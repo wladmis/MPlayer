@@ -1,4 +1,4 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>D.2. The skin file</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - The Movie Player for LINUX"><link rel="up" href="skin.html" title="Appendix D. MPlayer skin format"><link rel="previous" href="skin-overview.html" title="D.1. Overview"><link rel="next" href="skin-fonts.html" title="D.3. Fonts"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">D.2. The skin file</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="skin-overview.html">Prev</a> </td><th width="60%" align="center">Appendix D. MPlayer skin format</th><td width="20%" align="right"> <a accesskey="n" href="skin-fonts.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="skin-file"></a>D.2. The skin file</h2></div></div><p>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>D.2. The skin file</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - The Movie Player"><link rel="up" href="skin.html" title="Appendix D. MPlayer skin format"><link rel="previous" href="skin-overview.html" title="D.1. Overview"><link rel="next" href="skin-fonts.html" title="D.3. Fonts"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">D.2. The skin file</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="skin-overview.html">Prev</a> </td><th width="60%" align="center">Appendix D. MPlayer skin format</th><td width="20%" align="right"> <a accesskey="n" href="skin-fonts.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="skin-file"></a>D.2. The skin file</h2></div></div><p>
 As mentioned above, this is the skin configuration file. It is line oriented;
 comment lines start with a '<tt>;</tt>' character at the beginning
 of the line (only spaces and tabs are allowed before the '<tt>;</tt>').
@@ -48,7 +48,7 @@ section = movieplayer
   window = sub
   ; ... items for subwindow ...
   end
-  
+
   window = menu
   ; ... items for menu ...
   end
@@ -137,12 +137,12 @@ dragged horizontally. The parameters are:
     </p><div class="itemizedlist"><ul type="disc"><li><p><tt>button</tt> - the image to be used for the
     button (must have three parts below each other, like in case of
     <a href="skin-file.html#skin-button">button</a>)
-    </p></li><li><p><tt>bwidth</tt>,<tt>bheight</tt> - size
+    </p></li><li><p><tt>bwidth</tt>, <tt>bheight</tt> - size
     of the button
     </p></li><li><p><tt>phases</tt> - the image to be used for the
    different phases of the hpotmeter. A special value of <tt>NULL</tt>
    can be used if you want no such image. The image must be divided into
-   <tt>numphasesparts</tt> vertically like this:
+   <tt>numphases</tt> parts vertically like this:
     </p><div class="informalfigure"><pre class="screen">
 +------------+
 |  phase #1  |
@@ -157,8 +157,8 @@ dragged horizontally. The parameters are:
     <tt>phases</tt> image
     </p></li><li><p><tt>default</tt> - default value for hpotmeter
     (in the range <tt>0</tt> to <tt>100</tt>)
-    </p></li><li><p><tt>X</tt>,<tt>Y</tt> - position for the hpotmeter
-    </p></li><li><p><tt>width</tt>,<tt>height</tt> - width and height
+    </p></li><li><p><tt>X</tt>, <tt>Y</tt> - position for the hpotmeter
+    </p></li><li><p><tt>width</tt>, <tt>height</tt> - width and height
     of the <tt>hpotmeter</tt>
     </p></li><li><p><tt>message</tt> - the message to be generated when the
     value of <tt>hpotmeter</tt> is changed

@@ -107,14 +107,16 @@ OSD/SUB OPTIONS
     created because of its size.
 AUDIO OUTPUT OPTIONS (MPLAYER ONLY)
     Audio output layer (ao) option descriptions (MPlayer only).
+AUDIO OUTPUT DRIVERS (MPLAYER ONLY)
+    Audio output driver description (ao)
 VIDEO OUTPUT OPTIONS (MPLAYER ONLY)
     Video output layer (vo) option descriptions (MPlayer only).
+VIDEO OUTPUT DRIVERS (MPLAYER ONLY)
+    Video output driver description (vo)
 DECODING/FILTERING OPTIONS
     Decoding/Filtering layer options (ad, vd, pl).
 VIDEO FILTERS
     Video filter description (vf)
-VIDEO OUTPUT DRIVERS (MPLAYER ONLY)
-    Video output driver description (vo)
 GENERAL ENCODING OPTIONS (MENCODER ONLY)
     Encoding option descriptions (ve) (MEncoder only).
 CODEC SPECIFIC ENCODING OPTIONS (MENCODER ONLY)
@@ -172,7 +174,7 @@ Option descriptions:
     - Obsolete options are followed by (OBSOLETE), beta options by
       (BETA CODE), etc.
     - MPlayer only options in a section which isn't marked this way
-      are followed by (MPLAYER only).
+      are followed by (MPlayer only).
     - Add references to other options if they belong to each other, e.g.
       '(\-vo zr only)' or '(also see \-alang)' or are commonly used together.
     - If a nontrivial default parameter exists, mention it, e.g. (default: 24).
@@ -256,7 +258,7 @@ Options, suboptions, examples structure:
     - Examples:
 
       [...]
-      
+
       .I EXAMPLE:
       .PD 0
       .RSs

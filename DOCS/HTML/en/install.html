@@ -1,4 +1,4 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>1.2. Installation</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - The Movie Player for LINUX"><link rel="up" href="intro.html" title="Chapter 1. Introduction"><link rel="previous" href="history.html" title="1.1. History"><link rel="next" href="gui.html" title="1.3. What about the GUI?"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">1.2. Installation</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="history.html">Prev</a> </td><th width="60%" align="center">Chapter 1. Introduction</th><td width="20%" align="right"> <a accesskey="n" href="gui.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="install"></a>1.2. Installation</h2></div></div><p>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>1.2. Installation</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - The Movie Player"><link rel="up" href="intro.html" title="Chapter 1. Introduction"><link rel="previous" href="history.html" title="1.1. History"><link rel="next" href="gui.html" title="1.3. What about the GUI?"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">1.2. Installation</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="history.html">Prev</a> </td><th width="60%" align="center">Chapter 1. Introduction</th><td width="20%" align="right"> <a accesskey="n" href="gui.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="install"></a>1.2. Installation</h2></div></div><p>
 A quick installation guide can be found in the <tt class="filename">README</tt>
 file. Please read it first and then come back here for the rest of the gory
 details.
@@ -84,7 +84,16 @@ You need a fairly recent system. On Linux, 2.4.x kernels are recommended.
   support. At least 1.2.7 is required.
   </p></li><li><p>
   <span class="bold"><b>libsmb</b></span> - optional, for Samba support.
-  </p></li></ul></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="id2835111"></a>1.2.2. Codecs</h3></div></div><div class="itemizedlist"><ul type="disc"><li><p>
+  </p></li><li><p>
+  <span class="bold"><b>bio2jack</b></span> - optional, for JACK audio output
+  support, needed only in compile time. You can obtain it from
+  <a href="http://bio2jack.sf.net/" target="_top">http://bio2jack.sf.net</a>. Since it
+  doesn't have install option you have to manually put the file
+  <tt class="filename">libbio2jack.a</tt> somewhere in your library path
+  (e.g. <tt class="filename">/usr/local/lib</tt>) or use the
+  <tt class="option">--with-bio2jack=DIR</tt> switch to tell
+  <tt class="filename">./configure</tt> where that file is.
+  </p></li></ul></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="id2835162"></a>1.2.2. Codecs</h3></div></div><div class="itemizedlist"><ul type="disc"><li><p>
   <span class="bold"><b><tt>libavcodec</tt></b></span>:
   This codec package is capable
   of decoding H263/MJPEG/RV10/DivX3/DivX4/DivX5/MP41/MP42/WMV1/WMV2/SVQ1/SVQ3 encoded video
@@ -128,7 +137,7 @@ You need a fairly recent system. On Linux, 2.4.x kernels are recommended.
   <span class="bold"><b>QuickTime codecs</b></span>: on x86 platforms these
   codecs can be used to decode RPZA, and other QuickTime video,
   and QDesign audio streams. Installation instructions can be found in the
-  <a href="codecs.html#sorenson" title="2.2.1.10. Sorenson">Sorenson video codec</a> section.
+  <a href="codecs.html#sorenson" title="2.2.1.9. Sorenson">Sorenson video codec</a> section.
   </p></li><li><p>
   <span class="bold"><b>DivX4/DivX5</b></span>: information about this codec is
   available in the <a href="codecs.html#divx4-5" title="2.2.1.1. DivX4/DivX5">DivX4/DivX5</a> section. You possibly
@@ -173,8 +182,10 @@ You need a fairly recent system. On Linux, 2.4.x kernels are recommended.
   (this is a nightly updated tarball of Vorbis CVS).
   </p></li><li><p>
   <span class="application">MPlayer</span> can use the libraries of RealPlayer 8
-  or RealONE to play files with <span class="bold"><b>RealVideo 2.0-4.0</b></span>
-  video, and Sipro/Cook audio. See <a href="formats.html#realmedia" title="2.1.1.7. RealMedia (RM) files">RealMedia file format</a>
+  or RealONE to play files with
+  <span class="bold"><b>RealVideo 3.0 and 4.0</b></span>
+  video, and Sipro/Cook audio. See the
+  <a href="formats.html#realmedia" title="2.1.1.7. RealMedia (RM) files">RealMedia file format</a>
   section for installation instructions and more information.
   </p></li></ul></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="video-cards"></a>1.2.3. Video cards</h3></div></div><p>
 There are generally two kind of video cards. One kind (the newer cards) has
@@ -184,7 +195,7 @@ the other cards don't.
 They can display and scale (zoom) the picture to any size that fits in
 their memory, with <span class="bold"><b>small CPU usage</b></span> (even when
 zooming), thus fullscreen is nice and very fast.
-  
+
 </p><div class="itemizedlist"><ul type="disc"><li><p>
   <span class="bold"><b>Matrox G200/G400/G450/G550 cards</b></span>: although a
   <a href="devices.html#vidix" title="2.3.1.2.13. VIDIX">Vidix driver</a> is provided, it is recommended to
@@ -220,7 +231,7 @@ zooming), thus fullscreen is nice and very fast.
   If you do not have a GeForce2 (or newer) card, it's not likely to work without bugs.
   <span class="bold"><b>the built-in nVidia driver in XFree86 does not support
   hardware YUV acceleration on all nVidia cards.</b></span> You have
-  to download nVidia's closed-source drivers from <a href="http://nvidia.com" target="_top">nVidia.com</a>. 
+  to download nVidia's closed-source drivers from <a href="http://nvidia.com" target="_top">nVidia.com</a>.
   See the <a href="devices.html#nvidia" title="2.3.1.2.1.3. nVidia cards">nVidia Xv driver</a> section for details. Please also check
   the <a href="devices.html#tvout-nvidia" title="2.3.1.5.5. nVidia">nVidia TV-out</a> section if you wish to
   use a TV.
@@ -286,14 +297,14 @@ it works with the following drivers:
   <a href="codecs.html#swac3" title="2.2.2.1. Software AC3 decoding">Software AC3 decoding</a> section. For hardware AC3
   passthrough you <span class="bold"><b>must</b></span> use ALSA 0.9 with OSS emulation!
   </li><li>
-  <span class="bold"><b>C-Media with SP/DIF out</b></span>: hardware AC3
+  <span class="bold"><b>C-Media with S/PDIF out</b></span>: hardware AC3
   passthrough is possible with these cards, see
   <a href="codecs.html#hwac3" title="2.2.2.2. Hardware AC3 decoding">Hardware AC3 decoding</a> section.
   </li><li>
   Features of <span class="bold"><b>other cards</b></span> aren't supported by
   <span class="application">MPlayer</span>. <span class="bold"><b>It's very recommended
   to read the <a href="devices.html#audio-dev" title="2.3.2. Audio output devices">sound card</a> section!</b></span>
-  </li></ul></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="id2836668"></a>1.2.5. Features</h3></div></div><div class="itemizedlist"><ul type="disc"><li><p>
+  </li></ul></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="id2836720"></a>1.2.5. Features</h3></div></div><div class="itemizedlist"><ul type="disc"><li><p>
   Decide if you need GUI. If you do, see the <a href="gui.html" title="1.3. What about the GUI?">GUI</a>
   section before compiling.
   </p></li><li><p>

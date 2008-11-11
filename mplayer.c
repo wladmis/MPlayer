@@ -1,5 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "config.h"
+
+#ifdef WIN32
+#define _UWIN 1  /*disable Non-underscored versions of non-ANSI functions as otherwise int eof would conflict with eof()*/
+#include <windows.h>
+#endif
 #include <string.h>
 #include <unistd.h>
 
@@ -27,7 +33,6 @@ extern int mp_input_win32_slave_cmd_func(int fd,char* dest,int size);
 #include <errno.h>
 
 #include "version.h"
-#include "config.h"
 
 #include "mp_msg.h"
 
@@ -179,13 +184,14 @@ extern void vf_list_plugins();
 
 // Common FIFO functions, and keyboard/event FIFO code
 #include "fifo.c"
-int use_stdin=0;
+int noconsolecontrols=0;
 //**************************************************************************//
 
 vo_functions_t *video_out=NULL;
 ao_functions_t *audio_out=NULL;
 
 int fixed_vo=0;
+int eof=0;
 
 // benchmark:
 double video_time_usage=0;
@@ -337,6 +343,7 @@ static char* menu_root = "main";
 
 #ifdef HAVE_RTC
 static int nortc;
+static char* rtc_device;
 #endif
 
 #ifdef USE_EDL
@@ -436,7 +443,7 @@ static void uninit_player(unsigned int mask){
   if(mask&INITED_AO){
     inited_flags&=~INITED_AO;
     current_module="uninit_ao";
-    audio_out->uninit(1); audio_out=NULL;
+    audio_out->uninit(eof?0:1); audio_out=NULL;
   }
 
 #ifdef HAVE_NEW_GUI
@@ -518,6 +525,8 @@ static void exit_sighandler(int x){
 extern void mp_input_register_options(m_config_t* cfg);
 
 #include "mixer.h"
+mixer_t mixer;
+
 #include "cfg-mplayer.h"
 
 void parse_cfgfiles( m_config_t* conf )
@@ -721,7 +730,6 @@ int file_format=DEMUXER_TYPE_UNKNOWN;
 int delay_corrected=1;
 
 // movie info:
-int eof=0;
 
 int osd_function=OSD_PLAY;
 int osd_last_pts=-303;
@@ -792,8 +800,6 @@ int gui_no_filename=0;
   char tmppath[MAX_PATH*2 + 1];
   char win32path[MAX_PATH];
   char realpath[MAX_PATH];
-  int       WINAPI SetEnvironmentVariableA(char*,char*);
-  int       WINAPI GetModuleFileNameA(void*,char*,int);
 #ifdef __CYGWIN__
   cygwin_conv_to_full_win32_path(WIN32_PATH,win32path);
   strcpy(tmppath,win32path);
@@ -1088,8 +1094,9 @@ if(!codecs_file || !parse_codec_cfg(codecs_file)){
   if(!nortc)
   {
     // seteuid(0); /* Can't hurt to try to get root here */
-    if ((rtc_fd = open("/dev/rtc", O_RDONLY)) < 0)
-	mp_msg(MSGT_CPLAYER, MSGL_WARN, "Failed to open /dev/rtc: %s (/dev/rtc should be readable by the user.)\n", strerror(errno));
+    if ((rtc_fd = open(rtc_device ? rtc_device : "/dev/rtc", O_RDONLY)) < 0)
+	mp_msg(MSGT_CPLAYER, MSGL_WARN, "Failed to open %s: %s (it should be readable by the user.)\n",
+	    rtc_device ? rtc_device : "/dev/rtc", strerror(errno));
      else {
 	unsigned long irqp = 1024; /* 512 seemed OK. 128 is jerky. */
 
@@ -1139,7 +1146,7 @@ if(slave_mode)
 #else
   mp_input_add_cmd_fd(0,0,mp_input_win32_slave_cmd_func,NULL);
 #endif
-else if(!use_stdin)
+else if(!noconsolecontrols)
 #ifndef HAVE_NO_POSIX_SELECT
   mp_input_add_key_fd(0,1,NULL,NULL);
 #else
@@ -1204,7 +1211,7 @@ play_next_file:
 
 // We must enable getch2 here to be able to interrupt network connection
 // or cache filling
-if(!use_stdin && !slave_mode){
+if(!noconsolecontrols && !slave_mode){
   if(inited_flags&INITED_GETCH2)
     mp_msg(MSGT_CPLAYER,MSGL_WARN,"WARNING: getch2_init called twice!\n");
   else
@@ -1600,10 +1607,13 @@ if (vo_spudec==NULL && stream->type==STREAMTYPE_DVD) {
 #ifdef HAVE_MATROSKA
 if ((vo_spudec == NULL) && (demuxer->type == DEMUXER_TYPE_MATROSKA) &&
     (d_dvdsub->sh != NULL) && (((mkv_sh_sub_t *)d_dvdsub->sh)->type == 'v')) {
+  mkv_sh_sub_t *mkv_sh_sub = (mkv_sh_sub_t *)d_dvdsub->sh;
   current_module = "spudec_init_matroska";
-  vo_spudec = spudec_new_scaled(((mkv_sh_sub_t *)d_dvdsub->sh)->palette,
-                                ((mkv_sh_sub_t *)d_dvdsub->sh)->width,
-                                ((mkv_sh_sub_t *)d_dvdsub->sh)->height);
+  vo_spudec =
+    spudec_new_scaled_vobsub(mkv_sh_sub->palette, mkv_sh_sub->colors,
+                             mkv_sh_sub->custom_colors, mkv_sh_sub->width,
+                             mkv_sh_sub->height);
+  forced_subs_only = mkv_sh_sub->forced_subs_only;
 }
 #endif
 
@@ -1896,6 +1906,9 @@ if(sh_audio){
     }
 #endif
   }
+  mixer.audio_out = audio_out;
+  mixer.afilter = sh_audio ? sh_audio->afilter : NULL;
+  mixer.volstep = 3;
 }
 
 current_module="av_init";
@@ -2482,7 +2495,7 @@ if (stream->type==STREAMTYPE_DVDNAV && dvd_nav_still)
        edl_decision = 1;
        next_edl_record = next_edl_record->next;
      } else if( next_edl_record->action == EDL_MUTE ) {
-       mixer_mute();
+       mixer_mute(&mixer);
 #ifdef DEBUG_EDL
        printf( "\nEDL_MUTE: [%f]\n", next_edl_record->start_sec );
 #endif
@@ -2651,25 +2664,27 @@ if (stream->type==STREAMTYPE_DVDNAV && dvd_nav_still)
 		
 		if( abs )
 		{
-			mixer_setvolume( (float)v, (float)v );
+			mixer_setvolume(&mixer, (float)v, (float)v );
 		} else {
       if(v > 0)
-	mixer_incvolume();
+	mixer_incvolume(&mixer);
       else
-	mixer_decvolume();
+	mixer_decvolume(&mixer);
 		}
 	  
 #ifdef USE_OSD
       if(osd_level && sh_video){
+        float vol;
 	osd_visible=sh_video->fps; // 1 sec
 	vo_osd_progbar_type=OSD_VOLUME;
-	vo_osd_progbar_value=(mixer_getbothvolume()*256.0)/100.0;
+	mixer_getbothvolume(&mixer, &vol);
+	vo_osd_progbar_value=(vol*256.0)/100.0;
 	vo_osd_changed(OSDTYPE_PROGBAR);
       }
 #endif
     } break;
     case MP_CMD_MUTE:
-      mixer_mute();
+      mixer_mute(&mixer);
       break;
     case MP_CMD_LOADFILE : {
       play_tree_t* e = play_tree_new();

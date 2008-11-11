@@ -149,13 +149,14 @@ Installation directories:
 
 Optional features:
   --disable-mencoder     disable mencoder (a/v encoder) compilation [enable]
-  --enable-gui           enable gmplayer compilation (gtk-1.2 GUI) [disable]
+  --enable-gui           enable gmplayer compilation (GTK 1.2 GUI) [disable]
   --enable-largefiles    enable support for files > 2 GBytes [disable]
   --enable-linux-devfs   set default devices to devfs ones [disable]
   --enable-termcap       use termcap database for key codes [autodetect]
   --enable-termios       use termios database for key codes [autodetect]
   --disable-iconv        do not use iconv(3) function [autodetect]
   --disable-setlocale    disable setlocale using in mplayer [autodetect]
+  --disable-langinfo     do not use langinfo [autodetect]
   --enable-lirc          enable LIRC (remote control) support [autodetect]
   --enable-lircc         enable LIRCCD (LIRC client daemon) input [autodetect]
   --enable-joystick      enable joystick support [disable]
@@ -178,6 +179,7 @@ Optional features:
   --enable-menu          Enable OSD menu support (NOT DVD MENU) [disabled]
   --disable-sortsub      Disable subtitles sorting [enabled]
   --enable-fribidi       Enable using the FriBiDi libs [disabled]
+  --disable-enca         Disable using ENCA charset oracle library [autodetect]
   --disable-macosx       Disable Mac OS X specific features [autodetect]
   --disable-inet6        Disable IPv6 support [autodetect]
   --disable-gethostbyname2  gethostbyname() function is not provided by the C
@@ -190,6 +192,7 @@ Codecs:
   --enable-jpeg		 enable jpeg input/output support [autodetect]
   --enable-liblzo	 enable external liblzo support [autodetect]
   --disable-win32        disable Win32 DLL support [autodetect]
+  --disable-macshlb      disable Mac OS X SHLB support [autodetect]
   --disable-dshow        disable Win32/DirectShow support [autodetect]
   --disable-qtx          disable Quicktime codecs [autodetect]
   --disable-xanim        disable XAnim DLL support [autodetect]
@@ -245,7 +248,7 @@ Video output:
   --enable-directfb      build with DirectFB support [autodetect]
   --enable-zr            build with ZR360[56]7/ZR36060 support [autodetect]
   --enable-bl		 build with Blinkenlights support [disable]
-  --enable-tdfxvid       build with tdfx vid support [disable]
+  --enable-tdfxvid       build with tdfx_vid support [disable]
   --disable-tga          disable targa output support [enable]
   
 Audio output:
@@ -253,6 +256,7 @@ Audio output:
   --disable-ossaudio     disable OSS sound support [autodetect]
   --disable-arts         disable aRts sound support [autodetect]
   --disable-esd          disable esd sound support [autodetect]
+  --disable-jack         disable JACK sound support [autodetect]
   --disable-nas          disable NAS sound support [autodetect]
   --disable-sgiaudio     disable SGI sound support [autodetect]
   --disable-sunaudio     disable Sun sound support [autodetect]
@@ -319,6 +323,7 @@ Use these options if autodetection fails:
   --with-livelibdir=DIR    path to LIVE.COM Streaming Media libraries
   --with-xmmsplugindir=DIR path to XMMS plugins
   --with-xmmslibdir=DIR    path to libxmms.so.1
+  --with-bio2jack=DIR      path to libbio2jack.a (e.g. /home/user/bio2jack)
   --with-cdparanoiaincdir=DIR  cdparanoia headers in DIR
   --with-cdparanoialibdir=DIR  cdparanoia libraries (libcdda_*) in DIR
   --with-termcaplib=NAME   name of library with termcap functionality
@@ -440,7 +445,7 @@ if test -z "$_target" ; then
       i[3-9]86*|x86|x86pc|k5|k6|k6_2|k6_3|k6-2|k6-3|pentium*|athlon*|i586_i686|i586-i686) host_arch=i386 ;;
       ia64) host_arch=ia64 ;;
       x86_64|amd64) host_arch=x86_64 ;;
-      ppc) host_arch=ppc ;;
+      macppc|ppc) host_arch=ppc ;;
       alpha) host_arch=alpha ;;
       sparc*) host_arch=sparc ;;
       parisc*|hppa*|9000*) host_arch=hppa ;;
@@ -448,6 +453,7 @@ if test -z "$_target" ; then
       s390) host_arch=s390 ;;
       s390x) host_arch=s390x ;;
       mips) host_arch=mips ;;
+      vax) host_arch=vax ;;
       *) host_arch=UNKNOWN ;;
     esac
     ;;
@@ -463,6 +469,7 @@ else
     sunos) system_name=SunOS ;;
     qnx) system_name=QNX ;;
     morphos) system_name=MorphOS ;;
+    mingw32msvc) system_name=MINGW32 ;;
   esac
   # We need to convert underscores so that values like k6-2 and pentium-mmx can be passed
   host_arch=`echo $_target | cut -d '-' -f 1 | tr '_' '-'`
@@ -733,20 +740,28 @@ case "$host_arch" in
     # LGB: check -mcpu and -march swithing step by step with enabling
     # to fall back till 386.
 
+    # gcc >= 3.4.0  doesn't support -mcpu, we have to use -mtune instead
+
+    if [ "$_cc_major" -gt 3 ] || ( [ "$_cc_major" = 3 ] && [ "$_cc_minor" -ge 4 ]) ; then
+	cpuopt=-mtune
+    else
+	cpuopt=-mcpu
+    fi
+
     echocheck "GCC & CPU optimization abilities"
 cat > $TMPC << EOF
 int main(void) { return 0; }
 EOF
   if test "$_runtime_cpudetection" = no ; then
     if test "$proc" = "athlon-xp" || test "$proc" = "athlon-4" || test "$proc" = "athlon-tbird"; then
-      cc_check -march=$proc -mcpu=$proc || proc=athlon
+      cc_check -march=$proc $cpuopt=$proc || proc=athlon
     fi
     if test "$proc" = "k6-3" || test "$proc" = "k6-2"; then
-      cc_check -march=$proc -mcpu=$proc  || proc=k6
+      cc_check -march=$proc $cpuopt=$proc  || proc=k6
     fi
     if test "$proc" = "k6"; then
-      if not cc_check -march=$proc -mcpu=$proc; then
-        if cc_check -march=i586 -mcpu=i686; then
+      if not cc_check -march=$proc $cpuopt=$proc; then
+        if cc_check -march=i586 $cpuopt=i686; then
           proc=i586-i686
         else 
           proc=i586
@@ -754,37 +769,37 @@ EOF
       fi
     fi
     if test "$proc" = "pentium4" || test "$proc" = "pentium3" || test "$proc" = "pentium2" || test "$proc" = "athlon"; then
-      cc_check -march=$proc -mcpu=$proc  || proc=i686
+      cc_check -march=$proc $cpuopt=$proc  || proc=i686
     fi
     if test "$proc" = "i686" || test "$proc" = "pentium-mmx"; then
-      cc_check -march=$proc -mcpu=$proc  || proc=i586
+      cc_check -march=$proc $cpuopt=$proc  || proc=i586
     fi
     if test "$proc" = "i586" ; then
-      cc_check -march=$proc -mcpu=$proc  || proc=i486
+      cc_check -march=$proc $cpuopt=$proc  || proc=i486
     fi
     if test "$proc" = "i486" ; then
-      cc_check -march=$proc -mcpu=$proc  || proc=i386
+      cc_check -march=$proc $cpuopt=$proc  || proc=i386
     fi
     if test "$proc" = "i386" ; then
-      cc_check -march=$proc -mcpu=$proc  || proc=error
+      cc_check -march=$proc $cpuopt=$proc  || proc=error
     fi
     if test "$proc" = "error" ; then
-      echores "Your $_cc does not even support \"i386\" for '-march' and '-mcpu'."
+      echores "Your $_cc does not even support \"i386\" for '-march' and '$cpuopt'."
       _mcpu=""
       _march=""
       _optimizing=""
     elif test "$proc" = "i586-i686"; then
       _march="-march=i586"
-      _mcpu="-mcpu=i686"
+      _mcpu="$cpuopt=i686"
       _optimizing="$proc"
     else
       _march="-march=$proc"
-      _mcpu="-mcpu=$proc"
+      _mcpu="$cpuopt=$proc"
       _optimizing="$proc"
     fi
   else
     # i686 is probably the most common CPU - optimize for it
-    _mcpu="-mcpu=i686"
+    _mcpu="$cpuopt=i686"
     # at least i486 required, for bswap instruction
     _march="-march=i486"
     cc_check $_mcpu || _mcpu=""
@@ -797,10 +812,10 @@ EOF
       # TODO: it may be a good idea to check GCC and fall back in all cases
       if test "$host_arch" = "i586-i686"; then
         _march="-march=i586"
-        _mcpu="-mcpu=i686"
+        _mcpu="$cpuopt=i686"
       else      
         _march="-march=$host_arch"
-        _mcpu="-mcpu=$host_arch"
+        _mcpu="$cpuopt=$host_arch"
       fi
     
       proc="$host_arch"
@@ -878,8 +893,7 @@ EOF
 	proc=`$_cpuinfo | grep "Processor type" | cut -f 3 -d ' ' | sed 's/ppc//'`
 	if [ `sysctl -n hw.vectorunit` -eq 1 ]; then
 	    _altivec=yes
- 	fi
-	if [ `sysctl -n hw.optional.altivec` -eq 1 ]; then
+	elif [ "`sysctl -n hw.optional.altivec 2>/dev/null`" = 1 ]; then
 	    _altivec=yes
 	fi
     fi
@@ -1165,10 +1179,12 @@ _dvbhead=auto
 _dxr2=auto
 _dxr3=auto
 _iconv=auto
+_langinfo=auto
 _rtc=auto
 _ossaudio=auto
 _arts=auto
 _esd=auto
+_jack=auto
 _liblzo=auto
 _mad=auto
 _vorbis=auto
@@ -1199,6 +1215,7 @@ _sunaudio=auto
 _alsa=auto
 _fastmemcpy=yes
 _unrarlib=yes
+_macshlb=auto
 _win32=auto
 _dshow=yes
 _select=yes
@@ -1248,6 +1265,7 @@ _sortsub=yes
 _freetypeconfig='freetype-config'
 _fribidi=no
 _fribidiconfig='fribidi-config'
+_enca=auto
 _inet6=auto
 _gethostbyname2=auto
 _ftp=yes
@@ -1321,6 +1339,8 @@ for ac_option do
   --disable-dxr3)	_dxr3=no	;;
   --enable-iconv)	_iconv=yes	;;
   --disable-iconv)	_iconv=no	;;
+  --enable-langinfo)	_langinfo=yes	;;
+  --disable-langinfo)	_langinfo=no	;;
   --enable-rtc)	        _rtc=yes	;;
   --disable-rtc)	_rtc=no	        ;;
   --enable-mp1e)	_mp1e=yes	;;
@@ -1333,6 +1353,8 @@ for ac_option do
   --disable-arts)	_arts=no	;;
   --enable-esd)		_esd=yes	;;
   --disable-esd)	_esd=no		;;
+  --enable-jack)	_jack=yes	;;
+  --disable-jack)	_jack=no	;;
   --enable-mad)		_mad=yes	;;
   --disable-mad)	_mad=no		;;
   --enable-liblzo)	_liblzo=yes	;;
@@ -1472,6 +1494,9 @@ for ac_option do
   --enable-fribidi)     _fribidi=yes    ;;
   --disable-fribidi)    _fribidi=no     ;;
 
+  --enable-enca)        _enca=yes    ;;
+  --disable-enca)       _enca=no     ;;
+
   --enable-inet6)	_inet6=yes	;;
   --disable-inet6)	_inet6=no	;;
 
@@ -1539,6 +1564,10 @@ for ac_option do
   --with-xmmsplugindir=*)
     _xmmsplugindir=`echo $ac_option | cut -d '=' -f 2`
     ;;
+
+  --with-bio2jack=*)
+    _bio2jackdir=`echo $ac_option | cut -d '=' -f 2`
+    ;;
     
   --enable-profile)
     _profile='-p'
@@ -1578,6 +1607,8 @@ for ac_option do
   --disable-mmx) # 3Dnow! and MMX2 require MMX
         _3dnow=no _3dnowex=no _mmx=no _mmx2=no ;;
 
+  --enable-macshlb) _macshlb=yes ;;
+  --disable-macshlb) _macshlb=no ;;
   --enable-win32) _win32=yes ;;
   --disable-win32) _win32=no _dshow=no ;;
   --enable-dshow) _win32=yes _dshow=yes ;;
@@ -1849,10 +1880,20 @@ if test "$_vidix" = auto ; then
   x86 && _vidix=yes
   ppc && linux && _vidix=yes
   alpha && linux && _vidix=yes
-  win32 && _vidix=no
   qnx && _vidix=no
   sunos && _vidix=no
 fi
+
+echocheck "mplayer binary name"
+if win32 ; then
+  _prg="mplayer.exe"
+  _prg_mencoder="mencoder.exe"
+else
+  _prg="mplayer"
+  _prg_mencoder="mencoder"
+fi
+echores $_prg
+
 
 # On QNX we must link to libph - Gabucino
 if qnx ; then
@@ -1884,6 +1925,8 @@ fi
 # If IRIX we must use ar instead of ranlib (not present on IRIX systems)
 if irix ; then
   _ranlib='ar -r'
+elif linux ; then
+  _ranlib='true'
 fi
 
 ######################
@@ -1957,6 +2000,74 @@ fi
 echores "$_setlocale"
 
 
+echocheck "iconv"
+if test "$_iconv" = auto ; then
+  _iconv_tmp='#include <iconv.h>'
+
+  cat > $TMPC << EOF
+#include <stdio.h>
+#include <unistd.h>
+$_iconv_tmp
+#define INBUFSIZE 1024
+#define OUTBUFSIZE 4096
+
+char inbuffer[INBUFSIZE];
+char outbuffer[OUTBUFSIZE];
+
+int main(void) {
+  size_t numread;
+  iconv_t icdsc;
+  char *tocode="UTF-8";
+  char *fromcode="cp1250";
+  if ((icdsc = iconv_open (tocode, fromcode)) != (iconv_t)(-1)) {
+    while ((numread = read (0, inbuffer, INBUFSIZE))) {
+      char *iptr=inbuffer;
+      char *optr=outbuffer;
+      size_t inleft=numread;
+      size_t outleft=OUTBUFSIZE;
+      if (iconv(icdsc, (const char **)&iptr, &inleft, &optr, &outleft)
+          != (size_t)(-1)) {
+        write (1, outbuffer, OUTBUFSIZE - outleft);
+      }
+    }
+    if (iconv_close(icdsc) == -1)
+      ;
+  }
+}
+EOF
+  _iconv=no
+  if cc_check -lm -liconv ; then
+    _iconv=yes
+    _ld_iconv='-liconv'
+  else
+    cc_check -lm && _iconv=yes
+  fi
+fi
+if test "$_iconv" = yes ; then
+  _def_iconv='#define USE_ICONV 1'
+else
+  _def_iconv='#undef USE_ICONV'
+fi
+echores "$_iconv"
+
+
+echocheck "langinfo"
+if test "$_langinfo" = auto ; then
+  cat > $TMPC <<EOF
+#include <langinfo.h>
+int main(void) { nl_langinfo(CODESET); return 0; }
+EOF
+  _langinfo=no
+  cc_check && _langinfo=yes
+fi
+if test "$_langinfo" = yes ; then
+  _def_langinfo='#define USE_LANGINFO 1'
+else
+  _def_langinfo='#undef USE_LANGINFO'
+fi
+echores "$_langinfo"
+
+
 echocheck "language"
 test -z "$_language" && _language=$LINGUAS
 _language=`echo $_language | sed 's/,/ /g'`
@@ -1982,6 +2093,8 @@ done
 echores "using $_language (man pages: $LANGUAGES)"
 _mp_help="help/help_mp-${_language}.h"
 test -f $_mp_help || die "$_mp_help not found"
+_doc_lang=$_language
+test -d DOCS/xml/$_doc_lang || _doc_lang=en
 
 echocheck "enable sighandler"
 if test "$_sighandler" = yes ; then
@@ -2184,7 +2297,7 @@ EOF
   if test "$_inttypes" = yes ; then
     die "You don't have inttypes.h, but sys/bitypes.h is present. Please copy etc/inttypes.h into the include path, and re-run configure."
   else
-    die "Cannot find header either inttypes.h or bitypes.h (see DOCS/HTML/en/faq.html)."
+    die "Cannot find header either inttypes.h or bitypes.h (see DOCS/HTML/$_doc_lang/faq.html)."
   fi
 fi
 echores "$_inttypes"
@@ -2383,8 +2496,12 @@ else
 fi
 if test "$_ld_pthread" != '' ; then
   echores "yes (using $_ld_pthread)"
+  _pthreads='yes'
+  _def_pthreads='#define HAVE_PTHREADS 1'
 else
   echores "no"
+  _pthreads=''
+  _def_pthreads='#undef HAVE_PTHREADS'
 fi
 
 
@@ -2648,6 +2765,34 @@ else
  _def_strsep='#undef HAVE_STRSEP'
 fi
 echores "$_strsep"
+
+echocheck "strlcpy()"
+cat > $TMPC << EOF
+#include <string.h>
+int main (void) { char *s = "Hello, world!", t[20]; (void) strlcpy(t, s, sizeof( t )); return 0; }
+EOF
+_strlcpy=no
+cc_check && _strlcpy=yes
+if test "$_strlcpy" = yes ; then
+ _def_strlcpy='#define HAVE_STRLCPY 1'
+else
+ _def_strlcpy='#undef HAVE_STRLCPY'
+fi
+echores "$_strlcpy"
+
+echocheck "strlcat()"
+cat > $TMPC << EOF
+#include <string.h>
+int main (void) { char *s = "Hello, world!", t[20]; (void) strlcat(t, s, sizeof( t )); return 0; }
+EOF
+_strlcat=no
+cc_check && _strlcat=yes
+if test "$_strlcat" = yes ; then
+ _def_strlcat='#define HAVE_STRLCAT 1'
+else
+ _def_strlcat='#undef HAVE_STRLCAT'
+fi
+echores "$_strlcat"
 
 echocheck "fseeko()"
 cat > $TMPC << EOF
@@ -2990,7 +3135,7 @@ fi
 echocheck "X11 libs presence"
 if test -z "$_ld_x11" ; then
   for I in /usr/X11R6/lib /usr/lib/X11R6 /usr/X11/lib /usr/lib32 /usr/openwin/lib /usr/X11R6/lib64 ; do
-    if test -d "$I" && ( test -f "$I/libX11.so" || test -f "$I/libX11.a" ) ; then
+    if test -d "$I" && ( test -f "$I/libX11.so" || test -f "$I/libX11.a" || test -f "$I/libX11.dll.a" ) ; then
       _ld_x11="-L$I"
       echores "yes (using $I)"
       break;
@@ -3350,6 +3495,7 @@ EOF
 fi
 if test "$_caca" = yes ; then
   _def_caca='#define HAVE_CACA 1'
+  _inc_caca=`caca-config --cflags`
   _ld_caca=`caca-config --libs`
   _vosrc="$_vosrc vo_caca.c"
   _vomodules="caca $_vomodules"
@@ -4009,6 +4155,41 @@ else
   _noaomodules="esd $_noaomodules"
 fi
 
+
+echocheck "JACK"
+if test "$_jack" = auto ; then
+  _jack=no
+  if ( ( pkg-config --modversion jack ) > /dev/null 2>&1 ) &&
+     ( jackd --version | grep version | awk '{ print $3 }' ) >> "$TMPLOG" 2>&1 ; then
+
+cat > $TMPC << EOF
+#include <jack/jack.h>
+int main(void) { JACK_Init(); return 0; }
+EOF
+	if test -z "$_bio2jackdir" ; then
+		cc_check -lbio2jack `pkg-config --libs --cflags jack` && ( "$TMPO" >> "$TMPLOG" 2>&1 ) && _jack=yes
+	else
+		cc_check -L "$_bio2jackdir" -lbio2jack `pkg-config --libs --cflags jack` && ( "$TMPO" >> "$TMPLOG" 2>&1 ) && _jack=yes
+	fi
+  fi
+fi
+
+if test "$_jack" = yes ; then
+  _def_jack='#define USE_JACK 1'
+  _aosrc="$_aosrc ao_jack.c"
+  _aomodules="jack $_aomodules"
+  if test -z "$_bio2jackdir" ; then
+    _ld_jack="-lbio2jack `pkg-config --libs jack`"
+  else
+	_ld_jack="-L \"$_bio2jackdir\" -lbio2jack `pkg-config --libs jack`"
+  fi
+  _inc_jack=`pkg-config --cflags jack`
+else
+  _noaomodules="jack $_noaomodules"
+fi
+echores "$_jack"
+
+
 echocheck "ALSA audio"
 if test "$_alsa" != no ; then
   _alsa=no
@@ -4053,26 +4234,26 @@ if test "$_alsaver" ; then
     _def_sys_asoundlib_h='#define HAVE_SYS_ASOUNDLIB_H 1'
     echores "yes (using alsa 0.5.x and sys/asoundlib.h)"
   elif test "$_alsaver" = '0.9.x-sys' ; then
-    _aosrc="$_aosrc ao_alsa9.c"
-    _aomodules="alsa9 $_aomodules"
+    _aosrc="$_aosrc ao_alsa.c"
+    _aomodules="alsa $_aomodules"
     _def_alsa9='#define HAVE_ALSA9 1'
     _def_sys_asoundlib_h='#define HAVE_SYS_ASOUNDLIB_H 1'
     echores "yes (using alsa 0.9.x and sys/asoundlib.h)"
   elif test "$_alsaver" = '0.9.x-alsa' ; then
-    _aosrc="$_aosrc ao_alsa9.c"
-    _aomodules="alsa9 $_aomodules"
+    _aosrc="$_aosrc ao_alsa.c"
+    _aomodules="alsa $_aomodules"
     _def_alsa9='#define HAVE_ALSA9 1'
     _def_alsa_asoundlib_h='#define HAVE_ALSA_ASOUNDLIB_H 1'
     echores "yes (using alsa 0.9.x and alsa/asoundlib.h)"
   elif test "$_alsaver" = '1.0.x-sys' ; then
-    _aosrc="$_aosrc ao_alsa1x.c"
-    _aomodules="alsa1x $_aomodules"
+    _aosrc="$_aosrc ao_alsa.c"
+    _aomodules="alsa $_aomodules"
     _def_alsa1x="#define HAVE_ALSA1X 1"
     _def_alsa_asoundlib_h='#define HAVE_SYS_ASOUNDLIB_H 1'
     echores "yes (using alsa 1.0.x and sys/asoundlib.h)"
   elif test "$_alsaver" = '1.0.x-alsa' ; then
-    _aosrc="$_aosrc ao_alsa1x.c"
-    _aomodules="alsa1x $_aomodules"
+    _aosrc="$_aosrc ao_alsa.c"
+    _aomodules="alsa $_aomodules"
     _def_alsa1x="#define HAVE_ALSA1X 1"
     _def_alsa_asoundlib_h='#define HAVE_ALSA_ASOUNDLIB_H 1'
     echores "yes (using alsa 1.0.x and alsa/asoundlib.h)"
@@ -4330,7 +4511,14 @@ else
 fi
 echores "$_cdparanoia"
 
+
 echocheck "freetype >= 2.0.9"
+
+# freetype depends on iconv
+if test "$_iconv" = no ; then
+    _freetype="no (iconv support needed)"
+fi
+
 if test "$_freetype" = auto ; then
     if ( $_freetypeconfig --version ) >/dev/null 2>&1 ; then
 	cat > $TMPC << EOF
@@ -4439,6 +4627,30 @@ else
     _def_fribidi='#undef USE_FRIBIDI'
 fi
 echores "$_fribidi"
+
+
+echocheck "ENCA"
+if test "$_enca" = auto ; then
+    cat > $TMPC << EOF
+#include <enca.h>
+int main()
+{
+    const char **langs;
+    size_t langcnt;
+    langs = enca_get_languages(&langcnt);
+    return 0;
+}
+EOF
+    _enca=no
+    cc_check -lenca && _enca=yes
+    if test "$_enca" = yes ; then
+	_def_enca='#define HAVE_ENCA 1'
+	_ld_enca='-lenca'
+    else
+	_def_enca='#undef HAVE_ENCA'
+    fi
+fi
+echores "$_enca"
 
 
 echocheck "zlib"
@@ -4763,7 +4975,20 @@ else
   _ld_faad=
 fi
 
-
+echocheck "MacOS X SHLB (shared lib) support"
+if test "$_macshlb" = auto ; then
+  if test "$_macosx" = yes ; then
+    _macshlb=yes
+  else
+    _macshlb=no
+  fi
+fi
+echores "$_macshlb"
+if test "$_macshlb" = yes ; then
+  _def_macshlb='#define USE_MACSHLB 1'
+else
+  _def_macshlb='#undef USE_MACSHLB'
+fi
 
 if test "$_win32" = auto ; then
   if x86 ; then
@@ -4802,20 +5027,17 @@ fi
 if test "$_win32" != no ; then
   _def_win32_loader='#undef WIN32_LOADER'
   echocheck "Win32 loader support"
+  _ld_win32='loader/libloader.a'
+  _dep_win32='loader/libloader.a'
+  _codecmodules="win32 $_codecmodules"
+  if openbsd ; then
+    x86 && _ld_win32="$_ld_win32 -li386"
+  fi
   if not win32 ; then
-    _ld_win32='loader/libloader.a'
-    _dep_win32='loader/libloader.a'
-    _codecmodules="win32 $_codecmodules"
-    if openbsd ; then
-      x86 && _ld_win32="$_ld_win32 -li386"
-    fi
     _def_win32_loader='#define WIN32_LOADER 1'
     echores "yes"
   else
-    _ld_win32='loader/driver.o loader/vfl.o loader/afl.o'
-    _dep_win32='loader/driver.o loader/vfl.o loader/afl.o'
     _ld_win32libs="$_ld_win32libs -ladvapi32 -lole32"
-    _codecmodules="win32 $_codecmodules"
     echores "no (using native windows)"
   fi
 fi
@@ -4890,7 +5112,7 @@ if test "$_xanim" = auto ; then
     if test "$_xanim" = yes ; then
       echores "yes (using $_xanimlibdir)"
     else
-      echores "no (no suitable directory found - see DOCS/HTML/en/codecs.html)"
+      echores "no (no suitable directory found - see DOCS/HTML/$_doc_lang/codecs.html)"
     fi
   else
     echores "no (dynamic loader support needed)"
@@ -4911,18 +5133,19 @@ fi
 echocheck "RealPlayer DLL"
 if test "$_real" = auto ; then
   _real=no
-  if test "$_dl" = yes || test "$_win32" = yes ; then
+  if test "$_dl" = yes || test "$_win32" = yes || test "$_macshlb" = yes ; then
 #  if test "$_dl" = yes  ; then
-    if linux || freebsd || netbsd || win32 ; then
+    if linux || freebsd || netbsd || win32 || darwin ; then
       _real=yes
     else
-      echores "no (tested only on Linux/FreeBSD/NetBSD/Cygwin/MinGW)"
+      echores "no (tested only on Linux/FreeBSD/NetBSD/Cygwin/MinGW/Darwin)"
     fi
     if test "$_real" = yes ; then
       if test -z "$_reallibdir" ; then
 	for I in "$_libdir/codecs" "$_libdir/real" /usr/lib/real \
 	  /usr/lib/RealPlayer{9,8,}/Codecs /usr/local/RealPlayer{9,8,}/Codecs \
 	  /usr/local/lib/RealPlayer{9,8,}/Codecs /opt/RealPlayer{9,8,}/{Real/,}Codecs \
+	  {~,}/Applications/RealOne\ Player.app/Contents/MacOS/Library/Codecs \
 	  "$_win32libdir"; do
           if test -d "$I" ; then
             _reallibdir="$I"
@@ -4934,7 +5157,7 @@ if test "$_real" = auto ; then
       if test "$_real" = yes ; then
         echores "yes (using $_reallibdir)"
       else
-        echores "no (no suitable directory found - see DOCS/HTML/en/codecs.html)"
+        echores "no (no suitable directory found - see DOCS/HTML/$_doc_lang/codecs.html)"
       fi
     fi
   else
@@ -4990,57 +5213,6 @@ else
 fi
 
 
-echocheck "iconv"
-if test "$_iconv" = auto ; then
-  _iconv_tmp='#include <iconv.h>'
-
-  cat > $TMPC << EOF
-#include <stdio.h>
-#include <unistd.h>
-$_iconv_tmp
-#define INBUFSIZE 1024
-#define OUTBUFSIZE 4096
-
-char inbuffer[INBUFSIZE];
-char outbuffer[OUTBUFSIZE];
-
-int main(void) {
-  size_t numread;
-  iconv_t icdsc;
-  char *tocode="UTF-8";
-  char *fromcode="cp1250";
-  if ((icdsc = iconv_open (tocode, fromcode)) != (iconv_t)(-1)) {
-    while ((numread = read (0, inbuffer, INBUFSIZE))) {
-      char *iptr=inbuffer;
-      char *optr=outbuffer;
-      size_t inleft=numread;
-      size_t outleft=OUTBUFSIZE;
-      if (iconv(icdsc, (const char **)&iptr, &inleft, &optr, &outleft)
-          != (size_t)(-1)) {
-        write (1, outbuffer, OUTBUFSIZE - outleft);
-      }
-    }
-    if (iconv_close(icdsc) == -1)
-      ;
-  }
-}
-EOF
-  _iconv=no
-  if cc_check -lm -liconv ; then
-    _iconv=yes
-    _ld_iconv='-liconv'
-  else
-    cc_check -lm && _iconv=yes
-  fi
-fi
-if test "$_iconv" = yes ; then
-  _def_iconv='#define USE_ICONV 1'
-else
-  _def_iconv='#undef USE_ICONV'
-fi
-echores "$_iconv"
-
-
 echocheck "FFmpeg libavcodec (static)"
 if test "$_libavcodec" = auto ; then
   # Note: static linking is preferred to dynamic linking
@@ -5053,7 +5225,7 @@ if test "$_libavcodec" = auto ; then
       echores "no (old ffmpeg version, use CVS !)"
     fi
   else
-    echores "no (see DOCS/HTML/en/codecs.html)"
+    echores "no (see DOCS/HTML/$_doc_lang/codecs.html)"
   fi
 else
   echores "$_libavcodec"
@@ -5481,6 +5653,7 @@ if test "$_network" != no ; then
 else
   _noinputmodules="network $_noinputmodules"
   _def_network='#undef MPLAYER_NETWORK'
+  _ftp=no
 fi
 echores "$_network"
 
@@ -5672,7 +5845,7 @@ EOF
 
 
   # Check for GTK:
-  echocheck "gtk version"
+  echocheck "GTK version"
   if test -z "$_gtkconfig" ; then
     if ( gtk-config --version ) >/dev/null 2>&1 ; then
       _gtkconfig="gtk-config"
@@ -5758,8 +5931,11 @@ To do so, execute 'CFLAGS= ./configure <options>'
 EOF
 fi
 if darwin ; then
-  # use gnu style cpp on Darwin
-  CFLAGS="$CFLAGS -no-cpp-precomp -DSYS_DARWIN -Wl,-bind_at_load"
+  CFLAGS="$CFLAGS -DSYS_DARWIN"
+  if [ "$_cc_major" = 3 ] && [ "$_cc_minor" -lt 1 ]; then
+    CFLAGS="$CFLAGS -no-cpp-precomp"
+  fi
+
   # libavcodec (from ffmpeg) requires CONFIG_DARWIN to enable AltiVec on Darwin/MacOSX
   test "$_altivec" = yes && CFLAGS="$CFLAGS -DCONFIG_DARWIN"
 fi
@@ -5801,19 +5977,10 @@ echores "$_ftello"
 
 # Determine OS dependent libs
 if cygwin ; then
-  _confcygwin='TARGET_CYGWIN = yes'
   _def_confwin32='#define WIN32'
   #CFLAGS="$CFLAGS -D__CYGWIN__ -D__CYGWIN_USE_BIG_TYPES__"
   # stat.st_size with BIG_TYPES is broken (not set) ::atmos 
   CFLAGS="$CFLAGS -D__CYGWIN__"
-else
-  _confcygwin="TARGET_CYGWIN = no"
-fi
-
-if mingw32 ; then
-  _confmingw32='TARGET_MINGW32 = yes'
-else
-  _confmingw32='TARGET_MINGW32 = no'
 fi
 
 if win32 ; then
@@ -5934,14 +6101,17 @@ RANLIB = $_ranlib
 INSTALL = $_install
 # OPTFLAGS = -O4 $_profile $_debug $_march $_mcpu -pipe -fomit-frame-pointer -ffast-math
 EXTRA_INC = $_inc_extra $_inc_gtk
-OPTFLAGS = -I../libvo/ -I../../libvo $CFLAGS \$(EXTRA_INC)
+OPTFLAGS = -I../libvo -I../../libvo $_inc_x11 $CFLAGS \$(EXTRA_INC)
 STRIPBINARIES = $_stripbinaries
+
+PRG = $_prg
+PRG_MENCODER = $_prg_mencoder
 
 $_live_libs_def
 
 MPLAYER_NETWORK = $_network
 STREAMING_LIVE_DOT_COM = $_live
-MPLAYER_NETWORK_LIB = $_ld_network $_ld_live
+MPLAYER_NETWORK_LIB = $_ld_live $_ld_network
 DVBIN = $_dvbin
 VIDIX = $_vidix
 SHARED_PP = $_shared_pp
@@ -5967,6 +6137,8 @@ Z_LIB =  $_ld_static $_ld_zlib
 HAVE_MLIB = $_mlib
 WIN32_LIB = $_ld_win32libs
 STATIC_LIB = $_ld_static
+ENCA_LIB = $_ld_enca
+HAVE_PTHREADS = $_pthreads
 
 X11_INC = $_inc_x11
 X11DIR = $_ld_x11
@@ -5981,7 +6153,7 @@ SLIBPREF=lib
 SLIBSUF=.so
 
 # video output
-X_LIB = $_ld_gl $_ld_dga $_ld_xv $_ld_xvmc $_ld_vm $_ld_xinerama $_ld_x11 $_ld_mad $_ld_sock
+X_LIB = $_ld_gl $_ld_dga $_ld_xv $_ld_xvmc $_ld_vm $_ld_xinerama $_ld_x11 $_ld_sock
 GGI_LIB = $_ld_ggi
 MLIB_LIB =  $_ld_mlib
 MLIB_INC = $_inc_mlib
@@ -5993,6 +6165,7 @@ GIF_LIB = $_ld_gif
 SDL_LIB = $_ld_sdl
 SVGA_LIB = $_ld_svga
 AA_LIB = $_ld_aa
+CACA_INC = $_inc_caca
 CACA_LIB = $_ld_caca
 
 # audio output
@@ -6002,6 +6175,8 @@ ARTS_LIB = $_ld_arts
 ARTS_INC = $_inc_arts
 ESD_LIB = $_ld_esd
 ESD_INC = $_inc_esd
+JACK_LIB = $_ld_jack
+JACK_INC = $_inc_jack
 SGIAUDIO_LIB = $_ld_sgiaudio
 
 # input/demuxer/codecs
@@ -6057,8 +6232,6 @@ MACOSX_FRAMEWORKS = $_macosx_frameworks
 # --- Some stuff for autoconfigure ----
 $_target_arch
 $_confwin32
-$_confcygwin
-$_confmingw32
 TARGET_CPU=$iproc
 TARGET_MMX = $_mmx
 TARGET_MMX2 = $_mmx2
@@ -6207,6 +6380,9 @@ $_def_select
 /* define this to use iconv(3) function to codepage conversions */
 $_def_iconv
 
+/* define this to use nl_langinfo function */
+$_def_langinfo
+
 /* define this to use RTC (/dev/rtc) for video timers (LINUX only) */
 $_def_rtc
 
@@ -6272,6 +6448,18 @@ $_def_scandir
 /* Define this if your system has strsep */
 $_def_strsep
 
+/* Define this if your system has strlcpy */
+$_def_strlcpy
+#ifndef HAVE_STRLCPY
+unsigned int strlcpy (char *dest, char *src, unsigned int size);
+#endif
+
+/* Define this if your system has strlcat */
+$_def_strlcat
+#ifndef HAVE_STRLCAT
+unsigned int strlcat (char *dest, char *src, unsigned int size);
+#endif
+
 /* Define this if your system has fseeko */
 $_def_fseeko
 #ifndef HAVE_FSEEKO
@@ -6294,6 +6482,9 @@ $_def_gettimeofday
 
 /* Define this if your system has glob */
 $_def_glob
+
+/* Define this if your system has pthreads */
+$_def_pthreads
 
 /* LIRC (remote control, see www.lirc.org) support: */
 $_def_lirc
@@ -6326,6 +6517,9 @@ $_def_dshow
 
 /* Mac OS X specific features */
 $_def_macosx
+
+/* Mac OS X SHLB support */
+$_def_macshlb
 
 /* Build our Win32-loader */
 $_def_win32_loader
@@ -6388,6 +6582,7 @@ $_def_alsa1x
 $_def_arts
 $_def_esd
 $_def_esd_latency
+$_def_jack
 $_def_sys_asoundlib_h
 $_def_alsa_asoundlib_h
 $_def_sunaudio
@@ -6459,6 +6654,9 @@ $_def_vcd
 #elif defined(SYS_DARWIN)
 #define DEFAULT_CDROM_DEVICE    "/dev/rdiskN"
 #define DEFAULT_DVD_DEVICE	DEFAULT_CDROM_DEVICE
+#elif defined(__OpenBSD__)
+#define DEFAULT_CDROM_DEVICE	"/dev/rcd0a"
+#define DEFAULT_DVD_DEVICE	DEFAULT_CDROM_DEVICE
 #else
 #define DEFAULT_CDROM_DEVICE    "/dev/cdrom"
 #define DEFAULT_DVD_DEVICE	"/dev/dvd"
@@ -6515,6 +6713,9 @@ $_def_fontconfig
 
 /* enable FriBiDi usage */
 $_def_fribidi
+
+/* enable ENCA usage */
+$_def_enca
 
 /* liblzo support */
 $_def_liblzo
@@ -6729,7 +6930,7 @@ EOF
 
 
 if test "$_mtrr" = yes ; then
-  echo "Please check mtrr settings at /proc/mtrr (see DOCS/HTML/en/devices.html#mtrr)"
+  echo "Please check mtrr settings at /proc/mtrr (see DOCS/HTML/$_doc_lang/devices.html#mtrr)"
   echo
 fi
 
@@ -6765,8 +6966,8 @@ EOF
 else
   cat <<EOF
 NOTE: Win32 codec DLLs are not supported on your CPU ($host_arch) or your
-operating system ($system_name). You may encounter a few AVI files that
-cannot be played due to missing Open Source video/audio codec support.
+operating system ($system_name). You may encounter a few files that cannot
+be played due to missing open source video/audio codec support.
 
 EOF
 fi
@@ -6777,7 +6978,7 @@ cat <<EOF
 Check $TMPLOG if you wonder why an autodetection failed (check whether
 the development headers/packages are installed).
 
-If you suspect a bug, please read DOCS/HTML/en/bugreports.html.
+If you suspect a bug, please read DOCS/HTML/$_doc_lang/bugreports.html.
 
 EOF
 

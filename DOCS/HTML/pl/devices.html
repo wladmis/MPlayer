@@ -1,4 +1,4 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>2.3. Urz&#261;dzenia wyj&#347;ciowe</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - Odtwarzacz filmów dla LINUKSA"><link rel="up" href="features.html" title="Rozdzia&#322; 2. Mo&#380;liwo&#347;ci"><link rel="previous" href="codecs.html" title="2.2. Wspierane kodeki"><link rel="next" href="tv-input.html" title="2.4. Wej&#347;cie TV"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">2.3. Urz&#261;dzenia wyj&#347;ciowe</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="codecs.html">Poprzedni</a> </td><th width="60%" align="center">Rozdzia&#322; 2. Mo&#380;liwo&#347;ci</th><td width="20%" align="right"> <a accesskey="n" href="tv-input.html">Nast&#281;pny</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="devices"></a>2.3. Urz&#261;dzenia wyj&#347;ciowe</h2></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="video-dev"></a>2.3.1. Urz&#261;dzenia wyj&#347;cia video</h3></div></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="mtrr"></a>2.3.1.1. Ustawianie MTRR</h4></div></div><p>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>2.3. Urz&#261;dzenia wyj&#347;ciowe</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - Odtwarzacz filmów"><link rel="up" href="features.html" title="Rozdzia&#322; 2. Mo&#380;liwo&#347;ci"><link rel="previous" href="codecs.html" title="2.2. Wspierane kodeki"><link rel="next" href="tv-input.html" title="2.4. Wej&#347;cie TV"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">2.3. Urz&#261;dzenia wyj&#347;ciowe</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="codecs.html">Poprzedni</a> </td><th width="60%" align="center">Rozdzia&#322; 2. Mo&#380;liwo&#347;ci</th><td width="20%" align="right"> <a accesskey="n" href="tv-input.html">Nast&#281;pny</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="devices"></a>2.3. Urz&#261;dzenia wyj&#347;ciowe</h2></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="video-dev"></a>2.3.1. Urz&#261;dzenia wyj&#347;cia video</h3></div></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="mtrr"></a>2.3.1.1. Ustawianie MTRR</h4></div></div><p>
 Jest WYSOCE wskazane, aby sprawdzi&#263;, czy rejestry MTRR s&#261; ustawione prawid&#322;owo, 
 poniewa&#380; mog&#261; da&#263; du&#380;y wzrost wydajno&#347;ci.
 </p><p>
@@ -123,7 +123,7 @@ wi&#281;c najlepiej j&#261; sprzedaj.
 </p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Notatka</h3><p>
 Obecnie niejasne jest, które modele kart Savage nie maj&#261; sprz&#281;towej obs&#322;ugi YV12 i 
 robi&#261; to programowo (co jest wolne). Je&#380;eli podejrzewasz o to swoj&#261; kart&#281;, 
-zdob&#261;d&#378; nowsze sterowniki, lub grzecznie popro&#347; o sterownik z obs&#322;ug&#261; MMX/3DNow 
+zdob&#261;d&#378; nowsze sterowniki, lub grzecznie popro&#347; o sterownik z obs&#322;ug&#261; MMX/3DNow!
 na grupie dyskusyjnej mplayer-users 
 </p></div></div><div class="sect5"><div class="titlepage"><div><h6 class="title"><a name="nvidia"></a>2.3.1.2.1.3. Karty nVidia</h6></div></div><p>
 nVidia nie zawsze jest dobrym wyborem dla Linuksa (wg nVidii to 
@@ -138,10 +138,10 @@ karty Riva 128 nie obs&#322;uguj&#261; XVideo nawet ze sterownikami nVidii :(
 Za&#380;alenia sk&#322;adaj do nVidii.
 
 </p><p>
-Jednak&#380;e <span class="application">MPlayer</span> zawiera sterownik <a href="devices.html#vidix" title="2.3.1.2.12. VIDIX">VIDIX</a>
+Jednak&#380;e <span class="application">MPlayer</span> zawiera sterownik <a href="devices.html#vidix" title="2.3.1.2.13. VIDIX">VIDIX</a>
 obs&#322;uguj&#261;cy wi&#281;kszo&#347;&#263; kart nVidia.
 Obecnie znajduje si&#281; w stadium beta i ma pewne ograniczenia. 
-Wi&#281;cej informacji znajdziesz w sekcji <a href="devices.html#vidix-nvidia" title="2.3.1.2.12.5. Karty nVidia">nVidia</a>.
+Wi&#281;cej informacji znajdziesz w sekcji <a href="devices.html#vidix-nvidia" title="2.3.1.2.13.5. Karty nVidia">nVidia</a>.
 </p></div><div class="sect5"><div class="titlepage"><div><h6 class="title"><a name="ati"></a>2.3.1.2.1.4. Karty ATI</h6></div></div><p>
 <a href="http://www.linuxvideo.org/gatos" target="_top">Sterowniki GATOS</a> 
 (których powiniene&#347; u&#380;ywa&#263;, chyba &#380;e masz Rage128 lub Radeon) 
@@ -157,7 +157,7 @@ Oczywi&#347;cie w <span class="application">MPlayerze</span> mo&#380;esz uzyska&
 <span class="bold"><b>przy&#347;pieszane</b></span> wy&#347;wietlanie, 
 z lub bez <span class="bold"><b>wyj&#347;cia TV</b></span>.
 &#379;adne biblioteki czy X nie s&#261; do tego potrzebne. 
-Poczytaj sekcj&#281; o <a href="devices.html#vidix" title="2.3.1.2.12. VIDIX">VIDIX</a>.
+Poczytaj sekcj&#281; o <a href="devices.html#vidix" title="2.3.1.2.13. VIDIX">VIDIX</a>.
 </p></div><div class="sect5"><div class="titlepage"><div><h6 class="title"><a name="neomagic"></a>2.3.1.2.1.5. Karty NeoMagic</h6></div></div><p>
 Te karty mo&#380;na znale&#378;&#263; w wielu laptopach. 
 Musisz u&#380;ywa&#263; XFree86 4.3.0 lub nowszych, lub sterowników Stefana Seyfried'a 
@@ -185,7 +185,7 @@ Je&#380;eli chcesz u&#380;ywa&#263; Xv z kart&#261; trident (zak&#322;adaj&#261;
 zainstaluj XFree 4.2.0. 4.2.0 obs&#322;uguje pe&#322;noekranowe Xv 
 w karcie Cyberblade XP.
 </p><p>
-Alternatyw&#261; jest sterownik <a href="devices.html#vidix" title="2.3.1.2.12. VIDIX">VIDIX</a> dla
+Alternatyw&#261; jest sterownik <a href="devices.html#vidix" title="2.3.1.2.13. VIDIX">VIDIX</a> dla
 karty Cyberblade/i1.
 </p></div><div class="sect5"><div class="titlepage"><div><h6 class="title"><a name="kyro"></a>2.3.1.2.1.7. Karty Kyro/PowerVR</h6></div></div><p>
 Je&#380;eli chcesz u&#380;ywa&#263; Xv z kart&#261; opart&#261; na Kyro 
@@ -539,7 +539,7 @@ ma sprz&#281;towy VSYNC z potrójnym buforowaniem.
 Dzia&#322;a na konsoli framebuffer oraz w X.
 </p><div class="warning" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Ostrze&#380;enie</h3><p>
 Tylko dla Linuksa! Na systemach nie-Linuksowych (testowane na FreeBSD) u&#380;ywaj 
-<a href="devices.html#vidix" title="2.3.1.2.12. VIDIX">VIDIX</a> zamiast tego!
+<a href="devices.html#vidix" title="2.3.1.2.13. VIDIX">VIDIX</a> zamiast tego!
 </p></div><div class="procedure"><p><b>Instalacja</b></p><ol type="1"><li><p>
   Przed u&#380;yciem musisz skompilowa&#263; <tt class="filename">mga_vid.o</tt>:
   <pre class="screen">
@@ -674,7 +674,51 @@ Nie jest to  wykrywane automatycznie przez aalib, ale vo_aa próbuje
 znale&#378;&#263; najlepszy tryb. Spójrz na 
 <a href="http://aa-project.sourceforge.net/tune" target="_top">http://aa-project.sourceforge.net/tune</a>, 
 jest tam wi&#281;cej informacji o dostrajaniu.
-</p></div><div class="sect4"><div class="titlepage"><div><h5 class="title"><a name="vesa"></a>2.3.1.2.10. VESA - wyj&#347;cie na VESA BIOS</h5></div></div><p>
+</p></div><div class="sect4"><div class="titlepage"><div><h5 class="title"><a name="caca"></a>2.3.1.2.10. <tt>libcaca</tt> - Color ASCII
+		Art library (bibliotek kolorowego ASCII-Art)</h5></div></div><p>
+Biblioteka<a href="http://sam.zoy.org/projects/libcaca/" target="_top"><tt>libcaca</tt></a>
+jest bibilotek&#261; produkuj&#261;c&#261; tekst zamiast pikseli, wi&#281;c mo&#380;e pracowa&#263; na
+starszych kartach graficznych oraz terminalach tekstowych. Jest podobna do
+s&#322;unnej biblioteki <tt>AAlib</tt>.
+<tt>libcaca</tt> potrzebuje dop pracy terminalu,
+wi&#281;c powinna dzia&#322;a&#263; na wszystkich systemach Uniksowych (w&#322;&#261;cznie z Mac OS X),
+u&#380;ywaj&#261;c biblioteki
+<tt>slang</tt> lub biblioteki
+<tt>ncurses</tt>, w DOSie u&#380;ywaj&#261;c biblioteki
+<tt>conio.h</tt> i w systemach Windowsowych
+u&#380;ywaj&#261;c <tt>slang</tt> lub
+<tt>ncurses</tt> (poprzez emulacj&#281; Cygwin) b&#261;d&#378;
+<tt>conio.h</tt>. Je&#380;eli
+<tt class="filename">./configure</tt>
+wykryje <tt>libcaca</tt>, to zostanie abudowany
+sterownik caca libvo.
+</p><div class="itemizedlist"><p><b>Ró&#380;nice mi&#281;dzy <tt>AAlib</tt> s&#261;
+		nast&#281;puj&#261;ce:</b></p><ul type="disc"><li>
+   16 dost&#281;pnych kolorów na wyj&#347;ciu znakowym (256 par kolorów)
+  </li><li>
+   dirthering obrazu kolorowego
+  </li></ul></div><div class="itemizedlist"><p><b>Lecz <tt>libcaca</tt> ma tak&#380;e
+	nast&#281;puj&#261;ce ograniczenia:</b></p><ul type="disc"><li>
+   brak obs&#322;ugi jasno&#347;ci, kontrastu, gammy
+  </li></ul></div><p>
+	Aby zmieni&#263; opcje renderowania, mo&#380;esz u&#380;y&#263; pewnych klawiszy w oknie caca:
+</p><div class="informaltable"><table border="1"><colgroup><col><col></colgroup><thead><tr><th>Klawisz</th><th>Akcja</th></tr></thead><tbody><tr><td><span class="keycap"><b>d</b></span></td><td>
+  Prz&#281;&#322;&#261;czanie metod dirtheringu <tt>libcaca</tt>.
+  </td></tr><tr><td><span class="keycap"><b>a</b></span></td><td>
+		Prze&#322;&#261;czanie anyaliasungu (wyg&#322;adzania) <tt>libcaca</tt>.
+  </td></tr><tr><td><span class="keycap"><b>b</b></span></td><td>
+		Prze&#322;&#261;czanie t&#322;a <tt>libcaca</tt>.
+  </td></tr></tbody></table></div><div class="variablelist"><p><b><tt>libcaca</tt> b&#281;dzie tak&#380;e szuka&#263;
+	pewnych zmiennych &#347;rodowiskowych:</b></p><dl><dt><span class="term"><tt class="option">CACA_DRIVER</tt></span></dt><dd>
+    Ustawia zwlecany sterownik caca, np. ncurses, slang, x11.
+    </dd><dt><span class="term"><tt class="option">CACA_GEOMETRY (tylko X11)</tt></span></dt><dd>
+    Okre&#347;la liczb&#281; wierszy i kolumn, np. 128x50.
+    </dd><dt><span class="term"><tt class="option">CACA_FONT (tylko X11)</tt></span></dt><dd>
+    Okre&#347;la jakiej u&#380;y&#263; czcionki, np. fixed, nexus.
+    </dd></dl></div><p>
+	Je&#380;eli Twój komputer nie jest wystarczaj&#261;co szybki aby renderowa&#263;
+	wszystkie ramki, u&#380;yj opcji <tt class="option">-framedrop</tt>.
+</p></div><div class="sect4"><div class="titlepage"><div><h5 class="title"><a name="vesa"></a>2.3.1.2.11. VESA - wyj&#347;cie na VESA BIOS</h5></div></div><p>
 Ten sterownik zosta&#322; stworzony jako 
 <span class="bold"><b>ogólny sterownik</b></span> dla jakiejkolwiek karty, 
 która ma BIOS zgodny z VESA VBE 2.0. Inn&#261; zalet&#261; tego sterownika jest to, 
@@ -769,7 +813,7 @@ po czym prze&#322;&#261;cz si&#281; z powrotem na poprzedni&#261; konsol&#281; w
 Aby uzyska&#263; <span class="bold"><b>dzia&#322;aj&#261;ce wyj&#347;cie TV</b></span> 
 musisz mie&#263; pod&#322;&#261;czony odbiornik TV przed w&#322;&#261;czeniem swojego PC, 
 poniewa&#380; video BIOS inicjalizuje si&#281; tylko podczas procedury POST
-  </li></ul></div></div><div class="sect4"><div class="titlepage"><div><h5 class="title"><a name="x11"></a>2.3.1.2.11. X11</h5></div></div><p>
+  </li></ul></div></div><div class="sect4"><div class="titlepage"><div><h5 class="title"><a name="x11"></a>2.3.1.2.12. X11</h5></div></div><p>
 Unikaj je&#347;li to mo&#380;liwe. Wyj&#347;cie na X11 (u&#380;ywa rozszerzenia wspó&#322;dzielonej pami&#281;ci) 
 nie u&#380;ywa &#380;adnego przy&#347;pieszania sprz&#281;towego. 
 Obs&#322;uguje (przy&#347;pieszane przez MMX/3DNow/SSE, lecz ci&#261;gle wolne) skalowanie programowe. 
@@ -804,7 +848,7 @@ Zmieni ona rozdzielczo&#347;&#263; na tak&#261; jak&#261; ma twój film. Je&#380;
 Je&#380;eli nie mo&#380;esz znale&#378;&#263; trybów, które wstawi&#322;e&#347;, przeszukaj komunikaty XFree86. 
 Niektóre sterowniki nie mog&#261; u&#380;ywa&#263; niskich pixelclock (cz&#281;stotliwo&#347;ci 
 taktowania uk&#322;adu RAMDAC), które s&#261; wymagane dla trybów o niskiej rozdzielczo&#347;ci.
-</p></div><div class="sect4"><div class="titlepage"><div><h5 class="title"><a name="vidix"></a>2.3.1.2.12. VIDIX</h5></div></div><p><b>WST&#280;P. </b>
+</p></div><div class="sect4"><div class="titlepage"><div><h5 class="title"><a name="vidix"></a>2.3.1.2.13. VIDIX</h5></div></div><p><b>WST&#280;P. </b>
 VIDIX jest skrótem od 
 <span class="bold"><b>VID</b></span>eo
 <span class="bold"><b>I</b></span>nterface 
@@ -840,7 +884,7 @@ Wymaga on dla wi&#281;kszo&#347;ci kart dzia&#322;aj&#261;cego i zainicjalizowan
 (albo po prostu zapaskudzisz sobie ekran). Otrzymasz podobny efekt jak przy 
 <tt class="option">-vo mga</tt> lub <tt class="option">-vo fbdev</tt>. Jednak&#380;e karty nVidia
 s&#261; zdolne do wy&#347;wietlania w pe&#322;ni graficznego obrazu w konsoli ca&#322;kowicie tekstowej.
-Wi&#281;cej informacji znajdziesz w sekcji <a href="devices.html#vidix-nvidia" title="2.3.1.2.12.5. Karty nVidia">nvidia_vid</a>.
+Wi&#281;cej informacji znajdziesz w sekcji <a href="devices.html#vidix-nvidia" title="2.3.1.2.13.5. Karty nVidia">nvidia_vid</a>.
   </li><li>
 Mo&#380;esz u&#380;y&#263; podurz&#261;dzenia (subdevice) VIDIX, które zosta&#322;o dodane 
 do rozmaitych sterowników wyj&#347;cia video, takich jak: 
@@ -922,7 +966,7 @@ CFLAGS zawieraj&#261;cy ci&#261;g "svgalib_helper" z
 <tt class="filename">libdha/Makefile</tt>.
   </p></li><li><p>
 Przekompiluj i zainstaluj libdha
-  </p></li></ol></div><div class="sect5"><div class="titlepage"><div><h6 class="title"><a name="vidix-ati"></a>2.3.1.2.12.1. Karty ATI</h6></div></div><p>
+  </p></li></ol></div><div class="sect5"><div class="titlepage"><div><h6 class="title"><a name="vidix-ati"></a>2.3.1.2.13.1. Karty ATI</h6></div></div><p>
 Obecnie wi&#281;kszo&#347;&#263; kart ATI jest obs&#322;ugiwana natywnie, 
 od Mach64 do najnowszych Radeonów.
 </p><p>
@@ -930,21 +974,21 @@ S&#261; dwie skompilowanie binarki: <tt class="filename">radeon_vid</tt> dla Rad
 <tt class="filename">rage128_vid</tt> dla kart Rage 128. 
 Mo&#380;esz wymusi&#263; jedn&#261; z nich lub pozwoli&#263; systemowi VIDIX na autodetekcj&#281; 
 dost&#281;pnych sterowników.
-</p></div><div class="sect5"><div class="titlepage"><div><h6 class="title"><a name="vidix-mga"></a>2.3.1.2.12.2. Karty Matrox</h6></div></div><p>
+</p></div><div class="sect5"><div class="titlepage"><div><h6 class="title"><a name="vidix-mga"></a>2.3.1.2.13.2. Karty Matrox</h6></div></div><p>
 Matrox G200, G400, G450 i G550 zg&#322;oszono jako dzia&#322;aj&#261;ce.
 </p><p>
 Sterownik obs&#322;uguje korektory (equalizery) video i powinien by&#263; prawie tak szybki jak 
 <a href="devices.html#mga_vid" title="2.3.1.2.6. Bufor ramki Matrox (mga_vid)">Matrox framebuffer</a>
-</p></div><div class="sect5"><div class="titlepage"><div><h6 class="title"><a name="vidix-trident"></a>2.3.1.2.12.3. Karty Trident</h6></div></div><p>
+</p></div><div class="sect5"><div class="titlepage"><div><h6 class="title"><a name="vidix-trident"></a>2.3.1.2.13.3. Karty Trident</h6></div></div><p>
 Jest dost&#281;pny sterownik dla uk&#322;adu Trident Cyberblade/i1, który mo&#380;na znale&#378;&#263; 
 na p&#322;ytach g&#322;ównych VIA Epia.
 </p><p>
 Sterownik ten zosta&#322; napisany (i jest utrzymywany) przez
 <a href="http://www.blackfiveservices.co.uk/EPIAVidix.shtml" target="_top">Alastaira M. Robinsona</a>
-</p></div><div class="sect5"><div class="titlepage"><div><h6 class="title"><a name="vidix-3dlabs"></a>2.3.1.2.12.4. Karty 3DLabs</h6></div></div><p>
+</p></div><div class="sect5"><div class="titlepage"><div><h6 class="title"><a name="vidix-3dlabs"></a>2.3.1.2.13.4. Karty 3DLabs</h6></div></div><p>
 Chocia&#380; istnieje sterownik dla uk&#322;adów 3DLabs GLINT R3 oraz Permedia3, 
 to nikt go nie testowa&#322; (sprawozdania s&#261; mile widziane)
-</p></div><div class="sect5"><div class="titlepage"><div><h6 class="title"><a name="vidix-nvidia"></a>2.3.1.2.12.5. Karty nVidia</h6></div></div><p>
+</p></div><div class="sect5"><div class="titlepage"><div><h6 class="title"><a name="vidix-nvidia"></a>2.3.1.2.13.5. Karty nVidia</h6></div></div><p>
 Dost&#281;pny jest stosunkowo nowy sterownik nVidia, dzia&#322;a na kartach Riva128, TNT i 
 GeForce2. Doniesiono nam, &#380;e na innych te&#380; dzia&#322;a.
 </p><div class="itemizedlist"><p><b>OGRANICZENIA</b></p><ul type="disc" compact><li><p>
@@ -973,7 +1017,7 @@ poni&#380;szy przyk&#322;ad:
   </pre>
 </p><p>
 Czekamy na raporty!
-</p></div><div class="sect5"><div class="titlepage"><div><h6 class="title"><a name="vidix-sis"></a>2.3.1.2.12.6. Karty SiS</h6></div></div><p>
+</p></div><div class="sect5"><div class="titlepage"><div><h6 class="title"><a name="vidix-sis"></a>2.3.1.2.13.6. Karty SiS</h6></div></div><p>
 Jest to kod wysoce eksperymentalny. (Tak jak nvidia_vid).
 </p><p>
 Przetestowano go na SiS 650/651/740 (najcz&#281;&#347;ciej u&#380;ywane uk&#322;ady w SiSowskiej
@@ -981,7 +1025,7 @@ wersji "Shuttle XPC")
 
 </p><p>
 Czekamy na raporty!
-</p></div></div><div class="sect4"><div class="titlepage"><div><h5 class="title"><a name="directfb"></a>2.3.1.2.13. DirectFB</h5></div></div><blockquote class="blockquote"><p>
+</p></div></div><div class="sect4"><div class="titlepage"><div><h5 class="title"><a name="directfb"></a>2.3.1.2.14. DirectFB</h5></div></div><blockquote class="blockquote"><p>
 "DirectFB jest bibliotek&#261; graficzn&#261;, która by&#322;a tworzona z my&#347;l&#261; o 
 systemach typu embedded.
 Oferuje ona maksymaln&#261; przy&#347;pieszan&#261; sprz&#281;towo wydajno&#347;&#263; przy minimalnym zu&#380;yciu 
@@ -998,8 +1042,8 @@ Zawsze próbuj u&#380;ywa&#263; najnowszej wersji DirectFB.
 Mo&#380;esz u&#380;ywa&#263; opcji DirectFB w linii polece&#324;, u&#380;ywaj&#261;c opcji <tt class="option">-dfbopts</tt>. 
 Wyboru warstwy mo&#380;na dokona&#263; metod&#261; podurz&#261;dzenia. 
 Przyk&#322;ad: <tt class="option">-vo directfb:2</tt> (standardow&#261; jest warstwa -1 : autodetekcja)
-</p></div><div class="sect4"><div class="titlepage"><div><h5 class="title"><a name="dfbmga"></a>2.3.1.2.14. DirectFB/Matrox (dfbmga)</h5></div></div><p>
-Przeczytaj prosz&#281; g&#322;ówn&#261; sekcj&#281; <a href="devices.html#directfb" title="2.3.1.2.13. DirectFB">DirectFB</a>, znajdziesz tam
+</p></div><div class="sect4"><div class="titlepage"><div><h5 class="title"><a name="dfbmga"></a>2.3.1.2.15. DirectFB/Matrox (dfbmga)</h5></div></div><p>
+Przeczytaj prosz&#281; g&#322;ówn&#261; sekcj&#281; <a href="devices.html#directfb" title="2.3.1.2.14. DirectFB">DirectFB</a>, znajdziesz tam
 ogólne informacje. 
 </p><p>
 Ten sterownik wyj&#347;cia video w&#322;&#261;czy CRTC2 
@@ -1110,6 +1154,13 @@ naziemnego), to mo&#380;esz zapisa&#263; swoje pliki kana&#322;ów jako:
 </p><pre class="screen">
   mplayer dvb://R1
 </pre><p>
+	Je&#380;eli masz wi&#281;cej ni&#380; jedn&#261; kart&#281;, b&#281;dziesz musia&#322; okre&#347;li&#263; numer
+	karty, na której jest widoczny kana&#322; (np. 2), ko&#380;ystaj&#261;c z nast&#281;puj&#261;cej
+	sk&#322;adni:
+</p><pre class="screen">
+   mplayer dvb://2@R1
+ </pre><p>
+
   Aby prze&#322;&#261;cza&#263; kana&#322;y u&#380;ywaj klawiszy <span class="keycap"><b>h</b></span> (nast&#281;pny) oraz
   <span class="keycap"><b>k</b></span> (poprzedni) lub skorzystaj z menu OSD (wymaga dzia&#322;aj&#261;cego 
   <a href="subosd.html" title="1.4. Napisy i OSD">podsystemu OSD</a>).
@@ -1119,7 +1170,9 @@ naziemnego), to mo&#380;esz zapisa&#263; swoje pliki kana&#322;ów jako:
   <tt class="filename">etc/dvb-menu.conf</tt> (którego mo&#380;esz u&#380;y&#263; do nadpisania 
   <tt class="filename">~/.mplayer/menu.conf</tt>), w menu g&#322;ównym poka&#380;e si&#281;
   podmenu, które zezwoli Ci na wybór jednego kana&#322;u z obecnych w Twoim 
-  <tt class="filename">channels.conf</tt>.
+  <tt class="filename">channels.conf</tt>, mo&#380;liwe, &#380;e poprzedzone menu z list&#261;
+  dost&#281;pnych kart, je&#380;eli wi&#281;cej ni&#380; jedna jest u&#380;ywalna z
+  <span class="application">MPlayerem</span>.
 </p><p>
   Je&#380;eli chcesz zapisa&#263; program (audycj&#281;) na dysku u&#380;yj 
 </p><pre class="screen">
@@ -1311,6 +1364,7 @@ tylko do DC10+ a opcje po drogim <tt class="option">-zrcrop</tt> odnosz&#261; si
 Ilo&#347;&#263; kart uczestnicz&#261;cych w <span class="emphasis"><i>cinerama</i></span> ograniczona jest do
 czterech, wi&#281;c mo&#380;esz zbudowa&#263; ekran (&#347;cian&#281; video:) 2x2.
 
+
 </p><p>
 Na koniec - wa&#380;na uwaga: Nie w&#322;&#261;czaj ani wy&#322;&#261;czaj XawTV na urz&#261;dzeniu
 odtwarzaj&#261;cym - zawiesisz swój komputer. W porz&#261;dku jest 
@@ -1321,8 +1375,14 @@ poczeka&#263; a&#380; <span class="application">MPlayer</span> zako&#324;czy dzi
 </p></div><div class="sect4"><div class="titlepage"><div><h5 class="title"><a name="blinkenlights"></a>2.3.1.4.2. Blinkenlights</h5></div></div><p>
 Ten sterownik zdolny jest do odtwarzanie u&#380;ywaj&#261;c protoko&#322;u UDP Blinkenlights
 (mrugaj&#261;ce &#347;wiat&#322;a - przyp. t&#322;um.). Je&#380;eli nie wiesz czym jest 
-<a href="http://www.blinkenlights.de/" target="_top">Blinkenlights</a>,
-nie potrzebujesz tego sterownika.
+<a href="http://www.blinkenlights.de/" target="_top">Blinkenlights</a>
+lub jego nast&#281;pca - <a href="http://www.blinkenlights.de/arcade/" target="_top">Arcade</a>,
+dowiedz si&#281;. Pomimo, &#380;e prawdopodobnie jest to najmniej u&#380;ywane wyj&#347;cie video,
+z pewno&#347;ci&#261; jest najfajniejszym jakie <span class="application">MPlayer</span> ma
+do zaoferowania. Po prostu poogl&#261;daj kilka 
+<a href="http://www.blinkenlights.de/video.en.html" target="_top">dokumentacyjnych filmów
+Blinkenlights</a>. Na filmie Arcade mo&#380;esz zobaczy&#263; sterownik wyj&#347;ciowy
+Blinkenlights w akcji w 00:07:50.
 </p></div></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="tvout"></a>2.3.1.5. Obs&#322;uga wyj&#347;cia TV</h4></div></div><div class="sect4"><div class="titlepage"><div><h5 class="title"><a name="tvout-mga-g400"></a>2.3.1.5.1. Karty Matrox G400</h5></div></div><p>
 Pod Linuksem istniej&#261; dwa sposoby uruchomienia wyj&#347;cia TV na karcie Matrox G400:
 </p><div class="important" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">WA&#379;NE</h3><p>
@@ -1435,27 +1495,27 @@ sterownika j&#261;dra matroxfb - Petr Vandrovec - by&#263; mo&#380;e zrobi obs&#
 wy&#347;wietlanie wyj&#347;cia z pierwszego CRTC na obydwa z&#322;&#261;cza jednocze&#347;nie, jak to
 jest w tej chwili zalecane dla G400 (-&gt; sekcja wy&#380;ej).
 </p><p>
-Potrzebn&#261; &#322;atk&#281; na j&#261;dro i dok&#322;adne howto mo&#380;na &#347;ci&#261;gn&#261;&#263; z 
+Potrzebn&#261; &#322;atk&#281; na j&#261;dro i dok&#322;adne HOWTO mo&#380;na &#347;ci&#261;gn&#261;&#263; z 
 <a href="http://www.bglug.ca/matrox_tvout/" target="_top">http://www.bglug.ca/matrox_tvout/</a>
 </p></div><div class="sect4"><div class="titlepage"><div><h5 class="title"><a name="tvout-ati"></a>2.3.1.5.3. karty ATI</h5></div></div><p><b>WST&#280;P. </b>
 Obecnie ATI nie chce wspiera&#263; pod Linuksem &#380;adnego z uk&#322;adów TV-out, z powodu ich
 licencjonowanej technologii Macrovision.
 </p><div class="itemizedlist"><p><b>STATUS KART ATI Z TV-OUT POD LINUKSEM</b></p><ul type="disc"><li>
   <span class="bold"><b>ATI Mach64</b></span>:
-  obs&#322;ugiwane przez <a href="http://gatos.sf.net" target="_top">gatos</a>.
+  obs&#322;ugiwane przez <a href="http://gatos.sf.net" target="_top">GATOS</a>.
   </li><li>
   <span class="bold"><b>ASIC Radeon VIVO</b></span>:
   obs&#322;ugiwane przez <a href="http://gatos.sf.net" target="_top">gatos</a>.
   </li><li>
   <span class="bold"><b>Radeon</b></span> oraz <span class="bold"><b>Rage128</b></span>:
   obs&#322;ugiwane przez <span class="application">MPlayera</span>!
-  Sprawd&#378; sekcje <a href="devices.html#vesa" title="2.3.1.2.10. VESA - wyj&#347;cie na VESA BIOS">sterownik VESA</a> oraz
-  <a href="devices.html#vidix" title="2.3.1.2.12. VIDIX">VIDIX</a>.
+  Sprawd&#378; sekcje <a href="devices.html#vesa" title="2.3.1.2.11. VESA - wyj&#347;cie na VESA BIOS">sterownik VESA</a> oraz
+  <a href="devices.html#vidix" title="2.3.1.2.13. VIDIX">VIDIX</a>.
   </li><li>
   <span class="bold"><b>Rage Mobility P/M, Radeon, Rage 128, Mobility M3/M4</b></span>:
   obs&#322;ugiwane przez <a href="http://www.stud.uni-hamburg.de/users/lennart/projects/atitvout/" target="_top">atitvout</a>.
   </li></ul></div><p>
-Na innych kartach u&#380;ywaj sterownika <a href="devices.html#vesa" title="2.3.1.2.10. VESA - wyj&#347;cie na VESA BIOS">VESA</a>, bez VIDIX.
+Na innych kartach u&#380;ywaj sterownika <a href="devices.html#vesa" title="2.3.1.2.11. VESA - wyj&#347;cie na VESA BIOS">VESA</a>, bez VIDIX.
 Potrzebny jest jednak pot&#281;&#380;ny CPU.
 </p><p>
 Jedyna rzecz, któr&#261; musisz zrobi&#263; to: 
@@ -1530,6 +1590,8 @@ Interfejs audio <span class="application">MPlayera</span> nazywa si&#281;
   rdzenny sterownik ARTS (g&#322;ównie dla u&#380;ytkowników KDE)
   </td></tr><tr><td>esd</td><td>
   rdzenny sterownik ESD (g&#322;ównie dla u&#380;ytkowników GNOMEa)
+  </td></tr><tr><td>jack</td><td>
+  sterownik JACK (Jack Audio Connection Kit)
   </td></tr></tbody></table></div><p>
 Sterowniki kart d&#378;wi&#281;kowych przeznaczone dla Linuksa maj&#261; problemy 
 zwi&#261;zane z kompatybilno&#347;ci&#261;. Dzieje si&#281; tak, poniewa&#380; <span class="application">MPlayer</span> 
@@ -1590,7 +1652,7 @@ komercyjn&#261; wersj&#281; OSS z witryny
 <a href="http://www.opensound.com/" target="_top">4Front Technologies</a>.
 Obs&#322;uguje ona równie&#380; kilka innych systemów poza Linuksem.
 </p><div class="informaltable"><table border="1"><colgroup><col><col><col><col><col><col><col><col></colgroup><thead><tr><th rowspan="3" valign="middle">KARTA D&#377;WI&#280;KOWA</th><th colspan="4">STEROWNIK</th><th rowspan="3" valign="middle">Maks. cz&#281;stotliwo&#347;&#263; (kHz)</th><th rowspan="3" valign="middle">Maks. liczba kana&#322;ów</th><th rowspan="3" valign="middle">Maks. liczba aplikacji
-      <sup>[<a name="maxopens" href="#ftn.maxopens">a</a>]</sup></th></tr><tr><th>OSS/Free</th><th>ALSA</th><th>OSS/Pro</th><th>inne</th></tr></thead><tbody><tr><td>Zintegrowane karty VIA (686/A/B, 8233, 8235)</td><td><a href="http://sourceforge.net/project/showfiles.php?group_id=3242&amp;release_id=59602" target="_top">via82cxxx_audio</a></td><td>snd-via82xx</td><td> </td><td> </td><td>4-48 kHz lub wy&#322;&#261;cznie 48 kHz, w zale&#380;no&#347;ci od uk&#322;adu</td><td> </td><td> </td></tr><tr><td>Aureal Vortex 2</td><td>brak</td><td>brak</td><td>OK</td><td><a href="http://aureal.sourceforge.net" target="_top">Sterowniki do Aureala dla Linuksa </a><a href="http://makacs.poliod.hu/~pontscho/aureal/au88xx-1.1.3.tar.bz2" target="_top"> bufor zwi&#281;kszony do 32k</a></td><td>48</td><td>4.1</td><td>5+</td></tr><tr><td>SB Live!</td><td>Wyj&#347;cie analogowe-OK, SP/DIF nie dzia&#322;a</td><td>Oba dzia&#322;aj&#261;</td><td>Oba dzia&#322;aj&#261;</td><td><a href="http://opensource.creative.com" target="_top">Sterowniki OSS Creative'a (obs&#322;uga SP/DIF)</a></td><td>192</td><td>4.0/5.1</td><td>32</td></tr><tr><td>SB 128 PCI (es1371)</td><td>OK</td><td>?</td><td> </td><td> </td><td>48</td><td>stereo</td><td>2</td></tr><tr><td>SB AWE 64</td><td>max 44kHz</td><td>&#378;le brzmi na 48kHz</td><td> </td><td> </td><td>48</td><td> </td><td> </td></tr><tr><td>GUS PnP</td><td>brak</td><td>OK</td><td>OK</td><td> </td><td>48</td><td> </td><td> </td></tr><tr><td>Gravis UltraSound ACE</td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr><tr><td>Gravis UltraSound MAX</td><td>OK</td><td>OK (?)</td><td> </td><td> </td><td>48</td><td> </td><td> </td></tr><tr><td>ESS 688</td><td>OK</td><td>OK (?)</td><td> </td><td> </td><td>48</td><td> </td><td> </td></tr><tr><td>Karty C-Media (CMI8338/8738)</td><td>OK</td><td>OK SP/DIF jest obs&#322;ugiwane przez ALSA 0.9.x</td><td>?</td><td> </td><td>44</td><td>stereo</td><td>1</td></tr><tr><td>Karty Yamaha (*ymf*)</td><td>z&#322;e (?) (mo&#380;e <tt class="option">-ao sdl</tt>)</td><td>Dzia&#322;a poprawnie tylko z ALSA 0.5 z w&#322;&#261;czon&#261; emulacj&#261; OSS
+      <sup>[<a name="maxopens" href="#ftn.maxopens">a</a>]</sup></th></tr><tr><th>OSS/Free</th><th>ALSA</th><th>OSS/Pro</th><th>inne</th></tr></thead><tbody><tr><td>Zintegrowane karty VIA (686/A/B, 8233, 8235)</td><td><a href="http://sourceforge.net/project/showfiles.php?group_id=3242&amp;release_id=59602" target="_top">via82cxxx_audio</a></td><td>snd-via82xx</td><td> </td><td> </td><td>4-48 kHz lub wy&#322;&#261;cznie 48 kHz, w zale&#380;no&#347;ci od uk&#322;adu</td><td> </td><td> </td></tr><tr><td>Aureal Vortex 2</td><td>brak</td><td>brak</td><td>OK</td><td><a href="http://aureal.sourceforge.net" target="_top">Sterowniki do Aureala dla Linuksa </a><a href="http://makacs.poliod.hu/~pontscho/aureal/au88xx-1.1.3.tar.bz2" target="_top"> bufor zwi&#281;kszony do 32k</a></td><td>48</td><td>4.1</td><td>5+</td></tr><tr><td>SB Live!</td><td>Wyj&#347;cie analogowe-OK, S/PDIF nie dzia&#322;a</td><td>Oba dzia&#322;aj&#261;</td><td>Oba dzia&#322;aj&#261;</td><td><a href="http://opensource.creative.com" target="_top">Sterowniki OSS Creative'a (obs&#322;uga S/PDIF)</a></td><td>192</td><td>4.0/5.1</td><td>32</td></tr><tr><td>SB 128 PCI (es1371)</td><td>OK</td><td>?</td><td> </td><td> </td><td>48</td><td>stereo</td><td>2</td></tr><tr><td>SB AWE 64</td><td>max 44kHz</td><td>&#378;le brzmi na 48kHz</td><td> </td><td> </td><td>48</td><td> </td><td> </td></tr><tr><td>GUS PnP</td><td>brak</td><td>OK</td><td>OK</td><td> </td><td>48</td><td> </td><td> </td></tr><tr><td>Gravis UltraSound ACE</td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr><tr><td>Gravis UltraSound MAX</td><td>OK</td><td>OK (?)</td><td> </td><td> </td><td>48</td><td> </td><td> </td></tr><tr><td>ESS 688</td><td>OK</td><td>OK (?)</td><td> </td><td> </td><td>48</td><td> </td><td> </td></tr><tr><td>Karty C-Media (CMI8338/8738)</td><td>OK</td><td>OK S/PDIF jest obs&#322;ugiwane przez ALSA 0.9.x</td><td>?</td><td> </td><td>44</td><td>stereo</td><td>1</td></tr><tr><td>Karty Yamaha (*ymf*)</td><td>z&#322;e (?) (mo&#380;e <tt class="option">-ao sdl</tt>)</td><td>Dzia&#322;a poprawnie tylko z ALSA 0.5 z w&#322;&#261;czon&#261; emulacj&#261; OSS
       <span class="bold"><b>i</b></span><tt class="option">-ao sdl</tt> (!) (?)</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr><tr><td>Karty z uk&#322;adem envy24 (np. Terratec EWS88MT)</td><td>?</td><td>?</td><td>OK</td><td> </td><td>?</td><td> </td><td> </td></tr><tr><td>PC Speaker lub DAC</td><td>OK</td><td>brak</td><td> </td><td><a href="http://www.geocities.com/stssppnn/pcsp.html" target="_top">Sterowniki do PC speakera dla Linuksa (OSS)</a></td><td>Sterownik emuluje 44.1, mo&#380;e wi&#281;cej.</td><td>mono</td><td>1</td></tr></tbody><tbody class="footnotes"><tr><td colspan="8"><div class="footnote"><p><sup>[<a name="ftn.maxopens" href="#maxopens">a</a>] </sup><sup>[<a name="ftn.maxopens" href="#maxopens">a</a>] </sup>liczba aplikacji, które mog&#261; <span class="emphasis"><i>jednocze&#347;nie</i></span>
          u&#380;ywa&#263; urz&#261;dzenia.</p></div></td></tr></tbody></table></div><p>
 Pomoc przy tworzeniu tego dokumentu jest mile widziana. Powiedz jak

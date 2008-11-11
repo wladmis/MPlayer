@@ -1,4 +1,4 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>2.3. Output devices</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - The Movie Player for LINUX"><link rel="up" href="features.html" title="Chapter 2. Features"><link rel="previous" href="codecs.html" title="2.2. Supported codecs"><link rel="next" href="tv-input.html" title="2.4. TV input"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">2.3. Output devices</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="codecs.html">Prev</a> </td><th width="60%" align="center">Chapter 2. Features</th><td width="20%" align="right"> <a accesskey="n" href="tv-input.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="devices"></a>2.3. Output devices</h2></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="video-dev"></a>2.3.1. Video output devices</h3></div></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="mtrr"></a>2.3.1.1. Setting up MTRR</h4></div></div><p>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>2.3. Output devices</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - The Movie Player"><link rel="up" href="features.html" title="Chapter 2. Features"><link rel="previous" href="codecs.html" title="2.2. Supported codecs"><link rel="next" href="tv-input.html" title="2.4. TV input"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">2.3. Output devices</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="codecs.html">Prev</a> </td><th width="60%" align="center">Chapter 2. Features</th><td width="20%" align="right"> <a accesskey="n" href="tv-input.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="devices"></a>2.3. Output devices</h2></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="video-dev"></a>2.3.1. Video output devices</h3></div></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="mtrr"></a>2.3.1.1. Setting up MTRR</h4></div></div><p>
 It is VERY recommended to check if the MTRR registers
 are set up properly, because they can give a big performance boost.
 </p><p>
@@ -42,9 +42,9 @@ with 32MB ram (<tt>size=0x2000000</tt>) just execute:
 echo "base=0xd8000000 size=0x2000000 type=write-combining" &gt;| /proc/mtrr
 </pre>
 </p><p>
-Not all CPUs support MTRRs. For example older K6-2's (around 266MHz,
-stepping 0) doesn't support MTRR, but stepping 12's do
-(<b>cat /proc/cpuinfo</b> to check it).
+Not all CPUs have MTRRs. For example older K6-2 (around 266MHz,
+stepping 0) CPUs don't have MTRRs, but stepping 12 does
+(execute <b>cat /proc/cpuinfo</b> to check it).
 </p></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="output-trad"></a>2.3.1.2. Video outputs for traditional video cards</h4></div></div><div class="sect4"><div class="titlepage"><div><h5 class="title"><a name="xv"></a>2.3.1.2.1. Xv</h5></div></div><p>
 Under XFree86 4.0.2 or newer, you can use your card's hardware YUV routines
 using the XVideo extension. This is what the option
@@ -123,12 +123,12 @@ xv support, but the card itself is very slow, so you better sell it.
 </p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
 It's currently unclear which Savage models lack YV12 support, and convert by
 driver (slow). If you suspect your card, get a newer driver, or ask politely
-on the mplayer-users mailing list for an MMX/3DNow enabled driver.
+on the mplayer-users mailing list for an MMX/3DNow! enabled driver.
 </p></div></div><div class="sect5"><div class="titlepage"><div><h6 class="title"><a name="nvidia"></a>2.3.1.2.1.3. nVidia cards</h6></div></div><p>
 nVidia isn't always a very good choice under Linux (according to nVidia, this
 is <a href="nvidia-opinions.html" title="E.3. nVidia">not true</a>)... XFree86's
 open-source driver supports most of these cards, but for some cases, you'll
-have to use the binary closed-source nVidia driver, available at 
+have to use the binary closed-source nVidia driver, available at
 <a href="http://www.nvidia.com/object/linux.html" target="_top">nVidia's web site</a>.
 You'll always need this driver if you want 3D acceleration, too.
 </p><p>
@@ -526,7 +526,7 @@ make</pre>
   </p></li><li><p>
   To make it load/unload automatically when needed, first insert the
   following line at the end of <tt class="filename">/etc/modules.conf</tt>:
-  
+
   <pre class="programlisting">alias char-major-178 mga_vid</pre>
 
   Then copy the <tt class="filename">mga_vid.o</tt> module to the appropriate
@@ -626,7 +626,7 @@ important:</b></p><dl><dt><span class="term"><tt class="option">-aadriver</tt></
 The rendering is very CPU intensive, especially when using AA-on-X
 (using aalib on X), and it's least CPU intensive on standard,
 non-framebuffer console. Use SVGATextMode to set up a big textmode,
-then enjoy! (secondary head Hercules cards rock :)) (but imho you
+then enjoy! (secondary head Hercules cards rock :)) (but IMHO you
 can use <tt class="option">-vf 1bpp</tt> option to get graphics on hgafb:)
 </p></div><p>
 Use the <tt class="option">-framedrop</tt> option if your computer isn't fast
@@ -639,7 +639,7 @@ need write access on
 That isn't autodetected by aalib, but vo_aa tries to find the best mode.
 See <a href="http://aa-project.sourceforge.net/tune" target="_top">http://aa-project.sourceforge.net/tune</a> for further
 tuning issues.
-</p></div><div class="sect4"><div class="titlepage"><div><h5 class="title"><a name="caca"></a>2.3.1.2.10. <tt>libcaca</tt> - Colour AsCii Art library</h5></div></div><p>
+</p></div><div class="sect4"><div class="titlepage"><div><h5 class="title"><a name="caca"></a>2.3.1.2.10. <tt>libcaca</tt> - Color ASCII Art library</h5></div></div><p>
 The <a href="http://sam.zoy.org/projects/libcaca/" target="_top"><tt>libcaca</tt></a>
 library is a graphics library that outputs text instead of pixels, so that it
 can work on older video cards or text terminals. It is not unlike the famous
@@ -657,7 +657,7 @@ detects <tt>libcaca</tt>, the caca libvo driver
 will be built.
 </p><div class="itemizedlist"><p><b>The differences with <tt>AAlib</tt> are
   the following:</b></p><ul type="disc"><li>
-   16 available colours for character output (256 colour pairs)
+   16 available colors for character output (256 color pairs)
   </li><li>
    color image dithering
   </li></ul></div><div class="itemizedlist"><p><b>But <tt>libcaca</tt> also has the
@@ -725,7 +725,7 @@ at least.)
   </li><li>
   If you have VESA VBE 3.0+, and you had specified
   <tt class="option">monitor-hfreq, monitor-vfreq, monitor-dotclock</tt> somewhere
-  (config file, or commandline) you will get the highest possible refresh rate.
+  (config file, or command line) you will get the highest possible refresh rate.
   (Using General Timing Formula). To enable this feature you have to specify
   <span class="bold"><b>all</b></span> your monitor options.
   </li></ul></div><div class="itemizedlist"><p><b>DISADVANTAGES</b></p><ul type="disc" compact><li>
@@ -772,7 +772,7 @@ Avoid if possible. Outputs to X11 (uses shared memory extension), with no
 hardware acceleration at all. Supports (MMX/3DNow/SSE accelerated, but
 still slow) software scaling, use the options <tt class="option">-fs -zoom</tt>.
 Most cards have hardware scaling support, use the <tt class="option">-vo xv</tt>
-output for them, or <tt class="option">-vo xmga</tt> for Matroxes.
+output for them, or <tt class="option">-vo xmga</tt> for Matrox cards.
 </p><p>
 The problem is that most cards' driver doesn't support hardware
 acceleration on the second head/TV. In those cases, you see green/blue
@@ -808,9 +808,9 @@ portable.
 </p><p>
 This interface was designed as an attempt to fit existing video
 acceleration interfaces (known as mga_vid, rage128_vid, radeon_vid,
-pm3_vid) into a fixed scheme. It provides highlevel interface to chips
+pm3_vid) into a fixed scheme. It provides a high level interface to chips
 which are known as BES (BackEnd scalers) or OV (Video Overlays). It doesn't
-provide lowlevel interface to things which are known as graphics servers.
+provide low level interface to things which are known as graphics servers.
 (I don't want to compete with X11 team in graphics mode switching). I.e.
 main goal of this interface is to maximize the speed of video playback.
 </p><div class="itemizedlist"><p><b>USAGE</b></p><ul type="disc" compact><li>
@@ -890,7 +890,7 @@ Alternatively, you can use a special kernel module, like this:
   directory (it can be found inside the <tt class="filename">svgalib-1.9.17/kernel/</tt>
   directory if you've downloaded the source from the svgalib site) and insmod it.
   </p></li><li><p>
-  To create the neccessary devices in the <tt class="filename">/dev</tt>
+  To create the necessary devices in the <tt class="filename">/dev</tt>
   directory, do a <pre class="screen">make device</pre> in the <tt class="filename">svgalib_helper</tt>
   dir, as root.
   </p></li><li><p>
@@ -956,7 +956,7 @@ Reports awaited!
 </p></div><div class="sect5"><div class="titlepage"><div><h6 class="title"><a name="vidix-sis"></a>2.3.1.2.13.6. SiS cards</h6></div></div><p>
 This is very experimental code, just like nvidia_vid.
 </p><p>
-It's been tested on SiS 650/651/740 (the most common chipsets used in the 
+It's been tested on SiS 650/651/740 (the most common chipsets used in the
 SiS versions of the "Shuttle XPC" barebones boxes out there)
 </p><p>
 Reports awaited!
@@ -982,9 +982,9 @@ This video output driver will enable CRTC2 (on the second head) on Matrox
 G400/G450/G550 cards, displaying video
 <span class="bold"><b>independent</b></span> of the first head.
 </p><p>
-Ville Syrjala's has a 
+Ville Syrjala's has a
 <a href="http://www.sci.fi/~syrjala/directfb/Matrox_TV-out_README.txt" target="_top">README</a>
-and a 
+and a
 <a href="http://www.sci.fi/~syrjala/directfb/matrox_tv-out_howto" target="_top">HOWTO</a>
 on his homepage that explain how to make DirectFB TV output run on Matrox cards.
 </p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
@@ -1075,6 +1075,14 @@ for a 16:9 TV: -vf dvbscale=1024,scale=-1:0,expand=-1:576:-1:-1:1
   <span class="application">MPlayer</span> will try to skip to the next visible one,
   but it may take long if there are many consecutive encrypted channels.
 </p><p>
+  In your audio and video fields you can use an extended syntax:
+  <tt class="option">...:pid[+pid]:...</tt> (for a maximum of 6 pids each);
+  in this case <span class="application">MPlayer</span> will include in the
+  stream all the indicated pids, plus pid 0 (that contains the PAT).
+  You are encouraged to include in each row the PMT pid for the
+  corresponding channel (if you know it).
+  Other possible uses are: televideo pid, second audio track, etc.
+</p><p>
   To show the first of the channels present in your list, run
 </p><pre class="screen">
   mplayer dvb://
@@ -1083,8 +1091,8 @@ for a 16:9 TV: -vf dvbscale=1024,scale=-1:0,expand=-1:576:-1:-1:1
 </p><pre class="screen">
   mplayer dvb://R1
 </pre><p>
-  If you have more than one card you also need to specify the number of the card 
-  where the channel is visibile (e.g. 2) with the syntax:
+  If you have more than one card you also need to specify the number of the card
+  where the channel is visible (e.g. 2) with the syntax:
 </p><pre class="screen">
   mplayer dvb://2@R1
 </pre><p>
@@ -1164,12 +1172,12 @@ With prebuffering video playback is <span class="bold"><b>much</b></span>
 less sensitive to other programs hogging the CPU, it will not drop frames unless
 applications hog the CPU for a long time.
 When running without prebuffering the em8300 is much more sensitive to CPU load,
-so it is highly suggested that you turn on <span class="application">MPlayer's</span>
+so it is highly suggested that you turn on <span class="application">MPlayer</span>'s
 <tt class="option">-framedrop</tt> option to avoid further loss of sync.
 <tt class="option">sync</tt> will turn on the new sync-engine. This is currently an
 experimental feature. With the sync feature turned on the em8300's internal clock
 will be monitored at all times, if it starts to deviate from
-<span class="application">MPlayer's</span> clock it will be reset causing the em8300 to
+<span class="application">MPlayer</span>'s clock it will be reset causing the em8300 to
 drop any frames that are lagging behind.
 <tt class="option">norm=x</tt> will set the TV norm of the DXR3 card without the need
 for external tools like em8300setup. Valid norms are 5 = NTSC, 4 = PAL-60,
@@ -1208,7 +1216,7 @@ this is unknown to us. If you set it to somewhere between 25 and 27 the picture
 becomes stable. For now all we can do is accept this for a fact.
 </p></dd><dt><span class="term"><tt class="option">-vf expand=-1:-1:-1:-1:1</tt></span></dt><dd><p>
 Although the DXR3 driver can put some OSD onto the MPEG1/2/4 video, it has
-much lower quality than <span class="application">MPlayer's</span> traditional OSD,
+much lower quality than <span class="application">MPlayer</span>'s traditional OSD,
 and has several refresh problems as well. The command line above will firstly
 convert the input video to MPEG4 (this is mandatory, sorry), then apply an
 expand filter which won't expand anything (-1: default), but apply the normal
@@ -1216,7 +1224,7 @@ OSD onto the picture (that's what the "1" at the end does).
 </p></dd><dt><span class="term"><tt class="option">-ac hwac3</tt></span></dt><dd><p>
 The em8300 supports playing back AC3 audio (surround sound) through the
 digital audio output of the card. See the <tt class="option">-ao oss</tt> option above,
-it must be used to specify the DXR3's output instead of a soundcard.
+it must be used to specify the DXR3's output instead of a sound card.
 </p></dd></dl></div></div></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="other"></a>2.3.1.4. Other visualization hardware</h4></div></div><div class="sect4"><div class="titlepage"><div><h5 class="title"><a name="zr"></a>2.3.1.4.1. Zr</h5></div></div><p>
 This is a display-driver (<tt class="option">-vo zr</tt>) for a number of MJPEG
 capture/playback cards (tested for DC10+ and Buz, and it should work for the
@@ -1248,7 +1256,7 @@ that you have a movie with a resolution of 512x272 and you want to view it
 fullscreen on your DC10+. There are three main possibilities, you may scale
 the movie to a width of 768, 384 or 192. For performance and quality reasons,
 I would choose to scale the movie to 384x204 using the fast bilinear software
-scaler. The commandline is
+scaler. The command line is
 <pre class="screen">
 mplayer -vo zr -sws 0 -vf scale=384:204 <i><tt>movie.avi</tt></i>
 </pre>
@@ -1294,13 +1302,20 @@ to finish and <span class="bold"><b>THEN</b></span> stop XawTV.
 </p></div><div class="sect4"><div class="titlepage"><div><h5 class="title"><a name="blinkenlights"></a>2.3.1.4.2. Blinkenlights</h5></div></div><p>
 This driver is capable of playback using the Blinkenlights UDP protocol. If you
 don't know what <a href="http://www.blinkenlights.de/" target="_top">Blinkenlights</a>
-is, you don't need this driver.
+or its successor
+<a href="http://www.blinkenlights.de/arcade/" target="_top">Arcade</a>
+are, find it out. Although this is most probably the least used video output
+driver, without a doubt it is the coolest <span class="application">MPlayer</span>
+has to offer. Just watch some of the
+<a href="http://www.blinkenlights.de/video.en.html" target="_top">Blinkenlights documentation videos</a>.
+On the Arcade video you can see the Blinkenlights output driver in
+action at 00:07:50.
 </p></div></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="tvout"></a>2.3.1.5. TV-out support</h4></div></div><div class="sect4"><div class="titlepage"><div><h5 class="title"><a name="tvout-mga-g400"></a>2.3.1.5.1. Matrox G400 cards</h5></div></div><p>
 Under Linux you have two methods to get G400 TV out working:
 </p><div class="important" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Important</h3><p>
 for Matrox G450/G550 TV-out instructions, please see the next section!
 </p></div><div class="variablelist"><dl><dt><span class="term">XFree86</span></dt><dd><p>
-    Using the driver and the HAL module, available from <a href="http://www.matrox.com" target="_top">Matrox's site</a>. This will give you X
+    Using the driver and the HAL module, available from the <a href="http://www.matrox.com" target="_top">Matrox site</a>. This will give you X
     on the TV.
     </p><p>
     <span class="bold"><b>This method doesn't give you accelerated playback</b></span>
@@ -1349,7 +1364,7 @@ for Matrox G450/G550 TV-out instructions, please see the next section!
       Yoh. Next task is to make the cursor on tty1 (or whatever) to
       disappear, and turn off screen blanking. Execute the following
       commands:
-      
+
       <pre class="screen">
 echo -e '\033[?25l'
 setterm -blank 0</pre>
@@ -1366,7 +1381,7 @@ setterm -blank 0</pre>
       Yeah kewl. Start movie playing with
       <pre class="screen">
 mplayer -vo mga -fs -screenw 640 -screenh 512 <i><tt>filename</tt></i></pre>
-   
+
       (If you use X, now change to matroxfb with for example
       <span class="keycap"><b>Ctrl</b></span>+<span class="keycap"><b>Alt</b></span>+<span class="keycap"><b>F1</b></span>.)
       Change <tt>640</tt> and <tt>512</tt> if you set
@@ -1400,17 +1415,17 @@ kernel matroxfb driver - Petr Vandrovec - will maybe make support for this, by
 displaying the first CRTC's output onto both of the heads at once, as currently
 recommended for G400, see the section above.
 </p><p>
-The necessary kernel patch and the detailed howto is downloadable from
+The necessary kernel patch and the detailed HOWTO is downloadable from
 <a href="http://www.bglug.ca/matrox_tvout/" target="_top">http://www.bglug.ca/matrox_tvout/</a>
 </p></div><div class="sect4"><div class="titlepage"><div><h5 class="title"><a name="tvout-ati"></a>2.3.1.5.3. ATI cards</h5></div></div><p><b>PREAMBLE. </b>
 Currently ATI doesn't want to support any of its TV-out chips under Linux,
 because of their licensed Macrovision technology.
 </p><div class="itemizedlist"><p><b>ATI CARDS TV-OUT STATUS ON LINUX</b></p><ul type="disc"><li>
   <span class="bold"><b>ATI Mach64</b></span>:
-  supported by <a href="http://gatos.sf.net" target="_top">gatos</a>.
+  supported by <a href="http://gatos.sf.net" target="_top">GATOS</a>.
   </li><li>
   <span class="bold"><b>ASIC Radeon VIVO</b></span>:
-  supported by <a href="http://gatos.sf.net" target="_top">gatos</a>.
+  supported by <a href="http://gatos.sf.net" target="_top">GATOS</a>.
   </li><li>
   <span class="bold"><b>Radeon</b></span> and <span class="bold"><b>Rage128</b></span>:
   supported by <span class="application">MPlayer</span>!
@@ -1459,17 +1474,38 @@ EndSection
 </p><p>
 Of course the important thing is the TwinView part.
 </p></div><div class="sect4"><div class="titlepage"><div><h5 class="title"><a name="tvout-neomagic"></a>2.3.1.5.6. Neomagic</h5></div></div><p>
-Tested on a Toshiba Tecra 8000. Its TV output chip is a miserable crap. Avoid
-if possible.
-</p><p>
-You must use <tt class="option">-vo vesa</tt>. The tested chip was capable of 1.333333
-aspect ratio only, so be sure to use the <tt class="option">-x</tt>, <tt class="option">-y</tt> options and/or the
-<tt class="option">-vf scale,crop,expand</tt> filters if the box doesn't let you
-enable TV output. Maximum resolution was 720*576 at 16bpp.
-</p><p>
-Known issues: VESA-only, 1.33333 limitation, image isn't always centered,
-movie becomes 4bpp in every 10 minutes, and stays that way. Frequent hard
-freezes, LCD display problems.
+The Neomagic chip is found in a variety of laptops, some of them are equipped
+with a simple analog TV encoder, some have a more advanced one.
+</p><div class="itemizedlist"><ul type="disc"><li><p>
+  <span class="bold"><b>Analog encoder chip</b></span>:
+  Tested on a Toshiba Tecra 8000. Its TV output chip is miserable crap. Avoid
+  if possible.
+  </p><p>
+  You must use <tt class="option">-vo vesa</tt>. The tested chip was capable of
+  1.333333 aspect ratio only, so be sure to use the <tt class="option">-x</tt>,
+  <tt class="option">-y</tt> options and/or the
+  <tt class="option">-vf scale,crop,expand</tt> filters if the box doesn't let
+  you enable TV output. Maximum resolution was 720*576 at 16bpp.
+  </p><p>
+  Known issues: VESA-only, 1.33333 limitation, image isn't always centered,
+  movie becomes 4bpp in every 10 minutes, and stays that way. Frequent hard
+  freezes, LCD display problems.
+  </p></li><li><p>
+  <span class="bold"><b>Chrontel 70xx encoder chip</b></span>:
+  Found in IBM Thinkpad 390E and possibly other Thinkpads or notebooks.
+  </p><p>
+  You must use <tt class="option">-vo vesa:neotv_pal</tt> for PAL or
+  <tt class="option">-vo vesa:neotv_ntsc</tt> for NTSC.
+  It will provide TV output function in the following 16 bpp and 8 bpp modes:
+  </p><div class="itemizedlist"><ul type="round"><li>NTSC 320x240, 640x480 and maybe 800x600 too.</li><li>PAL  320x240, 400x300, 640x480, 800x600.  </li></ul></div><p>Mode 512x384 is not supported in BIOS. You must scale the image
+  to a different resolution to activate TV out. If you can see an image on the
+  screen in 640x480 or in 800x600 but not in 320x240 or other smaller
+  resolution you need to replace two tables in <tt class="filename">vbelib.c</tt>.
+  See the vbeSetTV function for details. Please contact the author in this case.
+  </p><p>
+  Known issues: VESA-only, no other controls such as brightness, contrast,
+  blacklevel, flickfilter are implemented.
+  </p></li></ul></div><p>
 </p></div></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="audio-dev"></a>2.3.2. Audio output devices</h3></div></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="sync"></a>2.3.2.1. Audio/Video synchronisation</h4></div></div><p>
 <span class="application">MPlayer</span>'s audio interface is called
 <span class="emphasis"><i>libao2</i></span>. It currently contains these drivers:
@@ -1494,6 +1530,8 @@ freezes, LCD display problems.
   native ARTS driver (mostly for KDE users)
   </td></tr><tr><td>esd</td><td>
   native ESD driver (mostly for GNOME users)
+  </td></tr><tr><td>jack</td><td>
+  JACK (Jack Audio Connection Kit) driver
   </td></tr></tbody></table></div><p>
 Linux sound card drivers have compatibility problems. This is because
 <span class="application">MPlayer</span> relies on an in-built feature of
@@ -1549,7 +1587,7 @@ sound cards are only supported by the commercial OSS drivers from
 <a href="http://www.opensound.com/" target="_top">4Front Technologies</a>.
 They also support several non-Linux systems.
 </p><div class="informaltable"><table border="1"><colgroup><col><col><col><col><col><col><col><col></colgroup><thead><tr><th rowspan="3" valign="middle">SOUND CARD</th><th colspan="4">DRIVER</th><th rowspan="3" valign="middle">Max kHz</th><th rowspan="3" valign="middle">Max Channels</th><th rowspan="3" valign="middle">Max Opens
-      <sup>[<a name="maxopens" href="#ftn.maxopens">a</a>]</sup></th></tr><tr><th>OSS/Free</th><th>ALSA</th><th>OSS/Pro</th><th>other</th></tr></thead><tbody><tr><td>VIA onboard (686/A/B, 8233, 8235)</td><td><a href="http://sourceforge.net/project/showfiles.php?group_id=3242&amp;release_id=59602" target="_top">via82cxxx_audio</a></td><td>snd-via82xx</td><td> </td><td> </td><td>4-48 kHz or 48 kHz only, depending on the chipset</td><td> </td><td> </td></tr><tr><td>Aureal Vortex 2</td><td>none</td><td>none</td><td>OK</td><td><a href="http://aureal.sourceforge.net" target="_top">Linux Aureal Drivers</a><a href="http://makacs.poliod.hu/~pontscho/aureal/au88xx-1.1.3.tar.bz2" target="_top">buffer size increased to 32k</a></td><td>48</td><td>4.1</td><td>5+</td></tr><tr><td>SB Live!</td><td>Analog OK, SP/DIF not working</td><td>Both OK</td><td>Both OK</td><td><a href="http://opensource.creative.com" target="_top">Creative's OSS driver (SP/DIF support)</a></td><td>192</td><td>4.0/5.1</td><td>32</td></tr><tr><td>SB 128 PCI (es1371)</td><td>OK</td><td>?</td><td> </td><td> </td><td>48</td><td>stereo</td><td>2</td></tr><tr><td>SB AWE 64</td><td>max 44kHz</td><td>48kHz sounds bad</td><td> </td><td> </td><td>48</td><td> </td><td> </td></tr><tr><td>GUS PnP</td><td>none</td><td>OK</td><td>OK</td><td> </td><td>48</td><td> </td><td> </td></tr><tr><td>Gravis UltraSound ACE</td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr><tr><td>Gravis UltraSound MAX</td><td>OK</td><td>OK (?)</td><td> </td><td> </td><td>48</td><td> </td><td> </td></tr><tr><td>ESS 688</td><td>OK</td><td>OK (?)</td><td> </td><td> </td><td>48</td><td> </td><td> </td></tr><tr><td>C-Media cards (CMI8338/8738)</td><td>OK</td><td>OK SP/DIF is supported with ALSA 0.9.x</td><td>?</td><td> </td><td>44</td><td>stereo</td><td>1</td></tr><tr><td>Yamaha cards (*ymf*)</td><td>not OK (?) (maybe <tt class="option">-ao sdl</tt>)</td><td>OK only with ALSA 0.5 with OSS emulation
+      <sup>[<a name="maxopens" href="#ftn.maxopens">a</a>]</sup></th></tr><tr><th>OSS/Free</th><th>ALSA</th><th>OSS/Pro</th><th>other</th></tr></thead><tbody><tr><td>VIA onboard (686/A/B, 8233, 8235)</td><td><a href="http://sourceforge.net/project/showfiles.php?group_id=3242&amp;release_id=59602" target="_top">via82cxxx_audio</a></td><td>snd-via82xx</td><td> </td><td> </td><td>4-48 kHz or 48 kHz only, depending on the chipset</td><td> </td><td> </td></tr><tr><td>Aureal Vortex 2</td><td>none</td><td>none</td><td>OK</td><td><a href="http://aureal.sourceforge.net" target="_top">Linux Aureal Drivers</a><a href="http://makacs.poliod.hu/~pontscho/aureal/au88xx-1.1.3.tar.bz2" target="_top">buffer size increased to 32k</a></td><td>48</td><td>4.1</td><td>5+</td></tr><tr><td>SB Live!</td><td>Analog OK, S/PDIF not working</td><td>Both OK</td><td>Both OK</td><td><a href="http://opensource.creative.com" target="_top">Creative's OSS driver (S/PDIF support)</a></td><td>192</td><td>4.0/5.1</td><td>32</td></tr><tr><td>SB 128 PCI (es1371)</td><td>OK</td><td>?</td><td> </td><td> </td><td>48</td><td>stereo</td><td>2</td></tr><tr><td>SB AWE 64</td><td>max 44kHz</td><td>48kHz sounds bad</td><td> </td><td> </td><td>48</td><td> </td><td> </td></tr><tr><td>GUS PnP</td><td>none</td><td>OK</td><td>OK</td><td> </td><td>48</td><td> </td><td> </td></tr><tr><td>Gravis UltraSound ACE</td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr><tr><td>Gravis UltraSound MAX</td><td>OK</td><td>OK (?)</td><td> </td><td> </td><td>48</td><td> </td><td> </td></tr><tr><td>ESS 688</td><td>OK</td><td>OK (?)</td><td> </td><td> </td><td>48</td><td> </td><td> </td></tr><tr><td>C-Media cards (CMI8338/8738)</td><td>OK</td><td>OK S/PDIF is supported with ALSA 0.9.x</td><td>?</td><td> </td><td>44</td><td>stereo</td><td>1</td></tr><tr><td>Yamaha cards (*ymf*)</td><td>not OK (?) (maybe <tt class="option">-ao sdl</tt>)</td><td>OK only with ALSA 0.5 with OSS emulation
       <span class="bold"><b>AND</b></span><tt class="option">-ao sdl</tt> (!) (?)</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr><tr><td>Cards with envy24 chips (like Terratec EWS88MT)</td><td>?</td><td>?</td><td>OK</td><td> </td><td>?</td><td> </td><td> </td></tr><tr><td>PC Speaker or DAC</td><td>OK</td><td>none</td><td> </td><td><a href="http://www.geocities.com/stssppnn/pcsp.html" target="_top">Linux PC speaker OSS driver</a></td><td>The driver emulates 44.1, maybe more.</td><td>mono</td><td>1</td></tr></tbody><tbody class="footnotes"><tr><td colspan="8"><div class="footnote"><p><sup>[<a name="ftn.maxopens" href="#maxopens">a</a>] </sup><sup>[<a name="ftn.maxopens" href="#maxopens">a</a>] </sup>the number of applications that are able to use
           the device <span class="emphasis"><i>at the same time</i></span>.</p></div></td></tr></tbody></table></div><p>
 Feedback to this document is welcome. Please tell us how
@@ -1883,7 +1921,7 @@ unsigned long long counter   /*Used to keep sync, it's updated
 
 The rest is payload (non-interleaved) 16bit data.
 </p><div class="variablelist"><dl><dt><span class="term"><tt class="option">mmapped_file</tt></span></dt><dd><p>
-The file you want this filter to export to. The default is to map to 
+The file you want this filter to export to. The default is to map to
 <tt class="filename">~/.mplayer/mplayer-af_export</tt>.
 </p></dd><dt><span class="term"><tt class="option">nsamples</tt></span></dt><dd><p>
 Number of samples per channel. The default is <tt>512</tt> samples.
@@ -1961,7 +1999,7 @@ Usage:
 <pre class="screen">
 mplayer <i><tt>media.avi</tt></i> -aop list=format:format=<i><tt>outfmt</tt></i></pre>
 
-where <tt><i><tt>outfmt</tt></i></tt> is the 
+where <tt><i><tt>outfmt</tt></i></tt> is the
 required output format.
 </p></div><div class="sect4"><div class="titlepage"><div><h5 class="title"><a name="audio-delay"></a>2.3.2.4.4. Delay</h5></div></div><p>
 This plugin delays the sound and is intended as an example of how to

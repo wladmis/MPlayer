@@ -1,4 +1,4 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>7.12. How to deal with telecine and interlacing within NTSC DVDs</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - The Movie Player for LINUX"><link rel="up" href="mencoder.html" title="Chapter 7. Encoding with MEncoder"><link rel="previous" href="menc-feat-dvd-mpeg4.html" title='7.11. Making a high quality MPEG4 ("DivX") rip of a DVD movie'><link rel="next" href="mailinglists.html" title="Appendix A. Mailing lists"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">7.12. How to deal with telecine and interlacing within NTSC DVDs</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="menc-feat-dvd-mpeg4.html">Prev</a> </td><th width="60%" align="center">Chapter 7. Encoding with MEncoder</th><td width="20%" align="right"> <a accesskey="n" href="mailinglists.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="menc-feat-telecine"></a>7.12. How to deal with telecine and interlacing within NTSC DVDs</h2></div></div><p><b>Introduction. </b>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>7.12. How to deal with telecine and interlacing within NTSC DVDs</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - The Movie Player"><link rel="up" href="mencoder.html" title="Chapter 7. Encoding with MEncoder"><link rel="previous" href="menc-feat-dvd-mpeg4.html" title='7.11. Making a high quality MPEG4 ("DivX") rip of a DVD movie'><link rel="next" href="mailinglists.html" title="Appendix A. Mailing lists"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">7.12. How to deal with telecine and interlacing within NTSC DVDs</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="menc-feat-dvd-mpeg4.html">Prev</a> </td><th width="60%" align="center">Chapter 7. Encoding with MEncoder</th><td width="20%" align="right"> <a accesskey="n" href="mailinglists.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="menc-feat-telecine"></a>7.12. How to deal with telecine and interlacing within NTSC DVDs</h2></div></div><p><b>Introduction. </b>
   I suggest you visit this page if you don't understand much of what
   is written in this document:
   <a href="http://www.divx.com/support/guides/guide.php?gid=10" target="_top">http://www.divx.com/support/guides/guide.php?gid=10</a>
@@ -46,7 +46,7 @@ Notes:
   <tt>libavcodec</tt> for maximum
   quality is not within the scope of this document.
   </p></li><li><p>
-  There are a couple footnotes specific to this guide, linked like this: 
+  There are a couple footnotes specific to this guide, linked like this:
   <a href="menc-feat-telecine.html#menc-feat-telecine-footnotes" title="7.12.3. Footnotes">[1]</a>
   </p></li></ul></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="menc-feat-telecine-ident"></a>7.12.1. How to tell what type of video you have</h3></div></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="menc-feat-telecine-ident-progressive"></a>7.12.1.1. Progressive</h4></div></div><p>
   Progressive video was originally filmed at 23.976 fps, and stored
@@ -123,7 +123,7 @@ Notes:
   When <span class="application">MPlayer</span> plays this category, it will
   (often repeatedly) switch back and forth between "30fps
   NTSC" and "24fps progressive NTSC". Watch the bottom of
-  <span class="application">MPlayer's</span> output to see these messages.
+  <span class="application">MPlayer</span>'s output to see these messages.
 </p><p>
   You should check the "30fps NTSC" sections to make sure
   they are actually telecine, and not just interlaced.
@@ -180,7 +180,7 @@ Notes:
   no motion. Note that <tt class="option">-ofps</tt> is NOT needed here.
 
   <pre class="screen">mencoder dvd://1 -nosound -ovc lavc -lavcopts ildct:ilme:mbd=2</pre>
-  </p></li><li><p>  
+  </p></li><li><p>
   Use a deinterlacing filter before encoding. There are several of
   these filters available to choose from, each with its own advantages
   and disadvantages. Consult <tt class="option">mplayer -pphelp</tt> to see
@@ -212,12 +212,12 @@ Notes:
   use this method, then Reference the manual, and chose whichever
   option looks best for your material. Note that when using
   <tt class="option">tfields</tt> you
-   <span class="bold"><b>have to</b></span> specify both
+  <span class="bold"><b>have to</b></span> specify both
   <tt class="option">-fps</tt> and <tt class="option">-ofps</tt> to be twice the
   framerate of your original source.
 
   <pre class="screen">mencoder dvd://1 -nosound -vf tfields=2 -ovc lavc -fps 59.94 -ofps 59.94</pre>
-  </p></li><li><p>   
+  </p></li><li><p>
   If you plan on downscaling dramatically, you can excise and encode
   only one of the two fields. Of course, you'll lose half the vertical
   resolution, but if you plan on downscaling to at most 1/2 of the
@@ -256,7 +256,7 @@ Notes:
   ready). It works fine without <tt class="option">-ofps</tt>, but
   <tt class="option">-ofps</tt> is needed to prevent choppy output. With
   <tt class="option">-ofps</tt>, it sometimes fails. The problems arise from
-  <span class="application">MEncoder's</span> behavior of dropping frames to
+  <span class="application">MEncoder</span>'s behavior of dropping frames to
   maintain synchronization between the audio and video: it drops
   frames before sending them through the filter chain, rather than
   after. As a result, <tt class="option">pullup</tt> is sometimes deprived

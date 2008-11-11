@@ -30,6 +30,7 @@
 #    include <stdio.h>
 #    include <string.h>
 #    include <ctype.h>
+#    include <limits.h>
 #    ifndef __BEOS__
 #        include <errno.h>
 #    else
@@ -115,6 +116,10 @@ extern const struct AVOption avoptions_workaround_bug[11];
 #define INT64_MAX int64_t_C(9223372036854775807)
 #endif
 
+#ifndef UINT64_MAX
+#define UINT64_MAX uint64_t_C(0xFFFFFFFFFFFFFFFF)
+#endif
+
 #ifdef EMULATE_FAST_INT
 /* note that we don't emulate 64bit ints */
 typedef signed char int_fast8_t;
@@ -123,6 +128,14 @@ typedef signed int  int_fast32_t;
 typedef unsigned char uint_fast8_t;
 typedef unsigned int  uint_fast16_t;
 typedef unsigned int  uint_fast32_t;
+#endif
+
+#ifndef INT_BIT
+#    if INT_MAX != 2147483647
+#        define INT_BIT 64
+#    else
+#        define INT_BIT 32
+#    endif
 #endif
 
 #if defined(CONFIG_OS2) || defined(CONFIG_SUNOS)
@@ -280,10 +293,6 @@ static inline uint32_t NEG_USR32(uint32_t a, int8_t s){
 #endif
 
 /* bit output */
-
-struct PutBitContext;
-
-typedef void (*WriteDataFunc)(void *, uint8_t *, int);
 
 /* buf and buf_end must be present and used by every alternative writer. */
 typedef struct PutBitContext {

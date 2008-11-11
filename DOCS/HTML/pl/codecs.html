@@ -1,4 +1,4 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>2.2. Wspierane kodeki</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - Odtwarzacz filmów dla LINUKSA"><link rel="up" href="features.html" title="Rozdzia&#322; 2. Mo&#380;liwo&#347;ci"><link rel="previous" href="formats.html" title="2.1. Obs&#322;ugiwane formaty"><link rel="next" href="devices.html" title="2.3. Urz&#261;dzenia wyj&#347;ciowe"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">2.2. Wspierane kodeki</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="formats.html">Poprzedni</a> </td><th width="60%" align="center">Rozdzia&#322; 2. Mo&#380;liwo&#347;ci</th><td width="20%" align="right"> <a accesskey="n" href="devices.html">Nast&#281;pny</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="codecs"></a>2.2. Wspierane kodeki</h2></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="video-codecs"></a>2.2.1. Kodeki Video</h3></div></div><p>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>2.2. Wspierane kodeki</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - Odtwarzacz filmów"><link rel="up" href="features.html" title="Rozdzia&#322; 2. Mo&#380;liwo&#347;ci"><link rel="previous" href="formats.html" title="2.1. Obs&#322;ugiwane formaty"><link rel="next" href="devices.html" title="2.3. Urz&#261;dzenia wyj&#347;ciowe"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">2.2. Wspierane kodeki</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="formats.html">Poprzedni</a> </td><th width="60%" align="center">Rozdzia&#322; 2. Mo&#380;liwo&#347;ci</th><td width="20%" align="right"> <a accesskey="n" href="devices.html">Nast&#281;pny</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="codecs"></a>2.2. Wspierane kodeki</h2></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="video-codecs"></a>2.2.1. Kodeki Video</h3></div></div><p>
 Zajrzyj do <a href="http://www.mplayerhq.hu/homepage/codecs-status.html" target="_top">tabeli statusu kodeków</a>,
 &#380;eby zobaczy&#263; kompletn&#261;, codziennie generowan&#261; list&#281;. Niektóre kodeki s&#261; dost&#281;pne do pobrania z
 naszej strony domowej. &#346;ci&#261;gniesz je ze
@@ -152,7 +152,7 @@ wi&#281;kszo&#347;&#263; funkcji. W celu zdobycia libavcodec wykonaj nast&#281;p
 </p><div class="procedure"><ol type="1"><li><p>
   <pre class="screen">cvs -d:pserver:anonymous@mplayerhq.hu:/cvsroot/ffmpeg login</pre>
   </p></li><li><p>
-  <pre class="screen">cvs -d:pserver:anonymous@mplayerhq.hu:/cvsroot/ffmpeg co ffmpeg</pre>
+  <pre class="screen">cvs -z3 -d:pserver:anonymous@mplayerhq.hu:/cvsroot/ffmpeg co -P ffmpeg/libavcodec</pre>
   </p></li><li><p>
   Przenie&#347; katalog <tt class="filename">libavcodec</tt> ze &#378;róde&#322; FFmpega
   do katalogu g&#322;ównego drzewa CVS <span class="application">MPlayera</span>.
@@ -393,9 +393,9 @@ poprzez SNDCTL_DSP_CHANNELS ioctl. Przyk&#322;adem odpowiedniego sterownika jest
 emu10k1 (u&#380;ywany przez karty Soundblaster Live!) z sierpnia 2001 roku, albo nowszy
 (przypuszczalnie dzia&#322;a tak&#380;e ALSA CVS).
 </p></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="hwac3"></a>2.2.2.2. Sprz&#281;towe dekodowanie AC3</h4></div></div><p>
-Potrzebna jest karta obs&#322;uguj&#261;ca AC3, z cyfrowym wyj&#347;ciem (SP/DIF). Sterownik
+Potrzebna jest karta obs&#322;uguj&#261;ca AC3, z cyfrowym wyj&#347;ciem (S/PDIF). Sterownik
 musi prawid&#322;owo obs&#322;ugiwa&#263; format AFMT_AC3 (robi to C-Media). Pod&#322;&#261;cz swój
-dekoder AC3 do wyj&#347;cia SP/DIF i u&#380;yj opcji <tt class="option">-ac
+dekoder AC3 do wyj&#347;cia S/PDIF i u&#380;yj opcji <tt class="option">-ac
 hwac3</tt>. Rozwi&#261;zanie to jest ci&#261;gle w fazie testów, ale wiadomo, &#380;e dzia&#322;a
 z kartami C-Media i Soundblaster Live! + sterowniki ALSA (ale nie z OSS) i kartami
 dekoduj&#261;cymi DXR3/Hollywood+ MPEG.

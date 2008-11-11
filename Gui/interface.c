@@ -42,6 +42,8 @@
 #include "../m_config.h"
 #include "../m_option.h"
 
+extern mixer_t mixer; // mixer from mplayer.c
+
 guiInterface_t guiIntfStruct;
 int guiWinID=-1;
 
@@ -54,8 +56,12 @@ char * gstrcat( char ** dest,char * src )
  if ( *dest )
   {
    tmp=malloc( strlen( *dest ) + strlen( src ) + 1 );
-   strcpy( tmp,*dest ); strcat( tmp,src ); free( *dest ); 
-  }
+   
+   if ( tmp ) /* TODO: advanced error handling */
+    {
+     strcpy( tmp,*dest ); strcat( tmp,src ); free( *dest ); 
+    }
+   }
   else
    { tmp=malloc( strlen( src ) + 1 ); strcpy( tmp,src ); }
  *dest=tmp;
@@ -618,7 +624,7 @@ int guiGetEvent( int type,char * arg )
         if ( audio_out )
 	{
 	 float l,r;
-	 mixer_getvolume( &l,&r );
+	 mixer_getvolume( &mixer,&l,&r );
 	 guiIntfStruct.Volume=(r>l?r:l);
 	 if ( r != l ) guiIntfStruct.Balance=( ( r - l ) + 100 ) * 0.5f;
 	   else guiIntfStruct.Balance=50.0f;
@@ -647,7 +653,7 @@ int guiGetEvent( int type,char * arg )
         if ( audio_out )
 	{
 	 float l,r;
-	 mixer_getvolume( &l,&r );
+	 mixer_getvolume( &mixer,&l,&r );
 	 guiIntfStruct.Volume=(r>l?r:l);
 	 if ( r != l ) guiIntfStruct.Balance=( ( r - l ) + 100 ) * 0.5f;
 	   else guiIntfStruct.Balance=50.0f;

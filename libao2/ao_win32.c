@@ -30,6 +30,8 @@
 #include "../libvo/fastmemcpy.h"
 #include "osdep/timer.h"
 
+#define WAVE_FORMAT_DOLBY_AC3_SPDIF 0x0092
+
 #define SAMPLESIZE   1024
 #define BUFFER_SIZE  4096
 #define BUFFER_COUNT 16
@@ -121,11 +123,20 @@ static int init(int rate,int channels,int format,int flags)
 	//fill waveformatex
     ZeroMemory( &wformat, sizeof(WAVEFORMATEX));
     wformat.cbSize          = 0; /* size of _extra_ info */
-	wformat.wFormatTag      = WAVE_FORMAT_PCM;  
     wformat.nChannels       = channels;                
     wformat.nSamplesPerSec  = rate;            
-    wformat.wBitsPerSample  = audio_out_format_bits(format); 
-    wformat.nBlockAlign     = wformat.nChannels * (wformat.wBitsPerSample >> 3);
+    if(format == AFMT_AC3)
+    {
+        wformat.wFormatTag      = WAVE_FORMAT_DOLBY_AC3_SPDIF;
+        wformat.wBitsPerSample  = 16;
+        wformat.nBlockAlign     = 4;
+    }
+    else 
+    {
+        wformat.wFormatTag      = WAVE_FORMAT_PCM;
+        wformat.wBitsPerSample  = audio_out_format_bits(format); 
+        wformat.nBlockAlign     = wformat.nChannels * (wformat.wBitsPerSample >> 3);
+    }       
     wformat.nAvgBytesPerSec = wformat.nSamplesPerSec * wformat.nBlockAlign;
  	
     //open sound device
@@ -151,7 +162,6 @@ static int init(int rate,int channels,int format,int flags)
 		mp_msg(MSGT_AO, MSGL_ERR,"ao_win32: unable to open wave mapper device\n");
 		return 0;
     }
-    //save volume
 	//allocate buffer memory as one big block
 	buffer = malloc(totalBufferSize);
 	memset(buffer,0x0,totalBufferSize);

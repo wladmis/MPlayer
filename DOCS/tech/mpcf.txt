@@ -88,22 +88,33 @@ main header:
 	packet header
 	version					v
 	stream_count				v
-	max_type0_size				v
+	max_distance				v
+	max_short_distance			v
+	global_time_base_nom			v
+	global_time_base_denom			v
+	short_startcode				v
 	for(i=0; i<256; ){
 		tmp_flag			v
-		tmp_stream			v
-		tmp_mul				v
-		tmp_size			v
-		count				v
-		for(j=0; j<count; j++, i++){
+		tmp_fields			v
+		if(tmp_fields>0) tmp_timestamp	s
+		if(tmp_fields>1) tmp_mul	v
+		if(tmp_fields>2) tmp_stream	v
+		if(tmp_fields>3) tmp_size	v
+		else tmp_size=0
+		if(tmp_fields>4) tmp_res	v
+		else tmp_res=0
+		if(tmp_fields>5) count		v
+		else count= tmp_mul - tmp_size
+		for(j=6; j<tmp_fields; j++){
+			tmp_reserved[i]		v
+		}
+		for(j=0; j<count && i<256; j++, i++){
 			flags[i]= tmp_flag;
 			stream_id_plus1[i]= tmp_stream;
 			data_size_mul[i]= tmp_mul;
-			data_size_lsb[i]= tmp_size;
-			if(++tmp_size >= tmp_mul){
-				tmp_size=0;
-				tmp_stream++;
-			}
+			data_size_lsb[i]= tmp_size + j;
+			timestamp_delta[i]= tmp_timestamp;
+			reserved_count[i]= tmp_res;
 		}
 	}
 	reserved_bytes
@@ -120,9 +131,8 @@ stream_header:
 	time_base_nom				v
 	time_base_denom				v
 	msb_timestamp_shift			v
-	initial_timestamp_predictor		v(3)
+	decode_delay				v
 	fixed_fps				u(1)
-	index_flag				u(1)
 	reserved				u(6)
 	for(;;){
 		codec_specific_data_type	v
@@ -142,32 +152,31 @@ video_stream_header:
 
 audio_stream_header:
 	stream_header
-	samplerate_mul				v
+	samplerate_nom				v
+	samplerate_denom			v
 	channel_count				v
 	reserved_bytes
 	checksum				u(32)
 
  
 frame
-	if(frame_type == 2){
-		frame_type2_startcode		f(64)
-	}
 	frame_code				f(8)
 	if(stream_id_plus1[frame_code]==0){
 		stream_id			v
 	}
-	if((flags[frame_code]&3)==3){
+	if(timestamp_delta[frame_code]==0){
 		coded_timestamp			v
 	}
-	if(flags[frame_code]&4){
+	if(flags[frame_code]&1){
 		data_size_msb			v
 	}
+	for(i=0; i<reserved_count[frame_code]; i++)
+		reserved			v
 	data
                 
 Index:
 	index_startcode				f(64)
 	packet header
-	stream_id				v
 	index_length				v
 	for(i=0; i<index_length; i++){
 		index_timestamp			v
@@ -196,9 +205,13 @@ info_packet: (optional)
 	reserved_bytes
         checksum				u(32)
         
+sync_point
+	frame_startcode				f(64)
+		global_timestamp		v
+
 file
 	file_id_string
-	while(!eof){
+	while(!eof && next_code != index_startcode){
 		main_header
 		for(i=0; i<stream_count; i++){
 			if(next_packet==video_stream_header)
@@ -206,14 +219,19 @@ file
 			else
 				audio_stream_header
 		}
-		while(next_packet != main_header){
-			if(next_packet == info_packet)
+		while(next_code != main_startcode){
+			if(next_code == info_startcode)
 				info_packet
-			else
+			else{
+				if(next_code == short_startcode)
+					short_startcode    u(24)
+				else if(next_code == frame_startcode)                
+					sync_point
 				frame
+			}
 		}
-//FIXME index
 	}
+	index
                 
 forward_ptr
 	size of the packet (exactly the distance from the first byte of the
@@ -229,8 +247,12 @@ main_startcode
 	0x7A561F5F04ADULL + (((uint64_t)('N'<<8) + 'M')<<48)
 stream_starcode
 	0x11405BF2F9DBULL + (((uint64_t)('N'<<8) + 'S')<<48)
-frame_type2_startcode
+frame_startcode
 	0xE4ADEECA4569ULL + (((uint64_t)('N'<<8) + 'K')<<48)
+	frame_startcodes SHOULD be placed immedeatly before a keyframe if the
+	previous frame of the same stream was a non-keyframe, unless such
+	non-keyframe - keyframe tansitions are very frequent
+
 index_startcode
 	0xDD672F23E64EULL + (((uint64_t)('N'<<8) + 'X')<<48)
 info_startcode
@@ -239,11 +261,29 @@ info_startcode
 version
 	2 for now
 
-max_type0_size
-	max cummulative sum of type0 frames between type not 0 frames, this can
-	be used by the deocoder to detect damaged type 0 headers if the damage
-	results in a too long chain
-	SHOULD be set to <=16384 to ensure reasonable error recovery
+max_distance
+	max distance of frame_startcodes, the distance may only be larger if
+	there is only a single frame between the 2 frame_startcodes
+	this can be used by the demuxer to detect damaged frame headers if the
+	damage results in a too long chain
+	SHOULD be set to <=32768 or at least <=65536 unless there is a very good
+	reason to set it higher otherwise reasonable error recovery will be
+	impossible
+
+max_short_distance
+	max distance of short startcodes or frame_startcodes, the distance may
+	only be larger if there is only a single frame between the 2 
+	frame_startcodes/short startcodes this can be used by the demuxer to
+	detect damaged frame headers if the damage results in a too long chain
+	SHOULD be set to <=4096 or at least <=8192 unless there is a very good
+	reason to set it higher otherwise reasonable error recovery will be
+	impossible
+
+
+short_startcode
+	MUST be 3 bytes long and MUST have 'N' as first byte, the second byte
+	MUST not be a printable uppercase letter / must not be within 65..90, 
+	default is 0x4EFE79
 
 stream_id
 	Note: streams with a lower relative class MUST have a lower relative id
@@ -289,17 +329,36 @@ time_base_nom / time_base_denom = time_base
 		Note: the advantage to using a large sample_rate_mul is that the
 		      timestamps need fewer bits
 
+global_time_base_nom / global_time_base_denom = global_time_base
+	the number of timer ticks per second
+	global_time_base_denom MUST not be 0
+	global_time_base_nom and global_time_base_denom MUST be relative prime
+	global_time_base_nom MUST be < 2^31
+
+global_timestamp
+	timestamp in global_time_base units
+	when a global_timestamp is encountered the last_timestamp of all streams
+	is set to the following:
+	ln= global_time_base_denom*time_base_nom
+	sn= global_timestamp
+	d1= global_time_base_nom
+	d2= time_base_denom
+	last_timestamp= (ln/d1*sn + ln%d1*sn/d1)/d2
+	Note, this calculation MUST be done with unsigned 64 bit integers, and 
+	is equivalent to (ln*sn)/(d1*d2) but this would require a 96bit integer
+
 msb_timestamp_shift
 	amount of bits in lsb_timestamp
 	MUST be <16
 
+decode_delay
+	maximum time between input and output for a codec, used to generate dts
+	from pts
+	is 0 for streams without b frames, and 1 for streams with b frames, may
+	be larger for future codecs
+        
 fixed_fps
 	1 indicates that the fps is fixed
-
-index_flag
-	1 indicates that this file has an index
-	Note, all files SHOULD have an index at the end except, (realtime) streams 
-	Note, all streams SHOULD have an index
 
 codec_specific_data_type
 	0	none/end
@@ -320,39 +379,15 @@ frame_code
 	different from the first byte of any startcode
 
 flags[frame_code]
-	the bits of the flags from MSB to LSB are KDTT
-	TT is the timestamp_code
-		00,01,10 predicted delta timestamps
-		11 timestamp coded, either lsb or full timestamp
-		
-		predicted delta timestamp use the last timestamp from the
-		current stream + the first, second and third last unique
-		timestamp difference, so if the timestamp differences, where
-		+3,+1,+2,+2,+1 then last difference is +1, second is +2 and
-		third is +3
-		predicted delta timestamps MUST NOT be used in type > 0 frames
-		or in type 0 frames if there was no full timestamp in the 
-		current stream after the last type > 0 frame
-
-		the least recent used delta timestamps are reset to the 
-		initial_timestamp_predictor values from the stream header if a
-		packet of type not 0 in encountered
+	the bits of the flags from MSB to LSB are KD
 	if D is 1 then data_size_msb is coded, otherwise data_size_msb is 0
 	K is the keyframe_type 
 		0-> no keyframe, 
 		1-> keyframe, 
-	flags=16 can be used to mark illegal frame_code bytes
-	frame_code=78 must have flags=16
-
-frame_type
-	if the first byte of a frame is 'N' then the frame_type is 2 otherwise 
-	its 0
-	there SHOULD not be more then 0.5 seconds or 16kbyte of type 0 frames
-	wihout a intervening frame of different frame_type
-	* type 2 frames MUST not depend(1) upon any other frames, this means,
-	they MUST use a full timestamp
-	* type 0 frames MUST not depend(1) upon frames prior to the last type 
-	2 frame
+	flags=4 can be used to mark illegal frame_code bytes
+	frame_code=78 must have flags=4
+	* frames MUST not depend(1) upon frames prior to the last
+	  frame_startcode
 	depend(1) means dependancy on the container level (NUT) not dependancy
 	on the codec level
 
@@ -361,10 +396,13 @@ stream_id_plus1[frame_code]
 	if its 0 then the stream_id is coded in the frame
 
 data_size_mul[frame_code]
-	must be <250
+	must be <16384
 
 data_size_lsb[frame_code]
-	must be <250
+	must be <16384
+
+timestamp_delta[frame_code]
+	must be <16384 and >-16384
 
 data_size       
 	data_size= data_size_lsb + data_size_msb*data_size_mul;
@@ -376,9 +414,8 @@ coded_timestamp
 	mask = (1<<msb_timestamp_shift)-1;
 	delta= last_timestamp - mask/2
 	timestamp= ((timestamp_lsb-delta)&mask) + delta
-	a full timestamp must be used if the packet_type is not 0 or there is no
-	reference timestamp available after the last not 0 frame with the 
-	current stream_id
+	a full timestamp must be used if there is no reference timestamp
+	available after the last frame_startcode with the current stream_id
         
 lsb_timestamp
 	least significant bits of the timestamp in time_base precission
@@ -396,6 +433,16 @@ lsb_timestamp
 		frame                    lsb_timestamp=3 -> timestamp=259
 	all timestamps of keyframes of a single stream MUST be monotone
 
+dts
+	dts are calculated by using a decode_delay+1 sized buffer for each 
+	stream, into which the current pts is inserted and the element with
+	the smallest value is removed, this is then the current dts
+	this buffer is initalized with decode_delay -1 elements
+	all frames with dts == timestamp must be monotone, that means a frame
+	which occures later in the stream must have a larger or equal dts
+	then an earlier frame
+	FIXME rename timestamp* to pts* ?
+
 width/height
 	MUST be set to the coded width/height
 
@@ -411,19 +458,18 @@ colorspace_type
 	17	ITU Rec 624 / ITU Rec 601 Y range:  0..255 Cb/Cr range:  0..255
 	18	ITU Rec 709               Y range:  0..255 Cb/Cr range:  0..255
 
-samplerate_mul
-	the number of samples per second in one time_base unit
-	samplerate = time_base*samplerate_mul
+samplerate_nom / samplerate_denom = samplerate
+	the number of samples per second
 
 checksum
 	adler32 checksum
 
 index_timestamp
-	value in time_base precission, relative to the last index_timestamp
+	value of the timetamp in a sync point relative to the last sync-point
 
 index_position
-	position in bytes of the first byte of the keyframe header, relative
-	to the last index_position
+	position in bytes of the first byte of a sync-point, relative to the
+	last sync_point
 
 id
 	the id of the type/name pair, so its more compact
@@ -456,6 +502,7 @@ name
 			Note: dont forget the timezone
 	"ReplayGain"
 	"Keywords"
+	"Disposition"	"original", "dub" (translated), "comment", "lyrics", "karaoke"
 	Note: if someone needs some others, please tell us about them, so we can
 	      add them to the official standard (if they are sane)
 	Note: nonstandard fields should be prefixed by "X-"
@@ -486,6 +533,7 @@ info_table[][2]={
 	{"Keyword"		, "UTF8"},
 	{"Cover"		, "JPEG"},
 	{"Cover"		, "PNG"},
+	{"Disposition"		, "UTF8"},
 };
 
 			Structure:
@@ -499,14 +547,23 @@ stream_header (id=n)
 
 headers may be repated, but if they are then they MUST all be repeated together
 and repeated headers MUST be identical
+headers MAY only repeated at the closest possible positions after 2^x where x is 
+an integer and the file end, so the headers may be repeated at 4102 if thats the
+closest possition after 2^12=4096 at which the headers can be placed
 
-headers MUST be repeated every 10sec at least ? FIXME
-headers MUST be repeated BEFORE keyframes
+headers MUST be placed at least at the begin of the file and immedeatly before
+the index or at the file end if there is no index
 headers MUST be repeated at least twice (so they exist 3 times in a file)
 
+a demuxer MUST not demux a stream which contains more than one stream, or which
+is wrapped in a structure to facilitate more than one stream or otherwise 
+duplicate the role of a container. any such file is to be considered invalid
+
+info packets which describe the whole file or individual streams/tracks must be
+placed before any video/audio/... frames
+
 		Index
-the index can be repeated but there SHOULD be at least one for each stream at
-the end
+every sync-point must be exacty once in the index
 Note: in case of realtime streaming there is no end, so no index there either
 
 		Info packets
@@ -520,6 +577,13 @@ for example, the current song title & artist of the currently shown music video
 
 		Unknown packets
 MUST be ignored by the demuxer
+
+			demuxer (non-normative)
+
+in the absence of valid header at beginning, players SHOULD search for backup
+headers starting at offset 2^x for each x players SHOULD end their search from a
+particular offset when any startcode is found (including syncpoint)
+
 
 			Sample code (GPL, & untested)
 
@@ -583,6 +647,20 @@ static inline int put_v(BufferContext *bc, uint64_t val){
 	*(bc->buf_ptr++)= val&0x7F;
         
 	return 0;
+}
+
+static int64_t get_dts(int64_t pts, int64_t *pts_cache, int delay, int reset){
+	if(reset) memset(pts_cache, -1, delay*sizeof(int64_t));
+
+	while(delay--){
+		int64_t t= pts_cache[delay];
+		if(t < pts){
+			pts_cache[delay]= pts;
+			pts= t;
+		}
+	}
+
+	return pts;
 }
 
 		        Authors

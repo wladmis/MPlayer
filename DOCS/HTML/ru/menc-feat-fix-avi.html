@@ -1,4 +1,4 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>7.5. Fixing AVIs with broken index or interleaving</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - The Movie Player for LINUX"><link rel="up" href="mencoder.html" title="&#1043;&#1083;&#1072;&#1074;&#1072; 7. Encoding with MEncoder"><link rel="previous" href="menc-feat-streamcopy.html" title="7.4. Stream copying"><link rel="next" href="menc-feat-enc-libavcodec.html" title="7.6. Encoding with the libavcodec
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>7.5. Fixing AVIs with broken index or interleaving</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - The Movie Player"><link rel="up" href="mencoder.html" title="&#1043;&#1083;&#1072;&#1074;&#1072; 7. Encoding with MEncoder"><link rel="previous" href="menc-feat-streamcopy.html" title="7.4. Stream copying"><link rel="next" href="menc-feat-enc-libavcodec.html" title="7.6. Encoding with the libavcodec
   codec family"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">7.5. Fixing AVIs with broken index or interleaving</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="menc-feat-streamcopy.html">&#1055;&#1088;&#1077;&#1076;.</a> </td><th width="60%" align="center">&#1043;&#1083;&#1072;&#1074;&#1072; 7. Encoding with MEncoder</th><td width="20%" align="right"> <a accesskey="n" href="menc-feat-enc-libavcodec.html">&#1057;&#1083;&#1077;&#1076;.</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="menc-feat-fix-avi"></a>7.5. Fixing AVIs with broken index or interleaving</h2></div></div><p>
 Easiest thing. We simply copy the video and audio streams, and
 <span class="application">MEncoder</span> generates the index. Of course this cannot fix possible bugs in
@@ -13,7 +13,8 @@ As a side-effect, the broken AVI fixer function enables <span class="application
 to append 2 (or more) AVI files:
 </p><p>
 Command:
-<pre class="screen">cat 1.avi 2.avi | mencoder -noidx -ovc copy -oac copy -o <i><tt>output.avi</tt></i> -</pre>
+<pre class="screen">cat <i><tt>1.avi</tt></i> <i><tt>2.avi</tt></i> &gt; <i><tt>3.avi</tt></i>
+mencoder -noidx -ovc copy -oac copy -o <i><tt>output.avi</tt></i> <i><tt>3.avi</tt></i></pre>
 </p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">&#1047;&#1072;&#1084;&#1077;&#1095;&#1072;&#1085;&#1080;&#1077;</h3><p>
 This expects <tt class="filename">1.avi</tt> and <tt class="filename">2.avi</tt> to use
 the same codecs, resolution, stream rate etc, and at least <tt class="filename">1.avi</tt>

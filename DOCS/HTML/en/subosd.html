@@ -1,7 +1,7 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>1.4. Subtitles and OSD</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - The Movie Player for LINUX"><link rel="up" href="intro.html" title="Chapter 1. Introduction"><link rel="previous" href="gui.html" title="1.3. What about the GUI?"><link rel="next" href="rtc.html" title="1.5. RTC"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">1.4. Subtitles and OSD</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="gui.html">Prev</a> </td><th width="60%" align="center">Chapter 1. Introduction</th><td width="20%" align="right"> <a accesskey="n" href="rtc.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="subosd"></a>1.4. Subtitles and OSD</h2></div></div><p>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>1.4. Subtitles and OSD</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - The Movie Player"><link rel="up" href="intro.html" title="Chapter 1. Introduction"><link rel="previous" href="gui.html" title="1.3. What about the GUI?"><link rel="next" href="rtc.html" title="1.5. RTC"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">1.4. Subtitles and OSD</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="gui.html">Prev</a> </td><th width="60%" align="center">Chapter 1. Introduction</th><td width="20%" align="right"> <a accesskey="n" href="rtc.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="subosd"></a>1.4. Subtitles and OSD</h2></div></div><p>
 <span class="application">MPlayer</span> can display subtitles along with movie files.
 Currently the following formats are supported:
-</p><div class="itemizedlist"><ul type="disc"><li><p>VobSub</p></li><li><p>OGM</p></li><li><p>CC (closed caption)</p></li><li><p>MicroDVD</p></li><li><p>SubRip</p></li><li><p>SubViewer</p></li><li><p>Sami</p></li><li><p>VPlayer</p></li><li><p>RT</p></li><li><p>SSA</p></li><li><p>PJS (Phoenix Japanimation Society)</p></li><li><p><a href="subosd.html#mpsub" title="1.4.1. MPlayer's own subtitle format (MPsub)">MPsub</a></p></li><li><p>AQTitle</p></li><li><p><a href="http://unicorn.us.com/jacosub/" target="_top">JACOsub</a></p></li></ul></div><p>
+</p><div class="itemizedlist"><ul type="disc"><li><p>VOBsub</p></li><li><p>OGM</p></li><li><p>CC (closed caption)</p></li><li><p>MicroDVD</p></li><li><p>SubRip</p></li><li><p>SubViewer</p></li><li><p>Sami</p></li><li><p>VPlayer</p></li><li><p>RT</p></li><li><p>SSA</p></li><li><p>PJS (Phoenix Japanimation Society)</p></li><li><p><a href="subosd.html#mpsub" title="1.4.1. MPlayer's own subtitle format (MPsub)">MPsub</a></p></li><li><p>AQTitle</p></li><li><p><a href="http://unicorn.us.com/jacosub/" target="_top">JACOsub</a></p></li></ul></div><p>
 </p><p>
 <span class="application">MPlayer</span> can dump the previously listed subtitle formats
 (<span class="bold"><b>except the three first</b></span>) into the following
@@ -9,11 +9,11 @@ destination formats, with the given options:
 </p><div class="itemizedlist"><ul type="disc"><li><p>MPsub: <tt class="option">-dumpmpsub</tt></p></li><li><p>SubRip: <tt class="option">-dumpsrtsub</tt></p></li><li><p>MicroDVD: <tt class="option">-dumpmicrodvdsub</tt></p></li><li><p>JACOsub: <tt class="option">-dumpjacosub</tt></p></li><li><p>Sami: <tt class="option">-dumpsami</tt></p></li></ul></div><p>
 </p><p>
 <span class="application">MEncoder</span> can dump DVD subtitles into
-<a href="menc-feat-extractsub.html" title="7.8. Extracting DVD subtitles to Vobsub file">VobSub</a> format.
+<a href="menc-feat-extractsub.html" title="7.8. Extracting DVD subtitles to VOBsub file">VOBsub</a> format.
 </p><p>
 The command line options differ slightly for the different formats:
-</p><p><b>VobSub subtitles. </b>
-VobSub subtitles consist of a big (some megabytes) <tt class="filename">.SUB</tt> file,
+</p><p><b>VOBsub subtitles. </b>
+VOBsub subtitles consist of a big (some megabytes) <tt class="filename">.SUB</tt> file,
 and optional <tt class="filename">.IDX</tt> and/or <tt class="filename">.IFO</tt>
 files.  If you have files like
 <tt class="filename"><i><tt>sample.sub</tt></i></tt>,
@@ -54,7 +54,7 @@ directory of the <span class="application">MPlayer</span> FTP site to do this
 conversion for you.
 </p><p>
 About DVD subtitles, read the <a href="dvd.html" title="5.2. DVD playback">DVD</a> section.
-</p><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="mpsub"></a>1.4.1. <span class="application">MPlayer's</span> own subtitle format (MPsub)</h3></div></div><p>
+</p><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="mpsub"></a>1.4.1. <span class="application">MPlayer</span>'s own subtitle format (MPsub)</h3></div></div><p>
 <span class="application">MPlayer</span> introduces a new subtitle format called
 <span class="bold"><b>MPsub</b></span>. It was designed by Gabucino. Basically
 its main feature is being <span class="emphasis"><i>dynamically</i></span> time-based (although
@@ -110,7 +110,7 @@ OSD/SUB feature. There are many ways to get it:
   <tt>fontconfig</tt> support, the above methods
   won't work, instead the <tt class="option">-font</tt> expects a
   <tt>fontconfig</tt> font name
-  and defaults to the sans-serif font. To get a list of fonts known to 
+  and defaults to the sans-serif font. To get a list of fonts known to
   <tt>fontconfig</tt>,
   use <b>fc-list</b>. Example: <tt class="option">-font
   <i><tt>'Bitstream Vera Sans'</tt></i></tt>
@@ -129,7 +129,7 @@ OSD/SUB feature. There are many ways to get it:
   as the video file. Recoding from different codepages to UTF8 could be
   done by using <b>konwert</b> or <b>iconv</b> programs.
   </p><p>
-  
+
   </p><div class="table"><p><b>Table 1.1. Some URLs</b></p><table summary="Some URLs" border="1"><colgroup><col><col></colgroup><thead><tr><th>URL</th><th>Comment</th></tr></thead><tbody><tr><td><a href="ftp://ftp.mplayerhq.hu/MPlayer/releases/fonts/" target="_top">ftp://ftp.mplayerhq.hu/MPlayer/releases/fonts/</a></td><td>
     ISO fonts
     </td></tr><tr><td><a href="ftp://ftp.mplayerhq.hu/MPlayer/contrib/fonts/" target="_top">ftp://ftp.mplayerhq.hu/MPlayer/contrib/fonts/</a></td><td>

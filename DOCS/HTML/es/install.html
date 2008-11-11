@@ -83,7 +83,7 @@ núcleo 2.4.x es recomendado.
   La versión mínima necesaria es 1.2.7.
   </p></li><li><p>
   <span class="bold"><b>libsmb</b></span> - opcional, para soporte Samba.
-  </p></li></ul></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="id2835200"></a>1.2.2. Codecs</h3></div></div><div class="itemizedlist"><ul type="disc"><li><p>
+  </p></li></ul></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="id2835199"></a>1.2.2. Codecs</h3></div></div><div class="itemizedlist"><ul type="disc"><li><p>
   <span class="bold"><b><tt>libavcodec</tt></b></span>:
   Este paquete de codecs es capaz de decodificar flujos de vídeo codificado en 
   H263/MJPEG/RV10/DivX3/DivX4/DivX5/MP41/MP42/WMV1/WMV2/SVQ1/SVQ3
@@ -188,7 +188,7 @@ cuando hagan zoom), por lo tanto la pantalla completa es agradable y muy rápida.
   
 </p><div class="itemizedlist"><ul type="disc"><li><p>
   <span class="bold"><b>Placas Matrox G200/G400/G450/G550</b></span>: a pesar de
-  que se provee un <a href="devices.html#vidix" title="2.3.1.2.12. VIDIX">controlador Vidix</a>, es recomendado
+  que se provee un <a href="devices.html#vidix" title="2.3.1.2.13. VIDIX">controlador Vidix</a>, es recomendado
   usar el módulo mga_vid en su lugar, porque funciona mucho mejor.
   Por favor vea la sección <a href="devices.html#mga_vid" title="2.3.1.2.6. Framebuffer de Matrox (mga_vid)">mga_vid</a> acerca de su
   instalación y uso. Es muy importante hacer estos pasos <span class="emphasis"><i>antes</i></span>
@@ -196,7 +196,7 @@ cuando hagan zoom), por lo tanto la pantalla completa es agradable y muy rápida.
   para mga_vid. También revise la sección 
   <a href="devices.html#tvout-mga-g400" title="2.3.1.5.1. Tarjetas Matrox G400">Salida de TV Matrox</a>.
   <span class="bold"><b>Si no usa Linux</b></span>, su única posibilidad
-  es el controlador VIDIX: lea la sección <a href="devices.html#vidix" title="2.3.1.2.12. VIDIX">VIDIX</a>.
+  es el controlador VIDIX: lea la sección <a href="devices.html#vidix" title="2.3.1.2.13. VIDIX">VIDIX</a>.
   </p></li><li><p>
   <span class="bold"><b>Placas 3Dfx Voodoo3/Banshee</b></span>: por favor vea la
   sección <a href="devices.html#tdfxfb" title="2.3.1.2.7. Soporte 3Dfx YUV">tdfxfb</a> para poder obtener una gran
@@ -207,7 +207,7 @@ cuando hagan zoom), por lo tanto la pantalla completa es agradable y muy rápida.
   Si usa X, use por lo menos <span class="bold"><b>4.2.0</b></span>, ya que el
   controlador de Xv para 3Dfx andaba mal en versiones previas.
   </p></li><li><p>
-  <span class="bold"><b>Placas ATI</b></span>: el controlador <a href="devices.html#vidix" title="2.3.1.2.12. VIDIX">VIDIX</a>
+  <span class="bold"><b>Placas ATI</b></span>: el controlador <a href="devices.html#vidix" title="2.3.1.2.13. VIDIX">VIDIX</a>
   se provee para las siguientes placas:
   <span class="bold"><b>Radeon, Rage128, Mach64</b></span> (Rage XL/Mobility, Xpert98).
   Vea también la sección de <a href="devices.html#tvout-ati" title="2.3.1.5.3. Tarjetas ATI">placas ATI</a> de la documentación de 
@@ -230,7 +230,7 @@ cuando hagan zoom), por lo tanto la pantalla completa es agradable y muy rápida.
   <a href="devices.html#tvout-nvidia" title="2.3.1.5.5. nVidia">salida-TV de nVidia</a> si desea usar una TV.
   </p></li><li><p>
   <span class="bold"><b>3DLabs GLINT R3 y Permedia3</b></span>: se provee un controlador
-  VIDIX (pm3_vid). Por favor vea la sección <a href="devices.html#vidix" title="2.3.1.2.12. VIDIX">VIDIX</a> para
+  VIDIX (pm3_vid). Por favor vea la sección <a href="devices.html#vidix" title="2.3.1.2.13. VIDIX">VIDIX</a> para
   más detalles.
   </p></li><li><p>
   <span class="bold"><b>Otras placas</b></span>: ¿ninguna de las de arriba?
@@ -255,12 +255,12 @@ El cambio de modo de vídeo se activa usando la opción <tt class="option">-vm</tt
 funciona con los siguientes controladores:
 </p><div class="itemizedlist"><ul type="disc"><li>
   <span class="bold"><b>usando</b></span> XFree86: vea los detalles en las secciones del <a href="devices.html#dga" title="2.3.1.2.2. DGA">controlador DGA</a> y
-  <a href="devices.html#x11" title="2.3.1.2.11. X11">el controlador X11</a>. ¡DGA es lo más recomendado! Además,
+  <a href="devices.html#x11" title="2.3.1.2.12. X11">el controlador X11</a>. ¡DGA es lo más recomendado! Además,
   intente usar DGA a través de SDL, muchas veces es mejor.
   </li><li>
   <span class="bold"><b>sin usar</b></span> XFree86: pruebe los controladores en el
   siguiente orden:
-  <a href="devices.html#vesa" title="2.3.1.2.10. VESA - salida en VESA BIOS">vesa</a>,
+  <a href="devices.html#vesa" title="2.3.1.2.11. VESA - salida en VESA BIOS">vesa</a>,
   <a href="devices.html#fbdev" title="2.3.1.2.5. Salida en framebuffer (FBdev)">fbdev</a>,
   <a href="devices.html#svgalib" title="2.3.1.2.4. SVGAlib">svgalib</a>,
   <a href="devices.html#aalib" title="2.3.1.2.9. AAlib - reproduciendo en modo texto">aalib</a>.

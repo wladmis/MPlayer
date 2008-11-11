@@ -1,4 +1,4 @@
-.\" $Revision: 1.577 $
+.\" $Revision: 1.625 $
 .\" MPlayer (C) 2000-2004 MPlayer Team
 .\" This man page was/is done by Gabucino, Diego Biurrun, Jonas Jermann
 .
@@ -33,12 +33,12 @@
 .\" Title
 .\" --------------------------------------------------------------------------
 .
-.TH MPlayer 1 "2004-01-16" "The MPlayer Project" "The Movie Player For Linux"
+.TH MPlayer 1 "2004-01-16" "The MPlayer Project" "The Movie Player"
 .
 .SH NAME
-mplayer  \- Movie Player for Linux
+mplayer  \- movie player
 .br
-mencoder \- Movie Encoder for Linux
+mencoder \- movie encoder
 .
 .\" --------------------------------------------------------------------------
 .\" Synopsis
@@ -66,20 +66,13 @@ mencoder \- Movie Encoder for Linux
 .in
 .B mplayer
 'in +\n[.k]u
-.RI [ mms[t] | http | http_proxy | rt[s]p | ftp ] ://
-[user:passwd@]\fIURL\fP[:port] [options]
-.br
-.in
-.B mplayer
-'in +\n[.k]u
-.I dvd://title
+.I dvd://[title | [start_title]-end_title ]
 [options]
 .br
 .in
 .B mplayer
 'in +\n[.k]u
 .I vcd://track[/device]
-[options]
 .br
 .in
 .B mplayer
@@ -90,8 +83,14 @@ mencoder \- Movie Encoder for Linux
 .in
 .B mplayer
 'in +\n[.k]u
-.I mf://filemask
+.I dvb://[card_number@]channel
 [options]
+.br
+.in
+.B mplayer
+'in +\n[.k]u
+.I mf://filemask
+[-mf options] [options]
 .br
 .in
 .B mplayer
@@ -108,6 +107,12 @@ mencoder \- Movie Encoder for Linux
 .in
 .B mplayer
 'in +\n[.k]u
+.RI [ mms[t] | http | http_proxy | rt[s]p | ftp ] ://
+[user:passwd@]\fIURL\fP[:port] [options]
+.br
+.in
+.B mplayer
+'in +\n[.k]u
 .I sdp://file
 [options]
 .br
@@ -118,20 +123,14 @@ mencoder \- Movie Encoder for Linux
 [options]
 .br
 .in
-.B mplayer
-'in +\n[.k]u
-.I dvb://[card_number@]channel
+.B gmplayer
 [options]
+[\-skin\ skin]
 .br
-.in
 .B mencoder
 [options]
 .RI [ \ file\  | \ URL\  | \ \-\  ]
 [\-o\ file]
-.br
-.B gmplayer
-[options]
-[\-skin\ skin]
 .ad
 .hy
 .
@@ -141,30 +140,29 @@ mencoder \- Movie Encoder for Linux
 .
 .SH DESCRIPTION
 .B mplayer
-is a movie player for LINUX (runs on many other Unices and non\-x86 CPUs, see
-the documentation).
+is a movie player for Linux (runs on many other platforms and CPU
+architectures, see the documentation).
 It plays most MPEG/\:VOB, AVI, ASF/\:WMA/\:WMV, RM, QT/\:MOV/\:MP4, OGG/\:OGM,
-VIVO, FLI, NuppelVideo, yuv4mpeg, FILM and RoQ files, supported by many
-native, XAnim, and Win32 DLL codecs.
+MKV, VIVO, FLI, NuppelVideo, yuv4mpeg, FILM and RoQ files, supported by many
+native and binary codecs.
 You can watch VideoCD, SVCD, DVD, 3ivx, DivX\ 3/\:4/\:5 and even WMV movies,
-too (without using the avifile library).
+too.
 .PP
-Another great feature of MPlayer is the wide range of supported output
-drivers.
+MPlayer supports a wide range of video and audio output drivers.
 It works with X11, Xv, DGA, OpenGL, SVGAlib, fbdev, AAlib, libcaca, DirectFB,
 Quartz, but you can also use GGI, SDL (and all their drivers), VESA (on every
-VESA compatible card, even without X11), some low level card-specific drivers
+VESA-compatible card, even without X11), some low-level card-specific drivers
 (for Matrox, 3Dfx and ATI) and some hardware MPEG decoder boards, such as the
 Siemens DVB, DXR2 and DXR3/\:Hollywood+.
 Most of them support software or hardware scaling, so you can enjoy movies in
-fullscreen.
+fullscreen mode.
 .PP
 MPlayer has an onscreen display (OSD) for status information, nice big
 antialiased shaded subtitles and visual feedback for keyboard controls.
 European/\:ISO 8859-1,2 (Hungarian, English, Czech, etc), Cyrillic and Korean
-fonts are supported along with 11 subtitle formats (MicroDVD, SubRip,
+fonts are supported along with 12 subtitle formats (MicroDVD, SubRip, OGM,
 SubViewer, Sami, VPlayer, RT, SSA, AQTitle, JACOsub, PJS and our own: MPsub) and
-DVD subtitles (SPU streams, VobSub and Closed Captions).
+DVD subtitles (SPU streams, VOBsub and Closed Captions).
 .PP
 .B mencoder
 (MPlayer's Movie Encoder) is a simple movie encoder, designed to encode
@@ -172,7 +170,7 @@ MPlayer-playable movies (see above) to other MPlayer-playable formats (see
 below).
 It encodes to DivX4, XviD, one of the libavcodec codecs and PCM/\:MP3/\:VBRMP3
 audio in 1, 2 or 3\ passes.
-Furthermore it has stream copying abilities, a powerful plugin system (crop,
+Furthermore it has stream copying abilities, a powerful filter system (crop,
 expand, flip, postprocess, rotate, scale, noise, rgb/\:yuv conversion) and
 more.
 .PP
@@ -188,15 +186,13 @@ It has the same options as MPlayer.
 .\" --------------------------------------------------------------------------
 .
 .SH "KEYBOARD CONTROL"
-MPlayer has a fully configurable, command driven, control layer
-which allow you to control MPlayer using keyboard, mouse, joystick
-or remote control (using lirc).
+MPlayer has a fully configurable, command-driven control layer
+which allows you to control MPlayer using keyboard, mouse, joystick
+or remote control (with LIRC).
 .br
 The default configuration file for the input system is
 ~/.mplayer/\:input.conf but it can be overriden
-using the \-input conf option.
-.br
-These keys may/\:may not work, depending on your video output driver.
+using the \-input option.
 .TP
 .B general control
 .PD 0
@@ -212,7 +208,7 @@ backward/\:forward in playlist
 .IPs "HOME and END"
 go to next/\:previous playtree entry in the parent list
 .IPs "INS and DEL"
-go to next/\:previous alternative source (asx playlist only)
+go to next/\:previous alternative source (ASX playlist only)
 .IPs "p / SPACE"
 pause movie (any key unpauses)
 .IPs "q / ESC"
@@ -229,13 +225,14 @@ mute sound
 toggle fullscreen
 .IPs T\ \ \ \ 
 toggle stay-on-top.
-Supported by drivers which use X11, except SDL, as well as directx and gl2 under Windows.
+Supported by video out drivers which use X11, except SDL, as well as directx
+and gl2 under Windows.
 .IPs "w and e"
 decrease/\:increase panscan range
 .IPs o\ \ \ \ 
-toggle between OSD states: none / seek / seek+timer
+toggle OSD states: none / seek / seek + timer / seek + timer + total time
 .IPs d\ \ \ \ 
-toggle between frame dropping states:  none / skip display / skip decoding
+toggle frame dropping states:  none / skip display / skip decoding
 (see \-framedrop and \-hardframedrop)
 .IPs v\ \ \ \ 
 toggle subtitle visibility
@@ -323,7 +320,7 @@ command line override either.
 The syntax of the configuration files is 'option=<value>', everything after
 a '#' is considered a comment.
 Options that work without values can be enabled by setting them to 'yes'
-or '1' and disabled by setting them to 'no' or '0'.
+or '1' or 'true' and disabled by setting them to 'no' or '0' or 'false'.
 Even suboptions can be specified in this way.
 .PP
 .I EXAMPLE:
@@ -362,9 +359,9 @@ See also \-afm, \-ac, \-vfm and \-vc.
 Specify configuration file to be parsed after the default ones.
 .TP
 .B \-quiet \ \ 
-With this option the status line (i.e. A:   0.7 V:   0.6 A-V:  0.068 ...)
-will not be displayed.
-Particularly useful on slow terminals or broken ones that do not properly
+Make console output less verbose; in particular, prevents the status line
+(i.e. A:   0.7 V:   0.6 A-V:  0.068 ...) from being displayed.
+Particularly useful on slow terminals or broken ones which do not properly
 handle carriage return (i.e. \\r).
 .TP
 .B \-v, \-verbose
@@ -388,18 +385,18 @@ prints everything related to input parsers (parser debug)
 .SH "PLAYER OPTIONS (MPLAYER ONLY)"
 .TP
 .B \-autoq <quality> (use with \-vf [s]pp)
-Dynamically changes the level of postprocessing depending on available spare
+Dynamically changes the level of postprocessing depending on the available spare
 CPU time.
 The number you specify will be the maximum level used.
 Usually you can use some big number.
-You have to use \-vf [s]pp without parameters in order to use this.
+You have to use \-vf [s]pp without parameters in order for this to work.
 .TP
 .B \-autosync <factor>
 Gradually adjusts the A/\:V sync based on audio delay measurements.
 Specifying \-autosync\ 0, the default, will cause frame timing to be based
 entirely on audio delay measurements.
 Specifying \-autosync\ 1 will do the same, but will subtly change the A/\:V
-correction algorithm used.
+correction algorithm.
 An uneven video frame rate in a movie which plays fine with \-nosound can
 often be helped by setting this to an integer value greater than 1.
 The higher the value, the closer the timing will be to \-nosound.
@@ -411,7 +408,7 @@ This delay in reaction time to sudden A/\:V offsets should be the only
 side-effect of turning this option on, for all sound drivers.
 .TP
 .B \-benchmark
-Prints some statistics on CPU usage and dropped frames at the end.
+Prints some statistics on CPU usage and dropped frames at the end of playback.
 Use in combination with \-nosound and \-vo null for benchmarking only the
 video codec.
 .br
@@ -430,13 +427,13 @@ Disables colorkeying.
 Only supported by the cvidix, fbdev, svga, vesa, winvidix, xmga, xvidix and
 xover video out drivers.
 .TP
-.B \-edl <filename>
+.B \-edl <filename> (EDL only)
 Enables edit decision list (EDL) actions during playback.
 Video will be skipped over and audio will be muted and unmuted according to
 the entries in the given file.
 See DOCS/HTML/en/edl.html for details on how to use this.
 .TP
-.B \-edlout <filename>
+.B \-edlout <filename> (EDL only)
 Creates a new file and writes edit decision list (EDL) records to that file.
 During playback, when the user hits 'i', an entry to skip over the last two
 seconds of playback will be written to the file.
@@ -468,7 +465,7 @@ More intense frame dropping (breaks decoding).
 Leads to image distortion!
 .TP
 .B \-identify
-Show file parameters in easy parsable format.
+Show file parameters in an easily parseable format.
 The wrapper script TOOLS/midentify suppresses the other MPlayer output and
 (hopefully) shellescapes the filenames.
 .TP
@@ -485,15 +482,15 @@ Available commands are:
 .RSs
 .IPs conf=<file>
 Read alternative input.conf.
-If given without pathname, ~/\:.mplayer is assumed.
+If no full path is given, ~/\:.mplayer/<file> is assumed.
 .IPs ar-delay
 Delay in msec before we start to autorepeat a key (0 to disable).
 .IPs ar-rate
-How many key presses per second when we autorepeat.
+Number of key presses to generate per second on autorepeat.
 .IPs keylist
-Prints all keys that can be bound.
+Prints all keys that can be bound to commands.
 .IPs cmdlist
-Prints all commands that can be bound.
+Prints all commands that can be bound to keys.
 .IPs js-dev
 Specifies the joystick device to use (default is /dev/\:input/\:js0).
 .IPs file\ 
@@ -508,8 +505,7 @@ several 'echo "seek 10" > mp_pipe' and the pipe will stay valid.
 .
 .TP
 .B \-lircconf <file> (LIRC only)
-Specifies a configuration file for LIRC (Linux Infrared Remote Control, see
-http://www.lirc.org) if you don't like the default ~/\:.lircrc.
+Specifies a configuration file for LIRC (default: ~/\:.lircrc).
 .TP
 .B \-list-options
 Prints out all the available options.
@@ -527,9 +523,17 @@ Use an alternative menu.conf.
 .B \-menu-root <value> (OSD menu only)
 Specify the main menu.
 .TP
+.B \-noconsolecontrols
+Prevent MPlayer from reading key events from standard input.
+Useful when reading data from standard input.
+This is automatically enabled when \- is found on the command line.
+There are situations where you have to set it manually, e.g.
+if you open /dev/stdin (or the equivalent on your system), use stdin
+in a playlist or intend to read from stdin later on via the loadfile or
+loadlist slave commands.
+.TP
 .B \-nojoystick
 Turns off joystick support.
-Default is on, if compiled in.
 .TP
 .B \-nolirc
 Turns off LIRC support.
@@ -539,62 +543,58 @@ Disable mouse button press/release input (mozplayerxp's context menu relies
 on this option).
 .TP
 .B \-nortc (RTC only)
-Turns off usage of the Linux RTC (real-time clock \- /dev/\:rtc) as timing
+Turns off usage of the Linux RTC (realtime clock \- /dev/\:rtc) as timing
 mechanism.
 .TP
 .B \-playlist <file>
-Play files according to a playlist (1 file per row or Winamp or ASX format).
+Play files according to a playlist file (ASX, Winamp, SMIL, or
+one-file-per-line format).
 .br
 .I NOTE:
 This option is considered an entry so options found after it will apply
 only to the elements of this playlist.
+.br
+FIXME: This needs to be clarified and documented thoroughly.
 .TP
-.B \-really-quiet
-Display even less output and status messages.
+.B \-really-quiet (also see \-quiet)
+Display even less output and status messages than with \-quiet.
+.TP
+.B \-rtc-device <device>
+Use the specified device for RTC timing.
 .TP
 .B \-shuffle
 Play files in random order.
 .TP
-.B \-skin <skin\ directory> (GUI only)
-Load skin from the given directory (WITHOUT path name).
+.B \-skin <name> (GUI only)
+Loads a skin from the directory given as parameter below the default skin
+directories, /usr/local/share/mplayer/Skin/ and ~/.mplayer/Skin/.
 
 .I EXAMPLE:
 .PD 0
 .RSs
 .IPs "\-skin fittyfene"
-tries Skin/fittyfene.
-It first checks
-/usr/local/share/mplayer/
-and afterwards ~/.mplayer/.
+Tries /usr/local/share/mplayer/Skin/fittyfene
+and afterwards ~/.mplayer/Skin/fittyfene.
 .RE
 .PD 1
 .
 .TP
-.B \-slave \ \ 
-This option switches on slave mode.
-This is intended for use of MPlayer as a backend to other programs.
-Instead of intercepting keyboard events, MPlayer will read simplistic command
-lines from its stdin.
+.B \-slave (also see \-input)
+Switches on slave mode, in which MPlayer works as a backend for other programs.
+Instead of intercepting keyboard events, MPlayer will read commands from stdin.
+See DOCS/tech/slave.txt and \-input cmdlist for a list of slave commands.
 .TP
 .B \-softsleep
-Uses high quality software timers.
+Use high-quality software timers instead of the RTC.
 As precise as the RTC without requiring special privileges.
 Comes at the price of higher CPU consumption.
 .TP
 .B \-speed <0.01\-100>
-Set playback speed rate.
+Slow down or speed up playback by the factor given as parameter.
 .TP
 .B \-sstep <sec>
-Specifies seconds between displayed frames.
+Display one frame every <sec> seconds.
 Useful for slideshows.
-.TP
-.B \-use-stdin
-The standard input (aka. stdin) will be used to read data instead of key
-events.  If you open /dev/stdin (or the equivalent on your system), use stdin
-in a playlist or intend to read from stdin later on via the loadfile or
-loadlist commands you
-.B need
-this option.
 .
 .
 .SH "DEMUXER/STREAM OPTIONS"
@@ -633,7 +633,7 @@ Plays Hungarian and falls back to English if Hungarian is not available.
 .B \-audio-demuxer <number> (\-audiofile only)
 Force audio demuxer type for \-audiofile.
 Give the demuxer ID as defined in libmpdemux/demuxer.h.
-Use \-audio-demuxer 17 to force .mp3 detection.
+Use \-audio-demuxer 17 to force MP3 detection.
 .TP
 .B \-audiofile <filename>
 Play audio from an external file (WAV, MP3 or Ogg Vorbis) while viewing a
@@ -649,7 +649,7 @@ able to send content in different bitrates).
 Useful if you want to watch live streamed media behind a slow connection.
 .TP
 .B \-cdrom-device <path\ to\ device>
-Override default CDROM drive name /dev/\:cdrom.
+Override default CD-ROM drive name /dev/\:cdrom.
 .TP
 .B \-cache <kBytes>
 This option specifies how much memory (in kBytes) to use when precaching a
@@ -742,21 +742,21 @@ and ~/.mozilla/.
 .B \-demuxer <number>
 Force demuxer type.
 Give the demuxer ID as defined in libmpdemux/demuxer.h.
-Use \-demuxer 17 to force .mp3 detection.
+Use \-demuxer 17 to force MP3 detection.
 .TP
-.B \-dumpaudio (MPLAYER only)
-Dumps raw compressed audio stream to ./\:stream.dump (useful with mpeg/\:ac3).
+.B \-dumpaudio (MPlayer only)
+Dumps raw compressed audio stream to ./stream.dump (useful with mpeg/\:ac3).
 .TP
-.B \-dumpfile <filename> (MPLAYER only)
+.B \-dumpfile <filename> (MPlayer only)
 Specify which file MPlayer should dump to.
 Should be used together with \-dumpaudio / \-dumpvideo / \-dumpstream.
 .TP
-.B \-dumpstream (MPLAYER only)
-Dumps the raw stream to ./\:stream.dump.
+.B \-dumpstream (MPlayer only)
+Dumps the raw stream to ./stream.dump.
 Useful when ripping from DVD or network.
 .TP
-.B \-dumpvideo (MPLAYER only)
-Dump raw compressed video stream to ./\:stream.dump (not very usable).
+.B \-dumpvideo (MPlayer only)
+Dump raw compressed video stream to ./stream.dump (not very usable).
 .TP
 .B \-dvbin <options> (DVB only)
 Pass the following parameters to the DVB input module, in order to override
@@ -783,7 +783,7 @@ Here you can tell MPlayer which angles to use (default: 1).
 Examples can be found below.
 .TP
 .B \-forceidx
-Force rebuilding of INDEX.
+Force rebuilding of index.
 Useful for files with broken index (desyncs, etc).
 Seeking will be possible.
 You can fix the index permanently with MEncoder (see the documentation).
@@ -807,9 +807,9 @@ It can be slow especially when seeking backwards \- it has to rewind to the
 beginning to find the exact frame.
 .TP
 .B \-idx (also see \-forceidx)
-Rebuilds INDEX of the AVI if no INDEX was found,
+Rebuilds index of files if no index was found,
 thus allowing seeking.
-Useful with broken/\:incomplete downloads, or badly created AVIs.
+Useful with broken/\:incomplete downloads, or badly created files.
 .br
 .I NOTE:
 You can only use this option if the underlying media supports seeking
@@ -944,7 +944,7 @@ This option is obsolete, because MPlayer has OpenDML support.
 .TP
 .B \-sb <byte\ position> (see \-ss option too)
 Seek to byte position.
-Useful for playback from CDROM images / .VOB files with junk at the beginning.
+Useful for playback from CD-ROM images / .VOB files with junk at the beginning.
 .TP
 .B \-srate <Hz>
 Selects the given output sampling rate, resampling if necessary.
@@ -1133,32 +1133,32 @@ Force audio parameters for the .vivo demuxer (for debugging purposes).
 .I NOTE:
 See \-vf expand too.
 .TP
-.B \-dumpjacosub (MPLAYER only)
+.B \-dumpjacosub (MPlayer only)
 Convert the given subtitle (specified with the \-sub option) to the time-based
 JACOsub subtitle format.
 Creates a dumpsub.js file in the current directory.
 .TP
-.B \-dumpmicrodvdsub (MPLAYER only)
+.B \-dumpmicrodvdsub (MPlayer only)
 Convert the given subtitle (specified with the \-sub option) to the
 MicroDVD subtitle format.
 Creates a dumpsub.sub file in the current directory.
 .TP
-.B \-dumpmpsub (MPLAYER only)
+.B \-dumpmpsub (MPlayer only)
 Convert the given subtitle (specified with the \-sub option) to MPlayer's
 subtitle format, MPsub.
 Creates a dump.mpsub file in the current directory.
 .TP
-.B \-dumpsami (MPLAYER only)
+.B \-dumpsami (MPlayer only)
 Convert the given subtitle (specified with the \-sub option) to the time-based
 SAMI subtitle format.
 Creates a dumpsub.smi file in the current directory.
 .TP
-.B \-dumpsrtsub (MPLAYER only)
+.B \-dumpsrtsub (MPlayer only)
 Convert the given subtitle (specified with the \-sub option) to the time-based
 SubViewer (SRT) subtitle format.
 Creates a dumpsub.srt file in the current directory.
 .TP
-.B \-dumpsub (MPLAYER only) (BETA CODE)
+.B \-dumpsub (MPlayer only) (BETA CODE)
 Dumps the subtitle substream from VOB streams.
 See \-dump*sub and \-vobsubout* options too.
 .TP
@@ -1191,7 +1191,7 @@ fonts: ~/\:.mplayer/\:font/\:font.desc, default for FreeType fonts:
 .I NOTE:
 With FreeType, this option determines path to the text font file.
 .br
-With Fontconfig, this option determines the fontconfig font name.
+With fontconfig, this option determines the fontconfig font name.
 
 .I EXAMPLE:
 .PD 0
@@ -1216,14 +1216,14 @@ Display only forced subtitles for the DVD subtitle stream selected by e.g.\&
 Specifies the charset that will be passed to FriBiDi when decoding a non-UTF8
 subtitles (default: ISO8859-8).
 .TP
-.B \-ifo <vobsub\ ifo\ file>
-Indicate the file that will be used to load palette and frame size for VOBSUB
+.B \-ifo <VOBsub\ ifo\ file>
+Indicate the file that will be used to load palette and frame size for VOBsub
 subtitles.
 .TP
 .B \-noautosub
 Turns off automatic loading of subtitle files.
 .TP
-.B \-osdlevel <0\-3> (MPLAYER only)
+.B \-osdlevel <0\-3> (MPlayer only)
 Specifies which mode the OSD should start in.
 .
 .PD 0
@@ -1270,7 +1270,7 @@ Selects Hungarian and falls back to English if Hungarian is not available.
 .
 .TP
 .B \-spuaa <mode> (OSD only)
-Antialiasing/scaling mode for DVD/VobSub.
+Antialiasing/scaling mode for DVD/VOBsub.
 A value of 16 may be added to mode in order to force scaling even
 when original and scaled frame size already match, for example to
 smooth subtitles with the gaussian blur.
@@ -1292,7 +1292,7 @@ uses swscaler gaussian blur (looks very good)
 .
 .TP
 .B \-spualign <-1\-2> (OSD only)
-Specify how spu (DVD/VobSub) subtitles should be aligned.
+Specify how spu (DVD/VOBsub) subtitles should be aligned.
 Values are the same as for \-subalign, with the extra choice -1 for original
 position.
 .TP
@@ -1309,7 +1309,7 @@ switched with 'j'.
 .B \-sub-bg-alpha <0\-255>
 Specify the alpha channel value for subtitles and OSD backgrounds.
 Big values mean more transparency.
-The 0 value is an exception and means completly transparent.
+The 0 value is an exception and means completely transparent.
 .TP
 .B \-sub-bg-color <0\-255>
 Specify the color value for subtitles and OSD backgrounds.
@@ -1360,6 +1360,25 @@ specify codepage of the subtitle.
 \-subcp latin2
 .br
 \-subcp cp1250
+.RE
+.PD 1
+.
+.TP
+.B \-subcp enca:<language>:<fallback codepage> (ENCA only)
+You can specify your language using a two letter language code to
+make ENCA detect the codepage automatically.
+If unsure, enter anything and watch mplayer -v output for available
+languages. Fallback codepage specifies the codepage to use, when the
+autodetection fails.
+
+.I EXAMPLE:
+.PD 0
+.RSs
+.IPs "\-subcp enca:cs:latin2"
+Guess the encoding, assuming the subtitles are Czech, fall back to
+latin 2, if the detection fails.
+.IPs "\-subcp enca:pl:cp1250"
+Guess the encoding for Polish, fall back to cp1250.
 .RE
 .PD 1
 .
@@ -1434,41 +1453,19 @@ Tells MPlayer to handle the subtitle file as UNICODE.
 .B \-utf8 \ \ 
 Tells MPlayer to handle the subtitle file as UTF8.
 .TP
-.B \-vobsub <vobsub\ file\ without\ extension>
-Specify the VobSub files that are to be used for subtitle.
+.B \-vobsub <VOBsub\ file\ without\ extension>
+Specify the VOBsub files that are to be used for subtitle.
 This is the full pathname without extensions, i.e.\& without
 the '.idx', '.ifo' or '.sub'.
 .TP
 .B \-vobsubid <0\-31>
-Specify the VobSub subtitle id.
+Specify the VOBsub subtitle id.
 .
 .
 .SH "AUDIO OUTPUT OPTIONS (MPLAYER ONLY)"
 .TP
 .B \-abs <value> (OBSOLETE)
 Override audio driver/\:card buffer size detection, \-ao oss only
-.TP
-.B \-ao <driver1[:device],driver2,...[,]>
-Specify a priority list of audio output drivers (optionally with device) to be
-used.
-With SDL 'device' is valid, too, it means subdriver then.
-.br
-.I NOTE:
-To get a full list of available drivers, see \-ao help.
-.br
-If the list has a trailing ',' it will fallback to drivers not listed.
-
-.I EXAMPLE:
-.PD 0
-.RSs
-.IPs "\-ao oss:/\:dev/\:dsp2,oss:/\:dev/\:dsp1,"
-try to use OSS with the specified sound devices and fallback to others if it
-fails
-.IPs "\-ao sdl:esd"
-specify the SDL subdriver
-.RE
-.PD 1
-.
 .TP
 .B \-aofile <filename>
 Filename for \-ao pcm.
@@ -1539,18 +1536,133 @@ Signed 32-bit (Big-Endian)
 .B \-mixer <device>
 This option will tell MPlayer to use a different device for mixing than
 /dev/\:mixer.
-.TP      
-.B \-mixer-channel <mixer line> (\-ao oss only)
+For ALSA this is the mixer name.
+.TP
+.B \-mixer-channel <mixer line> (\-ao oss and \-ao alsa only)
 This option will tell MPlayer to use a different channel for controlling
 volume than the default PCM.
-Options include
+Options for OSS include
 .B vol, pcm, line.
 For a complete list of options look for SOUND_DEVICE_NAMES in
 /usr/include/linux/soundcard.h.
+For ALSA you can use the names e.g. alsamixer displays, like 
+.B Master, Line, PCM.
 .TP
 .B \-nowaveheader (\-ao pcm only)
 Don't include wave header.
 Used for RAW PCM.
+.
+.
+.SH "AUDIO OUTPUT DRIVERS (MPLAYER ONLY)"
+Audio output drivers are interfaces to different output facilities.
+The syntax is:
+.TP
+.B \-ao <driver1[:suboption1[=value]:...],driver2,...[,]>
+Specify a priority list of audio output drivers to be used.
+.PP
+If the list has a trailing ',' it will fall back to drivers not listed
+on the command line.
+Suboptions are optional and can mostly be omitted.
+.br
+.I NOTE:
+See \-ao help for a list of compiled-in drivers.
+
+.I EXAMPLE:
+.PD 0
+.RSs
+.IPs "\-ao alsa,oss,"
+Try the ALSA driver, then the OSS driver, then others.
+.IPs "\-ao alsa:mmap:noblock:device=hw#0.3"
+Sets noblock-mode, mmap-mode and the device-name as first card, fourth device.
+.RE
+.PD 1
+.
+
+FIXME: Document suboptions for sdl, arts, esd, jack, nas, macosx, sgi, sun,
+win32, dxr2, mpegpes, null, pcm, plugin.
+
+Available audio output drivers are:
+.
+.TP
+.B alsa\ \ \ 
+ALSA 0.9/1.x audio output driver.
+.PD 0
+.RSs
+.IPs mmap\ \ \ 
+Sets experimental mmap-mode (does not work for more than 2 channels).
+.IPs noblock
+Sets noblock-mode.
+.IPs device=<device>
+Sets the device name.
+Replace any ',' with '.' and any ':' with '#' in the ALSA device name.
+.RE
+.PD 1
+.TP
+.B alsa1x (OBSOLETE)
+ALSA 1.x audio output driver.
+Obsoleted by the general alsa audio output driver.
+.TP
+.B alsa9 (OBSOLETE)
+ALSA 0.9 audio output driver.
+Obsoleted by the general alsa audio output driver.
+.TP
+.B alsa5\ \ 
+ALSA 0.5 audio output driver.
+.TP
+.B oss\ \ \ \ 
+OSS audio output driver
+.PD 0
+.RSs
+.IPs dsp-device
+Sets the audio-output device (default: /dev/dsp).
+.RE
+.PD 1
+.TP
+.B sdl\ \ \ \ 
+Highly platform independent SDL (Simple Directmedia Layer) library
+audio output driver.
+.TP
+.B arts\ \ \ 
+Audio output through the Arts daemon.
+.TP
+.B esd\ \ \ \ 
+Audio output through the ESD daemon.
+.TP
+.B jack\ \ \ \ 
+Audio output through JACK (Jack Audio Connection Kit).
+.TP
+.B nas\ \ \ \ 
+Audio output through NAS.
+.TP
+.B macosx (Mac OS X only)
+Native Mac OS X audio output driver.
+.TP
+.B sgi (SGI only)
+Native SGI audio output driver.
+.TP
+.B sun (Sun only)
+Native Sun audio output driver.
+.TP
+.B win32 (Windows only)
+Native Windows waveout audio output driver.
+.TP
+.B dxr2 (DXR2 only)
+Creative DXR2 specific output driver.
+Also see the \-dxr2 option.
+.TP
+.B mpegpes (DVB only)
+DVB specific output driver.
+.TP
+.B null\ \ \ 
+Produces no audio output but maintains video playback speed.
+Use \-nosound for benchmarking.
+.TP
+.B pcm\ \ \ \ 
+Raw PCM/wave file writer audio output.
+Writes the sound to ./audiodump.wav.
+.TP
+.B plugin\ \ 
+Plugin audio output driver.
 .
 .
 .SH "VIDEO OUTPUT OPTIONS (MPLAYER ONLY)"
@@ -1559,7 +1671,7 @@ Used for RAW PCM.
 You can get a list and an explanation of available options executing
 .I mplayer \-aahelp
 .TP
-.B \-adapter <value> (\-vo directx only)
+.B \-adapter <value>
 Set the graphics card that will receive the image.
 Needs the \-vm option to work.
 You can get a list of available cards when you run this option with \-v.
@@ -1844,10 +1956,10 @@ See also \-aspect for movie aspect.
 Do not grab mouse pointer after VidMode change (\-vm), useful for multihead
 setup.
 .TP
-.B \-nokeepaspect (X11 only)
-Do not keep window aspect ratio when resizing X11 windows (Works currently only
-with \-vo x11, xv, xmga and xvidix and your window manager needs to understand
-window aspect hints.).
+.B \-nokeepaspect
+Do not keep window aspect ratio when resizing windows (Works currently only
+with \-vo x11, xv, xmga, xvidix, directx and under X11 your window manager
+needs to understand window aspect hints.).
 .TP
 .B \-noxv (SDL only)
 Disables XVideo SDL driver.
@@ -1962,6 +2074,383 @@ of the movie relative to the upper left corner of the screen.
 The movie is centered by default.
 .
 .
+.SH "VIDEO OUTPUT DRIVERS (MPLAYER ONLY)"
+Video output drivers are interfaces to different output facilities.
+The syntax is:
+.TP
+.B \-vo <driver1[:suboption1[=value]:...],driver2,...[,]>
+Specify a priority list of video output drivers to be used.
+.PP
+If the list has a trailing ',' it will fall back to drivers not listed on the
+command line.
+Suboptions are optional and can mostly be omitted.
+.br
+.I NOTE:
+See \-vo help for a list of compiled-in drivers.
+
+.I EXAMPLE:
+.PD 0
+.RSs
+.IPs "\-vo xmga,xv,"
+Try the Matrox X11 driver, then the Xv driver, then others.
+.IPs "\-vo directx:noaccel"
+Uses the DirectX driver with acceleration features turned off.
+.RE
+.PD 1
+.
+
+FIXME: Document suboptions for x11, xover, dga, sdl, vidix, xvidix, fbdev,
+fbdev2, vesa, svga, null, aa, bl, ggi, mga, xmga, syncfb, 3dfx, tdfx_vid,
+dxr2, dxr3, mpegpes, zr, zr2, md5, yuv4mpeg, gif89a, jpeg, pgm, png, tga.
+
+Available video output drivers are:
+.
+.TP
+.B xv (X11 only)
+Uses the XVideo extension of XFree86 4.x to enable hardware
+accelerated playback.
+If you cannot use a hardware specific driver, this is probably
+the best option.
+.PD 0
+.RSs
+.IPs port=<number>
+Select a specific XVideo port.
+.RE
+.PD 1
+.TP
+.B x11 (X11 only)
+Shared memory output driver without hardware acceleration that
+works whenever X11 is present.
+.TP
+.B xover (X11 only)
+Adds X11 support to all overlay based video output drivers.
+Currently only supported by tdfx_vid.
+.TP
+.B xvmc (X11, \-vc ffmpeg12mc only)
+Video output driver that uses the XvMC (X Video Motion Compensation)
+extension of XFree86 4.x to speed up MPEG1/2 and VCR2 decoding.
+.PD 0
+.RSs
+.IPs benchmark
+Disables image display.
+Necessary for proper benchmarking of drivers that change
+image buffers on monitor retrace only (nVidia).
+.IPs queue
+Queue frames for display to allow more parallel work of the video hardware.
+May add a small (not noticeable) constant A/V desync.
+.IPs sleep
+Use sleep function while waiting for rendering to finish
+(not recomended on Linux).
+.IPs wait\ 
+Do not use sleep function while waiting for rendering to finish
+(default).
+.RE
+.PD 1
+.TP
+.B dga (X11 only)
+Output video through the XFree86 Direct Graphics Access extension.
+Considered obsolete.
+.TP
+.B sdl (SDL only)
+Highly platform independent SDL (Simple Directmedia Layer) library
+video output driver.
+.TP
+.B vidix\ \ 
+VIDIX (VIDeo Interface for *niX) is an interface to the
+video acceleration features of different graphics cards.
+Very fast output driver on cards that support it.
+.PD 0
+.RSs
+.IPs <subdevice>
+Explicitly choose the VIDIX subdevice driver to use.
+Available subdevice drivers are cyberblade_vid, mach64_vid, mga_crtc2_vid,
+mga_vid, nvidia_vid, pm3_vid, radeon_vid, rage128_vid, sis_vid.
+.RE
+.PD 1
+.TP
+.B xvidix (X11 only)
+X11 frontend for VIDIX
+.PD 0
+.RSs
+.IPs <subdevice>
+same as vidix
+.RE
+.PD 1
+.TP
+.B cvidix\ 
+Generic and platform independent VIDIX frontend, can even run in a
+textconsole with nVidia cards.
+.PD 0
+.RSs
+.IPs <subdevice>
+same as vidix
+.RE
+.PD 1
+.TP
+.B winvidix (Windows only)
+Windows frontend for VIDIX
+.PD 0
+.RSs
+.IPs <subdevice>
+same as vidix
+.RE
+.PD 1
+.TP
+.B directx (Windows only)
+Output driver that uses the DirectX interface.
+.PD 0
+.RSs
+.IPs noaccel
+Turns off hardware acceleration.
+Try this option if you have display problems.
+.RE
+.PD 1
+.TP
+.B quartz (Mac OS X only)
+Mac OS X Quartz output driver.
+Under some circumstances, it might be more efficient to force a
+packed YUV output format, with e.g. \-vf format=yuy2
+.PD 0
+.RSs
+.IPs device_id=<number>
+Choose the display device to use in fullscreen.
+.RE
+.PD 1
+.TP
+.B fbdev (Linux only)
+Uses the kernel framebuffer to output video.
+.TP
+.B fbdev2 (Linux only)
+Uses the kernel framebuffer to output video,
+alternative implementation.
+.TP
+.B vesa\ \ \ 
+Very general output driver that should work on any VESA VBE 2.0
+compatible card.
+.PD 0
+.RSs
+.IPs dga\ \ 
+Turns on DGA mode.
+.IPs nodga
+Turns off DGA mode.
+.IPs vidix
+FIXME: document this
+.IPs lvo\ \ 
+FIXME: document this
+.RE
+.PD 1
+.TP
+.B svga\ \ \ 
+Output video using the SVGA library.
+.TP
+.B gl\ \ \ \ \ 
+OpenGL output driver.
+Very simple version, no OSD support and video size must be smaller than
+the maximum texture size of your OpenGL implementation.
+Intended to work even with the most simple OpenGL implementations.
+.PD 0
+.RSs
+.IPs manyfmts
+Enables support for more (RGB and BGR) color formats.
+Needs OpenGL version >= 1.2, NOT yet WORKING correctly.
+.IPs slice-height=<0\-...>
+Number of lines copied to texture in one piece (default: 4).
+0 for whole image.
+.RE
+.PD 1
+.TP
+.B gl2\ \ \ \ 
+OpenGL output driver, second generation.
+Supports OSD and videos larger than the maximum texture size.
+.TP
+.B null\ \ \ 
+Produces no video output.
+Useful for benchmarking.
+.TP
+.B aa\ \ \ \ \ 
+ASCII art output driver that works on a text console.
+.TP
+.B caca\ \ \ 
+Colour AsCii Art output driver that works on a text console.
+.TP
+.B bl\ \ \ \ \ 
+Video playback using the Blinkenlights UDP protocol.
+This driver is highly hardware specific.
+.TP
+.B ggi\ \ \ \ 
+Output driver for the GGI graphics system.
+.TP
+.B directfb
+Play video using the DirectFB library.
+.PD 0
+.RSs
+.IPs (no)input
+Use the DirectFB instead of the MPlayer keyboard code (default: enabled).
+.IPs buffermode=single|double|triple
+Double and triple buffering give best results if you want to avoid tearing issues.
+Triple buffering is more efficent than double buffering as it doesn't block MPlayer
+while waiting for the vertical retrace.
+Single buffering should be avoided (default: single).
+.IPs fieldparity=top|bottom
+Control the output order for interlaced frames (default: disabled).
+Valid values are top = top fields first, bottom = bottom fields first.
+This option doesn't have any effect on progressive film material
+like most MPEG movies are.
+You need to enable this option if you have tearing issues/unsmooth
+motions watching interlaced film material.
+.IPs layer=N
+Will force layer with id N for playback (default: -1 - auto).
+.RE
+.PD 1
+.TP
+.B dfbmga\ 
+Matrox G400/G450/G550 specific output driver that uses the DirectFB library.
+Enables CRTC2 (second head), displaying video independently of the first head.
+.PD 0
+.RSs
+.IPs (no)bes
+Enable the use of the Matrox BES (backend scaler) (default: disabled).
+Gives very good results concerning speed and output quality as interpolated
+picture processing is done in hardware.
+Works only on the primary head.
+.IPs (no)spic
+Make use of the Matrox sub picture layer to display the OSD (default: enabled).
+.IPs (no)crtc2
+Turn on TV-out on the second head (default: enabled).
+The output quality is amazing as it's a full interlaced picture
+with proper sync to every odd/even field.
+.IPs (no)input
+Use the DirectFB instead of the MPlayer keyboard code (default: disabled).
+.IPs buffermode=single|double|triple
+Double and triple buffering give best results if you want to avoid tearing issues.
+Triple buffering is more efficent than double buffering as it doesn't block MPlayer
+while waiting for the vertical retrace.
+Single buffering should be avoided (default: triple).
+.IPs fieldparity=top|bottom
+Control the output order for interlaced frames (default: disabled).
+Valid values are top = top fields first, bottom = bottom fields first.
+This option doesn't have any effect on progressive film material
+like most MPEG movies are.
+You need to enable this option if you have tearing issues/unsmooth
+motions watching interlaced film material.
+.IPs tvnorm=pal|ntsc|auto
+Will set the TV norm of the Matrox card without the need
+for modifying /etc/\:directfbrc (default: disabled).
+Valid norms are pal = PAL, ntsc = NTSC.
+Special norm is auto (auto-adjust using PAL/NTSC) because it decides
+which norm to use by looking at the frame rate of the movie.
+.RE
+.PD 1
+.TP
+.B mga (Linux only)
+Matrox specific output driver that makes use of the YUV back
+end scaler on Gxxx cards through a kernel module.
+If you have a Matrox card, this is the fastest option.
+.TP
+.B xmga (Linux, X11 only)
+The mga output driver, running in an X11 window.
+.TP
+.B syncfb\ 
+Video output driver for the SyncFB kernel module, which provides
+special hardware features of Matrox Gxxx cards like hardware
+deinterlacing, scaling and synchronizing your video output to
+the vertical retrace of your monitor.
+.TP
+.B 3dfx (Linux only)
+This driver employs the tdfx framebuffer driver to play movies with
+YUV acceleration.
+.TP
+.B tdfx_vid (Linux only)
+3Dfx specific output driver.
+Works in conjunction with a kernel module.
+.TP
+.B dxr2 (DXR2 only)
+Creative DXR2 specific output driver.
+Also see the \-dxr2 option.
+.PD 0
+.RSs
+.IPs x11
+Enables overlay.
+.IPs xv
+Enables overlay.
+.RE
+.PD 1
+.TP
+.B dxr3 (DXR3 only)
+Sigma Designs em8300 MPEG decoder chip (Creative DXR3, Sigma Designs
+Hollywood Plus) specific output driver.
+Also see the lavc video filter.
+.PD 0
+.RSs
+.IPs overlay
+Activates the overlay instead of TVOut.
+.IPs prebuf
+Turns on prebuffering.
+.IPs sync
+Will turn on the new sync-engine.
+.IPs norm=<norm>
+Specifies the TV norm.
+.RSss
+0: Does not change current norm (default).
+.br
+1: Auto-adjust using PAL/NTSC.
+.br
+2: Auto-adjust using PAL/PAL-60.
+.br
+3: PAL
+.br
+4: PAL-60
+.br
+5: NTSC
+.REss
+.IPs device=<number>
+Specifies the device number to use if you have more than one em8300 card.
+.RE
+.PD 1
+.TP
+.B mpegpes (DVB only)
+DVB specific output driver.
+.TP
+.B zr\ \ \ \ \ 
+Output driver for a number of MJPEG capture/playback cards.
+Also see the -zr* options and -zrhelp.
+.TP
+.B zr2\ \ \ \ 
+Output driver for a number of MJPEG capture/playback cards, second generation.
+Also see the zrmjpeg video filter.
+.TP
+.B md5\ \ \ \ 
+Writes md5sums for each frame into a file called 'md5' in the
+current directory.
+Useful for debugging.
+.TP
+.B yuv4mpeg
+Transforms the video stream into a sequence of uncompressed YUV 4:2:0
+images and stores it in a file called 'stream.yuv' in the current
+directory.
+Useful if you want to process the video with the mjpegtools suite.
+.TP
+.B gif89a\ 
+Output each frame into a GIF file in the current directory.
+Each file takes the frame number padded with leading zeros as name.
+.TP
+.B jpeg\ \ \ 
+Output each frame into a JPEG file in the current directory.
+Each file takes the frame number padded with leading zeros as name.
+.TP
+.B pgm\ \ \ \ 
+Output each frame into a PGM file in the current directory.
+Each file takes the frame number padded with leading zeros as name.
+.TP
+.B png\ \ \ \ 
+Output each frame into a PNG file in the current directory.
+Each file takes the frame number padded with leading zeros as name.
+.TP
+.B tga\ \ \ \ 
+Output each frame into a Targa file in the current directory.
+Each file takes the frame number padded with leading zeros as name.
+.
+.
 .SH "DECODING/FILTERING OPTIONS"
 .TP
 .B \-ac <[-]codec1,[-]codec2,...[,]>
@@ -1989,7 +2478,7 @@ try other codecs except FFmpeg's MP3 decoder
 .PD 1
 .
 .TP
-.B \-af <plugin1[=options],plugin2,...>
+.B \-af <filter1[=option1:option2:...],filter2,...>
 Activate a comma separated list of audio filters and their options.
 .br
 Available filters are:
@@ -2005,7 +2494,7 @@ empty channels are inserted (except mixing from mono to stereo, then the mono
 channel is repeated in both of the output channels).
 If the number of output channels is smaller than the number of input channels
 the exceeding channels are truncated.
-.IPs format[=bps,f]
+.IPs format[=bps:f]
 Select the format f and bytes per sample bps used for output from the
 filter layer.
 The option bps is an integer and denotes Bytes per sample.
@@ -2025,8 +2514,8 @@ This filter is not reentrant and can therefore only be enabled once for every
 audio stream.
 .RSss
 v: desired gain in dB for all channels in the stream.
-The gain can be set from -200dB to +40dB (where -200dB mutes the sound
-completely and +40dB equals a gain of 1000).
+The gain can be set from -200dB to +60dB (where -200dB mutes the sound
+completely and +60dB equals a gain of 1000).
 .br
 sc: enable soft clipping.
 .REss
@@ -2251,6 +2740,7 @@ It has effect only with libmpeg2 and libavcodec codecs.
 .TP
 .B \-nosound
 Do not play/\:encode sound.
+Useful for benchmarking.
 .TP
 .B \-novideo
 Do not play/\:encode video.
@@ -2406,7 +2896,7 @@ try XAnim codecs first
 .PD 1
 .
 .TP
-.B \-x <x> (MPLAYER only)
+.B \-x <x> (MPlayer only)
 Scale image to x width (if sw/\:hw scaling available).
 Disables aspect calculations.
 .TP
@@ -2445,7 +2935,7 @@ Set width to value and calculate height to keep correct aspect ratio.
 .PD 1
 .
 .TP
-.B \-y <y> (MPLAYER only)
+.B \-y <y> (MPlayer only)
 Scale image to y height (if sw/\:hw scaling available).
 Disables aspect calculations.
 .TP
@@ -2666,7 +3156,7 @@ Clamps YUV color values to the CCIR 601 range without doing real conversion.
 RGB 24/\:32 <\-> BGR 24/\:32 colorspace conversion.
 .PD 0
 .RSs
-.IPs swap
+.IPs swap\ 
 Also perform  R <\-> B swapping.
 .RE
 .PD 1
@@ -2896,6 +3386,25 @@ The optional argument selects the sampling mode.
 By default, linear interpolation (mode 1) is used.
 Mode 0 uses nearest-neighbor sampling, which is fast but incorrect.
 .TP
+.B harddup
+Only useful with MEncoder.
+If harddup is used when encoding, it will force duplicate frames to be
+encoded in the output.
+This uses slightly more space, but is necessary for output to MPEG
+files or if you plan to demux and remux the video stream after
+encoding.
+Should be placed at or near the end of the filter chain unless you
+have a good reason to do otherwise.
+.TP
+.B softskip
+Only useful with MEncoder.
+Softskip moves the frame skipping (dropping) step of encoding from
+before the filter chain to some point during the filter chain.
+This allows filters which need to see all frames (inverse telecine,
+temporal denoising, etc.) to function properly.
+Should be placed after the filters which need to see all frames and
+before any subsequent filters that are CPU-intensive.
+.TP
 .B decimate[=max:hi:lo:frac]
 Drops frames that don't differ greatly from the previous frame in
 order to reduce framerate.
@@ -3009,11 +3518,17 @@ field (depending on whether n is even or odd).
 .B detc[=var1=value2:var2=value2:...]
 Attempts to reverse the 'telecine' process to recover a clean,
 non-interlaced stream at film framerate.
-This filter is still experimental but seems to be usable.
-Please be aware that there is absolutely no use in this filter
-unless you see interlacing when playing the movie!
+This was the first and most primitive inverse telecine filter to be
+added to MPlayer/MEncoder.
+It works by latching onto the telecine 3:2 pattern and following it as
+long as possible.
+This makes it suitable for perfectly-telecined material, even in the
+presence of a fair degree of noise, but it will fail in the presence
+of complex post-telecine edits.
+Development on this filter is no longer taking place, as ivtc, pullup,
+and filmdint are better for most applications.
 The following arguments (see syntax above) may be used to control
-its behavior:
+detc's behavior:
 .RSs
 .IPs dr
 Set the frame dropping mode.
@@ -3022,7 +3537,7 @@ Set the frame dropping mode.
 merges in the past 5 frames.
 2 means always maintain exact 5:4 input to output frame ratio.
 .I NOTE:
-Use mode 1 with MEncoder.
+Use mode 1 or 2 with MEncoder.
 .IPs am
 Analysis mode.
 Available values are 0 (fixed pattern with initial frame number
@@ -3050,22 +3565,33 @@ The optional parameter (ivtc=1) corresponds to the dr=1 option for the
 detc filter, and should be used with MEncoder but not with MPlayer.
 As with detc, you must specify the correct output framerate (\-ofps
 23.976) when using MEncoder.
+Further development on ivtc has stopped, as the pullup and filmdint
+filters appear to be much more accurate.
 .TP
-.B pullup\ 
+.B pullup[=jl:jr:jt:jb:sb]\ 
 Third-generation pulldown reversal (inverse telecine) filter,
 capable of handling mixed hard-telecine, 24 fps progressive, and 30
 fps progressive content.
 The pullup filter is designed to be much more robust than detc or
-ivtc, but it is still under development.
-No configuration options are available yet.
-As the underlying pulldown reversal engine is designed to take
-advantage of the new features in MPlayer G2, the current
-implementation in G1 is meant to serve mainly as a testbed.
+ivtc, by taking advantage of future context in making its decisions.
+Like ivtc, pullup is stateless in the sense that it does not lock onto
+a pattern to follow, but it instead looks forward to the following
+fields in order to identify matches and rebuild progressive frames.
+It is still under development, but believed to be quite accurate.
+The jl, jr, jt, and jb options set the amount of "junk" to ignore at
+the left, right, top, and bottom of the image, respectively.
+Left/right are in units of 8 pixels, while top/bottom are in units of
+2 lines.
+The default is 8 pixels on each side.
+Setting the sb (strict breaks) option to 1 will reduce the chances of
+pullup generating an occasional mismatched frame, but it may also
+cause an excessive number of frames to be dropped during high motion
+sequences.
 .I NOTE:
-Presently pullup lacks any way to cap the output framerate, so
-during 30 fps progressive sequences or stills, it will output more
-than 24 fps, meaning you'll have trouble if you use it with mencoder
-\-ofps 23.976.
+Always follow pullup with the softskip filter when encoding to ensure
+that pullup is able to see each frame. Failure to do so will lead to
+incorrect output and will usually crash, due to design limitations in
+the codec/filter layer.
 .TP
 .B filmdint[=options]
 Inverse telecine filter, similar to the pullup filter above.
@@ -3540,328 +4066,6 @@ decimation (ugly).
 .RE
 .
 .
-.SH "VIDEO OUTPUT DRIVERS (MPLAYER ONLY)"
-Video output drivers are interfaces to different output facilities.
-The syntax is:
-.TP
-.B \-vo <driver1[:option],driver2,...[,]>
-Specify a priority list of video output drivers to be used.
-.PP
-If the list has a trailing ',' it will fall back to drivers not listed on the
-command line.
-Suboptions are optional and can mostly be omitted.
-.br
-.I NOTE:
-See \-vo help for a list of compiled-in drivers.
-
-.I EXAMPLE:
-.PD 0
-.RSs
-.IPs "\-vo xmga,xv,"
-Try the Matrox X11 driver, then the Xv driver, then others.
-.br
-.IPs "\-vo directx:noaccel"
-Uses the DirectX driver with acceleration features turned off.
-.RE
-.PD 1
-.
-
-Available output drivers are:
-.
-.TP
-.B xv (X11 only)
-Uses the XVideo extension of XFree86 4.x to enable hardware
-accelerated playback.
-If you cannot use a hardware specific driver, this is probably
-the best option.
-.PD 0
-.RSs
-.IPs port=<number>
-Select a specific XVideo port.
-.RE
-.PD 1
-.TP
-.B x11 (X11 only)
-Shared memory output driver without hardware acceleration that
-works whenever X11 is present.
-.TP
-.B xover (X11 only)
-Adds X11 support to all overlay based video output drivers.
-Currently only supported by tdfx_vid.
-.TP
-.B xvmc (X11 only)
-This video output driver employs the XvMC (X Video Motion Compensation)
-extension of XFree86 4.x.
-.TP
-.B dga (X11 only)
-Output video through the XFree86 Direct Graphics Access extension.
-Considered obsolete.
-.TP
-.B sdl\ \ \ \ 
-Highly platform independent SDL (Simple Directmedia Layer) library
-output driver.
-.TP
-.B vidix\ \ 
-VIDIX (VIDeo Interface for *niX) is an interface to the
-video acceleration features of different graphics cards.
-Very fast output driver on cards that support it.
-.TP
-.B xvidix (X11 only)
-VIDIX running under X11.
-.TP
-.B cvidix\ 
-VIDIX running in a console.
-.TP
-.B winvidix (Windows only)
-Windows version of the VIDIX driver.
-.TP
-.B directx (Windows only)
-Output driver that uses the DirectX interface.
-.PD 0
-.RSs
-.IPs noaccel
-Turns off hardware acceleration.
-Try this option if you have display problems.
-.RE
-.PD 1
-.TP
-.B quartz (Mac OS X only)
-Mac OS X Quartz output driver.
-.TP
-.B fbdev (Linux only)
-Uses the kernel framebuffer to output video.
-.TP
-.B fbdev2 (Linux only)
-Uses the kernel framebuffer to output video,
-alternative implementation.
-.TP
-.B vesa\ \ \ 
-Very general output driver that should work on any VESA VBE 2.0
-compatible card.
-.PD 0
-.RSs
-.IPs dga\ \ 
-Turns on DGA mode.
-.IPs nodga
-Turns off DGA mode.
-.IPs vidix
-FIXME: document this
-.IPs lvo\ \ 
-FIXME: document this
-.RE
-.PD 1
-.TP
-.B svga\ \ \ 
-Output video using the SVGA library.
-.TP
-.B gl\ \ \ \ \ 
-OpenGL output driver.
-Very simple version, no OSD support and video size must be smaller than
-the maximum texture size of your OpenGL implementation.
-Intended to work even with the most simple OpenGL implementations.
-.PD 0
-.RSs
-.IPs manyfmts
-Enables support for more (RGB and BGR) color formats.
-Needs OpenGL version >= 1.2, NOT yet WORKING correctly.
-.IPs slice-height=<0\-...>
-Number of lines copied to texture in one piece (default: 4).
-0 for whole image.
-.RE
-.PD 1
-.TP
-.B gl2\ \ \ \ 
-OpenGL output driver, second generation.
-Supports OSD and videos larger than the maximum texture size.
-.TP
-.B null\ \ \ 
-Produces no video output.
-Useful for benchmarking.
-.TP
-.B aa\ \ \ \ \ 
-ASCII art output driver that works on a text console.
-.TP
-.B caca\ \ \ 
-Colour AsCii Art output driver that works on a text console.
-.TP
-.B bl\ \ \ \ \ 
-Video playback using the Blinkenlights UDP protocol.
-This driver is highly hardware specific.
-.TP
-.B ggi\ \ \ \ 
-Output driver for the GGI graphics system.
-.TP
-.B directfb
-Play video using the DirectFB library.
-.PD 0
-.RSs
-.IPs (no)input
-Use the DirectFB instead of the MPlayer keyboard code (default: enabled).
-.IPs buffermode=single|double|triple
-Double and triple buffering give best results if you want to avoid tearing issues.
-Triple buffering is more efficent than double buffering as it doesn't block MPlayer
-while waiting for the vertical retrace.
-Single buffering should be avoided (default: single).
-.IPs fieldparity=top|bottom
-Control the output order for interlaced frames (default: disabled).
-Valid values are top = top fields first, bottom = bottom fields first.
-This option doesn't have any effect on progressive film material
-like most MPEG movies are.
-You need to enable this option if you have tearing issues/unsmooth
-motions watching interlaced film material.
-.IPs layer=N
-Will force layer with id N for playback (default: -1 - auto).
-.RE
-.PD 1
-.TP
-.B dfbmga\ 
-Matrox G400/G450/G550 specific output driver that uses the DirectFB library.
-Enables CRTC2 (second head), displaying video independently of the first head.
-.PD 0
-.RSs
-.IPs (no)bes
-Enable the use of the Matrox BES (backend scaler) (default: disabled).
-Gives very good results concerning speed and output quality as interpolated
-picture processing is done in hardware.
-Works only on the primary head.
-.IPs (no)spic
-Make use of the Matrox sub picture layer to display the OSD (default: enabled).
-.IPs (no)crtc2
-Turn on TV-out on the second head (default: enabled).
-The output quality is amazing as it's a full interlaced picture
-with proper sync to every odd/even field.
-.IPs (no)input
-Use the DirectFB instead of the MPlayer keyboard code (default: disabled).
-.IPs buffermode=single|double|triple
-Double and triple buffering give best results if you want to avoid tearing issues.
-Triple buffering is more efficent than double buffering as it doesn't block MPlayer
-while waiting for the vertical retrace.
-Single buffering should be avoided (default: triple).
-.IPs fieldparity=top|bottom
-Control the output order for interlaced frames (default: disabled).
-Valid values are top = top fields first, bottom = bottom fields first.
-This option doesn't have any effect on progressive film material
-like most MPEG movies are.
-You need to enable this option if you have tearing issues/unsmooth
-motions watching interlaced film material.
-.IPs tvnorm=pal|ntsc|auto
-Will set the TV norm of the Matrox card without the need
-for modifying /etc/\:directfbrc (default: disabled).
-Valid norms are pal = PAL, ntsc = NTSC.
-Special norm is auto (auto-adjust using PAL/NTSC) because it decides
-which norm to use by looking at the frame rate of the movie.
-.RE
-.PD 1
-.TP
-.B mga (Linux only)
-Matrox specific output driver that makes use of the YUV back
-end scaler on Gxxx cards through a kernel module.
-If you have a Matrox card, this is the fastest option.
-.TP
-.B xmga (Linux, X11 only)
-The mga output driver, running in an X11 window.
-.TP
-.B syncfb\ 
-Video output driver for the SyncFB kernel module, which provides
-special hardware features of Matrox Gxxx cards like hardware
-deinterlacing, scaling and synchronizing your video output to
-the vertical retrace of your monitor.
-.TP
-.B 3dfx (Linux only)
-This driver employs the tdfx framebuffer driver to play movies with
-YUV acceleration.
-.TP
-.B tdfx_vid (Linux only)
-3Dfx specific output driver.
-Works in conjunction with a kernel module.
-.TP
-.B dxr2\ \ \ 
-Creative DXR2 specific output driver.
-Also see the -dxr2 option.
-.PD 0
-.RSs
-.IPs x11
-Enables overlay.
-.IPs xv
-Enables overlay.
-.RE
-.PD 1
-.TP
-.B dxr3\ \ \ 
-Sigma Designs em8300 MPEG decoder chip (Creative DXR3, Sigma Designs
-Hollywood Plus) specific output driver.
-Also see the lavc video filter.
-.PD 0
-.RSs
-.IPs overlay
-Activates the overlay instead of TVOut.
-.IPs prebuf
-Turns on prebuffering.
-.IPs sync
-Will turn on the new sync-engine.
-.IPs norm=<norm>
-Specifies the TV norm.
-.RSss
-0: Does not change current norm (default).
-.br
-1: Auto-adjust using PAL/NTSC.
-.br
-2: Auto-adjust using PAL/PAL-60.
-.br
-3: PAL
-.br
-4: PAL-60
-.br
-5: NTSC
-.REss
-.IPs device=<number>
-Specifies the device number to use if you have more than one em8300 card.
-.RE
-.PD 1
-.TP
-.B mpegpes
-DVB specific output driver.
-.TP
-.B zr\ \ \ \ \ 
-Output driver for a number of MJPEG capture/playback cards.
-Also see the -zr* options and -zrhelp.
-.TP
-.B zr2\ \ \ \ 
-Output driver for a number of MJPEG capture/playback cards, second generation.
-Also see the zrmjpeg video filter.
-.TP
-.B md5\ \ \ \ 
-Writes md5sums for each frame into a file called 'md5' in the
-current directory.
-Useful for debugging.
-.TP
-.B yuv4mpeg
-Transforms the video stream into a sequence of uncompressed YUV 4:2:0
-images and stores it in a file called 'stream.yuv' in the current
-directory.
-Useful if you want to process the video with the mjpegtools suite.
-.TP
-.B gif89a\ 
-Output each frame into a GIF file in the current directory.
-Each file takes the frame number padded with leading zeros as name.
-.TP
-.B jpeg\ \ \ 
-Output each frame into a JPEG file in the current directory.
-Each file takes the frame number padded with leading zeros as name.
-.TP
-.B pgm\ \ \ \ 
-Output each frame into a PGM file in the current directory.
-Each file takes the frame number padded with leading zeros as name.
-.TP
-.B png\ \ \ \ 
-Output each frame into a PNG file in the current directory.
-Each file takes the frame number padded with leading zeros as name.
-.TP
-.B tga\ \ \ \ 
-Output each frame into a Targa file in the current directory.
-Each file takes the frame number padded with leading zeros as name.
-.
-.
 .SH "GENERAL ENCODING OPTIONS (MENCODER ONLY)"
 .TP
 .B \-audio-delay <0.0\-...>
@@ -3925,19 +4129,19 @@ Available options are:
 .IPs help\ 
 show this description
 .IPs name=<value>
-title of the subject of the file
+title of the work
 .IPs artist=<value>
-artist or author of the original subject of the file
+artist or author of the work
 .IPs genre=<value>
 original work category
 .IPs subject=<value>
-contents of the file
+contents of the work
 .IPs copyright=<value>
-copyright information for the file
+copyright information
 .IPs srcform=<value>
-original form of the material that was digitized
+original format of the digitized material
 .IPs comment=<value>
-general comments about the file or the subject of the file
+general comments about the work
 .RE
 .
 .TP
@@ -3945,6 +4149,9 @@ general comments about the file or the subject of the file
 Do not automatically insert the expand filter into the MEncoder filter chain.
 Useful to control at which point of the filter chain subtitles are rendered
 when hardcoding subtitles onto a movie.
+.TP
+.B \-noodml (\-of avi only)
+Do not write OpenDML index for files >1GB.
 .TP
 .B \-noskip
 Do not skip frames.
@@ -4025,7 +4232,7 @@ Maximum skippable frames after non-skipped one
 .B \-vobsubout <basename>
 Specify the basename for the output .idx and .sub files.
 This turns off subtitle rendering in the encoded movie and diverts it to
-Vobsub subtitle files.
+VOBsub subtitle files.
 .TP
 .B \-vobsuboutid <langid>
 Specify the language two letter code for the subtitles.
@@ -4274,6 +4481,10 @@ should only be used for regression tests, which need binary
 identical files even if the encoder version changes.
 This also suppresses the user_data header in MPEG-4 streams.
 Do not use this option unless you know exactly what you are doing.
+.TP
+.B threads=<1\-8>
+Maximum number of threads to use (default: 1).
+.RE
 .TP
 .B vcodec=<value>
 use the specified codec (default: mpeg4):
@@ -4975,10 +5186,16 @@ rate distortion optimal, slow
 sum of absolute vertical differences 
 .IPs "9 (VSSE)"
 sum of squared vertical differences
+.IPs "10 (NSSE)"
+noise preserving sum of squared differences
 .IPs +256\ 
 use chroma too, doesn't work (correctly) with B frames currently
 .RE
 .PD 1
+.TP
+.B nssew=<0\-100>
+NSSE weight, larger weights will result in more noise,
+with 0 NSSE is identical to SSE.
 .TP
 .B predia=<-99\-6>
 Diamond type and size for motion estimation pre pass
@@ -5044,7 +5261,8 @@ try to encode each MB with MV=<0,0> and choose the better one
 this has no effect if mbd=0
 .TP
 .B qprd\ \ \ 
-rate distorted optimal QP for the given lambda of each macroblock
+rate distorted optimal QP for the given lambda of each macroblock, note this
+needs mbd=2
 .TP
 .B last_pred=<0\-99>
 Amount of motion predictors from the previous frame
@@ -5154,6 +5372,14 @@ experimental quantizer modulation
 .TP
 .B vqmod_freq
 experimental quantizer modulation
+.TP
+.B dc
+intra DC precision in bits (default: 8).
+If you specify vcodec=mpeg2video this value can be 8, 9, 10 or 11.
+.TP
+.B cgop
+Close all GOPs.
+Currently it doesn't work (yet).
 .RE
 .
 .SS nuv (\-nuvopts)
@@ -5394,6 +5620,9 @@ mplayer dvd://1 \-alang ja \-slang en
 .B Play only chapters 5, 6, 7
 mplayer dvd://1 \-chapter 5-7
 .TP
+.B Play only titles 5, 6, 7
+mplayer dvd://5-7
+.TP
 .B Multiangle DVD playing
 mplayer dvd://1 \-dvdangle 2
 .TP
@@ -5406,7 +5635,7 @@ mplayer http://mplayer.hq/\:example.avi
 .B Stream using RTSP
 mplayer rtsp://server.example.com/\:streamName
 .TP
-.B Convert subtitle to MPsub (to ./\:dump.mpsub)
+.B Convert subtitle to MPsub (to ./dump.mpsub)
 mplayer dummy.avi \-sub source.sub \-dumpmpsub
 .TP
 .B Convert subtitle to MPsub without watching the movie
@@ -5424,14 +5653,14 @@ mplayer -vo zr -vf scale=352:288 file.avi
 mplayer -vo zr2 -vf scale=352:288,zrmjpeg file.avi
 .TP
 .B Encoding DVD title #2, only selected chapters
-mencoder dvd://2 \-chapter 10-15 \-o title2.avi \-oac copy \-ovc divx4
+mencoder dvd://2 \-chapter 10-15 \-o title2.avi \-oac copy \-ovc lavc \-lavcopts vcodec=mpeg4
 .TP
 .B Encoding DVD title #2, resizing to 640x480
-mencoder dvd://2 \-vf scale=640:480 \-o title2.avi \-oac copy \-ovc divx4
+mencoder dvd://2 \-vf scale=640:480 \-o title2.avi \-oac copy \-ovc lavc \-lavcopts vcodec=mpeg4
 .TP
 .B Encoding DVD title #2, resizing to 512xHHH (keep aspect ratio)
 mencoder dvd://2 \-vf scale \-zoom \-xy 512 \-o title2.avi \-oac copy
-\-ovc divx4
+\-ovc lavc \-lavcopts vcodec=mpeg4
 .TP
 .B The same, but with libavcodec family, MPEG4 (Divx5) compression
 mencoder dvd://2 \-o title2.avi \-ovc lavc
@@ -5442,13 +5671,13 @@ mencoder dvd://2 \-o titel2.avi \-ovc lavc
 \-lavcopts vcodec=mjpeg:vhq:vbitrate=1800 \-oac copy
 .TP
 .B Encoding all *.jpg files in the current dir
-mencoder "mf://*.jpg" \-mf fps=25 \-o output.avi \-ovc divx4
+mencoder "mf://*.jpg" \-mf fps=25 \-o output.avi \-ovc lavc \-lavcopts vcodec=mpeg4
 .TP
-.B Encoding from tuner
+.B Encoding from tuner (specify a format with \-vf format)
 mencoder \-tv driver=v4l:width=640:height=480 tv:// \-o tv.avi \-ovc raw
 .TP
 .B Encoding from a pipe
-rar p test-SVCD.rar | mencoder \-ovc divx4 \-divx4opts br=800 \-ofps 24 \-
+rar p test-SVCD.rar | mencoder \-ovc lavc \-lavcopts vcodec=mpeg4:vbitrate=800 \-ofps 24 \-
 .
 .
 .\" --------------------------------------------------------------------------

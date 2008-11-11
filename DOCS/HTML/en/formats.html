@@ -1,4 +1,4 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>2.1. Supported formats</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - The Movie Player for LINUX"><link rel="up" href="features.html" title="Chapter 2. Features"><link rel="previous" href="features.html" title="Chapter 2. Features"><link rel="next" href="codecs.html" title="2.2. Supported codecs"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">2.1. Supported formats</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="features.html">Prev</a> </td><th width="60%" align="center">Chapter 2. Features</th><td width="20%" align="right"> <a accesskey="n" href="codecs.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="formats"></a>2.1. Supported formats</h2></div></div><p>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>2.1. Supported formats</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - The Movie Player"><link rel="up" href="features.html" title="Chapter 2. Features"><link rel="previous" href="features.html" title="Chapter 2. Features"><link rel="next" href="codecs.html" title="2.2. Supported codecs"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">2.1. Supported formats</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="features.html">Prev</a> </td><th width="60%" align="center">Chapter 2. Features</th><td width="20%" align="right"> <a accesskey="n" href="codecs.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="formats"></a>2.1. Supported formats</h2></div></div><p>
 It is important to clarify a common mistake. When people see a file with a
 <tt class="filename">.AVI</tt> extension, they immediately conclude that it is
 not an MPEG file.  That is not true. At least not entirely. Contrary to
@@ -123,7 +123,7 @@ streams in these files are real MPG and AAC files. You can even extract them wit
 <tt class="option">-dumpvideo</tt> and <tt class="option">-dumpaudio</tt> options.).
 </p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
 Most new QuickTime files use <span class="bold"><b>Sorenson</b></span> video and
-QDesign Music audio. See our <a href="codecs.html#sorenson" title="2.2.1.10. Sorenson">Sorenson</a> codec section.
+QDesign Music audio. See our <a href="codecs.html#sorenson" title="2.2.1.9. Sorenson">Sorenson</a> codec section.
 </p></div></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="vivo"></a>2.1.1.5. VIVO files</h4></div></div><p>
 <span class="application">MPlayer</span> happily demuxes VIVO file formats. The
 biggest disadvantage of the format is that it has no index block, nor a
@@ -149,9 +149,8 @@ even able to seek within them (useful when looping with the
 picture will be messy for a short time after seeking.
 </p></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="realmedia"></a>2.1.1.7. RealMedia (RM) files</h4></div></div><p>
 Yes, <span class="application">MPlayer</span> can read (demux) RealMedia
-(<tt class="filename">.rm</tt>) files. Seeking works, but you have to explicitly
-specify the <tt class="option">-forceidx</tt> option (the format supports
-keyframes). Here are the lists of the supported <a href="codecs.html#realvideo" title="2.2.1.8. RealVideo">RealVideo</a> and <a href="codecs.html#realaudio" title="2.2.2.5. RealAudio">RealAudio</a> codecs.
+(<tt class="filename">.rm</tt>) files.
+Here are the lists of the supported <a href="codecs.html#realvideo" title="2.2.1.7. RealVideo">RealVideo</a> and <a href="codecs.html#realaudio" title="2.2.2.5. RealAudio">RealAudio</a> codecs.
 </p></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="nuppelvideo"></a>2.1.1.8. NuppelVideo files</h4></div></div><p>
 <a href="http://mars.tuwien.ac.at/~roman/nuppelvideo" target="_top">NuppelVideo</a>
 is a TV grabber tool (AFAIK:). <span class="application">MPlayer</span> can read
@@ -188,7 +187,18 @@ PVA is an MPEG-like format used by DVB TV boards' software (e.g.:
 </p><p>
 The PVA specifications can be downloaded from the following address:
 <a href="http://www.technotrend.de/download/av_format_v1.pdf" target="_top">http://www.technotrend.de/download/av_format_v1.pdf</a>
-</p></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="gif"></a>2.1.1.15. GIF files</h4></div></div><p>
+</p></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="nsv"></a>2.1.1.15. NSV files</h4></div></div><p>
+NSV (NullSoft Video) is the file format used by the
+<span class="application">Winamp</span> player to stream audio and video.
+Video is VP3, VP5 or VP6, audio is MP3, AAC or VLB.
+The audio only version of NSV has the <tt class="filename">.nsa</tt> extension.
+<span class="application">MPlayer</span> can play both NSV streams and files.
+Please note that most files from the
+<a href="http://www.winamp.com" target="_top">Winamp site</a> use VLB audio, that
+can't be decoded yet. Moreover streams from that site need an extra
+depacketization layer that still has to be implemented (those files are
+unplayable anyway because they use VLB audio).
+</p></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="gif"></a>2.1.1.16. GIF files</h4></div></div><p>
 The <span class="bold"><b>GIF</b></span> format is a common format for web
 graphics. There are two versions of the GIF spec, GIF87a and GIF89a. The
 main difference is that GIF89a allows for animation. <span class="application">MPlayer</span>

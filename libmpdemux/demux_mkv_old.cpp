@@ -2,7 +2,7 @@
 // written by Moritz Bunkus <moritz@bunkus.org>
 // License: GPL of course ;)
 
-// $Id: demux_mkv_old.cpp,v 1.54 2004/01/23 15:16:50 mosu Exp $
+// $Id: demux_mkv_old.cpp,v 1.55 2004/07/14 14:35:45 iive Exp $
 
 extern "C" {
 #include "config.h"
@@ -1552,7 +1552,7 @@ extern "C" int demux_mkv_open(demuxer_t *demuxer) {
   qt_image_description_t *idesc;
 
 #ifdef USE_ICONV
-  subcp_open();
+  subcp_open_noenca();
 #endif
 
   s = demuxer->stream;

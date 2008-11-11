@@ -270,7 +270,7 @@ void demux_ogg_add_sub (ogg_stream_t* os,ogg_packet* pack) {
     }
   }
 
-  mp_msg(MSGT_DEMUX,MSGL_DBG2,"ogg sub lines: %d  first: '%s'\n",
+  mp_msg(MSGT_DEMUX,MSGL_DBG2,"Ogg sub lines: %d  first: '%s'\n",
       ogg_sub.lines, ogg_sub.text[0]);
 #ifdef USE_ICONV
   subcp_recode1(&ogg_sub);
@@ -313,7 +313,7 @@ static  int demux_ogg_get_page_stream(ogg_demuxer_t* ogg_d,ogg_stream_state** os
 
 }
 
-static unsigned char* demux_ogg_read_packet(ogg_stream_t* os,ogg_packet* pack,void *context,float* pts,int* flags) {
+static unsigned char* demux_ogg_read_packet(ogg_stream_t* os,ogg_packet* pack,void *context,float* pts,int* flags, int samplesize) {
   unsigned char* data;
 
   *pts = 0;
@@ -328,7 +328,7 @@ static unsigned char* demux_ogg_read_packet(ogg_stream_t* os,ogg_packet* pack,vo
        vorbis_info *vi = &((ov_struct_t*)context)->vi;
 
        // When we dump the audio, there is no vi, but we don't care of timestamp in this case
-       int32_t blocksize = vorbis_packet_blocksize(vi,pack) / vi->channels;
+       int32_t blocksize = vorbis_packet_blocksize(vi,pack) / samplesize;
        // Calculate the timestamp if the packet don't have any
        if(pack->granulepos == -1) {
 	  pack->granulepos = os->lastpos;
@@ -440,7 +440,7 @@ static void demux_ogg_check_comments(demuxer_t *d, ogg_stream_t *os, int id, vor
       if (os->text && d->sub->id == -1 && demux_ogg_check_lang(val, dvdsub_lang))
       {
 	d->sub->id = id;
-	mp_msg(MSGT_DEMUX, MSGL_V, "Stream language matched -slang: %s\n", val);
+        mp_msg(MSGT_DEMUX, MSGL_V, "Ogg demuxer: Displaying subtitle stream id %d which matched -slang %s\n", id, val);
       }
       else
 	hdr = "Language";
@@ -470,6 +470,7 @@ static int demux_ogg_add_packet(demux_stream_t* ds,ogg_stream_t* os,int id,ogg_p
   float pts = 0;
   int flags = 0;
   void *context = NULL;
+  int samplesize = 1;
 
   // If packet is an comment header then we try to get comments at first
   if (pack->bytes >= 7 && !memcmp(pack->packet, "\003vorbis", 7))
@@ -501,11 +502,13 @@ static int demux_ogg_add_packet(demux_stream_t* ds,ogg_stream_t* os,int id,ogg_p
 
   // For vorbis packet the packet is the data, for other codec we must jump
   // the header
-  if(ds == d->audio && ((sh_audio_t*)ds->sh)->format == 0xFFFE)
+  if(ds == d->audio && ((sh_audio_t*)ds->sh)->format == 0xFFFE) {
      context = ((sh_audio_t *)ds->sh)->context;
+     samplesize = ((sh_audio_t *)ds->sh)->samplesize;
+  }
   if (ds == d->video && ((sh_audio_t*)ds->sh)->format == 0xFFFC)
      context = ((sh_video_t *)ds->sh)->context;
-  data = demux_ogg_read_packet(os,pack,context,&pts,&flags);
+  data = demux_ogg_read_packet(os,pack,context,&pts,&flags,samplesize);
   if(d->video->id < 0)
       ((sh_audio_t*)ds->sh)->delay = pts;
 
@@ -537,7 +540,7 @@ void demux_ogg_scan_stream(demuxer_t* demuxer) {
   ogg_stream_state* oss;
   ogg_stream_t* os;
   ogg_packet op;
-  int np,sid,p;
+  int np,sid,p,samplesize=1;
   void *context = NULL;
   off_t pos, last_pos;
   pos = last_pos = demuxer->movi_start;
@@ -561,8 +564,10 @@ void demux_ogg_scan_stream(demuxer_t* demuxer) {
   else {
     sid = demuxer->audio->id;
     /* demux_ogg_read_packet needs decoder context for Vorbis streams */
-    if(((sh_audio_t*)demuxer->audio->sh)->format == 0xFFFE)
+    if(((sh_audio_t*)demuxer->audio->sh)->format == 0xFFFE) {
       context = ((sh_audio_t*)demuxer->audio->sh)->context;
+      samplesize = ((sh_audio_t*)demuxer->audio->sh)->samplesize;
+    }
   }
   os = &ogg_d->subs[sid];
   oss = &os->stream;
@@ -597,7 +602,7 @@ void demux_ogg_scan_stream(demuxer_t* demuxer) {
     while(ogg_stream_packetout(oss,&op) == 1) {
       float pts;
       int flags;
-      demux_ogg_read_packet(os,&op,context,&pts,&flags);
+      demux_ogg_read_packet(os,&op,context,&pts,&flags,samplesize);
       if(op.granulepos >= 0) ogg_d->final_granulepos = op.granulepos;
       if(index_mode == 2 && (flags || (os->vorbis && op.granulepos >= 0))) {
 	ogg_d->syncpoints = (ogg_syncpoint_t*)realloc(ogg_d->syncpoints,(ogg_d->num_syncpoint+1)*sizeof(ogg_syncpoint_t));
@@ -664,7 +669,7 @@ int demux_ogg_open(demuxer_t* demuxer) {
   sh_video_t* sh_v;
 
 #ifdef USE_ICONV
-  subcp_open();
+  subcp_open_noenca();
 #endif
 
   clear_sub = -1;
@@ -682,7 +687,7 @@ int demux_ogg_open(demuxer_t* demuxer) {
     np = ogg_sync_pageseek(sync,page);
     /// Error
     if(np < 0) {
-      mp_msg(MSGT_DEMUX,MSGL_DBG2,"OGG demuxer : Bad page sync\n");
+      mp_msg(MSGT_DEMUX,MSGL_DBG2,"Ogg demuxer : Bad page sync\n");
       free(ogg_d);
       return 0;
     }
@@ -707,7 +712,7 @@ int demux_ogg_open(demuxer_t* demuxer) {
       if(id >= 0)
 	ogg_stream_pagein(&ogg_d->subs[id].stream,page);
       else
-	mp_msg(MSGT_DEMUX,MSGL_ERR,"OGG : Warning found none bos page from unknown stream %d\n",ogg_page_serialno(page));
+	mp_msg(MSGT_DEMUX,MSGL_ERR,"Ogg : Warning found none bos page from unknown stream %d\n",ogg_page_serialno(page));
       break;
     }
 
@@ -717,7 +722,7 @@ int demux_ogg_open(demuxer_t* demuxer) {
     /// Get the stream serial number
     s_no = ogg_page_serialno(page);
     ogg_stream_init(&ogg_d->subs[ogg_d->num_sub].stream,s_no);
-    mp_msg(MSGT_DEMUX,MSGL_DBG2,"OGG : Found a stream with serial=%d\n",s_no);
+    mp_msg(MSGT_DEMUX,MSGL_DBG2,"Ogg : Found a stream with serial=%d\n",s_no);
     // Take the first page
     ogg_stream_pagein(&ogg_d->subs[ogg_d->num_sub].stream,page);
     // Get first packet of the page
@@ -733,7 +738,7 @@ int demux_ogg_open(demuxer_t* demuxer) {
       sh_a->format = 0xFFFE;
       ogg_d->subs[ogg_d->num_sub].vorbis = 1;
       n_audio++;
-      mp_msg(MSGT_DEMUX,MSGL_V,"OGG : stream %d is vorbis\n",ogg_d->num_sub);
+      mp_msg(MSGT_DEMUX,MSGL_V,"Ogg : stream %d is vorbis\n",ogg_d->num_sub);
 
       // check for Theora
 #   ifdef HAVE_OGGTHEORA
@@ -771,7 +776,7 @@ int demux_ogg_open(demuxer_t* demuxer) {
 	    ogg_d->subs[ogg_d->num_sub].theora = 1;
 	    n_video++;
 	    mp_msg(MSGT_DEMUX,MSGL_V,
-		   "OGG : stream %d is theora v%i.%i.%i %i:%i, %.3f FPS,"
+		   "Ogg : stream %d is theora v%i.%i.%i %i:%i, %.3f FPS,"
 		   " aspect %i:%i\n", ogg_d->num_sub,
 		   (int)inf.version_major, 
 		   (int)inf.version_minor, 
@@ -789,7 +794,7 @@ int demux_ogg_open(demuxer_t* demuxer) {
 	n_audio++;
 	ogg_d->subs[ogg_d->num_sub].flac = 1;
 	sh_a->wf = NULL;
-	mp_msg(MSGT_DEMUX,MSGL_V,"OGG : stream %d is FLAC\n",ogg_d->num_sub);
+	mp_msg(MSGT_DEMUX,MSGL_V,"Ogg : stream %d is FLAC\n",ogg_d->num_sub);
 #   endif /* HAVE_FLAC */
 
       /// Check for old header
@@ -814,7 +819,7 @@ int demux_ogg_open(demuxer_t* demuxer) {
 
 	ogg_d->subs[ogg_d->num_sub].samplerate = sh_v->fps;
 	n_video++;
-	mp_msg(MSGT_DEMUX,MSGL_V,"OGG stream %d is video (old hdr)\n",ogg_d->num_sub);
+	mp_msg(MSGT_DEMUX,MSGL_V,"Ogg stream %d is video (old hdr)\n",ogg_d->num_sub);
 	if(verbose>0) print_video_header(sh_v->bih);
 	// Old audio header
       } else if(get_uint32(pack.packet+96) == 0x05589F81) {
@@ -835,10 +840,10 @@ int demux_ogg_open(demuxer_t* demuxer) {
 
 	ogg_d->subs[ogg_d->num_sub].samplerate = sh_a->samplerate; // * sh_a->channels;
 	n_audio++;
-	mp_msg(MSGT_DEMUX,MSGL_V,"OGG stream %d is audio (old hdr)\n",ogg_d->num_sub);
+	mp_msg(MSGT_DEMUX,MSGL_V,"Ogg stream %d is audio (old hdr)\n",ogg_d->num_sub);
 	if(verbose>0) print_wave_header(sh_a->wf);
       } else
-	mp_msg(MSGT_DEMUX,MSGL_WARN,"OGG stream %d contains an old header but the header type is unknown\n",ogg_d->num_sub);
+	mp_msg(MSGT_DEMUX,MSGL_WARN,"Ogg stream %d contains an old header but the header type is unknown\n",ogg_d->num_sub);
 
         // Check new header
     } else if ( (*pack.packet & PACKET_TYPE_BITS ) == PACKET_TYPE_HEADER && 
@@ -863,7 +868,7 @@ int demux_ogg_open(demuxer_t* demuxer) {
 
 	ogg_d->subs[ogg_d->num_sub].samplerate= sh_v->fps;
 	n_video++;
-	mp_msg(MSGT_DEMUX,MSGL_V,"OGG stream %d is video (new hdr)\n",ogg_d->num_sub);
+	mp_msg(MSGT_DEMUX,MSGL_V,"Ogg stream %d is video (new hdr)\n",ogg_d->num_sub);
 	if(verbose>0) print_video_header(sh_v->bih);
 	/// New audio header
       } else if(strncmp(st->streamtype,"audio",5) == 0) {
@@ -886,12 +891,12 @@ int demux_ogg_open(demuxer_t* demuxer) {
 
 	ogg_d->subs[ogg_d->num_sub].samplerate = sh_a->samplerate; // * sh_a->channels;
 	n_audio++;
-	mp_msg(MSGT_DEMUX,MSGL_V,"OGG stream %d is audio (new hdr)\n",ogg_d->num_sub);
+	mp_msg(MSGT_DEMUX,MSGL_V,"Ogg stream %d is audio (new hdr)\n",ogg_d->num_sub);
 	if(verbose>0) print_wave_header(sh_a->wf);
 
 	/// Check for text (subtitles) header
       } else if (strncmp(st->streamtype, "text", 4) == 0) {
-          mp_msg(MSGT_DEMUX, MSGL_V, "OGG stream %d is text\n", ogg_d->num_sub);
+          mp_msg(MSGT_DEMUX, MSGL_V, "Ogg stream %d is text\n", ogg_d->num_sub);
 	  ogg_d->subs[ogg_d->num_sub].samplerate= get_uint64(&st->time_unit)/10;
 	  ogg_d->subs[ogg_d->num_sub].text = 1;
           if (demuxer->sub->id == n_text)
@@ -900,10 +905,10 @@ int demux_ogg_open(demuxer_t* demuxer) {
           demux_ogg_init_sub();
 	//// Unknown header type
       } else
-	mp_msg(MSGT_DEMUX,MSGL_ERR,"OGG stream %d has a header marker but is of an unknown type\n",ogg_d->num_sub);
+	mp_msg(MSGT_DEMUX,MSGL_ERR,"Ogg stream %d has a header marker but is of an unknown type\n",ogg_d->num_sub);
       /// Unknown (invalid ?) header
     } else
-      mp_msg(MSGT_DEMUX,MSGL_ERR,"OGG stream %d is of an unknown type\n",ogg_d->num_sub);
+      mp_msg(MSGT_DEMUX,MSGL_ERR,"Ogg stream %d is of an unknown type\n",ogg_d->num_sub);
 
     if(sh_a || sh_v) {
       demux_stream_t* ds = NULL;
@@ -961,10 +966,15 @@ int demux_ogg_open(demuxer_t* demuxer) {
     demuxer->audio->id = -2;
   else
     demuxer->audio->id = audio_id;
-  if(!n_text || (text_id < 0))
+  /* Disable the subs only if there are no text streams at all.
+     Otherwise the stream to display might be chosen later when the comment
+     packet is encountered and the user used -slang instead of -sid. */
+  if(!n_text)
     demuxer->sub->id = -2;
-  else
+  else if (text_id >= 0) {
     demuxer->sub->id = text_id;
+    mp_msg(MSGT_DEMUX, MSGL_V, "Ogg demuxer: Displaying subtitle stream id %d\n", text_id);
+  }
 
   ogg_d->final_granulepos=0;
   if(!s->end_pos)
@@ -976,7 +986,7 @@ int demux_ogg_open(demuxer_t* demuxer) {
     demux_ogg_scan_stream(demuxer);
   }
 
-  mp_msg(MSGT_DEMUX,MSGL_V,"OGG demuxer : found %d audio stream%s, %d video stream%s and %d text stream%s\n",n_audio,n_audio>1?"s":"",n_video,n_video>1?"s":"",n_text,n_text>1?"s":"");
+  mp_msg(MSGT_DEMUX,MSGL_V,"Ogg demuxer : found %d audio stream%s, %d video stream%s and %d text stream%s\n",n_audio,n_audio>1?"s":"",n_video,n_video>1?"s":"",n_text,n_text>1?"s":"");
  
   return 1;
 }
@@ -999,7 +1009,7 @@ int demux_ogg_fill_buffer(demuxer_t *d) {
 
   /// Find the stream we are working on
   if ( (id = demux_ogg_get_page_stream(ogg_d,&os)) < 0) {
-      mp_msg(MSGT_DEMUX,MSGL_ERR,"OGG demuxer : can't get current stream\n");
+      mp_msg(MSGT_DEMUX,MSGL_ERR,"Ogg demuxer : can't get current stream\n");
       return 0;
   }
 
@@ -1018,7 +1028,7 @@ int demux_ogg_fill_buffer(demuxer_t *d) {
 	  while( (pa = ogg_sync_pageseek(sync,page)) <= 0) {
 	    /// Error : we skip some bytes
 	    if(pa < 0) {
-	      mp_msg(MSGT_DEMUX,MSGL_WARN,"OGG : Page out not synced, we skip some bytes\n");
+	      mp_msg(MSGT_DEMUX,MSGL_WARN,"Ogg : Page out not synced, we skip some bytes\n");
 	      ogg_d->pos -= pa;
 	      continue;
 	    }
@@ -1026,7 +1036,7 @@ int demux_ogg_fill_buffer(demuxer_t *d) {
 	    buf = ogg_sync_buffer(sync,BLOCK_SIZE);	    
 	    len = stream_read(s,buf,BLOCK_SIZE);
 	    if(len == 0 && s->eof) {
-	      mp_msg(MSGT_DEMUX,MSGL_DBG2,"OGG : Stream EOF !!!!\n");
+	      mp_msg(MSGT_DEMUX,MSGL_DBG2,"Ogg : Stream EOF !!!!\n");
 	      return 0;
 	    }
 	    ogg_sync_wrote(sync,len);
@@ -1034,18 +1044,18 @@ int demux_ogg_fill_buffer(demuxer_t *d) {
 	  ogg_d->last_size = pa;
 	  /// Find the page's logical stream
 	  if( (id = demux_ogg_get_page_stream(ogg_d,&os)) < 0) {
-	    mp_msg(MSGT_DEMUX,MSGL_ERR,"OGG demuxer error : we met an unknown stream\n");
+	    mp_msg(MSGT_DEMUX,MSGL_ERR,"Ogg demuxer error : we met an unknown stream\n");
 	    return 0;
 	  }
 	  /// Take the page
 	  if(ogg_stream_pagein(os,page) == 0)
 	    break;
 	  /// Page was invalid => retry
-	  mp_msg(MSGT_DEMUX,MSGL_WARN,"OGG demuxer : got invalid page !!!!!\n");
+	  mp_msg(MSGT_DEMUX,MSGL_WARN,"Ogg demuxer : got invalid page !!!!!\n");
 	  ogg_d->pos += ogg_d->last_size;
 	}
       } else /// Packet was corrupted
-	mp_msg(MSGT_DEMUX,MSGL_WARN,"OGG : bad packet in stream %d\n",id);
+	mp_msg(MSGT_DEMUX,MSGL_WARN,"Ogg : bad packet in stream %d\n",id);
     } /// Packet loop
     
     /// Is the actual logical stream in use ?
@@ -1082,7 +1092,7 @@ demuxer_t* init_avi_with_ogg(demuxer_t* demuxer) {
 
   /// Check that the cbSize is enouth big for the following reads
   if(sh_audio->wf->cbSize < 22+3*sizeof(uint32_t)) {
-    mp_msg(MSGT_DEMUX,MSGL_ERR,"AVI OGG : Initial audio header is too small !!!!!\n");
+    mp_msg(MSGT_DEMUX,MSGL_ERR,"AVI Ogg : Initial audio header is too small !!!!!\n");
     goto fallback;
   }
   /// Get the size of the 3 header packet
@@ -1091,7 +1101,7 @@ demuxer_t* init_avi_with_ogg(demuxer_t* demuxer) {
 
   /// Check the size
   if(sh_audio->wf->cbSize < 22+3*sizeof(uint32_t)+hdrsizes[0]+hdrsizes[1] + hdrsizes[2]) {
-    mp_msg(MSGT_DEMUX,MSGL_ERR,"AVI OGG : Audio header is too small !!!!!\n");
+    mp_msg(MSGT_DEMUX,MSGL_ERR,"AVI Ogg : Audio header is too small !!!!!\n");
     goto fallback;
   }
 
@@ -1107,7 +1117,7 @@ demuxer_t* init_avi_with_ogg(demuxer_t* demuxer) {
   // Get the first page of the stream : we assume there only 1 logical stream
   while((np = ogg_sync_pageout(&ogg_d->sync,&ogg_d->page)) <= 0 ) {
     if(np < 0) {
-      mp_msg(MSGT_DEMUX,MSGL_ERR,"AVI OGG error : Can't init using first stream packets\n");
+      mp_msg(MSGT_DEMUX,MSGL_ERR,"AVI Ogg error : Can't init using first stream packets\n");
       free(ogg_d);
       goto fallback;
     }
@@ -1118,7 +1128,7 @@ demuxer_t* init_avi_with_ogg(demuxer_t* demuxer) {
     ogg_sync_wrote(&ogg_d->sync,plen);
   }
   // Init the logical stream
-  mp_msg(MSGT_DEMUX,MSGL_DBG2,"AVI OGG found page with serial %d\n",ogg_page_serialno(&ogg_d->page));
+  mp_msg(MSGT_DEMUX,MSGL_DBG2,"AVI Ogg found page with serial %d\n",ogg_page_serialno(&ogg_d->page));
   ogg_stream_init(&ogg_d->subs[0].stream,ogg_page_serialno(&ogg_d->page));
   // Write the page
   ogg_stream_pagein(&ogg_d->subs[0].stream,&ogg_d->page);
@@ -1180,6 +1190,7 @@ void demux_ogg_seek(demuxer_t *demuxer,float rel_seek_secs,int flags) {
   int is_gp_valid;
   float pts;
   int is_keyframe;
+  int samplesize=1;
 
   if(demuxer->video->id >= 0) {
     ds = demuxer->video;
@@ -1194,6 +1205,7 @@ void demux_ogg_seek(demuxer_t *demuxer,float rel_seek_secs,int flags) {
       context = ((sh_audio_t*)demuxer->audio->sh)->context;
     vi = &((ov_struct_t*)((sh_audio_t*)ds->sh)->context)->vi;
     rate = (float)vi->rate;
+    samplesize = ((sh_audio_t*)ds->sh)->samplesize;
   }
 
   os = &ogg_d->subs[ds->id];
@@ -1295,7 +1307,7 @@ void demux_ogg_seek(demuxer_t *demuxer,float rel_seek_secs,int flags) {
         break;
       }
       is_gp_valid = (op.granulepos >= 0);
-      demux_ogg_read_packet(os,&op,context,&pts,&is_keyframe);
+      demux_ogg_read_packet(os,&op,context,&pts,&is_keyframe,samplesize);
       if (precision && is_gp_valid) {
         precision--;
         if (abs(gp - op.granulepos) > rate && (op.granulepos != old_gp)) {

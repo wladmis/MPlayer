@@ -1,4 +1,4 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>1.2. Instalacja</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - Odtwarzacz filmów dla LINUKSA"><link rel="up" href="intro.html" title="Rozdzia&#322; 1. Wprowadzenie"><link rel="previous" href="history.html" title="1.1. Historia"><link rel="next" href="gui.html" title="1.3. A co z GUI?"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">1.2. Instalacja</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="history.html">Poprzedni</a> </td><th width="60%" align="center">Rozdzia&#322; 1. Wprowadzenie</th><td width="20%" align="right"> <a accesskey="n" href="gui.html">Nast&#281;pny</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="install"></a>1.2. Instalacja</h2></div></div><p>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>1.2. Instalacja</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - Odtwarzacz filmów"><link rel="up" href="intro.html" title="Rozdzia&#322; 1. Wprowadzenie"><link rel="previous" href="history.html" title="1.1. Historia"><link rel="next" href="gui.html" title="1.3. A co z GUI?"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">1.2. Instalacja</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="history.html">Poprzedni</a> </td><th width="60%" align="center">Rozdzia&#322; 1. Wprowadzenie</th><td width="20%" align="right"> <a accesskey="n" href="gui.html">Nast&#281;pny</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="install"></a>1.2. Instalacja</h2></div></div><p>
 Przewodnik szybkiej instalacji znajdziesz w pliku <tt class="filename">README</tt>.
 Prosz&#281;, najpierw go przeczytaj, a pó&#378;niej wró&#263; do tego dokumentu
 po bardziej mordercze szczegó&#322;y.
@@ -86,7 +86,16 @@ Potrzebujesz do&#347;&#263; nowego sprz&#281;tu. Je&#347;li u&#380;ywasz Linuksa
   XMMS. Wymagana jest przynajmniej wersja 1.2.7.
   </p></li><li><p>
   <span class="bold"><b>libsmb</b></span> - opcjonalna, do obs&#322;ugi Samby.
-  </p></li></ul></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="id2839503"></a>1.2.2. Kodeki</h3></div></div><div class="itemizedlist"><ul type="disc"><li><p>
+  </p></li><li><p>
+  <span class="bold"><b>bio2jack</b></span> - opcjonalna, do obs&#322;ugi wyj&#347;cia
+  d&#378;wi&#281;ku poprzez JACK, potrzebna jedynie w czasie kompilacji. Do pobrania z
+  <a href="http://bio2jack.sf.net/" target="_top">http://bio2jack.sf.net</a>. Poniewa&#380;
+  nie posiada ona opcji instalacji musisz samodzielnie umie&#347;ci&#263; plik
+  <tt class="filename">libbio2jack.a</tt> w swoim katalogu z bibliotekami 
+  (np. <tt class="filename">/usr/local/lib/</tt>) lub u&#380;y&#263; opcji 
+  <tt class="option">--with-bio2jack=KATALOG</tt> aby przekaza&#263; jego lokalizacj&#281; do
+  skryptu <tt class="filename">./configure</tt>.
+  </p></li></ul></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="id2839552"></a>1.2.2. Kodeki</h3></div></div><div class="itemizedlist"><ul type="disc"><li><p>
   <span class="bold"><b><tt>libavcodec</tt></b></span>:
   Ten pakiet kodeków jest zdolny do dekodowania strumieni video zakodowanych
   H263/MJPEG/RV10/DivX3/DivX4/DivX5/MP41/MP42/WMV1/WMV2/SVQ1/SVQ3
@@ -173,7 +182,8 @@ Potrzebujesz do&#347;&#263; nowego sprz&#281;tu. Je&#347;li u&#380;ywasz Linuksa
   (jest to uaktualniana ka&#380;dej nocy wersja Vorbis CVS spakowana tarem).
   </p></li><li><p>
   <span class="application">MPlayer</span> mo&#380;e korzysta&#263; z bibliotek RealPlayer 8
-  lub RealONE, &#380;eby odtworzy&#263; pliki z obrazem w formacie <span class="bold"><b>RealVideo 2.0-4.0</b></span>
+  lub RealONE, &#380;eby odtworzy&#263; pliki z obrazem w formacie
+  <span class="bold"><b>RealVideo 3.0 i 4.0</b></span>
   i d&#378;wi&#281;kiem w Sipro/Cook. Zobacz rozdzia&#322; 
   <a href="formats.html#realmedia" title="2.1.1.7. Pliki RealMedia (RM)">format pliku RealMedia</a>,
   znajdziesz tam instrukcje i kilka informacji.
@@ -188,7 +198,7 @@ zoomie), dlatego te&#380; tryb pe&#322;nego ekranu jest mi&#322;y i bardzo szybk
   
 </p><div class="itemizedlist"><ul type="disc"><li><p>
   <span class="bold"><b>Karty Matrox G200/G400/G450/G550</b></span>: mimo, &#380;e
-  dost&#281;pny jest <a href="devices.html#vidix" title="2.3.1.2.12. VIDIX">sterownik Vidix</a>, zalecane
+  dost&#281;pny jest <a href="devices.html#vidix" title="2.3.1.2.13. VIDIX">sterownik Vidix</a>, zalecane
   jest u&#380;ywanie modu&#322;u mga_vid zamiast niego, poniewa&#380; dzia&#322;a znacznie
   lepiej. W rozdziale <a href="devices.html#mga_vid" title="2.3.1.2.6. Bufor ramki Matrox (mga_vid)">mga_vid</a> znajdziesz informacje
   o sposobie jego instalacji i u&#380;ycia. Wa&#380;ne jest wykonanie tych kroków
@@ -196,7 +206,7 @@ zoomie), dlatego te&#380; tryb pe&#322;nego ekranu jest mi&#322;y i bardzo szybk
   w przeciwnym wypadku obs&#322;uga mga_vid nie zostanie wkompilowana. Sprawd&#378; równie&#380;
   rozdzia&#322; <a href="devices.html#tvout-mga-g400" title="2.3.1.5.1. Karty Matrox G400">Matrox TV-out</a>.
   <span class="bold"><b> Je&#380;eli nie korzystasz z Linuksa</b></span>, jedyn&#261; mo&#380;liwo&#347;ci&#261;
-  jest dla Ciebie sterownik VIDIX: przeczytaj rozdzia&#322; <a href="devices.html#vidix" title="2.3.1.2.12. VIDIX">VIDIX</a>.
+  jest dla Ciebie sterownik VIDIX: przeczytaj rozdzia&#322; <a href="devices.html#vidix" title="2.3.1.2.13. VIDIX">VIDIX</a>.
   </p></li><li><p>
   <span class="bold"><b>Karty 3Dfx Voodoo3/Banshee</b></span>: przeczytaj rozdzia&#322;
   po&#347;wi&#281;cony <a href="devices.html#tdfxfb" title="2.3.1.2.7. Obs&#322;uga 3dfx YUV">tdfxfb</a>, &#380;eby dowiedzie&#263; si&#281;, jak uzyska&#263; znaczy
@@ -207,7 +217,7 @@ zoomie), dlatego te&#380; tryb pe&#322;nego ekranu jest mi&#322;y i bardzo szybk
   <span class="bold"><b>4.2.0</b></span>, poniewa&#380; sterownik Xv dla 3dfx by&#322; uszkodzony
   w wersji 4.1.0 i wcze&#347;niejszych.
   </p></li><li><p>
-  <span class="bold"><b>Karty ATI</b></span>: sterownik <a href="devices.html#vidix" title="2.3.1.2.12. VIDIX">VIDIX</a>
+  <span class="bold"><b>Karty ATI</b></span>: sterownik <a href="devices.html#vidix" title="2.3.1.2.13. VIDIX">VIDIX</a>
   obs&#322;uguje nast&#281;puj&#261;ce karty:
   <span class="bold"><b>Radeon, Rage128, Mach64</b></span> (Rage XL/Mobility, Xpert98).
   Przeczytaj równie&#380; rozdzia&#322; <a href="devices.html#tvout-ati" title="2.3.1.5.3. karty ATI">karty ATI</a> 
@@ -231,7 +241,7 @@ zoomie), dlatego te&#380; tryb pe&#322;nego ekranu jest mi&#322;y i bardzo szybk
   </p></li><li><p>
   <span class="bold"><b>3DLabs GLINT R3 and Permedia3</b></span>: dost&#281;pny jest
   sterownik VIDIX (pm3_vid). Dla uzyskanie bardziej szczegó&#322;owych informacji
-  przeczytaj rozdzia&#322; <a href="devices.html#vidix" title="2.3.1.2.12. VIDIX">VIDIX</a>.
+  przeczytaj rozdzia&#322; <a href="devices.html#vidix" title="2.3.1.2.13. VIDIX">VIDIX</a>.
   </p></li><li><p>
   <span class="bold"><b>Inne karty</b></span>: &#380;adna z powy&#380;szych?
   </p><div class="itemizedlist"><ul type="round"><li>
@@ -257,12 +267,12 @@ dzia&#322;a ona z nast&#281;puj&#261;cymi sterownikami:
 </p><div class="itemizedlist"><ul type="disc"><li>
   <span class="bold"><b>u&#380;ywasz</b></span> XFree86: sprawd&#378; szczegó&#322;y
   w rozdziale <a href="devices.html#dga" title="2.3.1.2.2. DGA">sterownik DGA</a> i
-  <a href="devices.html#x11" title="2.3.1.2.11. X11">sterownik X11</a>. DGA jest zalecany! Spróbuj równie&#380;
+  <a href="devices.html#x11" title="2.3.1.2.12. X11">sterownik X11</a>. DGA jest zalecany! Spróbuj równie&#380;
   DGA przez SDL, czasami jest to lepsze rozwi&#261;zanie.
   </li><li>
   <span class="bold"><b>nie u&#380;ywasz</b></span> XFree86: spróbuj u&#380;y&#263; którego&#347;
   z ni&#380;ej wymienionych sterowników w podanej kolejno&#347;ci:
-  <a href="devices.html#vesa" title="2.3.1.2.10. VESA - wyj&#347;cie na VESA BIOS">vesa</a>,
+  <a href="devices.html#vesa" title="2.3.1.2.11. VESA - wyj&#347;cie na VESA BIOS">vesa</a>,
   <a href="devices.html#fbdev" title="2.3.1.2.5. Wyj&#347;cie bufora ramki (FBdev)">fbdev</a>,
   <a href="devices.html#svgalib" title="2.3.1.2.4. SVGAlib">svgalib</a>,
   <a href="devices.html#aalib" title="2.3.1.2.9. AAlib - wy&#347;wietlanie w trybie tekstowym">aalib</a>.
@@ -295,14 +305,14 @@ dzia&#322;a ona z nast&#281;puj&#261;cymi sterownikami:
   sprz&#281;towej obróbki AC3 <span class="bold"><b>musisz</b></span> u&#380;y&#263; ALSA 0.9 
   z emulacj&#261; OSS!
   </li><li>
-  <span class="bold"><b>C-Media z wyj&#347;ciem SP/DIF</b></span>: Mo&#380;liwa jest sprz&#281;towa
+  <span class="bold"><b>C-Media z wyj&#347;ciem S/PDIF</b></span>: Mo&#380;liwa jest sprz&#281;towa
   obróbka AC3 z tymi kartami, przeczytaj rozdzia&#322;
   <a href="codecs.html#hwac3" title="2.2.2.2. Sprz&#281;towe dekodowanie AC3">Sprz&#281;towe dekodowanie AC3</a>.
   </li><li>
   Mo&#380;liwo&#347;ci <span class="bold"><b>innych kart</b></span> nie s&#261; obs&#322;ugiwane przez
   <span class="application">MPlayera</span>. <span class="bold"><b>Zalecamy, aby&#347; przeczyta&#322;
   sekcj&#281; <a href="devices.html#audio-dev" title="2.3.2. Urz&#261;dzenia wyj&#347;ciowe audio">karty d&#378;wi&#281;kowe</a>!</b></span>
-  </li></ul></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="id2841248"></a>1.2.5. Mo&#380;liwo&#347;ci</h3></div></div><div class="itemizedlist"><ul type="disc"><li><p>
+  </li></ul></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="id2841297"></a>1.2.5. Mo&#380;liwo&#347;ci</h3></div></div><div class="itemizedlist"><ul type="disc"><li><p>
   Zdecyduj czy potrzebujesz GUI. Je&#347;li tak, przeczytaj rozdzia&#322; <a href="gui.html" title="1.3. A co z GUI?">GUI
   </a> przed kompilacj&#261;.
   </p></li><li><p>

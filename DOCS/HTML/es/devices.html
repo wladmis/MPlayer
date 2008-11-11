@@ -143,9 +143,9 @@ Las tarjetas Riva128 no tienen soporte XVideo con el controlador nVidia de
 XFree86 :( Las quejas a nVidia.
 </p><p>
 Sin embargo, <span class="application">MPlayer</span> contiene un controlador
-<a href="devices.html#vidix" title="2.3.1.2.12. VIDIX">VIDIX</a> para la mayoría de las tarjetas nVidia.
+<a href="devices.html#vidix" title="2.3.1.2.13. VIDIX">VIDIX</a> para la mayoría de las tarjetas nVidia.
 Actualmente está en estado beta, y tiene algunos problemas. Para más
-información, vea la sección <a href="devices.html#vidix-nvidia" title="2.3.1.2.12.5. Tarjetas nVidia">nVidia VIDIX</a>.
+información, vea la sección <a href="devices.html#vidix-nvidia" title="2.3.1.2.13.5. Tarjetas nVidia">nVidia VIDIX</a>.
 </p></div><div class="sect5"><div class="titlepage"><div><h6 class="title"><a name="ati"></a>2.3.1.2.1.4. Tarjetas ATI</h6></div></div><p>
 El <a href="http://www.linuxvideo.org/gatos" target="_top">controlador GATOS</a>
 (que es el que debería de usar, a menos que tenga una Rage128 o Radeon) tiene
@@ -157,7 +157,7 @@ Radeon VE - si necesita X, use XFree86 4.2.0 o posterior para esta tarjeta.
 No tiene soporte de salida de TV. Por supuesto con <span class="application">MPlayer</span>
 puede felizmente obtener gráficos <span class="bold"><b>acelerados</b></span>, con o
 sin <span class="bold"><b>salida TV</b></span>, y no se necesitan bibliotecas o X.
-Lea la sección <a href="devices.html#vidix" title="2.3.1.2.12. VIDIX">VIDIX</a>.
+Lea la sección <a href="devices.html#vidix" title="2.3.1.2.13. VIDIX">VIDIX</a>.
 </p></div><div class="sect5"><div class="titlepage"><div><h6 class="title"><a name="neomagic"></a>2.3.1.2.1.5. Tarjetas NeoMagic</h6></div></div><p>
 Estas tarjetas se pueden encontrar en algunos portátiles. Debe usar XFree86 4.3.0 o
 posterior, o incluso los controladores de Stefan Seyfried
@@ -184,7 +184,7 @@ Si quiere usar xv con una tarjeta trident, sepa que no funciona con
 con la tarjeta Cyberblade XP.
 </p><p>
 Alternativamente, <span class="application">MPlayer</span> contiene un controlador
-<a href="devices.html#vidix" title="2.3.1.2.12. VIDIX">VIDIX</a> para la tarjeta Cyberblade/i1.
+<a href="devices.html#vidix" title="2.3.1.2.13. VIDIX">VIDIX</a> para la tarjeta Cyberblade/i1.
 </p></div><div class="sect5"><div class="titlepage"><div><h6 class="title"><a name="kyro"></a>2.3.1.2.1.7. Tarjetas Kyro/PowerVR</h6></div></div><p>
 Si quiere usar Xv con una tarjeta basada en Kyro (por ejemplo Hercules
 Prophet 4000XT), debe descargar los controladores desde
@@ -521,7 +521,7 @@ Está en activo desarrollo poro A'rpi, y tiene soporte de VSYNC por hardware
 con triple buffering. Funciona tanto en consola con frambuffer como bajo X.
 </p><div class="warning" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Aviso</h3><p>
 ¡Esto es solo en Linux! En sistemas no-Linux (probado en FreeBSD), puede
-usar en su lugar <a href="devices.html#vidix" title="2.3.1.2.12. VIDIX">VIDIX</a>!
+usar en su lugar <a href="devices.html#vidix" title="2.3.1.2.13. VIDIX">VIDIX</a>!
 </p></div><div class="procedure"><p><b>Instalación:</b></p><ol type="1"><li><p>
   Para usarlo, primero tendrá que compilar <tt class="filename">mga_vid.o</tt>:
   <pre class="screen">
@@ -661,7 +661,49 @@ Esto no es automáticamente detectado por aalib, pero vo_aa intenta encontrar
 el mejor modo.
 Vea <a href="http://aa-project.sourceforge.net/tune" target="_top">http://aa-project.sourceforge.net/tune</a> para más detalles
 y ajustes.
-</p></div><div class="sect4"><div class="titlepage"><div><h5 class="title"><a name="vesa"></a>2.3.1.2.10. VESA - salida en VESA BIOS</h5></div></div><p>
+</p></div><div class="sect4"><div class="titlepage"><div><h5 class="title"><a name="caca"></a>2.3.1.2.10. <tt>libcaca</tt> - Biblioteca de Arte AsCii
+en color</h5></div></div><p>
+La biblioteca <a href="http://sam.zoy.org/projects/libcaca/" target="_top"><tt>libcaca</tt></a>
+es una biblioteca gráfica que tiene como salida texto en lugar de pixels, de modo
+que funicona en cualquier tarjeta gráfica antigua o en terminales de texto.
+No es como la famosa biblioteca <tt>AAlib</tt>.
+<tt>libcaca</tt> necesita un terminal para funcionar,
+esto es funciona en todo sistema Unix (incluyendo Mac OS X) usando bien la biblioteca
+<tt>slang</tt> o bien la biblioteca
+<tt>ncurses</tt>, en DOS usando la biblioteca
+<tt>conio.h</tt>, y en sistemas Windows usando bien
+<tt>slang</tt> o
+<tt>ncurses</tt> (a través de emulación Cygwin) o
+<tt>conio.h</tt>. Si <tt class="filename">./configure</tt>
+detecta <tt>libcaca</tt>, el controlador de salida
+caca libvo será construido.
+</p><div class="itemizedlist"><p><b>Las diferencias con <tt>AAlib</tt> son las
+siguientes:</b></p><ul type="disc"><li>
+  16 colores disponibles para la salida de caracteres (256 pares de colores)
+  </li><li>
+  difuminado del color de la imagen
+  </li></ul></div><div class="itemizedlist"><p><b>Pero <tt>libcaca</tt> también tiene las siguientes
+limitaciones:</b></p><ul type="disc"><li>
+  no soporta brillo, contraste, gamma
+  </li></ul></div><p>
+Puede usar algunas teclas en la ventana caca para cambiar opciones de renderizado:
+</p><div class="informaltable"><table border="1"><colgroup><col><col></colgroup><thead><tr><th>Tecla</th><th>Acción</th></tr></thead><tbody><tr><td><span class="keycap"><b>d</b></span></td><td>
+  Cambia los métodos de difuminado de <tt>libcaca</tt>.
+  </td></tr><tr><td><span class="keycap"><b>a</b></span></td><td>
+  Cambia el antialiasing en <tt>libcaca</tt>.
+  </td></tr><tr><td><span class="keycap"><b>b</b></span></td><td>
+  Cambia el fondo en <tt>libcaca</tt>.
+  </td></tr></tbody></table></div><div class="variablelist"><p><b><tt>libcaca</tt> también mira algunas
+variables de entorno:</b></p><dl><dt><span class="term"><tt class="option">CACA_DRIVER</tt></span></dt><dd>
+    Establece el controlador caca recomendado, e.g. ncurses, slang, x11.
+    </dd><dt><span class="term"><tt class="option">CACA_GEOMETRY (solo X11)</tt></span></dt><dd>
+    Especifica el número de filas y columnas. e.g. 128x50.
+    </dd><dt><span class="term"><tt class="option">CACA_FONT (solo X11)</tt></span></dt><dd>
+    Especifica la tipografía a usar. e.g. fixed, nexus.
+    </dd></dl></div><p>
+Use la opción <tt class="option">-framedrop</tt> si su ordenador no es suficientemente
+rápido para renderizar todos los marcos de imagen.
+</p></div><div class="sect4"><div class="titlepage"><div><h5 class="title"><a name="vesa"></a>2.3.1.2.11. VESA - salida en VESA BIOS</h5></div></div><p>
 Este controlador fue diseñado e introducido como un
 <span class="bold"><b>controlador genérico</b></span> para cualquier tarjeta
 gráfica que tenga una BIOS compatible con VESA VBE 2.0. Otra ventaja
@@ -750,7 +792,7 @@ No use este controlador con <span class="bold"><b>GCC 2.96</b></span>!
   Para  hacer que <span class="bold"><b>funcione la salida-TV</b></span> deberá
   tener conectado el conector de TV antes de iniciar el PC porque la BIOS de video
   lo inicia automáticamente durante el proceso POST.
-  </li></ul></div></div><div class="sect4"><div class="titlepage"><div><h5 class="title"><a name="x11"></a>2.3.1.2.11. X11</h5></div></div><p>
+  </li></ul></div></div><div class="sect4"><div class="titlepage"><div><h5 class="title"><a name="x11"></a>2.3.1.2.12. X11</h5></div></div><p>
 Evite usarlo si es posible. La salida a X11 (usa la extensión de memoria
 compartida), sin ninguna aceleración hardware. Soporta (acelerado por
 MMX/3DNow/SSE, pero sigue siendo lento) escalado por software, use las
@@ -783,7 +825,7 @@ DGA</a>, e insertela en su <tt class="filename">XF86Config</tt>.
 Si no puede encontrar los modos que ha insertado, consule la salida de
 XFree86. Algunos controladores no pueden usar pixelclocks bajos que son
 necesarios para modos de video de baja resolución.
-</p></div><div class="sect4"><div class="titlepage"><div><h5 class="title"><a name="vidix"></a>2.3.1.2.12. VIDIX</h5></div></div><p><b>PREÁMBULO. </b>
+</p></div><div class="sect4"><div class="titlepage"><div><h5 class="title"><a name="vidix"></a>2.3.1.2.13. VIDIX</h5></div></div><p><b>PREÁMBULO. </b>
 VIDIX es la abreviatura para 
 <span class="bold"><b>VID</b></span>eo<span class="bold"><b>I</b></span>nterface
 para *ni<span class="bold"><b>X</b></span>.
@@ -816,7 +858,7 @@ de la reproducción de video.
   fastidiará su pantalla), y obtendrá un efecto similar al que se obtiene con
   <tt class="option">-vo mga</tt> o <tt class="option">-vo fbdev</tt>. Las tarjetas nVidia, sin
   embargo, son capaces de mostrar gráficos reales de video sobre una consola
-  de texto real. Vea la sección <a href="devices.html#vidix-nvidia" title="2.3.1.2.12.5. Tarjetas nVidia">nvidia_vid</a>
+  de texto real. Vea la sección <a href="devices.html#vidix-nvidia" title="2.3.1.2.13.5. Tarjetas nVidia">nvidia_vid</a>
   para más información.
   </li><li>
   Puede usar el subdispositivo VIDIX aplicado a varios controladores de salida
@@ -893,7 +935,7 @@ puede usar un módulo especial del kernel, como esto:
   <tt class="filename">libdha/Makefile</tt>.
   </p></li><li><p>
   Recompile e instale libdha.
-  </p></li></ol></div><div class="sect5"><div class="titlepage"><div><h6 class="title"><a name="vidix-ati"></a>2.3.1.2.12.1. Tarjetas ATI</h6></div></div><p>
+  </p></li></ol></div><div class="sect5"><div class="titlepage"><div><h6 class="title"><a name="vidix-ati"></a>2.3.1.2.13.1. Tarjetas ATI</h6></div></div><p>
 Actualmente la mayoría de las tarjetas ATI están soportadas de manera nativa,
 desde la Mach64 hasta las más nuevas Radeons.
 </p><p>
@@ -901,22 +943,22 @@ Hay dos binarios compilados: <tt class="filename">radeon_vid</tt> para Radeon y
 <tt class="filename">rage128_vid</tt> para tarjetas Rage 128. Puede forzar uno
 o dejar que el sistema VIDIX pruebe automáticamente todos los controladores
 disponibles.
-</p></div><div class="sect5"><div class="titlepage"><div><h6 class="title"><a name="vidix-mga"></a>2.3.1.2.12.2. Tarjetas Matrox</h6></div></div><p>
+</p></div><div class="sect5"><div class="titlepage"><div><h6 class="title"><a name="vidix-mga"></a>2.3.1.2.13.2. Tarjetas Matrox</h6></div></div><p>
 Hemos sido informados de que funcionan Matrox G200, G400, G450 y G550.
 </p><p>
 El controlador soporta ecualizadores de video y debe ser casi tan rápido como el
 <a href="devices.html#mga_vid" title="2.3.1.2.6. Framebuffer de Matrox (mga_vid)">Matrox framebuffer</a>
-</p></div><div class="sect5"><div class="titlepage"><div><h6 class="title"><a name="vidix-trident"></a>2.3.1.2.12.3. Tarjetas Trident</h6></div></div><p>
+</p></div><div class="sect5"><div class="titlepage"><div><h6 class="title"><a name="vidix-trident"></a>2.3.1.2.13.3. Tarjetas Trident</h6></div></div><p>
 Hay un controlador disponible para los chipset Trident Ciberblade/i1, que
 puede ser encontrado en las placas base VIA Epia.
 </p><p>
 El controlador ha sido escrito y es mantenido por, 
 <a href="http://www.blackfiveservices.co.uk/EPIAVidix.shtml" target="_top">Alastair M.
 Robinson</a>.
-</p></div><div class="sect5"><div class="titlepage"><div><h6 class="title"><a name="vidix-3dlabs"></a>2.3.1.2.12.4. Tarjetas 3DLabs</h6></div></div><p>
+</p></div><div class="sect5"><div class="titlepage"><div><h6 class="title"><a name="vidix-3dlabs"></a>2.3.1.2.13.4. Tarjetas 3DLabs</h6></div></div><p>
 Aunque hay un controlador para los chips 3DLabs GLINT R3 y Permedia3, ninguno
 ha sido probado, así que cualquier comentario o informe será bienvenido.
-</p></div><div class="sect5"><div class="titlepage"><div><h6 class="title"><a name="vidix-nvidia"></a>2.3.1.2.12.5. Tarjetas nVidia</h6></div></div><p>
+</p></div><div class="sect5"><div class="titlepage"><div><h6 class="title"><a name="vidix-nvidia"></a>2.3.1.2.13.5. Tarjetas nVidia</h6></div></div><p>
 Hay controladores para nVidia relativamente recientes, se sabe que funcionan bien
 con los chipset Riva 128, TNT y GeForce2, también se nos ha informado de que funciona
 con otros.
@@ -946,14 +988,14 @@ con otros.
   </pre>
 </p><p>
 ¡Esperamos que nos informe!
-</p></div><div class="sect5"><div class="titlepage"><div><h6 class="title"><a name="vidix-sis"></a>2.3.1.2.12.6. Tarjetas SiS</h6></div></div><p>
+</p></div><div class="sect5"><div class="titlepage"><div><h6 class="title"><a name="vidix-sis"></a>2.3.1.2.13.6. Tarjetas SiS</h6></div></div><p>
 Se trata de un código muy experimental, al igual que el nvidia_vid.
 </p><p>
 Ha sido probado en SiS 650/651/740 (los chipset más comunes usados en las versiones
 SiS de las placas base "Shuttle XPC")
 </p><p>
 ¡Esperamos que nos informe!
-</p></div></div><div class="sect4"><div class="titlepage"><div><h5 class="title"><a name="directfb"></a>2.3.1.2.13. DirectFB</h5></div></div><blockquote class="blockquote"><p>
+</p></div></div><div class="sect4"><div class="titlepage"><div><h5 class="title"><a name="directfb"></a>2.3.1.2.14. DirectFB</h5></div></div><blockquote class="blockquote"><p>
 "DirectFB es una biblioteca de gráficos que ha sido diseñada
 con los sistemas embebidos en mente. Ofrece el máximo rendimientdo en
 aceleración hardware con el mínimo uso de recursos y sobrecarga." -
@@ -968,8 +1010,8 @@ Intente usar siempre la versión más reciente de DirectFB. Puede usar las opcione
 de DirectFB en la línea de órdenes, usando la opción <tt class="option">-dfbopts</tt>.
 La capa de selección puede hacerse con el método de subdispositivo, p.e.:
 <tt class="option">-vo directfb:2</tt> (la capa -1 se usa por defecto: autodetectado)
-</p></div><div class="sect4"><div class="titlepage"><div><h5 class="title"><a name="dfbmga"></a>2.3.1.2.14. DirectFB/Matrox (dfbmga)</h5></div></div><p>
-Lea por favor la sección <a href="devices.html#directfb" title="2.3.1.2.13. DirectFB">principal de DirectFB</a> para 
+</p></div><div class="sect4"><div class="titlepage"><div><h5 class="title"><a name="dfbmga"></a>2.3.1.2.15. DirectFB/Matrox (dfbmga)</h5></div></div><p>
+Lea por favor la sección <a href="devices.html#directfb" title="2.3.1.2.14. DirectFB">principal de DirectFB</a> para 
 información general.
 </p><p>
 Este controlador de salida de video activa CRTC2 (en un segundo monitor) en la
@@ -1087,9 +1129,20 @@ para una TV 16:9: -vf dvbscale=1024,scale=-1:0,expand=-1:576:-1:-1:1
   con la sintaxis aceptada por <b>szap/tzap/czap</b>, o tener
   <b>scan</b> compilado por usted mismo.
 </p><p>
+  Si tiene más de un tipo de tarjeta (e.g. Satélite, Terrestre y Cable)
+  puede guardar sus archivos de canales como
+  <tt class="filename">~/.mplayer/channels.conf.sat</tt>,
+  <tt class="filename">~/.mplayer/channels.conf.ter</tt>
+  y <tt class="filename">~/.mplayer/channels.conf.cbl</tt>,
+  respectivamente, de ese modo se indica implícitamente a
+  <span class="application">MPlayer</span> que uso esos archivos en lugar de
+  <tt class="filename">~/.mplayer/channels.conf</tt>,
+  y solo tiene que especificar qué tarjeta usar.
+</p><p>
   Asegúrese de que tiene <span class="emphasis"><i>solo</i></span> canales Free to Air en su
   archivo <tt class="filename">channels.conf</tt>, o <span class="application">MPlayer</span>
-  se colgará en los otros.
+  intentará saltar al siguiente visible, pero puede tardar mucho si hay varios
+  canales consecutivos encriptados.
 </p><p>
   Para mostrar el primero de los canales presentes en su lista, ejecute
 </p><pre class="screen">
@@ -1435,13 +1488,13 @@ debido a los problemas de licencia de la tecnología Macrovision.
   </li><li>
   <span class="bold"><b>Radeon</b></span> y <span class="bold"><b>Rage128</b></span>:
   soportados por <span class="application">MPlayer</span>!
-  Consulte el <a href="devices.html#vesa" title="2.3.1.2.10. VESA - salida en VESA BIOS">controlador VESA</a> y la secciones
-  <a href="devices.html#vidix" title="2.3.1.2.12. VIDIX">VIDIX</a>.
+  Consulte el <a href="devices.html#vesa" title="2.3.1.2.11. VESA - salida en VESA BIOS">controlador VESA</a> y la secciones
+  <a href="devices.html#vidix" title="2.3.1.2.13. VIDIX">VIDIX</a>.
   </li><li>
   <span class="bold"><b>Rage Mobility P/M, Radeon, Rage 128, Mobility M3/M4</b></span>:
   soportado por <a href="http://www.stud.uni-hamburg.de/users/lennart/projects/atitvout/" target="_top">atitvout</a>.
   </li></ul></div><p>
-En otras tarjetas, use el controlador <a href="devices.html#vesa" title="2.3.1.2.10. VESA - salida en VESA BIOS">VESA</a>,
+En otras tarjetas, use el controlador <a href="devices.html#vesa" title="2.3.1.2.11. VESA - salida en VESA BIOS">VESA</a>,
 sin VIDIX. Lo malo es que se necesita una CPU potente.
 </p><p>
 Lo único que necesita hacer - <span class="bold"><b>Tener el conector

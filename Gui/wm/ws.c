@@ -38,6 +38,10 @@
 #include <X11/extensions/Xinerama.h>
 #endif
 
+#ifdef HAVE_XF86VM
+#include <X11/extensions/xf86vmode.h>
+#endif
+
 #include <sys/ipc.h>
 #include <sys/shm.h>
 
@@ -249,9 +253,21 @@ wsXDNDInitialize();
   }
   else
 #endif
+#ifdef HAVE_XF86VM
+    {
+      int clock;
+      XF86VidModeModeLine modeline;
+
+      XF86VidModeGetModeLine( wsDisplay,wsScreen,&clock ,&modeline );
+      wsMaxX=modeline.hdisplay;
+      wsMaxY=modeline.vdisplay;
+    }
+#endif
  {
  wsOrgX = wsOrgY = 0;
+ if ( !wsMaxX )
  wsMaxX=DisplayWidth( wsDisplay,wsScreen );
+ if ( !wsMaxY )
  wsMaxY=DisplayHeight( wsDisplay,wsScreen );
  }
 
@@ -754,37 +770,57 @@ void wsFullScreen( wsTWindow * win )
 
  if ( win->isFullScreen )
   {
-   win->X=win->OldX;
-   win->Y=win->OldY;
-   win->Width=win->OldWidth;
-   win->Height=win->OldHeight;
-   win->isFullScreen=False;
-   decoration=win->Decorations;
+   vo_x11_ewmh_fullscreen( _NET_WM_STATE_REMOVE ); // removes fullscreen state if wm supports EWMH
+   if ( ! (vo_fs_type & vo_wm_FULLSCREEN) ) // shouldn't be needed with EWMH fs
+    {
+     win->X=win->OldX;
+     win->Y=win->OldY;
+     win->Width=win->OldWidth;
+     win->Height=win->OldHeight;
+     decoration=win->Decorations;
+    }
+
 #ifdef ENABLE_DPMS
    wsScreenSaverOn( wsDisplay );
 #endif
+
+   win->isFullScreen=False;
   }
   else
    {
-    win->OldX=win->X; win->OldY=win->Y;
-    win->OldWidth=win->Width; win->OldHeight=win->Height;
-    win->X=wsOrgX; win->Y=wsOrgY;
-    win->Width=wsMaxX; win->Height=wsMaxY;
+    if ( ! (vo_fs_type & vo_wm_FULLSCREEN) ) // shouldn't be needed with EWMH fs
+     {
+      win->OldX=win->X; win->OldY=win->Y;
+      win->OldWidth=win->Width; win->OldHeight=win->Height;
+      win->X=wsOrgX; win->Y=wsOrgY;
+      win->Width=wsMaxX; win->Height=wsMaxY;
+     }
+
     win->isFullScreen=True;
 #ifdef ENABLE_DPMS
     wsScreenSaverOff( wsDisplay );
 #endif
+    
+     vo_x11_ewmh_fullscreen( _NET_WM_STATE_ADD ); // adds fullscreen state if wm supports EWMH
    }
 
- vo_x11_decoration( wsDisplay,win->WindowID,decoration );
- vo_x11_sizehint( win->X,win->Y,win->Width,win->Height,0 );
- vo_x11_setlayer( wsDisplay,win->WindowID,win->isFullScreen );
+  if ( ! (vo_fs_type & vo_wm_FULLSCREEN) ) // shouldn't be needed with EWMH fs
+   {
+    vo_x11_decoration( wsDisplay,win->WindowID,decoration );
+    vo_x11_sizehint( win->X,win->Y,win->Width,win->Height,0 );
+    vo_x11_setlayer( wsDisplay,win->WindowID,win->isFullScreen );
 
-if ((!(win->isFullScreen)) & vo_ontop) vo_x11_setlayer(wsDisplay, win->WindowID,1);
+    if ((!(win->isFullScreen)) & vo_ontop) vo_x11_setlayer(wsDisplay, win->WindowID,1);
+
+    XMoveResizeWindow( wsDisplay,win->WindowID,win->X,win->Y,win->Width,win->Height );
+   }
 
  if ( vo_wm_type == 0 && !(vo_fsmode&16) )
-  XWithdrawWindow( wsDisplay,win->WindowID,wsScreen );
- XMoveResizeWindow( wsDisplay,win->WindowID,win->X,win->Y,win->Width,win->Height );
+  {
+   XWithdrawWindow( wsDisplay,win->WindowID,wsScreen );
+  }
+
+
  XMapRaised( wsDisplay,win->WindowID );
  XRaiseWindow( wsDisplay,win->WindowID );
  XFlush( wsDisplay );

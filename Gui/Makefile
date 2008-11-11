@@ -27,11 +27,12 @@ OBJS = $(SRCS:.c=.o)
 $(LIB):	.depend	$(OBJS)
 	rm -f $(LIB)
 	$(AR) rc $(LIB) $(OBJS) $(MPLAYEROBJS)
+	$(RANLIB) $(LIB)
 
 all:	$(LIB)
 
 clean:
-	rm -rf $(OBJS) *.o *~ *.bak main $(PRG) $(LIB) .depend
+	rm -rf $(OBJS) *.o *~ *.bak main $(LIB) .depend
 
 #dep:	depend
 #

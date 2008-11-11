@@ -79,7 +79,7 @@ desc->fpath = dn; // search in the same dir as fonts.desc
 desc->charspace=2;
 desc->spacewidth=12;
 desc->height=0;
-for(i=0;i<512;i++) desc->start[i]=desc->width[i]=desc->font[i]=-1;
+for(i=0;i<65536;i++) desc->start[i]=desc->width[i]=desc->font[i]=-1;
 
 section[0]=0;
 
@@ -245,9 +245,18 @@ while(fgets(sor,1020,f)){
       }
   }
   printf("Syntax error in font desc: %s\n",sor);
+  free(desc);
+  fclose(f);
+  return NULL;
 
 }
 fclose(f);
+
+ if (first == 1) {
+   printf("%s is empty or a directory, ignoring\n", fname);
+   free(desc);
+   return NULL;
+ }
 
 //printf("font: pos of U = %d\n",desc->start[218]);
 
@@ -295,7 +304,7 @@ for(i=0;i<=fontdb;i++){
 }
 
 j='_';if(desc->font[j]<0) j='?';
-for(i=0;i<512;i++)
+for(i=0;i<65536;i++)
   if(desc->font[i]<0){
       desc->start[i]=desc->start[j];
       desc->width[i]=desc->width[j];
