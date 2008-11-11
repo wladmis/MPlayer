@@ -1,7 +1,7 @@
 #ifndef __CODEC_CFG_H
 #define __CODEC_CFG_H
 
-#define CODEC_CFG_MIN	20030724
+#define CODEC_CFG_MIN	20060501
 
 #define CODECS_MAX_FOURCC	32
 #define CODECS_MAX_OUTFMT	16
@@ -59,12 +59,15 @@ typedef struct codecs_st {
 } codecs_t;
 
 int parse_codec_cfg(char *cfgfile);
-codecs_t* find_video_codec(unsigned int fourcc, unsigned int *fourccmap, codecs_t *start);
-codecs_t* find_audio_codec(unsigned int fourcc, unsigned int *fourccmap, codecs_t *start);
-codecs_t* find_codec(unsigned int fourcc,unsigned int *fourccmap,codecs_t *start,int audioflag);
+codecs_t* find_video_codec(unsigned int fourcc, unsigned int *fourccmap,
+                           codecs_t *start, int force);
+codecs_t* find_audio_codec(unsigned int fourcc, unsigned int *fourccmap,
+                           codecs_t *start, int force);
+codecs_t* find_codec(unsigned int fourcc, unsigned int *fourccmap,
+                     codecs_t *start, int audioflag, int force);
 void select_codec(char* codecname,int audioflag);
 void list_codecs(int audioflag);
 void codecs_reset_selection(int audioflag);
-void codecs_uninit_free();
+void codecs_uninit_free(void);
 
 #endif

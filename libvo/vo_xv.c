@@ -22,6 +22,7 @@ Buffer allocation:
 
 #include "config.h"
 #include "mp_msg.h"
+#include "help_mp.h"
 #include "video_out.h"
 #include "video_out_internal.h"
 
@@ -89,6 +90,7 @@ static int int_pause;
 static Window mRoot;
 static uint32_t drwX, drwY, drwBorderWidth, drwDepth;
 static uint32_t dwidth, dheight;
+static uint32_t max_width = 0, max_height = 0; // zero means: not set
 
 static void (*draw_alpha_fnc) (int x0, int y0, int w, int h,
                                unsigned char *src, unsigned char *srca,
@@ -143,7 +145,7 @@ static void deallocate_xvimage(int foo);
  * connect to server, create and map window,
  * allocate colors and (shared) memory
  */
-static uint32_t config(uint32_t width, uint32_t height, uint32_t d_width,
+static int config(uint32_t width, uint32_t height, uint32_t d_width,
                        uint32_t d_height, uint32_t flags, char *title,
                        uint32_t format)
 {
@@ -175,23 +177,35 @@ static uint32_t config(uint32_t width, uint32_t height, uint32_t d_width,
     image_width = width;
     image_format = format;
 
+    if ((max_width != 0 && max_height != 0) &&
+        (image_width > max_width || image_height > max_height))
+    {
+        mp_msg( MSGT_VO, MSGL_ERR, "[xv] " MSGTR_VO_XV_ImagedimTooHigh,
+                image_width, image_height, max_width, max_height);
+        return -1;
+    }
+
     vo_mouse_autohide = 1;
 
     int_pause = 0;
     visible_buf = -1;
 
+    update_xinerama_info();
+    aspect(&d_width, &d_height, A_NOZOOM);
     vo_dx = (vo_screenwidth - d_width) / 2;
     vo_dy = (vo_screenheight - d_height) / 2;
     geometry(&vo_dx, &vo_dy, &d_width, &d_height, vo_screenwidth,
              vo_screenheight);
+    vo_dx += xinerama_x;
+    vo_dy += xinerama_y;
     vo_dwidth = d_width;
     vo_dheight = d_height;
 
 #ifdef HAVE_XF86VM
-    if (flags & 0x02)
+    if (flags & VOFLAG_MODESWITCHING)
         vm = 1;
 #endif
-    flip_flag = flags & 8;
+    flip_flag = flags & VOFLAG_FLIPPING;
     num_buffers =
         vo_doublebuffering ? (vo_directrendering ? NUM_BUFFERS : 2) : 1;
 
@@ -212,7 +226,6 @@ static uint32_t config(uint32_t width, uint32_t height, uint32_t d_width,
         if (!xv_format)
             return -1;
     }
-    aspect_save_screenres(vo_screenwidth, vo_screenheight);
 
 #ifdef HAVE_NEW_GUI
     if (use_gui)
@@ -222,7 +235,6 @@ static uint32_t config(uint32_t width, uint32_t height, uint32_t d_width,
     {
         hint.x = vo_dx;
         hint.y = vo_dy;
-        aspect(&d_width, &d_height, A_NOZOOM);
         hint.width = d_width;
         hint.height = d_height;
 #ifdef HAVE_XF86VM
@@ -298,6 +310,11 @@ static uint32_t config(uint32_t width, uint32_t height, uint32_t d_width,
                                            ButtonReleaseMask |
                                            ExposureMask);
                 XMapWindow(mDisplay, vo_window);
+                XGetGeometry(mDisplay, vo_window, &mRoot,
+                             &drwX, &drwY, &vo_dwidth, &vo_dheight,
+                             &drwBorderWidth, &drwDepth);
+                drwX = drwY = 0; // coordinates need to be local to the window
+                aspect_save_prescale(vo_dwidth, vo_dheight);
             } else
             {
                 drwX = vo_dx;
@@ -331,14 +348,8 @@ static uint32_t config(uint32_t width, uint32_t height, uint32_t d_width,
                                    NULL, 0, &hint);
             vo_x11_sizehint(hint.x, hint.y, hint.width, hint.height, 0);
             XMapWindow(mDisplay, vo_window);
-            if (flags & 1)
+            if (flags & VOFLAG_FULLSCREEN)
                 vo_x11_fullscreen();
-            else
-            {
-#ifdef HAVE_XINERAMA
-                vo_x11_xinerama_move(mDisplay, vo_window);
-#endif
-            }
         } else
         {
             // vo_fs set means we were already at fullscreen
@@ -346,7 +357,7 @@ static uint32_t config(uint32_t width, uint32_t height, uint32_t d_width,
             if (!vo_fs)
                 XMoveResizeWindow(mDisplay, vo_window, hint.x, hint.y,
                                   hint.width, hint.height);
-            if (flags & 1 && !vo_fs)
+            if (flags & VOFLAG_FULLSCREEN && !vo_fs)
                 vo_x11_fullscreen();    // handle -fs on non-first file
         }
 
@@ -405,7 +416,7 @@ static uint32_t config(uint32_t width, uint32_t height, uint32_t d_width,
 #endif
 
     aspect(&vo_dwidth, &vo_dheight, A_NOZOOM);
-    if (((flags & 1) && (WinID <= 0)) || vo_fs)
+    if (((flags & VOFLAG_FULLSCREEN) && (WinID <= 0)) || vo_fs)
     {
         aspect(&vo_dwidth, &vo_dheight, A_ZOOM);
         drwX =
@@ -425,6 +436,12 @@ static uint32_t config(uint32_t width, uint32_t height, uint32_t d_width,
     }
 
     panscan_calc();
+    
+    vo_xv_draw_colorkey(drwX - (vo_panscan_x >> 1),
+                        drwY - (vo_panscan_y >> 1),
+                        vo_dwidth + vo_panscan_x - 1,
+                        vo_dheight + vo_panscan_y - 1);
+
 
 #if 0
 #ifdef HAVE_SHM
@@ -619,7 +636,7 @@ static void flip_page(void)
     return;
 }
 
-static uint32_t draw_slice(uint8_t * image[], int stride[], int w, int h,
+static int draw_slice(uint8_t * image[], int stride[], int w, int h,
                            int x, int y)
 {
     uint8_t *dst;
@@ -655,9 +672,9 @@ static uint32_t draw_slice(uint8_t * image[], int stride[], int w, int h,
     return 0;
 }
 
-static uint32_t draw_frame(uint8_t * src[])
+static int draw_frame(uint8_t * src[])
 {
-    printf("draw_frame() called!!!!!!");
+    mp_msg(MSGT_VO,MSGL_INFO, MSGTR_LIBVO_XV_DrawFrameCalled);
     return -1;
 }
 
@@ -758,7 +775,7 @@ static uint32_t get_image(mp_image_t * mpi)
     return VO_FALSE;
 }
 
-static uint32_t query_format(uint32_t format)
+static int query_format(uint32_t format)
 {
     uint32_t i;
     int flag = VFCAP_CSP_SUPPORTED | VFCAP_CSP_SUPPORTED_BY_HW | VFCAP_HWSCALE_UP | VFCAP_HWSCALE_DOWN | VFCAP_OSD | VFCAP_ACCEPT_STRIDE;       // FIXME! check for DOWN
@@ -793,7 +810,7 @@ static void uninit(void)
     vo_x11_uninit();
 }
 
-static uint32_t preinit(const char *arg)
+static int preinit(const char *arg)
 {
     XvPortID xv_p;
     int busy_ports = 0;
@@ -912,13 +929,15 @@ static uint32_t preinit(const char *arg)
     {
       return -1; // bail out, colorkey setup failed
     }
+    vo_xv_enable_vsync();
+    vo_xv_get_max_img_dim( &max_width, &max_height );
 
     fo = XvListImageFormats(mDisplay, xv_port, (int *) &formats);
 
     return 0;
 }
 
-static uint32_t control(uint32_t request, void *data, ...)
+static int control(uint32_t request, void *data, ...)
 {
     switch (request)
     {

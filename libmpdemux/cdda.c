@@ -3,15 +3,23 @@
 #ifdef HAVE_CDDA
 
 #include "stream.h"
-#include "../m_option.h"
-#include "../m_struct.h"
-#include "../bswap.h"
+#include "m_option.h"
+#include "m_struct.h"
+#include "bswap.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include "demuxer.h"
 
 #include "cdd.h"
+
+#include "mp_msg.h"
+#include "help_mp.h"
+
+#ifndef CD_FRAMESIZE_RAW
+#define CD_FRAMESIZE_RAW CDIO_CD_FRAMESIZE_RAW
+#endif
+
 
 extern char *cdrom_device;
 
@@ -28,7 +36,7 @@ static struct cdda_params {
   m_span_t span;
 } cdda_dflts = {
   -1,
-  1,
+  0,
   NULL,
   0,
   -1,
@@ -81,21 +89,27 @@ m_option_t cdda_opts[] = {
   {NULL, NULL, 0, 0, 0, 0, NULL}
 };
 
+extern int cdd_identify(const char *dev);
 extern int cddb_resolve(const char *dev, char **xmcd_file);
 extern cd_info_t* cddb_parse_xmcd(char *xmcd_file);
 
 static int seek(stream_t* s,off_t pos);
 static int fill_buffer(stream_t* s, char* buffer, int max_len);
-static void close(stream_t* s);
+static void close_cdda(stream_t* s);
 
 static int open_cdda(stream_t *st,int m, void* opts, int* file_format) {
   struct cdda_params* p = (struct cdda_params*)opts;
   int mode = p->paranoia_mode;
   int offset = p->toc_offset;
+#ifndef HAVE_LIBCDIO
   cdrom_drive* cdd = NULL;
+#else
+  cdrom_drive_t* cdd = NULL;
+#endif
   cdda_priv* priv;
   cd_info_t *cd_info,*cddb_info = NULL;
   unsigned int audiolen=0;
+  int last_track;
   int i;
   char *xmcd_file = NULL;
 
@@ -112,7 +126,9 @@ static int open_cdda(stream_t *st,int m, void* opts, int* file_format) {
   }
 
 #ifdef MPLAYER_NETWORK
-  if(strncmp(st->url,"cddb",4) == 0) {
+  // cdd_identify returns -1 if it cannot read the TOC,
+  // in which case there is no point in calling cddb_resolve
+  if(cdd_identify(p->device) >= 0 && strncmp(st->url,"cddb",4) == 0) {
     i = cddb_resolve(p->device, &xmcd_file);
     if(i == 0) {
       cddb_info = cddb_parse_xmcd(xmcd_file);
@@ -121,9 +137,11 @@ static int open_cdda(stream_t *st,int m, void* opts, int* file_format) {
   }
 #endif
   
+#ifndef HAVE_LIBCDIO
   if(p->generic_dev)
     cdd = cdda_identify_scsi(p->generic_dev,p->device,0,NULL);
   else
+#endif
 #if defined(__NetBSD__)
     cdd = cdda_identify_scsi(p->device,p->device,0,NULL);
 #else
@@ -131,8 +149,9 @@ static int open_cdda(stream_t *st,int m, void* opts, int* file_format) {
 #endif
 
   if(!cdd) {
-    mp_msg(MSGT_OPEN,MSGL_ERR,"Can't open cdda device\n");
+    mp_msg(MSGT_OPEN,MSGL_ERR,MSGTR_MPDEMUX_CDDA_CantOpenCDDADevice);
     m_struct_free(&stream_opts,opts);
+    free(cddb_info);
     return STREAM_ERROR;
   }
 
@@ -140,18 +159,21 @@ static int open_cdda(stream_t *st,int m, void* opts, int* file_format) {
 
   if(p->sector_size) {
     cdd->nsectors = p->sector_size;
+#ifndef HAVE_LIBCDIO
     cdd->bigbuff = p->sector_size * CD_FRAMESIZE_RAW;
+#endif
   }
 
   if(cdda_open(cdd) != 0) {
-    mp_msg(MSGT_OPEN,MSGL_ERR,"Can't open disc\n");
+    mp_msg(MSGT_OPEN,MSGL_ERR,MSGTR_MPDEMUX_CDDA_CantOpenDisc);
     cdda_close(cdd);
     m_struct_free(&stream_opts,opts);
+    free(cddb_info);
     return STREAM_ERROR;
   }
 
   cd_info = cd_info_new();
-  mp_msg(MSGT_OPEN,MSGL_INFO,"Found Audio CD with %d tracks\n",cdda_tracks(cdd));
+  mp_msg(MSGT_OPEN,MSGL_INFO,MSGTR_MPDEMUX_CDDA_AudioCDFoundWithNTracks,cdda_tracks(cdd));
   for(i=0;i<cdd->tracks;i++) {
 	  char track_name[80];
 	  long sec=cdda_track_firstsector(cdd,i+1);
@@ -182,14 +204,16 @@ static int open_cdda(stream_t *st,int m, void* opts, int* file_format) {
   if(p->speed)
     cdda_speed_set(cdd,p->speed);
 
+  last_track = cdda_tracks(cdd);
+  if (p->span.start > last_track) p->span.start = last_track;
+  if (p->span.end < p->span.start) p->span.end = p->span.start;
+  if (p->span.end > last_track) p->span.end = last_track;
   if(p->span.start)
     priv->start_sector = cdda_track_firstsector(cdd,p->span.start);
   else
     priv->start_sector = cdda_disc_firstsector(cdd);
 
   if(p->span.end) {
-    int last = cdda_tracks(cdd);
-    if(p->span.end > last) p->span.end = last;
     priv->end_sector = cdda_track_lastsector(cdd,p->span.end);
   } else
     priv->end_sector = cdda_disc_lastsector(cdd);
@@ -200,6 +224,7 @@ static int open_cdda(stream_t *st,int m, void* opts, int* file_format) {
     free(priv);
     cd_info_free(cd_info);
     m_struct_free(&stream_opts,opts);
+    free(cddb_info);
     return STREAM_ERROR;
   }
 
@@ -212,9 +237,17 @@ static int open_cdda(stream_t *st,int m, void* opts, int* file_format) {
   
   if(p->no_skip)
     mode |= PARANOIA_MODE_NEVERSKIP;
+#ifndef HAVE_LIBCDIO
+  paranoia_modeset(cdd, mode);
 
   if(p->search_overlap >= 0)
     paranoia_overlapset(cdd,p->search_overlap);
+#else
+  paranoia_modeset(priv->cdp, mode);
+
+  if(p->search_overlap >= 0)
+    paranoia_overlapset(priv->cdp,p->search_overlap);
+#endif
 
   paranoia_seek(priv->cdp,priv->start_sector,SEEK_SET);
   priv->sector = priv->start_sector;
@@ -235,7 +268,7 @@ static int open_cdda(stream_t *st,int m, void* opts, int* file_format) {
 
   st->fill_buffer = fill_buffer;
   st->seek = seek;
-  st->close = close;
+  st->close = close_cdda;
 
   *file_format = DEMUXER_TYPE_RAWAUDIO;
 
@@ -244,7 +277,11 @@ static int open_cdda(stream_t *st,int m, void* opts, int* file_format) {
   return STREAM_OK;
 }
 
+#ifndef HAVE_LIBCDIO
 static void cdparanoia_callback(long inpos, int function) {
+#else
+static void cdparanoia_callback(long int inpos, paranoia_cb_mode_t function) {
+#endif
 }
 
 static int fill_buffer(stream_t* s, char* buffer, int max_len) {
@@ -274,7 +311,8 @@ static int fill_buffer(stream_t* s, char* buffer, int max_len) {
 		  cd_track = cd_info_get_track(p->cd_info, i+1);
 //printf("Track %d, sector=%d\n", i, p->sector-1);
 		  if( cd_track!=NULL ) {
-			  printf("\n%s\n", cd_track->name ); 
+			mp_msg(MSGT_SEEK, MSGL_INFO, "\n%s\n", cd_track->name); 
+			mp_msg(MSGT_IDENTIFY, MSGL_INFO, "ID_CDDA_TRACK=%d\n", cd_track->track_nb);
 		  }
 		  break;
 	  }
@@ -315,7 +353,8 @@ static int seek(stream_t* s,off_t newpos) {
 //printf("Track %d, sector=%d\n", seeked_track, sec);
 		  cd_track = cd_info_get_track(p->cd_info, seeked_track+1);
 		  if( cd_track!=NULL ) {
-			  printf("\n%s\n", cd_track->name ); 
+			  mp_msg(MSGT_SEEK, MSGL_INFO, "\n%s\n", cd_track->name);
+			  mp_msg(MSGT_IDENTIFY, MSGL_INFO, "ID_CDDA_TRACK=%d\n", cd_track->track_nb);
 		  }
 
 	}
@@ -334,7 +373,7 @@ static int seek(stream_t* s,off_t newpos) {
   return 1;
 }
 
-static void close(stream_t* s) {
+static void close_cdda(stream_t* s) {
   cdda_priv* p = (cdda_priv*)s->priv;
   paranoia_free(p->cdp);
   cdda_close(p->cd);

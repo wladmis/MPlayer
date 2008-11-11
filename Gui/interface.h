@@ -4,12 +4,12 @@
 
 #include "../config.h"
 #include "mplayer/play.h"
-#include "../mplayer.h"
-#include "../libvo/font_load.h"
+#include "mplayer.h"
+#include "libvo/font_load.h"
 #include "cfg.h"
 
 #ifdef USE_DVDREAD
- #include "../libmpdemux/stream.h"
+ #include "libmpdemux/stream.h"
 #endif
 
 typedef struct
@@ -150,6 +150,7 @@ extern int  guiGetEvent( int type,char * arg );
 extern void guiEventHandling( void );
 extern void guiLoadFont( void );
 extern void guiLoadSubtitle( char * name );
+extern void guiMessageBox(int level, char * str);
 
 typedef struct _plItem 
 {

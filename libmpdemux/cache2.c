@@ -17,16 +17,17 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "../osdep/timer.h"
+#include "osdep/timer.h"
 #ifndef WIN32
 #include <sys/wait.h>
-#include "../osdep/shmem.h"
+#include "osdep/shmem.h"
 #else
 #include <windows.h>
 static DWORD WINAPI ThreadProc(void* s);
 #endif
 
 #include "mp_msg.h"
+#include "help_mp.h"
 
 #include "stream.h"
 
@@ -42,7 +43,7 @@ typedef struct {
   int sector_size; // size of a single sector (2048/2324)
   int back_size;   // we should keep back_size amount of old bytes for backward seek
   int fill_limit;  // we should fill buffer only if space>=fill_limit
-  int prefill;	   // we should fill min prefill bytes if cache gets empty
+  int seek_limit;  // keep filling cache if distanse is less that seek limit
   // filler's pointers:
   int eof;
   off_t min_filepos; // buffer contain only a part of the file, from min-max pos
@@ -63,8 +64,8 @@ int cache_fill_status=0;
 
 void cache_stats(cache_vars_t* s){
   int newb=s->max_filepos-s->read_filepos; // new bytes in the buffer
-  printf("0x%06X  [0x%06X]  0x%06X   ",(int)s->min_filepos,(int)s->read_filepos,(int)s->max_filepos);
-  printf("%3d %%  (%3d%%)\n",100*newb/s->buffer_size,100*min_fill/s->buffer_size);
+  mp_msg(MSGT_CACHE,MSGL_INFO,"0x%06X  [0x%06X]  0x%06X   ",(int)s->min_filepos,(int)s->read_filepos,(int)s->max_filepos);
+  mp_msg(MSGT_CACHE,MSGL_INFO,"%3d %%  (%3d%%)\n",100*newb/s->buffer_size,100*min_fill/s->buffer_size);
 }
 
 int cache_read(cache_vars_t* s,unsigned char* buf,int size){
@@ -109,7 +110,7 @@ int cache_read(cache_vars_t* s,unsigned char* buf,int size){
     total+=len;
     
   }
-  cache_fill_status=100*(s->max_filepos-s->read_filepos)/s->buffer_size;
+  cache_fill_status=(s->max_filepos-s->read_filepos)/(s->buffer_size / 100);
   return total;
 }
 
@@ -119,16 +120,16 @@ int cache_fill(cache_vars_t* s){
   
   if(read<s->min_filepos || read>s->max_filepos){
       // seek...
-      mp_msg(MSGT_CACHE,MSGL_DBG2,"Out of boundaries... seeking to 0x%X  \n",read);
+      mp_msg(MSGT_CACHE,MSGL_DBG2,"Out of boundaries... seeking to 0x%"PRIX64"  \n",(int64_t)read);
       // streaming: drop cache contents only if seeking backward or too much fwd:
       if(s->stream->type!=STREAMTYPE_STREAM ||
-          read<s->min_filepos || read>=s->max_filepos+s->buffer_size)
+          read<s->min_filepos || read>=s->max_filepos+s->seek_limit)
       {
         s->offset= // FIXME!?
         s->min_filepos=s->max_filepos=read; // drop cache content :(
         if(s->stream->eof) stream_reset(s->stream);
         stream_seek(s->stream,read);
-        mp_msg(MSGT_CACHE,MSGL_DBG2,"Seek done. new pos: 0x%X  \n",(int)stream_tell(s->stream));
+        mp_msg(MSGT_CACHE,MSGL_DBG2,"Seek done. new pos: 0x%"PRIX64"  \n",(int64_t)stream_tell(s->stream));
       }
   }
   
@@ -250,7 +251,7 @@ static void exit_sighandler(int x){
   exit(0);
 }
 
-int stream_enable_cache(stream_t *stream,int size,int min,int prefill){
+int stream_enable_cache(stream_t *stream,int size,int min,int seek_limit){
   int ss=(stream->type==STREAMTYPE_VCD)?VCD_SECTOR_DATA:STREAM_BUFFER_SIZE;
   cache_vars_t* s;
 
@@ -264,13 +265,13 @@ int stream_enable_cache(stream_t *stream,int size,int min,int prefill){
   if(s == NULL) return 0;
   stream->cache_data=s;
   s->stream=stream; // callback
-  s->prefill=prefill;
+  s->seek_limit=seek_limit;
 
 
   //make sure that we won't wait from cache_fill
   //more data than it is alowed to fill
-  if (s->prefill > s->buffer_size - s->fill_limit ){
-     s->prefill = s->buffer_size - s->fill_limit;
+  if (s->seek_limit > s->buffer_size - s->fill_limit ){
+     s->seek_limit = s->buffer_size - s->fill_limit;
   }
   if (min > s->buffer_size - s->fill_limit) {
      min = s->buffer_size - s->fill_limit;
@@ -287,17 +288,18 @@ int stream_enable_cache(stream_t *stream,int size,int min,int prefill){
     stream->cache_pid = CreateThread(NULL,0,ThreadProc,s,0,&threadId);
 #endif
     // wait until cache is filled at least prefill_init %
-    mp_msg(MSGT_CACHE,MSGL_V,"CACHE_PRE_INIT: %d [%d] %d  pre:%d  eof:%d  \n",
-	s->min_filepos,s->read_filepos,s->max_filepos,min,s->eof);
+    mp_msg(MSGT_CACHE,MSGL_V,"CACHE_PRE_INIT: %"PRId64" [%"PRId64"] %"PRId64"  pre:%d  eof:%d  \n",
+	(int64_t)s->min_filepos,(int64_t)s->read_filepos,(int64_t)s->max_filepos,min,s->eof);
     while(s->read_filepos<s->min_filepos || s->max_filepos-s->read_filepos<min){
-	mp_msg(MSGT_CACHE,MSGL_STATUS,"\rCache fill: %5.2f%% (%d bytes)    ",
+	mp_msg(MSGT_CACHE,MSGL_STATUS,MSGTR_CacheFill,
 	    100.0*(float)(s->max_filepos-s->read_filepos)/(float)(s->buffer_size),
-	    s->max_filepos-s->read_filepos
+	    (int64_t)s->max_filepos-s->read_filepos
 	);
 	if(s->eof) break; // file is smaller than prefill size
 	if(mp_input_check_interrupt(PREFILL_SLEEP_TIME))
 	  return 0;
     }
+    mp_msg(MSGT_CACHE,MSGL_STATUS,"\n");
     return 1; // parent exits
   }
   
@@ -345,7 +347,7 @@ int cache_stream_seek_long(stream_t *stream,off_t pos){
   s=stream->cache_data;
 //  s->seek_lock=1;
   
-  mp_msg(MSGT_CACHE,MSGL_DBG2,"CACHE2_SEEK: 0x%X <= 0x%X (0x%X) <= 0x%X  \n",s->min_filepos,(int)pos,s->read_filepos,s->max_filepos);
+  mp_msg(MSGT_CACHE,MSGL_DBG2,"CACHE2_SEEK: 0x%"PRIX64" <= 0x%"PRIX64" (0x%"PRIX64") <= 0x%"PRIX64"  \n",s->min_filepos,pos,s->read_filepos,s->max_filepos);
 
   newpos=pos/s->sector_size; newpos*=s->sector_size; // align
   stream->pos=s->read_filepos=newpos;
@@ -362,11 +364,7 @@ int cache_stream_seek_long(stream_t *stream,off_t pos){
 //  stream->buf_pos=stream->buf_len=0;
 //  return 1;
 
-#ifdef _LARGEFILE_SOURCE
-  mp_msg(MSGT_CACHE,MSGL_V,"cache_stream_seek: WARNING! Can't seek to 0x%llX !\n",(long long)(pos+newpos));
-#else
-  mp_msg(MSGT_CACHE,MSGL_V,"cache_stream_seek: WARNING! Can't seek to 0x%X !\n",(pos+newpos));
-#endif
+  mp_msg(MSGT_CACHE,MSGL_V,"cache_stream_seek: WARNING! Can't seek to 0x%"PRIX64" !\n",(int64_t)(pos+newpos));
   return 0;
 }
 

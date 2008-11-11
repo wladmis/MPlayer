@@ -3,13 +3,13 @@
 
 #include <inttypes.h>
 
-#include "../../config.h"
-#include "../../libvo/x11_common.h"
-#include "../../libvo/fastmemcpy.h"
+#include "../config.h"
+#include "../libvo/x11_common.h"
+#include "../libvo/fastmemcpy.h"
 
-#include "../app.h"
-#include "../interface.h"
-#include "../../help_mp.h"
+#include "app.h"
+#include "interface.h"
+#include "../help_mp.h"
 #include "widgets.h"
 
 int             mplSubRender = 0;
@@ -47,7 +47,7 @@ void mplSubMouseHandle( int Button,int X,int Y,int RX,int RY )
 
  switch( Button )
   {
-   case wsPRMouseButton:
+   case wsRRMouseButton:
           gtkShow( evShowPopUpMenu,NULL );
           break;
    case wsPMMouseButton:

@@ -28,16 +28,19 @@ typedef struct {
     unsigned char fps;            
 } nsv_priv_t;
 
+#define HEADER_SEARCH_SIZE 256000
+
+
 /**
  * Seeking still to be implemented
  */
-void demux_seek_nsv ( demuxer_t *demuxer, float rel_seek_secs, int flags )
+static void demux_seek_nsv ( demuxer_t *demuxer, float rel_seek_secs, float audio_delay, int flags )
 {
 // seeking is not yet implemented
 }
 
 
-int demux_nsv_fill_buffer ( demuxer_t *demuxer )
+static int demux_nsv_fill_buffer ( demuxer_t *demuxer, demux_stream_t *ds )
 {  
     unsigned char hdr[17];
     // for the extra data
@@ -132,7 +135,7 @@ int demux_nsv_fill_buffer ( demuxer_t *demuxer )
 }
 
 
-demuxer_t* demux_open_nsv ( demuxer_t* demuxer )
+static demuxer_t* demux_open_nsv ( demuxer_t* demuxer )
 {
     // last 2 bytes 17 and 18 are unknown but right after that comes the length
     unsigned char hdr[17];
@@ -152,42 +155,6 @@ demuxer_t* demux_open_nsv ( demuxer_t* demuxer )
     stream_read(demuxer->stream,hdr,4);
     if(stream_eof(demuxer->stream)) return 0;
     
-    /*** if we detected the file to be nsv and there was neither eof nor a header
-    **** that means that its most likely a shoutcast stream so we will need to seek
-    **** to the first occurance of the NSVs header                      ****/
-    if(!(hdr[0]==0x4E && hdr[1]==0x53 && hdr[2]==0x56)){
-        // todo: replace this with a decent string search algo 
-        while(1){
-            stream_read(demuxer->stream,hdr,1);
-            if(stream_eof(demuxer->stream)) 
-                return 0;
-            if(hdr[0]!=0x4E)
-                continue;
-                
-            stream_read(demuxer->stream,hdr+1,1);
-            
-            if(stream_eof(demuxer->stream)) 
-                return 0;
-            if(hdr[1]!=0x53)
-                continue;
-                
-            stream_read(demuxer->stream,hdr+2,1);
-            
-            if(stream_eof(demuxer->stream)) 
-                return 0;
-            if(hdr[2]!=0x56)
-                continue;
-                
-            stream_read(demuxer->stream,hdr+3,1);
-            
-            if(stream_eof(demuxer->stream)) 
-                return 0;
-            if(hdr[3]!=0x73)
-                continue;
-            
-            break;
-        }
-    }
     if(hdr[0]==0x4E && hdr[1]==0x53 && hdr[2]==0x56){
         // NSV header!
         if(hdr[3]==0x73){
@@ -298,6 +265,9 @@ demuxer_t* demux_open_nsv ( demuxer_t* demuxer )
         case 0x85:
             sh_video->fps=(float)15000.0/1001.0;
             break;
+        case 0x89:
+            sh_video->fps=(float)10000.0/1001.0;
+            break;
         default:
             sh_video->fps = (float)priv->fps;
         }       
@@ -311,28 +281,44 @@ demuxer_t* demux_open_nsv ( demuxer_t* demuxer )
     return demuxer;
 }
 
-int nsv_check_file ( demuxer_t* demuxer )
+static int nsv_check_file ( demuxer_t* demuxer )
 {
-    unsigned int id;
+    unsigned char hdr;
+    int i;
 
     /* Store original position */
 //  off_t orig_pos = stream_tell(demuxer->stream);
 
     mp_msg ( MSGT_DEMUX, MSGL_V, "Checking for Nullsoft Streaming Video\n" );
    
-    //---- check NSVx header:
-    id=stream_read_dword_le(demuxer->stream);
-    if(id!=mmioFOURCC('N','S','V','f') && id!=mmioFOURCC('N','S','V','s'))
-        return 0; // not an NSV file
-    
-    stream_reset(demuxer->stream); // clear EOF
-    stream_seek(demuxer->stream,demuxer->stream->start_pos);
+    for (i = 0; i < HEADER_SEARCH_SIZE; i++) {
+        if (stream_read_char(demuxer->stream) != 'N')
+            continue;
+        if(stream_eof(demuxer->stream))
+            return 0;
 
-    
-    return 1;
+        if (stream_read_char(demuxer->stream) != 'S')
+            continue;
+        if(stream_eof(demuxer->stream))
+            return 0;
+        if (stream_read_char(demuxer->stream) != 'V')
+            continue;
+        if(stream_eof(demuxer->stream))
+            return 0;
+
+        hdr = stream_read_char(demuxer->stream);
+        if(stream_eof(demuxer->stream)) 
+            return 0;
+        if((hdr == 'f') || (hdr == 's')) {
+            stream_seek(demuxer->stream,stream_tell(demuxer->stream)-4);
+            return DEMUXER_TYPE_NSV;
+        }
+    }
+
+    return 0;
 }
 
-void demux_close_nsv(demuxer_t* demuxer) {
+static void demux_close_nsv(demuxer_t* demuxer) {
     nsv_priv_t* priv = demuxer->priv;
 
     if(!priv)
@@ -340,3 +326,20 @@ void demux_close_nsv(demuxer_t* demuxer) {
     free(priv);
 
 }
+
+
+demuxer_desc_t demuxer_desc_nsv = {
+  "NullsoftVideo demuxer",
+  "nsv",
+  "Nullsoft Streaming Video",
+  "Reza Jelveh",
+  "nsv and nsa streaming files",
+  DEMUXER_TYPE_NSV,
+  0, // safe but expensive autodetect
+  nsv_check_file,
+  demux_nsv_fill_buffer,
+  demux_open_nsv,
+  demux_close_nsv,
+  demux_seek_nsv,
+  NULL
+};

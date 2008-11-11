@@ -1,22 +1,7 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- $Revision: 1.12 $ -->
+<!-- $Revision: 18600 $ -->
 <appendix id="skin">
 <title><application>MPlayer</application> skin format</title>
-<para>
-The purpose of this document is to describe the
-<application>MPlayer</application> skin format. The information contained here
-might be wrong, for
-<orderedlist>
-<listitem><para>It is not me who wrote the GUI.</para></listitem>
-<listitem><para>The GUI is not finished.</para></listitem>
-<listitem><para>I might be wrong.</para></listitem>
-</orderedlist>
-So do not be surprised if something does not work as described here.
-</para>
-
-<para>Thanks to <emphasis>Zoltán Ponekker</emphasis> for his help.</para>
-
-<para><emphasis>András Mohari &lt;mayday@freemail.hu&gt;</emphasis></para>
 
 <sect1 id="skin-overview">
 <title>Overview</title>
@@ -33,13 +18,13 @@ in order to be able to use the GUI.</emphasis>
 The directories searched for skins are (in order):
 <orderedlist>
 <listitem><para>
-<filename class="directory">$(DATADIR)/Skin/</filename>
+<filename class="directory">$(DATADIR)/skins/</filename>
 </para></listitem>
 <listitem><para>
-<filename class="directory">$(PREFIX)/share/mplayer/Skin/</filename>
+<filename class="directory">$(PREFIX)/share/mplayer/skins/</filename>
 </para></listitem>
 <listitem><para>
-<filename class="directory">~/.mplayer/Skin/</filename>
+<filename class="directory">~/.mplayer/skins/</filename>
 </para></listitem>
 </orderedlist>
 </para>
@@ -53,7 +38,7 @@ arguments of the <command>configure</command> script).
 <para>
 Every skin is installed into its own directory under one of the directories
 listed above, for example:
-<screen>$(PREFIX)/share/mplayer/Skin/default/</screen>
+<screen>$(PREFIX)/share/mplayer/skins/default/</screen>
 </para>
 </sect2>
 
@@ -268,7 +253,7 @@ end
 
 <para>
 The name of an image file must be given without leading directories - images
-are searched for in the <filename class="directory">Skin</filename> directory.
+are searched for in the <filename class="directory">skins</filename> directory.
 You may (but you need not) specify the extension of the file. If the file does
 not exist, <application>MPlayer</application> tries to load the file
 <filename>&lt;filename&gt;.&lt;ext&gt;</filename>, where <literal>png</literal>
@@ -1062,7 +1047,7 @@ Loads an audio file (with the fileselector)
 <varlistentry>
   <term><emphasis role="bold">evNone</emphasis></term>
   <listitem><para>
-Empty message, it has no effect (except maybe in CVS versions :-)).
+Empty message, it has no effect (except maybe in Subversion versions :-)).
     </para></listitem>
 </varlistentry>
 
@@ -1115,6 +1100,56 @@ Open the skin browser window.
     </para></listitem>
 </varlistentry>
 </variablelist>
+
+</sect1>
+
+<sect1 id="skin-quality">
+<title>Creating quality skins</title>
+
+<para>
+So you have read up on creating skins for the
+<application>MPlayer</application> GUI, done your best with the
+<application>Gimp</application> and wish to submit your skin to us?
+Read on for some guidelines to avoid common mistakes and produce
+a high quality skin.
+</para>
+
+<para>
+We want skins that we add to our repository to conform to certain
+quality standards. There are also a number of things that you can do
+to make our lives easier.
+</para>
+
+<para>
+As an example you can look at the <systemitem>Blue</systemitem> skin,
+it satisfies all the criteria listed below since version 1.5.
+</para>
+
+<itemizedlist>
+  <listitem><para>Each skin should come with a
+  <filename>README</filename> file that contains information about
+  you, the author, copyright and license notices and anything else
+  you wish to add. If you wish to have a changelog, this file is a
+  good place.</para></listitem>
+
+  <listitem><para>There should be a file <filename>VERSION</filename>
+  with nothing more than the version number of the skin on a single
+  line (e.g. 1.0).</para></listitem>
+
+  <listitem><para>Horizontal and vertical controls (sliders like volume
+  or position) should have the center of the knob properly centered on
+  the middle of the slider. It should be possible to move the knob to
+  both ends of the slider, but not past it.</para></listitem>
+
+  <listitem><para>Skin elements should have the right sizes declared
+  in the skin file. If this is not the case you can click outside of
+  e.g. a button and still trigger it or click inside its area and not
+  trigger it.</para></listitem>
+
+  <listitem><para>The <filename>skin</filename> file should be
+  prettyprinted and not contain tabs. Prettyprinted means that the
+  numbers should line up neatly in columns.</para></listitem>
+</itemizedlist>
 
 </sect1>
 

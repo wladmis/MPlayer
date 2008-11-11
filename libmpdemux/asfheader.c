@@ -5,10 +5,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-extern int verbose; // defined in mplayer.c
-
 #include "config.h"
 #include "mp_msg.h"
+#include "help_mp.h"
 
 #include "stream.h"
 #include "demuxer.h"
@@ -35,6 +34,8 @@ extern int verbose; // defined in mplayer.c
 #define ASF_GUID_PREFIX_file_header	0x8CABDCA1
 #define	ASF_GUID_PREFIX_content_desc	0x75b22633
 #define	ASF_GUID_PREFIX_stream_group	0x7bf875ce
+#define ASF_GUID_PREFIX_ext_audio_stream	0x31178C9D
+#define ASF_GUID_PREFIX_ext_stream_embed_stream_header	0x3AFB65E2
 
 /*
 const char asf_audio_stream_guid[16] = {0x40, 0x9e, 0x69, 0xf8,
@@ -52,18 +53,13 @@ const char asf_stream_group_guid[16] = {0xce, 0x75, 0xf8, 0x7b,
   0x8d, 0x46, 0xd1, 0x11, 0x8d, 0x82, 0x00, 0x60, 0x97, 0xc9, 0xa2, 0xb2};
 const char asf_data_chunk_guid[16] = {0x36, 0x26, 0xb2, 0x75,
   0x8e, 0x66, 0xcf, 0x11, 0xa6, 0xd9, 0x00, 0xaa, 0x00, 0x62, 0xce, 0x6c};
+const char asf_ext_stream_embed_stream_header[16] = {0xe2, 0x65, 0xfb, 0x3a,
+  0xef, 0x47, 0xf2, 0x40, 0xac, 0x2c, 0x70, 0xa9, 0x0d, 0x71, 0xd3, 0x43};
+const char asf_ext_stream_audio[16] = {0x9d, 0x8c, 0x17, 0x31,
+  0xe1, 0x03, 0x28, 0x45, 0xb5, 0x82, 0x3d, 0xf9, 0xdb, 0x22, 0xf5, 0x03};
+const char asf_ext_stream_header[16] = {0xCB, 0xA5, 0xE6, 0x14,
+  0x72, 0xC6, 0x32, 0x43, 0x83, 0x99, 0xA9, 0x69, 0x52, 0x06, 0x5B, 0x5A};
 
-static ASF_header_t asfh;
-
-unsigned char* asf_packet=NULL;
-int asf_scrambling_h=1;
-int asf_scrambling_w=1;
-int asf_scrambling_b=1;
-int asf_packetsize=0;
-double asf_packetrate=0;
-int asf_movielength=0;
-
-//int i;
 
 // the variable string is modify in this function
 void pack_asf_string(char* string, int length) {
@@ -89,6 +85,10 @@ static char* asf_chunk_type(unsigned char* guid) {
   switch(ASF_LOAD_GUID_PREFIX(guid)){
     case ASF_GUID_PREFIX_audio_stream:
       return "guid_audio_stream";
+    case ASF_GUID_PREFIX_ext_audio_stream:
+      return "guid_ext_audio_stream";
+    case ASF_GUID_PREFIX_ext_stream_embed_stream_header:
+      return "guid_ext_stream_embed_stream_header";
     case ASF_GUID_PREFIX_video_stream: 
       return "guid_video_stream";
     case ASF_GUID_PREFIX_audio_conceal_none:
@@ -123,23 +123,28 @@ static char* asf_chunk_type(unsigned char* guid) {
 
 int asf_check_header(demuxer_t *demuxer){
   unsigned char asfhdrguid[16]={0x30,0x26,0xB2,0x75,0x8E,0x66,0xCF,0x11,0xA6,0xD9,0x00,0xAA,0x00,0x62,0xCE,0x6C};
-  stream_read(demuxer->stream,(char*) &asfh,sizeof(asfh)); // header obj
-  le2me_ASF_header_t(&asfh);			// swap to machine endian
+  struct asf_priv* asf = calloc(1,sizeof(*asf));
+  asf->scrambling_h=asf->scrambling_w=asf->scrambling_b=1;
+  stream_read(demuxer->stream,(char*) &asf->header,sizeof(asf->header)); // header obj
+  le2me_ASF_header_t(&asf->header);			// swap to machine endian
 //  for(i=0;i<16;i++) printf(" %02X",temp[i]);printf("\n");
 //  for(i=0;i<16;i++) printf(" %02X",asfhdrguid[i]);printf("\n");
-  if(memcmp(asfhdrguid,asfh.objh.guid,16)){
+  if(memcmp(asfhdrguid,asf->header.objh.guid,16)){
     mp_msg(MSGT_HEADER,MSGL_V,"ASF_check: not ASF guid!\n");
+    free(asf);
     return 0; // not ASF guid
   }
-  if(asfh.cno>256){
-    mp_msg(MSGT_HEADER,MSGL_V,"ASF_check: invalid subchunks_no %d\n",(int) asfh.cno);
+  if(asf->header.cno>256){
+    mp_msg(MSGT_HEADER,MSGL_V,"ASF_check: invalid subchunks_no %d\n",(int) asf->header.cno);
+    free(asf);
     return 0; // invalid header???
   }
-  return 1;
+  demuxer->priv = asf;
+  return DEMUXER_TYPE_ASF;
 }
 
-extern void print_wave_header(WAVEFORMATEX *h);
-extern void print_video_header(BITMAPINFOHEADER *h);
+extern void print_wave_header(WAVEFORMATEX *h, int verbose_level);
+extern void print_video_header(BITMAPINFOHEADER *h, int verbose_level);
 
 int find_asf_guid(char *buf, const char *guid, int cur_pos, int buf_len)
 {
@@ -151,8 +156,44 @@ int find_asf_guid(char *buf, const char *guid, int cur_pos, int buf_len)
   return -1;
 }
 
-int read_asf_header(demuxer_t *demuxer){
-  unsigned int hdr_len = asfh.objh.size - sizeof(asfh);
+static int find_backwards_asf_guid(char *buf, const char *guid, int cur_pos)
+{
+  int i;
+  for (i=cur_pos-16; i>0; i--) {
+    if (memcmp(&buf[i], guid, 16) == 0)
+      return i + 16 + 8; // point after guid + length
+  }
+  return -1;
+}
+
+static int asf_init_audio_stream(demuxer_t *demuxer,struct asf_priv* asf, sh_audio_t* sh_audio, ASF_stream_header_t *streamh, int *ppos, uint8_t** buf, char *hdr, unsigned int hdr_len)
+{
+  uint8_t *buffer = *buf;
+  int pos = *ppos;
+
+  sh_audio->wf=calloc((streamh->type_size<sizeof(WAVEFORMATEX))?sizeof(WAVEFORMATEX):streamh->type_size,1);
+  memcpy(sh_audio->wf,buffer,streamh->type_size);
+  le2me_WAVEFORMATEX(sh_audio->wf);
+  if( mp_msg_test(MSGT_HEADER,MSGL_V) ) print_wave_header(sh_audio->wf,MSGL_V);
+  if(ASF_LOAD_GUID_PREFIX(streamh->concealment)==ASF_GUID_PREFIX_audio_conceal_interleave){
+    buffer = &hdr[pos];
+    pos += streamh->stream_size;
+    if (pos > hdr_len) return 0;
+    asf->scrambling_h=buffer[0];
+    asf->scrambling_w=(buffer[2]<<8)|buffer[1];
+    asf->scrambling_b=(buffer[4]<<8)|buffer[3];
+    if(asf->scrambling_b>0){
+      asf->scrambling_w/=asf->scrambling_b;
+    }
+  } else {
+    asf->scrambling_b=asf->scrambling_h=asf->scrambling_w=1;
+  }
+  mp_msg(MSGT_HEADER,MSGL_V,"ASF: audio scrambling: %d x %d x %d\n",asf->scrambling_h,asf->scrambling_w,asf->scrambling_b);
+  return 1;
+}
+
+int read_asf_header(demuxer_t *demuxer,struct asf_priv* asf){
+  int hdr_len = asf->header.objh.size - sizeof(asf->header);
   char *hdr = NULL;
   char guid_buffer[16];
   int pos, start = stream_tell(demuxer->stream);
@@ -163,33 +204,66 @@ int read_asf_header(demuxer_t *demuxer){
   int best_video = -1;
   int best_audio = -1;
   uint64_t data_len;
+  ASF_stream_header_t *streamh;
+  uint8_t *buffer;
+  int audio_pos=0;
 
-  if (hdr_len > 64 * 1024) {
-    mp_msg(MSGT_HEADER, MSGL_FATAL,
-            "FATAL: header size bigger than 64 kB (%d)!\n"
-            "Please contact MPlayer authors, and upload/send this file.\n",
-             hdr_len);
+  if(hdr_len < 0) {
+    mp_msg(MSGT_HEADER, MSGL_FATAL, "Header size is too small.\n");
+    return 0;
+  }
+    
+  if (hdr_len > 1024 * 1024) {
+    mp_msg(MSGT_HEADER, MSGL_FATAL, MSGTR_MPDEMUX_ASFHDR_HeaderSizeOver1MB,
+			hdr_len);
     return 0;
   }
   hdr = malloc(hdr_len);
   if (!hdr) {
-    mp_msg(MSGT_HEADER, MSGL_FATAL, "Could not allocate %d bytes for header\n",
+    mp_msg(MSGT_HEADER, MSGL_FATAL, MSGTR_MPDEMUX_ASFHDR_HeaderMallocFailed,
             hdr_len);
     return 0;
   }
   stream_read(demuxer->stream, hdr, hdr_len);
   if (stream_eof(demuxer->stream)) {
-    mp_msg(MSGT_HEADER, MSGL_FATAL,
-           "EOF while reading asf header, broken/incomplete file?\n");
+    mp_msg(MSGT_HEADER, MSGL_FATAL, MSGTR_MPDEMUX_ASFHDR_EOFWhileReadingHeader);
     goto err_out;
   }
 
+  if ((pos = find_asf_guid(hdr, asf_ext_stream_audio, pos, hdr_len)) >= 0)
+  {
+    // Special case: found GUID for dvr-ms audio.
+    // Now skip back to associated stream header.
+    int sh_pos=0;
+
+    sh_pos = find_backwards_asf_guid(hdr, asf_stream_header_guid, pos);
+ 
+    if (sh_pos > 0) {
+      sh_audio_t *sh_audio;
+
+       mp_msg(MSGT_HEADER, MSGL_V, "read_asf_header found dvr-ms audio stream header pos=%d\n", sh_pos);
+      // found audio stream header - following code reads header and
+      // initializes audio stream.
+      audio_pos = pos - 16 - 8;
+      streamh = (ASF_stream_header_t *)&hdr[sh_pos];
+      le2me_ASF_stream_header_t(streamh);
+      audio_pos += 64; //16+16+4+4+4+16+4;
+      buffer = &hdr[audio_pos];
+      sh_audio=new_sh_audio(demuxer,streamh->stream_no & 0x7F);
+      ++audio_streams;
+      if (!asf_init_audio_stream(demuxer, asf, sh_audio, streamh, &audio_pos, &buffer, hdr, hdr_len))
+        goto len_err_out;
+    }
+  }
   // find stream headers
-  pos = 0;
+  // only reset pos if we didnt find dvr_ms audio stream
+  // if we did find it then we want to avoid reading its header twice
+  if (audio_pos == 0) 
+    pos = 0;
+
   while ((pos = find_asf_guid(hdr, asf_stream_header_guid, pos, hdr_len)) >= 0)
   {
-    ASF_stream_header_t *streamh = (ASF_stream_header_t *)&hdr[pos];
-    char *buffer;
+    streamh = (ASF_stream_header_t *)&hdr[pos];
     pos += sizeof(ASF_stream_header_t);
     if (pos > hdr_len) goto len_err_out;
     le2me_ASF_stream_header_t(streamh);
@@ -211,22 +285,8 @@ int read_asf_header(demuxer_t *demuxer){
       case ASF_GUID_PREFIX_audio_stream: {
         sh_audio_t* sh_audio=new_sh_audio(demuxer,streamh->stream_no & 0x7F);
         ++audio_streams;
-        sh_audio->wf=calloc((streamh->type_size<sizeof(WAVEFORMATEX))?sizeof(WAVEFORMATEX):streamh->type_size,1);
-        memcpy(sh_audio->wf,buffer,streamh->type_size);
-	le2me_WAVEFORMATEX(sh_audio->wf);
-        if(verbose>=1) print_wave_header(sh_audio->wf);
-	if(ASF_LOAD_GUID_PREFIX(streamh->concealment)==ASF_GUID_PREFIX_audio_conceal_interleave){
-          buffer = &hdr[pos];
-          pos += streamh->stream_size;
-          if (pos > hdr_len) goto len_err_out;
-          asf_scrambling_h=buffer[0];
-          asf_scrambling_w=(buffer[2]<<8)|buffer[1];
-          asf_scrambling_b=(buffer[4]<<8)|buffer[3];
-  	  asf_scrambling_w/=asf_scrambling_b;
-	} else {
-	  asf_scrambling_b=asf_scrambling_h=asf_scrambling_w=1;
-	}
-	mp_msg(MSGT_HEADER,MSGL_V,"ASF: audio scrambling: %d x %d x %d\n",asf_scrambling_h,asf_scrambling_w,asf_scrambling_b);
+        if (!asf_init_audio_stream(demuxer, asf, sh_audio, streamh, &pos, &buffer, hdr, hdr_len))
+          goto len_err_out;
 	//if(demuxer->audio->id==-1) demuxer->audio->id=streamh.stream_no & 0x7F;
         break;
         }
@@ -238,9 +298,15 @@ int read_asf_header(demuxer_t *demuxer){
         sh_video->bih=calloc((len<sizeof(BITMAPINFOHEADER))?sizeof(BITMAPINFOHEADER):len,1);
         memcpy(sh_video->bih,&buffer[4+4+1+2],len);
 	le2me_BITMAPINFOHEADER(sh_video->bih);
-        //sh_video->fps=(float)sh_video->video.dwRate/(float)sh_video->video.dwScale;
-        //sh_video->frametime=(float)sh_video->video.dwScale/(float)sh_video->video.dwRate;
-        if(verbose>=1) print_video_header(sh_video->bih);
+        if (sh_video->bih->biCompression == mmioFOURCC('D', 'V', 'R', ' ')) {
+          //mp_msg(MSGT_DEMUXER, MSGL_WARN, MSGTR_MPDEMUX_ASFHDR_DVRWantsLibavformat);
+          //sh_video->fps=(float)sh_video->video.dwRate/(float)sh_video->video.dwScale;
+          //sh_video->frametime=(float)sh_video->video.dwScale/(float)sh_video->video.dwRate;
+          asf->asf_frame_state=-1;
+          asf->asf_frame_start_found=0;
+          asf->asf_is_dvr_ms=1;
+        } else asf->asf_is_dvr_ms=0;
+        if( mp_msg_test(MSGT_DEMUX,MSGL_V) ) print_video_header(sh_video->bih, MSGL_V);
         //asf_video_id=streamh.stream_no & 0x7F;
 	//if(demuxer->video->id==-1) demuxer->video->id=streamh.stream_no & 0x7F;
         break;
@@ -263,10 +329,10 @@ int read_asf_header(demuxer_t *demuxer){
               (int)fileh->num_packets, (int)fileh->flags, 
               (int)fileh->min_packet_size, (int)fileh->max_packet_size,
               (int)fileh->max_bitrate, (int)fileh->preroll);
-      asf_packetsize=fileh->max_packet_size;
-      asf_packet=malloc(asf_packetsize); // !!!
-      asf_packetrate=fileh->max_bitrate/8.0/(double)asf_packetsize;
-      asf_movielength=fileh->send_duration/10000000LL;
+      asf->packetsize=fileh->max_packet_size;
+      asf->packet=malloc(asf->packetsize); // !!!
+      asf->packetrate=fileh->max_bitrate/8.0/(double)asf->packetsize;
+      asf->movielength=fileh->send_duration/10000000LL;
   }
 
   // find content header
@@ -283,7 +349,7 @@ int read_asf_header(demuxer_t *demuxer){
           string = &hdr[pos];
           pos += contenth->title_size;
           if (pos > hdr_len) goto len_err_out;
-          if(verbose>0)
+          if( mp_msg_test(MSGT_HEADER,MSGL_V) )
             print_asf_string(" Title: ", string, contenth->title_size);
 	  else
 	    pack_asf_string(string, contenth->title_size);
@@ -294,7 +360,7 @@ int read_asf_header(demuxer_t *demuxer){
           string = &hdr[pos];
           pos += contenth->author_size;
           if (pos > hdr_len) goto len_err_out;
-          if(verbose>0)
+          if( mp_msg_test(MSGT_HEADER,MSGL_V) )
             print_asf_string(" Author: ", string, contenth->author_size);
 	  else
 	    pack_asf_string(string, contenth->author_size);
@@ -305,7 +371,7 @@ int read_asf_header(demuxer_t *demuxer){
           string = &hdr[pos];
           pos += contenth->copyright_size;
           if (pos > hdr_len) goto len_err_out;
-          if(verbose>0)
+          if( mp_msg_test(MSGT_HEADER,MSGL_V) )
             print_asf_string(" Copyright: ", string, contenth->copyright_size);
 	  else
 	    pack_asf_string(string, contenth->copyright_size);
@@ -316,7 +382,7 @@ int read_asf_header(demuxer_t *demuxer){
           string = &hdr[pos];
           pos += contenth->comment_size;
           if (pos > hdr_len) goto len_err_out;
-          if(verbose>0)
+          if( mp_msg_test(MSGT_HEADER,MSGL_V) )
             print_asf_string(" Comment: ", string, contenth->comment_size);
 	  else
 	    pack_asf_string(string, contenth->comment_size);
@@ -327,7 +393,7 @@ int read_asf_header(demuxer_t *demuxer){
           string = &hdr[pos];
           pos += contenth->rating_size;
           if (pos > hdr_len) goto len_err_out;
-          if(verbose>0)
+          if( mp_msg_test(MSGT_HEADER,MSGL_V) )
             print_asf_string(" Rating: ", string, contenth->rating_size);
         }
 	mp_msg(MSGT_HEADER,MSGL_V,"\n");
@@ -366,12 +432,12 @@ int read_asf_header(demuxer_t *demuxer){
   start = stream_tell(demuxer->stream); // start of first data chunk
   stream_read(demuxer->stream, guid_buffer, 16);
   if (memcmp(guid_buffer, asf_data_chunk_guid, 16) != 0) {
-    mp_msg(MSGT_HEADER, MSGL_FATAL, "No data chunk following header!\n");
+    mp_msg(MSGT_HEADER, MSGL_FATAL, MSGTR_MPDEMUX_ASFHDR_NoDataChunkAfterHeader);
     return 0;
   }
   // read length of chunk
   stream_read(demuxer->stream, (char *)&data_len, sizeof(data_len));
-  le2me_64(data_len);
+  data_len = le2me_64(data_len);
   demuxer->movi_start = stream_tell(demuxer->stream) + 26;
   demuxer->movi_end = start + data_len;
   mp_msg(MSGT_HEADER, MSGL_V, "Found movie at 0x%X - 0x%X\n",
@@ -411,14 +477,14 @@ if(!audio_streams) demuxer->audio->id=-2;  // nosound
 else if(best_audio > 0 && demuxer->audio->id == -1) demuxer->audio->id=best_audio;
 if(!video_streams){
     if(!audio_streams){
-	mp_msg(MSGT_HEADER,MSGL_ERR,"ASF: no audio or video headers found - broken file?\n");
+	mp_msg(MSGT_HEADER,MSGL_ERR,MSGTR_MPDEMUX_ASFHDR_AudioVideoHeaderNotFound);
 	return 0; 
     }
     demuxer->video->id=-2; // audio-only
 } else if (best_video > 0 && demuxer->video->id == -1) demuxer->video->id = best_video;
 
 #if 0
-if(verbose){
+if( mp_msg_test(MSGT_HEADER,MSGL_V) ){
     printf("ASF duration: %d\n",(int)fileh.duration);
     printf("ASF start pts: %d\n",(int)fileh.start_timestamp);
     printf("ASF end pts: %d\n",(int)fileh.end_timestamp);
@@ -428,7 +494,7 @@ if(verbose){
 return 1;
 
 len_err_out:
-  mp_msg(MSGT_HEADER, MSGL_FATAL, "Invalid length in ASF header!\n");
+  mp_msg(MSGT_HEADER, MSGL_FATAL, MSGTR_MPDEMUX_ASFHDR_InvalidLengthInASFHeader);
 err_out:
   if (hdr) free(hdr);
   if (streams) free(streams);

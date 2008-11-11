@@ -1,4 +1,4 @@
-/* 
+/*
  * Sierra SOL decoder
  * Copyright Konstantin Shishkov.
  *
@@ -14,10 +14,10 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-/* 
+/*
  * Based on documents from Game Audio Player and own research
  */
 
@@ -81,7 +81,7 @@ static int sol_channels(int magic, int type)
     if (magic == 0x0B8D || !(type & SOL_STEREO)) return 1;
     return 2;
 }
-    
+
 static int sol_read_header(AVFormatContext *s,
                           AVFormatParameters *ap)
 {
@@ -101,23 +101,23 @@ static int sol_read_header(AVFormatContext *s,
     size = get_le32(pb);
     if (magic != 0x0B8D)
         get_byte(pb); /* newer SOLs contain padding byte */
-    
+
     codec = sol_codec_id(magic, type);
     channels = sol_channels(magic, type);
-    
+
     if (codec == CODEC_ID_SOL_DPCM)
         id = sol_codec_type(magic, type);
     else id = 0;
-    
+
     /* now we are ready: build format streams */
     st = av_new_stream(s, 0);
     if (!st)
         return -1;
-    st->codec.codec_type = CODEC_TYPE_AUDIO;
-    st->codec.codec_tag = id;
-    st->codec.codec_id = codec;
-    st->codec.channels = channels;
-    st->codec.sample_rate = rate;    
+    st->codec->codec_type = CODEC_TYPE_AUDIO;
+    st->codec->codec_tag = id;
+    st->codec->codec_id = codec;
+    st->codec->channels = channels;
+    st->codec->sample_rate = rate;
     av_set_pts_info(st, 64, 1, rate);
     return 0;
 }
@@ -131,13 +131,9 @@ static int sol_read_packet(AVFormatContext *s,
 
     if (url_feof(&s->pb))
         return -EIO;
-    if (av_new_packet(pkt, MAX_SIZE))
-        return -EIO;
+    ret= av_get_packet(&s->pb, pkt, MAX_SIZE);
     pkt->stream_index = 0;
 
-    ret = get_buffer(&s->pb, pkt->data, pkt->size);
-    if (ret < 0)
-        av_free_packet(pkt);
     /* note: we need to modify the packet size here to handle the last
        packet */
     pkt->size = ret;

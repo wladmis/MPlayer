@@ -12,6 +12,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <dirent.h>
+#include <inttypes.h>
 
 #include "cookies.h"
 #include "http.h"
@@ -110,6 +111,11 @@ static char *load_file(const char *filename, off_t * length)
 	return NULL;
     }
 
+    if (*length > SIZE_MAX - 1) {
+	mp_msg(MSGT_NETWORK, MSGL_V, "File too big, could not malloc.");
+	return NULL;
+    }
+
     lseek(fd, SEEK_SET, 0);
 
     if (!(buffer = malloc(*length + 1))) {
@@ -159,7 +165,7 @@ static struct cookie_list_type *load_cookies_from(const char *filename,
 }
 
 /* Attempt to load cookies.txt from various locations. Returns a pointer to the linked list contain the cookies. */
-static struct cookie_list_type *load_cookies()
+static struct cookie_list_type *load_cookies(void)
 {
     DIR *dir;
     struct dirent *ent;
@@ -234,11 +240,9 @@ cookies_set(HTTP_header_t * http_hdr, const char *domain, const char *url)
 	    for (i = 0; i < found_cookies; i++) {
 		if (strcmp(list->name, cookies[i]->name) == 0) {
 		    replacing = 0;
-		    if (strlen(list->domain) >
-			strlen(cookies[i]->domain) == 0) {
+		    if (strlen(list->domain) <= strlen(cookies[i]->domain)) {
 			cookies[i] = list;
-		    } else if (strlen(list->path) >
-			       strlen(cookies[i]->path) == 0) {
+		    } else if (strlen(list->path) <= strlen(cookies[i]->path)) {
 			cookies[i] = list;
 		    }
 		}

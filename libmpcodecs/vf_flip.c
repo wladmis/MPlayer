@@ -2,19 +2,20 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../config.h"
-#include "../mp_msg.h"
+#include "config.h"
+#include "mp_msg.h"
 
 #include "mp_image.h"
 #include "vf.h"
 
+#include "libvo/video_out.h"
 
 //===========================================================================//
 
 static int config(struct vf_instance_s* vf,
         int width, int height, int d_width, int d_height,
 	unsigned int flags, unsigned int outfmt){
-    flags&=~8; // remove the FLIP flag
+    flags&=~VOFLAG_FLIPPING; // remove the FLIP flag
     return vf_next_config(vf,width,height,d_width,d_height,flags,outfmt);
 }
 
@@ -40,12 +41,12 @@ static void get_image(struct vf_instance_s* vf, mp_image_t *mpi){
     }
 }
 
-static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
+static int put_image(struct vf_instance_s* vf, mp_image_t *mpi, double pts){
     if(mpi->flags&MP_IMGFLAG_DIRECT){
 	// we've used DR, so we're ready...
 	if(!(mpi->flags&MP_IMGFLAG_PLANAR))
 	    ((mp_image_t*)mpi->priv)->planes[1] = mpi->planes[1]; // passthrough rgb8 palette
-	return vf_next_put_image(vf,(mp_image_t*)mpi->priv);
+	return vf_next_put_image(vf,(mp_image_t*)mpi->priv, pts);
     }
 
     vf->dmpi=vf_get_image(vf->next,mpi->imgfmt,
@@ -66,7 +67,7 @@ static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
     } else
 	vf->dmpi->planes[1]=mpi->planes[1]; // passthru bgr8 palette!!!
     
-    return vf_next_put_image(vf,vf->dmpi);
+    return vf_next_put_image(vf,vf->dmpi, pts);
 }
 
 //===========================================================================//

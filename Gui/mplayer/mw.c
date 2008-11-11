@@ -7,24 +7,26 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "../app.h"
-#include "../skin/font.h"
-#include "../skin/skin.h"
-#include "../wm/ws.h"
+#include "app.h"
+#include "skin/font.h"
+#include "skin/skin.h"
+#include "wm/ws.h"
 
-#include "../../config.h"
-#include "../../help_mp.h"
-#include "../../libvo/x11_common.h"
-#include "../../libvo/fastmemcpy.h"
+#include "../config.h"
+#include "../help_mp.h"
+#include "../libvo/x11_common.h"
+#include "../libvo/fastmemcpy.h"
 
-#include "../../libmpdemux/stream.h"
-#include "../../mixer.h"
-#include "../../libvo/sub.h"
-#include "../../mplayer.h"
+#include "../libmpdemux/stream.h"
+#include "../mixer.h"
+#include "../libvo/sub.h"
+#include "../mplayer.h"
 
-#include "../../libmpdemux/demuxer.h"
-#include "../../libmpdemux/stheader.h"
-#include "../../codec-cfg.h"
+#include "../libmpdemux/demuxer.h"
+#include "../libmpdemux/stheader.h"
+#include "../codec-cfg.h"
+#include "../m_option.h"
+#include "../m_property.h"
 
 #define GUI_REDRAW_WAIT 375
 
@@ -76,7 +78,6 @@ void mplMainDraw( void )
 
 extern void exit_player(char* how);
 extern int vcd_track;
-extern int osd_visible;
 static unsigned last_redraw_time = 0;
 
 void mplEventHandling( int msg,float param )
@@ -109,6 +110,10 @@ void mplEventHandling( int msg,float param )
         if ( !guiIntfStruct.demuxer || video_id == iparam ) break;
 	video_id=iparam;
 	goto play;
+
+   case evSetSubtitle:
+	mp_property_do("sub",M_PROPERTY_SET,&iparam); 
+	break;
 
 #ifdef HAVE_VCD
    case evSetVCDTrack:
@@ -265,7 +270,7 @@ set_volume:
 #ifdef USE_OSD
 	if ( osd_level )
 	 {
-	  osd_visible=vo_mouse_timer_const;
+	  osd_visible=(GetTimerMS() + 1000) | 1;
 	  vo_osd_progbar_type=OSD_VOLUME;
 	  vo_osd_progbar_value=( ( guiIntfStruct.Volume ) * 256.0 ) / 100.0;
 	  vo_osd_changed( OSDTYPE_PROGBAR );
@@ -432,9 +437,13 @@ void mplMainMouseHandle( int Button,int X,int Y,int RX,int RY )
           switch( itemtype )
            {
             case itPotmeter:
-	    case itVPotmeter:
             case itHPotmeter:
                  btnModify( item->msg,(float)( X - item->x ) / item->width * 100.0f );
+		 mplEventHandling( item->msg,item->value );
+                 value=item->value;
+                 break;
+	    case itVPotmeter:
+                 btnModify( item->msg, ( 1. - (float)( Y - item->y ) / item->height) * 100.0f );
 		 mplEventHandling( item->msg,item->value );
                  value=item->value;
                  break;
@@ -443,7 +452,7 @@ void mplMainMouseHandle( int Button,int X,int Y,int RX,int RY )
           itemtype=0;
           break;
 
-   case wsPRMouseButton:
+   case wsRRMouseButton:
         gtkShow( evShowPopUpMenu,NULL );
         break;
 
@@ -476,7 +485,7 @@ rollerhandled:
                  item->value=(float)( X - item->x ) / item->width * 100.0f;
                  goto potihandled;
             case itVPotmeter:
-                 item->value=(float)( Y - item->y ) / item->height * 100.0f;
+                 item->value=(1. - (float)( Y - item->y ) / item->height) * 100.0f;
                  goto potihandled;
             case itHPotmeter:
                  item->value=(float)( X - item->x ) / item->width * 100.0f;

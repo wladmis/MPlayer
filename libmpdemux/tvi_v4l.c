@@ -41,10 +41,10 @@
 #endif
 
 #include "mp_msg.h"
-#include "../libaf/af_format.h"
-#include "../libvo/img_format.h"
-#include "../libvo/fastmemcpy.h"
-#include "../libvo/videodev_mjpeg.h"
+#include "libaf/af_format.h"
+#include "libvo/img_format.h"
+#include "libvo/fastmemcpy.h"
+#include "libvo/videodev_mjpeg.h"
 
 #include "tv.h"
 
@@ -63,7 +63,7 @@ static tvi_info_t info = {
 
 #define NTSC_WIDTH  640
 #define NTSC_HEIGHT 480
-#define NTSC_FPS    29.97
+#define NTSC_FPS    (30000.0/1001.0)
 
 #define MAX_AUDIO_CHANNELS	10
 
@@ -437,7 +437,7 @@ static int init(priv_t *priv)
     priv->audio_skew_buffer = NULL;
 
     priv->video_fd = open(priv->video_device, O_RDWR);
-    mp_msg(MSGT_TV, MSGL_DBG2, "Video fd: %d, %x\n", priv->video_fd,
+    mp_msg(MSGT_TV, MSGL_DBG2, "Video fd: %d, %p\n", priv->video_fd,
 	priv->video_device);
     if (priv->video_fd == -1)
     {
@@ -568,7 +568,7 @@ static int init(priv_t *priv)
       }
 
     mp_msg(MSGT_TV, MSGL_INFO, " Inputs: %d\n", priv->capability.channels);
-    priv->channels = (struct video_channel *)malloc(sizeof(struct video_channel)*priv->capability.channels);
+    priv->channels = (struct video_channel *)calloc(priv->capability.channels, sizeof(struct video_channel));
     if (!priv->channels)
 	goto malloc_failed;
     memset(priv->channels, 0, sizeof(struct video_channel)*priv->capability.channels);
@@ -621,7 +621,7 @@ static int init(priv_t *priv)
     priv->nbuf = priv->mbuf.frames;
     
     /* video buffers */
-    priv->buf = (struct video_mmap *)malloc(priv->nbuf * sizeof(struct video_mmap));
+    priv->buf = (struct video_mmap *)calloc(priv->nbuf, sizeof(struct video_mmap));
     if (!priv->buf)
 	goto malloc_failed;
     memset(priv->buf, 0, priv->nbuf * sizeof(struct video_mmap));
@@ -799,7 +799,6 @@ static int start(priv_t *priv)
     if (ioctl(priv->video_fd, VIDIOCSPICT, &priv->picture) == -1)
     {
 	mp_msg(MSGT_TV, MSGL_ERR, "ioctl set picture failed: %s\n", strerror(errno));
-	return(0);
     }
 
     if ( !tv_param_mjpeg )
@@ -857,13 +856,13 @@ static int start(priv_t *priv)
     if (!tv_param_noaudio) {
 	setup_audio_buffer_sizes(priv);
 	bytes_per_sample = priv->audio_in.bytes_per_sample;
-	priv->audio_skew_buffer = (long long*)malloc(sizeof(long long)*priv->aud_skew_cnt);
+	priv->audio_skew_buffer = (long long*)calloc(priv->aud_skew_cnt, sizeof(long long));
 	if (!priv->audio_skew_buffer) {
 	    mp_msg(MSGT_TV, MSGL_ERR, "cannot allocate skew buffer: %s\n", strerror(errno));
 	    return 0;
 	}
 
-	priv->audio_ringbuffer = (unsigned char*)malloc(priv->audio_in.blocksize*priv->audio_buffer_size);
+	priv->audio_ringbuffer = (unsigned char*)calloc(priv->audio_in.blocksize, priv->audio_buffer_size);
 	if (!priv->audio_ringbuffer) {
 	    mp_msg(MSGT_TV, MSGL_ERR, "cannot allocate audio buffer: %s\n", strerror(errno));
 	    return 0;
@@ -901,7 +900,7 @@ static int start(priv_t *priv)
 	   priv->video_buffer_size_max,
 	   priv->video_buffer_size_max*priv->height*priv->bytesperline/(1024*1024));
 
-    priv->video_ringbuffer = (unsigned char**)malloc(priv->video_buffer_size_max*sizeof(unsigned char*));
+    priv->video_ringbuffer = (unsigned char**)calloc(priv->video_buffer_size_max, sizeof(unsigned char*));
     if (!priv->video_ringbuffer) {
 	mp_msg(MSGT_TV, MSGL_ERR, "cannot allocate video buffer: %s\n", strerror(errno));
 	return 0;
@@ -909,7 +908,7 @@ static int start(priv_t *priv)
     for (i = 0; i < priv->video_buffer_size_max; i++)
 	priv->video_ringbuffer[i] = NULL;
     
-    priv->video_timebuffer = (long long*)malloc(sizeof(long long) * priv->video_buffer_size_max);
+    priv->video_timebuffer = (long long*)calloc(priv->video_buffer_size_max, sizeof(long long));
     if (!priv->video_timebuffer) {
 	mp_msg(MSGT_TV, MSGL_ERR, "cannot allocate time buffer: %s\n", strerror(errno));
 	return 0;
@@ -965,11 +964,6 @@ static int start(priv_t *priv)
     return(1);
 }
 
-// 2nd order polynomial with p(-100)=0, p(100)=65535, p(0)=y0
-static int poly(int x, int y0)
-{
-    return ((65535-2*y0)*x*x+6553500*x+20000*y0)/20000;
-}
 
 static int control(priv_t *priv, int cmd, void *arg)
 {
@@ -1084,21 +1078,33 @@ static int control(priv_t *priv, int cmd, void *arg)
 	    }
 	    return(TVI_CONTROL_TRUE);
 	case TVI_CONTROL_VID_SET_BRIGHTNESS:
-	    priv->picture.brightness = 65535*(*(int *)arg+100)/200;
-	    control(priv, TVI_CONTROL_VID_SET_PICTURE, 0);
-	    return(TVI_CONTROL_TRUE);
+	    priv->picture.brightness = (327*(*(int *)arg+100)) + 68;
+	    return control(priv, TVI_CONTROL_VID_SET_PICTURE, 0);
 	case TVI_CONTROL_VID_SET_HUE:
-	    priv->picture.hue = 65535*(*(int *)arg+100)/200;
-	    control(priv, TVI_CONTROL_VID_SET_PICTURE, 0);
-	    return(TVI_CONTROL_TRUE);
+	    priv->picture.hue = (327*(*(int *)arg+100)) + 68;
+	    return control(priv, TVI_CONTROL_VID_SET_PICTURE, 0);
 	case TVI_CONTROL_VID_SET_SATURATION:
-	    priv->picture.colour = 65535*(*(int *)arg+100)/200;
-	    control(priv, TVI_CONTROL_VID_SET_PICTURE, 0);
-	    return(TVI_CONTROL_TRUE);
+	    priv->picture.colour = (327*(*(int *)arg+100)) + 68;
+	    return control(priv, TVI_CONTROL_VID_SET_PICTURE, 0);
 	case TVI_CONTROL_VID_SET_CONTRAST:
-	    priv->picture.contrast = poly(*(int *)arg, 24576);
-	    control(priv, TVI_CONTROL_VID_SET_PICTURE, 0);
-	    return(TVI_CONTROL_TRUE);
+	    priv->picture.contrast = (327*(*(int *)arg+100)) + 68;
+	    return control(priv, TVI_CONTROL_VID_SET_PICTURE, 0);
+	case TVI_CONTROL_VID_GET_BRIGHTNESS:
+	    if(!control(priv, TVI_CONTROL_VID_GET_PICTURE, 0)) return 0;
+	    *(int*)arg = ((int)priv->picture.brightness-68)/327-100;
+	    return 1;
+	case TVI_CONTROL_VID_GET_HUE:
+	    if(!control(priv, TVI_CONTROL_VID_GET_PICTURE, 0)) return 0;
+	    *(int*)arg = ((int)priv->picture.hue-68)/327-100;
+	    return 1;
+	case TVI_CONTROL_VID_GET_SATURATION:
+	    if(!control(priv, TVI_CONTROL_VID_GET_PICTURE, 0)) return 0;
+	    *(int*)arg = ((int)priv->picture.colour-68)/327-100;
+	    return 1;
+	case TVI_CONTROL_VID_GET_CONTRAST:
+	    if(!control(priv, TVI_CONTROL_VID_GET_PICTURE, 0)) return 0;
+	    *(int*)arg = ((int)priv->picture.contrast-68)/327-100;
+	    return 1;
 	case TVI_CONTROL_VID_GET_FPS:
 	    *(float *)arg=priv->fps;
 	    return(TVI_CONTROL_TRUE);
@@ -1141,7 +1147,7 @@ static int control(priv_t *priv, int cmd, void *arg)
 		mp_msg(MSGT_TV, MSGL_ERR, "ioctl set freq failed: %s\n", strerror(errno));
 		return(TVI_CONTROL_FALSE);
 	    }
-	    usleep(100000); // wait to supress noise during switching
+	    usleep(100000); // wait to suppress noise during switching
 
 	    if (priv->capability.audios) {
 		priv->audio[priv->audio_id].flags &= ~VIDEO_AUDIO_MUTE;
@@ -1563,7 +1569,7 @@ static void *video_grabber(void *data)
 	    pthread_mutex_lock(&priv->video_buffer_mutex);
 	    if (priv->video_buffer_size_current < priv->video_buffer_size_max) {
 		if (priv->video_cnt == priv->video_buffer_size_current) {
-		    unsigned char *newbuf = (unsigned char*)malloc(priv->bytesperline * priv->height);
+		    unsigned char *newbuf = (unsigned char*)calloc(priv->bytesperline, priv->height);
 		    if (newbuf) {
 			memmove(priv->video_ringbuffer+priv->video_tail+1, priv->video_ringbuffer+priv->video_tail,
 			       (priv->video_buffer_size_current-priv->video_tail)*sizeof(unsigned char *));

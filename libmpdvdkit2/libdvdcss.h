@@ -2,7 +2,7 @@
  * libdvdcss.h: private DVD reading library data
  *****************************************************************************
  * Copyright (C) 1998-2001 VideoLAN
- * $Id: libdvdcss.h,v 1.9 2002/12/19 15:36:04 sam Exp $
+ * $Id: libdvdcss.h 16631 2005-10-01 17:19:33Z diego $
  *
  * Authors: Stéphane Borel <stef@via.ecp.fr>
  *          Samuel Hocevar <sam@zoy.org>
@@ -77,6 +77,14 @@ struct dvdcss_s
 /*****************************************************************************
  * Functions used across the library
  *****************************************************************************/
-void _dvdcss_error ( dvdcss_t, char * );
-void _dvdcss_debug ( dvdcss_t, char * );
+#define print_error(dvdcss,msg) _print_error(dvdcss,msg)
+#define print_debug(dvdcss,msg,args...) \
+    if( dvdcss->b_debug ) \
+    { \
+        fprintf( stderr, "libdvdcss debug: " ); \
+        fprintf( stderr, msg, ##args ); \
+        fprintf( stderr, "\n" ); \
+    }
+
+void _print_error ( dvdcss_t, char * );
 

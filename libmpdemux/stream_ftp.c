@@ -21,8 +21,8 @@
 #include "mp_msg.h"
 #include "stream.h"
 #include "help_mp.h"
-#include "../m_option.h"
-#include "../m_struct.h"
+#include "m_option.h"
+#include "m_struct.h"
 
 static struct stream_priv_s {
   char* user;
@@ -71,6 +71,20 @@ static struct m_struct_st stream_opts = {
 #define TELNET_IP       244             /* interrupt process--permanently */
 #define TELNET_SYNCH    242             /* for telfunc calls */
 
+// Check if there is something to read on a fd. This avoid hanging
+// forever if the network stop responding.
+static int fd_can_read(int fd,int timeout) {
+  fd_set fds;
+  struct timeval tv;
+
+  FD_ZERO(&fds);
+  FD_SET(fd,&fds);
+  tv.tv_sec = timeout;
+  tv.tv_usec = 0;
+  
+  return (select(fd+1, &fds, NULL, NULL, &tv) > 0);
+}
+
 /*
  * read a line of text
  *
@@ -118,6 +132,13 @@ static int readline(char *buf,int max,struct stream_priv_s *ctl)
 	  retval = -1;
 	break;
       }
+
+      if(!fd_can_read(ctl->handle, 15)) {
+        mp_msg(MSGT_OPEN,MSGL_ERR, "[ftp] read timed out\n");
+        retval = -1;
+        break;
+      }
+
       if ((x = recv(ctl->handle,ctl->cput,ctl->cleft,0)) == -1) {
 	mp_msg(MSGT_STREAM,MSGL_ERR, "[ftp] read error: %s\n",strerror(errno));
 	retval = -1;
@@ -172,8 +193,10 @@ static int readresp(struct stream_priv_s* ctl,char* rsp)
 static int FtpSendCmd(const char *cmd, struct stream_priv_s *nControl,char* rsp)
 {
   int l = strlen(cmd);
+  int hascrlf = cmd[l - 2] == '\r' && cmd[l - 1] == '\n';
 
-  mp_msg(MSGT_STREAM,MSGL_V, "[ftp] > %s",cmd);
+  if(hascrlf && l == 2) mp_msg(MSGT_STREAM,MSGL_V, "\n");
+  else mp_msg(MSGT_STREAM,MSGL_V, "[ftp] > %s",cmd);
   while(l > 0) {
     int s = send(nControl->handle,cmd,l,0);
 
@@ -186,7 +209,10 @@ static int FtpSendCmd(const char *cmd, struct stream_priv_s *nControl,char* rsp)
     l -= s;
   }
     
-  return readresp(nControl,rsp);
+  if (hascrlf)  
+    return readresp(nControl,rsp);
+  else
+    return FtpSendCmd("\r\n", nControl, rsp);
 }
 
 static int FtpOpenPort(struct stream_priv_s* p) {
@@ -195,7 +221,7 @@ static int FtpOpenPort(struct stream_priv_s* p) {
   char* par,str[128];
   int num[6];
 
-  resp = FtpSendCmd("PASV\r\n",p,rsp_txt);
+  resp = FtpSendCmd("PASV",p,rsp_txt);
   if(resp != 2) {
     mp_msg(MSGT_OPEN,MSGL_WARN, "[ftp] command 'PASV' failed: %s\n",rsp_txt);
     return 0;
@@ -213,27 +239,52 @@ static int FtpOpenPort(struct stream_priv_s* p) {
   snprintf(str,127,"%d.%d.%d.%d",num[0],num[1],num[2],num[3]);
   fd = connect2Server(str,(num[4]<<8)+num[5],0);
 
-  if(fd <= 0) {
+  if(fd < 0)
     mp_msg(MSGT_OPEN,MSGL_ERR, "[ftp] failed to create data connection\n");
-    return 0;
-  }
 
   return fd;
 }
 
+static int FtpOpenData(stream_t* s,size_t newpos) {
+  struct stream_priv_s* p = s->priv;
+  int resp;
+  char str[256],rsp_txt[256];
+
+  // Open a new connection
+  s->fd = FtpOpenPort(p);
+
+  if(s->fd < 0) return 0;
+
+  if(newpos > 0) {
+    snprintf(str,255,"REST %"PRId64, (int64_t)newpos);
+
+    resp = FtpSendCmd(str,p,rsp_txt);
+    if(resp != 3) {
+      mp_msg(MSGT_OPEN,MSGL_WARN, "[ftp] command '%s' failed: %s\n",str,rsp_txt);
+      newpos = 0;
+    }
+  }
+
+  // Get the file
+  snprintf(str,255,"RETR %s",p->filename);
+  resp = FtpSendCmd(str,p,rsp_txt);
+
+  if(resp != 1) {
+    mp_msg(MSGT_OPEN,MSGL_ERR, "[ftp] command '%s' failed: %s\n",str,rsp_txt);
+    return 0;
+  }
+
+  s->pos = newpos;
+  return 1;
+}
+
 static int fill_buffer(stream_t *s, char* buffer, int max_len){
-  fd_set fds;
-  struct timeval tv;
   int r;
 
-  // Check if there is something to read. This avoid hang
-  // forever if the network stop responding.
-  FD_ZERO(&fds);
-  FD_SET(s->fd,&fds);
-  tv.tv_sec = 15;
-  tv.tv_usec = 0;
-
-  if(select(s->fd+1, &fds, NULL, NULL, &tv) < 1) {
+  if(s->fd < 0 && !FtpOpenData(s,s->pos))
+    return -1;
+  
+  if(!fd_can_read(s->fd, 15)) {
     mp_msg(MSGT_OPEN,MSGL_ERR, "[ftp] read timed out\n");
     return -1;
   }
@@ -245,21 +296,15 @@ static int fill_buffer(stream_t *s, char* buffer, int max_len){
 static int seek(stream_t *s,off_t newpos) {
   struct stream_priv_s* p = s->priv;
   int resp;
-  char str[256],rsp_txt[256];
-  fd_set fds;
-  struct timeval tv;
+  char rsp_txt[256];
 
   if(s->pos > s->end_pos) {
     s->eof=1;
     return 0;
   }
 
-  FD_ZERO(&fds);
-  FD_SET(p->handle,&fds);
-  tv.tv_sec = tv.tv_usec = 0;
-
   // Check to see if the server doesn't alredy terminated the transfert
-  if(select(p->handle+1, &fds, NULL, NULL, &tv) > 0) {
+  if(fd_can_read(p->handle, 0)) {
     if(readresp(p,rsp_txt) != 2)
       mp_msg(MSGT_OPEN,MSGL_WARN, "[ftp] Warning the server didn't finished the transfert correctly: %s\n",rsp_txt);
     closesocket(s->fd);
@@ -298,39 +343,9 @@ static int seek(stream_t *s,off_t newpos) {
     }
     // Send the ABOR command
     // Ignore the return code as sometimes it fail with "nothing to abort"
-    FtpSendCmd("ABOR\n\r",p,rsp_txt);
+    FtpSendCmd("ABOR",p,rsp_txt);
   }
-
-  // Open a new connection
-  s->fd = FtpOpenPort(p);
-
-  if(!s->fd) return 0;
-
-  if(newpos > 0) {
-#ifdef _LARGEFILE_SOURCE
-    snprintf(str,255,"REST %lld\r\n",newpos);
-#else
-    snprintf(str,255,"REST %u\r\n",newpos);
-#endif 
-
-    resp = FtpSendCmd(str,p,rsp_txt);
-    if(resp != 3) {
-      mp_msg(MSGT_OPEN,MSGL_WARN, "[ftp] command '%s' failed: %s\n",str,rsp_txt);
-      newpos = 0;
-    }
-  }
-
-  // Get the file
-  snprintf(str,255,"RETR %s\r\n",p->filename);
-  resp = FtpSendCmd(str,p,rsp_txt);
-
-  if(resp != 1) {
-    mp_msg(MSGT_OPEN,MSGL_ERR, "[ftp] command '%s' failed: %s\n",str,rsp_txt);
-    return 0;
-  }
-
-  s->pos = newpos;
-  return 1;
+  return FtpOpenData(s,newpos);
 }
 
 
@@ -344,7 +359,7 @@ static void close_f(stream_t *s) {
     s->fd = 0;
   }
 
-  FtpSendCmd("QUIT\r\n",p,NULL);
+  FtpSendCmd("QUIT",p,NULL);
 
   if(p->handle) closesocket(p->handle);
   if(p->buf) free(p->buf);
@@ -391,12 +406,12 @@ static int open_f(stream_t *stream,int mode, void* opts, int* file_format) {
   }
 
   // Login
-  snprintf(str,255,"USER %s\r\n",p->user);
+  snprintf(str,255,"USER %s",p->user);
   resp = FtpSendCmd(str,p,rsp_txt);
 
   // password needed
   if(resp == 3) {
-    snprintf(str,255,"PASS %s\r\n",p->pass);
+    snprintf(str,255,"PASS %s",p->pass);
     resp = FtpSendCmd(str,p,rsp_txt);
     if(resp != 2) {
       mp_msg(MSGT_OPEN,MSGL_ERR, "[ftp] command '%s' failed: %s\n",str,rsp_txt);
@@ -410,7 +425,7 @@ static int open_f(stream_t *stream,int mode, void* opts, int* file_format) {
   }
     
   // Set the transfert type
-  resp = FtpSendCmd("TYPE I\r\n",p,rsp_txt);
+  resp = FtpSendCmd("TYPE I",p,rsp_txt);
   if(resp != 2) {
     mp_msg(MSGT_OPEN,MSGL_WARN, "[ftp] command 'TYPE I' failed: %s\n",rsp_txt);
     close_f(stream);
@@ -418,7 +433,7 @@ static int open_f(stream_t *stream,int mode, void* opts, int* file_format) {
   }
 
   // Get the filesize
-  snprintf(str,255,"SIZE %s\r\n",p->filename);
+  snprintf(str,255,"SIZE %s",p->filename);
   resp = FtpSendCmd(str,p,rsp_txt);
   if(resp != 2) {
     mp_msg(MSGT_OPEN,MSGL_WARN, "[ftp] command '%s' failed: %s\n",str,rsp_txt);
@@ -427,29 +442,16 @@ static int open_f(stream_t *stream,int mode, void* opts, int* file_format) {
     sscanf(rsp_txt,"%d %d",&dummy,&len);
   }
 
-  // Start the data connection
-  stream->fd = FtpOpenPort(p);
-  if(stream->fd <= 0) {
-    close_f(stream);
-    return STREAM_ERROR;
-  }
-
-  // Get the file
-  snprintf(str,255,"RETR %s\r\n",p->filename);
-  resp = FtpSendCmd(str,p,rsp_txt);
-
-  if(resp != 1) {
-    mp_msg(MSGT_OPEN,MSGL_WARN, "[ftp] command '%s' failed: %s\n",str,rsp_txt);
-    close_f(stream);
-    return STREAM_ERROR;
-  }
-  
-
   if(len > 0) {
     stream->seek = seek;
     stream->end_pos = len;
   }
 
+  // The data connection is really opened only at the first
+  // read/seek. This must be done when the cache is used
+  // because the connection would stay open in the main process,
+  // preventing correct abort with many servers.
+  stream->fd = -1;
   stream->priv = p;
   stream->fill_buffer = fill_buffer;
   stream->close = close_f;

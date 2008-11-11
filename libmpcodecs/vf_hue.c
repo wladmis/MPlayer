@@ -4,15 +4,15 @@
 #include <inttypes.h>
 #include <math.h>
 
-#include "../config.h"
-#include "../mp_msg.h"
-#include "../cpudetect.h"
+#include "config.h"
+#include "mp_msg.h"
+#include "cpudetect.h"
 
 #include "img_format.h"
 #include "mp_image.h"
 #include "vf.h"
 
-#include "../libvo/video_out.h"
+#include "libvo/video_out.h"
 
 #include "m_option.h"
 #include "m_struct.h"
@@ -58,7 +58,7 @@ static void (*process)(uint8_t *udst, uint8_t *vdst, uint8_t *usrc, uint8_t *vsr
 
 /* FIXME: add packed yuv version of process */
 
-static int put_image(struct vf_instance_s* vf, mp_image_t *mpi)
+static int put_image(struct vf_instance_s* vf, mp_image_t *mpi, double pts)
 {
 	mp_image_t *dmpi;
 
@@ -89,7 +89,7 @@ static int put_image(struct vf_instance_s* vf, mp_image_t *mpi)
 			vf->priv->hue, vf->priv->saturation);
 	}
 
-	return vf_next_put_image(vf,dmpi);
+	return vf_next_put_image(vf,dmpi, pts);
 }
 
 static int control(struct vf_instance_s* vf, int request, void* data)
@@ -103,7 +103,7 @@ static int control(struct vf_instance_s* vf, int request, void* data)
 			vf->priv->hue = eq->value * M_PI / 100;
 			return CONTROL_TRUE;
 		} else if (!strcmp(eq->item,"saturation")) {
-			vf->priv->saturation = eq->value/100.0 + 100;
+			vf->priv->saturation = (eq->value + 100)/100.0;
 			return CONTROL_TRUE;
 		}
 		break;

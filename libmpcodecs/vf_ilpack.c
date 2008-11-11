@@ -3,16 +3,17 @@
 #include <string.h>
 #include <inttypes.h>
 
-#include "../config.h"
-#include "../mp_msg.h"
-#include "../cpudetect.h"
+#include "config.h"
+#include "mp_msg.h"
+#include "cpudetect.h"
+#include "asmalign.h"
 
 #include "img_format.h"
 #include "mp_image.h"
 #include "vf.h"
 
-#include "../libvo/fastmemcpy.h"
-#include "../postproc/rgb2rgb.h"
+#include "libvo/fastmemcpy.h"
+#include "postproc/rgb2rgb.h"
 
 typedef void (pack_func_t)(unsigned char *dst, unsigned char *y,
 	unsigned char *u, unsigned char *v, int w, int us, int vs);
@@ -66,7 +67,7 @@ static void pack_nn_MMX(unsigned char *dst, unsigned char *y,
 {
 	int j;
 	asm volatile (""
-		".balign 16 \n\t"
+		ASMALIGN16                
 		"1: \n\t"
 		"movq (%0), %%mm1 \n\t"
 		"movq (%0), %%mm2 \n\t"
@@ -105,7 +106,7 @@ static void pack_li_0_MMX(unsigned char *dst, unsigned char *y,
 #endif
 		"pxor %%mm0, %%mm0 \n\t"
 		
-		".balign 16 \n\t"
+		ASMALIGN16 
 		".Lli0: \n\t"
 		"movq (%%"REG_S"), %%mm1 \n\t"
 		"movq (%%"REG_S"), %%mm2 \n\t"
@@ -213,7 +214,7 @@ static void pack_li_1_MMX(unsigned char *dst, unsigned char *y,
 #endif
 		"pxor %%mm0, %%mm0 \n\t"
 		
-		".balign 16 \n\t"
+		ASMALIGN16  
 		".Lli1: \n\t"
 		"movq (%%"REG_S"), %%mm1 \n\t"
 		"movq (%%"REG_S"), %%mm2 \n\t"
@@ -353,7 +354,7 @@ static void ilpack(unsigned char *dst, unsigned char *src[3],
 }
 
 
-static int put_image(struct vf_instance_s* vf, mp_image_t *mpi)
+static int put_image(struct vf_instance_s* vf, mp_image_t *mpi, double pts)
 {
 	mp_image_t *dmpi;
 
@@ -364,7 +365,7 @@ static int put_image(struct vf_instance_s* vf, mp_image_t *mpi)
 
 	ilpack(dmpi->planes[0], mpi->planes, dmpi->stride[0], mpi->stride, mpi->w, mpi->h, vf->priv->pack);
 
-	return vf_next_put_image(vf,dmpi);
+	return vf_next_put_image(vf,dmpi, pts);
 }
 
 static int config(struct vf_instance_s* vf,

@@ -1,0 +1,92 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>2.2. Codecek</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.68.1"><link rel="start" href="index.html" title="MPlayer - The Movie Player"><link rel="up" href="install.html" title="2. fejezet - Telepítés"><link rel="prev" href="softreq.html" title="2.1. Szoftver követelmények"><link rel="next" href="video-cards.html" title="2.3. Videó kártyák"><link rel="preface" href="howtoread.html" title="Hogyan olvasd ezt a dokumentációt"><link rel="chapter" href="intro.html" title="1. fejezet - Bevezetés"><link rel="chapter" href="install.html" title="2. fejezet - Telepítés"><link rel="chapter" href="usage.html" title="3. fejezet - Használat"><link rel="chapter" href="cd-dvd.html" title="4. fejezet - CD/DVD használat"><link rel="chapter" href="faq.html" title="5. fejezet - Gyakran ismételt kérdések"><link rel="chapter" href="containers.html" title="6. fejezet - Konténerek"><link rel="chapter" href="codecs.html" title="7. fejezet - Codec-ek"><link rel="chapter" href="video.html" title="8. fejezet - Videó kimeneti eszközök"><link rel="chapter" href="audio.html" title="9. fejezet - Audió kimeneti eszközök"><link rel="chapter" href="tv.html" title="10. fejezet - TV"><link rel="chapter" href="ports.html" title="11. fejezet - Portok"><link rel="chapter" href="mencoder.html" title="12. fejezet - A MEncoder használatának alapjai"><link rel="chapter" href="encoding-guide.html" title="13. fejezet - Kódolás a MEncoderrel"><link rel="appendix" href="mailinglists.html" title="A. függelék - Levelezési listák"><link rel="appendix" href="bugreports.html" title="B. függelék - Hogyan jelentsd a hibákat"><link rel="appendix" href="bugs.html" title="C. függelék - Ismert hibák"><link rel="appendix" href="skin.html" title="D. függelék - MPlayer skin formátum"><link rel="appendix" href="users-vs-dev.html" title="E. függelék - Fejleszt&#337;i panaszok"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">2.2. Codecek</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="softreq.html">El&#337;z&#337;</a> </td><th width="60%" align="center">2. fejezet - Telepítés</th><td width="20%" align="right"> <a accesskey="n" href="video-cards.html">Következ&#337;</a></td></tr></table><hr></div><div class="sect1" lang="hu"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="installation_codecs"></a>2.2. Codecek</h2></div></div></div><div class="itemizedlist"><ul type="disc"><li><p>
+  <span class="bold"><strong><code class="systemitem">libavcodec</code></strong></span>:
+  Ez a codec csomag a H.263/MJPEG/RV10/DivX3/DivX4/DivX5/MP41/MP42/WMV1/WMV2/SVQ1/SVQ3 kódolású videó
+  folyamokat és a WMA (Windows Media Audio) v1/v2 audió folyamokat tudja visszakódolni több platformon.
+  Mindezt az elérhet&#337; programok közül &#337; végzi a leggyorsabban is. Lásd az
+  <a href="video-codecs.html#ffmpeg" title="7.1.2. FFmpeg/libavcodec">FFmpeg</a> bekezdést a részletekért. Jellemz&#337;k:
+  </p><div class="itemizedlist"><ul type="circle"><li>
+    lehet&#337;vé teszi a fent említett formátumok dekódolását nem x86 gépeken
+    </li><li>
+    a legtöbb megemlített codec-kel kódolni is tud
+    </li><li>
+    ez a codec <span class="bold"><strong>az elérhet&#337; leggyorsabb</strong></span> a
+    DivX/3/4/5 és egyébb MPEG-4 típusú formátumoknál. Javasolt!
+    </li></ul></div><p>
+  </p></li><li><p>
+  <span class="bold"><strong>Win32 codecek</strong></span>: Ha x86-os gépen akarod használni
+  az <span class="application">MPlayer</span>t, valószín&#369;leg szükséged lesz rájuk.
+  Töltsd le egy codec csomagot a
+  <a href="http://www.mplayerhq.hu/design7/codecs.html" target="_top">codec oldalunkról</a>
+  és tedd be a codec-eket a <tt class="filename">/usr/local/lib/codecs</tt> könyvtárba
+  az <span class="application">MPlayer</span> fordítása <span class="bold"><strong>EL&#336;TT</strong></span>,
+  különben nem lesz befordított Win32 támogatásod!
+  </p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Megjegyzés</h3><p>Az avifile projektnek hasonló codec csomagja van, de az különbözik
+  a mienkét&#337;l, így ha minden támogatott codecet használni akarsz, akkor a mi
+  csomagunkra van szükséged (ne aggódj, az avifile-é is probléma nélkül m&#369;ködik).</p></div><p>
+  Jellemz&#337;k:
+  </p><div class="itemizedlist"><ul type="circle"><li>
+    szükséged van erre, ha különböz&#337; hardveres tömörít&#337;kkel, például tuner kártyákkal,
+    digitális kamerákkal rögzített filmeket akarod lejátszani vagy átkódolni
+    (például: DV, ATI VCR, MJPEG)
+    </li><li>
+    szükséges ha <span class="bold"><strong>WMV9/WMA9 filmeket</strong></span> akarsz lejátszani.
+   </li><li>
+    Nem kell a régi ASF-ekhez MP41 vagy MP42 videóval (ezek gyakran VoxWare audiójú
+    fájlok - ezt a Win32 codec elintézi), és az WMV7-hez. Szintén szükségtelen
+    a WMA-hoz (Windows Media Audio), a
+    <code class="systemitem">libavcodec</code>nek van nyílt forrású dekódolója
+    ehhez.
+    </li></ul></div><p>
+  </p></li><li><p>
+  <span class="bold"><strong>QuickTime codecek</strong></span>: x86-os platformokon ezek
+  a codecek az RPZA, egyébb QuickTime videók és QDesign audió folyamok lejátszására
+  használható. A telepítés&#337; útmutatók a <a href="video-codecs.html#sorenson" title="7.1.9. Sorenson">Sorenson video codec</a>
+  részben találhatóak.
+  </p></li><li><p>
+  <span class="bold"><strong>DivX4/DivX5</strong></span>: err&#337;l a codecr&#337;l a információkat a
+  <a href="video-codecs.html#divx4-5" title="7.1.1. DivX4/DivX5">DivX4/DivX5</a> részben találhatsz. Valószín&#369;leg nincs
+  szükséged erre a codecre, mert a <span class="bold"><strong>
+  <code class="systemitem">libavcodec</code></strong></span> (lásd fent) sokkal
+  gyorsabb és jobb min&#337;séget biztosít, mint ez, mind kódolásban, mind visszakódolásban.
+  Jellemz&#337;k:
+  </p><div class="itemizedlist"><ul type="circle"><li>
+    egy vagy két menetes kódolás
+    <a href="mencoder.html" title="12. fejezet - A MEncoder használatának alapjai"><span class="application">MEncoder</span></a>-rel
+    </li><li>
+    le tudja játszani a régi <span class="bold"><strong>DivX3</strong></span> filmeket, sokkal
+    gyorsabban, mint a Win32-es DLL-ekkel, de lassabban, mint a
+    <span class="bold"><strong><code class="systemitem">libavcodec</code></strong></span>-kel!
+    </li><li>
+    zárt forrású, és csak x86 változata elérhet&#337;.
+    </li></ul></div><p>
+  </p></li><li><p>
+  <span class="bold"><strong>XviD</strong></span>: Nyílt forráskódú, alternatív kódoló a
+  DivX4Linux mellett. Jellemz&#337;k:
+  </p><div class="itemizedlist"><ul type="circle"><li>
+    egy vagy két menetes kódolás
+    <a href="mencoder.html" title="12. fejezet - A MEncoder használatának alapjai"><span class="application">MEncoder</span></a>-rel
+    </li><li>
+    nyílt forráskódú, így multiplatformos.
+    </li><li>
+    kódolásban kb. kétszer gyorsabb, mint a divX4 - majdnem ugyan azzal a min&#337;séggel
+    </li></ul></div><p>
+  </p></li><li><p>
+  Az <span class="bold"><strong><a href="video-codecs.html#xanim" title="7.1.3. XAnim codec-ek">XAnim codecek</a></strong></span>
+  a legjobbak (teljes képerny&#337;, hardveres YUV nagyítás) a
+  <span class="bold"><strong>3ivx</strong></span> és Indeo 3/4/5 filmek dekódolásához, és
+  néhány régi formátumhoz. Ráadásul multiplatformos, így ez az egyetlen lehet&#337;ség
+  az Indeo fájlok lejátszására nem-x86-os platformokon (nos, legalábbis az XAnim
+  használatán kívül :). De például a Cinepak filmeket legjobb az
+  <span class="application">MPlayer</span> saját Cinepak dekódolójával lejátszani!
+  </p></li><li><p>
+  Az <span class="bold"><strong>Ogg Vorbis</strong></span> audió dekódoláshoz helyesen
+  telepített <code class="systemitem">libvorbis</code> kell.
+  A bináris csomagokat és a forráskódot beszerezheted az
+  <a href="http://www.vorbis.com/download.psp" target="_top">Ogg Vorbis oldaláról</a>
+  </p></li><li><p>
+  <span class="application">MPlayer</span> tudja használni a RealPlayer 8 vagy a
+  RealONE függvénykönyvtárait a <span class="bold"><strong>RealVideo 3.0 és 4.0</strong></span>
+  videók lejátszásához, és a Sipro/Cook audióhoz. Lásd a
+  <a href="video-formats.html#realmedia" title="6.1.7. RealMedia (RM) fájlok">RealMedia fájl formátumok</a>
+  részt a telepítési útmutatóért és egyébb információkért.
+  </p></li></ul></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="softreq.html">El&#337;z&#337;</a> </td><td width="20%" align="center"><a accesskey="u" href="install.html">Fel</a></td><td width="40%" align="right"> <a accesskey="n" href="video-cards.html">Következ&#337;</a></td></tr><tr><td width="40%" align="left" valign="top">2.1. Szoftver követelmények </td><td width="20%" align="center"><a accesskey="h" href="index.html">Tartalom</a></td><td width="40%" align="right" valign="top"> 2.3. Videó kártyák</td></tr></table></div></body></html>

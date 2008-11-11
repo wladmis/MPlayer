@@ -1,10 +1,10 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>2.4. Entrada de TV</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - El reproductor de Películas
-para LINUX"><link rel="up" href="features.html" title="Capítulo 2. Características"><link rel="previous" href="devices.html" title="2.3. Dispositivos de Salida"><link rel="next" href="usage.html" title="Capítulo 3. Uso"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">2.4. Entrada de TV</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="devices.html">Anterior</a> </td><th width="60%" align="center">Capítulo 2. Características</th><td width="20%" align="right"> <a accesskey="n" href="usage.html">Siguiente</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="tv-input"></a>2.4. Entrada de TV</h2></div></div><p>
-Esta sección es acerca de como poder <span class="bold"><b>mirar/capturar
-desde un dispositivo sintonizador de TV compatible con V4L</b></span>. Vea
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>2.4. Entrada de TV</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.68.1"><link rel="start" href="index.html" title="MPlayer - El reproductor de Películas
+para LINUX"><link rel="up" href="features.html" title="Capítulo 2. Características"><link rel="prev" href="devices.html" title="2.3. Dispositivos de Salida"><link rel="next" href="usage.html" title="Capítulo 3. Uso"><link rel="preface" href="howtoread.html" title="Como leer esta documentación"><link rel="chapter" href="intro.html" title="Capítulo 1. Introducción"><link rel="chapter" href="features.html" title="Capítulo 2. Características"><link rel="chapter" href="usage.html" title="Capítulo 3. Uso"><link rel="chapter" href="faq.html" title="Capítulo 4. Preguntas de Usuario Frecuentes"><link rel="chapter" href="cd-dvd.html" title="Capítulo 5. Uso de CD/DVD"><link rel="chapter" href="ports.html" title="Capítulo 6. Adaptaciones"><link rel="chapter" href="mencoder.html" title="Capítulo 7. Codificando con MEncoder"><link rel="appendix" href="mailinglists.html" title="Apéndice A. Listas de correo"><link rel="appendix" href="bugreports.html" title="Apéndice B. Cómo reportar errores"><link rel="appendix" href="bugs.html" title="Apéndice C. Problemas conocidos"><link rel="appendix" href="skin.html" title="Apéndice D. Formato del skin de MPlayer"><link rel="appendix" href="users-vs-dev.html" title="Apéndice E. Lloriqueos de desarrolladores"><link rel="subsection" href="tv-input.html#tv-compilation" title="2.4.1. Compilación"><link rel="subsection" href="tv-input.html#tv-tips" title="2.4.2. Consejos de Uso"><link rel="subsection" href="tv-input.html#tv-examples" title="2.4.3. Ejemplos"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">2.4. Entrada de TV</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="devices.html">Anterior</a> </td><th width="60%" align="center">Capítulo 2. Características</th><td width="20%" align="right"> <a accesskey="n" href="usage.html">Siguiente</a></td></tr></table><hr></div><div class="sect1" lang="es"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="tv-input"></a>2.4. Entrada de TV</h2></div></div></div><p>
+Esta sección es acerca de como poder <span class="bold"><strong>mirar/capturar
+desde un dispositivo sintonizador de TV compatible con V4L</strong></span>. Vea
 la página del manual para una descripción de las opciones de TV y los controles
 del teclado.
-</p><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="tv-compilation"></a>2.4.1. Compilación</h3></div></div><div class="procedure"><ol type="1"><li><p>
+</p><div class="sect2" lang="es"><div class="titlepage"><div><div><h3 class="title"><a name="tv-compilation"></a>2.4.1. Compilación</h3></div></div></div><div class="procedure"><ol type="1"><li><p>
   Primero, deberá recompilar. <tt class="filename">./configure</tt> detectará
   los archivos de encabezados de las cosas de v4l y la existencia de
   las entradas <tt class="filename">/dev/video*</tt>. Si existen, el soporte
@@ -12,12 +12,12 @@ del teclado.
   </p></li><li><p>
   Asegúrese de que su sintonizador funcione bien con otro software de TV
   en Linux, como por ejemplo con <span class="application">XawTV</span>.
-  </p></li></ol></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="tv-tips"></a>2.4.2. Consejos de Uso</h3></div></div><p>
+  </p></li></ol></div></div><div class="sect2" lang="es"><div class="titlepage"><div><div><h3 class="title"><a name="tv-tips"></a>2.4.2. Consejos de Uso</h3></div></div></div><p>
 El listado completo de opciones esta disponible en la página del manual.
 Aquí hay solamente un par de consejos:
 </p><div class="itemizedlist"><ul type="disc"><li><p>
 Use la opción <tt class="option">channels</tt>(canales). Ejemplo:
-<pre class="screen">-tv channels=26-MTV,23-TV2</pre>
+</p><pre class="screen">-tv channels=26-MTV,23-TV2</pre><p>
 Explicación: usando esta opción, solo se podrá ver el canal 26 y el 23 y
 habrá un bonito texto en pantalla (OSD) por cada cambio de canal, mostrando
 el nombre del canal. Los espacios en el nombre del canal deben ser reemplazados
@@ -66,7 +66,7 @@ MEncoder</span> era necesario especificar el formato de salida. Este
 problema se debería estar resuelto en las versiones actuales y la opción <tt class="option">outfmt</tt>
 no se requiere más, ya que la opción por omisión sirve para la mayoría de los propósitos. Por
 ejemplo si está capturando en DivX usando
-<tt>libavcodec</tt> y especifica <tt class="option">outfmt=RGB24</tt>
+<code class="systemitem">libavcodec</code> y especifica <tt class="option">outfmt=RGB24</tt>
 para incrementar la calidad de las imágenes capturadas, las imágenes capturadas serán
 realmente convertidas nuevamente a YV12 por lo que lo único que logra es un desperdicio
 masivo de ciclos de CPU.
@@ -78,8 +78,8 @@ un codec de vídeo de Intel Indeo.
 Hay muchas maneras de capturar audio. Puede capturar el sonido ya sea usando
 su tarjeta de sonido por medio de un cable de conexión externo entre la placa
 sintonizadora y la linea de entrada, o usando el chip ADC incorporado en el chip
-bt878. En este ultimo caso, deberá cargar el controlador <span class="bold"><b>btaudio
-</b></span>. Lea el archivo <tt class="filename">linux/Documentation/sound/btaudio</tt>
+bt878. En este ultimo caso, deberá cargar el controlador <span class="bold"><strong>btaudio
+</strong></span>. Lea el archivo <tt class="filename">linux/Documentation/sound/btaudio</tt>
 (en el árbol de directorio del núcleo, no el de
 <span class="application">MPlayer</span>) para instrucciones de como
 usar este controlador.
@@ -90,26 +90,26 @@ algunos servidores de sonido como arts (KDE) o esd (GNOME). Si tiene una placa
 de sonido full dúplex (casi todas las placas decentes lo soportan hoy en día), y
 está usando KDE, trate activando la opción "full dúplex" en el menú de preferencias del
 servidor de sonido.
-</p></li></ul></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="tv-examples"></a>2.4.3. Ejemplos</h3></div></div><div class="informalexample"><p>
+</p></li></ul></div></div><div class="sect2" lang="es"><div class="titlepage"><div><div><h3 class="title"><a name="tv-examples"></a>2.4.3. Ejemplos</h3></div></div></div><div class="informalexample"><p>
 Salida ficticia, a AAlib :)
-<pre class="screen">
-mplayer -tv driver=dummy:width=640:height=480 -vo aa tv://</pre>
+</p><pre class="screen">
+mplayer -tv driver=dummy:width=640:height=480 -vo aa tv://</pre><p>
 </p></div><div class="informalexample"><p>
 Entrada desde un dispositivo estándar V4L:
-<pre class="screen">
-mplayer -tv driver=v4l:width=640:height=480:outfmt=i420 -vc rawi420 -vo xv tv://</pre>
+</p><pre class="screen">
+mplayer -tv driver=v4l:width=640:height=480:outfmt=i420 -vc rawi420 -vo xv tv://</pre><p>
 </p></div><div class="informalexample"><p>
 Un ejemplo más sofisticado. Esto hace que <span class="application">MEncoder</span>
 capture la imagen completa PAL, corte los margenes y desentrelazando la
 imagen usando un algoritmo linear blend. El audio es comprimido con una
 tasa de bits constante de 64kbps, usando el codec LAME. Esta configuración
 es satisfactoria para capturar películas.
-<pre class="screen">
+</p><pre class="screen">
      mencoder -tv driver=v4l:width=768:height=576 \
      -ovc lavc -lavcopts vcodec=mpeg4:vbitrate=900 \
      -oac mp3lame -lameopts cbr:br=64 \
-     -vf crop=720:544:24:16,pp=lb -o <i><tt>salida.avi</tt></i> tv://
-</pre>
+     -vf crop=720:544:24:16,pp=lb -o <em class="replaceable"><code>salida.avi</code></em> tv://
+</pre><p>
 </p></div><div class="informalexample"><p>
 Esto adicionalmente escalará la imagen a 384x288 y comprimirá el vídeo
 a una tasa de bits de 350kbps en modo alta calidad. La opción <tt class="option">
@@ -117,13 +117,13 @@ vqmax</tt> suelta al cuantizador y le permite al compresor de vídeo
 alcanzar tasas de bits muy bajas a expensas de la calidad. Esto puede ser
 usado para capturar series de TV largas, donde la calidad del vídeo no
 es tan importante.
-<pre class="screen">
+</p><pre class="screen">
      mencoder -tv driver=v4l:width=768:height=576 \
      -ovc lavc -lavcopts vcodec=mpeg4:vbitrate=350:vhq:vqmax=31:keyint=300 \
      -oac mp3lame -lameopts cbr:br=48 \
      -vf crop=720:540:24:18,pp=tn/lb,scale=384:288 -sws 1 \
-     -o <i><tt>salida.avi</tt></i> tv://
-</pre>
+     -o <em class="replaceable"><code>salida.avi</code></em> tv://
+</pre><p>
 Es posible especificar una dimensión de imagen más chica en la opción <tt class="option">-tv</tt>
 y omitir el escalado de software pero este enfoque usa la máxima cantidad de información
 disponible y es un poco más resistente al ruido. Los chips bt8x8 pueden hacer

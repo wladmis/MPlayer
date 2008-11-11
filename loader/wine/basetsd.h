@@ -6,7 +6,7 @@
 /*
  * Modified for use with MPlayer, detailed CVS changelog at
  * http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
- * $Id: basetsd.h,v 1.3 2005/04/15 20:17:14 diego Exp $
+ * $Id: basetsd.h 15692 2005-06-07 13:54:17Z faust3 $
  */
 
 #ifndef __WINE_BASETSD_H
@@ -36,17 +36,33 @@ extern "C" {
 
 #ifndef __INTEL_COMPILER
 
+#ifndef __int8
 typedef char          __int8;
+#endif
+#ifndef __uint8
 typedef unsigned char __uint8;
+#endif
 
+#ifndef __int16
 typedef short          __int16;
+#endif
+#ifndef __uint16
 typedef unsigned short __uint16;
+#endif
 
+#ifndef __int32
 typedef int          __int32;
+#endif
+#ifndef __uint32
 typedef unsigned int __uint32;
+#endif
 
+#ifndef __int64
 typedef long long          __int64;
+#endif
+#ifndef __uint64
 typedef unsigned long long __uint64;
+#endif
 
 #else
 

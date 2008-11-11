@@ -31,6 +31,8 @@ typedef struct menu_info_s {
 #define MENU_CMD_DOWN 1
 #define MENU_CMD_OK 2
 #define MENU_CMD_CANCEL 3
+#define MENU_CMD_LEFT 4
+#define MENU_CMD_RIGHT 5 
 
 /// Global init/uninit
 int menu_init(char* cfg_file);
@@ -70,3 +72,5 @@ void menu_text_size(char* txt,int max_width,
 void menu_draw_text_full(mp_image_t* mpi,char* txt,
 			 int x, int y,int w, int h,
 			 int vspace, int warp, int align, int anchor);
+
+void menu_draw_box(mp_image_t* mpi, unsigned char grey, unsigned char alpha, int x, int y, int w, int h);

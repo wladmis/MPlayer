@@ -5,8 +5,8 @@
 #include "mp_msg.h"
 #include "stream.h"
 #include "help_mp.h"
-#include "../m_option.h"
-#include "../m_struct.h"
+#include "m_option.h"
+#include "m_struct.h"
 
 #include <fcntl.h>
 #include <stdlib.h>
@@ -14,7 +14,7 @@
 #include <sys/ioctl.h>
 #include <errno.h>
 
-#ifdef __FreeBSD__
+#if defined(__FreeBSD__) || defined(__DragonFly__)
 #include <sys/cdrio.h>
 #include "vcd_read_fbsd.h" 
 #elif defined(__NetBSD__) || defined (__OpenBSD__)
@@ -53,6 +53,8 @@ static struct m_struct_st stream_opts = {
 };
 
 static int fill_buffer(stream_t *s, char* buffer, int max_len){
+  if(s->pos > s->end_pos) /// don't past end of current track
+    return 0;
   return vcd_read(s->priv,buffer);
 }
 

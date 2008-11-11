@@ -11,9 +11,19 @@
 
 extern void mplayer_put_key(int code);
 
+#ifndef MONITOR_DEFAULTTOPRIMARY
+#define MONITOR_DEFAULTTOPRIMARY 1
+#endif
+
 static const char* classname = "MPlayer - Media player for Win32";
 int vo_vm = 0;
 HDC vo_hdc = 0;
+
+// last non-fullscreen extends
+int prev_width;
+int prev_height;
+int prev_x;
+int prev_y;
 
 uint32_t o_dwidth;
 uint32_t o_dheight;
@@ -21,20 +31,42 @@ uint32_t o_dheight;
 static HINSTANCE hInstance;
 HWND vo_window = 0;
 static int cursor = 1;
+static int event_flags;
+static int mon_cnt;
+
+static HMONITOR (WINAPI* myMonitorFromWindow)(HWND, DWORD);
+static BOOL (WINAPI* myGetMonitorInfo)(HMONITOR, LPMONITORINFO);
+static BOOL (WINAPI* myEnumDisplayMonitors)(HDC, LPCRECT, MONITORENUMPROC, LPARAM);
 
 static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
+    RECT r;
+    POINT p;
     switch (message) {
+	case WM_PAINT:
+	    event_flags |= VO_EVENT_EXPOSE;
+	    break;
+	case WM_MOVE:
+	    p.x = 0;
+	    p.y = 0;
+	    ClientToScreen(vo_window, &p);
+	    vo_dx = p.x;
+	    vo_dy = p.y;
+	    break;
+	case WM_SIZE:
+	    event_flags |= VO_EVENT_RESIZE;
+	    GetClientRect(vo_window, &r);
+	    vo_dwidth = r.right;
+	    vo_dheight = r.bottom;
+	    break;
 	case WM_CLOSE:
-	    mp_input_queue_cmd(mp_input_parse_cmd("quit"));
+	    mplayer_put_key(KEY_CLOSE_WIN);
 	    break;
         case WM_SYSCOMMAND:
 	    switch (wParam) {
 		case SC_SCREENSAVE:
 		case SC_MONITORPOWER:
     		    mp_msg(MSGT_VO, MSGL_V, "vo: win32: killing screensaver\n");
-		    break;
-		default:
-		    return DefWindowProc(hWnd, message, wParam, lParam);
+		    return 0;
 	    }
 	    break;
         case WM_KEYDOWN:
@@ -92,18 +124,51 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 
 int vo_w32_check_events(void) {
     MSG msg;
-    int r = 0;
+    event_flags = 0;
     while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE)) {
 	TranslateMessage(&msg);
 	DispatchMessage(&msg);
-	switch (msg.message) {
-	    case WM_ACTIVATE:
-		r |= VO_EVENT_EXPOSE;
-		break;
-	}
     }
     
-    return r;
+    return event_flags;
+}
+
+static BOOL CALLBACK mon_enum(HMONITOR hmon, HDC hdc, LPRECT r, LPARAM p) {
+    // this defaults to the last screen if specified number does not exist
+    xinerama_x = r->left;
+    xinerama_y = r->top;
+    vo_screenwidth = r->right - r->left;
+    vo_screenheight = r->bottom - r->top;
+    if (mon_cnt == xinerama_screen)
+        return FALSE;
+    mon_cnt++;
+    return TRUE;
+}
+
+void update_xinerama_info(void) {
+    xinerama_x = xinerama_y = 0;
+    if (xinerama_screen < -1) {
+        int tmp;
+        xinerama_x = GetSystemMetrics(SM_XVIRTUALSCREEN);
+        xinerama_y = GetSystemMetrics(SM_YVIRTUALSCREEN);
+        tmp = GetSystemMetrics(SM_CXVIRTUALSCREEN);
+        if (tmp) vo_screenwidth = tmp;
+        tmp = GetSystemMetrics(SM_CYVIRTUALSCREEN);
+        if (tmp) vo_screenheight = tmp;
+    } else if (xinerama_screen == -1 && myMonitorFromWindow && myGetMonitorInfo) {
+        MONITORINFO mi;
+        HMONITOR m = myMonitorFromWindow(vo_window, MONITOR_DEFAULTTOPRIMARY);
+        mi.cbSize = sizeof(mi);
+        myGetMonitorInfo(m, &mi);
+        xinerama_x = mi.rcMonitor.left;
+        xinerama_y = mi.rcMonitor.top;
+        vo_screenwidth = mi.rcMonitor.right - mi.rcMonitor.left;
+        vo_screenheight = mi.rcMonitor.bottom - mi.rcMonitor.top;
+    } else if (xinerama_screen > 0 && myEnumDisplayMonitors) {
+        mon_cnt = 0;
+        myEnumDisplayMonitors(NULL, NULL, mon_enum, 0);
+    }
+    aspect_save_screenres(vo_screenwidth, vo_screenheight);
 }
 
 static void updateScreenProperties() {
@@ -119,7 +184,7 @@ static void updateScreenProperties() {
     vo_screenwidth = dm.dmPelsWidth;
     vo_screenheight = dm.dmPelsHeight;
     vo_depthonscreen = dm.dmBitsPerPel;
-    aspect_save_screenres(vo_screenwidth, vo_screenheight);
+    update_xinerama_info();
 }
 
 static void changeMode(void) {
@@ -137,10 +202,10 @@ static void changeMode(void) {
 	int bestScore = INT_MAX;
 	int i;
 	for (i = 0; EnumDisplaySettings(0, i, &dm); ++i) {
+	    int score = (dm.dmPelsWidth - o_dwidth) * (dm.dmPelsHeight - o_dheight);
 	    if (dm.dmBitsPerPel != vo_depthonscreen) continue;
 	    if (dm.dmPelsWidth < o_dwidth) continue;
 	    if (dm.dmPelsHeight < o_dheight) continue;
-	    int score = (dm.dmPelsWidth - o_dwidth) * (dm.dmPelsHeight - o_dheight);
 
 	    if (score < bestScore) {
 		bestScore = score;
@@ -160,8 +225,13 @@ static void resetMode(void) {
     ChangeDisplaySettings(0, 0);
 }
 
-int createRenderingContext(void) {
+static int createRenderingContext(void) {
     HWND layer = HWND_NOTOPMOST;
+    PIXELFORMATDESCRIPTOR pfd;
+    RECT r;
+    int pf;
+    int style = (vo_border && !vo_fs) ?
+                (WS_OVERLAPPEDWINDOW | WS_SIZEBOX) : WS_POPUP;
 
     if (vo_fs || vo_ontop) layer = HWND_TOPMOST;
     if (vo_fs) {
@@ -178,11 +248,30 @@ int createRenderingContext(void) {
 	}
     }
     updateScreenProperties();
-    vo_dwidth = vo_fs ? vo_screenwidth : o_dwidth;
-    vo_dheight = vo_fs ? vo_screenheight : o_dheight;
-    SetWindowPos(vo_window, layer, (vo_screenwidth - vo_dwidth) / 2, (vo_screenheight - vo_dheight) / 2, vo_dwidth, vo_dheight, SWP_SHOWWINDOW);
+    ShowWindow(vo_window, SW_HIDE);
+    SetWindowLong(vo_window, GWL_STYLE, style);
+    if (vo_fs) {
+        prev_width = vo_dwidth;
+        prev_height = vo_dheight;
+        prev_x = vo_dx;
+        prev_y = vo_dy;
+        vo_dwidth = vo_screenwidth;
+        vo_dheight = vo_screenheight;
+        vo_dx = xinerama_x;
+        vo_dy = xinerama_y;
+    } else {
+        vo_dwidth = prev_width;
+        vo_dheight = prev_height;
+        vo_dx = prev_x;
+        vo_dy = prev_y;
+    }
+    r.left = vo_dx;
+    r.right = r.left + vo_dwidth;
+    r.top = vo_dy;
+    r.bottom = r.top + vo_dheight;
+    AdjustWindowRect(&r, style, 0);
+    SetWindowPos(vo_window, layer, r.left, r.top, r.right - r.left, r.bottom - r.top, SWP_SHOWWINDOW);
 
-    PIXELFORMATDESCRIPTOR pfd;
     memset(&pfd, 0, sizeof pfd);
     pfd.nSize = sizeof pfd;
     pfd.nVersion = 1;
@@ -190,7 +279,7 @@ int createRenderingContext(void) {
     pfd.iPixelType = PFD_TYPE_RGBA;
     pfd.cColorBits = 24;
     pfd.iLayerType = PFD_MAIN_PLANE;
-    int pf = ChoosePixelFormat(vo_hdc, &pfd);
+    pf = ChoosePixelFormat(vo_hdc, &pfd);
     if (!pf) {
     	mp_msg(MSGT_VO, MSGL_ERR, "vo: win32: unable to select a valid pixel format!\n");
 	return 0;
@@ -203,9 +292,25 @@ int createRenderingContext(void) {
     return 1;
 }
 
+int vo_w32_config(uint32_t width, uint32_t height, uint32_t flags) {
+    // store original size for videomode switching
+    o_dwidth = width;
+    o_dheight = height;
+
+    prev_width = width;
+    prev_height = height;
+    prev_x = vo_dx;
+    prev_y = vo_dy;
+
+    vo_fs = flags & VOFLAG_FULLSCREEN;
+    vo_vm = flags & VOFLAG_MODESWITCHING;
+    return createRenderingContext();
+}
+
 int vo_init(void) {
     HICON 	mplayerIcon = 0;
     char 	exedir[MAX_PATH];
+    HINSTANCE	user32;
 
     if (vo_window)
 	return 1;
@@ -217,21 +322,38 @@ int vo_init(void) {
     if (!mplayerIcon)
 	mplayerIcon = LoadIcon(0, IDI_APPLICATION);
 
+  {
     WNDCLASSEX wcex = { sizeof wcex, CS_OWNDC, WndProc, 0, 0, hInstance, mplayerIcon, LoadCursor(0, IDC_ARROW), (HBRUSH)GetStockObject(BLACK_BRUSH), 0, classname, mplayerIcon };
 
     if (!RegisterClassEx(&wcex)) {
 	mp_msg(MSGT_VO, MSGL_ERR, "vo: win32: unable to register window class!\n");
 	return 0;
     }
+  }
 
-    vo_window = CreateWindowEx(0, classname, classname, WS_POPUP, CW_USEDEFAULT, 0, 100, 100, 0, 0, hInstance, 0);
+    if (WinID >= 0)
+      vo_window = WinID;
+    else {
+    vo_window = CreateWindowEx(0, classname, classname,
+                  vo_border ? (WS_OVERLAPPEDWINDOW | WS_SIZEBOX) : WS_POPUP,
+                  CW_USEDEFAULT, 0, 100, 100, 0, 0, hInstance, 0);
     if (!vo_window) {
 	mp_msg(MSGT_VO, MSGL_ERR, "vo: win32: unable to create window!\n");
 	return 0;
     }
+    }
 
     vo_hdc = GetDC(vo_window);
 
+    myMonitorFromWindow = NULL;
+    myGetMonitorInfo = NULL;
+    myEnumDisplayMonitors = NULL;
+    user32 = GetModuleHandle("user32.dll");
+    if (user32) {
+        myMonitorFromWindow = GetProcAddress(user32, "MonitorFromWindow");
+        myGetMonitorInfo = GetProcAddress(user32, "GetMonitorInfoA");
+        myEnumDisplayMonitors = GetProcAddress(user32, "EnumDisplayMonitors");
+    }
     updateScreenProperties();
 
     return 1;
@@ -240,6 +362,11 @@ int vo_init(void) {
 void vo_w32_fullscreen(void) {
     vo_fs = !vo_fs;
 
+    createRenderingContext();
+}
+
+void vo_w32_border() {
+    vo_border = !vo_border;
     createRenderingContext();
 }
 
@@ -258,6 +385,7 @@ void vo_w32_uninit() {
     resetMode();
     ShowCursor(1);
     vo_depthonscreen = 0;
+    if (WinID < 0)
     DestroyWindow(vo_window);
     vo_window = 0;
     UnregisterClass(classname, 0);

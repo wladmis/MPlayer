@@ -1,3 +1,7 @@
+
+/// \file
+/// \ingroup ConfigParsers Playtree
+
 #include "config.h"
 
 #include <stdio.h>
@@ -56,6 +60,9 @@ static inline void add_entry(play_tree_t **last_parentp,
     *last_entryp = entry;
 }
 
+/// Setup the \ref Config from command line arguments and build a playtree.
+/** \ingroup ConfigParsers
+ */
 play_tree_t*
 m_config_parse_mp_command_line(m_config_t *config, int argc, char **argv)
 {
@@ -63,6 +70,7 @@ m_config_parse_mp_command_line(m_config_t *config, int argc, char **argv)
   char *opt,*splitpos=NULL;
   char entbuf[10];
   int no_more_opts = 0;
+  int opt_exit = 0; // flag indicating whether mplayer should exit without playing anything
   play_tree_t *last_parent, *last_entry = NULL, *root;
 #ifdef MACOSX_FINDER_SUPPORT
   extern play_tree_t *macosx_finder_args(m_config_t *, int , char **);
@@ -90,7 +98,7 @@ m_config_parse_mp_command_line(m_config_t *config, int argc, char **argv)
     //next:
     opt = argv[i];
     /* check for -- (no more options id.) except --help! */
-    if ((*opt == '-') && (*(opt+1) == '-') && (*(opt+2) != 'h'))
+    if ((*opt == '-') && (*(opt+1) == '-') && (*(opt+2) == 0))
       {
 	no_more_opts = 1;
 	if (i+1 >= argc)
@@ -135,16 +143,13 @@ m_config_parse_mp_command_line(m_config_t *config, int argc, char **argv)
 
 	mp_msg(MSGT_CFGPARSER, MSGL_DBG3, "this_opt = option: %s\n", opt);
 	// We handle here some specific option
-	if(strcasecmp(opt,"list-options") == 0) {
-	  m_config_print_option_list(config);
-	  exit(1);
-	  // Loop option when it apply to a group
-	} else if(strcasecmp(opt,"loop") == 0 &&
+	// Loop option when it apply to a group
+	if(strcasecmp(opt,"loop") == 0 &&
 		  (! last_entry || last_entry->child) ) {
 	  int l;
-	  char* end;
+	  char* end = NULL;
 	  l = (i+1<argc) ? strtol(argv[i+1],&end,0) : 0;
-	  if(*end != '\0') {
+	  if(!end || *end != '\0') {
 	    mp_msg(MSGT_CFGPARSER, MSGL_ERR, "The loop option must be an integer: %s\n",argv[i+1]);
 	    tmp = ERR_OUT_OF_RANGE;
 	  } else {
@@ -191,14 +196,17 @@ m_config_parse_mp_command_line(m_config_t *config, int argc, char **argv)
 	      }
 	    } else {
 	      tmp = M_OPT_UNKNOWN;
-	      mp_msg(MSGT_CFGPARSER, MSGL_ERR, "Unknown option on the command line: %s\n",opt);
+	      mp_msg(MSGT_CFGPARSER, MSGL_ERR, "Unknown option on the command line: -%s\n",opt);
 	    }
 	  }
 	}
 
+	if (tmp <= M_OPT_EXIT) {
+	  opt_exit = 1;
+	  tmp = M_OPT_EXIT - tmp;
+	} else
 	if (tmp < 0) {
-	  if (tmp == M_OPT_EXIT)
-	    exit(0);
+	  mp_msg(MSGT_CFGPARSER, MSGL_FATAL, "Error parsing option on the command line: -%s\n",opt);
 	  goto err_out;
 	}
 	i += tmp;
@@ -252,6 +260,8 @@ m_config_parse_mp_command_line(m_config_t *config, int argc, char **argv)
       }
   }
 
+  if (opt_exit)
+    goto err_out;
   --recursion_depth;
   if(last_parent != root)
     mp_msg(MSGT_CFGPARSER, MSGL_ERR,"Missing }- ?\n");

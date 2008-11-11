@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../config.h"
-#include "../mp_msg.h"
+#include "config.h"
+#include "mp_msg.h"
 
 #ifdef HAVE_DIVX4ENCORE
 
@@ -376,18 +376,18 @@ static int query_format(struct vf_instance_s* vf, unsigned int fmt){
     case IMGFMT_YV12:
     case IMGFMT_IYUV:
     case IMGFMT_I420:
-	return 3; // no conversion
+	return VFCAP_CSP_SUPPORTED | VFCAP_CSP_SUPPORTED_BY_HW; // no conversion
     case IMGFMT_YUY2:
     case IMGFMT_UYVY:
-	return 1; // conversion
+	return VFCAP_CSP_SUPPORTED; // conversion
     case IMGFMT_RGB24:
     case IMGFMT_BGR24:
-	return 1 | VFCAP_FLIPPED; // conversion+flipped
+	return VFCAP_CSP_SUPPORTED | VFCAP_FLIPPED; // conversion+flipped
     }
     return 0;
 }
 
-static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
+static int put_image(struct vf_instance_s* vf, mp_image_t *mpi, double pts){
     ENC_RESULT enc_result;
     vf->priv->enc_frame.image=mpi->planes[0];
     vf->priv->enc_frame.bitstream=mux_v->buffer;
@@ -396,9 +396,9 @@ static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
     vf->priv->enc_frame.produce_empty_frame = 0;
     encore(vf->priv->enc_handle, ENC_OPT_ENCODE, &vf->priv->enc_frame, &enc_result);
     if(enc_result.cType == 'I')
-        muxer_write_chunk(mux_v,vf->priv->enc_frame.length,0x10);
+        muxer_write_chunk(mux_v,vf->priv->enc_frame.length,0x10, MP_NOPTS_VALUE, MP_NOPTS_VALUE);
     else
-        muxer_write_chunk(mux_v,vf->priv->enc_frame.length,0);
+        muxer_write_chunk(mux_v,vf->priv->enc_frame.length,0, MP_NOPTS_VALUE, MP_NOPTS_VALUE);
 #else
     vf->priv->enc_frame.mvs=NULL;
 #ifdef HAVE_XVID_VBR
@@ -444,7 +444,7 @@ static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
 					       enc_result.quantizer);
 	}
     }
-    muxer_write_chunk(mux_v,vf->priv->enc_frame.length,enc_result.is_key_frame?0x10:0);
+    muxer_write_chunk(mux_v,vf->priv->enc_frame.length,enc_result.is_key_frame?0x10:0, MP_NOPTS_VALUE, MP_NOPTS_VALUE);
 #endif
     return 1;
 }

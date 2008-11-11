@@ -4,19 +4,21 @@
 #include <string.h>
 //#include <libgen.h>
 
-#include "../config.h"
+#include "config.h"
+#include "mp_msg.h"
+#include "help_mp.h"
 
 #include "img_format.h"
 #include "mp_image.h"
 
-#include "../m_struct.h"
-#include "../m_option.h"
+#include "m_struct.h"
+#include "m_option.h"
 #include "menu.h"
 #include "menu_list.h"
 
 
-#include "../playtree.h"
-#include "../input/input.h"
+#include "playtree.h"
+#include "input/input.h"
 
 #define mp_basename(s) (strrchr((s),'/')==NULL?(char*)(s):(strrchr((s),'/')+1))
 
@@ -50,6 +52,7 @@ static m_option_t cfg_fields[] = {
 
 static void read_cmd(menu_t* menu,int cmd) {
   switch(cmd) {
+  case MENU_CMD_RIGHT:
   case MENU_CMD_OK: {
     int d = 1;
     char str[15];
@@ -76,7 +79,7 @@ static void read_cmd(menu_t* menu,int cmd) {
 	  d--;
 	}
 	if(i == NULL) {
-	  printf("Can't find the target item ????\n");
+	  mp_msg(MSGT_GLOBAL,MSGL_WARN,MSGTR_LIBMENU_CantfindTheTargetItem);
 	  break;
 	}
       }
@@ -86,7 +89,7 @@ static void read_cmd(menu_t* menu,int cmd) {
     if(c)
       mp_input_queue_cmd(c);
     else
-      printf("Failed to build command %s\n",str);
+      mp_msg(MSGT_GLOBAL,MSGL_WARN,MSGTR_LIBMENU_FailedToBuildCommand,str);
   } break;
   default:
     menu_list_read_cmd(menu,cmd);

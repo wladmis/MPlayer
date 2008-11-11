@@ -226,7 +226,7 @@ static void set_window(int force_update)
 /* connect to server, create and map window,
  * allocate colors and (shared) memory
  */
-static uint32_t config(uint32_t width, uint32_t height, uint32_t d_width,
+static int config(uint32_t width, uint32_t height, uint32_t d_width,
                        uint32_t d_height, uint32_t flags, char *title,
                        uint32_t format)
 {
@@ -301,7 +301,7 @@ static uint32_t config(uint32_t width, uint32_t height, uint32_t d_width,
 #endif
 
 #ifdef X11_FULLSCREEN
-        if ((flags & 1) || (flags & 0x04))
+        if ((flags & VOFLAG_FULLSCREEN) || (flags & VOFLAG_SWSCALE))
             aspect(&d_width, &d_height, A_ZOOM);
 #endif
         dwidth = d_width;
@@ -347,6 +347,7 @@ static uint32_t config(uint32_t width, uint32_t height, uint32_t d_width,
                                            ButtonPressMask |
                                            ButtonReleaseMask |
                                            ExposureMask);
+                XMapWindow(mDisplay, vo_window);
             } else
                 XSelectInput(mDisplay, vo_window, ExposureMask);
         } else
@@ -367,13 +368,10 @@ static uint32_t config(uint32_t width, uint32_t height, uint32_t d_width,
                 XStoreName(mDisplay, vo_window, title);
                 XMapWindow(mDisplay, vo_window);
 
-                if (flags & 1)
+                if (flags & VOFLAG_FULLSCREEN)
                     vo_x11_fullscreen();
 
-#ifdef HAVE_XINERAMA
-                vo_x11_xinerama_move(mDisplay, vo_window);
-#endif
-            } else if (!(flags & 1))
+            } else if (!(flags & VOFLAG_FULLSCREEN))
                 XMoveResizeWindow(mDisplay, vo_window, vo_dx, vo_dy,
                                   vo_dwidth, vo_dheight);
         }
@@ -385,7 +383,7 @@ static uint32_t config(uint32_t width, uint32_t height, uint32_t d_width,
     }
 #endif
 
-    if ((!WinID) && (flags & 1))
+    if ((!WinID) && (flags & VOFLAG_FULLSCREEN))
     {
         vo_dx = 0;
         vo_dy = 0;
@@ -447,7 +445,7 @@ static void flip_page(void)
     return;
 }
 
-static uint32_t draw_slice(uint8_t * src[], int stride[],
+static int draw_slice(uint8_t * src[], int stride[],
                            int w, int h, int x, int y)
 {
     UNUSED(src);
@@ -461,7 +459,7 @@ static uint32_t draw_slice(uint8_t * src[], int stride[],
     return (-1);
 }
 
-static uint32_t draw_frame(uint8_t * src[])
+static int draw_frame(uint8_t * src[])
 {
     UNUSED(src);
     mp_msg(MSGT_VO, MSGL_FATAL,
@@ -469,7 +467,7 @@ static uint32_t draw_frame(uint8_t * src[])
     return (-1);
 }
 
-static uint32_t query_format(uint32_t format)
+static int query_format(uint32_t format)
 {
     return (vidix_query_fourcc(format));
 }
@@ -489,7 +487,7 @@ static void uninit(void)
     vo_x11_uninit();
 }
 
-static uint32_t preinit(const char *arg)
+static int preinit(const char *arg)
 {
 
     if (arg)
@@ -510,7 +508,7 @@ static uint32_t preinit(const char *arg)
     return (0);
 }
 
-static uint32_t control(uint32_t request, void *data, ...)
+static int control(uint32_t request, void *data, ...)
 {
     switch (request)
     {

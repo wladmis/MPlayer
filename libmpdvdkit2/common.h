@@ -4,9 +4,9 @@
  *****************************************************************************
  * Copyright (C) 1998, 1999, 2000 VideoLAN
  *
- * Modified for use with MPlayer, changes contained in libdvdcss_changes.diff.
+ * Modified for use with MPlayer, changes contained in libdvdread_changes.diff.
  * detailed CVS changelog at http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
- * $Id: common.h,v 1.5 2005/03/01 06:41:41 diego Exp $
+ * $Id: common.h 16727 2005-10-11 12:17:09Z reimar $
  *
  * Authors: Samuel Hocevar <sam@via.ecp.fr>
  *          Vincent Seguin <seguin@via.ecp.fr>
@@ -30,10 +30,21 @@
 /*****************************************************************************
  * Basic types definitions
  *****************************************************************************/
-#include <inttypes.h>
-
-#ifdef __CYGWIN__
-#define SYS_CYGWIN
+#if defined( HAVE_STDINT_H )
+#   include <stdint.h>
+#elif defined( HAVE_INTTYPES_H )
+#   include <inttypes.h>
+#elif defined( SYS_CYGWIN )
+#   include <sys/types.h>
+    /* Cygwin only defines half of these... */
+    typedef u_int8_t            uint8_t;
+    typedef u_int32_t           uint32_t;
+#else
+    /* Fallback types (very x86-centric, sorry) */
+    typedef unsigned char       uint8_t;
+    typedef signed char         int8_t;
+    typedef unsigned int        uint32_t;
+    typedef signed int          int32_t;
 #endif
 
 #if defined( WIN32 )
@@ -44,6 +55,7 @@
 
 /* several type definitions */
 #   if defined( __MINGW32__ )
+#define lseek _lseeki64
 #       if !defined( _OFF_T_ )
 typedef long long _off_t;
 typedef _off_t off_t;

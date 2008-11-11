@@ -3,15 +3,15 @@
 #include <string.h>
 #include <inttypes.h>
 
-#include "../config.h"
-#include "../mp_msg.h"
+#include "config.h"
+#include "mp_msg.h"
 
 #include "img_format.h"
 #include "mp_image.h"
 #include "vf.h"
 
-#include "../libvo/fastmemcpy.h"
-#include "../postproc/rgb2rgb.h"
+#include "libvo/fastmemcpy.h"
+#include "postproc/rgb2rgb.h"
 
 struct vf_priv_s {
     int direction;
@@ -69,7 +69,7 @@ static int config(struct vf_instance_s* vf,
     return vf_next_config(vf,height,width,d_height,d_width,flags,outfmt);
 }
 
-static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
+static int put_image(struct vf_instance_s* vf, mp_image_t *mpi, double pts){
     mp_image_t *dmpi;
 
     // hope we'll get DR buffer:
@@ -94,7 +94,7 @@ static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
 	dmpi->planes[1] = mpi->planes[1]; // passthrough rgb8 palette
     }
     
-    return vf_next_put_image(vf,dmpi);
+    return vf_next_put_image(vf,dmpi, pts);
 }
 
 //===========================================================================//

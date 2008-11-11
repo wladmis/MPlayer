@@ -13,7 +13,7 @@
 
     You should have received a copy of the GNU General Public License
     along with this program; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 */
 
 /*
@@ -54,8 +54,8 @@ untested special converters
 #include <math.h>
 #include <stdio.h>
 #include <unistd.h>
-#include "../config.h"
-#include "../mangle.h"
+#include "config.h"
+#include "mangle.h"
 #include <assert.h>
 #ifdef HAVE_MALLOC_H
 #include <malloc.h>
@@ -70,11 +70,11 @@ untested special converters
 #endif
 #include "swscale.h"
 #include "swscale_internal.h"
-#include "../cpudetect.h"
-#include "../bswap.h"
-#include "../libvo/img_format.h"
+#include "cpudetect.h"
+#include "bswap.h"
+#include "libvo/img_format.h"
 #include "rgb2rgb.h"
-#include "../libvo/fastmemcpy.h"
+#include "libvo/fastmemcpy.h"
 
 #undef MOVNTQ
 #undef PAVGB
@@ -733,7 +733,7 @@ static inline void yuv2packedXinC(SwsContext *c, int16_t *lumFilter, int16_t **l
 #endif
 
 #ifdef ARCH_POWERPC
-#ifdef HAVE_ALTIVEC
+#if defined (HAVE_ALTIVEC) || defined (RUNTIME_CPUDETECT)
 #define COMPILE_ALTIVEC
 #endif //HAVE_ALTIVEC
 #endif //ARCH_POWERPC
@@ -1118,7 +1118,7 @@ static inline void initFilter(int16_t **outFilter, int16_t **filterPos, int *out
 	*outFilterSize= filterSize;
 
 	if(flags&SWS_PRINT_INFO)
-		MSG_INFO("SwScaler: reducing / aligning filtersize %d -> %d\n", filter2Size, filterSize);
+		MSG_V("SwScaler: reducing / aligning filtersize %d -> %d\n", filter2Size, filterSize);
 	/* try to reduce the filter-size (step2 reduce it) */
 	for(i=0; i<dstW; i++)
 	{
@@ -1166,7 +1166,8 @@ static inline void initFilter(int16_t **outFilter, int16_t **filterPos, int *out
 	}
 
 	// Note the +1 is for the MMXscaler which reads over the end
-	*outFilter= (int16_t*)memalign(8, *outFilterSize*(dstW+1)*sizeof(int16_t));
+	/* align at 16 for AltiVec (needed by hScale_altivec_real) */
+	*outFilter= (int16_t*)memalign(16, *outFilterSize*(dstW+1)*sizeof(int16_t));
 	memset(*outFilter, 0, *outFilterSize*(dstW+1)*sizeof(int16_t));
 
 	/* Normalize & Store in outFilter */
@@ -1374,7 +1375,7 @@ static void initMMX2HScaler(int dstW, int xInc, uint8_t *funnyCode, int16_t *fil
 }
 #endif // ARCH_X86 || ARCH_X86_64
 
-static void globalInit(){
+static void globalInit(void){
     // generating tables:
     int i;
     for(i=0; i<768; i++){
@@ -1425,7 +1426,7 @@ static int PlanarToNV12Wrapper(SwsContext *c, uint8_t* src[], int srcStride[], i
              int srcSliceH, uint8_t* dstParam[], int dstStride[]){
 	uint8_t *dst=dstParam[0] + dstStride[0]*srcSliceY;
 	/* Copy Y plane */
-	if(dstStride[0]==srcStride[0])
+	if(dstStride[0]==srcStride[0] && srcStride[0] > 0)
 		memcpy(dst, src[0], srcSliceH*dstStride[0]);
 	else
 	{
@@ -1475,7 +1476,7 @@ static int rgb2rgbWrapper(SwsContext *c, uint8_t* src[], int srcStride[], int sr
 	const int dstBpp= ((dstFormat&0xFF) + 7)>>3;
 	const int srcId= (srcFormat&0xFF)>>2; // 1:0, 4:1, 8:2, 15:3, 16:4, 24:6, 32:8 
 	const int dstId= (dstFormat&0xFF)>>2;
-	void (*conv)(const uint8_t *src, uint8_t *dst, unsigned src_size)=NULL;
+	void (*conv)(const uint8_t *src, uint8_t *dst, long src_size)=NULL;
 
 	/* BGR -> BGR */
 	if(   (isBGR(srcFormat) && isBGR(dstFormat))
@@ -1559,7 +1560,7 @@ static int yvu9toyv12Wrapper(SwsContext *c, uint8_t* src[], int srcStride[], int
 	int i;
 
 	/* copy Y */
-	if(srcStride[0]==dstStride[0]) 
+	if(srcStride[0]==dstStride[0] && srcStride[0] > 0) 
 		memcpy(dst[0]+ srcSliceY*dstStride[0], src[0], srcStride[0]*srcSliceH);
 	else{
 		uint8_t *srcPtr= src[0];
@@ -1633,7 +1634,7 @@ static int simpleCopy(SwsContext *c, uint8_t* src[], int srcStride[], int srcSli
 
 	if(isPacked(c->srcFormat))
 	{
-		if(dstStride[0]==srcStride[0])
+		if(dstStride[0]==srcStride[0] && srcStride[0] > 0)
 			memcpy(dst[0] + dstStride[0]*srcSliceY, src[0], srcSliceH*dstStride[0]);
 		else
 		{
@@ -1671,7 +1672,7 @@ static int simpleCopy(SwsContext *c, uint8_t* src[], int srcStride[], int srcSli
 			}
 			else
 			{
-				if(dstStride[plane]==srcStride[plane])
+				if(dstStride[plane]==srcStride[plane] && srcStride[plane] > 0)
 					memcpy(dst[plane] + dstStride[plane]*y, src[plane], height*dstStride[plane]);
 				else
 				{
@@ -1796,8 +1797,9 @@ int sws_setColorspaceDetails(SwsContext *c, const int inv_table[4], int srcRange
 	yuv2rgb_c_init_tables(c, inv_table, srcRange, brightness, contrast, saturation);
 	//FIXME factorize
 
-#ifdef HAVE_ALTIVEC
-	yuv2rgb_altivec_init_tables (c, inv_table, brightness, contrast, saturation);
+#ifdef COMPILE_ALTIVEC
+	if (c->flags & SWS_CPU_CAPS_ALTIVEC)
+	    yuv2rgb_altivec_init_tables (c, inv_table, brightness, contrast, saturation);
 #endif	
 	return 0;
 }
@@ -1986,7 +1988,7 @@ SwsContext *sws_getContext(int srcW, int srcH, int origSrcFormat, int dstW, int 
 			}
 		}
 
-#ifdef HAVE_ALTIVEC
+#ifdef COMPILE_ALTIVEC
 		if ((c->flags & SWS_CPU_CAPS_ALTIVEC) &&
 		    ((srcFormat == IMGFMT_YV12 && 
 		      (dstFormat == IMGFMT_YUY2 || dstFormat == IMGFMT_UYVY)))) {
@@ -2108,6 +2110,25 @@ SwsContext *sws_getContext(int srcW, int srcH, int origSrcFormat, int dstW, int 
 				c->chrSrcH, c->chrDstH, filterAlign, (1<<12)-4,
 				(flags&SWS_BICUBLIN) ? (flags|SWS_BILINEAR) : flags,
 				srcFilter->chrV, dstFilter->chrV, c->param);
+
+#ifdef HAVE_ALTIVEC
+		c->vYCoeffsBank = memalign (16, sizeof (vector signed short)*c->vLumFilterSize*c->dstH);
+		c->vCCoeffsBank = memalign (16, sizeof (vector signed short)*c->vChrFilterSize*c->chrDstH);
+
+		for (i=0;i<c->vLumFilterSize*c->dstH;i++) {
+                  int j;
+		  short *p = (short *)&c->vYCoeffsBank[i];
+		  for (j=0;j<8;j++)
+		    p[j] = c->vLumFilter[i];
+		}
+
+		for (i=0;i<c->vChrFilterSize*c->chrDstH;i++) {
+                  int j;
+		  short *p = (short *)&c->vCCoeffsBank[i];
+		  for (j=0;j<8;j++)
+		    p[j] = c->vChrFilter[i];
+		}
+#endif
 	}
 
 	// Calculate Buffer Sizes so that they won't run out while handling these damn slices
@@ -2131,10 +2152,11 @@ SwsContext *sws_getContext(int srcW, int srcH, int origSrcFormat, int dstW, int 
 	c->lumPixBuf= (int16_t**)memalign(4, c->vLumBufSize*2*sizeof(int16_t*));
 	c->chrPixBuf= (int16_t**)memalign(4, c->vChrBufSize*2*sizeof(int16_t*));
 	//Note we need at least one pixel more at the end because of the mmx code (just in case someone wanna replace the 4000/8000)
+	/* align at 16 bytes for AltiVec */
 	for(i=0; i<c->vLumBufSize; i++)
-		c->lumPixBuf[i]= c->lumPixBuf[i+c->vLumBufSize]= (uint16_t*)memalign(8, 4000);
+		c->lumPixBuf[i]= c->lumPixBuf[i+c->vLumBufSize]= (uint16_t*)memalign(16, 4000);
 	for(i=0; i<c->vChrBufSize; i++)
-		c->chrPixBuf[i]= c->chrPixBuf[i+c->vChrBufSize]= (uint16_t*)memalign(8, 8000);
+		c->chrPixBuf[i]= c->chrPixBuf[i+c->vChrBufSize]= (uint16_t*)memalign(16, 8000);
 
 	//try to avoid drawing green stuff between the right end and the stride end
 	for(i=0; i<c->vLumBufSize; i++) memset(c->lumPixBuf[i], 0, 4000);
@@ -2275,10 +2297,34 @@ SwsContext *sws_getContext(int srcW, int srcH, int origSrcFormat, int dstW, int 
  */
 int sws_scale_ordered(SwsContext *c, uint8_t* src[], int srcStride[], int srcSliceY,
                            int srcSliceH, uint8_t* dst[], int dstStride[]){
-	//copy strides, so they can safely be modified
-	int srcStride2[3]= {srcStride[0], srcStride[1], srcStride[2]};
-	int dstStride2[3]= {dstStride[0], dstStride[1], dstStride[2]};
-	return c->swScale(c, src, srcStride2, srcSliceY, srcSliceH, dst, dstStride2);
+	if (c->sliceDir == 0 && srcSliceY != 0 && srcSliceY + srcSliceH != c->srcH) {
+	    MSG_ERR("swScaler: slices start in the middle!\n");
+	    return 0;
+	}
+	if (c->sliceDir == 0) {
+	    if (srcSliceY == 0) c->sliceDir = 1; else c->sliceDir = -1;
+	}
+
+	// copy strides, so they can safely be modified
+	if (c->sliceDir == 1) {
+	    // slices go from top to bottom
+	    int srcStride2[3]= {srcStride[0], srcStride[1], srcStride[2]};
+	    int dstStride2[3]= {dstStride[0], dstStride[1], dstStride[2]};
+	    return c->swScale(c, src, srcStride2, srcSliceY, srcSliceH, dst, dstStride2);
+	} else {
+	    // slices go from bottom to top => we flip the image internally
+	    uint8_t* src2[3]= {src[0] + (srcSliceH-1)*srcStride[0],
+			       src[1] + ((srcSliceH>>c->chrSrcVSubSample)-1)*srcStride[1],
+			       src[2] + ((srcSliceH>>c->chrSrcVSubSample)-1)*srcStride[2]
+	    };
+	    uint8_t* dst2[3]= {dst[0] + (c->dstH-1)*dstStride[0],
+			       dst[1] + ((c->dstH>>c->chrDstVSubSample)-1)*dstStride[1],
+			       dst[2] + ((c->dstH>>c->chrDstVSubSample)-1)*dstStride[2]};
+	    int srcStride2[3]= {-srcStride[0], -srcStride[1], -srcStride[2]};
+	    int dstStride2[3]= {-dstStride[0], -dstStride[1], -dstStride[2]};
+	    
+	    return c->swScale(c, src2, srcStride2, c->srcH-srcSliceY-srcSliceH, srcSliceH, dst2, dstStride2);
+	}
 }
 
 /**
@@ -2321,24 +2367,20 @@ SwsFilter *sws_getDefaultFilter(float lumaGBlur, float chromaGBlur,
 	}
 
 	if(chromaSharpen!=0.0){
-		SwsVector *g= sws_getConstVec(-1.0, 3);
-		SwsVector *id= sws_getConstVec(10.0/chromaSharpen, 1);
-		g->coeff[1]=2.0;
-		sws_addVec(id, g);
-		sws_convVec(filter->chrH, id);
-		sws_convVec(filter->chrV, id);
-		sws_freeVec(g);
+		SwsVector *id= sws_getIdentityVec();
+                sws_scaleVec(filter->chrH, -chromaSharpen);
+                sws_scaleVec(filter->chrV, -chromaSharpen);
+		sws_addVec(filter->chrH, id);
+		sws_addVec(filter->chrV, id);
 		sws_freeVec(id);
 	}
 
 	if(lumaSharpen!=0.0){
-		SwsVector *g= sws_getConstVec(-1.0, 3);
-		SwsVector *id= sws_getConstVec(10.0/lumaSharpen, 1);
-		g->coeff[1]=2.0;
-		sws_addVec(id, g);
-		sws_convVec(filter->lumH, id);
-		sws_convVec(filter->lumV, id);
-		sws_freeVec(g);
+		SwsVector *id= sws_getIdentityVec();
+                sws_scaleVec(filter->lumH, -lumaSharpen);
+                sws_scaleVec(filter->lumV, -lumaSharpen);
+		sws_addVec(filter->lumH, id);
+		sws_addVec(filter->lumV, id);
 		sws_freeVec(id);
 	}
 
@@ -2400,28 +2442,17 @@ SwsVector *sws_getConstVec(double c, int length){
 
 
 SwsVector *sws_getIdentityVec(void){
-	double *coeff= memalign(sizeof(double), sizeof(double));
-	SwsVector *vec= malloc(sizeof(SwsVector));
-	coeff[0]= 1.0;
-
-	vec->coeff= coeff;
-	vec->length= 1;
-
-	return vec;
+        return sws_getConstVec(1.0, 1);
 }
 
-void sws_normalizeVec(SwsVector *a, double height){
+double sws_dcVec(SwsVector *a){
 	int i;
-	double sum=0;
-	double inv;
+        double sum=0;
 
 	for(i=0; i<a->length; i++)
 		sum+= a->coeff[i];
 
-	inv= height/sum;
-
-	for(i=0; i<a->length; i++)
-		a->coeff[i]*= inv;
+        return sum;
 }
 
 void sws_scaleVec(SwsVector *a, double scalar){
@@ -2429,6 +2460,10 @@ void sws_scaleVec(SwsVector *a, double scalar){
 
 	for(i=0; i<a->length; i++)
 		a->coeff[i]*= scalar;
+}
+
+void sws_normalizeVec(SwsVector *a, double height){
+        sws_scaleVec(a, height/sws_dcVec(a));
 }
 
 static SwsVector *sws_getConvVec(SwsVector *a, SwsVector *b){
@@ -2628,6 +2663,12 @@ void sws_freeContext(SwsContext *c){
 	c->hLumFilter = NULL;
 	if(c->hChrFilter) free(c->hChrFilter);
 	c->hChrFilter = NULL;
+#ifdef HAVE_ALTIVEC
+	if(c->vYCoeffsBank) free(c->vYCoeffsBank);
+	c->vYCoeffsBank = NULL;
+	if(c->vCCoeffsBank) free(c->vCCoeffsBank);
+	c->vCCoeffsBank = NULL;
+#endif
 
 	if(c->vLumFilterPos) free(c->vLumFilterPos);
 	c->vLumFilterPos = NULL;

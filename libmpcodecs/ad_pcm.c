@@ -4,7 +4,7 @@
 
 #include "config.h"
 #include "ad_internal.h"
-#include "../libaf/af_format.h"
+#include "libaf/af_format.h"
 
 static ad_info_t info = 
 {
@@ -53,20 +53,43 @@ static int init(sh_audio_t *sh_audio)
        // intended fall-through
     case 0x74776F73: // 'swot'
        if(sh_audio->samplesize==1) sh_audio->sample_format=AF_FORMAT_S8;
-// Uncomment this if twos audio is broken for you
-// (typically with movies made on sgi machines)
-// This is just a workaround, the real bug is elsewhere
-#if 0
-       sh_audio->ds->ss_div= sh_audio->samplesize;
-       sh_audio->ds->ss_mul= sh_audio->samplesize * sh_audio->channels;
-#endif
        break;
     case 0x32336c66: // 'fl32', bigendian float32
        sh_audio->sample_format=AF_FORMAT_FLOAT_BE;
        sh_audio->samplesize=4;
        break;
+    case 0x666c3332: // '23lf', little endian float32, MPlayer internal fourCC
+       sh_audio->sample_format=AF_FORMAT_FLOAT_LE;
+       sh_audio->samplesize=4;
+       break;
+/*    case 0x34366c66: // 'fl64', bigendian float64
+       sh_audio->sample_format=AF_FORMAT_FLOAT_BE;
+       sh_audio->samplesize=8;
+       break;
+    case 0x666c3634: // '46lf', little endian float64, MPlayer internal fourCC
+       sh_audio->sample_format=AF_FORMAT_FLOAT_LE;
+       sh_audio->samplesize=8;
+       break;*/
+    case 0x34326e69: // 'in24', bigendian int24
+       sh_audio->sample_format=AF_FORMAT_S24_BE;
+       sh_audio->samplesize=3;
+       break;
+    case 0x696e3234: // '42ni', little endian int24, MPlayer internal fourCC
+       sh_audio->sample_format=AF_FORMAT_S24_LE;
+       sh_audio->samplesize=3;
+       break;
+    case 0x32336e69: // 'in32', bigendian int32
+       sh_audio->sample_format=AF_FORMAT_S32_BE;
+       sh_audio->samplesize=4;
+       break;
+    case 0x696e3332: // '23ni', little endian int32, MPlayer internal fourCC
+       sh_audio->sample_format=AF_FORMAT_S32_LE;
+       sh_audio->samplesize=4;
+       break;
     default: if(sh_audio->samplesize!=2) sh_audio->sample_format=AF_FORMAT_U8;
   }
+  if (!sh_audio->samplesize) // this would cause MPlayer to hang later
+    sh_audio->samplesize = 2;
   return 1;
 }
 

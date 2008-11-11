@@ -21,29 +21,18 @@
 #define _NET_WM_STATE_TOGGLE        2    /* toggle property  */
 
 extern int metacity_hack;
-extern int vo_fsmode;
 
-extern int vo_depthonscreen;
-extern int vo_screenwidth;
-extern int vo_screenheight;
-extern int vo_dwidth;
-extern int vo_dheight;
-extern int vo_fs;
 extern int vo_fs_layer;
 extern int vo_wm_type;
 extern int vo_fs_type;
 extern char** vo_fstype_list;
-extern int vo_ontop;
-extern int vo_rootwin;
 
 extern char *mDisplayName;
 extern Display *mDisplay;
 extern Window mRootWin;
 extern int mScreen;
 extern int mLocalDisplay;
-extern int WinID;
 
-extern int vo_mouse_timer_const;
 extern int vo_mouse_autohide;
 
 extern int vo_init( void );
@@ -58,7 +47,7 @@ extern int vo_x11_check_events(Display *mydisplay);
 extern void vo_x11_selectinput_witherr(Display *display, Window w, long event_mask);
 extern void vo_x11_fullscreen( void );
 extern void vo_x11_setlayer( Display * mDisplay,Window vo_window,int layer );
-extern void vo_x11_uninit();
+extern void vo_x11_uninit(void);
 extern Colormap vo_x11_create_colormap(XVisualInfo *vinfo);
 extern uint32_t vo_x11_set_equalizer(char *name, int value);
 extern uint32_t vo_x11_get_equalizer(char *name, int *value);
@@ -69,7 +58,7 @@ extern Window vo_x11_create_smooth_window( Display *mDisplay, Window mRoot,
 extern void vo_x11_clearwindow_part(Display *mDisplay, Window vo_window,
 	int img_width, int img_height, int use_fs);
 extern void vo_x11_clearwindow( Display *mDisplay, Window vo_window );
-extern void vo_x11_ontop();
+extern void vo_x11_ontop(void);
 extern void vo_x11_ewmh_fullscreen( int action );
 
 #endif
@@ -84,6 +73,10 @@ extern unsigned int xv_port;
 
 extern int vo_xv_set_eq(uint32_t xv_port, char * name, int value);
 extern int vo_xv_get_eq(uint32_t xv_port, char * name, int *value);
+
+extern int vo_xv_enable_vsync();
+
+extern void vo_xv_get_max_img_dim( uint32_t * width, uint32_t * height );
 
 /*** colorkey handling ***/
 typedef struct xv_ck_info_s
@@ -120,14 +113,12 @@ int xv_test_ckm( void * arg );
 void saver_off( Display * );
 void saver_on( Display * );
 
-#ifdef HAVE_XINERAMA
-void vo_x11_xinerama_move(Display *dsp, Window w);
-#endif
-
 #ifdef HAVE_XF86VM
 void vo_vm_switch(uint32_t, uint32_t, int*, int*);
 void vo_vm_close(Display*);
 #endif
+
+void update_xinerama_info(void);
 
 int vo_find_depth_from_visuals(Display *dpy, int screen, Visual **visual_return);
 

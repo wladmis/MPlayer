@@ -79,7 +79,7 @@ void __pure_virtual(void) {
 //	exit(1);
 }
 
-#if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
+#if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__DragonFly__)
 void ___brk_addr(void) {exit(0);}
 char **__environ={NULL};
 #undef stderr
@@ -103,7 +103,7 @@ static int control(sh_video_t *sh,int cmd,void* arg,...){
 static int load_syms_linux(char *path) {
 		void *handle;
 
-		mp_msg(MSGT_DECVIDEO,MSGL_INFO, "opening shared obj '%s'\n", path);
+		mp_msg(MSGT_DECVIDEO,MSGL_V, "opening shared obj '%s'\n", path);
 		handle = dlopen (path, RTLD_LAZY);
 		if (!handle) {
 			mp_msg(MSGT_DECVIDEO,MSGL_WARN,"Error: %s\n",dlerror());
@@ -151,7 +151,7 @@ static int load_syms_linux(char *path) {
 #ifdef USE_WIN32DLL
 
 #ifdef WIN32_LOADER
-#include "../loader/ldt_keeper.h"
+#include "loader/ldt_keeper.h"
 #endif
 void* WINAPI LoadLibraryA(char* name);
 void* WINAPI GetProcAddress(void* handle,char* func);
@@ -160,7 +160,7 @@ int WINAPI FreeLibrary(void *handle);
 static int load_syms_windows(char *path) {
     void *handle;
 
-    mp_msg(MSGT_DECVIDEO,MSGL_INFO, "opening win32 dll '%s'\n", path);
+    mp_msg(MSGT_DECVIDEO,MSGL_V, "opening win32 dll '%s'\n", path);
 #ifdef WIN32_LOADER
     Setup_LDT_Keeper();
 #endif

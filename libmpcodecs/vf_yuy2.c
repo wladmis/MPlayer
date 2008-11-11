@@ -3,15 +3,16 @@
 #include <string.h>
 #include <inttypes.h>
 
-#include "../config.h"
-#include "../mp_msg.h"
+#include "config.h"
+#include "mp_msg.h"
+#include "help_mp.h"
 
 #include "img_format.h"
 #include "mp_image.h"
 #include "vf.h"
 
-#include "../libvo/fastmemcpy.h"
-#include "../postproc/rgb2rgb.h"
+#include "libvo/fastmemcpy.h"
+#include "postproc/rgb2rgb.h"
 #include "vf_scale.h"
 
 //===========================================================================//
@@ -23,14 +24,14 @@ static int config(struct vf_instance_s* vf,
     sws_rgb2rgb_init(get_sws_cpuflags());
     
     if(vf_next_query_format(vf,IMGFMT_YUY2)<=0){
-	printf("yuy2 not supported by next filter/vo :(\n");
+	mp_msg(MSGT_VFILTER, MSGL_WARN, MSGTR_MPCODECS_WarnNextFilterDoesntSupport, "YUY2");
 	return 0;
     }
     
     return vf_next_config(vf,width,height,d_width,d_height,flags,IMGFMT_YUY2);
 }
 
-static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
+static int put_image(struct vf_instance_s* vf, mp_image_t *mpi, double pts){
     mp_image_t *dmpi;
 
     // hope we'll get DR buffer:
@@ -47,7 +48,7 @@ static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
     
     vf_clone_mpi_attributes(dmpi, mpi);
     
-    return vf_next_put_image(vf,dmpi);
+    return vf_next_put_image(vf,dmpi, pts);
 }
 
 //===========================================================================//

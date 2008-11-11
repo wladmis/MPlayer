@@ -1,6 +1,6 @@
 
-About CVS write access:
-~~~~~~~~~~~~~~~~~~~~~~~
+About Subversion write access:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Before everything else, you should know how to use CVS properly. CVS comes with
 some documentation, as usual
@@ -36,8 +36,6 @@ I. TECH SIDE:
     ssh LOGIN@mplayerhq.hu passwd
 
   Replace LOGIN with your login name. Leave 'passwd' unchanged, it's a command.
-
-  Note: If you need a real shell for something, tell A'rpi.
 
 2. Checking out development source tree:
 
@@ -93,7 +91,7 @@ I. TECH SIDE:
 
 8. Renaming/moving files or content of files, removing empty directories:
 
-  You CANNOT do that. Ask the CVS server admin (A'rpi) to do it!
+  You CANNOT do that. Ask the CVS server admin to do it!
   Do NOT remove & readd a file - it will kill the changelog!!!!
 
   Don't do a lot of cut'n'paste from one file to another without a very good
@@ -105,22 +103,22 @@ I. TECH SIDE:
 
 9. Reverting broken commits
 
-  In case you committed something really broken and wish to undo it completely,
-  you can use the 'cvs admin -o' command, which removes entries from the
-  revision history of a file. It does not undo the changes related to that
-  revision, but for the corner case that you remove the last revision (and only
-  then!) this amounts to reverting a commit.
+  Should you commit something really broken, notice it quickly and wish to undo
+  it completely, the 'cvs admin -o' command can be used as a last resort. This
+  command removes entries from the revision history of a file. For the corner
+  case of removing the last revision (and only then!) this amounts to reverting
+  a commit. The HEAD version is not affected by removing revisions that came
+  before, only revision history will be lost and holes left in the revision
+  numbering. ONLY EVER use this command to delete the LAST revision of a file.
+
+  In short, if you use this improperly you can wreak permanent havoc. Employ it
+  only if you are completely sure of what you are doing.
 
   Assuming that 1.123 is the last revision
 
     cvs -z3 admin -o1.123 filename
 
   will remove revision 1.123, thus reverting the file back to revision 1.122.
-
-  ONLY use this command to delete the LAST revision of a file. Removing other
-  revisions will NOT undo the changes connected to that revision, so the last
-  revision will remain unmodified, only revision history will be lost and
-  holes left in the revision numbering.
 
 10. RSA authentication
 
@@ -155,9 +153,9 @@ II. POLICY / RULES:
 3. Do not commit unrelated changes together, split them into self-contained
    pieces.
 
-4. Do not change behavior of the program (renaming options etc) without
-   first discussing it on the mplayer-dev-eng mailing list. Do not remove
-   functionality from the code. Just improve!
+4. Do not change behavior of the program (renaming options etc) or
+   remove functionality from the code without approval in a discussion on
+   the mplayer-dev-eng mailing list.
 
 5. Do not commit changes to the build system (Makefiles, configure script)
    which change behaviour, defaults etc, without asking first. The same
@@ -183,15 +181,16 @@ II. POLICY / RULES:
    particular bug. Comments such as "fixed!" or "Changed it." are unacceptable.
 
 8. If you apply a patch by someone else, include the name and email address in
-   the CVS log message. Since the mplayer-cvslog mailing list is publicly
+   the log message. Since the mplayer-cvslog mailing list is publicly
    archived you should add some spam protection to the email address. Send an
    answer to mplayer-dev-eng (or wherever you got the patch from) saying that
-   you applied the patch.
+   you applied the patch. If the patch contains a documentation change, commit
+   that as well; do not leave it to the documentation maintainers.
 
 9. Do NOT commit to code actively maintained by others without permission. Send
    a patch to mplayer-dev-eng instead.
 
-10. Subscribe to the mplayer-cvslog mailing list. The diffs of all CVS commits
+10. Subscribe to the mplayer-cvslog mailing list. The diffs of all commits
     are sent there and reviewed by all the other developers. Bugs and possible
     improvements or general questions regarding commits are discussed there. We
     expect you to react if problems with your code are uncovered.
@@ -199,14 +198,6 @@ II. POLICY / RULES:
 11. Update the documentation if you change behavior or add features. If you are
     unsure how best to do this, send a patch to mplayer-docs, the documentation
     maintainers will review and commit your stuff.
-
-12. Revert a commit ONLY in case of a big blunder like committing something not
-    intended to be committed or committing a wrong file, the wrong version of a
-    patch, cosmetics or broken code and you are going to recommit the right
-    thing immediately.
-
-    Never revert changes made a long time ago or buggy code. Fix it in the
-    normal way instead.
 
 Also read DOCS/tech/patches.txt !!!!
 

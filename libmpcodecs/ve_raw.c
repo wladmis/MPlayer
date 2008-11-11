@@ -2,8 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../config.h"
-#include "../mp_msg.h"
+#include "config.h"
+#include "mp_msg.h"
+#include "help_mp.h"
 
 #include "codec-cfg.h"
 #include "stream.h"
@@ -68,7 +69,7 @@ static int set_format(struct vf_instance_s *vf, unsigned int fmt) {
 	mux_v->bih->biBitCount = 16;
 	break;
     default:
-	printf("ve_raw: raw output with fourcc [%x] not supported!\n", fmt);
+	mp_msg(MSGT_MENCODER, MSGL_INFO, MSGTR_MPCODECS_OutputWithFourccNotSupported, fmt);
 	mux_v->bih->biCompression = 0;
 	return 0;
     }
@@ -115,9 +116,9 @@ static int query_format(struct vf_instance_s *vf, unsigned int fmt) {
     return 0;
 }
 
-static int put_image(struct vf_instance_s *vf, mp_image_t *mpi) {
+static int put_image(struct vf_instance_s *vf, mp_image_t *mpi, double pts) {
     mux_v->buffer = mpi->planes[0];
-    muxer_write_chunk(mux_v, mpi->width*mpi->height*mux_v->bih->biBitCount/8, 0x10);
+    muxer_write_chunk(mux_v, mpi->width*mpi->height*mux_v->bih->biBitCount/8, 0x10, pts, pts);
     return 1;
 }
 

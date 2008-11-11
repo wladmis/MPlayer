@@ -1,7 +1,7 @@
 /*
  * Modified for use with MPlayer, for details see the CVS changelog at
  * http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
- * $Id: decod386.c,v 1.19 2005/04/15 22:21:34 diego Exp $
+ * $Id: decod386.c 16990 2005-11-15 18:14:07Z diego $
  */
 
 /*
@@ -17,7 +17,7 @@
  */
 
 
-#include "../config.h"
+#include "config.h"
 
 #if 0
  /* old WRITE_SAMPLE */

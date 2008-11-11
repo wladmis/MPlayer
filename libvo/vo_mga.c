@@ -7,6 +7,8 @@
 #include <string.h>
 
 #include "config.h"
+#include "mp_msg.h"
+#include "help_mp.h"
 #include "video_out.h"
 #include "video_out_internal.h"
 
@@ -34,7 +36,7 @@ LIBVO_EXTERN(mga)
 
 #define FBDEV	"/dev/fb0"
 
-static uint32_t config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uint32_t fullscreen, char *title, uint32_t format)
+static int config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uint32_t flags, char *title, uint32_t format)
 {
 
 //	if (f >= 0) mga_uninit();
@@ -60,14 +62,14 @@ static uint32_t config(uint32_t width, uint32_t height, uint32_t d_width, uint32
 		aspect_save_prescale(d_width,d_height);
 		aspect_save_screenres(vo_screenwidth,vo_screenheight);
 	
-		if(fullscreen&0x01) { /* -fs */
+		if(flags&VOFLAG_FULLSCREEN) { /* -fs */
 			aspect(&d_width,&d_height,A_ZOOM);
 			vo_fs = VO_TRUE;
 		} else {
 			aspect(&d_width,&d_height,A_NOZOOM);
 			vo_fs = VO_FALSE;
 		}
-		printf("vo_mga aspect(): resized to %dx%d\n",d_width,d_height);
+		mp_msg(MSGT_VO,MSGL_INFO, MSGTR_LIBVO_MGA_AspectResized,d_width,d_height);
 	}
 
 	vo_dwidth=d_width; vo_dheight=d_height;
@@ -85,7 +87,7 @@ static uint32_t config(uint32_t width, uint32_t height, uint32_t d_width, uint32
 
 static void uninit(void)
 {
-    printf("vo: uninit!\n");
+    mp_msg(MSGT_VO,MSGL_INFO, MSGTR_LIBVO_MGA_Uninit);
     mga_uninit();
 }
 

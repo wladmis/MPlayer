@@ -2,18 +2,18 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <limits.h>
 #include <time.h>
+#include <assert.h>
 
 #if !defined(INFINITY) && defined(HUGE_VAL)
 #define INFINITY HUGE_VAL
 #endif
 
-#include "../config.h"
+#include "config.h"
 
-#ifdef USE_LIBAVCODEC
-
-#include "../mp_msg.h"
-#include "../help_mp.h"
+#include "mp_msg.h"
+#include "help_mp.h"
 
 #include "codec-cfg.h"
 #include "stream.h"
@@ -58,7 +58,7 @@ static int lavc_param_vrate_tolerance = 1000*8;
 static int lavc_param_mb_decision = 0; /* default is realtime encoding */
 static int lavc_param_v4mv = 0;
 static int lavc_param_vme = 4;
-static float lavc_param_vqscale = 0.0;
+static float lavc_param_vqscale = -1;
 static int lavc_param_vqmin = 2;
 static int lavc_param_vqmax = 31;
 static int lavc_param_mb_qmin = 2;
@@ -75,12 +75,12 @@ static float lavc_param_vi_qoffset = 0.0;
 static int lavc_param_vmax_b_frames = 0;
 static int lavc_param_keyint = -1;
 static int lavc_param_vpass = 0;
-static int lavc_param_vrc_strategy = 2;
+static int lavc_param_vrc_strategy = 0;
 static int lavc_param_vb_strategy = 0;
 static int lavc_param_luma_elim_threshold = 0;
 static int lavc_param_chroma_elim_threshold = 0;
 static int lavc_param_packet_size= 0;
-static int lavc_param_strict= 0;
+static int lavc_param_strict= -1;
 static int lavc_param_data_partitioning= 0;
 static int lavc_param_gray=0;
 static float lavc_param_rc_qsquish=1.0;
@@ -93,6 +93,7 @@ static float lavc_param_rc_buffer_aggressivity=1.0;
 static int lavc_param_rc_max_rate=0;
 static int lavc_param_rc_min_rate=0;
 static float lavc_param_rc_initial_cplx=0;
+static float lavc_param_rc_initial_buffer_occupancy=0.9;
 static int lavc_param_mpeg_quant=0;
 static int lavc_param_fdct=0;
 static int lavc_param_idct=0;
@@ -103,6 +104,7 @@ static float lavc_param_dark_masking= 0.0;
 static float lavc_param_temporal_cplx_masking= 0.0;
 static float lavc_param_spatial_cplx_masking= 0.0;
 static float lavc_param_p_masking= 0.0;
+static float lavc_param_border_masking= 0.0;
 static int lavc_param_normalize_aqp= 0;
 static int lavc_param_interlaced_dct= 0;
 static int lavc_param_prediction_method= FF_PRED_LEFT;
@@ -154,11 +156,18 @@ static int lavc_param_closed_gop = 0;
 static int lavc_param_dc_precision = 8;
 static int lavc_param_threads= 1;
 static int lavc_param_turbo = 0;
-
+static int lavc_param_brd_scale = 0;
+static int lavc_param_bidir_refine = 0;
+static int lavc_param_sc_factor = 1;
+static int lavc_param_video_global_header= 0;
+static int lavc_param_mv0_threshold = 256;
+static int lavc_param_refs = 1;
+static int lavc_param_b_sensitivity = 40;
 
 char *lavc_param_acodec = "mp2";
 int lavc_param_atag = 0;
 int lavc_param_abitrate = 224;
+int lavc_param_audio_global_header= 0;
 
 #include "m_option.h"
 
@@ -173,8 +182,8 @@ m_option_t lavcopts_conf[]={
 	{"vhq", &lavc_param_mb_decision, CONF_TYPE_FLAG, 0, 0, 1, NULL},
 	{"mbd", &lavc_param_mb_decision, CONF_TYPE_INT, CONF_RANGE, 0, 9, NULL},
 	{"v4mv", &lavc_param_v4mv, CONF_TYPE_FLAG, 0, 0, 1, NULL},
-	{"vme", &lavc_param_vme, CONF_TYPE_INT, CONF_RANGE, 0, 5, NULL},
-	{"vqscale", &lavc_param_vqscale, CONF_TYPE_FLOAT, CONF_RANGE, 0.01, 255.0, NULL},
+	{"vme", &lavc_param_vme, CONF_TYPE_INT, CONF_RANGE, 0, 8, NULL},
+	{"vqscale", &lavc_param_vqscale, CONF_TYPE_FLOAT, CONF_RANGE, 0.0, 255.0, NULL},
 	{"vqmin", &lavc_param_vqmin, CONF_TYPE_INT, CONF_RANGE, 1, 31, NULL},
 	{"vqmax", &lavc_param_vqmax, CONF_TYPE_INT, CONF_RANGE, 1, 31, NULL},
 	{"mbqmin", &lavc_param_mb_qmin, CONF_TYPE_INT, CONF_RANGE, 1, 31, NULL},
@@ -205,11 +214,12 @@ m_option_t lavcopts_conf[]={
 	{"vqmod_freq", &lavc_param_rc_qmod_freq, CONF_TYPE_INT, 0, 0, 0, NULL},
 	{"vrc_eq", &lavc_param_rc_eq, CONF_TYPE_STRING, 0, 0, 0, NULL},
 	{"vrc_override", &lavc_param_rc_override_string, CONF_TYPE_STRING, 0, 0, 0, NULL},
-	{"vrc_maxrate", &lavc_param_rc_max_rate, CONF_TYPE_INT, CONF_RANGE, 4, 24000000, NULL},
-	{"vrc_minrate", &lavc_param_rc_min_rate, CONF_TYPE_INT, CONF_RANGE, 4, 24000000, NULL},
+	{"vrc_maxrate", &lavc_param_rc_max_rate, CONF_TYPE_INT, CONF_RANGE, 0, 24000000, NULL},
+	{"vrc_minrate", &lavc_param_rc_min_rate, CONF_TYPE_INT, CONF_RANGE, 0, 24000000, NULL},
 	{"vrc_buf_size", &lavc_param_rc_buffer_size, CONF_TYPE_INT, CONF_RANGE, 4, 24000000, NULL},
 	{"vrc_buf_aggressivity", &lavc_param_rc_buffer_aggressivity, CONF_TYPE_FLOAT, CONF_RANGE, 0.0, 99.0, NULL},
 	{"vrc_init_cplx", &lavc_param_rc_initial_cplx, CONF_TYPE_FLOAT, CONF_RANGE, 0.0, 9999999.0, NULL},
+	{"vrc_init_occupancy", &lavc_param_rc_initial_buffer_occupancy, CONF_TYPE_FLOAT, CONF_RANGE, 0.0, 1.0, NULL},
         {"vfdct", &lavc_param_fdct, CONF_TYPE_INT, CONF_RANGE, 0, 10, NULL},
 	{"aspect", &lavc_param_aspect, CONF_TYPE_STRING, 0, 0, 0, NULL},
 	{"autoaspect", &lavc_param_autoaspect, CONF_TYPE_FLAG, 0, 0, 1, NULL},
@@ -297,13 +307,24 @@ m_option_t lavcopts_conf[]={
 #if LIBAVCODEC_BUILD >= 4711
 	{"dc", &lavc_param_dc_precision, CONF_TYPE_INT, CONF_RANGE, 8, 11, NULL},
 #endif
+#if LIBAVCODEC_BUILD >= 4741
+	{"border_mask", &lavc_param_border_masking, CONF_TYPE_FLOAT, CONF_RANGE, 0.0, 1.0, NULL},
+#endif
 	{"inter_threshold", &lavc_param_inter_threshold, CONF_TYPE_INT, CONF_RANGE, -1000000, 1000000, NULL},
-	{"sc_threshold", &lavc_param_sc_threshold, CONF_TYPE_INT, CONF_RANGE, -1000000, 1000000, NULL},
+	{"sc_threshold", &lavc_param_sc_threshold, CONF_TYPE_INT, CONF_RANGE, -1000000000, 1000000000, NULL},
 	{"top", &lavc_param_top, CONF_TYPE_INT, CONF_RANGE, -1, 1, NULL},
         {"qns", &lavc_param_qns, CONF_TYPE_INT, CONF_RANGE, 0, 1000000, NULL},
         {"nssew", &lavc_param_nssew, CONF_TYPE_INT, CONF_RANGE, 0, 1000000, NULL},
 	{"threads", &lavc_param_threads, CONF_TYPE_INT, CONF_RANGE, 1, 8, NULL},
 	{"turbo", &lavc_param_turbo, CONF_TYPE_FLAG, 0, 0, 1, NULL},
+	{"brd_scale", &lavc_param_brd_scale, CONF_TYPE_INT, CONF_RANGE, 0, 10, NULL},
+	{"bidir_refine", &lavc_param_bidir_refine, CONF_TYPE_INT, CONF_RANGE, 0, 4, NULL},
+	{"sc_factor", &lavc_param_sc_factor, CONF_TYPE_INT, CONF_RANGE, 1, INT_MAX, NULL},
+	{"vglobal", &lavc_param_video_global_header, CONF_TYPE_INT, CONF_RANGE, 0, INT_MAX, NULL},
+	{"aglobal", &lavc_param_audio_global_header, CONF_TYPE_INT, CONF_RANGE, 0, INT_MAX, NULL},
+	{"mv0_threshold", &lavc_param_mv0_threshold, CONF_TYPE_INT, CONF_RANGE, 0, INT_MAX, NULL},
+	{"refs", &lavc_param_refs, CONF_TYPE_INT, CONF_RANGE, 1, 16, NULL},
+        {"b_sensitivity", &lavc_param_b_sensitivity, CONF_TYPE_INT, CONF_RANGE, 1, INT_MAX, NULL},
 	{NULL, NULL, 0, 0, 0, 0, NULL}
 };
 #endif
@@ -324,7 +345,7 @@ struct vf_priv_s {
 #define FF_QP2LAMBDA 1
 #endif
 
-static int encode_frame(struct vf_instance_s* vf, AVFrame *pic);
+static int encode_frame(struct vf_instance_s* vf, AVFrame *pic, double pts);
 
 static int config(struct vf_instance_s* vf,
         int width, int height, int d_width, int d_height,
@@ -336,7 +357,7 @@ static int config(struct vf_instance_s* vf,
     mux_v->bih->biHeight=height;
     mux_v->bih->biSizeImage=mux_v->bih->biWidth*mux_v->bih->biHeight*(mux_v->bih->biBitCount/8);
 
-    printf("videocodec: libavcodec (%dx%d fourcc=%x [%.4s])\n",
+    mp_msg(MSGT_MENCODER, MSGL_INFO,"videocodec: libavcodec (%dx%d fourcc=%x [%.4s])\n",
 	mux_v->bih->biWidth, mux_v->bih->biHeight, mux_v->bih->biCompression,
 	    (char *)&mux_v->bih->biCompression);
 
@@ -348,12 +369,19 @@ static int config(struct vf_instance_s* vf,
 	lavc_venc_context->bit_rate = lavc_param_vbitrate*1000;
     else
 	lavc_venc_context->bit_rate = 800000; /* default */
+
+    //mux_v->wf->nAvgBytesPerSec= lavc_venc_context->bit_rate/8;
+
     lavc_venc_context->bit_rate_tolerance= lavc_param_vrate_tolerance*1000;
+#if LIBAVCODEC_BUILD >= 4754
+    lavc_venc_context->time_base= (AVRational){mux_v->h.dwScale, mux_v->h.dwRate};
+#else
 #if LIBAVCODEC_BUILD >= 4662
     lavc_venc_context->frame_rate      = mux_v->h.dwRate;
     lavc_venc_context->frame_rate_base = mux_v->h.dwScale;
 #else
     lavc_venc_context->frame_rate      = mux_v->h.dwRate*FRAME_RATE_BASE/mux_v->h.dwScale;
+#endif
 #endif
     lavc_venc_context->qmin= lavc_param_vqmin;
     lavc_venc_context->qmax= lavc_param_vqmax;
@@ -384,9 +412,17 @@ static int config(struct vf_instance_s* vf,
     lavc_venc_context->rc_qmod_amp= lavc_param_rc_qmod_amp;
     lavc_venc_context->rc_qmod_freq= lavc_param_rc_qmod_freq;
     lavc_venc_context->rc_eq= lavc_param_rc_eq;
+
+    mux_v->max_rate=
     lavc_venc_context->rc_max_rate= lavc_param_rc_max_rate*1000;
     lavc_venc_context->rc_min_rate= lavc_param_rc_min_rate*1000;
+
+    mux_v->vbv_size=
     lavc_venc_context->rc_buffer_size= lavc_param_rc_buffer_size*1000;
+
+    lavc_venc_context->rc_initial_buffer_occupancy=
+            lavc_venc_context->rc_buffer_size *
+            lavc_param_rc_initial_buffer_occupancy;
     lavc_venc_context->rc_buffer_aggressivity= lavc_param_rc_buffer_aggressivity;
     lavc_venc_context->rc_initial_cplx= lavc_param_rc_initial_cplx;
 #if LIBAVCODEC_BUILD >= 4642
@@ -509,6 +545,9 @@ static int config(struct vf_instance_s* vf,
     lavc_venc_context->spatial_cplx_masking= lavc_param_spatial_cplx_masking;
     lavc_venc_context->p_masking= lavc_param_p_masking;
     lavc_venc_context->dark_masking= lavc_param_dark_masking;
+#if LIBAVCODEC_BUILD >= 4741
+        lavc_venc_context->border_masking = lavc_param_border_masking;
+#endif
 
     if (lavc_param_aspect != NULL)
     {
@@ -557,7 +596,7 @@ static int config(struct vf_instance_s* vf,
     lavc_venc_context->flags = 0;
     if (lavc_param_mb_decision)
     {
-	printf("High quality encoding selected (non real time)!\n");
+	mp_msg(MSGT_MENCODER, MSGL_INFO, MSGTR_MPCODECS_HighQualityEncodingSelected);
 #if LIBAVCODEC_BUILD < 4673
         lavc_venc_context->flags = CODEC_FLAG_HQ;
 #else
@@ -606,13 +645,23 @@ static int config(struct vf_instance_s* vf,
     lavc_venc_context->intra_dc_precision = lavc_param_dc_precision - 8;
 #endif
     lavc_venc_context->prediction_method= lavc_param_prediction_method;
+    lavc_venc_context->brd_scale = lavc_param_brd_scale;
+    lavc_venc_context->bidir_refine = lavc_param_bidir_refine;
+    lavc_venc_context->scenechange_factor = lavc_param_sc_factor;
+    if((lavc_param_video_global_header&1)
+       /*|| (video_global_header==0 && (oc->oformat->flags & AVFMT_GLOBALHEADER))*/){
+        lavc_venc_context->flags |= CODEC_FLAG_GLOBAL_HEADER;
+    }
+    if(lavc_param_video_global_header&2){
+        lavc_venc_context->flags2 |= CODEC_FLAG2_LOCAL_HEADER;
+    }
+    lavc_venc_context->mv0_threshold = lavc_param_mv0_threshold;
+    lavc_venc_context->refs = lavc_param_refs;
+    lavc_venc_context->b_sensitivity = lavc_param_b_sensitivity;
+
     switch(lavc_param_format)
     {
 	case IMGFMT_YV12:
-	    // HACK, mjpeg accepts PIX_FMT_YUV420P only with vstrict=-1
-	    if (strcasecmp(lavc_param_vcodec, "mjpeg") == 0)
-	      lavc_venc_context->pix_fmt = PIX_FMT_YUVJ420P;
-	    else
 	    lavc_venc_context->pix_fmt = PIX_FMT_YUV420P;
 	    break;
 	case IMGFMT_422P:
@@ -698,9 +747,9 @@ static int config(struct vf_instance_s* vf,
     lavc_venc_context->me_method = ME_ZERO+lavc_param_vme;
 
     /* fixed qscale :p */
-    if (lavc_param_vqscale)
+    if (lavc_param_vqscale >= 0.0)
     {
-	printf("Using constant qscale = %f (VBR)\n", lavc_param_vqscale);
+	mp_msg(MSGT_MENCODER, MSGL_INFO, MSGTR_MPCODECS_UsingConstantQscale, lavc_param_vqscale);
 	lavc_venc_context->flags |= CODEC_FLAG_QSCALE;
 #if LIBAVCODEC_BUILD >= 4668
         lavc_venc_context->global_quality= 
@@ -728,9 +777,12 @@ static int config(struct vf_instance_s* vf,
     if(lavc_venc_context->bits_per_sample)
         mux_v->bih->biBitCount= lavc_venc_context->bits_per_sample;
     if(lavc_venc_context->extradata_size){
+        mux_v->bih= realloc(mux_v->bih, sizeof(BITMAPINFOHEADER) + lavc_venc_context->extradata_size);
         memcpy(mux_v->bih + 1, lavc_venc_context->extradata, lavc_venc_context->extradata_size);
         mux_v->bih->biSize= sizeof(BITMAPINFOHEADER) + lavc_venc_context->extradata_size;
     }
+    
+    mux_v->decoder_delay = lavc_venc_context->max_b_frames ? 1 : 0;
     
     return 1;
 }
@@ -740,7 +792,7 @@ static int control(struct vf_instance_s* vf, int request, void* data){
     switch(request){
         case VFCTRL_FLUSH_FRAMES:
             if(vf->priv->codec->capabilities & CODEC_CAP_DELAY)
-                while(encode_frame(vf, NULL) > 0);
+                while(encode_frame(vf, NULL, MP_NOPTS_VALUE) > 0);
             return CONTROL_TRUE;
         default:
             return CONTROL_UNKNOWN;
@@ -784,7 +836,7 @@ static double psnr(double d){
     return -10.0*log(d)/log(10);
 }
 
-static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
+static int put_image(struct vf_instance_s* vf, mp_image_t *mpi, double pts){
     AVFrame *pic= vf->priv->pic;
 
     pic->data[0]=mpi->planes[0];
@@ -806,20 +858,53 @@ static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
     }
 #endif
 
-    return (encode_frame(vf, pic) >= 0);
+    return (encode_frame(vf, pic, pts) >= 0);
 }
 
-static int encode_frame(struct vf_instance_s* vf, AVFrame *pic){
+static int encode_frame(struct vf_instance_s* vf, AVFrame *pic, double pts){
     const char pict_type_char[5]= {'?', 'I', 'P', 'B', 'S'};
     int out_size;
+    double dts;
 
+    if(pic){
+#if 0
+        pic->opaque= malloc(sizeof(pts));
+        memcpy(pic->opaque, &pts, sizeof(pts));
+#else
+        if(pts != MP_NOPTS_VALUE)
+            pic->pts= floor(pts / av_q2d(lavc_venc_context->time_base) + 0.5);
+        else
+            pic->pts= MP_NOPTS_VALUE;
+#endif
+    }
 	out_size = avcodec_encode_video(lavc_venc_context, mux_v->buffer, mux_v->buffer_size,
 	    pic);
 
-    if(out_size == 0)
+    if(pts != MP_NOPTS_VALUE) 
+        dts= pts - lavc_venc_context->delay * av_q2d(lavc_venc_context->time_base);
+    else
+        dts= MP_NOPTS_VALUE;
+#if 0
+    pts= lavc_venc_context->coded_frame->opaque ?
+           *(double*)lavc_venc_context->coded_frame->opaque
+         : MP_NOPTS_VALUE;
+#else
+    if(lavc_venc_context->coded_frame->pts != MP_NOPTS_VALUE)
+        pts= lavc_venc_context->coded_frame->pts * av_q2d(lavc_venc_context->time_base);
+    else
+        pts= MP_NOPTS_VALUE;
+    assert(MP_NOPTS_VALUE == AV_NOPTS_VALUE);
+#endif
+//fprintf(stderr, "ve_lavc %f/%f\n", dts, pts);
+    if(out_size == 0) {
+        ++mux_v->encoder_delay;
         return 0;
+    }
            
-    muxer_write_chunk(mux_v,out_size,lavc_venc_context->coded_frame->key_frame?0x10:0);
+    muxer_write_chunk(mux_v,out_size,lavc_venc_context->coded_frame->key_frame?0x10:0, 
+                      dts, pts);
+    free(lavc_venc_context->coded_frame->opaque);
+    lavc_venc_context->coded_frame->opaque= NULL;
         
 #if LIBAVCODEC_BUILD >= 4643
     /* store psnr / pict size / type / qscale */
@@ -892,7 +977,7 @@ static void uninit(struct vf_instance_s* vf){
         double f= lavc_venc_context->width*lavc_venc_context->height*255.0*255.0;
         f*= lavc_venc_context->coded_frame->coded_picture_number;
         
-        printf("PSNR: Y:%2.2f, Cb:%2.2f, Cr:%2.2f, All:%2.2f\n",
+        mp_msg(MSGT_MENCODER, MSGL_INFO, "PSNR: Y:%2.2f, Cb:%2.2f, Cr:%2.2f, All:%2.2f\n",
             psnr(lavc_venc_context->error[0]/f),
             psnr(lavc_venc_context->error[1]*4/f),
             psnr(lavc_venc_context->error[2]*4/f),
@@ -1049,4 +1134,3 @@ vf_info_t ve_info_lavc = {
 };
 
 //===========================================================================//
-#endif

@@ -1,7 +1,7 @@
 #include <stdio.h>
 
 #include "config.h"
-#include "../mp_msg.h"
+#include "mp_msg.h"
 
 //----------------------- mp3 audio frame header parser -----------------------
 
@@ -34,8 +34,9 @@ int mp_mp3_get_lsf(unsigned char* hbuf){
 /*
  * return frame size or -1 (bad frame)
  */
-int mp_get_mp3_header(unsigned char* hbuf,int* chans, int* srate){
-    int stereo,ssize,lsf,framesize,padding,bitrate_index,sampling_frequency;
+int mp_get_mp3_header(unsigned char* hbuf,int* chans, int* srate, int* spf, int* mpa_layer, int* br){
+    int stereo,ssize,lsf,framesize,padding,bitrate_index,sampling_frequency, divisor;
+    int bitrate;
     int layer, mult[3] = { 12000, 144000, 144000 };
     unsigned long newhead = 
       hbuf[0] << 24 |
@@ -99,7 +100,8 @@ int mp_get_mp3_header(unsigned char* hbuf,int* chans, int* srate){
       ssize = (stereo == 1) ? 17 : 32;
     if(!((newhead>>16)&0x1)) ssize += 2; // CRC
 
-    framesize = tabsel_123[lsf][layer-1][bitrate_index] * mult[layer-1];
+    bitrate = tabsel_123[lsf][layer-1][bitrate_index];
+    framesize = bitrate * mult[layer-1];
 
     mp_msg(MSGT_DEMUXER,MSGL_DBG2,"FRAMESIZE: %d, layer: %d, bitrate: %d, mult: %d\n", 
     	framesize, layer, tabsel_123[lsf][layer-1][bitrate_index], mult[layer-1]);
@@ -108,15 +110,30 @@ int mp_get_mp3_header(unsigned char* hbuf,int* chans, int* srate){
 	return -1;
     }
 
-    framesize /= freqs[sampling_frequency]<<lsf;
+    divisor = (layer == 3 ? (freqs[sampling_frequency] << lsf) : freqs[sampling_frequency]); 
+    framesize /= divisor;
     if(layer==1)
       framesize = (framesize+padding)*4;
     else
       framesize += padding;
 
 //    if(framesize<=0 || framesize>MAXFRAMESIZE) return FALSE;
-    if(srate) *srate = freqs[sampling_frequency];
+    if(srate) {
+      *srate = freqs[sampling_frequency];
+      if(spf) {
+        if(layer == 1)
+	  *spf = 384;
+        else if(layer == 2)
+	  *spf = 1152;
+        else if(*srate < 32000)
+          *spf = 576;
+        else
+	  *spf = 1152;
+      }
+    }
+    if(mpa_layer) *mpa_layer = layer;
     if(chans) *chans = stereo;
+    if(br) *br = bitrate;
 
     return framesize;
 }

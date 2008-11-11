@@ -11,20 +11,20 @@
 #include <limits.h>
 
 
-#include "../config.h"
+#include "config.h"
 
-#include "../m_struct.h"
-#include "../m_option.h"
+#include "m_struct.h"
+#include "m_option.h"
 
 #include "img_format.h"
 #include "mp_image.h"
 
 #include "menu.h"
 #include "menu_list.h"
-#include "../input/input.h"
-#include "../osdep/keycodes.h"
+#include "input/input.h"
+#include "osdep/keycodes.h"
 
-#include "../libmpdemux/dvbin.h"
+#include "libmpdemux/dvbin.h"
 
 
 
@@ -39,6 +39,7 @@ struct menu_priv_s {
   char* file;
   int card;
   int level;
+  int auto_close;
   dvb_config_t *config;
 };
 
@@ -49,6 +50,7 @@ struct menu_priv_s {
 static m_option_t cfg_fields[] = {
   MENU_LIST_PRIV_FIELDS,
   { "title", ST_OFF(title), CONF_TYPE_STRING, 0, 0, 0, NULL },
+  { "auto-close", ST_OFF(auto_close), CONF_TYPE_FLAG, 0, 0, 1, NULL },
   { NULL, NULL, NULL, 0,0,0,NULL },
 };
 
@@ -59,6 +61,7 @@ static struct menu_priv_s cfg_dflt = {
   "channels.conf",
   0,
   0,
+  1,
   NULL,
 };
 
@@ -188,6 +191,7 @@ static void read_cmd(menu_t* menu, int cmd)
   char *cmd_name;
   switch(cmd)
   {
+	case MENU_CMD_RIGHT:
 	case MENU_CMD_OK:
 	{
 		elem = mpriv->p.current;
@@ -210,11 +214,16 @@ static void read_cmd(menu_t* menu, int cmd)
 		
 		c = mp_input_parse_cmd(cmd_name);
     	if(c)
-		  mp_input_queue_cmd(c);
+          {
+            if (mpriv->auto_close)
+              mp_input_queue_cmd (mp_input_parse_cmd ("menu hide"));
+            mp_input_queue_cmd(c);
+          }
   	}
   	}
   	break;
 
+	case MENU_CMD_LEFT:
 	case MENU_CMD_CANCEL:
 	{
 		elem = mpriv->p.current;

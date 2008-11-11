@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-2"?>
-<!-- synced with 1.62 -->
+<!-- synced with 1.70 -->
 <chapter id="ports" xreflabel="Ports">
 <title>Porty</title>
 
@@ -59,7 +59,7 @@ Są one dostępne w jego
 </para>
 
 <para>
-RPMy dla Mandrake są dostępne na <ulink url="http://plf.zarb.org/">P.L.F.</ulink>.
+RPMy dla Mandrake/Mandriva są dostępne na <ulink url="http://plf.zarb.org/">P.L.F.</ulink>.
 SuSE zawierał okrojoną wersję <application>MPlayera</application> w dystrybucji.
 Usunęli ją w swoich najnowszych wydaniach. W pełni funkcjonalne
 pakiety możesz pobrać z
@@ -419,11 +419,26 @@ wolna. Używaj SDL.
 <para>Tak, <application>MPlayer</application> działa na Windowsie pod
   <ulink url="http://www.cygwin.com/"><application>Cygwinem</application></ulink> i
   <ulink url="http://www.mingw.org/"><application>MinGW</application></ulink>.
-  Nie ma jeszcze interfejsu GUI, ale wersja dla wiersza poleceń jest już prawie w pełni
-  funkcjonalna. <ulink url="../../tech/patches.txt">Łatki</ulink> są zawsze mile widziane.
-  Powinieneś sprawdzić listę
+  Nie ma jeszcze oficjalnego interfejsu GUI, ale wersja dla wiersza poleceń jest już w pełni
+  funkcjonalna. Powinieneś sprawdzić listę
   <ulink url="http://mplayerhq.hu/mailman/listinfo/mplayer-cygwin/">MPlayer-cygwin</ulink>,
-  aby uzyskać pomoc albo otrzymać najnowsze informacje.</para>
+  aby uzyskać pomoc albo otrzymać najnowsze informacje.
+  Oficjalne paczki z binariami dla Windowsa znajdziesz na
+  <ulink url="http://www.mplayerhq.hu/design7/dload.html">stronie pobierania</ulink>.
+  Pakiety zawierające instalatory i proste nakładki GUI dostępne są z zewnętrznych
+  źródeł, informacje o nich zebraliśmy w sekcji poświęconej Windowsowi na
+  <ulink url="http://www.mplayerhq.hu/design7/projects.html#windows">stronie projektów</ulink>.
+</para>
+
+<para>Jeżeli chcesz uniknąć korzystania z wiersza poleceń, prostym sposobem
+      na jego ominięcie jest umieszczenie skrótu na pulpicie, który będzie
+      zawierał podobny wpis w części odpowiedzialnej za wykonanie
+      komendy:
+      <screen><replaceable>c:\ścieżka\do\</replaceable>mplayer.exe %1</screen>
+      Spowoduje to, że <application>MPlayer</application> będzie odtwarzał
+      film, który zostanie przeciągnięty na jego skrót. Dodaj opcję
+      <option>-fs</option>, aby korzystać z trybu pełnoekranowego.
+</para>
 
 <para>Najlepsze wyniki są osiągane ze sterownikami wyjściowymi video DirectX
   (<option>-vo directx</option>) i rdzennym wyjściem dźwiękowym wave Windows
@@ -432,7 +447,7 @@ wolna. Używaj SDL.
   zakłóceń w dźwięku i obrazie albo wywołać błąd, i zakończyć działanie programu.
   Jeżeli występują zakłócenia obrazu, spróbuj
   wyłączyć sprzętową akcelerację przez opcję <option>-vo directx:noaccel</option>. Ściągnij
-  <ulink url="http://www.mplayerhq.hu/MPlayer/releases/win32-beta/contrib/dx7headers.tgz">pliki
+  <ulink url="http://www.mplayerhq.hu/MPlayer/releases/win32/contrib/dx7headers.tgz">pliki
   nagłówkowe DirectX 7</ulink>, żeby skompilować sterownik do wyjścia video
   DirectX. Co więcej, musisz mieć zainstalowany DirectX 7 lub nowszy,
   aby to wyjście zadziałało.</para>
@@ -440,9 +455,9 @@ wolna. Używaj SDL.
 <para><link linkend="vidix">VIDIX</link> działa teraz również pod Windowsem jako
   <option>-vo winvidix</option>, chociaż jego obsługa jest eksperymentalna i wymaga
   trochę ręcznego przygotowania. Pobierz
-  <ulink url="http://www.mplayerhq.hu/MPlayer/releases/win32-beta/dhahelperwin/dhahelper.sys">dhahelper.sys</ulink>
+  <ulink url="http://www.mplayerhq.hu/MPlayer/releases/win32/dhahelperwin/dhahelper.sys">dhahelper.sys</ulink>
   lub
-  <ulink url="http://www.mplayerhq.hu/MPlayer/releases/win32-beta/dhahelperwin/withmtrr/dhahelper.sys">dhahelper.sys
+  <ulink url="http://www.mplayerhq.hu/MPlayer/releases/win32/dhahelperwin/withmtrr/dhahelper.sys">dhahelper.sys
   (z obsługą MTRR)</ulink>
   i skopiuj go do
   <filename class="directory">libdha/dhahelperwin</filename> w drzewie źródłowym
@@ -474,7 +489,7 @@ wolna. Używaj SDL.
   zapobiegnie jej używaniu. Możesz to na stałe dodać do Twojego pliku konfiguracyjnego.</para>
 
 <para>Dostępne są specjalne zbiory z kodekami przeznaczone dla systemu Windows, znajdziesz je na
-  <ulink url="http://mplayerhq.hu/homepage/design7/codecs.html">stronie kodeków</ulink>.
+  <ulink url="http://www.mplayerhq.hu/design7/codecs.html">stronie kodeków</ulink>.
   Pozwolą Ci one na odtwarzanie formatów, które nie są jeszcze bezpośrednio obsługiwane w
   <application>MPlayerze</application>. Umieść je, gdzieś w swojej ścieżce (w katalogu podanym w
   zmiennej PATH - przyp. tłumacza) lub przekaż opcję
@@ -505,12 +520,6 @@ wolna. Używaj SDL.
   opcją <option>-double</option>. Jeżeli odtwarzanie jest nierówne, spróbuj użyć
   <option>-autosync 100</option>. Jeżeli którakolwiek z tych opcji Ci pomogła,
   może będziesz chciał umieścić ją w swoim pliku konfiguracyjnym.</para>
-
-<para>Sascha Sommer wydaje, od czasu do czasu, oficjalne paczki dla Windowsa,
-  Joey Parrish tworzy nieoficjalne paczki z instalatorem.
-  Poszukaj ich w sekcji Windows
-  <ulink url="http://www.mplayerhq.hu/homepage/design7/projects.html#windows">na stronie
-  naszych projektów</ulink>.</para>
 
 <sect2 id="cygwin">
 <title><application>Cygwin</application></title>
@@ -546,6 +555,9 @@ wolna. Używaj SDL.
   Skonfiguruj ją z opcją <option>--prefix=/mingw</option> i zainstaluj
   przed kompilacją <application>MPlayera</application>.</para>
 
+<para>Pełną instrukcję jak zbudować <application>MPlayera</application>
+  i wszystkie potrzebne biblioteki znajdziesz w
+  <ulink url="http://mplayerhq.hu/MPlayer/releases/win32/contrib/MPlayer-MinGW-Howto.txt">MPlayer MinGW HOWTO</ulink>.</para>
 
 </sect2>
 
@@ -556,24 +568,122 @@ wolna. Używaj SDL.
 "Surowe" źródła <application>MPlayera</application> obsługują
 tylko Mac OS X w wersjach 10.2 i wyższych. Możesz spróbować umożliwić
 obsługę starszych wersji Mac OS oraz przysłać nam łaty!
+<application>MPlayer</application> powinien skompilować się bez problemu
+na systemie Mac OS X 10.2 i wyższym. Zalecanym kompilatorem jest GCC 3.x w wersji
+Apple, jeżeli masz Mac OS X 10.3.9 lub późniejszy i QuickTime 7, możesz
+skorzystać z wyjścia video macosx.
+</para>
+
+<sect2 id="mplayerosx">
+<title>MPlayer OS X</title>
+ 
+<para>
+Możesz pobrać natywne GUI dla <application>MPlayera</application> razem
+z prekompilowanymi binariami <application>MPlayera</application> dla
+Mac OS X ze strony projektu
+<ulink url="http://mplayerosx.sf.net/">MPlayerOSX</ulink>, ale uwaga:
+projekt nie jest już aktywny.
+</para>
+<para>
+Na szczęście, <application>MPlayerOSX</application> został przejęty
+przez członka załogi <application>MPlayera</application>.
+Wersje testowe są dostępne na stronie z
+<ulink url="http://mplayerhq.hu/dload.html">materiałami do
+pobrania</ulink>, a oficjalne wydanie powinno pojawić się już
+niedługo.
+</para>
+<para>
+Aby zbudować <application>MPlayerOSX</application> bezpośrednio
+ze źródeł, potrzebujesz modułu <systemitem>mplayerosx</systemitem>,
+<systemitem>main</systemitem> i kopii modułu CVS
+<systemitem>main</systemitem> o nazwie
+<systemitem>main_noaltivec</systemitem>.
+<systemitem>mplayerosx</systemitem> to graficzna nakładka,
+<systemitem>main</systemitem> to MPlayer, a
+<systemitem>main_noaltivec</systemitem> to MPlayer zbudowany bez obsługi
+AltiVec.
+
+</para>
+<para>
+Aby pobrać moduł z repozytorium CVS wykonaj polecenia:
+<screen>
+cvs -d:pserver:anonymous@mplayerhq.hu:/cvsroot/mplayer login
+cvs -z3 -d:pserver:anonymous@mplayerhq.hu:/cvsroot/mplayer co -P mplayerosx
+</screen>
+</para>
+<para>
+W celu zbudowania <application>MPlayerOSX</application> będziesz musiał
+utowrzyć podobną strukturę katalogów:
+<screen>
+katalog_źródłowy_MPlayera
+   |
+   |--->main           (źródła MPlayera z CVS)
+   |
+   |--->main_noaltivec (źródła MPlayera z CVS skonfigurowane z opcją --disable-altivec)
+   |
+   |--->mplayerosx     (źródła MPlayer OS X z CVS)
+</screen>
+
+
+Najpierw musisz zbudować main i main_noaltivec.
 </para>
 
 <para>
-Zmodyfikowane GCC 3.X Apple jest zalecane do kompilacji
-<application>MPlayera</application>, szczególnie z
-<systemitem class="library">libavcodec</systemitem>, ponieważ
-ich zmodyfikowane GCC 2.95.x nie obsługuje poprawnie składni C99.
+Następnie ustaw globalną zmienną:
+
+<screen>export MACOSX_DEPLOYMENT_TARGET=10.3</screen>
 </para>
 
 <para>
-Możesz pobrać Aqua GUI dla <application>MPlayera</application> razem z
-jego skompilowanymi binariami dla Mac OS X ze strony projektu
-<ulink url="http://mplayerosx.sf.net/">MPlayerOSX</ulink>.
+Potem skonfiguruj:
 </para>
+<para>
+Jeżeli konfigurujesz dla maszyny G4 lub lepszej z obsługą AltiVec,
+postępuj jak poniżej:
+<screen>
+./configure --with-termcaplib=ncurses.5 --disable-gl --disable-x11
+</screen>
+
+Jeżeli konfigurujesz dla maszyny z procesorem G3 bez AltiVec,
+postępuj jak ponieżej:
+<screen>
+./configure --with-termcaplib=ncurses.5 --disable-gl --disable-x11
+--disable-altivec
+</screen>
+Być może będziesz musiał wyedytować plik <filename>config.mak</filename>
+i zmienić wartości <systemitem>-mcpu</systemitem>
+<systemitem>-mtune</systemitem> z <systemitem>-74XX</systemitem> na
+<systemitem>-G3</systemitem>.
+</para>
+<para>
+Następnie wykonaj
+<screen>
+make
+</screen>
+przejdź do katalogu mplayerosx i wpisz
+
+<screen>
+make dist
+</screen>
+Zostanie utworzony skompresowany obraz <systemitem>.dmg</systemitem>
+zawierający gotowy do uruchomienia program.
+</para>
+<para>
+Możes również skorzystać z projektu <application>Xcode</application> 2.1;
+stary projekt dla <application>Xcode</application> 1.x już nie działa.
+ 
+</para>
+</sect2>
 </sect1>
 
 <sect1 id="amiga">
 <title>Amiga/MorphOS (zabawki dla zapaleńców)</title>
+<para>
+Ludzie z <ulink url="www.amigasoft.net">www.amigasoft.net</ulink>
+tworzą aktualne paczki z <application>MPlayerem</application> i
+<application>MEncoderem</application>.
+</para>
+
 <para>
 Nicholas Det at Genesi stworzył potężny port <application>MPlayera
 </application> dla MorphOS. Niestety oparty jest on o serię 0.90.

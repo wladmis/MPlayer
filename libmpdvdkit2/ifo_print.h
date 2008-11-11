@@ -7,7 +7,7 @@
  *
  * Modified for use with MPlayer, changes contained in libdvdread_changes.diff.
  * detailed CVS changelog at http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
- * $Id: ifo_print.h,v 1.3 2005/03/11 02:40:28 diego Exp $
+ * $Id: ifo_print.h 15875 2005-06-30 22:48:26Z aurel $
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -53,6 +53,7 @@ void ifoPrint_VTS_PTT_SRPT(vts_ptt_srpt_t *);
 void ifoPrint_PGC(pgc_t *);
 void ifoPrint_PGCIT(pgcit_t *);
 void ifoPrint_PGCI_UT(pgci_ut_t *);
+void ifoPrint_VTS_TMAPT(vts_tmapt_t *);
 void ifoPrint_C_ADT(c_adt_t *);
 void ifoPrint_VOBU_ADMAP(vobu_admap_t *);
 

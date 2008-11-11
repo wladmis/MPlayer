@@ -1,4 +1,4 @@
-/* 
+/*
  * WAV encoder and decoder
  * Copyright (c) 2001, 2002 Fabrice Bellard.
  *
@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 #include "avformat.h"
 #include "avi.h"
@@ -23,12 +23,16 @@ const CodecTag codec_wav_tags[] = {
     { CODEC_ID_MP2, 0x50 },
     { CODEC_ID_MP3, 0x55 },
     { CODEC_ID_AC3, 0x2000 },
+    { CODEC_ID_DTS, 0x2001 },
     { CODEC_ID_PCM_S16LE, 0x01 },
     { CODEC_ID_PCM_U8, 0x01 }, /* must come after s16le in this list */
+    { CODEC_ID_PCM_S24LE, 0x01 },
+    { CODEC_ID_PCM_S32LE, 0x01 },
     { CODEC_ID_PCM_ALAW, 0x06 },
     { CODEC_ID_PCM_MULAW, 0x07 },
     { CODEC_ID_ADPCM_MS, 0x02 },
     { CODEC_ID_ADPCM_IMA_WAV, 0x11 },
+    { CODEC_ID_ADPCM_YAMAHA, 0x20 },
     { CODEC_ID_ADPCM_G726, 0x45 },
     { CODEC_ID_ADPCM_IMA_DK4, 0x61 },  /* rogue format number */
     { CODEC_ID_ADPCM_IMA_DK3, 0x62 },  /* rogue format number */
@@ -40,10 +44,15 @@ const CodecTag codec_wav_tags[] = {
     { CODEC_ID_SONIC_LS, 0x2048 },
     { CODEC_ID_ADPCM_CT, 0x200 },
     { CODEC_ID_ADPCM_SWF, ('S'<<8)+'F' },
+    { CODEC_ID_TRUESPEECH, 0x22 },
+
+    // for NuppelVideo (nuv.c)
+    { CODEC_ID_PCM_S16LE, MKTAG('R', 'A', 'W', 'A') },
+    { CODEC_ID_MP3, MKTAG('L', 'A', 'M', 'E') },
     { 0, 0 },
 };
 
-#ifdef CONFIG_ENCODERS
+#ifdef CONFIG_MUXERS
 /* WAVEFORMATEX header */
 /* returns the size or -1 on error */
 int put_wav_header(ByteIOContext *pb, AVCodecContext *enc)
@@ -65,12 +74,16 @@ int put_wav_header(ByteIOContext *pb, AVCodecContext *enc)
         bps = 8;
     } else if (enc->codec_id == CODEC_ID_MP2 || enc->codec_id == CODEC_ID_MP3) {
         bps = 0;
-    } else if (enc->codec_id == CODEC_ID_ADPCM_IMA_WAV || enc->codec_id == CODEC_ID_ADPCM_MS || enc->codec_id == CODEC_ID_ADPCM_G726) { //
+    } else if (enc->codec_id == CODEC_ID_ADPCM_IMA_WAV || enc->codec_id == CODEC_ID_ADPCM_MS || enc->codec_id == CODEC_ID_ADPCM_G726 || enc->codec_id == CODEC_ID_ADPCM_YAMAHA) { //
         bps = 4;
+    } else if (enc->codec_id == CODEC_ID_PCM_S24LE) {
+        bps = 24;
+    } else if (enc->codec_id == CODEC_ID_PCM_S32LE) {
+        bps = 32;
     } else {
         bps = 16;
     }
-    
+
     if (enc->codec_id == CODEC_ID_MP2 || enc->codec_id == CODEC_ID_MP3) {
         blkalign = enc->frame_size; //this is wrong, but seems many demuxers dont work if this is set correctly
         //blkalign = 144 * enc->bit_rate/enc->sample_rate;
@@ -81,6 +94,8 @@ int put_wav_header(ByteIOContext *pb, AVCodecContext *enc)
     } else
         blkalign = enc->channels*bps >> 3;
     if (enc->codec_id == CODEC_ID_PCM_U8 ||
+        enc->codec_id == CODEC_ID_PCM_S24LE ||
+        enc->codec_id == CODEC_ID_PCM_S32LE ||
         enc->codec_id == CODEC_ID_PCM_S16LE) {
         bytespersec = enc->sample_rate * blkalign;
     } else {
@@ -126,7 +141,7 @@ int put_wav_header(ByteIOContext *pb, AVCodecContext *enc)
 
     return hdrsize;
 }
-#endif //CONFIG_ENCODERS
+#endif //CONFIG_MUXERS
 
 /* We could be given one of the three possible structures here:
  * WAVEFORMAT, PCMWAVEFORMAT or WAVEFORMATEX. Each structure
@@ -135,7 +150,7 @@ int put_wav_header(ByteIOContext *pb, AVCodecContext *enc)
  * WAVEFORMATEX adds 'WORD  cbSize' and basically makes itself
  * an openended structure.
  */
-void get_wav_header(ByteIOContext *pb, AVCodecContext *codec, int size) 
+void get_wav_header(ByteIOContext *pb, AVCodecContext *codec, int size)
 {
     int id;
 
@@ -151,20 +166,20 @@ void get_wav_header(ByteIOContext *pb, AVCodecContext *codec, int size)
     }else
         codec->bits_per_sample = get_le16(pb);
     codec->codec_id = wav_codec_get_id(id, codec->bits_per_sample);
-    
+
     if (size > 16) {  /* We're obviously dealing with WAVEFORMATEX */
-	codec->extradata_size = get_le16(pb);
-	if (codec->extradata_size > 0) {
-	    if (codec->extradata_size > size - 18)
-	        codec->extradata_size = size - 18;
+        codec->extradata_size = get_le16(pb);
+        if (codec->extradata_size > 0) {
+            if (codec->extradata_size > size - 18)
+                codec->extradata_size = size - 18;
             codec->extradata = av_mallocz(codec->extradata_size + FF_INPUT_BUFFER_PADDING_SIZE);
             get_buffer(pb, codec->extradata, codec->extradata_size);
         } else
-	    codec->extradata_size = 0;
-	
-	/* It is possible for the chunk to contain garbage at the end */
-	if (size - codec->extradata_size - 18 > 0)
-	    url_fskip(pb, size - codec->extradata_size - 18);
+            codec->extradata_size = 0;
+
+        /* It is possible for the chunk to contain garbage at the end */
+        if (size - codec->extradata_size - 18 > 0)
+            url_fskip(pb, size - codec->extradata_size - 18);
     }
 }
 
@@ -178,10 +193,14 @@ int wav_codec_get_id(unsigned int tag, int bps)
     /* handle specific u8 codec */
     if (id == CODEC_ID_PCM_S16LE && bps == 8)
         id = CODEC_ID_PCM_U8;
+    if (id == CODEC_ID_PCM_S16LE && bps == 24)
+        id = CODEC_ID_PCM_S24LE;
+    if (id == CODEC_ID_PCM_S16LE && bps == 32)
+        id = CODEC_ID_PCM_S32LE;
     return id;
 }
 
-#ifdef CONFIG_ENCODERS
+#ifdef CONFIG_MUXERS
 typedef struct {
     offset_t data;
 } WAVContext;
@@ -198,17 +217,17 @@ static int wav_write_header(AVFormatContext *s)
 
     /* format header */
     fmt = start_tag(pb, "fmt ");
-    if (put_wav_header(pb, &s->streams[0]->codec) < 0) {
+    if (put_wav_header(pb, s->streams[0]->codec) < 0) {
         av_free(wav);
         return -1;
     }
     end_tag(pb, fmt);
 
-    av_set_pts_info(s->streams[0], 64, 1, s->streams[0]->codec.sample_rate);
+    av_set_pts_info(s->streams[0], 64, 1, s->streams[0]->codec->sample_rate);
 
     /* data header */
     wav->data = start_tag(pb, "data");
-    
+
     put_flush_packet(pb);
 
     return 0;
@@ -240,7 +259,7 @@ static int wav_write_trailer(AVFormatContext *s)
     }
     return 0;
 }
-#endif //CONFIG_ENCODERS
+#endif //CONFIG_MUXERS
 
 /* return the size of the found tag */
 /* XXX: > 2GB ? */
@@ -295,7 +314,7 @@ static int wav_read_header(AVFormatContext *s,
     tag = get_le32(pb);
     if (tag != MKTAG('W', 'A', 'V', 'E'))
         return -1;
-    
+
     /* parse fmt header */
     size = find_tag(pb, MKTAG('f', 'm', 't', ' '));
     if (size < 0)
@@ -304,10 +323,10 @@ static int wav_read_header(AVFormatContext *s,
     if (!st)
         return AVERROR_NOMEM;
 
-    get_wav_header(pb, &st->codec, size);
+    get_wav_header(pb, st->codec, size);
     st->need_parsing = 1;
 
-    av_set_pts_info(st, 64, 1, st->codec.sample_rate);
+    av_set_pts_info(st, 64, 1, st->codec->sample_rate);
 
     size = find_tag(pb, MKTAG('d', 'a', 't', 'a'));
     if (size < 0)
@@ -328,10 +347,10 @@ static int wav_read_packet(AVFormatContext *s,
     st = s->streams[0];
 
     size = MAX_SIZE;
-    if (st->codec.block_align > 1) {
-        if (size < st->codec.block_align)
-            size = st->codec.block_align;
-        size = (size / st->codec.block_align) * st->codec.block_align;
+    if (st->codec->block_align > 1) {
+        if (size < st->codec->block_align)
+            size = st->codec->block_align;
+        size = (size / st->codec->block_align) * st->codec->block_align;
     }
     if (av_new_packet(pkt, size))
         return AVERROR_IO;
@@ -351,13 +370,13 @@ static int wav_read_close(AVFormatContext *s)
     return 0;
 }
 
-static int wav_read_seek(AVFormatContext *s, 
+static int wav_read_seek(AVFormatContext *s,
                          int stream_index, int64_t timestamp, int flags)
 {
     AVStream *st;
 
     st = s->streams[0];
-    switch(st->codec.codec_id) {
+    switch(st->codec->codec_id) {
     case CODEC_ID_MP2:
     case CODEC_ID_MP3:
     case CODEC_ID_AC3:
@@ -382,7 +401,7 @@ static AVInputFormat wav_iformat = {
     wav_read_seek,
 };
 
-#ifdef CONFIG_ENCODERS
+#ifdef CONFIG_MUXERS
 static AVOutputFormat wav_oformat = {
     "wav",
     "wav format",
@@ -395,13 +414,13 @@ static AVOutputFormat wav_oformat = {
     wav_write_packet,
     wav_write_trailer,
 };
-#endif //CONFIG_ENCODERS
+#endif //CONFIG_MUXERS
 
 int ff_wav_init(void)
 {
     av_register_input_format(&wav_iformat);
-#ifdef CONFIG_ENCODERS
+#ifdef CONFIG_MUXERS
     av_register_output_format(&wav_oformat);
-#endif //CONFIG_ENCODERS
+#endif //CONFIG_MUXERS
     return 0;
 }

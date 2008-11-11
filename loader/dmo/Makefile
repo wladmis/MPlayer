@@ -4,7 +4,12 @@ LIBNAME = libDMO_Filter.a
 include ../../config.mak
 
 # DS_AudioDec.c 
-SRCS	= DMO_AudioDecoder.c DMO_VideoDecoder.c  buffer.c  dmo.c  dmo_guids.c
+SRCS	= DMO_AudioDecoder.c \
+	  DMO_VideoDecoder.c   \
+	  buffer.c   \
+	  dmo.c  \
+	  dmo_guids.c \
+
 OBJS = $(SRCS:.c=.o)
 
 INCLUDE = -I. -I../dshow -I.. $(EXTRA_INC)
@@ -28,8 +33,8 @@ all:	$(LIBNAME)
 clean:
 	rm -f *.o *.a *~
 
-distclean:
-	rm -f Makefile.bak *.o *.a *~ .depend test test.raw
+distclean: clean
+	rm -f .depend test test.raw
 
 dep:    depend
 

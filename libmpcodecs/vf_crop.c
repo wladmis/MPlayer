@@ -2,8 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../config.h"
-#include "../mp_msg.h"
+#include "config.h"
+#include "mp_msg.h"
+#include "help_mp.h"
 
 #include "img_format.h"
 #include "mp_image.h"
@@ -57,7 +58,7 @@ static int config(struct vf_instance_s* vf,
     // check:
     if(vf->priv->crop_w+vf->priv->crop_x>width ||
        vf->priv->crop_h+vf->priv->crop_y>height){
-	printf("crop: bad position/width/height - cropped area is out of the original!\n");
+	mp_msg(MSGT_VFILTER, MSGL_WARN, MSGTR_MPCODECS_CropBadPositionWidthHeight);
 	return 0;
     }
     if(!opt_screen_size_x && !opt_screen_size_y){
@@ -67,10 +68,10 @@ static int config(struct vf_instance_s* vf,
     return vf_next_config(vf,vf->priv->crop_w,vf->priv->crop_h,d_width,d_height,flags,outfmt);
 }
 
-static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
+static int put_image(struct vf_instance_s* vf, mp_image_t *mpi, double pts){
     mp_image_t *dmpi;
     if (mpi->flags&MP_IMGFLAG_DRAW_CALLBACK)
-	return vf_next_put_image(vf,vf->dmpi);
+	return vf_next_put_image(vf,vf->dmpi, pts);
     dmpi=vf_get_image(vf->next,mpi->imgfmt,
 	MP_IMGTYPE_EXPORT, 0,
 	vf->priv->crop_w, vf->priv->crop_h);
@@ -91,7 +92,7 @@ static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
     }
     dmpi->stride[0]=mpi->stride[0];
     dmpi->width=mpi->width;
-    return vf_next_put_image(vf,dmpi);
+    return vf_next_put_image(vf,dmpi, pts);
 }
 
 static void start_slice(struct vf_instance_s* vf, mp_image_t *mpi){

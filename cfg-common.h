@@ -3,8 +3,12 @@
 // ------------------------- common options --------------------
 	{"quiet", &quiet, CONF_TYPE_FLAG, CONF_GLOBAL, 0, 1, NULL},
 	{"noquiet", &quiet, CONF_TYPE_FLAG, CONF_GLOBAL, 1, 0, NULL},
-	{"verbose", &verbose, CONF_TYPE_INT, CONF_RANGE|CONF_GLOBAL, 0, 100, NULL},
+	{"really-quiet", &verbose, CONF_TYPE_FLAG, CONF_GLOBAL, 0, -10, NULL},
 	{"v", cfg_inc_verbose, CONF_TYPE_FUNC, CONF_GLOBAL|CONF_NOSAVE, 0, 0, NULL},
+	{"msglevel", msgl_config, CONF_TYPE_SUBCONFIG, CONF_GLOBAL, 0, 0, NULL},
+#ifdef USE_ICONV
+	{"msgcharset", &mp_msg_charset, CONF_TYPE_STRING, CONF_GLOBAL, 0, 0, NULL},
+#endif
 	{"include", cfg_include, CONF_TYPE_FUNC_PARAM, CONF_NOSAVE, 0, 0, NULL},
 #ifdef WIN32
 	{"priority", &proc_priority, CONF_TYPE_STRING, 0, 0, 0, NULL},
@@ -16,7 +20,7 @@
 	{"cache", &stream_cache_size, CONF_TYPE_INT, CONF_RANGE, 32, 1048576, NULL},
 	{"nocache", &stream_cache_size, CONF_TYPE_FLAG, 0, 1, 0, NULL},
 	{"cache-min", &stream_cache_min_percent, CONF_TYPE_FLOAT, CONF_RANGE, 0, 99, NULL},
-	{"cache-prefill", &stream_cache_prefill_percent, CONF_TYPE_FLOAT, CONF_RANGE, 0, 99, NULL},
+	{"cache-seek-min", &stream_cache_seek_min_percent, CONF_TYPE_FLOAT, CONF_RANGE, 0, 99, NULL},
 #else
 	{"cache", "MPlayer was compiled without cache2 support.\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
 #endif
@@ -67,6 +71,15 @@
 	{"user-agent", "MPlayer was compiled without streaming (network) support.\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
 #endif
 
+#ifdef STREAMING_LIVE555
+        {"sdp", "-sdp is obsolete, use sdp://file instead.\n", CONF_TYPE_PRINT, 0, 0, 0, NULL},
+	// -rtsp-stream-over-tcp option, specifying TCP streaming of RTP/RTCP
+        {"rtsp-stream-over-tcp", &rtspStreamOverTCP, CONF_TYPE_FLAG, 0, 0, 1, NULL},
+        {"rtsp-port", &rtsp_port, CONF_TYPE_INT, CONF_RANGE, -1, 65535, NULL},
+#else
+	{"rtsp-stream-over-tcp", "RTSP support requires the \"LIVE555 Streaming Media\" libraries.\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
+        {"rtsp-port", "RTSP support requires the \"LIVE555 Streaming Media\" libraries.\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
+#endif
 	
 // ------------------------- demuxer options --------------------
 
@@ -77,11 +90,8 @@
 	{"sb", &seek_to_byte, CONF_TYPE_POSITION, CONF_MIN, 0, 0, NULL},
 	{"ss", &seek_to_sec, CONF_TYPE_STRING, CONF_MIN, 0, 0, NULL},
 
-#ifdef USE_EDL
 	{"edl", &edl_filename,  CONF_TYPE_STRING, 0, 0, 0, NULL},
-#else
-	{"edl", "MPlayer was compiled without EDL support.\n", CONF_TYPE_PRINT, 0, 0, 0, NULL},
-#endif
+
 	// AVI specific: force non-interleaved mode
 	{"ni", &force_ni, CONF_TYPE_FLAG, 0, 0, 1, NULL},
 	{"noni", &force_ni, CONF_TYPE_FLAG, 0, 1, 0, NULL},
@@ -113,9 +123,9 @@
 	{ "audiofile", &audio_stream, CONF_TYPE_STRING, 0, 0, 0, NULL },
 	{ "audiofile-cache", &audio_stream_cache, CONF_TYPE_INT, CONF_RANGE, 50, 65536, NULL},
 	{ "subfile", &sub_stream, CONF_TYPE_STRING, 0, 0, 0, NULL },
-	{ "demuxer", &demuxer_type, CONF_TYPE_INT, CONF_RANGE, 1, DEMUXER_TYPE_MAX, NULL },
-	{ "audio-demuxer", &audio_demuxer_type, CONF_TYPE_INT, CONF_RANGE, 1, DEMUXER_TYPE_MAX, NULL },
-	{ "sub-demuxer", &sub_demuxer_type, CONF_TYPE_INT, CONF_RANGE, 1, DEMUXER_TYPE_MAX, NULL },
+	{ "demuxer", &demuxer_name, CONF_TYPE_STRING, 0, 0, 0, NULL },
+	{ "audio-demuxer", &audio_demuxer_name, CONF_TYPE_STRING, 0, 0, 0, NULL },
+	{ "sub-demuxer", &sub_demuxer_name, CONF_TYPE_STRING, 0, 0, 0, NULL },
 	{ "extbased", &extension_parsing, CONF_TYPE_FLAG, 0, 0, 1, NULL },
 	{ "noextbased", &extension_parsing, CONF_TYPE_FLAG, 0, 1, 0, NULL },
 
@@ -137,7 +147,7 @@
 	{"nobps", &pts_from_bps, CONF_TYPE_FLAG, 0, 1, 0, NULL},
 
 	// set A-V sync correction speed (0=disables it):
-	{"mc", &default_max_pts_correction, CONF_TYPE_FLOAT, CONF_RANGE, 0, 10, NULL},
+	{"mc", &default_max_pts_correction, CONF_TYPE_FLOAT, CONF_RANGE, 0, 100, NULL},
 	
 	// force video/audio rate:
 	{"fps", &force_fps, CONF_TYPE_FLOAT, CONF_MIN, 0, 0, NULL},
@@ -145,6 +155,13 @@
 	{"channels", &audio_output_channels, CONF_TYPE_INT, CONF_RANGE, 1, 6, NULL},
 	{"format", &audio_output_format, CONF_TYPE_AFMT, 0, 0, 0, NULL},
 	{"speed", &playback_speed, CONF_TYPE_FLOAT, CONF_RANGE, 0.01, 100.0, NULL},
+
+	// set a-v distance
+	{"delay", &audio_delay, CONF_TYPE_FLOAT, CONF_RANGE, -100.0, 100.0, NULL},
+
+	// ignore header-specified delay (dwStart)
+	{"ignore-start", &ignore_start, CONF_TYPE_FLAG, 0, 0, 1, NULL},
+	{"noignore-start", &ignore_start, CONF_TYPE_FLAG, 0, 1, 0, NULL},
 
 #ifdef USE_LIBA52
         {"a52drc", &a52_drc_level, CONF_TYPE_FLOAT, CONF_RANGE, 0, 1, NULL},
@@ -188,7 +205,7 @@
         {"oldpp", "MPlayer was compiled without the OpenDivX library.\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
 #endif
 	{"npp", "-npp has been removed, use -vf pp and read the fine manual.\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
-#ifdef FF_POSTPROCESS
+#if defined(USE_LIBPOSTPROC) || defined(USE_LIBPOSTPROC_SO)
         {"pphelp", &pp_help, CONF_TYPE_PRINT_INDIRECT, CONF_NOCFG, 0, 0, NULL},
 #endif
 
@@ -294,6 +311,7 @@
 
 extern int quiet;
 extern int verbose;
+extern char *mp_msg_charset;
 
 // codec/filter opts: (defined at libmpcodecs/vd.c)
 extern float screen_size_xy;
@@ -340,15 +358,13 @@ extern off_t ts_probe;
 
 #include "libmpdemux/tv.h"
 
-#ifdef USE_EDL
 extern char* edl_filename;
 extern char* edl_output_filename;
-#endif
 
 #ifdef USE_TV
 m_option_t tvopts_conf[]={
 	{"on", "-tv on is deprecated, use tv:// instead.\n", CONF_TYPE_PRINT, 0, 0, 0, NULL},
-	{"immediatemode", &tv_param_immediate, CONF_TYPE_FLAG, 0, 0, 0, NULL},
+	{"immediatemode", &tv_param_immediate, CONF_TYPE_INT, CONF_RANGE, 0, 1, NULL},
 	{"noaudio", &tv_param_noaudio, CONF_TYPE_FLAG, 0, 0, 1, NULL},
 	{"audiorate", &tv_param_audiorate, CONF_TYPE_INT, 0, 0, 0, NULL},
 	{"driver", &tv_param_driver, CONF_TYPE_STRING, 0, 0, 0, NULL},
@@ -402,6 +418,11 @@ extern char *fribidi_charset;
 extern int flip_hebrew;
 #endif
 
+#ifdef STREAMING_LIVE555
+extern int rtspStreamOverTCP;
+extern int rtsp_port;
+#endif
+
 
 extern int audio_stream_cache;
 
@@ -417,8 +438,8 @@ m_option_t scaler_filter_conf[]={
 	{"cgb", &sws_chr_gblur, CONF_TYPE_FLOAT, 0, 0, 100.0, NULL},
 	{"cvs", &sws_chr_vshift, CONF_TYPE_INT, 0, 0, 0, NULL},
 	{"chs", &sws_chr_hshift, CONF_TYPE_INT, 0, 0, 0, NULL},
-	{"ls", &sws_lum_sharpen, CONF_TYPE_FLOAT, 0, 0, 100.0, NULL},
-	{"cs", &sws_chr_sharpen, CONF_TYPE_FLOAT, 0, 0, 100.0, NULL},
+	{"ls", &sws_lum_sharpen, CONF_TYPE_FLOAT, 0, -100.0, 100.0, NULL},
+	{"cs", &sws_chr_sharpen, CONF_TYPE_FLOAT, 0, -100.0, 100.0, NULL},
 	{NULL, NULL, 0, 0, 0, 0, NULL}
 };
 
@@ -473,6 +494,99 @@ m_option_t audio_filter_conf[]={
 	{NULL, NULL, 0, 0, 0, 0, NULL}
 };
 
+m_option_t msgl_config[]={
+	{ "all", &mp_msg_level_all, CONF_TYPE_INT, CONF_RANGE, -1, 9, NULL},
+
+	{ "global", &mp_msg_levels[MSGT_GLOBAL], CONF_TYPE_INT, CONF_RANGE, -1, 9, NULL },
+	{ "cplayer", &mp_msg_levels[MSGT_CPLAYER], CONF_TYPE_INT, CONF_RANGE, -1, 9, NULL },
+	{ "gplayer", &mp_msg_levels[MSGT_GPLAYER], CONF_TYPE_INT, CONF_RANGE, -1, 9, NULL },
+	{ "vo", &mp_msg_levels[MSGT_VO], CONF_TYPE_INT, CONF_RANGE, -1, 9, NULL },
+	{ "ao", &mp_msg_levels[MSGT_AO], CONF_TYPE_INT, CONF_RANGE, -1, 9, NULL },
+	{ "demuxer", &mp_msg_levels[MSGT_DEMUXER], CONF_TYPE_INT, CONF_RANGE, -1, 9, NULL },
+	{ "ds", &mp_msg_levels[MSGT_DS], CONF_TYPE_INT, CONF_RANGE, -1, 9, NULL },
+	{ "demux", &mp_msg_levels[MSGT_DEMUX], CONF_TYPE_INT, CONF_RANGE, -1, 9, NULL },
+	{ "header", &mp_msg_levels[MSGT_HEADER], CONF_TYPE_INT, CONF_RANGE, -1, 9, NULL },
+	{ "avsync", &mp_msg_levels[MSGT_AVSYNC], CONF_TYPE_INT, CONF_RANGE, -1, 9, NULL },
+	{ "autoq", &mp_msg_levels[MSGT_AUTOQ], CONF_TYPE_INT, CONF_RANGE, -1, 9, NULL },
+	{ "cfgparser", &mp_msg_levels[MSGT_CFGPARSER], CONF_TYPE_INT, CONF_RANGE, -1, 9, NULL },
+	{ "decaudio", &mp_msg_levels[MSGT_DECAUDIO], CONF_TYPE_INT, CONF_RANGE, -1, 9, NULL },
+	{ "decvideo", &mp_msg_levels[MSGT_DECVIDEO], CONF_TYPE_INT, CONF_RANGE, -1, 9, NULL },
+	{ "seek", &mp_msg_levels[MSGT_SEEK], CONF_TYPE_INT, CONF_RANGE, -1, 9, NULL },
+	{ "win32", &mp_msg_levels[MSGT_WIN32], CONF_TYPE_INT, CONF_RANGE, -1, 9, NULL },
+	{ "open", &mp_msg_levels[MSGT_OPEN], CONF_TYPE_INT, CONF_RANGE, -1, 9, NULL },
+	{ "dvd", &mp_msg_levels[MSGT_DVD], CONF_TYPE_INT, CONF_RANGE, -1, 9, NULL },
+	{ "parsees", &mp_msg_levels[MSGT_PARSEES], CONF_TYPE_INT, CONF_RANGE, -1, 9, NULL },
+	{ "lirc", &mp_msg_levels[MSGT_LIRC], CONF_TYPE_INT, CONF_RANGE, -1, 9, NULL },
+	{ "stream", &mp_msg_levels[MSGT_STREAM], CONF_TYPE_INT, CONF_RANGE, -1, 9, NULL },
+	{ "cache", &mp_msg_levels[MSGT_CACHE], CONF_TYPE_INT, CONF_RANGE, -1, 9, NULL },
+	{ "mencoder", &mp_msg_levels[MSGT_MENCODER], CONF_TYPE_INT, CONF_RANGE, -1, 9, NULL },
+	{ "xacodec", &mp_msg_levels[MSGT_XACODEC], CONF_TYPE_INT, CONF_RANGE, -1, 9, NULL },
+	{ "tv", &mp_msg_levels[MSGT_TV], CONF_TYPE_INT, CONF_RANGE, -1, 9, NULL },
+	{ "osdep", &mp_msg_levels[MSGT_OSDEP], CONF_TYPE_INT, CONF_RANGE, -1, 9, NULL },
+	{ "spudec", &mp_msg_levels[MSGT_SPUDEC], CONF_TYPE_INT, CONF_RANGE, -1, 9, NULL },
+	{ "playtree", &mp_msg_levels[MSGT_PLAYTREE], CONF_TYPE_INT, CONF_RANGE, -1, 9, NULL },
+	{ "input", &mp_msg_levels[MSGT_INPUT], CONF_TYPE_INT, CONF_RANGE, -1, 9, NULL },
+	{ "vfilter", &mp_msg_levels[MSGT_VFILTER], CONF_TYPE_INT, CONF_RANGE, -1, 9, NULL },
+	{ "osd", &mp_msg_levels[MSGT_OSD], CONF_TYPE_INT, CONF_RANGE, -1, 9, NULL },
+	{ "network", &mp_msg_levels[MSGT_NETWORK], CONF_TYPE_INT, CONF_RANGE, -1, 9, NULL },
+	{ "cpudetect", &mp_msg_levels[MSGT_CPUDETECT], CONF_TYPE_INT, CONF_RANGE, -1, 9, NULL },
+	{ "codeccfg", &mp_msg_levels[MSGT_CODECCFG], CONF_TYPE_INT, CONF_RANGE, -1, 9, NULL },
+	{ "sws", &mp_msg_levels[MSGT_SWS], CONF_TYPE_INT, CONF_RANGE, -1, 9, NULL },
+	{ "vobsub", &mp_msg_levels[MSGT_VOBSUB], CONF_TYPE_INT, CONF_RANGE, -1, 9, NULL },
+	{ "subreader", &mp_msg_levels[MSGT_SUBREADER], CONF_TYPE_INT, CONF_RANGE, -1, 9, NULL },
+	{ "afilter", &mp_msg_levels[MSGT_AFILTER], CONF_TYPE_INT, CONF_RANGE, -1, 9, NULL },
+	{ "netst", &mp_msg_levels[MSGT_NETST], CONF_TYPE_INT, CONF_RANGE, -1, 9, NULL },
+	{ "muxer", &mp_msg_levels[MSGT_MUXER], CONF_TYPE_INT, CONF_RANGE, -1, 9, NULL },
+	{ "osd-menu", &mp_msg_levels[MSGT_OSD_MENU], CONF_TYPE_INT, CONF_RANGE, -1, 9, NULL },
+	{ "identify", &mp_msg_levels[MSGT_IDENTIFY], CONF_TYPE_INT, CONF_RANGE, -1, 9, NULL },
+        {"help", "Available msg modules:\n"
+        "   global     - common player errors/information\n"
+        "   cplayer    - console player (mplayer.c)\n"
+        "   gplayer    - gui player\n"
+        "   vo         - libvo\n"
+        "   ao         - libao\n"
+        "   demuxer    - demuxer.c (general stuff)\n"
+        "   ds         - demux stream (add/read packet etc)\n"
+        "   demux      - fileformat-specific stuff (demux_*.c)\n"
+        "   header     - fileformat-specific header (*header.c)\n"
+        "   avsync     - mplayer.c timer stuff\n"
+        "   autoq      - mplayer.c auto-quality stuff\n"
+        "   cfgparser  - cfgparser.c\n"
+        "   decaudio   - av decoder\n"
+        "   decvideo\n"
+        "   seek       - seeking code\n"
+        "   win32      - win32 dll stuff\n"
+        "   open       - open.c (stream opening)\n"
+        "   dvd        - open.c (DVD init/read/seek)\n"
+        "   parsees    - parse_es.c (mpeg stream parser)\n"
+        "   lirc       - lirc_mp.c and input lirc driver\n"
+        "   stream     - stream.c\n"
+        "   cache      - cache2.c\n"
+        "   mencoder\n"
+        "   xacodec    - XAnim codecs\n"
+        "   tv         - TV input subsystem\n"
+        "   osdep      - OS Dependant parts (linux/ for now)\n"
+        "   spudec     - spudec.c\n"
+        "   playtree   - Playtree handeling (playtree.c, playtreeparser.c)\n"
+        "   input\n"
+        "   vfilter\n"
+        "   osd\n"
+        "   network\n"
+        "   cpudetect\n"
+        "   codeccfg\n"
+        "   sws\n"
+        "   vobsub\n"
+        "   subreader\n"
+        "   osd-menu   - OSD menu messages\n"
+        "   afilter    - Audio filter messages\n"
+        "   netst      - Netstream\n"
+        "   muxer      - muxer layer\n"
+        "   identify   - identify output\n"
+        "\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
+      	{NULL, NULL, 0, 0, 0, 0, NULL}
+
+};
+
 #ifdef WIN32
 
 extern char * proc_priority;
@@ -483,9 +597,13 @@ struct {
 } priority_presets_defs[] = {
   { "realtime", REALTIME_PRIORITY_CLASS},
   { "high", HIGH_PRIORITY_CLASS},
+#ifdef ABOVE_NORMAL_PRIORITY_CLASS
   { "abovenormal", ABOVE_NORMAL_PRIORITY_CLASS},
+#endif
   { "normal", NORMAL_PRIORITY_CLASS},
+#ifdef BELOW_NORMAL_PRIORITY_CLASS
   { "belownormal", BELOW_NORMAL_PRIORITY_CLASS},
+#endif
   { "idle", IDLE_PRIORITY_CLASS},
   { NULL, NORMAL_PRIORITY_CLASS} /* default */
 };

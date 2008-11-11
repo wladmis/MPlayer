@@ -27,6 +27,7 @@ extern int vo_pts;
 
 static char *ao_outputfilename = NULL;
 static int ao_pcm_waveheader = 1;
+static int fast = 0;
 
 #define WAV_ID_RIFF 0x46464952 /* "RIFF" */
 #define WAV_ID_WAVE 0x45564157 /* "WAVE" */
@@ -83,14 +84,18 @@ static int init(int rate,int channels,int format,int flags){
 	opt_t subopts[] = {
 	  {"waveheader", OPT_ARG_BOOL, &ao_pcm_waveheader, NULL},
 	  {"file",       OPT_ARG_MSTRZ, &ao_outputfilename, NULL},
+	  {"fast",       OPT_ARG_BOOL, &fast, NULL},
 	  {NULL}
 	};
 	// set defaults
 	ao_pcm_waveheader = 1;
-	ao_outputfilename =
-	      strdup((ao_pcm_waveheader)?"audiodump.wav":"audiodump.pcm");
+
 	if (subopt_parse(ao_subdevice, subopts) != 0) {
 	  return 0;
+	}
+	if (!ao_outputfilename){
+	  ao_outputfilename =
+	    strdup(ao_pcm_waveheader?"audiodump.wav":"audiodump.pcm");
 	}
 
 	/* bits is only equal to format if (format == 8) or (format == 16);
@@ -120,6 +125,7 @@ static int init(int rate,int channels,int format,int flags){
 	wavhdr.sample_rate = le2me_32(ao_data.samplerate);
 	wavhdr.bytes_per_second = le2me_32(ao_data.bps);
 	wavhdr.bits = le2me_16(bits);
+	wavhdr.block_align = le2me_16(ao_data.channels * (bits / 8));
 	
 	wavhdr.data_length=le2me_32(0x7ffff000);
 	wavhdr.file_length = wavhdr.data_length + sizeof(wavhdr) - 8;
@@ -158,27 +164,27 @@ static void uninit(int immed){
 }
 
 // stop playing and empty buffers (for seeking/pause)
-static void reset(){
+static void reset(void){
 
 }
 
 // stop playing, keep buffers (for pause)
-static void audio_pause()
+static void audio_pause(void)
 {
     // for now, just call reset();
     reset();
 }
 
 // resume playing, after audio_pause()
-static void audio_resume()
+static void audio_resume(void)
 {
 }
 
 // return: how many bytes can be played without blocking
-static int get_space(){
+static int get_space(void){
 
     if(vo_pts)
-      return ao_data.pts < vo_pts ? ao_data.outburst : 0;
+      return ao_data.pts < vo_pts + fast * 30000 ? ao_data.outburst : 0;
     return ao_data.outburst;
 }
 
@@ -209,7 +215,7 @@ static int play(void* data,int len,int flags){
 }
 
 // return: delay in seconds between first and last sample in buffer
-static float get_delay(){
+static float get_delay(void){
 
     return 0.0;
 }

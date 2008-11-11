@@ -204,7 +204,7 @@ static void set_window(int force_update)
 /* connect to server, create and map window,
  * allocate colors and (shared) memory
  */
-static uint32_t config(uint32_t width, uint32_t height, uint32_t d_width,
+static int config(uint32_t width, uint32_t height, uint32_t d_width,
 		       uint32_t d_height, uint32_t flags, char *title, uint32_t format)
 {
   XVisualInfo vinfo;
@@ -228,10 +228,8 @@ static uint32_t config(uint32_t width, uint32_t height, uint32_t d_width,
 
   aspect_save_orig(width, height);
   aspect_save_prescale(d_width, d_height);
-  aspect_save_screenres(vo_screenwidth, vo_screenheight);
+  update_xinerama_info();
 
-  vo_dx = 0;
-  vo_dy = 0;
   window_width = d_width;
   window_height = d_height;
 
@@ -261,6 +259,8 @@ static uint32_t config(uint32_t width, uint32_t height, uint32_t d_width,
   aspect(&d_width, &d_height, A_NOZOOM);
 
   vo_dx=( vo_screenwidth - d_width ) / 2; vo_dy=( vo_screenheight - d_height ) / 2;    
+  vo_dx += xinerama_x;
+  vo_dy += xinerama_y;
   vo_dwidth=d_width; vo_dheight=d_height;
 
 #ifdef HAVE_NEW_GUI
@@ -270,7 +270,7 @@ static uint32_t config(uint32_t width, uint32_t height, uint32_t d_width,
 #endif
 
 #ifdef X11_FULLSCREEN
-      if ( ( flags&1 )||(flags & 0x04) ) aspect(&d_width, &d_height, A_ZOOM);
+      if ( ( flags&VOFLAG_FULLSCREEN )||(flags & VOFLAG_SWSCALE) ) aspect(&d_width, &d_height, A_ZOOM);
 #endif
       dwidth = d_width;
       dheight = d_height;
@@ -300,6 +300,7 @@ static uint32_t config(uint32_t width, uint32_t height, uint32_t d_width,
 	      XUnmapWindow(mDisplay, vo_window);
 	      XChangeWindowAttributes(mDisplay, vo_window, xswamask, &xswa);
 	      vo_x11_selectinput_witherr( mDisplay,vo_window,StructureNotifyMask | KeyPressMask | PropertyChangeMask | PointerMotionMask | ButtonPressMask | ButtonReleaseMask | ExposureMask );
+	      XMapWindow(mDisplay, vo_window);
 	    } else XSelectInput( mDisplay,vo_window,ExposureMask );
 	}
       else
@@ -317,12 +318,9 @@ static uint32_t config(uint32_t width, uint32_t height, uint32_t d_width,
 	      XStoreName(mDisplay, vo_window, title);
 	      XMapWindow(mDisplay, vo_window);
     
-	      if ( flags&1 ) vo_x11_fullscreen();
+	      if ( flags&VOFLAG_FULLSCREEN ) vo_x11_fullscreen();
     
-#ifdef HAVE_XINERAMA
-	      vo_x11_xinerama_move(mDisplay, vo_window);
-#endif
-	    } else if ( !(flags&1) ) XMoveResizeWindow( mDisplay,vo_window,vo_dx,vo_dy,vo_dwidth,vo_dheight );
+	    } else if ( !(flags&VOFLAG_FULLSCREEN) ) XMoveResizeWindow( mDisplay,vo_window,vo_dx,vo_dy,vo_dwidth,vo_dheight );
 	}
 	 
       if ( vo_gc != None ) XFreeGC( mDisplay,vo_gc );
@@ -331,7 +329,7 @@ static uint32_t config(uint32_t width, uint32_t height, uint32_t d_width,
     }
 #endif
 
-  if ( ( !WinID )&&( flags&1 ) ) { vo_dx=0; vo_dy=0; vo_dwidth=vo_screenwidth; vo_dheight=vo_screenheight; vo_fs=1; }
+  if ( ( !WinID )&&( flags&VOFLAG_FULLSCREEN ) ) { vo_dx=0; vo_dy=0; vo_dwidth=vo_screenwidth; vo_dheight=vo_screenheight; vo_fs=1; }
 
   if(sub_vo->config(image_width,image_height,vo_dwidth,vo_dheight,
 		    flags | VOFLAG_XOVERLAY_SUB_VO,NULL,format)) {
@@ -376,7 +374,7 @@ static void flip_page(void)
   mp_msg(MSGT_VO, MSGL_FATAL, "xover error: didn't used sub vo flip_page!\n");
 }
 
-static uint32_t draw_slice(uint8_t *src[], int stride[],
+static int draw_slice(uint8_t *src[], int stride[],
 			   int w, int h, int x, int y)
 {
   UNUSED(src);
@@ -389,7 +387,7 @@ static uint32_t draw_slice(uint8_t *src[], int stride[],
   return 1;
 }
 
-static uint32_t draw_frame(uint8_t *src[])
+static int draw_frame(uint8_t *src[])
 {
   UNUSED(src);
   mp_msg(MSGT_VO, MSGL_FATAL, "xover error: didn't used sub vo draw_frame!\n");
@@ -409,7 +407,7 @@ static void uninit(void)
   video_out_xover.draw_osd  = draw_osd;
 }
 
-static uint32_t preinit(const char *arg)
+static int preinit(const char *arg)
 {
   int i;
 
@@ -446,7 +444,7 @@ static uint32_t preinit(const char *arg)
   return 0;
 }
 
-static uint32_t control(uint32_t request, void *data, ...)
+static int control(uint32_t request, void *data, ...)
 {
   if(!sub_vo) return VO_ERROR;
   switch (request) {

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-2"?>
-<!-- synced to 1.11 -->
+<!-- synced with r18600 -->
 <appendix id="bugreports">
 <title>Hogyan jelentsd a hibákat</title>
 <para>
@@ -12,6 +12,21 @@ Tehát miközben a visszajelzések kritikus és nagyon megbecsült az
 hogy <emphasis role="bold">minden</emphasis> általunk kért információt meg
 kell adnod és követned kell az ebben a dokumentumban leírt lépéseket.
 </para>
+<sect1 id="bugreports_security">
+<title>Biztonsági hibák jelentése</title>
+<para>
+Ha egy kihasználható hibát találsz és a helyesen akarsz cselekedni,
+vagyis előbb a mi tudomásunkra akarod hozni, mielőtt publikálnád,
+szívesen vesszük a biztonsági figyelmeztetésedet a
+<ulink url="mailto:&#115;&#101;&#99;&#117;&#114;&#105;&#116;&#121;&#64;&#109;&#112;&#108;&#97;&#121;&#101;&#114;&#104;&#113;&#46;&#104;&#117;">&#115;&#101;&#99;&#117;&#114;&#105;&#116;&#121;&#64;&#109;&#112;&#108;&#97;&#121;&#101;&#114;&#104;&#113;&#46;&#104;&#117;</ulink>
+címen.
+Kérjük írd bele a tárgy mezőbe a [SECURITY] vagy [ADVISORY] szót.
+Figyelj rá, hogy a jelentésed a hiba teljes és részletes analízisét tartalmazza.
+Nagyon hálásak leszünk, ha javítást is küldesz.
+Kérjük ne késlekedj a jelentéseddel egy proof-of-concept exploit írása
+miatt, azt később is elküldheted egy másik levélben.
+</para>
+</sect1>
 <sect1 id="bugreports_fix">
 <title>Hogyan javíts hibákat</title>
 <para>
@@ -22,17 +37,90 @@ Az <ulink url="http://mplayerhq.hu/mailman/listinfo/mplayer-dev-eng">MPlayer-dev
 levelezési listán lévő emberkék segítenek neked, ha kérdésed van.
 </para>
 </sect1>
+<sect1 id="bugreports_regression_test">
+<title>Hogyan tesztelj a Subversion segítségével</title>
+<para>
+Egy néha előforduló probléma, hogy "régen még működött, de most már nem...".
+Következzék hát egy lépésenkénti leírás, mely segít a probléma
+megtalálásában. Ez <emphasis role="bold">nem</emphasis> az átlagos
+felhasználóknak szól.
+</para>
+<para>
+Először is, be kell szerezned az MPlayer forrás fáját a Subversionből.
+Az utasításokat megtalálod
+<ulink url="http://www.mplayerhq.hu/dload.html">ennek az oldalnak</ulink>
+az alján.
+</para>
+<para>
+Ezután lesz az mplayer/ könyvtárban a Subversion fáról egy pillanatképed,
+a kliens oldalon. Ezután frissítsd ezt a kívánt dátumúra:
+<screen>
+cd mplayer/
+svn update -r {"2004-08-23"}
+</screen>
+A dátum formátum YYYY-MM-DD HH:MM:SS.
+Ezen dátum formátum használata biztosítja, hogy benne legyen minden olyan
+javítás, ami az adott dátumig commit-olva lett és bekerült az
+<ulink url="http://mplayerhq.hu/pipermail/mplayer-cvslog/">MPlayer-cvslog archívumába</ulink>.
+</para>
+<para>
+Majd folytasd, mint egy normális frissítést:
+<screen>
+./configure
+make
+</screen>
+</para>
+<para>
+Ha olyan olvassa ezt, aki nem programozó, annak gyorsabb megkeresni a
+probléma forrását bináris keresés használatával &mdash; ekkor
+a hiba helyét a keresési intervallum ismételt felezéseivel határozza
+meg.
+Például a probléma előfordult 2003 közepén, akkor kérdezd meg, hogy
+"Már ott volt a hiba?".
+Ha igen, akkor menj vissza április elsejére; ha nem, menj október elsejére,
+és így tovább.
+</para>
+<para>
+Ha nagyon sok hely van a merevlemezeden (egy teljes fordítás jelenleg 100 MB
+és 300-350 MB körül van a hibakereső szimbólumokkal), másold át a
+legrégebbi tudvalevőleg működő verziót, mielőtt frissítenél; ezzel időt
+spórolsz, ha vissza kell lépned.
+(Általában le kell futtatni a 'make distclean'-t egy régi verzió újrafordítása
+előtt, így ha nem készítesz mentést az eredeti forrás fádról, újra kell fordítanod
+mindent, ha visszajössz a jelenbe.)
+</para>
+<para>
+Ha megvan a nap, amikor a probléma megjelent, folytasd a keresést az
+mplayer-cvslog archívum segítségével (dátum szerint rendezve) és egy sokkal
+precízebb svn update-tel, melybe órát, percet és másodpercet is írsz:
+<screen>
+svn update -r {"2004-08-23 15:17:25"}
+</screen>
+Így könnyen megtalálod azt a javítást, ami okozta.
+</para>
+<para>
+Ha megvan a javítás, ami a problémát okozta, majdnem győztél is;
+jelentsd az
+<ulink url="http://bugzilla.mplayerhq.hu/">MPlayer Bugzilla</ulink>-n vagy
+iratkozz fel az
+<ulink url="http://mplayerhq.hu/mailman/listinfo/mplayer-users">MPlayer-users</ulink>
+listára és küldd el oda.
+Valószínűleg a szerző jelentkezni fog javítási ötlettel.
+Addig azonban a javításra is gyanakodva tekint, amíg nem tiszta, hogy hol
+is van a hiba :-).
+</para>
+</sect1>
 <sect1 id="bugreports_report">
 <title>Hogyan jelentsd a hibákat</title>
 <para>
 Mindenek előtt kérlek, hogy mindig próbáld ki az <application>MPlayer</application>
-legújabb CVS verzióját, hátha az általad felfedezett hibát már kijavították
+legújabb Subversion verzióját, hátha az általad felfedezett hibát már kijavították
 benne. A fejlesztés borzasztó gyorsan halad, a legtöbb, hivatalos kiadásban
 meglévő problémát napokon vagy akár órákon belül jelentik, így
-<emphasis role="bold">csak a CVS-ből</emphasis> küldj hibajelentést. Ebbe
+<emphasis role="bold">csak a Subversionből</emphasis> küldj hibajelentést. Ebbe
 beleértendőek az <application>MPlayer</application> bináris csomagjai is. A
 CVS utasításokat megtalálod
-<ulink url="http://www.mplayerhq.hu/homepage/dload.html">ennek az oldalnak</ulink>
+<ulink url="http://www.mplayerhq.hu/dload.html">ennek az oldalnak</ulink>
 az alján vagy a README fájlban. Ha ez sem segít, olvasd el az
 <link linkend="bugs">ismert hibák</link> listáját és a dokumentáció többi részét.
 Ha problémád még nem ismert vagy nem oldódott meg a leírásunk által, akkor kérjük
@@ -106,7 +194,7 @@ a választ.
 <para>
 A hibajelentésedhez csatolnod kell a log-ot, konfigurációs vagy minta fájlokat.
 Ha ezek közül valamelyik nagy, jobb ha feltöltöd az
-<ulink url="ftp://mplayerhq.hu/MPlayer/incoming/">FTP szerverünkre</ulink> tömörített
+<ulink url="ftp://ftp.mplayerhq.hu/MPlayer/incoming/">FTP szerverünkre</ulink> tömörített
 formátumban (gzip és bzip2 a javasolt) és csak az elérési utat és a fájl nevet írod
 bele a hiba jelentésedbe. A levelezési listáinkon az üzenet mérete maximum 80k lehet,
 ha ennél nagyobb fájlod van, tömörítened kell, vagy feltöltened.
@@ -222,7 +310,7 @@ fájlt a hibajelentésedhez.
 </para>
 </sect2>
 
-<sect2 id="bugreports_conpilation">
+<sect2 id="bugreports_compilation">
 <title>Fordítási problémák</title>
 <para>
 Kérlek csatold a következő fájlokat:
@@ -251,7 +339,7 @@ diagnosztizálják a problémát. A kimenetet átirányíthatod fájlba így:
 
 <para>
 Ha a probléma egy vagy több fájl esetén specifikus, kérlek töltsd fel ide:
-<ulink url="ftp://mplayerhq.hu/MPlayer/incoming/"/>
+<ulink url="ftp://ftp.mplayerhq.hu/MPlayer/incoming/"/>
 </para>
 
 <para>

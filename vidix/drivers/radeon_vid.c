@@ -888,6 +888,7 @@ static unsigned short ati_card_ids[] =
  DEVICE_ATI_RADEON_R250_LE,
  DEVICE_ATI_RADEON_R250_LF,
  DEVICE_ATI_RADEON_R250_LG,
+ DEVICE_ATI_RV370_5B60_RADEON,
  DEVICE_ATI_RV250_5C61_RADEON,
  DEVICE_ATI_RV250_5C63_RADEON,
  DEVICE_ATI_RV280_RADEON_9200,
@@ -904,6 +905,7 @@ static unsigned short ati_card_ids[] =
  DEVICE_ATI_RADEON_R300_AF,
  DEVICE_ATI_RADEON_RV350_AP,
  DEVICE_ATI_RADEON_RV350_AR,
+ DEVICE_ATI_RADEON_RV350_BK,
  DEVICE_ATI_RADEON_R350_AH,
  DEVICE_ATI_RADEON_R350_AI,
  DEVICE_ATI_RADEON_R350_NH,
@@ -948,7 +950,7 @@ vidix_capability_t def_cap =
 };
 
 #ifdef HAVE_X11
-void probe_fireGL_driver() {
+void probe_fireGL_driver(void) {
   Display *dp = XOpenDisplay ((void*)0);
   int n = 0;
   char **extlist;
@@ -1090,8 +1092,10 @@ int vixProbe( int verbose,int force )
               break;
 
             /* Radeon 9600/9800 */
+            case DEVICE_ATI_RV370_5B60_RADEON:
             case DEVICE_ATI_RADEON_RV350_AP:
             case DEVICE_ATI_RADEON_RV350_AR:
+            case DEVICE_ATI_RADEON_RV350_BK:
             case DEVICE_ATI_RADEON_R350_NH:
             case DEVICE_ATI_RADEON_R350_AH:
             case DEVICE_ATI_RADEON_R350_AI:

@@ -11,6 +11,8 @@
   <year>2002</year>
   <year>2003</year>
   <year>2004</year>
+  <year>2005</year>
+  <year>2006</year>
   <holder>комманда MPlayer[MPlayer team]</holder>
 </copyright>
 <!--
@@ -179,15 +181,20 @@ Public License Version 2.
 </chapter>
 
 
-&features.xml;
 &usage.xml;
-&faq.xml;
 &cd-dvd.xml;
+&faq.xml;
+
+&features.xml;
+
+&video.xml;
+&audio.xml;
+
 &ports.xml;
 &mencoder.xml;
+&encoding-guide.xml;
 &mail-lists.xml;
 &bugreports.xml;
 &bugs.xml;
 &skin.xml;
 &users-vs-dev.xml;
-&patches.xml;

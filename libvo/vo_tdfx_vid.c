@@ -36,6 +36,7 @@
 #include "video_out_internal.h"
 #include "aspect.h"
 #include "mp_msg.h"
+#include "help_mp.h"
 
 #include "fastmemcpy.h"
 #include "drivers/tdfx_vid.h"
@@ -88,14 +89,14 @@ static void clear_screen(void) {
   mov.dst = front_buffer;
   mov.dst_stride = tdfx_cfg.screen_stride;
 
-  printf("Move %d(%d) x %d => %d \n", mov.width,mov.src_stride,mov.height,mov.dst_stride);
+  mp_msg(MSGT_VO,MSGL_INFO, MSGTR_LIBVO_TDFXVID_Move, mov.width,mov.src_stride,mov.height,mov.dst_stride);
 
   if(ioctl(tdfx_fd,TDFX_VID_AGP_MOVE,&mov))
-    printf("tdfx_vid: AGP move failed to clear the screen\n");
+    mp_msg(MSGT_VO,MSGL_WARN, MSGTR_LIBVO_TDFXVID_AGPMoveFailedToClearTheScreen);
   
 }
 
-static uint32_t draw_slice(uint8_t *image[], int stride[], int w,int h,int x,int y)
+static int draw_slice(uint8_t *image[], int stride[], int w,int h,int x,int y)
 {
   uint8_t* ptr[3];
 
@@ -176,7 +177,7 @@ flip_page(void)
       blit.dst_h = src_height;
       blit.dst_format = IMGFMT_BGR16;
       if(ioctl(tdfx_fd,TDFX_VID_BLIT,&blit))
-	printf("tdfx_vid: Blit failed\n");
+	mp_msg(MSGT_VO,MSGL_WARN, MSGTR_LIBVO_TDFXVID_BlitFailed);
     }
     return;
   }
@@ -198,23 +199,23 @@ flip_page(void)
   blit.dst_format = dst_fmt;
 
   if(ioctl(tdfx_fd,TDFX_VID_BLIT,&blit))
-    printf("tdfx_vid: Blit failed\n");
+    mp_msg(MSGT_VO,MSGL_WARN, MSGTR_LIBVO_TDFXVID_BlitFailed);
 }
 
-static uint32_t
+static int
 draw_frame(uint8_t *src[])
 {
   int stride[] = { src_stride, 0, 0};
   return draw_slice(src,stride,src_width, src_height,0,0);
 }
 
-static uint32_t
+static int
 query_format(uint32_t format)
 {
   switch(format) {
   case IMGFMT_BGR8:
     if(tdfx_cfg.screen_format == TDFX_VID_FORMAT_BGR8)
-      return 3 | VFCAP_HWSCALE_UP | VFCAP_HWSCALE_DOWN | VFCAP_ACCEPT_STRIDE;
+      return VFCAP_CSP_SUPPORTED | VFCAP_CSP_SUPPORTED_BY_HW | VFCAP_HWSCALE_UP | VFCAP_HWSCALE_DOWN | VFCAP_ACCEPT_STRIDE;
     return 0;
   case IMGFMT_YUY2:
   case IMGFMT_UYVY:
@@ -226,19 +227,19 @@ query_format(uint32_t format)
   case IMGFMT_I420:
     if(tdfx_cfg.screen_format == TDFX_VID_FORMAT_BGR8)
       return 0;
-    return 3 | VFCAP_HWSCALE_UP | VFCAP_HWSCALE_DOWN | VFCAP_ACCEPT_STRIDE;
+    return VFCAP_CSP_SUPPORTED | VFCAP_CSP_SUPPORTED_BY_HW | VFCAP_HWSCALE_UP | VFCAP_HWSCALE_DOWN | VFCAP_ACCEPT_STRIDE;
   }
   return 0;
 }
 
-static uint32_t
-config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uint32_t fullscreen, char *title, uint32_t format)
+static int
+config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uint32_t flags, char *title, uint32_t format)
 {
 
   if(tdfx_fd < 0)
     return 1;
   // When we are run as sub vo we must follow the size gaven to us
-  if(!(fullscreen & VOFLAG_XOVERLAY_SUB_VO)) {
+  if(!(flags & VOFLAG_XOVERLAY_SUB_VO)) {
     if(!vo_screenwidth)
       vo_screenwidth = tdfx_cfg.screen_width;
     if(!vo_screenheight)
@@ -248,7 +249,7 @@ config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uin
     aspect_save_prescale(d_width,d_height);
     aspect_save_screenres(vo_screenwidth,vo_screenheight);
     
-    if(fullscreen&0x01) { /* -fs */
+    if(flags&VOFLAG_FULLSCREEN) { /* -fs */
       aspect(&d_width,&d_height,A_ZOOM);
       vo_fs = VO_TRUE;
     } else {
@@ -266,7 +267,7 @@ config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uin
   case IMGFMT_BGR24:
   case IMGFMT_BGR32:
     if(use_overlay)
-      printf("tdfx_vid: Non-native overlay format need conversion\n");
+      mp_msg(MSGT_VO,MSGL_INFO, MSGTR_LIBVO_TDFXVID_NonNativeOverlayFormatNeedConversion);
   case IMGFMT_BGR15:
   case IMGFMT_BGR16:
     src_bpp = ((format & 0x3F)+7)/8; 
@@ -282,7 +283,7 @@ config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uin
     src_bpp = 2;
     break;
   default:
-    printf("Unsupported input format 0x%x\n",format);
+    mp_msg(MSGT_VO,MSGL_WARN, MSGTR_LIBVO_TDFXVID_UnsupportedInputFormat,format);
     return 1;
   }
 
@@ -338,28 +339,28 @@ config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uin
     ov.use_colorkey = 0;
 
     if(ioctl(tdfx_fd,TDFX_VID_SET_OVERLAY,&ov)) {
-      printf("tdfxvid: Overlay setup failed\n");
+      mp_msg(MSGT_VO,MSGL_WARN, MSGTR_LIBVO_TDFXVID_OverlaySetupFailed);
       use_overlay = 0;
       break;
     }
     tdfx_ov = ov;
     if(use_overlay == 1) {
       if(ioctl(tdfx_fd,TDFX_VID_OVERLAY_ON)) {
-	printf("tdfx_vid: Overlay on failed\n");
+	mp_msg(MSGT_VO,MSGL_WARN, MSGTR_LIBVO_TDFXVID_OverlayOnFailed);
 	use_overlay = 0;
 	break;
       }
       use_overlay++;
     }
     
-    printf("tdfx_vid: Overlay ready : %d(%d) x %d @ %d => %d(%d) x %d @ %d\n",
+    mp_msg(MSGT_VO,MSGL_INFO, MSGTR_LIBVO_TDFXVID_OverlayReady,
 	   src_width,src_stride,src_height,src_bpp,
 	   dst_width,dst_stride,dst_height,dst_bpp);
     break;
   }
 
   if(!use_overlay)
-    printf("tdfx_vid : Texture blit ready %d(%d) x %d @ %d => %d(%d) x %d @ %d\n",
+    mp_msg(MSGT_VO,MSGL_INFO, MSGTR_LIBVO_TDFXVID_TextureBlitReady,
 	   src_width,src_stride,src_height,src_bpp,
 	   dst_width,dst_stride,dst_height,dst_bpp);
   
@@ -371,7 +372,7 @@ uninit(void)
 {
   if(use_overlay == 2) {
     if(ioctl(tdfx_fd,TDFX_VID_OVERLAY_OFF))
-      printf("tdfx_vid: Overlay off failed\n");
+      mp_msg(MSGT_VO,MSGL_WARN, MSGTR_LIBVO_TDFXVID_OverlayOffFailed);
     use_overlay--;
   }
   close(tdfx_fd);
@@ -383,22 +384,22 @@ static void check_events(void)
 {
 }
 
-static uint32_t preinit(const char *arg)
+static int preinit(const char *arg)
 {
  
   tdfx_fd = open(arg ? arg : "/dev/tdfx_vid", O_RDWR);
   if(tdfx_fd < 0) {
-    printf("tdfx_vid: Can't open %s: %s\n",arg ? arg : "/dev/tdfx_vid",
+    mp_msg(MSGT_VO,MSGL_WARN, MSGTR_LIBVO_TDFXVID_CantOpen,arg ? arg : "/dev/tdfx_vid",
 	   strerror(errno));
     return 1;
   }
 
   if(ioctl(tdfx_fd,TDFX_VID_GET_CONFIG,&tdfx_cfg)) {
-    printf("tdfx_vid: Can't get current cfg: %s\n",strerror(errno));
+    mp_msg(MSGT_VO,MSGL_WARN, MSGTR_LIBVO_TDFXVID_CantGetCurrentCfg,strerror(errno));
     return 1;
   }
 
-  printf("tdfx_vid version %d\n"
+  mp_msg(MSGT_VO,MSGL_INFO, "tdfx_vid version %d\n"
 	 "  Ram: %d\n"
 	 "  Screen: %d x %d\n"
 	 "  Format: %c%c%c%d\n",
@@ -413,7 +414,7 @@ static uint32_t preinit(const char *arg)
 		  tdfx_fd, 0);
 
   if(agp_mem == MAP_FAILED) {
-    printf("tdfx_vid: Memmap failed !!!!!\n");
+    mp_msg(MSGT_VO,MSGL_WARN, MSGTR_LIBVO_TDFXVID_MemmapFailed);
     return 1;
   }
   
@@ -465,7 +466,7 @@ static uint32_t get_image(mp_image_t *mpi) {
     mpi->stride[2] = mpi->chroma_width;
     break;
   default:
-    printf("Get image todo\n");
+    mp_msg(MSGT_VO,MSGL_WARN, MSGTR_LIBVO_TDFXVID_GetImageTodo);
     return VO_FALSE;
   }
   mpi->flags |= MP_IMGFLAG_DIRECT;
@@ -532,7 +533,7 @@ static uint32_t draw_image(mp_image_t *mpi){
     mov.dst_stride = src_stride;
 	 
     if(ioctl(tdfx_fd,TDFX_VID_AGP_MOVE,&mov))
-      printf("tdfx_vid: AGP move failed\n");
+      mp_msg(MSGT_VO,MSGL_WARN, MSGTR_LIBVO_TDFXVID_AgpMoveFailed);
     break;
 
   case IMGFMT_YV12:
@@ -561,7 +562,7 @@ static uint32_t draw_image(mp_image_t *mpi){
     yuv.base = back_buffer;
     yuv.stride = src_stride;
     if(ioctl(tdfx_fd,TDFX_VID_SET_YUV,&yuv)) {
-      printf("tdfx_vid: Set yuv failed\n");
+      mp_msg(MSGT_VO,MSGL_WARN, MSGTR_LIBVO_TDFXVID_SetYuvFailed);
       break;
     }
     
@@ -577,7 +578,7 @@ static uint32_t draw_image(mp_image_t *mpi){
     mov.dst_stride = TDFX_VID_YUV_STRIDE;
 
     if(ioctl(tdfx_fd,TDFX_VID_AGP_MOVE,&mov)) {
-      printf("tdfx_vid: AGP move failed on Y plane\n");
+      mp_msg(MSGT_VO,MSGL_WARN, MSGTR_LIBVO_TDFXVID_AgpMoveFailedOnYPlane);
       break;
     }
     //return 0;
@@ -589,7 +590,7 @@ static uint32_t draw_image(mp_image_t *mpi){
     mov.src_stride = buffer_stride[p];
     mov.dst += TDFX_VID_YUV_PLANE_SIZE;
     if(ioctl(tdfx_fd,TDFX_VID_AGP_MOVE,&mov)) {
-      printf("tdfx_vid: AGP move failed on U plane\n");
+      mp_msg(MSGT_VO,MSGL_WARN, MSGTR_LIBVO_TDFXVID_AgpMoveFailedOnUPlane);
       break;
     }
     // V
@@ -598,12 +599,12 @@ static uint32_t draw_image(mp_image_t *mpi){
     mov.src_stride = buffer_stride[p];
     mov.dst += TDFX_VID_YUV_PLANE_SIZE;
     if(ioctl(tdfx_fd,TDFX_VID_AGP_MOVE,&mov)) {
-      printf("tdfx_vid: AGP move failed on U plane\n");
+      mp_msg(MSGT_VO,MSGL_WARN, MSGTR_LIBVO_TDFXVID_AgpMoveFailedOnVPlane);
       break;
     }
     break;
   default:
-    printf("What's that for a format 0x%x\n",mpi->imgfmt);
+    mp_msg(MSGT_VO,MSGL_WARN, MSGTR_LIBVO_TDFXVID_UnknownFormat,mpi->imgfmt);
     return VO_TRUE;
   }
 
@@ -645,7 +646,7 @@ static uint32_t set_colorkey(mp_colorkey_t* colork) {
   return VO_TRUE;
 }
 
-static uint32_t control(uint32_t request, void *data, ...)
+static int control(uint32_t request, void *data, ...)
 {
   switch (request) {
   case VOCTRL_QUERY_FORMAT:

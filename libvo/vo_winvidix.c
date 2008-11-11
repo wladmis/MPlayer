@@ -50,23 +50,27 @@ static uint32_t image_format;
 static HWND hWnd;
 /* Window parameters */
 static HWND hWnd=NULL,hWndFS=NULL;
+static float window_aspect;
 
 static vidix_grkey_t gr_key;
     
 
 extern void set_video_eq( int cap );
-extern int vo_config_count;
 
 
 static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message){
 	    case WM_DESTROY:
-			mp_input_queue_cmd(mp_input_parse_cmd("quit"));
+			PostQuitMessage(0);
+			return 0;
+	    case WM_CLOSE:
+			mplayer_put_key(KEY_CLOSE_WIN);
 			break;
 		case WM_WINDOWPOSCHANGED:
            {
-                 /*calculate new window rect*/       
+                int tmpheight=0;
+                /*calculate new window rect*/       
                  if(!vo_fs){
                  RECT rd;
                  POINT point_window;
@@ -82,6 +86,26 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM l
                  vo_dx =point_window.x;
                  vo_dy =point_window.y;
           //       aspect(&vo_dwidth, &vo_dheight, A_NOZOOM);
+
+                 /* keep aspect on resize, borrowed from vo_directx.c */
+                 tmpheight = ((float)vo_dwidth/window_aspect);
+                 tmpheight += tmpheight % 2;
+                 if(tmpheight > vo_dheight)
+                 {
+                     vo_dwidth = ((float)vo_dheight*window_aspect);
+                     vo_dwidth += vo_dwidth % 2;
+                 }
+                 else vo_dheight = tmpheight;
+                 rd.right = rd.left + vo_dwidth;
+                 rd.bottom = rd.top + vo_dheight;
+
+                 if(rd.left < 0) rd.left = 0;
+                 if(rd.right > vo_screenwidth) rd.right = vo_screenwidth;
+                 if(rd.top < 0) rd.top = 0;
+                 if(rd.bottom > vo_screenheight) rd.bottom = vo_screenheight;
+
+                 AdjustWindowRect(&rd, WS_OVERLAPPEDWINDOW | WS_SIZEBOX, 0);
+                 SetWindowPos(hWnd, HWND_TOPMOST, vo_dx+rd.left, vo_dy+rd.top, rd.right-rd.left, rd.bottom-rd.top, SWP_NOOWNERZORDER); 
                }
                else {
                  if(ShowCursor(FALSE)>=0)while(ShowCursor(FALSE)>=0){}       
@@ -156,7 +180,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM l
 }
 
 
-static uint32_t config(uint32_t width, uint32_t height, uint32_t d_width,uint32_t d_height, uint32_t flags, char *title, uint32_t format){
+static int config(uint32_t width, uint32_t height, uint32_t d_width,uint32_t d_height, uint32_t flags, char *title, uint32_t format){
     title = "MPlayer VIDIX WIN32 Overlay";
 
     panscan_init();
@@ -179,12 +203,12 @@ static uint32_t config(uint32_t width, uint32_t height, uint32_t d_width,uint32_
     vo_dx=( vo_screenwidth - d_width ) / 2; vo_dy=( vo_screenheight - d_height ) / 2;    
     geometry(&vo_dx, &vo_dy, &d_width, &d_height, vo_screenwidth, vo_screenheight);
 
-    vo_fs = flags&0x01;
+    vo_fs = flags&VOFLAG_FULLSCREEN;
 
 
     aspect(&d_width, &d_height, A_NOZOOM);
     vo_dwidth=d_width; vo_dheight=d_height;
-
+    window_aspect = (float)d_width / (float)d_height;
 
    
     if(!vo_config_count){
@@ -256,7 +280,7 @@ static void flip_page(void){
     return;
 }
 
-static uint32_t draw_slice(uint8_t *src[], int stride[],int w, int h, int x, int y){
+static int draw_slice(uint8_t *src[], int stride[],int w, int h, int x, int y){
     UNUSED(src);
     UNUSED(stride);
     UNUSED(w);
@@ -267,13 +291,13 @@ static uint32_t draw_slice(uint8_t *src[], int stride[],int w, int h, int x, int
     return(-1);
 }
 
-static uint32_t draw_frame(uint8_t *src[]){
+static int draw_frame(uint8_t *src[]){
     UNUSED(src);
     mp_msg(MSGT_VO, MSGL_FATAL, "[winvidix] error: didn't use vidix draw_frame!\n");
     return(-1);
 }
 
-static uint32_t query_format(uint32_t format){
+static int query_format(uint32_t format){
   return(vidix_query_fourcc(format));
 }
 
@@ -290,7 +314,7 @@ static void uninit(void){
     //
 }
 
-static uint32_t preinit(const char *arg){
+static int preinit(const char *arg){
     if (arg)
         vidix_name = strdup(arg);
     else
@@ -305,10 +329,10 @@ static uint32_t preinit(const char *arg){
     return(0);
 }
 
-static uint32_t control(uint32_t request, void *data, ...){
+static int control(uint32_t request, void *data, ...){
   switch (request) {
   case VOCTRL_FULLSCREEN:
-    if(!vo_fs){vo_fs=1;ShowWindow(hWndFS,SW_SHOW);}  
+    if(!vo_fs){vo_fs=1;ShowWindow(hWndFS,SW_SHOW);SetForegroundWindow(hWndFS);}  
     else {vo_fs=0; ShowWindow(hWndFS,SW_HIDE);}  
     break;
   case VOCTRL_QUERY_FORMAT:

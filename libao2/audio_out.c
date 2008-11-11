@@ -31,6 +31,9 @@ extern ao_functions_t audio_out_polyp;
 #ifdef USE_JACK
 extern ao_functions_t audio_out_jack;
 #endif
+#ifdef USE_OPENAL
+extern ao_functions_t audio_out_openal;
+#endif
 extern ao_functions_t audio_out_null;
 #ifdef HAVE_ALSA5
  extern ao_functions_t audio_out_alsa5;
@@ -80,6 +83,9 @@ ao_functions_t* audio_out_drivers[] =
 #ifdef HAVE_WIN32WAVEOUT
         &audio_out_win32,
 #endif
+#ifdef MACOSX
+	&audio_out_macosx,
+#endif
 #ifdef USE_OSS_AUDIO
         &audio_out_oss,
 #endif
@@ -117,8 +123,8 @@ ao_functions_t* audio_out_drivers[] =
 #ifdef HAVE_SDL
         &audio_out_sdl,
 #endif
-#ifdef MACOSX
-	&audio_out_macosx,
+#ifdef USE_OPENAL
+        &audio_out_openal,
 #endif
         &audio_out_null,
 // should not be auto-selected:
@@ -126,14 +132,15 @@ ao_functions_t* audio_out_drivers[] =
 	NULL
 };
 
-void list_audio_out(){
+void list_audio_out(void){
       int i=0;
       mp_msg(MSGT_AO, MSGL_INFO, MSGTR_AvailableAudioOutputDrivers);
+      mp_msg(MSGT_IDENTIFY, MSGL_INFO, "ID_AUDIO_OUTPUTS\n");
       while (audio_out_drivers[i]) {
         const ao_info_t *info = audio_out_drivers[i++]->info;
-	printf("\t%s\t%s\n", info->short_name, info->name);
+	mp_msg(MSGT_GLOBAL, MSGL_INFO,"\t%s\t%s\n", info->short_name, info->name);
       }
-      printf("\n");
+      mp_msg(MSGT_GLOBAL, MSGL_INFO,"\n");
 }
 
 ao_functions_t* init_best_audio_out(char** ao_list,int use_plugin,int rate,int channels,int format,int flags){

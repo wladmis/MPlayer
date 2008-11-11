@@ -86,7 +86,7 @@ vorbis_comment (AVFormatContext * as, char *buf, int size)
             memcpy (ct, v, vl);
             ct[vl] = 0;
 
-            // took from Vorbis_I_spec 
+            // took from Vorbis_I_spec
             if (!strcmp (tt, "AUTHOR"))
                 strncpy (as->author, ct, FFMIN(sizeof (as->author), vl));
             else if (!strcmp (tt, "TITLE"))
@@ -117,7 +117,7 @@ vorbis_comment (AVFormatContext * as, char *buf, int size)
  * Vorbis Identification header from Vorbis_I_spec.html#vorbis-spec-codec
  * [vorbis_version] = read 32 bits as unsigned integer | Not used
  * [audio_channels] = read 8 bit integer as unsigned | Used
- * [audio_sample_rate] = read 32 bits as unsigned integer | Used 
+ * [audio_sample_rate] = read 32 bits as unsigned integer | Used
  * [bitrate_maximum] = read 32 bits as signed integer | Not used yet
  * [bitrate_nominal] = read 32 bits as signed integer | Not used yet
  * [bitrate_minimum] = read 32 bits as signed integer | Used as bitrate
@@ -126,37 +126,73 @@ vorbis_comment (AVFormatContext * as, char *buf, int size)
  * [framing_flag] = read one bit | Not Used
  *    */
 
+typedef struct {
+    unsigned int len[3];
+    unsigned char *packet[3];
+} oggvorbis_private_t;
+
+
+static unsigned int
+fixup_vorbis_headers(AVFormatContext * as, oggvorbis_private_t *priv,
+                     void **buf)
+{
+    int i,offset, len;
+    unsigned char *ptr;
+
+    len = priv->len[0] + priv->len[1] + priv->len[2];
+    ptr = *buf = av_mallocz(len + len/255 + 64);
+
+    ptr[0] = 2;
+    offset = 1;
+    offset += av_xiphlacing(&ptr[offset], priv->len[0]);
+    offset += av_xiphlacing(&ptr[offset], priv->len[1]);
+    for(i = 0; i < 3; i++) {
+        memcpy(&ptr[offset], priv->packet[i], priv->len[i]);
+        offset += priv->len[i];
+    }
+    *buf = av_realloc(*buf, offset);
+    return offset;
+}
+
+
 static int
 vorbis_header (AVFormatContext * s, int idx)
 {
     ogg_t *ogg = s->priv_data;
     ogg_stream_t *os = ogg->streams + idx;
     AVStream *st = s->streams[idx];
-    int cds = st->codec.extradata_size + os->psize + 2;
-    uint8_t *cdp;
+    oggvorbis_private_t *priv;
 
     if (os->seq > 2)
         return 0;
 
-    st->codec.extradata = av_realloc (st->codec.extradata, cds);
-    cdp = st->codec.extradata + st->codec.extradata_size;
-    *cdp++ = os->psize >> 8;
-    *cdp++ = os->psize & 0xff;
-    memcpy (cdp, os->buf + os->pstart, os->psize);
-    st->codec.extradata_size = cds;
+    if(os->seq == 0) {
+        os->private = av_mallocz(sizeof(oggvorbis_private_t));
+        if(!os->private)
+            return 0;
+    }
 
+    priv = os->private;
+    priv->len[os->seq] = os->psize;
+    priv->packet[os->seq] = av_mallocz(os->psize);
+    memcpy(priv->packet[os->seq], os->buf + os->pstart, os->psize);
     if (os->buf[os->pstart] == 1) {
         uint8_t *p = os->buf + os->pstart + 11; //skip up to the audio channels
-        st->codec.channels = *p++;
-        st->codec.sample_rate = le2me_32 (unaligned32 (p));
+        st->codec->channels = *p++;
+        st->codec->sample_rate = le2me_32 (unaligned32 (p));
         p += 8; //skip maximum and and nominal bitrate
-        st->codec.bit_rate = le2me_32 (unaligned32 (p)); //Minimum bitrate
+        st->codec->bit_rate = le2me_32 (unaligned32 (p)); //Minimum bitrate
 
-        st->codec.codec_type = CODEC_TYPE_AUDIO;
-        st->codec.codec_id = CODEC_ID_VORBIS;
+        st->codec->codec_type = CODEC_TYPE_AUDIO;
+        st->codec->codec_id = CODEC_ID_VORBIS;
 
+        st->time_base.num = 1;
+        st->time_base.den = st->codec->sample_rate;
     } else if (os->buf[os->pstart] == 3) {
         vorbis_comment (s, os->buf + os->pstart + 7, os->psize - 8);
+    } else {
+        st->codec->extradata_size =
+            fixup_vorbis_headers(s, priv, &st->codec->extradata);
     }
 
     return os->seq < 3;

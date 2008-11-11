@@ -6,13 +6,13 @@
 #include <unistd.h>
 #include <string.h>
 
-#include "../m_option.h"
+#include "m_option.h"
 
 #include "stream.h"
 #include "demuxer.h"
 #include "stheader.h"
 
-#include "../libmpcodecs/img_format.h"
+#include "libmpcodecs/img_format.h"
 
 extern int demuxer_type;
 static int format = IMGFMT_I420;
@@ -23,7 +23,6 @@ static float fps = 25;
 static int imgsize=0;
 
 m_option_t demux_rawvideo_opts[] = {
-  { "on", &demuxer_type, CONF_TYPE_FLAG, 0,0, DEMUXER_TYPE_RAWVIDEO, NULL },
   // size:
   { "w", &width, CONF_TYPE_INT,CONF_RANGE,1,8192, NULL },
   { "h", &height, CONF_TYPE_INT,CONF_RANGE,1,8192, NULL },
@@ -53,7 +52,7 @@ m_option_t demux_rawvideo_opts[] = {
 };
 
 
-int demux_rawvideo_open(demuxer_t* demuxer) {
+static demuxer_t* demux_rawvideo_open(demuxer_t* demuxer) {
   sh_video_t* sh_video;
 
   switch(size_id){
@@ -82,8 +81,14 @@ int demux_rawvideo_open(demuxer_t* demuxer) {
   case IMGFMT_UYVY: imgsize=width*height*2;break;
   case IMGFMT_Y8: imgsize=width*height;break;
   default:
+      if (IMGFMT_IS_RGB(format))
+        imgsize = width * height * ((IMGFMT_RGB_DEPTH(format) + 7) >> 3);
+      else if (IMGFMT_IS_BGR(format))
+        imgsize = width * height * ((IMGFMT_BGR_DEPTH(format) + 7) >> 3);
+      else {
       mp_msg(MSGT_DEMUX,MSGL_ERR,"rawvideo: img size not specified and unknown format!\n");
       return 0;
+      }
   }
 
   sh_video = new_sh_video(demuxer,0);
@@ -100,10 +105,10 @@ int demux_rawvideo_open(demuxer_t* demuxer) {
   demuxer->video->sh = sh_video;
   sh_video->ds = demuxer->video;
 
-  return 1;
+  return demuxer;
 }
 
-int demux_rawvideo_fill_buffer(demuxer_t* demuxer, demux_stream_t *ds) {
+static int demux_rawvideo_fill_buffer(demuxer_t* demuxer, demux_stream_t *ds) {
   sh_video_t* sh = demuxer->video->sh;
   off_t pos;
   if(demuxer->stream->eof) return 0;
@@ -113,7 +118,7 @@ int demux_rawvideo_fill_buffer(demuxer_t* demuxer, demux_stream_t *ds) {
   return 1;
 }
 
-void demux_rawvideo_seek(demuxer_t *demuxer,float rel_seek_secs,int flags){
+static void demux_rawvideo_seek(demuxer_t *demuxer,float rel_seek_secs,float audio_delay,int flags){
   stream_t* s = demuxer->stream;
   sh_video_t* sh_video = demuxer->video->sh;
   off_t pos;
@@ -131,3 +136,20 @@ void demux_rawvideo_seek(demuxer_t *demuxer,float rel_seek_secs,int flags){
   demuxer->video->pts = pos * sh_video->frametime;
 //  printf("demux_rawvideo: streamtell=%d\n",(int)stream_tell(demuxer->stream));
 }
+
+
+demuxer_desc_t demuxer_desc_rawvideo = {
+  "Raw video demuxer",
+  "rawvideo",
+  "rawvideo",
+  "?",
+  "",
+  DEMUXER_TYPE_RAWVIDEO,
+  0, // no autodetect
+  NULL,
+  demux_rawvideo_fill_buffer,
+  demux_rawvideo_open,
+  NULL,
+  demux_rawvideo_seek,
+  NULL
+};

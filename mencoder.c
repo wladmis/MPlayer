@@ -17,6 +17,8 @@
 #define ACODEC_NULL 3
 #define ACODEC_LAVC 4
 #define ACODEC_TOOLAME 5
+#define ACODEC_FAAC 6
+#define ACODEC_TWOLAME 7
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -25,7 +27,9 @@
 #include "config.h"
 
 #ifdef __MINGW32__
+#define        SIGHUP 1
 #define        SIGQUIT 3
+#define        SIGPIPE 13
 #endif
 #ifdef WIN32
 #include <windows.h>
@@ -64,43 +68,23 @@
 // for MPEGLAYER3WAVEFORMAT:
 #include "libmpdemux/ms_hdr.h"
 
-#ifdef HAVE_MP3LAME
-#undef CDECL
-#include <lame/lame.h>
-#endif
-
 #include <inttypes.h>
 
 #include "libvo/fastmemcpy.h"
 
 #include "osdep/timer.h"
 
-#ifdef USE_LIBAVCODEC
-// for lavc audio encoding
+#include "get_path.c"
 
+#ifdef USE_LIBAVCODEC
 #ifdef USE_LIBAVCODEC_SO
 #include <ffmpeg/avcodec.h>
 #else
-#include "libavcodec/avcodec.h"
+#include "avcodec.h"
+#endif
 #endif
 
-static AVCodec        *lavc_acodec;
-static AVCodecContext *lavc_actx = NULL;
-extern char    *lavc_param_acodec;
-extern int      lavc_param_abitrate;
-extern int      lavc_param_atag;
-// tmp buffer for lavc audio encoding (to free!!!!!)
-static void    *lavc_abuf = NULL;
-extern int      avcodec_inited;
-
-static uint32_t lavc_find_atag(char *codec);
-#endif
-
-#ifdef HAVE_TOOLAME
-#include "libmpcodecs/ae_toolame.h"
-static mpae_toolame_ctx *mpae_toolame;
-#endif
-
+#include "libmpcodecs/ae.h"
 int vo_doublebuffering=0;
 int vo_directrendering=0;
 int vo_config_count=0;
@@ -114,14 +98,14 @@ int stream_cache_size=-1;
 extern int cache_fill_status;
 
 float stream_cache_min_percent=20.0;
-float stream_cache_prefill_percent=5.0;
+float stream_cache_seek_min_percent=50.0;
 #else
 #define cache_fill_status 0
 #endif
 
 int audio_id=-1;
 int video_id=-1;
-int dvdsub_id=-1;
+int dvdsub_id=-2;
 int vobsub_id=-1;
 char* audio_lang=NULL;
 char* dvdsub_lang=NULL;
@@ -131,6 +115,9 @@ static char** audio_codec_list=NULL;  // override audio codec
 static char** video_codec_list=NULL;  // override video codec
 static char** audio_fm_list=NULL;     // override audio codec family 
 static char** video_fm_list=NULL;     // override video codec family 
+extern char *demuxer_name; // override demuxer
+extern char *audio_demuxer_name; // override audio demuxer
+extern char *sub_demuxer_name; // override sub demuxer
 
 static int out_audio_codec=-1;
 static int out_video_codec=-1;
@@ -142,8 +129,7 @@ int out_file_format=MUXER_TYPE_AVI;	// default to AVI
 //void skip_audio_frame(sh_audio_t *sh_audio){}
 //void resync_audio_stream(sh_audio_t *sh_audio){}
 
-int verbose=0; // must be global!
-int identify=0;
+extern int verbose; // must be global!
 int quiet=0;
 double video_time_usage=0;
 double vout_time_usage=0;
@@ -152,6 +138,9 @@ double max_vout_time_usage=0;
 double cur_video_time_usage=0;
 double cur_vout_time_usage=0;
 int benchmark=0;
+
+extern int mp_msg_levels[MSGT_MAX];
+extern int mp_msg_level_all;
 
 #ifdef WIN32
 char * proc_priority=NULL;
@@ -164,7 +153,9 @@ static float max_pts_correction=0;//default_max_pts_correction;
 static float c_total=0;
 
 static float audio_preload=0.5;
+static float audio_delay_fix=0.0;
 static float audio_delay=0.0;
+static int ignore_start=0;
 static int audio_density=2;
 
 float force_fps=0;
@@ -179,9 +170,10 @@ char *vobsub_out=NULL;
 unsigned int vobsub_out_index=0;
 char *vobsub_out_id=NULL;
 
-char* out_filename="test.avi";
+char* out_filename=NULL;
 
 char *force_fourcc=NULL;
+int force_audiofmttag=-1;
 
 char* passtmpfile="divx2pass.log";
 
@@ -221,36 +213,17 @@ char *info_copyright=NULL;
 char *info_sourceform=NULL;
 char *info_comment=NULL;
 
-
+// Needed by libmpdemux.
+int mp_input_check_interrupt(int time) {
+  usec_sleep(time);
+  return 0;
+}
 
 //char *out_audio_codec=NULL; // override audio codec
 //char *out_video_codec=NULL; // override video codec
 
 //#include "libmpeg2/mpeg2.h"
 //#include "libmpeg2/mpeg2_internal.h"
-
-#ifdef HAVE_MP3LAME
-int lame_param_quality=0; // best
-int lame_param_algqual=5; // same as old default
-int lame_param_vbr=vbr_default;
-int lame_param_mode=-1; // unset
-int lame_param_padding=-1; // unset
-int lame_param_br=-1; // unset
-int lame_param_ratio=-1; // unset
-float lame_param_scale=-1; // unset
-int lame_param_lowpassfreq = 0; //auto
-int lame_param_highpassfreq = 0; //auto
-int lame_param_free_format = 0; //disabled
-int lame_param_br_min = 0; //not specified
-int lame_param_br_max = 0; //not specified
-
-#if HAVE_MP3LAME >= 392
-int lame_param_fast=0; // unset
-static char* lame_param_preset=NULL; // unset
-static int  lame_presets_set( lame_t gfp, int fast, int cbr, const char* preset_name );
-static void  lame_presets_longinfo_dm ( FILE* msgfp );
-#endif
-#endif
 
 //static int vo_w=0, vo_h=0;
 
@@ -269,27 +242,43 @@ static int cfg_include(m_option_t *conf, char *filename){
 static char *seek_to_sec=NULL;
 static off_t seek_to_byte=0;
 
-static void parse_end_at();
+static char * frameno_filename=NULL;
+
+static void parse_end_at(void);
 static char * end_at_string=0;
 //static uint8_t* flip_upside_down(uint8_t* dst, const uint8_t* src, int width, int height);
 
-#include "get_path.c"
+typedef struct {
+    unsigned char* start;
+    int in_size;
+    float frame_time;
+    int already_read;
+} s_frame_data;
 
-#ifdef USE_EDL
+/// Returns a_pts
+static float calc_a_pts(demux_stream_t *d_audio);
+/** \brief Seeks audio forward to pts by dumping audio packets
+    \return The current audio pts.
+*/
+static float forward_audio(float pts, demux_stream_t *d_audio, muxer_stream_t* mux_a);
+/** \brief Seeks slowly by dumping frames.
+    \return 1 for success, 2 for EOF.
+*/
+static int slowseek(float end_pts, demux_stream_t *d_video, demux_stream_t *d_audio, muxer_stream_t* mux_a, s_frame_data * frame_data, int framecopy, int print_info);
+/// Deletes audio or video as told by -delay to sync
+static void fixdelay(demux_stream_t *d_video, demux_stream_t *d_audio, muxer_stream_t* mux_a, s_frame_data * frame_data, int framecopy);
+
 #include "edl.h"
 static edl_record_ptr edl_records = NULL; ///< EDL entries memory area
 static edl_record_ptr next_edl_record = NULL; ///< only for traversing edl_records
 static short edl_muted; ///< Stores whether EDL is currently in muted mode.
 static short edl_seeking; ///< When non-zero, stream is seekable.
 static short edl_seek_type; ///< When non-zero, frames are discarded instead of seeking.
-static short edl_skip; ///< -1 OR the value of in_size of an already read frame.
 /** \brief Seeks for EDL
     \return 1 for success, 0 for failure, 2 for EOF.
 */
-int edl_seek(edl_record_ptr next_edl_record, demuxer_t* demuxer, demux_stream_t *d_audio, muxer_stream_t* mux_a, float * frame_time, unsigned char ** start, int framecopy);
-#endif
+static int edl_seek(edl_record_ptr next_edl_record, demuxer_t* demuxer, demux_stream_t *d_audio, muxer_stream_t* mux_a, s_frame_data * frame_data, int framecopy);
 
-#include "cfg-mplayer-def.h"
 #include "cfg-mencoder.h"
 
 #ifdef USE_DVDREAD
@@ -297,11 +286,12 @@ int edl_seek(edl_record_ptr next_edl_record, demuxer_t* demuxer, demux_stream_t 
 #endif
 #include "vobsub.h"
 
+#include "libao2/audio_out.h"
 /* FIXME */
 static void mencoder_exit(int level, char *how)
 {
     if (how)
-	mp_msg(MSGT_MENCODER, MSGL_INFO, MSGTR_ExitingHow, mp_gettext(how));
+	mp_msg(MSGT_MENCODER, MSGL_INFO, MSGTR_ExitingHow, how);
     else
 	mp_msg(MSGT_MENCODER, MSGL_INFO, MSGTR_Exiting);
 
@@ -311,11 +301,11 @@ static void mencoder_exit(int level, char *how)
 void parse_cfgfiles( m_config_t* conf )
 {
   char *conffile;
-  if ((conffile = get_path("mencoder")) == NULL) {
+  if ((conffile = get_path("mencoder.conf")) == NULL) {
     mp_msg(MSGT_CPLAYER,MSGL_ERR,MSGTR_GetpathProblem);
   } else {
     if (m_config_parse_config_file(conf, conffile) < 0)
-      mencoder_exit(1,MSGTR_ConfigfileError);
+      mencoder_exit(1,MSGTR_ConfigFileError);
     free(conffile);
   }
 }
@@ -367,7 +357,7 @@ static void exit_sighandler(int x){
 static muxer_t* muxer=NULL;
 static FILE* muxer_f=NULL;
 
-extern void print_wave_header(WAVEFORMATEX *h);
+extern void print_wave_header(WAVEFORMATEX *h, int verbose_level);
 
 int main(int argc,char* argv[]){
 
@@ -383,6 +373,7 @@ sh_video_t *sh_video=NULL;
 int file_format=DEMUXER_TYPE_UNKNOWN;
 int i=DEMUXER_TYPE_UNKNOWN;
 void *vobsub_writer=NULL;
+s_frame_data frame_data = { .start = NULL, .in_size = 0, .frame_time = 0., .already_read = 0 };
 
 uint32_t ptimer_start;
 uint32_t audiorate=0;
@@ -397,27 +388,25 @@ muxer_stream_t* mux_a=NULL;
 muxer_stream_t* mux_v=NULL;
 off_t muxer_f_size=0;
 
-#ifdef HAVE_MP3LAME
-lame_global_flags *lame;
-#endif
-
 double v_pts_corr=0;
 double v_timer_corr=0;
 
 m_entry_t* filelist = NULL;
 char* filename=NULL;
-char* frameno_filename="frameno.avi";
 
 int decoded_frameno=0;
 int next_frameno=-1;
 int curfile=0;
-int new_srate;
+int new_srate=0;
 
-unsigned int timer_start;
+unsigned int timer_start=0;
+ao_data_t ao_data = {0,0,0,0,OUTBURST,-1,0};
+
+audio_encoding_params_t aparams;
+audio_encoder_t *aencoder = NULL;
 
   mp_msg_init();
-  mp_msg_set_level(MSGL_STATUS);
-  mp_msg(MSGT_CPLAYER,MSGL_INFO, "MEncoder " VERSION " (C) 2000-2005 MPlayer Team\n");
+  mp_msg(MSGT_CPLAYER,MSGL_INFO, "MEncoder " VERSION " (C) 2000-2006 MPlayer Team\n");
 
   /* Test for cpu capabilities (and corresponding OS support) for optimizing */
   GetCpuCaps(&gCpuCaps);
@@ -451,6 +440,10 @@ unsigned int timer_start;
   mp_msg(MSGT_CPLAYER,MSGL_INFO,"\n\n");
 #endif
 #endif
+
+#if defined(WIN32) && defined(USE_WIN32DLL)
+  set_path_env();
+#endif /*WIN32 && USE_WIN32DLL*/
   
   InitTimer();
 
@@ -467,21 +460,47 @@ if(!codecs_file || !parse_codec_cfg(codecs_file)){
   }
 }
 
-  // FIXME: get rid of -dvd and other tricky options
-  stream2=open_stream(frameno_filename,0,&i);
-  if(stream2){
-    demuxer2=demux_open(stream2,DEMUXER_TYPE_AVI,-1,-1,-2,NULL);
-    if(demuxer2) mp_msg(MSGT_MENCODER, MSGL_INFO, MSGTR_UsingPass3ControllFile, frameno_filename);
-    else mp_msg(MSGT_DEMUXER,MSGL_ERR,MSGTR_FormatNotRecognized);
-  }
-
  mconfig = m_config_new();
  m_config_register_options(mconfig,mencoder_opts);
  parse_cfgfiles(mconfig);
  filelist = m_config_parse_me_command_line(mconfig, argc, argv);
  if(!filelist) mencoder_exit(1, MSGTR_ErrorParsingCommandLine);
 
-  mp_msg_set_level(verbose+MSGL_STATUS);
+{
+	char *extension;
+	
+	if (!out_filename) mencoder_exit(1,MSGTR_MissingOutputFilename);
+	extension=strrchr(out_filename,'.');
+	if (extension != NULL && strlen(extension) > 3 && strlen(extension) < 6)
+	{
+		extension++;
+		
+		switch (out_file_format)
+		{
+			case MUXER_TYPE_AVI:
+			if (strcasecmp(extension,"avi"))
+				mp_msg(MSGT_MENCODER, MSGL_WARN, MSGTR_MencoderWrongFormatAVI);
+			break;
+
+			case MUXER_TYPE_MPEG:
+			if (strcasecmp(extension,"mpg") &&
+				strcasecmp(extension,"mpeg") &&
+				strcasecmp(extension,"vob")) 
+				mp_msg(MSGT_MENCODER, MSGL_WARN, MSGTR_MencoderWrongFormatMPG);
+			break;
+		}
+	}
+}				
+
+
+if (frameno_filename) {
+  stream2=open_stream(frameno_filename,0,&i);
+  if(stream2){
+    demuxer2=demux_open(stream2,DEMUXER_TYPE_AVI,-1,-1,-2,NULL);
+    if(demuxer2) mp_msg(MSGT_MENCODER, MSGL_INFO, MSGTR_UsingPass3ControlFile, frameno_filename);
+    else mp_msg(MSGT_DEMUXER,MSGL_ERR,MSGTR_FormatNotRecognized);
+  }
+}
 
 #ifdef WIN32
   if(proc_priority){
@@ -521,6 +540,9 @@ if(!codecs_file || !parse_codec_cfg(codecs_file)){
 
   vo_init_osd();
 
+  /* HACK, for some weird reason, push() has to be called twice,
+     otherwise options are not saved correctly */
+  m_config_push(mconfig);
 play_next_file:
   m_config_push(mconfig);
   m_entry_set_options(mconfig,&filelist[curfile]);
@@ -542,7 +564,7 @@ play_next_file:
 #ifdef USE_DVDREAD
 if(stream->type==STREAMTYPE_DVD){
   if(audio_lang && audio_id==-1) audio_id=dvd_aid_from_lang(stream,audio_lang);
-  if(dvdsub_lang && dvdsub_id==-1) dvdsub_id=dvd_sid_from_lang(stream,dvdsub_lang);
+  if(dvdsub_lang && dvdsub_id==-2) dvdsub_id=dvd_sid_from_lang(stream,dvdsub_lang);
 }
 #endif
 
@@ -588,10 +610,6 @@ sh_video=d_video->sh;
     mp_msg(MSGT_MENCODER,MSGL_INFO,MSGTR_ForcingInputFPS, sh_video->fps);
   }
 
-  if(sh_audio && out_file_format==MUXER_TYPE_RAWVIDEO){
-      mp_msg(MSGT_MENCODER,MSGL_ERR,MSGTR_RawvideoDoesNotSupportAudio);
-      sh_audio=NULL;
-  }
   if(sh_audio && out_audio_codec<0){
     if(audio_id==-2)
 	mp_msg(MSGT_MENCODER,MSGL_ERR,MSGTR_DemuxerDoesntSupportNosound);
@@ -632,9 +650,16 @@ if(sh_audio && (out_audio_codec || seek_to_sec || !sh_audio->wf || playback_spee
     subdata=sub_read_file(sub_name[0], sh_video->fps);
     if(!subdata) mp_msg(MSGT_CPLAYER,MSGL_ERR,MSGTR_CantLoadSub,sub_name[0]);
   } else
-  if(sub_auto) { // auto load sub file ...
-    subdata=sub_read_file( filename ? sub_filenames( get_path("sub/"), filename )[0]
-	                              : "default.sub", sh_video->fps );
+  if(sub_auto && filename) { // auto load sub file ...
+    char **tmp = NULL;
+    int i = 0;
+    char *psub = get_path( "sub/" );
+    tmp = sub_filenames((psub ? psub : ""), filename);
+    free(psub);
+    subdata=sub_read_file(tmp[0], sh_video->fps);
+    while (tmp[i])
+      free(tmp[i++]);
+    free(tmp);
   }
 #endif	
 
@@ -692,6 +717,16 @@ if(!muxer_f) {
 }
 
 muxer=muxer_new_muxer(out_file_format,muxer_f);
+if(!muxer) {
+  mp_msg(MSGT_MENCODER, MSGL_FATAL, "Cannot initialize muxer.");
+  mencoder_exit(1,NULL);
+}
+#if 0
+//disabled: it horrybly distorts filtered sound
+if(out_file_format == MUXER_TYPE_MPEG) audio_preload = 0;
+#endif
+
+muxer->audio_delay_fix = audio_delay_fix;
 
 // ============= VIDEO ===============
 
@@ -834,12 +869,22 @@ if ((force_fourcc != NULL) && (strlen(force_fourcc) >= 4))
 	mux_v->bih->biCompression, (char *)&mux_v->bih->biCompression);
 }
 
-if(muxer->fix_stream_parameters)
-	  muxer_stream_fix_parameters(muxer,mux_v);
+if (! ignore_start)
+    muxer->audio_delay_fix -= sh_video->stream_delay;
+
 //if(demuxer->file_format!=DEMUXER_TYPE_AVI) pts_from_bps=0; // it must be 0 for mpeg/asf!
 
 // ============= AUDIO ===============
 if(sh_audio){
+
+if (force_audiofmttag != -1) {
+	sh_audio->format = force_audiofmttag;
+	if (sh_audio->wf) {
+		sh_audio->wf->wFormatTag = sh_audio->format;
+	}
+	mp_msg(MSGT_MENCODER, MSGL_INFO, MSGTR_ForcingOutputAudiofmtTag,
+	       force_audiofmttag);
+}
 
 mux_a=muxer_new_stream(muxer,MUXER_TYPE_AUDIO);
 
@@ -852,9 +897,41 @@ mux_a->source=sh_audio;
 
 mux_a->codec=out_audio_codec;
 
+ao_data.samplerate = force_srate;
+ao_data.channels = 0;
+ao_data.format = audio_output_format;
+if(!preinit_audio_filters(sh_audio,
+   // input:
+   new_srate,
+   sh_audio->channels, sh_audio->sample_format,
+   // output:
+   &ao_data.samplerate, &ao_data.channels, &ao_data.format)) {
+     mp_msg(MSGT_CPLAYER,MSGL_ERR,MSGTR_AudioFilterChainPreinitError);
+     mencoder_exit(1, NULL);
+   }
+
+aparams.channels = ao_data.channels;
+aparams.sample_rate = ao_data.samplerate;
+aparams.audio_preload = 1000 * audio_preload;
+if(mux_a->codec != ACODEC_COPY) {
+    aencoder = new_audio_encoder(mux_a, &aparams);
+    if(!aencoder)
+        mencoder_exit(1, NULL);
+    if(!init_audio_filters(sh_audio, 
+        new_srate, sh_audio->channels, sh_audio->sample_format,  
+        &aparams.sample_rate, &aparams.channels, &aencoder->input_format, 
+        aencoder->min_buffer_size, aencoder->max_buffer_size)) {
+      mp_msg(MSGT_CPLAYER,MSGL_FATAL,MSGTR_NoMatchingFilter);
+      mencoder_exit(1,NULL);
+    }
+}
 switch(mux_a->codec){
 case ACODEC_COPY:
     if (playback_speed != 1.0) mp_msg(MSGT_CPLAYER, MSGL_WARN, MSGTR_NoSpeedWithFrameCopy);
+    if (sh_audio->format >= 0x10000) {
+	mp_msg(MSGT_MENCODER,MSGL_ERR,MSGTR_CantCopyAudioFormat, sh_audio->format);
+	mencoder_exit(1,NULL);
+    }
     if (sh_audio->wf){
 	mux_a->wf=malloc(sizeof(WAVEFORMATEX) + sh_audio->wf->cbSize);
 	memcpy(mux_a->wf, sh_audio->wf, sizeof(WAVEFORMATEX) + sh_audio->wf->cbSize);
@@ -873,7 +950,6 @@ case ACODEC_COPY:
 	mux_a->h.dwSampleSize=sh_audio->audio.dwSampleSize;
 	mux_a->h.dwScale=sh_audio->audio.dwScale;
 	mux_a->h.dwRate=sh_audio->audio.dwRate;
-//	mux_a->h.dwStart=sh_audio->audio.dwStart;
     } else {
 	mux_a->h.dwSampleSize=mux_a->wf->nBlockAlign;
 	mux_a->h.dwScale=mux_a->h.dwSampleSize;
@@ -885,422 +961,72 @@ case ACODEC_COPY:
 	mux_a->wf->wFormatTag, mux_a->wf->nChannels, mux_a->wf->nSamplesPerSec,
 	mux_a->wf->wBitsPerSample, mux_a->wf->nAvgBytesPerSec, mux_a->h.dwSampleSize);
     break;
-case ACODEC_PCM:
-    mp_msg(MSGT_MENCODER, MSGL_INFO, MSGTR_CBRPCMAudioSelected);
-    mux_a->h.dwScale=1;
-    mux_a->h.dwRate=force_srate?force_srate:new_srate;
-    mux_a->wf=malloc(sizeof(WAVEFORMATEX));
-    mux_a->wf->wFormatTag=0x1; // PCM
-    mux_a->wf->nChannels=audio_output_channels?audio_output_channels:sh_audio->channels;
-    mux_a->h.dwSampleSize=2*mux_a->wf->nChannels;
-    mux_a->wf->nBlockAlign=mux_a->h.dwSampleSize;
-    mux_a->wf->nSamplesPerSec=mux_a->h.dwRate;
-    mux_a->wf->nAvgBytesPerSec=mux_a->h.dwSampleSize*mux_a->wf->nSamplesPerSec;
-    mux_a->wf->wBitsPerSample=16;
-    mux_a->wf->cbSize=0; // FIXME for l3codeca.acm
-    // setup filter:
-    if(!init_audio_filters(sh_audio, 
-        new_srate,
-	sh_audio->channels, sh_audio->sample_format,
-	mux_a->wf->nSamplesPerSec, mux_a->wf->nChannels,
-	(mux_a->wf->wBitsPerSample==8)?	AF_FORMAT_U8:AF_FORMAT_S16_LE,
-	16384, mux_a->wf->nAvgBytesPerSec)){
-      mp_msg(MSGT_CPLAYER,MSGL_ERR,MSGTR_NoMatchingFilter);
-    }
-    break;
-#ifdef HAVE_MP3LAME
-case ACODEC_VBRMP3:
-    mp_msg(MSGT_MENCODER, MSGL_INFO, MSGTR_MP3AudioSelected);
-    mux_a->h.dwSampleSize=0; // VBR
-    mux_a->h.dwRate=force_srate?force_srate:new_srate;
-    mux_a->h.dwScale=(mux_a->h.dwRate<32000)?576:1152; // samples/frame
-    if(sizeof(MPEGLAYER3WAVEFORMAT)!=30) mp_msg(MSGT_MENCODER,MSGL_WARN,MSGTR_MP3WaveFormatSizeNot30,sizeof(MPEGLAYER3WAVEFORMAT));
-    mux_a->wf=malloc(sizeof(MPEGLAYER3WAVEFORMAT)); // should be 30
-    mux_a->wf->wFormatTag=0x55; // MP3
-    mux_a->wf->nChannels= (lame_param_mode<0) ? sh_audio->channels :
-	((lame_param_mode==3) ? 1 : 2);
-    mux_a->wf->nSamplesPerSec=mux_a->h.dwRate;
-    if(! lame_param_vbr)
-        mux_a->wf->nAvgBytesPerSec=lame_param_br * 125;
-    else
-        mux_a->wf->nAvgBytesPerSec=192000/8; // FIXME!
-    mux_a->wf->nBlockAlign=(mux_a->h.dwRate<32000)?576:1152; // required for l3codeca.acm + WMP 6.4
-    mux_a->wf->wBitsPerSample=0; //16;
-    // from NaNdub:  (requires for l3codeca.acm)
-    mux_a->wf->cbSize=12;
-    ((MPEGLAYER3WAVEFORMAT*)(mux_a->wf))->wID=1;
-    ((MPEGLAYER3WAVEFORMAT*)(mux_a->wf))->fdwFlags=2;
-    ((MPEGLAYER3WAVEFORMAT*)(mux_a->wf))->nBlockSize=(mux_a->h.dwRate<32000)?576:1152; // ???
-    ((MPEGLAYER3WAVEFORMAT*)(mux_a->wf))->nFramesPerBlock=1;
-    ((MPEGLAYER3WAVEFORMAT*)(mux_a->wf))->nCodecDelay=0;
-    // setup filter:
-    if(!init_audio_filters(sh_audio, 
-	new_srate,
-	sh_audio->channels, sh_audio->sample_format,
-	mux_a->wf->nSamplesPerSec, mux_a->wf->nChannels,
-	AF_FORMAT_S16_NE,
-	4608, mux_a->h.dwRate*mux_a->wf->nChannels*2)){
-      mp_msg(MSGT_CPLAYER,MSGL_ERR,MSGTR_NoMatchingFilter);
-    }
-    break;
-#endif
-#ifdef USE_LIBAVCODEC
-case ACODEC_LAVC:
-    if(!lavc_param_acodec)
-    {
-	mp_msg(MSGT_MENCODER, MSGL_FATAL, MSGTR_NoLavcAudioCodecName);
-	exit(1);
-    }
-
-    if(!avcodec_inited){
-	avcodec_init();
-	avcodec_register_all();
-	avcodec_inited=1;
-    }
-
-    lavc_acodec = avcodec_find_encoder_by_name(lavc_param_acodec);
-    if (!lavc_acodec)
-    {
-	mp_msg(MSGT_MENCODER, MSGL_FATAL, MSGTR_LavcAudioCodecNotFound, lavc_param_acodec);
-	exit(1);
-    }
-
-    lavc_actx = avcodec_alloc_context();
-    if(lavc_actx == NULL)
-    {
-	mp_msg(MSGT_MENCODER, MSGL_FATAL, MSGTR_CouldntAllocateLavcContext);
-	exit(1);
-    }
-
-    if(lavc_param_atag == 0)
-	lavc_param_atag = lavc_find_atag(lavc_param_acodec);
-
-    // put sample parameters
-    lavc_actx->channels = audio_output_channels ? audio_output_channels : sh_audio->channels;
-    lavc_actx->sample_rate = force_srate ? force_srate : new_srate;
-    lavc_actx->bit_rate = lavc_param_abitrate * 1000;
-
-    /*
-     * Special case for imaadpcm.
-     * The bitrate is only dependant on samplerate.
-     * We have to known frame_size and block_align in advance,
-     * so I just copied the code from libavcodec/adpcm.c
-     *
-     * However, ms imaadpcm uses a block_align of 2048,
-     * lavc defaults to 1024
-     */
-    if(lavc_param_atag == 0x11) {
-	int blkalign = 2048;
-	int framesize = (blkalign - 4 * lavc_actx->channels) * 8 / (4 * lavc_actx->channels) + 1;
-	lavc_actx->bit_rate = lavc_actx->sample_rate*8*blkalign/framesize;
-    }
-
-    if(avcodec_open(lavc_actx, lavc_acodec) < 0)
-    {
-	mp_msg(MSGT_MENCODER, MSGL_FATAL, MSGTR_CouldntOpenCodec, lavc_param_acodec, lavc_param_abitrate);
-	exit(1);
-    }
-
-    if(lavc_param_atag == 0x11) {
-	lavc_actx->block_align = 2048;
-	lavc_actx->frame_size = (lavc_actx->block_align - 4 * lavc_actx->channels) * 8 / (4 * lavc_actx->channels) + 1;
-    }
-
-    lavc_abuf = malloc(lavc_actx->frame_size * 2 * lavc_actx->channels);
-    if(lavc_abuf == NULL)
-    {
-	mp_msg(MSGT_MENCODER, MSGL_FATAL, MSGTR_CannotAllocateBytes, lavc_actx->frame_size * 2 * lavc_actx->channels);
-	exit(1);
-    }
-
-    mux_a->wf = malloc(sizeof(WAVEFORMATEX)+lavc_actx->extradata_size+256);
-    mux_a->wf->wFormatTag = lavc_param_atag;
-    mux_a->wf->nChannels = lavc_actx->channels;
-    mux_a->wf->nSamplesPerSec = lavc_actx->sample_rate;
-    mux_a->wf->nAvgBytesPerSec = (lavc_actx->bit_rate / 8);
-    mux_a->h.dwRate = mux_a->wf->nAvgBytesPerSec;
-    if (lavc_actx->block_align) {
-	mux_a->h.dwSampleSize = mux_a->h.dwScale = lavc_actx->block_align;
-    } else {
-	mux_a->h.dwScale = (mux_a->wf->nAvgBytesPerSec * lavc_actx->frame_size)/ mux_a->wf->nSamplesPerSec; /* for cbr */
-
-	if ((mux_a->wf->nAvgBytesPerSec *
-	    lavc_actx->frame_size) % mux_a->wf->nSamplesPerSec) {
-	    mux_a->h.dwScale = lavc_actx->frame_size;
-	    mux_a->h.dwRate = lavc_actx->sample_rate;
-	    mux_a->h.dwSampleSize = 0; // Blocksize not constant
-	} else {
-	    mux_a->h.dwSampleSize = mux_a->h.dwScale;
-	}
-    }
-    mux_a->wf->nBlockAlign = mux_a->h.dwScale;
-    mux_a->h.dwSuggestedBufferSize = audio_preload*mux_a->wf->nAvgBytesPerSec;
-    mux_a->h.dwSuggestedBufferSize -= mux_a->h.dwSuggestedBufferSize % mux_a->wf->nBlockAlign;
-
-    switch (lavc_param_atag) {
-    case 0x11: /* imaadpcm */
-	mux_a->wf->wBitsPerSample = 4;
-	mux_a->wf->cbSize = 2;
-	((uint16_t*)mux_a->wf)[sizeof(WAVEFORMATEX)] = 
-	    ((lavc_actx->block_align - 4 * lavc_actx->channels) / (4 * lavc_actx->channels)) * 8 + 1;
-	break;
-    case 0x55: /* mp3 */
-	mux_a->wf->cbSize = 12;
-	mux_a->wf->wBitsPerSample = 0; /* does not apply */
-	((MPEGLAYER3WAVEFORMAT *) (mux_a->wf))->wID = 1;
-	((MPEGLAYER3WAVEFORMAT *) (mux_a->wf))->fdwFlags = 2;
-	((MPEGLAYER3WAVEFORMAT *) (mux_a->wf))->nBlockSize = mux_a->wf->nBlockAlign;
-	((MPEGLAYER3WAVEFORMAT *) (mux_a->wf))->nFramesPerBlock = 1;
-	((MPEGLAYER3WAVEFORMAT *) (mux_a->wf))->nCodecDelay = 0;
-	break;
-    default:
-	mux_a->wf->wBitsPerSample = 0; /* Unknown */
-	if (lavc_actx->extradata && (lavc_actx->extradata_size > 0))
-	{
-	    memcpy(mux_a->wf+sizeof(WAVEFORMATEX), lavc_actx->extradata,
-		    lavc_actx->extradata_size);
-	    mux_a->wf->cbSize = lavc_actx->extradata_size;
-	}
-	else
-	    mux_a->wf->cbSize = 0;
-	break;
-    }
-
-    // Fix allocation    
-    mux_a->wf = realloc(mux_a->wf, sizeof(WAVEFORMATEX)+mux_a->wf->cbSize);
-
-    // setup filter:
-    if (!init_audio_filters(
-	sh_audio,
-	new_srate, sh_audio->channels,
-	sh_audio->sample_format,
-	mux_a->wf->nSamplesPerSec, mux_a->wf->nChannels,
-	AF_FORMAT_S16_NE,
-	mux_a->h.dwSuggestedBufferSize,
-	mux_a->h.dwSuggestedBufferSize*2)) {
-	mp_msg(MSGT_CPLAYER, MSGL_ERR, MSGTR_NoMatchingFilter);
-	exit(1);
-    }
-
-    mp_msg(MSGT_MENCODER, MSGL_V, "FRAME_SIZE: %d, BUFFER_SIZE: %d, TAG: 0x%x\n", lavc_actx->frame_size, lavc_actx->frame_size * 2 * lavc_actx->channels, mux_a->wf->wFormatTag);
-
-    break;
-#endif
-
-#ifdef HAVE_TOOLAME
-case ACODEC_TOOLAME:
-{
-    int cn = audio_output_channels ? audio_output_channels : sh_audio->channels;
-    int sr = force_srate ? force_srate : new_srate;
-    int br;
-
-    mpae_toolame = mpae_init_toolame(cn, sr);
-    if(mpae_toolame == NULL)
-    {
-	mp_msg(MSGT_MENCODER, MSGL_FATAL, "Couldn't open toolame codec, exiting\n");
-	exit(1);
-    }
-    
-    br = mpae_toolame->bitrate;
-
-    mux_a->wf = malloc(sizeof(WAVEFORMATEX)+256);
-    mux_a->wf->wFormatTag = 0x50;
-    mux_a->wf->nChannels = cn;
-    mux_a->wf->nSamplesPerSec = sr;
-    mux_a->wf->nAvgBytesPerSec = 1000 * (br / 8);
-    mux_a->h.dwRate = mux_a->wf->nAvgBytesPerSec;
-    mux_a->h.dwScale = (mux_a->wf->nAvgBytesPerSec * 1152)/ mux_a->wf->nSamplesPerSec; /* for cbr */
-
-    if ((mux_a->wf->nAvgBytesPerSec *
-	1152) % mux_a->wf->nSamplesPerSec) {
-	mux_a->h.dwScale = 1152;
-	mux_a->h.dwRate = sr;
-	mux_a->h.dwSampleSize = 0; // Blocksize not constant
-    } else {
-	mux_a->h.dwSampleSize = mux_a->h.dwScale;
-    }
-    mux_a->wf->nBlockAlign = mux_a->h.dwScale;
-    mux_a->h.dwSuggestedBufferSize = audio_preload*mux_a->wf->nAvgBytesPerSec;
-    mux_a->h.dwSuggestedBufferSize -= mux_a->h.dwSuggestedBufferSize % mux_a->wf->nBlockAlign;
-
-    mux_a->wf->cbSize = 12;
-    mux_a->wf->wBitsPerSample = 0; /* does not apply */
-    ((MPEGLAYER3WAVEFORMAT *) (mux_a->wf))->wID = 1;
-    ((MPEGLAYER3WAVEFORMAT *) (mux_a->wf))->fdwFlags = 2;
-    ((MPEGLAYER3WAVEFORMAT *) (mux_a->wf))->nBlockSize = mux_a->wf->nBlockAlign;
-    ((MPEGLAYER3WAVEFORMAT *) (mux_a->wf))->nFramesPerBlock = 1;
-    ((MPEGLAYER3WAVEFORMAT *) (mux_a->wf))->nCodecDelay = 0;
-	
-    // Fix allocation    
-    mux_a->wf = realloc(mux_a->wf, sizeof(WAVEFORMATEX)+mux_a->wf->cbSize);
-
-    // setup filter:
-    if (!init_audio_filters(
-	sh_audio,
-	new_srate, sh_audio->channels,
-	sh_audio->sample_format,
-	mux_a->wf->nSamplesPerSec, mux_a->wf->nChannels,
-	AF_FORMAT_S16_NE,
-	mux_a->h.dwSuggestedBufferSize,
-	mux_a->h.dwSuggestedBufferSize*2)) {
-	mp_msg(MSGT_CPLAYER, MSGL_ERR, "Couldn't find matching filter / ao format!\n");
-	exit(1);
-    }
-
-    break;
-}
-#endif
 }
 
-if (verbose>1) print_wave_header(mux_a->wf);
+if ( mp_msg_test(MSGT_MENCODER,MSGL_DBG2) ) print_wave_header(mux_a->wf, MSGL_DBG2);
 
-if(audio_delay!=0.0){
-    mux_a->h.dwStart=audio_delay*mux_a->h.dwRate/mux_a->h.dwScale;
-    mp_msg(MSGT_MENCODER, MSGL_INFO, MSGTR_SettingAudioDelay,mux_a->h.dwStart*mux_a->h.dwScale/(float)mux_a->h.dwRate);
-}
-if(muxer->fix_stream_parameters)
-	  muxer_stream_fix_parameters(muxer,mux_a);
+if (! ignore_start)
+    muxer->audio_delay_fix += sh_audio->stream_delay;
 
 } // if(sh_audio)
 
-mp_msg(MSGT_MENCODER, MSGL_INFO, MSGTR_WritingAVIHeader);
-if (muxer->cont_write_header) muxer_write_header(muxer);
-
 decoded_frameno=0;
-
-if(sh_audio)
-switch(mux_a->codec){
-#ifdef HAVE_MP3LAME
-case ACODEC_VBRMP3:
-
-lame=lame_init();
-lame_set_bWriteVbrTag(lame,0);
-lame_set_in_samplerate(lame,mux_a->wf->nSamplesPerSec);
-//lame_set_in_samplerate(lame,sh_audio->samplerate); // if resampling done by lame
-lame_set_num_channels(lame,mux_a->wf->nChannels);
-lame_set_out_samplerate(lame,mux_a->wf->nSamplesPerSec);
-lame_set_quality(lame,lame_param_algqual); // 0 = best q
-if(lame_param_free_format) lame_set_free_format(lame,1);
-if(lame_param_vbr){  // VBR:
-    lame_set_VBR(lame,lame_param_vbr); // vbr mode
-    lame_set_VBR_q(lame,lame_param_quality); // 0 = best vbr q  5=~128k
-    if(lame_param_br>0) lame_set_VBR_mean_bitrate_kbps(lame,lame_param_br);
-    if(lame_param_br_min>0) lame_set_VBR_min_bitrate_kbps(lame,lame_param_br_min);
-    if(lame_param_br_max>0) lame_set_VBR_max_bitrate_kbps(lame,lame_param_br_max);
-} else {    // CBR:
-    if(lame_param_br>0) lame_set_brate(lame,lame_param_br);
-}
-if(lame_param_mode>=0) lame_set_mode(lame,lame_param_mode); // j-st
-if(lame_param_ratio>0) lame_set_compression_ratio(lame,lame_param_ratio);
-if(lame_param_scale>0) {
-    mp_msg(MSGT_MENCODER, MSGL_INFO, MSGTR_SettingAudioInputGain, lame_param_scale);
-    lame_set_scale(lame,lame_param_scale);
-}
-if(lame_param_lowpassfreq>=-1) lame_set_lowpassfreq(lame,lame_param_lowpassfreq);
-if(lame_param_highpassfreq>=-1) lame_set_highpassfreq(lame,lame_param_highpassfreq);
-#if HAVE_MP3LAME >= 392
-if(lame_param_preset != NULL){
-  mp_msg(MSGT_MENCODER, MSGL_INFO, MSGTR_LamePresetEquals,lame_param_preset);
-  lame_presets_set(lame,lame_param_fast, (lame_param_vbr==0), lame_param_preset);
-}
-#endif
-if(lame_init_params(lame) == -1){
-    mp_msg(MSGT_MENCODER, MSGL_FATAL, MSGTR_LameCantInit); 
-    mencoder_exit(1,NULL);
-}
-if(verbose>0){
-    lame_print_config(lame);
-    lame_print_internals(lame);
-}
-break;
-#endif
-}
 
 signal(SIGINT,exit_sighandler);  // Interrupt from keyboard
 signal(SIGQUIT,exit_sighandler); // Quit from keyboard
 signal(SIGTERM,exit_sighandler); // kill
+signal(SIGHUP,exit_sighandler);  // broken terminal line
+signal(SIGPIPE,exit_sighandler); // broken pipe
 
 timer_start=GetTimerMS();
 } // if (!curfile) // if this was the first file.
-else if (sh_audio) {
-	int out_format = 0, out_minsize = 0, out_maxsize = 0;
-	int do_init_filters = 1;
-	switch(mux_a->codec){
-		case ACODEC_COPY:
-			do_init_filters = 0;
-			if (playback_speed != 1.0) mp_msg(MSGT_CPLAYER, MSGL_WARN, MSGTR_NoSpeedWithFrameCopy);
-			mp_msg(MSGT_MENCODER, MSGL_INFO, MSGTR_ACodecFramecopy,
-			       mux_a->wf->wFormatTag, mux_a->wf->nChannels, mux_a->wf->nSamplesPerSec,
-			       mux_a->wf->wBitsPerSample, mux_a->wf->nAvgBytesPerSec, mux_a->h.dwSampleSize);
-			if (sh_audio->wf) {
-				if ((mux_a->wf->wFormatTag != sh_audio->wf->wFormatTag) ||
-				    (mux_a->wf->nChannels != sh_audio->wf->nChannels) ||
-				    (mux_a->wf->nSamplesPerSec != sh_audio->wf->nSamplesPerSec * playback_speed))
-				{
-					mp_msg(MSGT_MENCODER, MSGL_INFO, MSGTR_ACodecFramecopy,
-					       sh_audio->wf->wFormatTag, sh_audio->wf->nChannels, sh_audio->wf->nSamplesPerSec * playback_speed,
-					       sh_audio->wf->wBitsPerSample, sh_audio->wf->nAvgBytesPerSec, 0);
-					mp_msg(MSGT_MENCODER,MSGL_FATAL,MSGTR_AudioCopyFileMismatch);
-					mencoder_exit(1,NULL);
-				}
-			}
-			else {
-				if ((mux_a->wf->wFormatTag != sh_audio->format) ||
-				    (mux_a->wf->nChannels != sh_audio->channels) ||
-				    (mux_a->wf->nSamplesPerSec != sh_audio->samplerate * playback_speed))
-				{
-					mp_msg(MSGT_MENCODER, MSGL_INFO, MSGTR_ACodecFramecopy,
-					       sh_audio->wf->wFormatTag, sh_audio->wf->nChannels, sh_audio->wf->nSamplesPerSec * playback_speed,
-					       sh_audio->wf->wBitsPerSample, sh_audio->wf->nAvgBytesPerSec, 0);
-					mp_msg(MSGT_MENCODER,MSGL_FATAL,MSGTR_AudioCopyFileMismatch);
-					mencoder_exit(1,NULL);
-				}
-				
-			}
-			break;
-		case ACODEC_PCM:
-			mp_msg(MSGT_MENCODER, MSGL_INFO, MSGTR_CBRPCMAudioSelected);
-			out_format = (mux_a->wf->wBitsPerSample==8) ? AF_FORMAT_U8 : AF_FORMAT_S16_LE;
-			out_minsize = 16384;
-			out_maxsize = mux_a->wf->nAvgBytesPerSec;
-			break;
-#ifdef HAVE_MP3LAME
-		case ACODEC_VBRMP3:
-			mp_msg(MSGT_MENCODER, MSGL_INFO, MSGTR_MP3AudioSelected);
-			out_format = AF_FORMAT_S16_NE;
-			out_minsize = 4608;
-			out_maxsize = mux_a->h.dwRate*mux_a->wf->nChannels*2;
-			break;
-#endif
-#ifdef USE_LIBAVCODEC
-		case ACODEC_LAVC:
-			out_format = AF_FORMAT_S16_NE;
-			out_minsize = mux_a->h.dwSuggestedBufferSize;
-			out_maxsize = mux_a->h.dwSuggestedBufferSize*2;
-			mp_msg(MSGT_MENCODER, MSGL_V, "FRAME_SIZE: %d, BUFFER_SIZE: %d, TAG: 0x%x\n",
-			       lavc_actx->frame_size, lavc_actx->frame_size * 2 * lavc_actx->channels, mux_a->wf->wFormatTag);
-			break;
-#endif
-#ifdef HAVE_TOOLAME
-		case ACODEC_TOOLAME:
-			out_format = AF_FORMAT_S16_NE;
-			out_minsize = mux_a->h.dwSuggestedBufferSize;
-			out_maxsize = mux_a->h.dwSuggestedBufferSize*2;
-			break;
-#endif
+else {
+	if (!mux_a != !sh_audio) {
+		mp_msg(MSGT_MENCODER,MSGL_FATAL,MSGTR_NoAudioFileMismatch);
+		mencoder_exit(1,NULL);
 	}
-	if (do_init_filters) if(!init_audio_filters(sh_audio,
-	    new_srate,
-	    sh_audio->channels,
-	    sh_audio->sample_format,
-	    mux_a->wf->nSamplesPerSec,
-	    mux_a->wf->nChannels,
-	    out_format,
-	    out_minsize,
-	    out_maxsize))
-	{
-		mp_msg(MSGT_CPLAYER, MSGL_FATAL, MSGTR_NoMatchingFilter);
-		exit(1);
+	if (sh_audio && mux_a->codec == ACODEC_COPY) {
+		if (playback_speed != 1.0) mp_msg(MSGT_CPLAYER, MSGL_WARN, MSGTR_NoSpeedWithFrameCopy);
+		mp_msg(MSGT_MENCODER, MSGL_INFO, MSGTR_ACodecFramecopy,
+		       mux_a->wf->wFormatTag, mux_a->wf->nChannels, mux_a->wf->nSamplesPerSec,
+		       mux_a->wf->wBitsPerSample, mux_a->wf->nAvgBytesPerSec, mux_a->h.dwSampleSize);
+		if (sh_audio->wf) {
+			if ((mux_a->wf->wFormatTag != sh_audio->wf->wFormatTag) ||
+			    (mux_a->wf->nChannels != sh_audio->wf->nChannels) ||
+			    (mux_a->wf->nSamplesPerSec != sh_audio->wf->nSamplesPerSec * playback_speed))
+			{
+				mp_msg(MSGT_MENCODER, MSGL_INFO, MSGTR_ACodecFramecopy,
+				       sh_audio->wf->wFormatTag, sh_audio->wf->nChannels, (int)(sh_audio->wf->nSamplesPerSec * playback_speed),
+				       sh_audio->wf->wBitsPerSample, sh_audio->wf->nAvgBytesPerSec, 0);
+				mp_msg(MSGT_MENCODER,MSGL_FATAL,MSGTR_AudioCopyFileMismatch);
+				mencoder_exit(1,NULL);
+			}
+		} else {
+			if ((mux_a->wf->wFormatTag != sh_audio->format) ||
+			    (mux_a->wf->nChannels != sh_audio->channels) ||
+			    (mux_a->wf->nSamplesPerSec != sh_audio->samplerate * playback_speed))
+			{
+				mp_msg(MSGT_MENCODER, MSGL_INFO, MSGTR_ACodecFramecopy,
+				       sh_audio->wf->wFormatTag, sh_audio->wf->nChannels, (int)(sh_audio->wf->nSamplesPerSec * playback_speed),
+				       sh_audio->wf->wBitsPerSample, sh_audio->wf->nAvgBytesPerSec, 0);
+				mp_msg(MSGT_MENCODER,MSGL_FATAL,MSGTR_AudioCopyFileMismatch);
+				mencoder_exit(1,NULL);
+			}
+		}
+	} else if (sh_audio) {
+		int out_srate = mux_a->wf->nSamplesPerSec;
+		int out_channels = mux_a->wf->nChannels;
+		int out_format = aencoder->input_format;
+		int out_minsize = aencoder->min_buffer_size;
+		int out_maxsize = aencoder->max_buffer_size;
+		if (!init_audio_filters(sh_audio, new_srate, sh_audio->channels,
+					sh_audio->sample_format, &out_srate, &out_channels,
+					&out_format, out_minsize, out_maxsize)) {
+			mp_msg(MSGT_CPLAYER, MSGL_FATAL, MSGTR_NoMatchingFilter);
+			mencoder_exit(1, NULL);
+		}
+		mux_a->wf->nSamplesPerSec = out_srate;
+		mux_a->wf->nChannels = out_channels;
 	}
 }
 
@@ -1316,12 +1042,12 @@ if (seek_to_sec) {
     else 
         sscanf(seek_to_sec, "%f", &d);
 
-    demux_seek(demuxer, d, 1);
+    demux_seek(demuxer, d, audio_delay, 1);
 //  there is 2 way to handle the -ss option in 3-pass mode:
 // > 1. do the first pass for the whole file, and use -ss for 2nd/3rd pases only
 // > 2. do all the 3 passes with the same -ss value
 //  this line enables behaviour 1. (and kills 2. at the same time):
-//    if(demuxer2) demux_seek(demuxer2, d, 1);
+//    if(demuxer2) demux_seek(demuxer2, d, audio_delay, 1);
 }
 
 if (out_file_format == MUXER_TYPE_MPEG)
@@ -1346,25 +1072,21 @@ if(file_format == DEMUXER_TYPE_TV)
 play_n_frames=play_n_frames_mf;
 if (curfile && end_at_type == END_AT_TIME) end_at += mux_v->timer;
 
-#ifdef USE_EDL
 if (edl_records) free_edl(edl_records);
 next_edl_record = edl_records = NULL;
 edl_muted = 0;
 edl_seeking = 1;
-edl_skip = -1;
 if (edl_filename) {
     next_edl_record = edl_records = edl_parse_file();
 }
-#endif
+
+if (sh_audio && audio_delay != 0.) fixdelay(d_video, d_audio, mux_a, &frame_data, mux_v->codec==VCODEC_COPY);
 
 while(!at_eof){
 
-    float frame_time=0;
     int blit_frame=0;
     float a_pts=0;
     float v_pts=0;
-    unsigned char* start=NULL;
-    int in_size;
     int skip_flag=0; // 1=skip  -1=duplicate
 
     if((end_at_type == END_AT_SIZE && end_at <= ftello(muxer_f))  ||
@@ -1376,7 +1098,6 @@ while(!at_eof){
       if(play_n_frames<0) break;
     }
 
-#ifdef USE_EDL
 goto_redo_edl:
     if (next_edl_record && sh_video && sh_video->pts >= next_edl_record->start_sec) {
         if (next_edl_record->action == EDL_SKIP && edl_seeking) {
@@ -1385,9 +1106,9 @@ goto_redo_edl:
             mp_msg(MSGT_CPLAYER, MSGL_DBG4, "EDL_SKIP: start [%f], stop [%f], length [%f]\n",
                    next_edl_record->start_sec, next_edl_record->stop_sec, next_edl_record->length_sec);
 
-            result = edl_seek(next_edl_record, demuxer, d_audio, mux_a, &frame_time, &start, mux_v->codec==VCODEC_COPY);
+            result = edl_seek(next_edl_record, demuxer, d_audio, mux_a, &frame_data, mux_v->codec==VCODEC_COPY);
 
-            if (result == 2) break; // EOF
+            if (result == 2) { at_eof=1; break; } // EOF
             else if (result == 0) edl_seeking = 0; // no seeking
             else { // sucess
                 edl_muted = 0;
@@ -1414,77 +1135,74 @@ goto_redo_edl:
             next_edl_record=next_edl_record->next;
         }
     }
-#endif
 
 
 if(sh_audio){
     // get audio:
     while(mux_a->timer-audio_preload<mux_v->timer){
+        float tottime;
 	int len=0;
 
 	ptimer_start = GetTimerMS();
+	// CBR - copy 0.5 sec of audio
+	// or until the end of video:
+	tottime = stop_time(demuxer, mux_v);
+	if (tottime != -1) {
+		tottime -= mux_a->timer;
+		if (tottime > 1./audio_density) tottime = 1./audio_density;
+	}
+	else tottime = 1./audio_density;
 
-#ifdef USE_LIBAVCODEC
-	if(mux_a->codec == ACODEC_LAVC){
-	    int  size, rd_len;
-	
-	    size = lavc_actx->frame_size * 2 * mux_a->wf->nChannels;
+	// let's not output more audio than necessary
+	if (tottime <= 0) break;
 
-	    rd_len = dec_audio(sh_audio, lavc_abuf, size);
-	    if(rd_len != size)
-		break;
+	if(aencoder)
+	{
+		if(mux_a->h.dwSampleSize) /* CBR */
+		{
+			if(aencoder->set_decoded_len)
+			{
+				len = mux_a->h.dwSampleSize*(int)(mux_a->h.dwRate*tottime);
+				aencoder->set_decoded_len(aencoder, len);
+			}
+			else
+				len = aencoder->decode_buffer_size;
 
-	    // Encode one frame
-	    mux_a->buffer_len += avcodec_encode_audio(lavc_actx, mux_a->buffer + mux_a->buffer_len, size, lavc_abuf);
-	    if (mux_a->h.dwSampleSize) { /* CBR */
-		/*
-		 * work around peculiar lame behaviour
-		 */
-		if (mux_a->buffer_len < mux_a->wf->nBlockAlign) {
-		    len = 0;
-		} else {
-		    len = mux_a->wf->nBlockAlign*(mux_a->buffer_len/mux_a->wf->nBlockAlign);
+			len = dec_audio(sh_audio, aencoder->decode_buffer, len);
+			mux_a->buffer_len += aencoder->encode(aencoder, mux_a->buffer + mux_a->buffer_len, 
+				aencoder->decode_buffer, len, mux_a->buffer_size-mux_a->buffer_len);
+			if(mux_a->buffer_len < mux_a->wf->nBlockAlign)
+				len = 0;
+			else 
+				len = mux_a->wf->nBlockAlign*(mux_a->buffer_len/mux_a->wf->nBlockAlign);
 		}
-	    } else { /* VBR */
-		len = mux_a->buffer_len;
+		else	/* VBR */
+		{
+			int sz = 0;
+			while(1)
+			{
+				len = 0;
+				if(! sz)
+					sz = aencoder->get_frame_size(aencoder);
+				if(sz > 0 && mux_a->buffer_len >= sz)
+				{
+					len = sz;
+					break;
+				}
+				len = dec_audio(sh_audio,aencoder->decode_buffer, aencoder->decode_buffer_size);
+				if(len <= 0)
+				{
+					len = 0;
+					break;
+				}
+				len = aencoder->encode(aencoder, mux_a->buffer + mux_a->buffer_len, aencoder->decode_buffer, len, mux_a->buffer_size-mux_a->buffer_len);
+				mux_a->buffer_len += len;
+			}
 	    }
 	    if (mux_v->timer == 0) mux_a->h.dwInitialFrames++;
 	}
-#endif
-#ifdef HAVE_TOOLAME
-	if((mux_a->codec == ACODEC_TOOLAME) && (mpae_toolame != NULL)){
-	    int  size, rd_len;
-	    uint8_t buf[1152*2*2];
-	    size = 1152 * 2 * mux_a->wf->nChannels;
-
-	    rd_len = dec_audio(sh_audio, buf, size);
-	    if(rd_len != size)
-		break;
-
-	    // Encode one frame
-	    mux_a->buffer_len += mpae_encode_toolame(mpae_toolame, mux_a->buffer + mux_a->buffer_len, 1152, (void*)buf, mux_a->buffer_size-mux_a->buffer_len);
-	    if (mux_a->h.dwSampleSize) { /* CBR */
-		if (mux_a->buffer_len < mux_a->wf->nBlockAlign) {
-		    len = 0;
-		} else {
-		    len = mux_a->wf->nBlockAlign*(mux_a->buffer_len/mux_a->wf->nBlockAlign);
-		}
-	    } else { /* VBR */
-		len = mux_a->buffer_len;
-	    }
-	    if (mux_v->timer == 0) mux_a->h.dwInitialFrames++;
-	}
-#endif
+	else {
 	if(mux_a->h.dwSampleSize){
-	    // CBR - copy 0.5 sec of audio
-	    // or until the end of video:
-	    float tottime = stop_time(demuxer, mux_v);
-	    if (tottime != -1) {
-		    tottime -= mux_a->timer;
-		    if (tottime > 1./audio_density) tottime = 1./audio_density;
-	    }
-	    else tottime = 1./audio_density;
-	    
 	    switch(mux_a->codec){
 	    case ACODEC_COPY: // copy
 		len=mux_a->wf->nAvgBytesPerSec*tottime;
@@ -1492,69 +1210,18 @@ if(sh_audio){
 		len*=mux_a->h.dwSampleSize;
 		len=demux_read_data(sh_audio->ds,mux_a->buffer,len);
 		break;
-	    case ACODEC_PCM:
-		len=mux_a->h.dwSampleSize*(int)(mux_a->h.dwRate*tottime);
-		len=dec_audio(sh_audio,mux_a->buffer,len);
-		break;
 	    }
 	} else {
 	    // VBR - encode/copy an audio frame
 	    switch(mux_a->codec){
 	    case ACODEC_COPY: // copy
 		len=ds_get_packet(sh_audio->ds,(unsigned char**) &mux_a->buffer);
-//		printf("VBR audio framecopy not yet implemented!\n");
 		break;
-#ifdef HAVE_MP3LAME
-	    case ACODEC_VBRMP3:
-		while(mux_a->buffer_len<4){
-		  unsigned char tmp[2304];
-		  int len=dec_audio(sh_audio,tmp,2304);
-		  if(len<=0) break; // eof
-		  /* mono encoding, a bit tricky */
-		  if (mux_a->wf->nChannels == 1)
-		  {
-		    len = lame_encode_buffer(lame, (short *)tmp, (short *)tmp, len/2,
-			mux_a->buffer+mux_a->buffer_len, mux_a->buffer_size-mux_a->buffer_len);
-		  }
-		  else
-		  {
-		    len=lame_encode_buffer_interleaved(lame,
-		      (short *)tmp,len/4,
-		      mux_a->buffer+mux_a->buffer_len,mux_a->buffer_size-mux_a->buffer_len);
-		  }
-		  if(len<0) break; // error
-		  mux_a->buffer_len+=len;
 		}
-		if(mux_a->buffer_len<4) break;
-		len=mp_decode_mp3_header(mux_a->buffer);
-		//printf("%d\n",len);
-		if(len<=0) break; // bad frame!
-//		printf("[%d]\n",mp_mp3_get_lsf(mux_a->buffer));
-		while(mux_a->buffer_len<len){
-		  unsigned char tmp[2304];
-		  int len=dec_audio(sh_audio,tmp,2304);
-		  if(len<=0) break; // eof
-		  /* mono encoding, a bit tricky */
-		  if (mux_a->wf->nChannels == 1)
-		  {
-		    len = lame_encode_buffer(lame, (short *)tmp, (short *)tmp, len/2,
-			mux_a->buffer+mux_a->buffer_len, mux_a->buffer_size-mux_a->buffer_len);
-		  }
-		  else
-		  {
-		    len=lame_encode_buffer_interleaved(lame,
-		      (short *)tmp,len/4,
-		      mux_a->buffer+mux_a->buffer_len,mux_a->buffer_size-mux_a->buffer_len);
-		  }
-		  if(len<0) break; // error
-		  mux_a->buffer_len+=len;
-		}
-		break;
-#endif
 	    }
 	}
 	if(len<=0) break; // EOF?
-	muxer_write_chunk(mux_a,len,0x10);
+	muxer_write_chunk(mux_a,len,0x10, MP_NOPTS_VALUE, MP_NOPTS_VALUE);
 	if(!mux_a->h.dwSampleSize && mux_a->timer>0)
 	    mux_a->wf->nAvgBytesPerSec=0.5f+(double)mux_a->size/mux_a->timer; // avg bps (VBR)
 	if(mux_a->buffer_len>=len){
@@ -1566,23 +1233,20 @@ if(sh_audio){
 	audiosamples++;
 	audiorate+= (GetTimerMS() - ptimer_start);
 	
-	// let's not output more audio than necessary
-	if (stop_time(demuxer, mux_v) != -1 && stop_time(demuxer, mux_v) <= mux_a->timer) break;
     }
 }
 
     // get video frame!
 
-#ifdef USE_EDL
-    if (edl_skip != -1) { in_size = edl_skip; edl_skip = -1; }
-    else
-#endif
-    in_size=video_read_frame(sh_video,&frame_time,&start,force_fps);
-    if(in_size<0){ at_eof=1; break; }
-    sh_video->timer+=frame_time; ++decoded_frameno;
-    frame_time /= playback_speed;
+    if (!frame_data.already_read) {
+        frame_data.in_size=video_read_frame(sh_video,&frame_data.frame_time,&frame_data.start,force_fps);
+        sh_video->timer+=frame_data.frame_time;
+    }
+    frame_data.frame_time /= playback_speed;
+    if(frame_data.in_size<0){ at_eof=1; break; }
+    ++decoded_frameno;
 
-    v_timer_corr-=frame_time-(float)mux_v->h.dwScale/mux_v->h.dwRate;
+    v_timer_corr-=frame_data.frame_time-(float)mux_v->h.dwScale/mux_v->h.dwRate;
 
 if(demuxer2){	// 3-pass encoding, read control file (frameno.avi)
     // find our frame:
@@ -1611,29 +1275,30 @@ if(demuxer2){	// 3-pass encoding, read control file (frameno.avi)
 // check frame duplicate/drop:
 
 //printf("\r### %5.3f ###\n",v_timer_corr);
+float mux_frametime = (float)mux_v->h.dwScale/mux_v->h.dwRate;
 
-if(v_timer_corr>=(float)mux_v->h.dwScale/mux_v->h.dwRate &&
-    (skip_limit<0 || skip_flag<skip_limit) ){
-    v_timer_corr-=(float)mux_v->h.dwScale/mux_v->h.dwRate;
+if (v_timer_corr >= mux_frametime && (skip_limit<0 || skip_flag < skip_limit)) {
+    v_timer_corr-=mux_frametime;
     ++skip_flag; // skip
-} else
-while(v_timer_corr<=-(float)mux_v->h.dwScale/mux_v->h.dwRate &&
-    (skip_limit<0 || (-skip_flag)<skip_limit) ){
-    v_timer_corr+=(float)mux_v->h.dwScale/mux_v->h.dwRate;
+}
+while (v_timer_corr <= -mux_frametime && (skip_limit<0 || -skip_flag < skip_limit)) {
+    v_timer_corr+=mux_frametime;
     --skip_flag; // dup
 }
 
-while( (v_pts_corr<=-(float)mux_v->h.dwScale/mux_v->h.dwRate && skip_flag>0)
- || (v_pts_corr<=-2*(float)mux_v->h.dwScale/mux_v->h.dwRate) ){
-    v_pts_corr+=(float)mux_v->h.dwScale/mux_v->h.dwRate;
+// either v_pts_corr is big, more than 2 times framerate, then we follow its advice,
+// or, it cancels out v_timer_corr, in which case be happy and do nothing.
+
+while ((v_pts_corr <= -mux_frametime && skip_flag > 0) || (v_pts_corr <= -2*mux_frametime)) {
+    v_pts_corr+=mux_frametime;
     --skip_flag; // dup
 }
-if( (v_pts_corr>=(float)mux_v->h.dwScale/mux_v->h.dwRate && skip_flag<0)
- || (v_pts_corr>=2*(float)mux_v->h.dwScale/mux_v->h.dwRate) )
-  if(skip_flag<=0){ // we can't skip more than 1 frame now
-    v_pts_corr-=(float)mux_v->h.dwScale/mux_v->h.dwRate;
+if ((v_pts_corr >= mux_frametime && skip_flag < 0) || (v_pts_corr >= 2*mux_frametime)) {
+  if (skip_flag<=0) { // we can't skip more than 1 frame now
+    v_pts_corr-=mux_frametime;
     ++skip_flag; // skip
   }
+}
 
 } // demuxer2
 
@@ -1641,32 +1306,42 @@ ptimer_start = GetTimerMS();
 
 switch(mux_v->codec){
 case VCODEC_COPY:
-    mux_v->buffer=start;
-    if(skip_flag<=0) muxer_write_chunk(mux_v,in_size,(sh_video->ds->flags&1)?0x10:0);
+    mux_v->buffer=frame_data.start;
+    if(skip_flag<=0) muxer_write_chunk(mux_v,frame_data.in_size,(sh_video->ds->flags&1)?0x10:0, MP_NOPTS_VALUE, MP_NOPTS_VALUE);
     break;
 case VCODEC_FRAMENO:
     mux_v->buffer=(unsigned char *)&decoded_frameno; // tricky
-    if(skip_flag<=0) muxer_write_chunk(mux_v,sizeof(int),0x10);
+    if(skip_flag<=0) muxer_write_chunk(mux_v,sizeof(int),0x10, MP_NOPTS_VALUE, MP_NOPTS_VALUE);
     break;
 default:
     // decode_video will callback down to ve_*.c encoders, through the video filters
-    blit_frame=decode_video(sh_video,start,in_size,
-      skip_flag>0 && (!sh_video->vfilter || ((vf_instance_t *)sh_video->vfilter)->control(sh_video->vfilter, VFCTRL_SKIP_NEXT_FRAME, 0) != CONTROL_TRUE));
+    blit_frame=decode_video(sh_video,frame_data.start,frame_data.in_size,
+      skip_flag>0 && (!sh_video->vfilter || ((vf_instance_t *)sh_video->vfilter)->control(sh_video->vfilter, VFCTRL_SKIP_NEXT_FRAME, 0) != CONTROL_TRUE), MP_NOPTS_VALUE);
     
     if (sh_video->vf_inited < 0) mencoder_exit(1, NULL);
     
     if(!blit_frame){
+      if (play_n_frames >= 0)
+        play_n_frames++;
       badframes++;
       if(skip_flag<=0){
 	// unwanted skipping of a frame, what to do?
+        v_timer_corr-=(float)mux_v->h.dwScale/mux_v->h.dwRate;
+#if 0
+        // Old code apparently made under the assumption that !blit_frame means
+        // decoding failed due to corruption or something.. but duplication and
+        // skipping of frames should be entirely disabled when skip_limit==0,
+        // and must be in order for many filters to work with -noskip.
+        // Eventually this entire block should probably be removed.
 	if(skip_limit==0){
 	    // skipping not allowed -> write empty frame:
 	    if (!encode_duplicates || !sh_video->vfilter || ((vf_instance_t *)sh_video->vfilter)->control(sh_video->vfilter, VFCTRL_DUPLICATE_FRAME, 0) != CONTROL_TRUE)
-	      muxer_write_chunk(mux_v,0,0);
+	      muxer_write_chunk(mux_v,0,0, MP_NOPTS_VALUE, MP_NOPTS_VALUE);
 	} else {
 	    // skipping allowed -> skip it and distriubute timer error:
 	    v_timer_corr-=(float)mux_v->h.dwScale/mux_v->h.dwRate;
 	}
+#endif
       }
     }
 }
@@ -1680,7 +1355,7 @@ if(skip_flag<0){
     while(skip_flag<0){
 	duplicatedframes++;
 	if (!encode_duplicates || !sh_video->vfilter || ((vf_instance_t *)sh_video->vfilter)->control(sh_video->vfilter, VFCTRL_DUPLICATE_FRAME, 0) != CONTROL_TRUE)
-	    muxer_write_chunk(mux_v,0,0);
+	    muxer_write_chunk(mux_v,0,0, MP_NOPTS_VALUE, MP_NOPTS_VALUE);
 	++skip_flag;
     }
 } else
@@ -1714,8 +1389,12 @@ if(sh_audio && !demuxer2){
     v_pts=sh_video ? sh_video->pts : d_video->pts;
     // av = compensated (with out buffering delay) A-V diff
     AV_delay=(a_pts-v_pts);
+    AV_delay-=audio_delay;
     AV_delay /= playback_speed;
     AV_delay-=mux_a->timer-(mux_v->timer-(v_timer_corr+v_pts_corr));
+    // adjust for encoder delays
+    AV_delay -= (float) mux_a->encoder_delay * mux_a->h.dwScale/mux_a->h.dwRate;
+    AV_delay += (float) mux_v->encoder_delay * mux_v->h.dwScale/mux_v->h.dwRate;
 	// compensate input video timer by av:
         x=AV_delay*0.1f;
         if(x<-max_pts_correction) x=-max_pts_correction; else
@@ -1748,7 +1427,8 @@ if(sh_audio && !demuxer2){
 
     {	float t=(GetTimerMS()-timer_start)*0.001f;
 	float len=(demuxer->movi_end-demuxer->movi_start);
-	float p=len>1000 ? (float)(demuxer->filepos-demuxer->movi_start) / len : 0;
+	float p=len>1000 ? (float)(demuxer->filepos-demuxer->movi_start) / len :
+                (demuxer_get_percent_pos(demuxer) / 100.0);
 #if 0
 	if(!len && sh_audio && sh_audio->audio.dwLength>100){
 	    p=(sh_audio->audio.dwSampleSize? ds_tell(sh_audio->ds)/sh_audio->audio.dwSampleSize : sh_audio->ds->block_no)
@@ -1762,7 +1442,7 @@ if(sh_audio && !demuxer2){
 	    (int)demuxer->movi_end);
 #else
       if(!quiet) {
-	if(verbose>0) {
+	if( mp_msg_test(MSGT_AVSYNC,MSGL_V) ) {
 		mp_msg(MSGT_AVSYNC,MSGL_STATUS,"Pos:%6.1fs %6df (%2d%%) %3dfps Trem:%4dmin %3dmb  A-V:%5.3f [%d:%d] A/Vms %d/%d D/B/S %d/%d/%d \r",
 	    	mux_v->timer, decoded_frameno, (int)(p*100),
 	    	(t>1) ? (int)(decoded_frameno/t+0.5) : 0,
@@ -1775,9 +1455,9 @@ if(sh_audio && !demuxer2){
 			duplicatedframes, badframes, skippedframes
 		);
 	} else
-	mp_msg(MSGT_AVSYNC,MSGL_STATUS,"Pos:%6.1fs %6df (%2d%%) %3dfps Trem:%4dmin %3dmb  A-V:%5.3f [%d:%d]\r",
+	mp_msg(MSGT_AVSYNC,MSGL_STATUS,"Pos:%6.1fs %6df (%2d%%) %5.2ffps Trem:%4dmin %3dmb  A-V:%5.3f [%d:%d]\r",
 	    mux_v->timer, decoded_frameno, (int)(p*100),
-	    (t>1) ? (int)(decoded_frameno/t+0.5) : 0,
+	    (t>1) ? (float)(decoded_frameno/t) : 0,
 	    (p>0.001) ? (int)((t/p-t)/60) : 0, 
 	    (p>0.001) ? (int)(ftello(muxer_f)/p/1024/1024) : 0,
 	    v_pts_corr,
@@ -1822,6 +1502,8 @@ if(sh_audio && !demuxer2){
  }
 #endif
 
+ frame_data = (s_frame_data){ .start = NULL, .in_size = 0, .frame_time = 0., .already_read = 0 };
+
  if(ferror(muxer_f)) {
      mp_msg(MSGT_MENCODER,MSGL_FATAL,MSGTR_ErrorWritingFile, out_filename);
      mencoder_exit(1, NULL);
@@ -1840,6 +1522,7 @@ if (!interrupted && filelist[++curfile].name != 0) {
 		sh_video->vfilter = NULL;
 	}
 
+	if(sh_audio){ uninit_audio(sh_audio);sh_audio=NULL; }
 	if(sh_video){ uninit_video(sh_video);sh_video=NULL; }
 	if(demuxer) free_demuxer(demuxer);
 	if(stream) free_stream(stream); // kill cache thread
@@ -1858,25 +1541,12 @@ if(sh_video && sh_video->vfilter){
     	                                              VFCTRL_FLUSH_FRAMES, 0);
 }
 
-#ifdef HAVE_MP3LAME
-// fixup CBR mp3 audio header:
-if(sh_audio && mux_a->codec==ACODEC_VBRMP3 && !lame_param_vbr){
-    mux_a->h.dwSampleSize=1;
-    ((MPEGLAYER3WAVEFORMAT*)(mux_a->wf))->nBlockSize=
-	(mux_a->size+(mux_a->h.dwLength>>1))/mux_a->h.dwLength;
-    mux_a->h.dwLength=mux_a->size;
-    mux_a->h.dwRate=mux_a->wf->nAvgBytesPerSec;
-    mux_a->h.dwScale=1;
-    mux_a->wf->nBlockAlign=1;
-    mp_msg(MSGT_MENCODER, MSGL_INFO, MSGTR_CBRAudioByterate,
-	    mux_a->h.dwRate,((MPEGLAYER3WAVEFORMAT*)(mux_a->wf))->nBlockSize);
-}
-#endif
+if(aencoder)
+    if(aencoder->fixup)
+        aencoder->fixup(aencoder);
 
-mp_msg(MSGT_MENCODER, MSGL_INFO, MSGTR_WritingAVIIndex);
 if (muxer->cont_write_index) muxer_write_index(muxer);
 muxer_f_size=ftello(muxer_f);
-mp_msg(MSGT_MENCODER, MSGL_INFO, MSGTR_FixupAVIHeader);
 fseek(muxer_f,0,SEEK_SET);
 if (muxer->cont_write_header) muxer_write_header(muxer); // update header
 if(ferror(muxer_f) || fclose(muxer_f) != 0) {
@@ -1896,24 +1566,20 @@ if(out_video_codec==VCODEC_FRAMENO && mux_v->timer>100){
 }
 
 mp_msg(MSGT_MENCODER, MSGL_INFO, MSGTR_VideoStreamResult,
-    (float)(mux_v->size/mux_v->timer*8.0f/1000.0f), (int)(mux_v->size/mux_v->timer), (int)mux_v->size, (float)mux_v->timer, decoded_frameno);
+    (float)(mux_v->size/mux_v->timer*8.0f/1000.0f), (int)(mux_v->size/mux_v->timer), (uint64_t)mux_v->size, (float)mux_v->timer, decoded_frameno);
 if(sh_audio)
 mp_msg(MSGT_MENCODER, MSGL_INFO, MSGTR_AudioStreamResult,
-    (float)(mux_a->size/mux_a->timer*8.0f/1000.0f), (int)(mux_a->size/mux_a->timer), (int)mux_a->size, (float)mux_a->timer);
+    (float)(mux_a->size/mux_a->timer*8.0f/1000.0f), (int)(mux_a->size/mux_a->timer), (uint64_t)mux_a->size, (float)mux_a->timer);
 
+if(sh_audio){ uninit_audio(sh_audio);sh_audio=NULL; }
 if(sh_video){ uninit_video(sh_video);sh_video=NULL; }
 if(demuxer) free_demuxer(demuxer);
 if(stream) free_stream(stream); // kill cache thread
 
-#ifdef USE_LIBAVCODEC
-if(lavc_abuf != NULL)
-    free(lavc_abuf);
-#endif
-
 return interrupted;
 }
 
-static void parse_end_at()
+static void parse_end_at(void)
 {
 
     end_at_type = END_AT_NONE;
@@ -1978,169 +1644,11 @@ static uint8_t* flip_upside_down(uint8_t* dst, const uint8_t* src, int width,
 }
 #endif
 
-#if HAVE_MP3LAME >= 392
-/* lame_presets_set 
-   taken out of presets_set in lame-3.93.1/frontend/parse.c and modified */
-static int  lame_presets_set( lame_t gfp, int fast, int cbr, const char* preset_name )
-{
-    int mono = 0;
-
-    if (strcmp(preset_name, "help") == 0) {
-        mp_msg(MSGT_MENCODER, MSGL_INFO, MSGTR_LameVersion, get_lame_version(), get_lame_url());
-        lame_presets_longinfo_dm( stdout );
-        return -1;
-    }
-
-
-
-    //aliases for compatibility with old presets
-
-    if (strcmp(preset_name, "phone") == 0) {
-        preset_name = "16";
-        mono = 1;
-    }
-    if ( (strcmp(preset_name, "phon+") == 0) ||
-         (strcmp(preset_name, "lw") == 0) ||
-         (strcmp(preset_name, "mw-eu") == 0) ||
-         (strcmp(preset_name, "sw") == 0)) {
-        preset_name = "24";
-        mono = 1;
-    }
-    if (strcmp(preset_name, "mw-us") == 0) {
-        preset_name = "40";
-        mono = 1;
-    }
-    if (strcmp(preset_name, "voice") == 0) {
-        preset_name = "56";
-        mono = 1;
-    }
-    if (strcmp(preset_name, "fm") == 0) {
-        preset_name = "112";
-    }
-    if ( (strcmp(preset_name, "radio") == 0) ||
-         (strcmp(preset_name, "tape") == 0)) {
-        preset_name = "112";
-    }
-    if (strcmp(preset_name, "hifi") == 0) {
-        preset_name = "160";
-    }
-    if (strcmp(preset_name, "cd") == 0) {
-        preset_name = "192";
-    }
-    if (strcmp(preset_name, "studio") == 0) {
-        preset_name = "256";
-    }
-
-#if HAVE_MP3LAME >= 393
-    if (strcmp(preset_name, "medium") == 0) {
-
-        if (fast > 0)
-           lame_set_preset(gfp, MEDIUM_FAST);
-        else
-           lame_set_preset(gfp, MEDIUM);
-
-        return 0;
-    }
-#endif
-    
-    if (strcmp(preset_name, "standard") == 0) {
-
-        if (fast > 0)
-           lame_set_preset(gfp, STANDARD_FAST);
-        else
-           lame_set_preset(gfp, STANDARD);
-
-        return 0;
-    }
-    
-    else if (strcmp(preset_name, "extreme") == 0){
-
-        if (fast > 0)
-           lame_set_preset(gfp, EXTREME_FAST);
-        else
-           lame_set_preset(gfp, EXTREME);
-
-        return 0;
-    }
-    					
-    else if (((strcmp(preset_name, "insane") == 0) || 
-              (strcmp(preset_name, "320"   ) == 0))   && (fast < 1)) {
-
-        lame_set_preset(gfp, INSANE);
- 
-        return 0;
-    }
-
-    // Generic ABR Preset
-    if (((atoi(preset_name)) > 0) &&  (fast < 1)) {
-        if ((atoi(preset_name)) >= 8 && (atoi(preset_name)) <= 320){
-            lame_set_preset(gfp, atoi(preset_name));
-
-            if (cbr == 1 )
-                lame_set_VBR(gfp, vbr_off);
-
-            if (mono == 1 ) {
-                lame_set_mode(gfp, MONO);
-            }
-
-            return 0;
-
-        }
-        else {
-            mp_msg(MSGT_MENCODER, MSGL_INFO, MSGTR_LameVersion, get_lame_version(), get_lame_url());
-            mp_msg(MSGT_MENCODER, MSGL_ERR, MSGTR_InvalidBitrateForLamePreset);
-            return -1;
-        }
-    }
-
-
-
-    mp_msg(MSGT_MENCODER, MSGL_INFO, MSGTR_LameVersion, get_lame_version(), get_lame_url());
-    mp_msg(MSGT_MENCODER, MSGL_FATAL, MSGTR_InvalidLamePresetOptions);
-    mencoder_exit(1, MSGTR_ErrorParsingCommandLine);
-}
-#endif
-
-#if HAVE_MP3LAME >= 392
-/* lame_presets_longinfo_dm
-   taken out of presets_longinfo_dm in lame-3.93.1/frontend/parse.c and modified */
-static void  lame_presets_longinfo_dm ( FILE* msgfp )
-{
-        mp_msg(MSGT_MENCODER, MSGL_INFO, MSGTR_LamePresetsLongInfo);
-	mencoder_exit(0, NULL);
-}
-#endif
-
-#ifdef USE_LIBAVCODEC
-static uint32_t lavc_find_atag(char *codec)
-{
-    if(codec == NULL)
-       return 0;
-
-    if(! strcasecmp(codec, "mp2"))
-       return 0x50;
-
-    if(! strcasecmp(codec, "mp3"))
-       return 0x55;
-
-    if(! strcasecmp(codec, "ac3"))
-       return 0x2000;
-
-    if(! strcasecmp(codec, "adpcm_ima_wav"))
-       return 0x11;
-
-    if(! strncasecmp(codec, "bonk", 4))
-       return 0x2048;
-
-    return 0;
-}
-#endif
 
 static float stop_time(demuxer_t* demuxer, muxer_stream_t* mux_v) {
 	float timeleft = -1;
 	if (play_n_frames >= 0) timeleft = mux_v->timer + play_n_frames * (double)(mux_v->h.dwScale) / mux_v->h.dwRate;
 	if (end_at_type == END_AT_TIME && (timeleft > end_at || timeleft == -1)) timeleft = end_at;
-#ifdef USE_EDL
 	if (next_edl_record && demuxer && demuxer->video) { // everything is OK to be checked
 		float tmp = mux_v->timer + next_edl_record->start_sec - demuxer->video->pts;
 		if (timeleft == -1 || timeleft > tmp) {
@@ -2153,25 +1661,123 @@ static float stop_time(demuxer_t* demuxer, muxer_stream_t* mux_v) {
 			}
 		}
 	}
-#endif
 	return timeleft;
 }
 
-#ifdef USE_EDL
-int edl_seek(edl_record_ptr next_edl_record, demuxer_t* demuxer, demux_stream_t *d_audio, muxer_stream_t* mux_a, float * frame_time, unsigned char ** start, int framecopy) {
-    sh_audio_t * sh_audio = d_audio->sh;
-    sh_video_t * sh_video = demuxer->video ? demuxer->video->sh : NULL;
+static float calc_a_pts(demux_stream_t *d_audio) {
+    sh_audio_t * sh_audio = d_audio ? d_audio->sh : NULL;
+    float a_pts = 0.;
+    if (sh_audio)
+        a_pts = d_audio->pts + (ds_tell_pts(d_audio) - sh_audio->a_in_buffer_len)/(float)sh_audio->i_bps;
+    return a_pts;
+}
+
+static float forward_audio(float pts, demux_stream_t *d_audio, muxer_stream_t* mux_a) {
+    sh_audio_t * sh_audio = d_audio ? d_audio->sh : NULL;
+    int samplesize, avg;
+    float a_pts = calc_a_pts(d_audio);
+
+    if (!sh_audio) return a_pts;
+
+    if (sh_audio->audio.dwScale) samplesize = sh_audio->audio.dwSampleSize;
+    else samplesize = (sh_audio->wf ? sh_audio->wf->nBlockAlign : 1);
+    avg = (sh_audio->wf ? sh_audio->wf->nAvgBytesPerSec : sh_audio->i_bps);
+
+    // after a demux_seek, a_pts will be zero until you read some audio.
+    // carefully checking if a_pts is truely correct by reading tiniest amount of data possible.
+    if (pts > a_pts && a_pts == 0.0 && samplesize) {
+        if (demux_read_data(sh_audio->ds,mux_a->buffer,samplesize) <= 0) return a_pts; // EOF
+        a_pts = calc_a_pts(d_audio);
+    }
+
+    while (pts > a_pts) {
+        int len;
+        if (samplesize) {
+            len = avg * (pts - a_pts > 0.5 ? 0.5 : pts - a_pts);
+            len/= samplesize; if(len<1) len=1;
+            len*= samplesize;
+            len = demux_read_data(sh_audio->ds,mux_a->buffer,len);
+        } else {
+            unsigned char * crap;
+            len = ds_get_packet(sh_audio->ds, &crap);
+        }
+        if (len <= 0) break; // EOF of audio.
+        a_pts = calc_a_pts(d_audio);
+    }
+    return a_pts;
+}
+
+static int slowseek(float end_pts, demux_stream_t *d_video, demux_stream_t *d_audio, muxer_stream_t* mux_a, s_frame_data * frame_data, int framecopy, int print_info) {
+    sh_video_t * sh_video = d_video->sh;
     vf_instance_t * vfilter = sh_video ? sh_video->vfilter : NULL;
+    int done = 0;
+
+    while (!interrupted) {
+        float a_pts = 0.;
+
+        if (!frame_data->already_read) { // when called after fixdelay, a frame is already read
+            frame_data->in_size = video_read_frame(sh_video, &frame_data->frame_time, &frame_data->start, force_fps);
+            if(frame_data->in_size<0) return 2;
+            sh_video->timer += frame_data->frame_time;
+        }
+        frame_data->already_read = 0;
+
+        a_pts = forward_audio(sh_video->pts - frame_data->frame_time + audio_delay, d_audio, mux_a);
+
+        if (done) {
+            frame_data->already_read = 1;
+            if (!framecopy || (sh_video->ds->flags & 1)) return 1;
+        }
+        if (sh_video->pts >= end_pts) done = 1;
+
+        if (vfilter) {
+            int softskip = (vfilter->control(vfilter, VFCTRL_SKIP_NEXT_FRAME, 0) == CONTROL_TRUE);
+            decode_video(sh_video, frame_data->start, frame_data->in_size, !softskip, MP_NOPTS_VALUE);
+        }
+
+        if (print_info) mp_msg(MSGT_MENCODER, MSGL_STATUS,
+               "EDL SKIP: Start: %.2f  End: %.2f   Current: V: %.2f  A: %.2f     \r",
+               next_edl_record->start_sec, next_edl_record->stop_sec,
+               sh_video->pts, a_pts);
+    }
+    if (interrupted) return 2;
+    return 1;
+}
+
+static void fixdelay(demux_stream_t *d_video, demux_stream_t *d_audio, muxer_stream_t* mux_a, s_frame_data * frame_data, int framecopy) {
+    // TODO: Find a way to encode silence instead of deleting video
+    sh_video_t * sh_video = d_video->sh;
+    float a_pts;
+
+    // demux_seek has a weirdness that sh_video->pts is meaningless,
+    // until a single frame is read... Same for audio actually too.
+    // Reading one frame, and keeping it.
+    frame_data->in_size = video_read_frame(sh_video, &frame_data->frame_time, &frame_data->start, force_fps);
+    if(frame_data->in_size<0) return;
+    sh_video->timer += frame_data->frame_time;
+    frame_data->already_read = 1;
+
+    a_pts = forward_audio(sh_video->pts - frame_data->frame_time + audio_delay, d_audio, mux_a);
+
+    if (audio_delay > 0) return;
+    else if (sh_video->pts - frame_data->frame_time + audio_delay >= a_pts) return;
+
+    slowseek(a_pts - audio_delay, d_video, d_audio, mux_a, frame_data, framecopy, 0);
+}
+
+static int edl_seek(edl_record_ptr next_edl_record, demuxer_t* demuxer, demux_stream_t *d_audio, muxer_stream_t* mux_a, s_frame_data * frame_data, int framecopy) {
+    sh_video_t * sh_video = demuxer->video ? demuxer->video->sh : NULL;
 
     if (!sh_video) return 0;
     if (sh_video->pts >= next_edl_record->stop_sec) return 1; // nothing to do...
 
     if (!edl_seek_type) {
-        if(demux_seek(demuxer, next_edl_record->stop_sec - sh_video->pts, 0)){
+        if(demux_seek(demuxer, next_edl_record->stop_sec - sh_video->pts, audio_delay, 0)){
             sh_video->pts = demuxer->video->pts;
             //if (vo_vobsub) vobsub_seek(vo_vobsub,sh_video->pts);
             resync_video_stream(sh_video);
             //if(vo_spudec) spudec_reset(vo_spudec);
+            if (audio_delay != 0.0) fixdelay(demuxer->video, d_audio, mux_a, frame_data, framecopy);
             return 1;
         }
         // non-seekable stream.
@@ -2180,46 +1786,5 @@ int edl_seek(edl_record_ptr next_edl_record, demuxer_t* demuxer, demux_stream_t 
 
     // slow seek, read every frame.
 
-    while (!interrupted) {
-        float a_pts = 0.;
-        int in_size;
-
-        in_size = video_read_frame(sh_video, frame_time, start, force_fps);
-        if(in_size<0) return 2;
-        sh_video->timer += *frame_time;
-
-        if (sh_audio) {
-            a_pts = d_audio->pts + (ds_tell_pts(d_audio) - sh_audio->a_in_buffer_len)/(float)sh_audio->i_bps;
-            while (sh_video->pts > a_pts) {
-                if (mux_a->h.dwSampleSize) {
-                    int len;
-                    len = mux_a->wf->nAvgBytesPerSec * (sh_video->pts - a_pts);
-                    len/= mux_a->h.dwSampleSize; if(len<1) len=1;
-                    len*= mux_a->h.dwSampleSize;
-                    demux_read_data(sh_audio->ds,mux_a->buffer,len);
-                } else {
-                    ds_get_packet(sh_audio->ds,(unsigned char**) &mux_a->buffer);
-                }
-                a_pts = d_audio->pts + (ds_tell_pts(d_audio)-sh_audio->a_in_buffer_len)/(float)sh_audio->i_bps;
-            }
-        }
-
-        if (sh_video->pts >= next_edl_record->stop_sec) {
-            edl_skip = in_size;
-            if (!framecopy || (sh_video->ds->flags & 1)) return 1;
-        }
-
-        if (vfilter) {
-            int softskip = (vfilter->control(vfilter, VFCTRL_SKIP_NEXT_FRAME, 0) == CONTROL_TRUE);
-            decode_video(sh_video, *start, in_size, !softskip);
-        }
-
-        mp_msg(MSGT_MENCODER, MSGL_STATUS,
-               "EDL SKIP: Start: %.2f  End: %.2lf   Current: V: %.2f  A: %.2f     \r",
-               next_edl_record->start_sec, next_edl_record->stop_sec,
-               sh_video->pts, a_pts);
-    }
-    if (interrupted) return 2;
-    return 1;
+    return slowseek(next_edl_record->stop_sec, demuxer->video, d_audio, mux_a, frame_data, framecopy, 1);
 }
-#endif

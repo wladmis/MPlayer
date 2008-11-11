@@ -4,9 +4,9 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "../config.h"
-#include "../mp_msg.h"
-#include "../help_mp.h"
+#include "config.h"
+#include "mp_msg.h"
+#include "help_mp.h"
 
 #include "app.h"
 #include "wm/wskeys.h"
@@ -74,8 +74,11 @@ extern char *get_path(char *);
 
 listItems   appMPlayer;
 
+/* FIXME: Eventually remove the obsolete directory names. */
 char      * skinDirInHome=NULL;
+char      * skinDirInHome_obsolete=NULL;
 char      * skinMPlayerDir=NULL;
+char      * skinMPlayerDir_obsolete=NULL;
 char      * skinName = NULL;
 
 void appClearItem( wItem * item )

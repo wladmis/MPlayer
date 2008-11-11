@@ -7,7 +7,7 @@
  **
  ** Modified for use with MPlayer, detailed CVS changelog at
  ** http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
- ** $Id: unrarlib.c,v 1.7 2005/04/15 18:48:03 diego Exp $
+ ** $Id: unrarlib.c 15166 2005-04-15 18:48:03Z diego $
  **
  **  The contents of this file are subject to the UniquE RAR File Library
  **  License (the "unrarlib-license.txt"). You may not use this file except

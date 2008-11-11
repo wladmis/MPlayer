@@ -1,5 +1,7 @@
 
-#include "../config.h"
+#include "config.h"
+#include "mp_msg.h"
+#include "help_mp.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -16,14 +18,14 @@
 #include "img_format.h"
 #include "mp_image.h"
 
-#include "../m_struct.h"
-#include "../m_option.h"
+#include "m_struct.h"
+#include "m_option.h"
 #include "menu.h"
 
-#include "../libvo/font_load.h"
-#include "../osdep/keycodes.h"
-#include "../input/input.h"
-#include "../osdep/timer.h"
+#include "libvo/font_load.h"
+#include "osdep/keycodes.h"
+#include "input/input.h"
+#include "osdep/timer.h"
 
 typedef struct history_st history_t;
 
@@ -55,6 +57,7 @@ struct menu_priv_s {
   int height; // Display size in %
   int minb;
   int vspace;
+  int bg,bg_alpha;
   unsigned int hide_time;
   unsigned int show_time;
   int history_max;
@@ -81,6 +84,7 @@ static struct menu_priv_s cfg_dflt = {
   33, // %
   3,
   3,
+  0x80,0x40,
   500,
   500,
   10,
@@ -96,6 +100,8 @@ static m_option_t cfg_fields[] = {
   { "height", ST_OFF(height), CONF_TYPE_INT, M_OPT_RANGE, 1, 100, NULL },
   { "minbor", ST_OFF(minb), CONF_TYPE_INT, M_OPT_MIN, 0, 0, NULL },
   { "vspace", ST_OFF(vspace), CONF_TYPE_INT, M_OPT_MIN, 0, 0, NULL },
+  { "bg", ST_OFF(bg), CONF_TYPE_INT, M_OPT_RANGE, -1, 255, NULL },
+  { "bg-alpha", ST_OFF(bg_alpha), CONF_TYPE_INT, M_OPT_RANGE, 0, 255, NULL },
   { "show-time",ST_OFF(show_time), CONF_TYPE_INT, M_OPT_MIN, 0, 0, NULL },
   { "hide-time",ST_OFF(hide_time), CONF_TYPE_INT, M_OPT_MIN, 0, 0, NULL },
   { "history-size",ST_OFF(history_max), CONF_TYPE_INT, M_OPT_MIN, 1, 0, NULL },
@@ -190,6 +196,9 @@ static void draw(menu_t* menu, mp_image_t* mpi) {
   if(x < 0 || y < 0 || w <= 0 || h <= 0 )
     return;
 
+  if(mpriv->bg >= 0)
+    menu_draw_box(mpi,mpriv->bg,mpriv->bg_alpha,0,0,mpi->w,h);
+  
   if(!mpriv->child || !mpriv->raw_child){
     char input[strlen(mpriv->cur_history->buffer) + strlen(mpriv->prompt) + 1];
     sprintf(input,"%s%s",mpriv->prompt,mpriv->cur_history->buffer);
@@ -253,10 +262,10 @@ static void check_child(menu_t* menu) {
         mpriv->prompt = mpriv->mp_prompt;
         //add_line(mpriv,"Child process exited");    
       }
-      else printf("waitpid error: %s\n",strerror(errno));
+      else mp_msg(MSGT_GLOBAL,MSGL_ERR,MSGTR_LIBMENU_WaitPidError,strerror(errno));
     }
   } else if(r < 0) {
-    printf("select error\n");
+    mp_msg(MSGT_GLOBAL,MSGL_ERR,MSGTR_LIBMENU_SelectError);
     return;
   }
   
@@ -266,7 +275,7 @@ static void check_child(menu_t* menu) {
       if(w) mpriv->add_line = 1;
       r = read(mpriv->child_fd[i],buffer,255);
       if(r < 0)
-	printf("Read error on child's %s \n", i == 1 ? "stdout":"stderr");
+	mp_msg(MSGT_GLOBAL,MSGL_ERR,MSGTR_LIBMENU_ReadErrorOnChilds, i == 1 ? "stdout":"stderr");
       else if(r>0) {
 	buffer[r] = '\0';
 	add_string(mpriv,buffer);
@@ -284,9 +293,9 @@ static int run_shell_cmd(menu_t* menu, char* cmd) {
 #ifndef __MINGW32__
   int in[2],out[2],err[2];
 
-  printf("Console run %s ...\n",cmd);
+  mp_msg(MSGT_GLOBAL,MSGL_INFO,MSGTR_LIBMENU_ConsoleRun,cmd);
   if(mpriv->child) {
-    printf("A child is alredy running\n");
+    mp_msg(MSGT_GLOBAL,MSGL_ERR,MSGTR_LIBMENU_AChildIsAlreadyRunning);
     return 0;
   }
 
@@ -296,7 +305,7 @@ static int run_shell_cmd(menu_t* menu, char* cmd) {
 
   mpriv->child = fork();
   if(mpriv->child < 0) {
-    printf("Fork failed !!!\n");
+    mp_msg(MSGT_GLOBAL,MSGL_ERR,MSGTR_LIBMENU_ForkFailed);
     close_pipe(in);
     close_pipe(out);
     close_pipe(err);
@@ -370,14 +379,14 @@ static void read_key(menu_t* menu,int c) {
       while(l > 0) {
 	int w = write(mpriv->child_fd[0],str,l);
 	if(w < 0) {
-	  printf("Write error\n");
+	  mp_msg(MSGT_GLOBAL,MSGL_ERR,MSGTR_LIBMENU_WriteError);
 	  break;
 	}
 	l -= w;
 	str += w;
       }
       if(write(mpriv->child_fd[0],"\n",1) < 0)
-	printf("Write error\n");
+	mp_msg(MSGT_GLOBAL,MSGL_ERR,MSGTR_LIBMENU_WriteError);
       enter_cmd(menu);
       return;
     }

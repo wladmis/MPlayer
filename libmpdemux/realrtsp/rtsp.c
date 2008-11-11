@@ -49,6 +49,10 @@
 #include <inttypes.h>
 
 #include "rtsp.h"
+#include "../stream.h"
+#include "../demuxer.h"
+#include "rtsp_session.h"
+#include "osdep/timer.h"
 
 /*
 #define LOG
@@ -58,6 +62,7 @@
 #define HEADER_SIZE 1024
 #define MAX_FIELDS 256
 
+extern int network_bandwidth;
 struct rtsp_s {
 
   int           s;
@@ -115,7 +120,7 @@ static int host_connect_attempt(struct in_addr ia, int port) {
 
   s = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);  
   if (s == -1) {
-    printf ("rtsp: socket(): %s\n", strerror(errno));
+    mp_msg(MSGT_OPEN, MSGL_ERR, "rtsp: socket(): %s\n", strerror(errno));
     return -1;
   }
 
@@ -129,7 +134,7 @@ static int host_connect_attempt(struct in_addr ia, int port) {
 #else
       && WSAGetLastError() == WSAEINPROGRESS) {
 #endif
-    printf ("rtsp: connect(): %s\n", strerror(errno));
+    mp_msg(MSGT_OPEN, MSGL_ERR, "rtsp: connect(): %s\n", strerror(errno));
     closesocket(s);
     return -1;
   }
@@ -144,7 +149,7 @@ static int host_connect(const char *host, int port) {
   
   h = gethostbyname(host);
   if (h == NULL) {
-    printf ("rtsp: unable to resolve '%s'.\n", host);
+    mp_msg(MSGT_OPEN, MSGL_ERR, "rtsp: unable to resolve '%s'.\n", host);
     return -1;
   }
 
@@ -156,7 +161,7 @@ static int host_connect(const char *host, int port) {
     if(s != -1)
       return s;
   }
-  printf ("rtsp: unable to connect to '%s'.\n", host);
+  mp_msg(MSGT_OPEN, MSGL_ERR, "rtsp: unable to connect to '%s'.\n", host);
   return -1;
 }
 
@@ -177,7 +182,7 @@ static int write_stream(int s, const char *buf, int len) {
 #else
       if ((timeout>0) && ((errno == EAGAIN) || (WSAGetLastError() == WSAEINPROGRESS))) {
 #endif
-        sleep (1); timeout--;
+        usec_sleep (1000000); timeout--;
       } else
         return -1;
     }
@@ -213,7 +218,7 @@ static ssize_t read_stream(int fd, void *buf, size_t count) {
         continue;
       }
       
-      printf ("rtsp: read error.\n");
+      mp_msg(MSGT_OPEN, MSGL_ERR, "rtsp: read error.\n");
       return ret;
     } else
       total += ret;
@@ -233,31 +238,31 @@ static void hexdump (char *buf, int length) {
 
   int i;
 
-  printf ("rtsp: ascii>");
+  mp_msg(MSGT_OPEN, MSGL_INFO, "rtsp: ascii>");
   for (i = 0; i < length; i++) {
     unsigned char c = buf[i];
 
     if ((c >= 32) && (c <= 128))
-      printf ("%c", c);
+      mp_msg(MSGT_OPEN, MSGL_INFO, "%c", c);
     else
-      printf (".");
+      mp_msg(MSGT_OPEN, MSGL_INFO, ".");
   }
-  printf ("\n");
+  mp_msg(MSGT_OPEN, MSGL_INFO, "\n");
 
-  printf ("rtsp: hexdump> ");
+  mp_msg(MSGT_OPEN, MSGL_INFO, "rtsp: hexdump> ");
   for (i = 0; i < length; i++) {
     unsigned char c = buf[i];
 
-    printf ("%02x", c);
+    mp_msg(MSGT_OPEN, MSGL_INFO, "%02x", c);
 
     if ((i % 16) == 15)
-      printf ("\nrtsp:         ");
+      mp_msg(MSGT_OPEN, MSGL_INFO, "\nrtsp:         ");
 
     if ((i % 2) == 1)
-      printf (" ");
+      mp_msg(MSGT_OPEN, MSGL_INFO, " ");
 
   }
-  printf ("\n");
+  mp_msg(MSGT_OPEN, MSGL_INFO, "\n");
 }
 #endif
 
@@ -268,10 +273,11 @@ static void hexdump (char *buf, int length) {
  
 static char *rtsp_get(rtsp_t *s) {
 
-  int n=0;
+  int n=1;
   char *buffer = malloc(BUF_SIZE);
   char *string = NULL;
 
+  read_stream(s->s, buffer, 1);
   while (n<BUF_SIZE) {
     read_stream(s->s, &(buffer[n]), 1);
     if ((buffer[n-1]==0x0d)&&(buffer[n]==0x0a)) break;
@@ -279,7 +285,7 @@ static char *rtsp_get(rtsp_t *s) {
   }
 
   if (n>=BUF_SIZE) {
-    printf("librtsp: buffer overflow in rtsp_get\n");
+    mp_msg(MSGT_OPEN, MSGL_FATAL, "librtsp: buffer overflow in rtsp_get\n");
     exit(1);
   }
   string=malloc(sizeof(char)*n);
@@ -287,7 +293,7 @@ static char *rtsp_get(rtsp_t *s) {
   string[n-1]=0;
 
 #ifdef LOG
-  printf("librtsp: << '%s'\n", string);
+  mp_msg(MSGT_OPEN, MSGL_INFO, "librtsp: << '%s'\n", string);
 #endif
   
 
@@ -305,7 +311,7 @@ static void rtsp_put(rtsp_t *s, const char *string) {
   char *buf=malloc(sizeof(char)*len+2);
 
 #ifdef LOG
-  printf("librtsp: >> '%s'", string);
+  mp_msg(MSGT_OPEN, MSGL_INFO, "librtsp: >> '%s'", string);
 #endif
 
   memcpy(buf,string,len);
@@ -315,7 +321,7 @@ static void rtsp_put(rtsp_t *s, const char *string) {
   write_stream(s->s, buf, len+2);
   
 #ifdef LOG
-  printf(" done.\n");
+  mp_msg(MSGT_OPEN, MSGL_INFO, " done.\n");
 #endif
 
   free(buf);
@@ -340,7 +346,7 @@ static int rtsp_get_code(const char *string) {
     return RTSP_STATUS_SET_PARAMETER;
   }
 
-  if(code != 200) printf("librtsp: server responds: '%s'\n",string);
+  if(code != 200) mp_msg(MSGT_OPEN, MSGL_INFO, "librtsp: server responds: '%s'\n",string);
 
   return code;
 }
@@ -417,7 +423,7 @@ static int rtsp_get_answers(rtsp_t *s) {
       sscanf(answer,"Cseq: %u",&answer_seq);
       if (s->cseq != answer_seq) {
 #ifdef LOG
-        printf("librtsp: warning: Cseq mismatch. got %u, assumed %u", answer_seq, s->cseq);
+        mp_msg(MSGT_OPEN, MSGL_WARN, "librtsp: warning: Cseq mismatch. got %u, assumed %u", answer_seq, s->cseq);
 #endif
         s->cseq=answer_seq;
       }
@@ -434,14 +440,14 @@ static int rtsp_get_answers(rtsp_t *s) {
       sscanf(answer,"Session: %s",buf);
       if (s->session) {
         if (strcmp(buf, s->session)) {
-          printf("rtsp: warning: setting NEW session: %s\n", buf);
+          mp_msg(MSGT_OPEN, MSGL_WARN, "rtsp: warning: setting NEW session: %s\n", buf);
           free(s->session);
           s->session=strdup(buf);
         }
       } else
       {
 #ifdef LOG
-        printf("rtsp: setting session id to: %s\n", buf);
+        mp_msg(MSGT_OPEN, MSGL_INFO, "rtsp: setting session id to: %s\n", buf);
 #endif
         s->session=strdup(buf);
       }
@@ -571,7 +577,8 @@ int rtsp_read_data(rtsp_t *s, char *buffer, unsigned int size) {
   if (size>=4) {
     i=read_stream(s->s, buffer, 4);
     if (i<4) return i;
-    if ((buffer[0]=='S')&&(buffer[1]=='E')&&(buffer[2]=='T')&&(buffer[3]=='_'))
+    if (((buffer[0]=='S')&&(buffer[1]=='E')&&(buffer[2]=='T')&&(buffer[3]=='_')) ||
+        ((buffer[0]=='O')&&(buffer[1]=='P')&&(buffer[2]=='T')&&(buffer[3]=='I'))) // OPTIONS
     {
       char *rest=rtsp_get(s);
       if (!rest)
@@ -583,13 +590,13 @@ int rtsp_read_data(rtsp_t *s, char *buffer, unsigned int size) {
         rest=rtsp_get(s);
         if (!rest)
           return -1;
-        if (!strncmp(rest,"Cseq:",5))
-          sscanf(rest,"Cseq: %u",&seq);
+        if (!strncmp(rest,"CSeq:",5))
+          sscanf(rest,"CSeq: %u",&seq);
       } while (strlen(rest)!=0);
       free(rest);
       if (seq<0) {
 #ifdef LOG
-        printf("rtsp: warning: cseq not recognized!\n");
+        mp_msg(MSGT_OPEN, MSGL_WARN, "rtsp: warning: cseq not recognized!\n");
 #endif
         seq=1;
       }
@@ -608,7 +615,7 @@ int rtsp_read_data(rtsp_t *s, char *buffer, unsigned int size) {
   } else
     i=read_stream(s->s, buffer, size);
 #ifdef LOG
-  printf("librtsp: << %d of %d bytes\n", i, size);
+  mp_msg(MSGT_OPEN, MSGL_INFO, "librtsp: << %d of %d bytes\n", i, size);
 #endif
 
   return i;
@@ -649,12 +656,12 @@ rtsp_t *rtsp_connect(int fd, char* mrl, char *path, char *host, int port, char *
     path++;
   if ((s->param = strchr(s->path, '?')) != NULL)
     s->param++;
-  //printf("path=%s\n", s->path);
-  //printf("param=%s\n", s->param ? s->param : "NULL");
+  //mp_msg(MSGT_OPEN, MSGL_INFO, "path=%s\n", s->path);
+  //mp_msg(MSGT_OPEN, MSGL_INFO, "param=%s\n", s->param ? s->param : "NULL");
   s->s = fd;
 
   if (s->s < 0) {
-    printf ("rtsp: failed to connect to '%s'\n", s->host);
+    mp_msg(MSGT_OPEN, MSGL_ERR, "rtsp: failed to connect to '%s'\n", s->host);
     rtsp_close(s);
     return NULL;
   }
@@ -710,6 +717,7 @@ char *rtsp_search_answers(rtsp_t *s, const char *tag) {
   while (*answer) {
     if (!strncasecmp(*answer,tag,strlen(tag))) {
       ptr=strchr(*answer,':');
+      if (!ptr) return NULL;
       ptr++;
       while(*ptr==' ') ptr++;
       return ptr;
@@ -839,3 +847,96 @@ void rtsp_free_answers(rtsp_t *s) {
     answer++;
   }
 }
+
+static int realrtsp_streaming_read( int fd, char *buffer, int size, streaming_ctrl_t *stream_ctrl ) {
+  return rtsp_session_read(stream_ctrl->data, buffer, size);
+}
+
+
+static int realrtsp_streaming_start( stream_t *stream ) {
+  int fd;
+  rtsp_session_t *rtsp;
+  char *mrl;
+  char *file;
+  int port;
+  int redirected, temp;
+  if( stream==NULL ) return -1;
+
+  temp = 5; // counter so we don't get caught in infinite redirections (you never know)
+
+  do {
+    redirected = 0;
+
+    fd = connect2Server( stream->streaming_ctrl->url->hostname,
+         port = (stream->streaming_ctrl->url->port ? stream->streaming_ctrl->url->port : 554),1 );
+    if(fd<0 && !stream->streaming_ctrl->url->port)
+      fd = connect2Server(stream->streaming_ctrl->url->hostname, port = 7070, 1);
+    if(fd<0) return -1;
+
+    file = stream->streaming_ctrl->url->file;
+    if (file[0] == '/')
+      file++;
+    mrl = malloc(sizeof(char)*(strlen(stream->streaming_ctrl->url->hostname)+strlen(file)+16));
+    sprintf(mrl,"rtsp://%s:%i/%s",stream->streaming_ctrl->url->hostname,port,file);
+    rtsp = rtsp_session_start(fd,&mrl, file, stream->streaming_ctrl->url->hostname, port, &redirected, stream->streaming_ctrl->bandwidth);
+
+    if( redirected == 1) {
+      url_free(stream->streaming_ctrl->url);
+      stream->streaming_ctrl->url = url_new(mrl);
+      closesocket(fd);
+    }
+
+    free(mrl);
+    temp--;
+  } while( (redirected != 0) && (temp > 0) );	
+
+  if(!rtsp) return -1;
+
+  stream->fd=fd;
+  stream->streaming_ctrl->data=rtsp;
+
+  stream->streaming_ctrl->streaming_read = realrtsp_streaming_read;
+  //stream->streaming_ctrl->streaming_seek = nop_streaming_seek;
+  stream->streaming_ctrl->prebuffer_size = 128*1024;  // 8 KBytes
+  stream->streaming_ctrl->buffering = 1;
+  stream->streaming_ctrl->status = streaming_playing_e;
+  return 0;
+}
+
+
+static int open_s(stream_t *stream,int mode, void* opts, int* file_format) {
+  URL_t *url;
+
+  mp_msg(MSGT_OPEN, MSGL_INFO, "STREAM_RTSP, URL: %s\n", stream->url);
+  stream->streaming_ctrl = streaming_ctrl_new();
+  if( stream->streaming_ctrl==NULL )
+    return STREAM_ERROR;
+
+  stream->streaming_ctrl->bandwidth = network_bandwidth;
+  url = url_new(stream->url);
+  stream->streaming_ctrl->url = check4proxies(url);
+  //url_free(url);
+
+  stream->fd = -1;
+  if(realrtsp_streaming_start( stream ) < 0) {
+    streaming_ctrl_free(stream->streaming_ctrl);
+    stream->streaming_ctrl = NULL;
+    return STREAM_UNSUPORTED;
+  }
+
+  fixup_network_stream_cache(stream);
+  stream->type = STREAMTYPE_STREAM;
+  return STREAM_OK;
+}
+
+
+stream_info_t stream_info_rtsp = {
+  "RealNetworks rtsp streaming",
+  "realrtsp",
+  "Roberto Togni, xine team",
+  "ported from xine",
+  open_s,
+  {"rtsp", NULL},
+  NULL,
+  0 // Urls are an option string
+};

@@ -6,17 +6,15 @@
 #include <string.h>
 #include <inttypes.h>
 
-#include "../config.h"
+#include "config.h"
 #include "af.h"
-
-#ifdef USE_LIBAVCODEC
 
 #ifdef USE_LIBAVCODEC_SO
 #include <ffmpeg/avcodec.h>
 #include <ffmpeg/rational.h>
 #else
-#include "../libavcodec/avcodec.h"
-#include "../libavcodec/rational.h"
+#include "avcodec.h"
+#include "rational.h"
 #endif
 
 #define CHANS 6
@@ -188,4 +186,3 @@ af_info_t af_info_lavcresample = {
   AF_FLAGS_REENTRANT,
   open
 };
-#endif

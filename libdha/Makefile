@@ -22,7 +22,11 @@ else
 LIBNAME = libdha.so.$(VERSION)
 endif
 
-SRCS=libdha.c mtrr.c pci.c pci_names.c
+SRCS=libdha.c \
+     mtrr.c \
+     pci.c \
+     pci_names.c \
+
 OBJS=$(SRCS:.c=.o)
 
 CFLAGS  = $(OPTFLAGS) -fPIC -I. -I..
@@ -66,10 +70,10 @@ test:
 	$(CC) test.c -o test $(SHORTNAME)
 
 clean:
-	rm -f *.o *.so *.so.* *~
+	rm -f *.o *.a *~ *.so *.so.*
 
-distclean:
-	rm -f Makefile.bak *.o *.so *.so.* test *~ .depend
+distclean: clean
+	rm -f .depend test
 	rm -f pci_dev_ids.c pci_ids.h pci_names.c pci_names.h pci_vendors.h pci.db
 
 dep:    depend
@@ -78,22 +82,22 @@ depend: pci_names.c
 	$(CC) -MM $(CFLAGS) $(SRCS) 1>.depend
 
 install:
-	mkdir -p $(LIBDIR)
-	install -m 755 -s -p $(LIBNAME) $(LIBDIR)/$(LIBNAME)
+	-mkdir -p $(LIBDIR)
+	install -m 755 $(INSTALLSTRIP) -p $(LIBNAME) $(LIBDIR)/$(LIBNAME)
 	rm -f $(LIBDIR)/libdha.so
 	ln -sf $(LIBNAME) $(LIBDIR)/$(SHORTNAME)
 ifeq ($(TARGET_OS),OpenBSD)
-	ldconfig -R
+	-ldconfig -R
 else
-	ldconfig
+	-ldconfig
 endif
 
 uninstall:
 	rm -f $(LIBDIR)/libdha.so $(LIBDIR)/$(SHORTNAME) $(LIBDIR)/$(LIBNAME)
 ifeq ($(TARGET_OS),OpenBSD)
-	ldconfig -R
+	-ldconfig -R
 else
-	ldconfig
+	-ldconfig
 endif
 
 #

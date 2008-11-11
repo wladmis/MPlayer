@@ -2,20 +2,20 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../config.h"
-#include "../mp_msg.h"
+#include "config.h"
+#include "mp_msg.h"
 
 #include "img_format.h"
 #include "mp_image.h"
 #include "vf.h"
 
-#include "../libvo/fastmemcpy.h"
+#include "libvo/fastmemcpy.h"
 
 struct vf_priv_s {
 	mp_image_t *last_mpi;
 };
 
-static int put_image(struct vf_instance_s* vf, mp_image_t *mpi)
+static int put_image(struct vf_instance_s* vf, mp_image_t *mpi, double pts)
 {
 	mp_image_t *dmpi;
 	int ret;
@@ -34,7 +34,7 @@ static int put_image(struct vf_instance_s* vf, mp_image_t *mpi)
 		dmpi->stride[2] = mpi->stride[2];
 	}
 	
-	return vf_next_put_image(vf, dmpi);
+	return vf_next_put_image(vf, dmpi, pts);
 }
 
 static int control(struct vf_instance_s* vf, int request, void* data)
@@ -46,7 +46,7 @@ static int control(struct vf_instance_s* vf, int request, void* data)
 		// has been called earlier in the filter chain
 		// since the last put_image. This is reasonable
 		// because we're handling a duplicate frame!
-		if (put_image(vf, vf->priv->last_mpi))
+		if (put_image(vf, vf->priv->last_mpi, MP_NOPTS_VALUE))
 			return CONTROL_TRUE;
 		break;
 	}

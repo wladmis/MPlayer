@@ -152,8 +152,8 @@ $(SAVAGE_VID):     $(SAVAGE_OBJS)
 clean:
 	rm -f *.o *.so *~
 
-distclean:
-	rm -f Makefile.bak *.o *.so test *~ .depend
+distclean: clean
+	rm -f .depend test
 
 dep:    depend
 
@@ -162,7 +162,7 @@ depend:
 
 install:
 	mkdir -p $(LIBDIR)/mplayer/vidix
-	-install -m 755 -s -p *.so $(LIBDIR)/mplayer/vidix
+	-install -m 755 $(INSTALLSTRIP) -p *.so $(LIBDIR)/mplayer/vidix
 uninstall:
 	rm -f $(LIBDIR)/mplayer/vidix/*.so
 	rmdir -p --ignore-fail-on-non-empty $(LIBDIR)/mplayer/vidix

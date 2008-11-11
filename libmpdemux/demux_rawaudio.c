@@ -6,7 +6,7 @@
 #include <unistd.h>
 #include <string.h>
 
-#include "../m_option.h"
+#include "m_option.h"
 
 #include "stream.h"
 #include "demuxer.h"
@@ -21,7 +21,6 @@ static int bitrate = 0;
 static int format = 0x1; // Raw PCM
 
 m_option_t demux_rawaudio_opts[] = {
-  { "on", &demuxer_type, CONF_TYPE_FLAG, 0,0, DEMUXER_TYPE_RAWAUDIO, NULL },
   { "channels", &channels, CONF_TYPE_INT,CONF_RANGE,1,8, NULL },
   { "rate", &samplerate, CONF_TYPE_INT,CONF_RANGE,1000,8*48000, NULL },
   { "samplesize", &samplesize, CONF_TYPE_INT,CONF_RANGE,1,8, NULL },
@@ -31,9 +30,7 @@ m_option_t demux_rawaudio_opts[] = {
 };
 
 
-extern void resync_audio_stream(sh_audio_t *sh_audio);
-
-int demux_rawaudio_open(demuxer_t* demuxer) {
+static demuxer_t* demux_rawaudio_open(demuxer_t* demuxer) {
   sh_audio_t* sh_audio;
   WAVEFORMATEX* w;
 
@@ -59,10 +56,10 @@ int demux_rawaudio_open(demuxer_t* demuxer) {
   demuxer->audio->sh = sh_audio;
   sh_audio->ds = demuxer->audio;
 
-  return 1;
+  return demuxer;
 }
 
-int demux_rawaudio_fill_buffer(demuxer_t* demuxer, demux_stream_t *ds) {
+static int demux_rawaudio_fill_buffer(demuxer_t* demuxer, demux_stream_t *ds) {
   sh_audio_t* sh_audio = demuxer->audio->sh;
   int l = sh_audio->wf->nAvgBytesPerSec;
   off_t spos = stream_tell(demuxer->stream);
@@ -82,7 +79,7 @@ int demux_rawaudio_fill_buffer(demuxer_t* demuxer, demux_stream_t *ds) {
   return 1;
 }
 
-void demux_rawaudio_seek(demuxer_t *demuxer,float rel_seek_secs,int flags){
+static void demux_rawaudio_seek(demuxer_t *demuxer,float rel_seek_secs,float audio_delay,int flags){
   stream_t* s = demuxer->stream;
   sh_audio_t* sh_audio = demuxer->audio->sh;
   off_t base,pos;
@@ -96,6 +93,22 @@ void demux_rawaudio_seek(demuxer_t *demuxer,float rel_seek_secs,int flags){
   pos -= (pos % (sh_audio->channels * sh_audio->samplesize) );
   stream_seek(s,pos);
   sh_audio->delay= (pos-ds_tell_pts(demuxer->audio)-sh_audio->a_in_buffer_len) / (float)(sh_audio->wf->nAvgBytesPerSec);
-  resync_audio_stream(sh_audio);
 //  printf("demux_rawaudio: streamtell=%d\n",(int)stream_tell(demuxer->stream));
 }
+
+
+demuxer_desc_t demuxer_desc_rawaudio = {
+  "Raw audio demuxer",
+  "rawaudio",
+  "rawaudio",
+  "?",
+  "",
+  DEMUXER_TYPE_RAWAUDIO,
+  0, // no autodetect
+  NULL,
+  demux_rawaudio_fill_buffer,
+  demux_rawaudio_open,
+  NULL,
+  demux_rawaudio_seek,
+  NULL
+};

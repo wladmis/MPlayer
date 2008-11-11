@@ -27,7 +27,7 @@ LIBAD_EXTERN(faad)
 #ifndef USE_INTERNAL_FAAD
 #include <faad.h>
 #else
-#include "../libfaad2/faad.h"
+#include "libfaad2/faad.h"
 #endif
 
 /* configure maximum supported channels, *
@@ -53,7 +53,7 @@ static int aac_probe(unsigned char *buffer, int len)
   mp_msg(MSGT_DECAUDIO,MSGL_V, "\nAAC_PROBE: %d bytes\n", len);
   while(i <= len-4) {
     if(
-       ((buffer[i] == 0xff) && ((buffer[i+1] & 0xfe) == 0xf8)) ||
+       ((buffer[i] == 0xff) && ((buffer[i+1] & 0xf6) == 0xf0)) ||
        (buffer[i] == 'A' && buffer[i+1] == 'D' && buffer[i+2] == 'I' && buffer[i+3] == 'F')
     ) {
       pos = i;
@@ -151,7 +151,7 @@ static int init(sh_audio_t *sh)
     return 0;
   } else {
     mp_msg(MSGT_DECAUDIO,MSGL_V,"FAAD: Decoder init done (%dBytes)!\n", sh->a_in_buffer_len); // XXX: remove or move to debug!
-    mp_msg(MSGT_DECAUDIO,MSGL_V,"FAAD: Negotiated samplerate: %dHz  channels: %d\n", faac_samplerate, faac_channels);
+    mp_msg(MSGT_DECAUDIO,MSGL_V,"FAAD: Negotiated samplerate: %ldHz  channels: %d\n", faac_samplerate, faac_channels);
     sh->channels = faac_channels;
     if (audio_output_channels <= 2) sh->channels = faac_channels > 1 ? 2 : 1;
     sh->samplerate = faac_samplerate;
@@ -206,12 +206,13 @@ static int control(sh_audio_t *sh,int cmd,void* arg, ...)
   return CONTROL_UNKNOWN;
 }
 
+#define MAX_FAAD_ERRORS 10
 static int decode_audio(sh_audio_t *sh,unsigned char *buf,int minlen,int maxlen)
 {
-  int j = 0, len = 0;	      
+  int j = 0, len = 0, last_dec_len = 1, errors = 0;	      
   void *faac_sample_buffer;
 
-  while(len < minlen) {
+  while(len < minlen && last_dec_len > 0 && errors < MAX_FAAD_ERRORS) {
 
     /* update buffer for raw aac streams: */
   if(!sh->codecdata_len)
@@ -231,28 +232,36 @@ static int decode_audio(sh_audio_t *sh,unsigned char *buf,int minlen,int maxlen)
   if(!sh->codecdata_len){
    // raw aac stream:
    do {
-    faac_sample_buffer = faacDecDecode(faac_hdec, &faac_finfo, sh->a_in_buffer+j, sh->a_in_buffer_len);
+    faac_sample_buffer = faacDecDecode(faac_hdec, &faac_finfo, sh->a_in_buffer, sh->a_in_buffer_len);
 	
     /* update buffer index after faacDecDecode */
     if(faac_finfo.bytesconsumed >= sh->a_in_buffer_len) {
       sh->a_in_buffer_len=0;
     } else {
       sh->a_in_buffer_len-=faac_finfo.bytesconsumed;
-      memcpy(sh->a_in_buffer,&sh->a_in_buffer[faac_finfo.bytesconsumed],sh->a_in_buffer_len);
+      memmove(sh->a_in_buffer,&sh->a_in_buffer[faac_finfo.bytesconsumed],sh->a_in_buffer_len);
     }
 
     if(faac_finfo.error > 0) {
       mp_msg(MSGT_DECAUDIO,MSGL_WARN,"FAAD: error: %s, trying to resync!\n",
               faacDecGetErrorMessage(faac_finfo.error));
-      j++;
+      sh->a_in_buffer_len--;
+      memmove(sh->a_in_buffer,&sh->a_in_buffer[1],sh->a_in_buffer_len);
+      aac_sync(sh);
+      errors++;
     } else
       break;
-   } while(j < FAAD_BUFFLEN);	  
+   } while(errors < MAX_FAAD_ERRORS);	  
   } else {
    // packetized (.mp4) aac stream:
     unsigned char* bufptr=NULL;
-    int buflen=ds_get_packet(sh->ds, &bufptr);
+    double pts;
+    int buflen=ds_get_packet_pts(sh->ds, &bufptr, &pts);
     if(buflen<=0) break;
+    if (pts != MP_NOPTS_VALUE) {
+	sh->pts = pts;
+	sh->pts_bytes = 0;
+    }
     faac_sample_buffer = faacDecDecode(faac_hdec, &faac_finfo, bufptr, buflen);
   }
   //for (j=0;j<faac_finfo.channels;j++) printf("%d:%d\n", j, faac_finfo.channel_position[j]);
@@ -264,10 +273,12 @@ static int decode_audio(sh_audio_t *sh,unsigned char *buf,int minlen,int maxlen)
       mp_msg(MSGT_DECAUDIO,MSGL_DBG2,"FAAD: Decoded zero samples!\n");
     } else {
       /* XXX: samples already multiplied by channels! */
-      mp_msg(MSGT_DECAUDIO,MSGL_DBG2,"FAAD: Successfully decoded frame (%d Bytes)!\n",
+      mp_msg(MSGT_DECAUDIO,MSGL_DBG2,"FAAD: Successfully decoded frame (%ld Bytes)!\n",
       sh->samplesize*faac_finfo.samples);
       memcpy(buf+len,faac_sample_buffer, sh->samplesize*faac_finfo.samples);
-      len += sh->samplesize*faac_finfo.samples;
+      last_dec_len = sh->samplesize*faac_finfo.samples;
+      len += last_dec_len;
+      sh->pts_bytes += last_dec_len;
     //printf("FAAD: buffer: %d bytes  consumed: %d \n", k, faac_finfo.bytesconsumed);
     }
   }

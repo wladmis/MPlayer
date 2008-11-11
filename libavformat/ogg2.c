@@ -2,7 +2,7 @@
  * Ogg bitstream support
  * Luca Barbato <lu_zero@gentoo.org>
  * Based on tcvp implementation
- * 
+ *
  */
 
 /**
@@ -39,10 +39,15 @@
 
 static ogg_codec_t *ogg_codecs[] = {
     &vorbis_codec,
+    &theora_codec,
+    &flac_codec,
+    &ogm_video_codec,
+    &ogm_audio_codec,
+    &ogm_old_codec,
     NULL
 };
 
-#if 0                           // CONFIG_ENCODERS
+#if 0                           // CONFIG_MUXERS
 static int
 ogg_write_header (AVFormatContext * avfcontext)
 {
@@ -72,7 +77,7 @@ static AVOutputFormat ogg_oformat = {
     ogg_write_packet,
     ogg_write_trailer,
 };
-#endif //CONFIG_ENCODERS
+#endif //CONFIG_MUXERS
 
 //FIXME We could avoid some structure duplication
 static int
@@ -425,17 +430,14 @@ ogg_get_headers (AVFormatContext * s)
 static uint64_t
 ogg_gptopts (AVFormatContext * s, int i, uint64_t gp)
 {
-    AVStream *st = s->streams[i];
-    AVCodecContext *codec = &st->codec;
+    ogg_t *ogg = s->priv_data;
+    ogg_stream_t *os = ogg->streams + i;
     uint64_t pts = AV_NOPTS_VALUE;
 
-    if (codec->codec_type == CODEC_TYPE_AUDIO){
-        pts = gp * 1000000LL / codec->sample_rate;
-    }else if (codec->codec_type == CODEC_TYPE_VIDEO){
-//FIXME
-        pts = gp * 1000000LL / codec->sample_rate;
-//  pts = gp * st->video.frame_rate.den * 27000000LL /
-//      st->video.frame_rate.num;
+    if(os->codec->gptopts){
+        pts = os->codec->gptopts(s, i, gp);
+    } else {
+        pts = gp;
     }
 
     return pts;
@@ -446,18 +448,23 @@ static int
 ogg_get_length (AVFormatContext * s)
 {
     ogg_t *ogg = s->priv_data;
-    URLContext *h = url_fileno (&s->pb);
     int idx = -1, i;
-//FIXME: get the right ctx flag to know if is seekable or not
-//    if(ogg->f->flags & URL_FLAG_STREAMED)
-//  return 0;
+    offset_t size, end;
+
+    if(s->pb.is_streamed)
+        return 0;
 
 // already set
     if (s->duration != AV_NOPTS_VALUE)
         return 0;
 
+    size = url_fsize(&s->pb);
+    if(size < 0)
+        return 0;
+    end = size > MAX_PAGE_SIZE? size - MAX_PAGE_SIZE: size;
+
     ogg_save (s);
-    url_seek (h, -MAX_PAGE_SIZE, SEEK_END);
+    url_fseek (&s->pb, end, SEEK_SET);
 
     while (!ogg_read_page (s, &i)){
         if (ogg->streams[i].granule != -1 && ogg->streams[i].granule != 0)
@@ -469,7 +476,7 @@ ogg_get_length (AVFormatContext * s)
             ogg_gptopts (s, idx, ogg->streams[idx].granule);
     }
 
-    ogg->size = url_filesize(h);
+    ogg->size = size;
     ogg_restore (s, 0);
 
     return 0;
@@ -501,7 +508,7 @@ ogg_read_packet (AVFormatContext * s, AVPacket * pkt)
     ogg_stream_t *os;
     int idx = -1;
 
-    //Get an ogg packet 
+    //Get an ogg packet
     do{
         if (ogg_packet (s, &idx) < 0)
             return AVERROR_IO;
@@ -534,7 +541,8 @@ ogg_read_close (AVFormatContext * s)
 
     for (i = 0; i < ogg->nstreams; i++){
         av_free (ogg->streams[i].buf);
-        av_freep (&s->streams[i]->codec.extradata);
+        av_free (ogg->streams[i].private);
+        av_freep (&s->streams[i]->codec->extradata);
     }
     av_free (ogg->streams);
     return 0;
@@ -545,10 +553,11 @@ static int
 ogg_read_seek (AVFormatContext * s, int stream_index, int64_t target_ts,
                int flags)
 {
+    AVStream *st = s->streams[stream_index];
     ogg_t *ogg = s->priv_data;
     ByteIOContext *bc = &s->pb;
     uint64_t min = 0, max = ogg->size;
-    uint64_t tmin = 0, tmax = s->duration;
+    uint64_t tmin = 0, tmax = st->duration;
     int64_t pts = AV_NOPTS_VALUE;
 
     ogg_save (s);
@@ -560,7 +569,8 @@ ogg_read_seek (AVFormatContext * s, int stream_index, int64_t target_ts,
         url_fseek (bc, p, SEEK_SET);
 
         while (!ogg_read_page (s, &i)){
-            if (ogg->streams[i].granule != 0 && ogg->streams[i].granule != -1)
+            if (i == stream_index && ogg->streams[i].granule != 0 &&
+                ogg->streams[i].granule != -1)
                 break;
         }
 
@@ -570,7 +580,7 @@ ogg_read_seek (AVFormatContext * s, int stream_index, int64_t target_ts,
         pts = ogg_gptopts (s, i, ogg->streams[i].granule);
         p = url_ftell (bc);
 
-        if (ABS (pts - target_ts) < 1000000LL)
+        if (ABS (pts - target_ts) * st->time_base.num < st->time_base.den)
             break;
 
         if (pts > target_ts){
@@ -582,7 +592,7 @@ ogg_read_seek (AVFormatContext * s, int stream_index, int64_t target_ts,
         }
     }
 
-    if (ABS (pts - target_ts) < 1000000LL){
+    if (ABS (pts - target_ts) * st->time_base.num < st->time_base.den){
         ogg_restore (s, 1);
         ogg_reset (ogg);
     }else{
@@ -619,23 +629,35 @@ ogg_read_timestamp (AVFormatContext * s, int stream_index, int64_t * pos_arg,
 }
 #endif
 
+static int ogg_probe(AVProbeData *p)
+{
+    if (p->buf_size < 6)
+        return 0;
+    if (p->buf[0] == 'O' && p->buf[1] == 'g' &&
+        p->buf[2] == 'g' && p->buf[3] == 'S' &&
+        p->buf[4] == 0x0 && p->buf[5] <= 0x7 )
+        return AVPROBE_SCORE_MAX;
+    else
+        return 0;
+}
+
 static AVInputFormat ogg_iformat = {
     "ogg",
     "Ogg",
     sizeof (ogg_t),
-    NULL,
+    ogg_probe,
     ogg_read_header,
     ogg_read_packet,
     ogg_read_close,
     ogg_read_seek,
-// ogg_read_timestamp, 
+// ogg_read_timestamp,
     .extensions = "ogg",
 };
 
 int
 ogg_init (void)
 {
-#if 0 // CONFIG_ENCODERS
+#if 0 // CONFIG_MUXERS
     av_register_output_format (&ogg_oformat);
 #endif
     av_register_input_format (&ogg_iformat);

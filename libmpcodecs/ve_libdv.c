@@ -5,8 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../config.h"
-#include "../mp_msg.h"
+#include "config.h"
+#include "mp_msg.h"
 
 #ifdef HAVE_LIBDV095
 
@@ -66,18 +66,18 @@ static int control(struct vf_instance_s* vf, int request, void* data){
 }
 
 static int query_format(struct vf_instance_s* vf, unsigned int fmt){
-    if(fmt==IMGFMT_YUY2) return 3;
-    if(fmt==IMGFMT_RGB24) return 1;
+    if(fmt==IMGFMT_YUY2) return VFCAP_CSP_SUPPORTED | VFCAP_CSP_SUPPORTED_BY_HW;
+    if(fmt==IMGFMT_RGB24) return VFCAP_CSP_SUPPORTED;
     return 0;
 }
 
-static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
+static int put_image(struct vf_instance_s* vf, mp_image_t *mpi, double pts){
 
     dv_encode_full_frame(vf->priv->enc, mpi->planes, 
 	(mpi->flags&MP_IMGFLAG_YUV) ? e_dv_color_yuv : e_dv_color_rgb,
 	mux_v->buffer);
 
-    muxer_write_chunk(mux_v, 480 * (vf->priv->enc->isPAL ? 300 : 250) , 0x10);
+    muxer_write_chunk(mux_v, 480 * (vf->priv->enc->isPAL ? 300 : 250) , 0x10, pts, pts);
     return 1;
 }
 

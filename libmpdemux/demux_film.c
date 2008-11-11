@@ -46,7 +46,7 @@ typedef struct _film_data_t
   unsigned int film_version;
 } film_data_t;
 
-void demux_seek_film(demuxer_t *demuxer, float rel_seek_secs, int flags)
+static void demux_seek_film(demuxer_t *demuxer, float rel_seek_secs, float audio_delay, int flags)
 {
   film_data_t *film_data = (film_data_t *)demuxer->priv;
   int new_current_chunk=(flags&1)?0:film_data->current_chunk;
@@ -57,7 +57,7 @@ void demux_seek_film(demuxer_t *demuxer, float rel_seek_secs, int flags)
       new_current_chunk += rel_seek_secs * film_data->chunks_per_second; // secs
 
 
-printf ("current, total chunks = %d, %d; seek %5.3f sec, new chunk guess = %d\n",
+mp_msg(MSGT_DECVIDEO, MSGL_INFO,"current, total chunks = %d, %d; seek %5.3f sec, new chunk guess = %d\n",
   film_data->current_chunk, film_data->total_chunks,
   rel_seek_secs, new_current_chunk);
 
@@ -74,7 +74,7 @@ printf ("current, total chunks = %d, %d; seek %5.3f sec, new chunk guess = %d\n"
 
   film_data->current_chunk = new_current_chunk;
 
-printf ("  (flags = %X)  actual new chunk = %d (syncinfo1 = %08X)\n",
+mp_msg(MSGT_DECVIDEO, MSGL_INFO,"  (flags = %X)  actual new chunk = %d (syncinfo1 = %08X)\n",
   flags, film_data->current_chunk, film_data->chunks[film_data->current_chunk].syncinfo1);
   demuxer->video->pts=film_data->chunks[film_data->current_chunk].pts;
   
@@ -83,7 +83,7 @@ printf ("  (flags = %X)  actual new chunk = %d (syncinfo1 = %08X)\n",
 // return value:
 //     0 = EOF or no stream found
 //     1 = successfully read a packet
-int demux_film_fill_buffer(demuxer_t *demuxer)
+static int demux_film_fill_buffer(demuxer_t *demuxer, demux_stream_t *ds)
 {
   int i;
   unsigned char byte_swap;
@@ -131,6 +131,28 @@ int demux_film_fill_buffer(demuxer_t *demuxer)
         dp->buffer[i] = dp->buffer[i + 1];
         dp->buffer[i + 1] = byte_swap;
       }
+
+    /* for SegaSaturn .cpk file, translate audio data if stereo */
+    if (sh_audio->wf->nChannels == 2) {
+      if (sh_audio->wf->wBitsPerSample == 8) {
+        unsigned char* tmp = dp->buffer;
+        unsigned char  buf[film_chunk.chunk_size];
+        for(i = 0; i < film_chunk.chunk_size/2; i++) {
+          buf[i*2] = tmp[i];
+          buf[i*2+1] = tmp[film_chunk.chunk_size/2+i];
+        }
+        memcpy( tmp, buf, film_chunk.chunk_size );
+      }
+      else {/* for 16bit */
+        unsigned short* tmp = dp->buffer;
+        unsigned short  buf[film_chunk.chunk_size/2];
+        for(i = 0; i < film_chunk.chunk_size/4; i++) {
+          buf[i*2] = tmp[i];
+          buf[i*2+1] = tmp[film_chunk.chunk_size/4+i];
+        }
+        memcpy( tmp, buf, film_chunk.chunk_size );
+      }
+    }
 
     // append packet to DS stream
     ds_add_packet(demuxer->audio, dp);
@@ -184,7 +206,7 @@ int demux_film_fill_buffer(demuxer_t *demuxer)
   return 1;
 }
 
-demuxer_t* demux_open_film(demuxer_t* demuxer)
+static demuxer_t* demux_open_film(demuxer_t* demuxer)
 {
   sh_video_t *sh_video = NULL;
   sh_audio_t *sh_audio = NULL;
@@ -215,6 +237,7 @@ demuxer_t* demux_open_film(demuxer_t* demuxer)
   if (chunk_type != CHUNK_FILM)
   {
     mp_msg(MSGT_DEMUX, MSGL_ERR, "Not a FILM file\n");
+    free(film_data);
     return(NULL);    
   }
 
@@ -227,7 +250,7 @@ demuxer_t* demux_open_film(demuxer_t* demuxer)
   header_size -= 16;
 
   mp_msg(MSGT_DEMUX, MSGL_HINT, "FILM version %.4s\n",
-    &film_data->film_version);
+    (char *)&film_data->film_version);
 
   // skip to where the next chunk should be
   stream_skip(demuxer->stream, 4);
@@ -266,7 +289,7 @@ demuxer_t* demux_open_film(demuxer_t* demuxer)
         stream_skip(demuxer->stream, 8);
 
       if(demuxer->audio->id<-1){
-          printf("chunk size = 0x%X \n",chunk_size);
+          mp_msg(MSGT_DECVIDEO, MSGL_INFO,"chunk size = 0x%X \n",chunk_size);
 	stream_skip(demuxer->stream, chunk_size-12-8);
 	break; // audio disabled (or no soundcard)
       }
@@ -354,7 +377,7 @@ demuxer_t* demux_open_film(demuxer_t* demuxer)
 
       // allocate enough entries for the chunk
       film_data->chunks = 
-        (film_chunk_t *)malloc(film_data->total_chunks * sizeof(film_chunk_t));
+        (film_chunk_t *)calloc(film_data->total_chunks, sizeof(film_chunk_t));
 
       // build the chunk index
       counting_chunks = 1;
@@ -414,7 +437,7 @@ demuxer_t* demux_open_film(demuxer_t* demuxer)
   return demuxer;
 }
 
-void demux_close_film(demuxer_t* demuxer) {
+static void demux_close_film(demuxer_t* demuxer) {
   film_data_t *film_data = demuxer->priv;
 
   if(!film_data)
@@ -424,3 +447,31 @@ void demux_close_film(demuxer_t* demuxer) {
   free(film_data);
   
 }
+
+static int film_check_file(demuxer_t* demuxer)
+{
+  int signature=stream_read_fourcc(demuxer->stream);
+
+  // check for the FILM file magic number
+  if(signature==mmioFOURCC('F', 'I', 'L', 'M'))
+    return DEMUXER_TYPE_FILM;
+
+  return 0;
+}
+
+
+demuxer_desc_t demuxer_desc_film = {
+  "FILM/CPK demuxer for Sega Saturn CD-ROM games",
+  "film",
+  "FILM",
+  "Mike Melanson",
+  "",
+  DEMUXER_TYPE_FILM,
+  0, // unsafe autodetect (short signature)
+  film_check_file,
+  demux_film_fill_buffer,
+  demux_open_film,
+  demux_close_film,
+  demux_seek_film,
+  NULL
+};

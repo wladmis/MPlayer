@@ -11,6 +11,7 @@
 #include "wineacm.h"
 
 #include "ad_internal.h"
+#include "osdep/timer.h"
 
 static ad_info_t info = 
 {
@@ -39,7 +40,7 @@ static int init(sh_audio_t *sh_audio)
   return 1;
 }
 
-extern void print_wave_header(WAVEFORMATEX *h);
+extern void print_wave_header(WAVEFORMATEX *h, int verbose_level);
 
 static int preinit(sh_audio_t *sh_audio)
 {
@@ -73,12 +74,12 @@ static int preinit(sh_audio_t *sh_audio)
 //    priv->o_wf->wBitsPerSample = inf_fmt->wBitsPerSample;
     priv->o_wf->cbSize = 0;
     
-    if (verbose>0)
+    if ( mp_msg_test(MSGT_DECAUDIO,MSGL_V) )
     {
 	mp_msg(MSGT_DECAUDIO, MSGL_V, "Input format:\n");
-	print_wave_header(in_fmt);
+	print_wave_header(in_fmt, MSGL_V);
 	mp_msg(MSGT_DECAUDIO, MSGL_V, "Output format:\n");
-	print_wave_header(priv->o_wf);
+	print_wave_header(priv->o_wf, MSGL_V);
     }
 
     MSACM_RegisterDriver((const char *)sh_audio->codec->dll, in_fmt->wFormatTag, 0);
@@ -97,7 +98,7 @@ static int preinit(sh_audio_t *sh_audio)
     mp_msg(MSGT_WIN32, MSGL_V, "Audio codec opened OK! ;-)\n");
     
     acmStreamSize(priv->handle, in_fmt->nBlockAlign, &srcsize, ACM_STREAMSIZEF_SOURCE);
-    //if (verbose) printf("Audio ACM output buffer min. size: %ld (reported by codec)\n", srcsize);
+    //if ( mp_msg_test(MSGT_DECAUDIO,MSGL_V) ) printf("Audio ACM output buffer min. size: %ld (reported by codec)\n", srcsize);
     srcsize *= 2;
     //if (srcsize < MAX_OUTBURST) srcsize = MAX_OUTBURST;
     if (!srcsize)
@@ -146,13 +147,13 @@ static void uninit(sh_audio_t *sh)
 	case ACMERR_BUSY:
 	case ACMERR_CANCELED:
 	    mp_msg(MSGT_WIN32, MSGL_DBG2, "ACM_Decoder: stream busy, waiting..\n");
-	    sleep(100);
+	    usec_sleep(100000000);
 	    return(uninit(sh));
 	case ACMERR_UNPREPARED:
 	case ACMERR_NOTPOSSIBLE:
 	    return;
 	default:
-	    mp_msg(MSGT_WIN32, MSGL_WARN, "ACM_Decoder: unknown error occurred: %d\n", ret);
+	    mp_msg(MSGT_WIN32, MSGL_WARN, "ACM_Decoder: unknown error occurred: %ld\n", ret);
 	    return;
     }
     
@@ -188,7 +189,7 @@ static int decode_audio(sh_audio_t *sh_audio,unsigned char *buf,int minlen,int m
     acm_context_t *priv = sh_audio->context;
 
     acmStreamSize(priv->handle, len, &srcsize, ACM_STREAMSIZEF_DESTINATION);
-    mp_msg(MSGT_WIN32,MSGL_DBG3,"acm says: srcsize=%ld  (buffsize=%d)  out_size=%d\n",srcsize,sh_audio->a_in_buffer_size,len);
+    mp_msg(MSGT_WIN32,MSGL_DBG3,"acm says: srcsize=%ld  (buffsize=%d)  out_size=%ld\n",srcsize,sh_audio->a_in_buffer_size,len);
 
     if(srcsize<sh_audio->wf->nBlockAlign){
        srcsize=sh_audio->wf->nBlockAlign;
@@ -203,7 +204,7 @@ static int decode_audio(sh_audio_t *sh_audio,unsigned char *buf,int minlen,int m
         demux_read_data(sh_audio->ds,&sh_audio->a_in_buffer[sh_audio->a_in_buffer_len],
         srcsize-sh_audio->a_in_buffer_len);
     }
-    mp_msg(MSGT_WIN32,MSGL_DBG3,"acm convert %d -> %d bytes\n",sh_audio->a_in_buffer_len,len);
+    mp_msg(MSGT_WIN32,MSGL_DBG3,"acm convert %d -> %ld bytes\n",sh_audio->a_in_buffer_len,len);
     memset(&ash, 0, sizeof(ash));
     ash.cbStruct=sizeof(ash);
     ash.fdwStatus=0;
@@ -228,7 +229,7 @@ static int decode_audio(sh_audio_t *sh_audio,unsigned char *buf,int minlen,int m
       }
 //      return -1;
     }
-    mp_msg(MSGT_WIN32,MSGL_DBG2,"acm converted %d -> %d\n",ash.cbSrcLengthUsed,ash.cbDstLengthUsed);
+    mp_msg(MSGT_WIN32,MSGL_DBG2,"acm converted %ld -> %ld\n",ash.cbSrcLengthUsed,ash.cbDstLengthUsed);
     if(ash.cbSrcLengthUsed>=sh_audio->a_in_buffer_len){
       sh_audio->a_in_buffer_len=0;
     } else {

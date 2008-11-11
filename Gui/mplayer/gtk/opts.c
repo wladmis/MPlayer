@@ -7,15 +7,15 @@
 #include <gdk/gdkkeysyms.h>
 #include <gtk/gtk.h>
 
-#include "../../../config.h"
-#include "../../../help_mp.h"
-#include "../../../mixer.h"
-#include "../../../libao2/audio_out.h"
-#include "../../../libvo/video_out.h"
+#include "../../config.h"
+#include "../../help_mp.h"
+#include "../../mixer.h"
+#include "../../libao2/audio_out.h"
+#include "../../libvo/video_out.h"
 
-#include "../../app.h"
-#include "../../cfg.h"
-#include "../../interface.h"
+#include "../app.h"
+#include "../cfg.h"
+#include "../interface.h"
 #include "../widgets.h"
 #include "opts.h"
 #include "fs.h"
@@ -25,8 +25,8 @@ typedef struct sh_video_t sh_video_t;
 typedef struct sh_audio_t sh_audio_t;
 
 // for mpcodecs_[av]d_drivers:
-#include "../../../libmpcodecs/vd.h"
-#include "../../../libmpcodecs/ad.h"
+#include "../../libmpcodecs/vd.h"
+#include "../../libmpcodecs/ad.h"
 
        GtkWidget * Preferences = NULL;
 static GtkWidget * AConfig;
@@ -736,6 +736,10 @@ static void prCListRow( GtkCList * clist,gint row,gint column,GdkEvent * event,g
 	     !strncmp( ao_driver[0],"esd",3 ) ||
 	     !strncmp( ao_driver[0],"sdl",3 ) )
 	  gtk_widget_set_sensitive( AConfig,TRUE );
+#ifndef HAVE_GTK2_GUI
+        if ( !strncmp( ao_driver[0],"arts",4 ) )
+          gtkMessageBox(GTK_MB_WARNING|GTK_MB_SIMPLE, MSGTR_PREFERENCES_ArtsBroken);
+#endif
 	break;
    case 1: // video driver 
 	gtk_clist_get_text( GTK_CLIST( CLVDrivers ),row,0,(char **)&vo_driver ); 
@@ -842,7 +846,7 @@ GtkWidget * create_Preferences( void )
     gtk_widget_set_usize( vbox3,250,-2 );
 
   CBNormalize=AddCheckButton( MSGTR_PREFERENCES_NormalizeSound,vbox3 );
-  CBAudioEqualizer=AddCheckButton( MSGTR_PREFERENCES_EnEqualizer,vbox3 );
+  CBAudioEqualizer=AddCheckButton( MSGTR_PREFERENCES_EnableEqualizer,vbox3 );
   CBSoftwareMixer=AddCheckButton( MSGTR_PREFERENCES_SoftwareMixer,vbox3 );
 #if 0
   CBSurround=AddCheckButton( "Enable surround",vbox3 );

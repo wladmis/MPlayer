@@ -1,14 +1,14 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>E.1. GCC 2.96</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - El reproductor de Películas
-para LINUX"><link rel="up" href="users-vs-dev.html" title="Apéndice E. Lloriqueos de desarrolladores"><link rel="previous" href="users-vs-dev.html" title="Apéndice E. Lloriqueos de desarrolladores"><link rel="next" href="mplayer-binary.html" title="E.2. Distribución binaria"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">E.1. GCC 2.96</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="users-vs-dev.html">Anterior</a> </td><th width="60%" align="center">Apéndice E. Lloriqueos de desarrolladores</th><td width="20%" align="right"> <a accesskey="n" href="mplayer-binary.html">Siguiente</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="gcc-296"></a>E.1. GCC 2.96</h2></div></div><p><b>El escenario: </b>
-La serie <span class="bold"><b>2.95</b></span> de GCC es una liberación oficial
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>E.1. GCC 2.96</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.68.1"><link rel="start" href="index.html" title="MPlayer - El reproductor de Películas
+para LINUX"><link rel="up" href="users-vs-dev.html" title="Apéndice E. Lloriqueos de desarrolladores"><link rel="prev" href="users-vs-dev.html" title="Apéndice E. Lloriqueos de desarrolladores"><link rel="next" href="mplayer-binary.html" title="E.2. Distribución binaria"><link rel="preface" href="howtoread.html" title="Como leer esta documentación"><link rel="chapter" href="intro.html" title="Capítulo 1. Introducción"><link rel="chapter" href="features.html" title="Capítulo 2. Características"><link rel="chapter" href="usage.html" title="Capítulo 3. Uso"><link rel="chapter" href="faq.html" title="Capítulo 4. Preguntas de Usuario Frecuentes"><link rel="chapter" href="cd-dvd.html" title="Capítulo 5. Uso de CD/DVD"><link rel="chapter" href="ports.html" title="Capítulo 6. Adaptaciones"><link rel="chapter" href="mencoder.html" title="Capítulo 7. Codificando con MEncoder"><link rel="appendix" href="mailinglists.html" title="Apéndice A. Listas de correo"><link rel="appendix" href="bugreports.html" title="Apéndice B. Cómo reportar errores"><link rel="appendix" href="bugs.html" title="Apéndice C. Problemas conocidos"><link rel="appendix" href="skin.html" title="Apéndice D. Formato del skin de MPlayer"><link rel="appendix" href="users-vs-dev.html" title="Apéndice E. Lloriqueos de desarrolladores"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">E.1. GCC 2.96</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="users-vs-dev.html">Anterior</a> </td><th width="60%" align="center">Apéndice E. Lloriqueos de desarrolladores</th><td width="20%" align="right"> <a accesskey="n" href="mplayer-binary.html">Siguiente</a></td></tr></table><hr></div><div class="sect1" lang="es"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="gcc-296"></a>E.1. GCC 2.96</h2></div></div></div><p><b>El escenario: </b>
+La serie <span class="bold"><strong>2.95</strong></span> de GCC es una liberación oficial
 de GNU y la verseión 2.95.3 de GCC es la serie más libre de errores que existe.
 Nunca se han tenido problemas de compilación derivados de gcc-2.95.3. Comenzando
-con Red Hat Linux 7.0, <span class="bold"><b>Red Hat</b></span> fue incluida una
+con Red Hat Linux 7.0, <span class="bold"><strong>Red Hat</strong></span> fue incluida una
 versión de CVS fuertemente parcheada de GCC en sus distribuciones y fue denominada
-<span class="bold"><b>2.96</b></span>. Red Hat incluyó esta versión en su
+<span class="bold"><strong>2.96</strong></span>. Red Hat incluyó esta versión en su
 distribución porque GCC 3.0 no estaba finalizada en ese momento, y necesitaban
 un compilador que funcionase bien en todas las plataformas soportadas, incluyendo
-IA64 y s390. El distribuidor de Linux <span class="bold"><b>Mandrake</b></span>
+IA64 y s390. El distribuidor de Linux <span class="bold"><strong>Mandrake</strong></span>
 también siguió el ejemplo de Red Hat y comenzó a llevar GCC 2.96 en su serie
 Linux-Mandrake 8.0.
 </p><p><b>Los hechos: </b>
@@ -30,10 +30,10 @@ proyectos empiezan a implementar variaciones de algunos aspectos de 2.96,
 pero se niegan a arreglar problemas de otras personas, especialmente porque
 algunos arreglos pueden implicar pérdidas de rendimiento.
 </p><p>
-GCC 2.96 no permite caracteres <tt>|</tt> (tuberías) en comentarios
+GCC 2.96 no permite caracteres <code class="literal">|</code> (tuberías) en comentarios
 en ensamblador porque esto lo hace Intel igual que la sintaxis de AT&amp;T y
-el caracter <tt>|</tt> es un símbolo en la variante Intel. El problema
-es que <span class="emphasis"><i>silenciosamente</i></span> ignora el bloque de ensamblador
+el caracter <code class="literal">|</code> es un símbolo en la variante Intel. El problema
+es que <span class="emphasis"><em>silenciosamente</em></span> ignora el bloque de ensamblador
 por completo. Esto es supuestamente corregible ahora, GCC imprime un mensaje
 de advertencia en lugar de saltarse el bloque.
 </p><p><b>El presente: </b>
@@ -43,7 +43,7 @@ que desaparecen con un compilador diferente. En cualquier caso esto no tiene
 más importancia. Alegremente, un maduro GCC 3.x ha resuelto bien los problemas. Si
 desea compilar con 2.96 puede indicar el parámetro
 <tt class="option">--disable-gcc-checking</tt> a <tt class="filename">configure</tt>. Recuerde que
-que es elección suya y <span class="bold"><b>no informe de problemas</b></span>. Si lo
+que es elección suya y <span class="bold"><strong>no informe de problemas</strong></span>. Si lo
 hace será expulsado de nuestras listas de correo porque ha sido avisao de manera
 más que suficiente de las guerras con GCC 2.96. Por favor, déjenos contarle el resto.
 </p><p>
@@ -57,29 +57,29 @@ binarios, aquí tiene cómo compilar GCC 3 desde el código fuente:
 </p><div class="procedure"><ol type="1"><li><p>
   Vaya a 
   <a href="http://gcc.gnu.org/mirrors.html" target="_top">la web de sitios espejo de GCC</a>
-  y descargue <tt class="filename">gcc-core-<i><tt>XXX</tt></i>.tar.gz</tt>
-  donde <i><tt>XXX</tt></i> es el número de versión. Esto incluye el compilador
+  y descargue <tt class="filename">gcc-core-<em class="replaceable"><code>XXX</code></em>.tar.gz</tt>
+  donde <em class="replaceable"><code>XXX</code></em> es el número de versión. Esto incluye el compilador
   C completo y es suficiente para <span class="application">MPlayer</span>. Si también quiere
   C++, Java, o algunas de las otras características avanzadas de GCC,
-  <tt class="filename">gcc-<i><tt>XXX</tt></i>.tar.gz</tt> suplirá mejor sus necesidades.
+  <tt class="filename">gcc-<em class="replaceable"><code>XXX</code></em>.tar.gz</tt> suplirá mejor sus necesidades.
   </p></li><li><p>
   Extraiga el fichero con
-  <pre class="screen">tar -xvzf gcc-core-<i><tt>XXX</tt></i>.tar.gz</pre>
+  </p><pre class="screen">tar -xvzf gcc-core-<em class="replaceable"><code>XXX</code></em>.tar.gz</pre><p>
   </p></li><li><p>
   GCC no es construido dentro del directorio del código fuente como la mayoría
   de los programas, sino que necesita un directorio fuera donde compilarse. Por eso
   necesita crear ese directorio via
-  <pre class="screen">mkdir gcc-build</pre>
+  </p><pre class="screen">mkdir gcc-build</pre><p>
   </p></li><li><p>
   Entonces puede proceder a configurar gcc en el directorio build, pero puede
   que necesite configurar desde el directorio de fuentes:
-  <pre class="screen">
+  </p><pre class="screen">
 cd gcc-build
-../gcc-3.<i><tt>XXX</tt></i>/configure</pre>
+../gcc-3.<em class="replaceable"><code>XXX</code></em>/configure</pre><p>
   </p></li><li><p>
   Compile GCC usando esta orden en el directorio build:
-  <pre class="screen">make bootstrap</pre>
+  </p><pre class="screen">make bootstrap</pre><p>
   </p></li><li><p>
   Ahora puede instalar GCC (como root) escribiendo
-  <pre class="screen">make install</pre>
+  </p><pre class="screen">make install</pre><p>
   </p></li></ol></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="users-vs-dev.html">Anterior</a> </td><td width="20%" align="center"><a accesskey="u" href="users-vs-dev.html">Subir</a></td><td width="40%" align="right"> <a accesskey="n" href="mplayer-binary.html">Siguiente</a></td></tr><tr><td width="40%" align="left" valign="top">Apéndice E. Lloriqueos de desarrolladores </td><td width="20%" align="center"><a accesskey="h" href="index.html">Inicio</a></td><td width="40%" align="right" valign="top"> E.2. Distribución binaria</td></tr></table></div></body></html>

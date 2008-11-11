@@ -2,11 +2,25 @@ include config.mak
 
 LIBNAME = libao2.a
 
-SRCS=audio_out.c ao_mpegpes.c ao_null.c ao_pcm.c $(OPTIONAL_SRCS)
+SRCS=audio_out.c \
+     ao_mpegpes.c \
+     ao_null.c \
+     ao_pcm.c \
+     $(OPTIONAL_SRCS) \
 
 OBJS=$(SRCS:.c=.o)
 
-CFLAGS  = $(OPTFLAGS) -I. -I.. $(ARTS_INC) $(ESD_INC) $(JACK_INC) $(SDL_INC) $(X11_INC) $(EXTRA_INC) $(DXR2_INC) $(DVB_INC) $(POLYP_INC)
+CFLAGS  = $(OPTFLAGS) -I. -I.. \
+          $(ARTS_INC) \
+          $(DVB_INC) \
+          $(DXR2_INC) \
+          $(ESD_INC) \
+          $(EXTRA_INC) \
+          $(JACK_INC) \
+          $(OPENAL_INC) \
+          $(POLYP_INC) \
+          $(SDL_INC) \
+          $(X11_INC) \
 
 .SUFFIXES: .c .o
 
@@ -24,8 +38,8 @@ all:    $(LIBNAME)
 clean:
 	rm -f *.o *.a *~
 
-distclean:
-	rm -f Makefile.bak *.o *.a *~ .depend
+distclean: clean
+	rm -f .depend
 
 dep:    depend
 

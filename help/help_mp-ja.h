@@ -60,7 +60,6 @@ static char help_text[]=
 #define MSGTR_NoHomeDir "ホームディレクトリを見付けることが出来ませんでした.\n"
 #define MSGTR_GetpathProblem "get_path(\"config\") で問題が起きました\n"
 #define MSGTR_CreatingCfgFile "config fileを作成しました: %s\n"
-#define MSGTR_InvalidAOdriver "無効な音声出力ドライバ: %s\n '-ao help' で有効な音声出力ドライバ一覧を取得できます.\n"
 #define MSGTR_CopyCodecsConf "MPlayerのソースの etc/codecs.confのコピーかリンクを ~/.mplayer/codecs.conf に作成して下さい)\n"
 #define MSGTR_BuiltinCodecsConf "組み込まれたデフォルトの codecs.conf を利用してます\n"
 #define MSGTR_CantLoadFont "フォントをロード出来ません: %s\n"
@@ -121,11 +120,11 @@ static char help_text[]=
 #define MSGTR_Paused "\n  =====  停止  =====\r" // no more than 23 characters (status line for audio files)
 #define MSGTR_PlaylistLoadUnable "\nプレイリストの読み込みが出来ません %s.\n"
 #define MSGTR_Exit_SIGILL_RTCpuSel \
-"- MPLayerは不正な命令(Illegal Instruction)によりクラッシュしました\n"\
+"- MPlayerは不正な命令(Illegal Instruction)によりクラッシュしました\n"\
 "  恐らくこれは あたらしいCPU-Detection codeにバグがあります\n"\
 "  DOCS/HTML/en/bugreports.html をお読み下さい.\n"
 #define MSGTR_Exit_SIGILL \
-"- MPLayerは不正な命令(Illegal Instruction)によりクラッシュしました\n"\
+"- MPlayerは不正な命令(Illegal Instruction)によりクラッシュしました\n"\
 "  It usually happens when you run it on a CPU different than the one it was\n"\
 "  compiled/optimized for.\n"\
 "  Verify this!\n"
@@ -151,14 +150,11 @@ static char help_text[]=
 #define MSGTR_CannotOpenOutputFile "出力ファイル'%s'を開く事が出来ません.\n"
 #define MSGTR_EncoderOpenFailed "エンコーダを開くことに失敗しました.\n"
 #define MSGTR_ForcingOutputFourcc "fourccを %x [%.4s] に指定します\n"
-#define MSGTR_WritingAVIHeader "AVIヘッダを書きだし中...\n"
 #define MSGTR_DuplicateFrames "\n%d 重複したフレーム\n"
 #define MSGTR_SkipFrame "\nフレームをスキップしています\n"
 #define MSGTR_ErrorWritingFile "%s: ファイル書き込みエラー.\n"
-#define MSGTR_WritingAVIIndex "\nAVI indexを書き込み中...\n"
-#define MSGTR_FixupAVIHeader "AVIヘッダを修復中...\n"
-#define MSGTR_VideoStreamResult "\n映像ストリーム: %8.3f kbit/s  (%d bps)  サイズ: %d bytes  %5.3f secs  %d フレーム\n"
-#define MSGTR_AudioStreamResult "\n音声ストリーム: %8.3f kbit/s  (%d bps)  サイズ: %d bytes  %5.3f secs\n"
+#define MSGTR_VideoStreamResult "\n映像ストリーム: %8.3f kbit/s  (%d B/s)  サイズ: %"PRIu64" bytes  %5.3f secs  %d フレーム\n"
+#define MSGTR_AudioStreamResult "\n音声ストリーム: %8.3f kbit/s  (%d B/s)  サイズ: %"PRIu64" bytes  %5.3f secs\n"
 
 // cfg-mencoder.h:
 
@@ -185,6 +181,13 @@ static char help_text[]=
 #define MSGTR_DVDnoVOBs "Cannot open title VOBS (VTS_%02d_1.VOB).\n"
 #define MSGTR_DVDopenOk "DVDを開くことに成功しました.\n"
 
+// muxer_*.c:
+#define MSGTR_TooManyStreams "ストリームが多過ぎる!"
+#define MSGTR_RawMuxerOnlyOneStream "Rawaudio muxerが一つだけの音声ストリームをサポートします!\n"
+#define MSGTR_IgnoringVideoStream "映像ストリームを差し置きます!\n"
+#define MSGTR_UnknownStreamType "警告: 未知のストリームタイプ: %d\n"
+#define MSGTR_WarningLenIsntDivisible "警告: samplesizeでlenが整除できない!\n"
+
 // demuxer.c, demux_*.c:
 #define MSGTR_AudioStreamRedefined "警告: Audio stream header %d redefined.\n"
 #define MSGTR_VideoStreamRedefined "警告: Video stream header %d redefined.\n"
@@ -207,9 +210,9 @@ static char help_text[]=
 #define MSGTR_CantSeekRawAVI "Cannot seek in raw AVI streams. (Indexが必要です, -idx を試して下さい.)\n"
 #define MSGTR_CantSeekFile "このファイルはシークすることが出来ません.\n"
 
-#define MSGTR_EncryptedVOB "暗号化されたVOB(Encryoted VOB)ファイルです。DOCS/HTML/en/cd-dvd.html を御覧下さい.\n"
+#define MSGTR_EncryptedVOB "暗号化されたVOB(Encrypted VOB)ファイルです。DOCS/HTML/en/cd-dvd.html を御覧下さい.\n"
 
-#define MSGTR_MOVcomprhdr "MOV: 圧縮されたヘッダ(Compressd headers)をサポートするには ZLIB が必要です\n"
+#define MSGTR_MOVcomprhdr "MOV: 圧縮されたヘッダ(Compressed headers)をサポートするには ZLIB が必要です\n"
 #define MSGTR_MOVvariableFourCC "MOV: 警告: Variable FOURCC detected!?\n"
 #define MSGTR_MOVtooManyTrk "MOV: 警告: too many tracks"
 #define MSGTR_FoundAudioStream "==> 音声ストリームが見付かりました: %d\n"
@@ -322,7 +325,7 @@ static char help_text[]=
 #define MSGTR_SKIN_BITMAP_PNGReadError "png 読み込みエラー (%s)\n"
 #define MSGTR_SKIN_BITMAP_RLENotSupported "RLE packed tga はサポートされていません (%s)\n"
 #define MSGTR_SKIN_BITMAP_UnknownFileType "未知のファイルタイプです (%s)\n"
-#define MSGTR_SKIN_BITMAP_ConvertError "24bitから32bitへの変換エラー (%s)\n"
+#define MSGTR_SKIN_BITMAP_ConversionError "24bitから32bitへの変換エラー (%s)\n"
 #define MSGTR_SKIN_BITMAP_UnknownMessage "未知のメッセージ: %s\n"
 #define MSGTR_SKIN_FONT_NotEnoughtMemory "メモリが不足しています\n"
 #define MSGTR_SKIN_FONT_FontFileNotFound "フォントファイルが存在しません\n"
@@ -360,9 +363,7 @@ static char help_text[]=
 #define MSGTR_MENU_None "(無し)"
 #define MSGTR_MENU_AudioLanguages "音声言語"
 #define MSGTR_MENU_SubtitleLanguages "サブタイトル言語"
-#define MSGTR_MENU_PlayList "プレイリスト"
 #define MSGTR_MENU_SkinBrowser "スキンブラウザ"
-#define MSGTR_MENU_Preferences "設定"
 #define MSGTR_MENU_Exit "終了 ..."
 #define MSGTR_MENU_Mute "消音"
 #define MSGTR_MENU_Original "オリジナル"
@@ -395,15 +396,13 @@ static char help_text[]=
 #define MSGTR_PLAYLIST_DirectoryTree "ディレクトリツリー"
 
 // --- preferences
-#define MSGTR_PREFERENCES_Audio "音声"
-#define MSGTR_PREFERENCES_Video "映像"
 #define MSGTR_PREFERENCES_SubtitleOSD "サブタイトル & OSD"
 #define MSGTR_PREFERENCES_Codecs "コーデック & demuxer"
 #define MSGTR_PREFERENCES_Misc "Misc"
 
 #define MSGTR_PREFERENCES_None "無し"
 #define MSGTR_PREFERENCES_AvailableDrivers "有効なドライバ:"
-#define MSGTR_PREFERENCES_EnEqualizer "イコライザーの有効"
+#define MSGTR_PREFERENCES_EnableEqualizer "イコライザーの有効"
 #define MSGTR_PREFERENCES_DoubleBuffer "double buffering 有効"
 #define MSGTR_PREFERENCES_DirectRender "direct rendering 有効"
 #define MSGTR_PREFERENCES_FrameDrop "frame dropping 有効"
@@ -429,7 +428,6 @@ static char help_text[]=
 #define MSGTR_PREFERENCES_FRAME_Font "フォント"
 #define MSGTR_PREFERENCES_FRAME_CodecDemuxer "コーデック& demuxer"
 #define MSGTR_PREFERENCES_FRAME_Cache "キャッシュ"
-#define MSGTR_PREFERENCES_FRAME_Misc "Misc"
 #define MSGTR_PREFERENCES_DXR3_VENC "Video エンコーダ:"
 #define MSGTR_PREFERENCES_DXR3_LAVC "LAVC (FFmpeg)使用"
 #define MSGTR_PREFERENCES_DXR3_FAME "FAME 使用"
@@ -444,9 +442,6 @@ static char help_text[]=
 #define MSGTR_PREFERENCES_CDROMDevice "CD-ROM デバイス:"
 #define MSGTR_PREFERENCES_DVDDevice "DVD デバイス:"
 #define MSGTR_PREFERENCES_FPS "Movie FPS:"
-
-#define MSGTR_ABOUT_CoreTeam "   MPlayer コアチーム:\n"
-#define MSGTR_ABOUT_MainTesters "   メインテスター:\n"
 
 // --- messagebox
 #define MSGTR_MSGBOX_LABEL_FatalError "致命的エラー!"

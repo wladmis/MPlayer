@@ -5,12 +5,12 @@
 
 #include "cut.h"
 #include "font.h"
-#include "../app.h"
+#include "app.h"
 
-#include "../../config.h"
-#include "../../mp_msg.h"
-#include "../../help_mp.h"
-#include "../mplayer/widgets.h"
+#include "../config.h"
+#include "../mp_msg.h"
+#include "../help_mp.h"
+#include "mplayer/widgets.h"
 
 //#define MSGL_DBG2 MSGL_STATUS
 
@@ -90,7 +90,7 @@ int skinBPRead( char * fname, txSample * bf )
    case -5: ERRORMESSAGE( MSGTR_SKIN_BITMAP_PNGReadError,fname ); break;
    case -6: ERRORMESSAGE( MSGTR_SKIN_BITMAP_RLENotSupported,fname ); break;
    case -7: ERRORMESSAGE( MSGTR_SKIN_BITMAP_UnknownFileType,fname ); break;
-   case -8: ERRORMESSAGE( MSGTR_SKIN_BITMAP_ConvertError,fname ); break;
+   case -8: ERRORMESSAGE( MSGTR_SKIN_BITMAP_ConversionError,fname ); break;
   }
  return i;
 }
@@ -676,8 +676,16 @@ int skinRead( char * dname )
    setname( skinMPlayerDir,dname );
    if ( ( skinFile = fopen( fn,"rt" ) ) == NULL )
     {
-     mp_msg( MSGT_GPLAYER,MSGL_STATUS,MSGTR_SKIN_SkinFileNotFound,fn );
-     return -1;
+     setname( skinDirInHome_obsolete,dname );
+     if ( ( skinFile = fopen( fn,"rt" ) ) == NULL )
+      {
+       setname( skinMPlayerDir_obsolete,dname );
+       if ( ( skinFile = fopen( fn,"rt" ) ) == NULL )
+        {
+         mp_msg( MSGT_GPLAYER,MSGL_STATUS,MSGTR_SKIN_SkinFileNotFound,fn );
+         return -1;
+        }
+      }
     }
   }
 
@@ -686,9 +694,9 @@ int skinRead( char * dname )
  appInitStruct( skinAppMPlayer );
 
  linenumber=0;
- while ( !feof( skinFile ) )
+ while (fgets(tmp, 255, skinFile))
   {
-   fgets( tmp,255,skinFile ); linenumber++;
+   linenumber++;
 
    c=tmp[ strlen( tmp ) - 1 ]; if ( c == '\n' || c == '\r' ) tmp[ strlen( tmp ) - 1 ]=0;
    c=tmp[ strlen( tmp ) - 1 ]; if ( c == '\n' || c == '\r' ) tmp[ strlen( tmp ) - 1 ]=0;
@@ -710,5 +718,9 @@ int skinRead( char * dname )
     if ( !strcmp( command,skinItem[i].name ) )
      if ( skinItem[i].func( param ) ) return -2;
   }
+ if (linenumber == 0) {
+   mp_msg(MSGT_GPLAYER, MSGL_FATAL, MSGTR_SKIN_SkinFileNotReadable, fn);
+   return -1;
+ }
  return 0;
 }

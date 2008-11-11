@@ -89,23 +89,23 @@
 /* --------------------------------------------------------------------- */
 
 struct CHANLIST {
-    char *name;
+    char  name[8];
     int   freq;
 };
 
 struct CHANLISTS {
-    char             *name;
-    struct CHANLIST  *list;
-    int               count;
+    char                   *name;
+    const struct CHANLIST  *list;
+    int                    count;
 };
 
 #define CHAN_COUNT(x) (sizeof(x)/sizeof(struct CHANLIST))
 
 /* --------------------------------------------------------------------- */
 
-extern struct CHANLISTS   chanlists[];
-extern struct STRTAB chanlist_names[];
+extern const struct CHANLISTS   chanlists[];
+//extern struct STRTAB chanlist_names[];
 
 extern int                chantab;
-extern struct CHANLIST   *chanlist;
+extern const struct CHANLIST *chanlist;
 extern int                chancount;

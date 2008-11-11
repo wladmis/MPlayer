@@ -32,6 +32,8 @@
 #include <math.h>
 
 #include "config.h"
+#include "mp_msg.h"
+#include "help_mp.h"
 #include "video_out.h"
 #include "video_out_internal.h"
 
@@ -178,7 +180,7 @@ static uint32_t draw_image(mp_image_t* mpi)
     return VO_TRUE;
 }
 
-static uint32_t config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uint32_t fullscreen, char *title, uint32_t format)
+static int config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uint32_t flags, char *title, uint32_t format)
 {
     /* buffer for alpha */
     if(line_buff){ free(line_buff); line_buff=NULL; }
@@ -197,17 +199,17 @@ static void flip_page (void)
     return;
 }
 
-static uint32_t draw_slice(uint8_t *srcimg[], int stride[], int w,int h,int x,int y)
+static int draw_slice(uint8_t *srcimg[], int stride[], int w,int h,int x,int y)
 {
     return -1;
 }
 
-static uint32_t draw_frame(uint8_t * src[])
+static int draw_frame(uint8_t * src[])
 {
     return -1;
 }
 
-static uint32_t query_format(uint32_t format)
+static int query_format(uint32_t format)
 {
     switch(format){
         case IMGFMT_BGR|15:
@@ -227,16 +229,16 @@ static void check_events(void)
 {
 }
 
-static uint32_t preinit(const char *arg)
+static int preinit(const char *arg)
 {
     if(arg) {
-	printf("vo_tga: Unknown subdevice: %s\n",arg);
+	mp_msg(MSGT_VO,MSGL_WARN, MSGTR_LIBVO_TGA_UnknownSubdevice,arg);
 	return ENOSYS;
     }
     return 0;
 }
 
-static uint32_t control(uint32_t request, void *data, ...)
+static int control(uint32_t request, void *data, ...)
 {
   switch (request) {
       case VOCTRL_DRAW_IMAGE:

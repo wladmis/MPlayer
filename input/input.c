@@ -1,4 +1,4 @@
-#include "../config.h"
+#include "config.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -17,12 +17,13 @@
 #ifdef MP_DEBUG
 #include <assert.h>
 #endif
-#include "../osdep/getch2.h"
-#include "../osdep/keycodes.h"
-#include "../osdep/timer.h"
-#include "../mp_msg.h"
-#include "../m_config.h"
-#include "../m_option.h"
+#include "osdep/getch2.h"
+#include "osdep/keycodes.h"
+#include "osdep/timer.h"
+#include "mp_msg.h"
+#include "help_mp.h"
+#include "m_config.h"
+#include "m_option.h"
 
 #include "joystick.h"
 
@@ -47,10 +48,8 @@
 
 static mp_cmd_t mp_cmds[] = {
   { MP_CMD_SEEK, "seek", 1, { {MP_CMD_ARG_FLOAT,{0}}, {MP_CMD_ARG_INT,{0}}, {-1,{0}} } },
-#ifdef USE_EDL
   { MP_CMD_EDL_MARK, "edl_mark", 0, { {-1,{0}} } },
-#endif
-  { MP_CMD_AUDIO_DELAY, "audio_delay", 1, { {MP_CMD_ARG_FLOAT,{0}}, {-1,{0}} } },
+  { MP_CMD_AUDIO_DELAY, "audio_delay", 1, { {MP_CMD_ARG_FLOAT,{0}}, {MP_CMD_ARG_INT,{0}}, {-1,{0}} } },
   { MP_CMD_SPEED_INCR, "speed_incr", 1, { {MP_CMD_ARG_FLOAT,{0}}, {-1,{0}} } },
   { MP_CMD_SPEED_MULT, "speed_mult", 1, { {MP_CMD_ARG_FLOAT,{0}}, {-1,{0}} } },
   { MP_CMD_SPEED_SET, "speed_set", 1, { {MP_CMD_ARG_FLOAT,{0}}, {-1,{0}} } },
@@ -64,10 +63,11 @@ static mp_cmd_t mp_cmds[] = {
   { MP_CMD_SUB_DELAY, "sub_delay",1,  { {MP_CMD_ARG_FLOAT,{0}}, {MP_CMD_ARG_INT,{0}}, {-1,{0}} } },
   { MP_CMD_SUB_STEP, "sub_step",1,  { { MP_CMD_ARG_INT,{0} }, {MP_CMD_ARG_INT,{0}}, {-1,{0}} } },
   { MP_CMD_OSD, "osd",0, { {MP_CMD_ARG_INT,{-1}}, {-1,{0}} } },
-  { MP_CMD_OSD_SHOW_TEXT, "osd_show_text", 1, { {MP_CMD_ARG_STRING, {0}}, {-1,{0}} } },
-  { MP_CMD_VOLUME, "volume", 1, { { MP_CMD_ARG_INT,{0} }, {MP_CMD_ARG_INT,{0}}, {-1,{0}} } },
+  { MP_CMD_OSD_SHOW_TEXT, "osd_show_text", 1, { {MP_CMD_ARG_STRING, {0}}, {MP_CMD_ARG_INT,{-1}}, {MP_CMD_ARG_INT,{0}}, {-1,{0}} } },
+  { MP_CMD_OSD_SHOW_PROPERTY_TEXT, "osd_show_property_text",1, { {MP_CMD_ARG_STRING, {0}}, {MP_CMD_ARG_INT,{-1}}, {MP_CMD_ARG_INT,{0}}, {-1,{0}} } },
+  { MP_CMD_VOLUME, "volume", 1, { { MP_CMD_ARG_FLOAT,{0} }, {MP_CMD_ARG_INT,{0}}, {-1,{0}} } },
   { MP_CMD_MIXER_USEMASTER, "use_master", 0, { {-1,{0}} } },
-  { MP_CMD_MUTE, "mute", 0, { {-1,{0}} } },
+  { MP_CMD_MUTE, "mute", 0, { {MP_CMD_ARG_INT,{-1}}, {-1,{0}} } },
   { MP_CMD_CONTRAST, "contrast",1,  { {MP_CMD_ARG_INT,{0}}, {MP_CMD_ARG_INT,{0}}, {-1,{0}} } },
   { MP_CMD_GAMMA, "gamma", 1, { {MP_CMD_ARG_INT,{0}}, {MP_CMD_ARG_INT,{0}}, {-1,{0}} }  },
   { MP_CMD_BRIGHTNESS, "brightness",1,  { {MP_CMD_ARG_INT,{0}}, {MP_CMD_ARG_INT,{0}}, {-1,{0}} }  },
@@ -76,13 +76,16 @@ static mp_cmd_t mp_cmds[] = {
   { MP_CMD_FRAMEDROPPING, "frame_drop",0, { { MP_CMD_ARG_INT,{-1} }, {-1,{0}} } },
   { MP_CMD_SUB_POS, "sub_pos", 1, { {MP_CMD_ARG_INT,{0}}, {MP_CMD_ARG_INT,{0}}, {-1,{0}} } },
   { MP_CMD_SUB_ALIGNMENT, "sub_alignment",0, { {MP_CMD_ARG_INT,{-1}}, {-1,{0}} } },
-  { MP_CMD_SUB_VISIBILITY, "sub_visibility", 0, { {-1,{0}} } },
+  { MP_CMD_SUB_VISIBILITY, "sub_visibility", 0, { {MP_CMD_ARG_INT,{-1}}, {-1,{0}} } },
+  { MP_CMD_SUB_LOAD, "sub_load", 1, { {MP_CMD_ARG_STRING,{0}}, {-1,{0}} } },
+  { MP_CMD_SUB_REMOVE, "sub_remove", 0, { {MP_CMD_ARG_INT,{-1}}, {-1,{0}} } },
   { MP_CMD_SUB_SELECT, "vobsub_lang", 0, { { MP_CMD_ARG_INT,{-2} }, {-1,{0}} } }, // for compatibility
   { MP_CMD_SUB_SELECT, "sub_select", 0, { { MP_CMD_ARG_INT,{-2} }, {-1,{0}} } },
   { MP_CMD_SUB_LOG, "sub_log", 0, { {-1,{0}} } },
   { MP_CMD_GET_PERCENT_POS, "get_percent_pos", 0, { {-1,{0}} } },
+  { MP_CMD_GET_TIME_POS, "get_time_pos", 0, { {-1,{0}} } },
   { MP_CMD_GET_TIME_LENGTH, "get_time_length", 0, { {-1,{0}} } },
-  { MP_CMD_SWITCH_AUDIO, "switch_audio", 0, { {-1,{0}} } },
+  { MP_CMD_SWITCH_AUDIO, "switch_audio", 0, { { MP_CMD_ARG_INT,{-1} }, {-1,{0}} } },
 #ifdef USE_TV
   { MP_CMD_TV_STEP_CHANNEL, "tv_step_channel", 1,  { { MP_CMD_ARG_INT ,{0}}, {-1,{0}} }},
   { MP_CMD_TV_STEP_NORM, "tv_step_norm",0, { {-1,{0}} }  },
@@ -91,24 +94,25 @@ static mp_cmd_t mp_cmds[] = {
   { MP_CMD_TV_LAST_CHANNEL, "tv_last_channel", 0, { {-1,{0}} } },
   { MP_CMD_TV_SET_FREQ, "tv_set_freq", 1, { {MP_CMD_ARG_FLOAT,{0}}, {-1,{0}} } },
   { MP_CMD_TV_SET_NORM, "tv_set_norm", 1, { {MP_CMD_ARG_STRING,{0}}, {-1,{0}} } },
-  { MP_CMD_TV_SET_BRIGHTNESS, "tv_set_brightness", 1,  { { MP_CMD_ARG_INT ,{0}}, {-1,{0}} }},
-  { MP_CMD_TV_SET_CONTRAST, "tv_set_contrast", 1,  { { MP_CMD_ARG_INT ,{0}}, {-1,{0}} }},
-  { MP_CMD_TV_SET_HUE, "tv_set_hue", 1,  { { MP_CMD_ARG_INT ,{0}}, {-1,{0}} }},
-  { MP_CMD_TV_SET_SATURATION, "tv_set_saturation", 1,  { { MP_CMD_ARG_INT ,{0}}, {-1,{0}} }},
+  { MP_CMD_TV_SET_BRIGHTNESS, "tv_set_brightness", 1,  { { MP_CMD_ARG_INT ,{0}}, { MP_CMD_ARG_INT,{1} }, {-1,{0}} }},
+  { MP_CMD_TV_SET_CONTRAST, "tv_set_contrast", 1,  { { MP_CMD_ARG_INT ,{0}}, { MP_CMD_ARG_INT,{1} }, {-1,{0}} }},
+  { MP_CMD_TV_SET_HUE, "tv_set_hue", 1,  { { MP_CMD_ARG_INT ,{0}}, { MP_CMD_ARG_INT,{1} }, {-1,{0}} }},
+  { MP_CMD_TV_SET_SATURATION, "tv_set_saturation", 1,  { { MP_CMD_ARG_INT ,{0}}, { MP_CMD_ARG_INT,{1} }, {-1,{0}} }},
 #endif
-  { MP_CMD_SUB_FORCED_ONLY, "forced_subs_only",  0, { {-1,{0}} } },
+  { MP_CMD_SUB_FORCED_ONLY, "forced_subs_only",  0, { {MP_CMD_ARG_INT,{-1}}, {-1,{0}} } },
 #ifdef HAS_DVBIN_SUPPORT
   { MP_CMD_DVB_SET_CHANNEL, "dvb_set_channel", 2, { {MP_CMD_ARG_INT,{0}}, {MP_CMD_ARG_INT,{0}}, {-1,{0}}}},
 #endif
   { MP_CMD_SWITCH_RATIO, "switch_ratio", 0, { {MP_CMD_ARG_FLOAT,{0}}, {-1,{0}} } },
-  { MP_CMD_VO_FULLSCREEN, "vo_fullscreen", 0, { {-1,{0}} } },
-  { MP_CMD_VO_ONTOP, "vo_ontop", 0, { {-1,{0}} } },
-  { MP_CMD_VO_ROOTWIN, "vo_rootwin", 0, { {-1,{0}} } },
+  { MP_CMD_VO_FULLSCREEN, "vo_fullscreen", 0, { {MP_CMD_ARG_INT,{-1}}, {-1,{0}} } },
+  { MP_CMD_VO_ONTOP, "vo_ontop", 0, { {MP_CMD_ARG_INT,{-1}}, {-1,{0}} } },
+  { MP_CMD_VO_ROOTWIN, "vo_rootwin", 0, { {MP_CMD_ARG_INT,{-1}}, {-1,{0}} } },
+  { MP_CMD_VO_BORDER, "vo_border", 0, { {MP_CMD_ARG_INT,{-1}}, {-1,{0}} } },
   { MP_CMD_SCREENSHOT, "screenshot", 0, { {-1,{0}} } },
   { MP_CMD_PANSCAN, "panscan",1,  { {MP_CMD_ARG_FLOAT,{0}}, {MP_CMD_ARG_INT,{0}}, {-1,{0}} } },
   { MP_CMD_SWITCH_VSYNC, "switch_vsync", 0, { {MP_CMD_ARG_INT,{0}}, {-1,{0}} } },
-  { MP_CMD_LOADFILE, "loadfile", 1, { {MP_CMD_ARG_STRING, {0}}, {-1,{0}} } },
-  { MP_CMD_LOADLIST, "loadlist", 1, { {MP_CMD_ARG_STRING, {0}}, {-1,{0}} } },
+  { MP_CMD_LOADFILE, "loadfile", 1, { {MP_CMD_ARG_STRING, {0}}, {MP_CMD_ARG_INT,{0}}, {-1,{0}} } },
+  { MP_CMD_LOADLIST, "loadlist", 1, { {MP_CMD_ARG_STRING, {0}}, {MP_CMD_ARG_INT,{0}}, {-1,{0}} } },
   { MP_CMD_RUN, "run", 1, { {MP_CMD_ARG_STRING,{0}}, {-1,{0}} } },
   { MP_CMD_VF_CHANGE_RECTANGLE, "change_rectangle", 2, { {MP_CMD_ARG_INT,{0}}, {MP_CMD_ARG_INT,{0}}, {-1,{0}}}},
 
@@ -138,6 +142,9 @@ static mp_cmd_t mp_cmds[] = {
  
   { MP_CMD_GET_VO_FULLSCREEN, "get_vo_fullscreen", 0, { {-1,{0}} } },
   { MP_CMD_GET_SUB_VISIBILITY, "get_sub_visibility", 0, { {-1,{0}} } },
+  { MP_CMD_KEYDOWN_EVENTS, "key_down_event", 1, { {MP_CMD_ARG_INT,{0}}, {-1,{0}} } },
+  { MP_CMD_SET_PROPERTY, "set_property", 2, { {MP_CMD_ARG_STRING, {0}},  {MP_CMD_ARG_STRING, {0}}, {-1,{0}} } },
+  { MP_CMD_GET_PROPERTY, "get_property", 1, { {MP_CMD_ARG_STRING, {0}},  {-1,{0}} } },
   
   { 0, NULL, 0, {} }
 };
@@ -198,6 +205,16 @@ static mp_key_name_t key_names[] = {
   { MOUSE_BTN7, "MOUSE_BTN7" },
   { MOUSE_BTN8, "MOUSE_BTN8" },
   { MOUSE_BTN9, "MOUSE_BTN9" },
+  { MOUSE_BTN0_DBL, "MOUSE_BTN0_DBL" },
+  { MOUSE_BTN1_DBL, "MOUSE_BTN1_DBL" },
+  { MOUSE_BTN2_DBL, "MOUSE_BTN2_DBL" },
+  { MOUSE_BTN3_DBL, "MOUSE_BTN3_DBL" },
+  { MOUSE_BTN4_DBL, "MOUSE_BTN4_DBL" },
+  { MOUSE_BTN5_DBL, "MOUSE_BTN5_DBL" },
+  { MOUSE_BTN6_DBL, "MOUSE_BTN6_DBL" },
+  { MOUSE_BTN7_DBL, "MOUSE_BTN7_DBL" },
+  { MOUSE_BTN8_DBL, "MOUSE_BTN8_DBL" },
+  { MOUSE_BTN9_DBL, "MOUSE_BTN9_DBL" },
   { JOY_AXIS1_MINUS, "JOY_UP" },
   { JOY_AXIS1_PLUS, "JOY_DOWN" },
   { JOY_AXIS0_MINUS, "JOY_LEFT" },
@@ -235,10 +252,27 @@ static mp_key_name_t key_names[] = {
   { JOY_BTN8, "JOY_BTN8" },
   { JOY_BTN9, "JOY_BTN9" },
 
-  { KEY_XF86_PAUSE, "XF86_PAUSE" },
-  { KEY_XF86_STOP, "XF86_STOP" },
-  { KEY_XF86_PREV, "XF86_PREV" },
-  { KEY_XF86_NEXT, "XF86_NEXT" },
+  { KEY_POWER, "POWER" },
+  { KEY_MENU, "MENU" },
+  { KEY_PLAY, "PLAY" },
+  { KEY_PAUSE, "PAUSE" },
+  { KEY_PLAYPAUSE, "PLAYPAUSE" },
+  { KEY_STOP, "STOP" },
+  { KEY_FORWARD, "FORWARD" },
+  { KEY_REWIND, "REWIND" },
+  { KEY_NEXT, "NEXT" },
+  { KEY_PREV, "PREV" },
+  { KEY_VOLUME_UP, "VOLUME_UP" },
+  { KEY_VOLUME_DOWN, "VOLUME_DOWN" },
+  { KEY_MUTE, "MUTE" },
+
+  // These are kept for backward compatibility
+  { KEY_PAUSE, "XF86_PAUSE" },
+  { KEY_STOP, "XF86_STOP" },
+  { KEY_PREV, "XF86_PREV" },
+  { KEY_NEXT, "XF86_NEXT" },
+
+  { KEY_CLOSE_WIN, "CLOSE_WIN" },
 
   { 0, NULL }
 };
@@ -269,30 +303,30 @@ static mp_cmd_bind_t def_cmd_binds[] = {
   { {  KEY_DOWN, 0 }, "seek -60" },
   { {  KEY_PAGE_UP, 0 }, "seek 600" },
   { { KEY_PAGE_DOWN, 0 }, "seek -600" },
-  { { '-', 0 }, "audio_delay 0.100" },
-  { { '+', 0 }, "audio_delay -0.100" },
+  { { '+', 0 }, "audio_delay 0.100" },
+  { { '-', 0 }, "audio_delay -0.100" },
   { { '[', 0 }, "speed_mult 0.9091" },
   { { ']', 0 }, "speed_mult 1.1" },
   { { '{', 0 }, "speed_mult 0.5" },
   { { '}', 0 }, "speed_mult 2.0" },
   { { KEY_BACKSPACE, 0 }, "speed_set 1.0" },
   { { 'q', 0 }, "quit" },
+  { { 'Q', 0 }, "quit" },
   { { KEY_ESC, 0 }, "quit" },
-#ifndef HAVE_NEW_GUI
   { { 'p', 0 }, "pause" },
-#endif
+  { { 'P', 0 }, "pause" },
   { { ' ', 0 }, "pause" },
   { { '.', 0 }, "frame_step" },
   { { KEY_HOME, 0 }, "pt_up_step 1" },
   { { KEY_END, 0 }, "pt_up_step -1" },
   { { '>', 0 }, "pt_step 1" },
-#ifndef HAVE_NEW_GUI
   { { KEY_ENTER, 0 }, "pt_step 1 1" },
-#endif
   { { '<', 0 }, "pt_step -1" },
   { { KEY_INS, 0 }, "alt_src_step 1" },
   { { KEY_DEL, 0 }, "alt_src_step -1" },
   { { 'o', 0 }, "osd" },
+  { { 'O', 0 }, "osd" },
+  { { 'I', 0 }, "osd_show_property_text \"${filename}\"" },
   { { 'z', 0 }, "sub_delay -0.1" },
   { { 'x', 0 }, "sub_delay +0.1" },
   { { 'g', 0 }, "sub_step -1" },
@@ -302,6 +336,7 @@ static mp_cmd_bind_t def_cmd_binds[] = {
   { { '0', 0 }, "volume 1" },
   { { '*', 0 }, "volume 1" },
   { { 'm', 0 }, "mute" },
+  { { 'M', 0 }, "mute" },
   { { '1', 0 }, "contrast -1" },
   { { '2', 0 }, "contrast 1" },
   { { '3', 0 }, "brightness -1" },
@@ -319,23 +354,12 @@ static mp_cmd_bind_t def_cmd_binds[] = {
   { { 'j', 0 }, "vobsub_lang" },
   { { 'F', 0 }, "forced_subs_only" },
   { { '#', 0 }, "switch_audio" },
-#ifdef USE_EDL
   { { 'i', 0 }, "edl_mark" },
-#endif
 #ifdef USE_TV
   { { 'h', 0 }, "tv_step_channel 1" },
   { { 'k', 0 }, "tv_step_channel -1" },
   { { 'n', 0 }, "tv_step_norm" },
   { { 'u', 0 }, "tv_step_chanlist" },
-#endif
-#ifdef HAVE_NEW_GUI
-  { { 'l', 0 }, "gui_loadfile" },
-  { { 't', 0 }, "gui_loadsubtitle" },
-  { { KEY_ENTER, 0 }, "gui_play" },
-  { { 's', 0 }, "gui_stop" },
-  { { 'p', 0 }, "gui_playlist" },
-  { { 'r', 0 }, "gui_preferences" },
-  { { 'c', 0 }, "gui_skinbrowser" },
 #endif
 #ifdef HAVE_JOYSTICK
   { { JOY_AXIS0_PLUS, 0 }, "seek 10" },
@@ -353,13 +377,40 @@ static mp_cmd_bind_t def_cmd_binds[] = {
   { { 'w', 0 }, "panscan -0.1" },
   { { 'e', 0 }, "panscan +0.1" },
 
-  { { KEY_XF86_PAUSE, 0 }, "pause" },
-  { { KEY_XF86_STOP, 0 }, "quit" },
-  { { KEY_XF86_PREV, 0 }, "seek -60" },
-  { { KEY_XF86_NEXT, 0 }, "seek +60" },
+  { { KEY_POWER, 0 }, "quit" },
+  { { KEY_MENU, 0 }, "osd" },
+  { { KEY_PLAY, 0 }, "pause" },
+  { { KEY_PAUSE, 0 }, "pause" },
+  { { KEY_PLAYPAUSE, 0 }, "pause" },
+  { { KEY_STOP, 0 }, "quit" },
+  { { KEY_FORWARD, 0 }, "seek 60" },
+  { { KEY_REWIND, 0 }, "seek -60" },
+  { { KEY_NEXT, 0 }, "pt_step 1" },
+  { { KEY_PREV, 0 }, "pt_step -1" },
+  { { KEY_VOLUME_UP, 0 }, "volume 1" },
+  { { KEY_VOLUME_DOWN, 0 }, "volume -1" },
+  { { KEY_MUTE, 0 }, "mute" },
+          
+  { { KEY_CLOSE_WIN, 0 }, "quit" },
 
   { { 0 }, NULL }
 };
+
+
+#ifdef HAVE_NEW_GUI
+static mp_cmd_bind_t gui_def_cmd_binds[] = {
+
+  { { 'l', 0 }, "gui_loadfile" },
+  { { 't', 0 }, "gui_loadsubtitle" },
+  { { KEY_ENTER, 0 }, "gui_play" },
+  { { KEY_ESC, 0 }, "gui_stop" },
+  { { 'p', 0 }, "gui_playlist" },
+  { { 'r', 0 }, "gui_preferences" },
+  { { 'c', 0 }, "gui_skinbrowser" },
+
+  { { 0 }, NULL }
+};
+#endif
 
 #ifndef MP_MAX_KEY_FD
 #define MP_MAX_KEY_FD 10
@@ -465,7 +516,7 @@ mp_input_get_key_name(int key);
 int
 mp_input_add_cmd_fd(int fd, int select, mp_cmd_func_t read_func, mp_close_func_t close_func) {
   if(num_cmd_fd == MP_MAX_CMD_FD) {
-    mp_msg(MSGT_INPUT,MSGL_ERR,"Too many command fds, unable to register fd %d.\n",fd);
+    mp_msg(MSGT_INPUT,MSGL_ERR,MSGTR_INPUT_INPUT_ErrCantRegister2ManyCmdFds,fd);
     return 0;
   }
 
@@ -521,7 +572,7 @@ mp_input_rm_key_fd(int fd) {
 int
 mp_input_add_key_fd(int fd, int select, mp_key_func_t read_func, mp_close_func_t close_func) {
   if(num_key_fd == MP_MAX_KEY_FD) {
-    mp_msg(MSGT_INPUT,MSGL_ERR,"Too many key fds, unable to register fd %d.\n",fd);
+    mp_msg(MSGT_INPUT,MSGL_ERR,MSGTR_INPUT_INPUT_ErrCantRegister2ManyKeyFds,fd);
     return 0;
   }
 
@@ -552,6 +603,12 @@ mp_input_parse_cmd(char* str) {
   if (strncmp(str, "pausing ", 8) == 0) {
     pausing = 1;
     str = &str[8];
+  } else if (strncmp(str, "pausing_keep ", 13) == 0) {
+    pausing = 2;
+    str = &str[13];
+  } else if (strncmp(str, "pausing_toggle ", 15) == 0) {
+    pausing = 3;
+    str = &str[15];
   }
 
   for(ptr = str ; ptr[0] != '\0'  && ptr[0] != '\t' && ptr[0] != ' ' ; ptr++)
@@ -574,7 +631,7 @@ mp_input_parse_cmd(char* str) {
 
   cmd_def = &mp_cmds[i];
 
-  cmd = (mp_cmd_t*)malloc(sizeof(mp_cmd_t));
+  cmd = (mp_cmd_t*)calloc(1, sizeof(mp_cmd_t));
   cmd->id = cmd_def->id;
   cmd->name = strdup(cmd_def->name);
   cmd->pausing = pausing;
@@ -592,7 +649,7 @@ mp_input_parse_cmd(char* str) {
       errno = 0;
       cmd->args[i].v.i = atoi(ptr);
       if(errno != 0) {
-	mp_msg(MSGT_INPUT,MSGL_ERR,"Command %s: argument %d isn't an integer.\n",cmd_def->name,i+1);
+	mp_msg(MSGT_INPUT,MSGL_ERR,MSGTR_INPUT_INPUT_ErrArgMustBeInt,cmd_def->name,i+1);
 	ptr = NULL;
       }
       break;
@@ -600,7 +657,7 @@ mp_input_parse_cmd(char* str) {
       errno = 0;
       cmd->args[i].v.f = atof(ptr);
       if(errno != 0) {
-	mp_msg(MSGT_INPUT,MSGL_ERR,"Command %s: argument %d isn't a float.\n",cmd_def->name,i+1);
+	mp_msg(MSGT_INPUT,MSGL_ERR,MSGTR_INPUT_INPUT_ErrArgMustBeFloat,cmd_def->name,i+1);
 	ptr = NULL;
       }
       break;
@@ -622,7 +679,7 @@ mp_input_parse_cmd(char* str) {
       }
       
       if(term != ' ' && (!e || e[0] == '\0')) {
-	mp_msg(MSGT_INPUT,MSGL_ERR,"Command %s: argument %d is unterminated.\n",cmd_def->name,i+1);
+	mp_msg(MSGT_INPUT,MSGL_ERR,MSGTR_INPUT_INPUT_ErrUnterminatedArg,cmd_def->name,i+1);
 	ptr = NULL;
 	break;
       } else if(!e) e = ptr+strlen(ptr);
@@ -642,14 +699,14 @@ mp_input_parse_cmd(char* str) {
       ptr = NULL;
       break;
     default :
-      mp_msg(MSGT_INPUT,MSGL_ERR,"Unknown argument %d\n",i);
+      mp_msg(MSGT_INPUT,MSGL_ERR,MSGTR_INPUT_INPUT_ErrUnknownArg,i);
     }
   }
   cmd->nargs = i;
 
   if(cmd_def->nargs > cmd->nargs) {
-    mp_msg(MSGT_INPUT,MSGL_ERR,"Got command '%s' but\n",str);
-    mp_msg(MSGT_INPUT,MSGL_ERR,"command %s requires at least %d arguments, we found only %d so far.\n",cmd_def->name,cmd_def->nargs,cmd->nargs);
+/*    mp_msg(MSGT_INPUT,MSGL_ERR,"Got command '%s' but\n",str); */
+    mp_msg(MSGT_INPUT,MSGL_ERR,MSGTR_INPUT_INPUT_Err2FewArgs,cmd_def->name,cmd_def->nargs,cmd->nargs);
     mp_cmd_free(cmd);
     return NULL;
   }
@@ -702,9 +759,11 @@ mp_input_read_cmd(mp_input_fd_t* mp_fd, char** ret) {
       switch(r) {
       case MP_INPUT_ERROR:
       case MP_INPUT_DEAD:
-	mp_msg(MSGT_INPUT,MSGL_ERR,"Error while reading cmd fd %d: %s\n",mp_fd->fd,strerror(errno));
+	mp_msg(MSGT_INPUT,MSGL_ERR,MSGTR_INPUT_INPUT_ErrReadingCmdFd,mp_fd->fd,strerror(errno));
       case MP_INPUT_NOTHING:
 	return r;
+      case MP_INPUT_RETRY:
+	continue;
       }
       // EOF ?
     } else if(r == 0) {
@@ -727,7 +786,7 @@ mp_input_read_cmd(mp_input_fd_t* mp_fd, char** ret) {
     if(!end) {
       // If buffer is full we must drop all until the next \n
       if(mp_fd->size - mp_fd->pos <= 1) {
-	mp_msg(MSGT_INPUT,MSGL_ERR,"Cmd buffer of fd %d is full: dropping content\n",mp_fd->fd);
+	mp_msg(MSGT_INPUT,MSGL_ERR,MSGTR_INPUT_INPUT_ErrCmdBufferFullDroppingContent,mp_fd->fd);
 	mp_fd->pos = 0;
 	mp_fd->flags |= MP_FD_DROP;
       }
@@ -827,7 +886,7 @@ mp_input_get_cmd_from_keys(int n,int* keys, int paused) {
     cmd = mp_input_find_bind_for_key(def_cmd_binds,n,keys);
 
   if(cmd == NULL) {
-    mp_msg(MSGT_INPUT,MSGL_WARN,"No bind found for key %s",mp_input_get_key_name(keys[0]));
+    mp_msg(MSGT_INPUT,MSGL_WARN,MSGTR_NoBindFound,mp_input_get_key_name(keys[0]));
     if(n > 1) {
       int s;
       for(s=1; s < n; s++)
@@ -838,7 +897,7 @@ mp_input_get_cmd_from_keys(int n,int* keys, int paused) {
   }
   ret =  mp_input_parse_cmd(cmd);
   if(!ret) {
-    mp_msg(MSGT_INPUT,MSGL_ERR,"Invalid command for bound key %s",mp_input_get_key_name(key_down[0]));
+    mp_msg(MSGT_INPUT,MSGL_ERR,MSGTR_INPUT_INPUT_ErrInvalidCommandForKey,mp_input_get_key_name(key_down[0]));
     if(  num_key_down > 1) {
       unsigned int s;
       for(s=1; s < num_key_down; s++)
@@ -899,7 +958,7 @@ if(n>0){
     if(select(max_fd+1,&fds,NULL,NULL,time_val) < 0) {
       if(errno == EINTR)
 	continue;
-      mp_msg(MSGT_INPUT,MSGL_ERR,"Select error: %s\n",strerror(errno));
+      mp_msg(MSGT_INPUT,MSGL_ERR,MSGTR_INPUT_INPUT_ErrSelect,strerror(errno));
     }
     break;
   }
@@ -933,9 +992,9 @@ if(n>0){
       return code;
 
     if(code == MP_INPUT_ERROR)
-      mp_msg(MSGT_INPUT,MSGL_ERR,"Error on key input fd %d\n",key_fds[i].fd);
+      mp_msg(MSGT_INPUT,MSGL_ERR,MSGTR_INPUT_INPUT_ErrOnKeyInFd,key_fds[i].fd);
     else if(code == MP_INPUT_DEAD) {
-      mp_msg(MSGT_INPUT,MSGL_ERR,"Dead key input on fd %d\n",key_fds[i].fd);
+      mp_msg(MSGT_INPUT,MSGL_ERR,MSGTR_INPUT_INPUT_ErrDeadKeyOnFd,key_fds[i].fd);
       key_fds[i].flags |= MP_FD_DEAD;
     }
   }
@@ -962,7 +1021,7 @@ mp_input_read_keys(int time,int paused) {
     // key pushed
     if(code & MP_KEY_DOWN) {
       if(num_key_down > MP_MAX_KEY_DOWN) {
-	mp_msg(MSGT_INPUT,MSGL_ERR,"Too many key down events at the same time\n");
+	mp_msg(MSGT_INPUT,MSGL_ERR,MSGTR_INPUT_INPUT_Err2ManyKeyDowns);
 	continue;
       }
       code &= ~MP_KEY_DOWN;
@@ -988,7 +1047,7 @@ mp_input_read_keys(int time,int paused) {
     }
     if(j == num_key_down) { // key was not in the down keys : add it
       if(num_key_down > MP_MAX_KEY_DOWN) {
-	mp_msg(MSGT_INPUT,MSGL_ERR,"Too many key down events at the same time\n");
+	mp_msg(MSGT_INPUT,MSGL_ERR,MSGTR_INPUT_INPUT_Err2ManyKeyDowns);
 	continue;
       }
       key_down[num_key_down] = code;
@@ -1083,7 +1142,7 @@ mp_input_read_cmds(int time) {
       if(i < 0) {
 	if(errno == EINTR)
 	  continue;
-	mp_msg(MSGT_INPUT,MSGL_ERR,"Select error: %s\n",strerror(errno));
+	mp_msg(MSGT_INPUT,MSGL_ERR,MSGTR_INPUT_INPUT_ErrSelect,strerror(errno));
       }
       if(!got_cmd)
 	return NULL;
@@ -1109,7 +1168,7 @@ mp_input_read_cmds(int time) {
     r = mp_input_read_cmd(&cmd_fds[i],&cmd);
     if(r < 0) {
       if(r == MP_INPUT_ERROR)
-	mp_msg(MSGT_INPUT,MSGL_ERR,"Error on cmd fd %d\n",cmd_fds[i].fd);
+	mp_msg(MSGT_INPUT,MSGL_ERR,MSGTR_INPUT_INPUT_ErrOnCmdFd,cmd_fds[i].fd);
       else if(r == MP_INPUT_DEAD)
 	cmd_fds[i].flags |= MP_FD_DEAD;
       continue;
@@ -1322,6 +1381,12 @@ mp_input_bind_keys(int keys[MP_MAX_KEY_DOWN+1], char* cmd) {
   memcpy(bind->input,keys,(MP_MAX_KEY_DOWN+1)*sizeof(int));
 }
 
+void
+mp_input_add_binds(mp_cmd_bind_t* list) {
+  int i;
+  for(i = 0 ; list[i].cmd ; i++)
+    mp_input_bind_keys(list[i].input,list[i].cmd);
+}
 
 static void
 mp_input_free_binds(mp_cmd_bind_t* binds) {
@@ -1348,7 +1413,6 @@ mp_input_parse_config(char *file) {
   char *iter,*end;
   char buffer[BS_MAX];
   int n_binds = 0, keys[MP_MAX_KEY_DOWN+1] = { 0 };
-  mp_cmd_bind_t* binds = NULL;
 
   fd = open(file,O_RDONLY);
 
@@ -1366,8 +1430,7 @@ mp_input_parse_config(char *file) {
       if(r < 0) {
 	if(errno == EINTR)
 	  continue;
-	mp_msg(MSGT_INPUT,MSGL_ERR,"Error while reading input config file %s: %s\n",file,strerror(errno));
-	mp_input_free_binds(binds);
+	mp_msg(MSGT_INPUT,MSGL_ERR,MSGTR_INPUT_INPUT_ErrReadingInputConfig,file,strerror(errno));
 	close(fd);
 	return 0;
       } else if(r == 0) {
@@ -1380,8 +1443,6 @@ mp_input_parse_config(char *file) {
     // Empty buffer : return
     if(bs <= 1) {
       mp_msg(MSGT_INPUT,MSGL_V,"Input config file %s parsed: %d binds\n",file,n_binds);
-      if(binds)
-	cmd_binds = binds;
       close(fd);
       return 1;
     }
@@ -1424,10 +1485,9 @@ mp_input_parse_config(char *file) {
       if(end[0] == '\0') { // Key name doesn't fit in the buffer
 	if(buffer == iter) {
 	  if(eof && (buffer-iter) == bs)
-	    mp_msg(MSGT_INPUT,MSGL_ERR,"Unfinished binding %s\n",iter);
+	    mp_msg(MSGT_INPUT,MSGL_ERR,MSGTR_INPUT_INPUT_ErrUnfinishedBinding,iter);
 	  else
-	    mp_msg(MSGT_INPUT,MSGL_ERR,"Buffer is too small for this key name: %s\n",iter);
-	  mp_input_free_binds(binds);
+	    mp_msg(MSGT_INPUT,MSGL_ERR,MSGTR_INPUT_INPUT_ErrBuffer2SmallForKeyName,iter);
 	  return 0;
 	}
 	memmove(buffer,iter,end-iter);
@@ -1439,8 +1499,7 @@ mp_input_parse_config(char *file) {
 	strncpy(name,iter,end-iter);
 	name[end-iter] = '\0';
 	if(! mp_input_get_input_from_name(name,keys)) {
-	  mp_msg(MSGT_INPUT,MSGL_ERR,"Unknown key '%s'\n",name);
-	  mp_input_free_binds(binds);
+	  mp_msg(MSGT_INPUT,MSGL_ERR,MSGTR_INPUT_INPUT_ErrUnknownKey,name);
 	  close(fd);
 	  return 0;
 	}
@@ -1454,7 +1513,7 @@ mp_input_parse_config(char *file) {
       // Found new line
       if(iter[0] == '\n' || iter[0] == '\r') {
 	int i;
-	mp_msg(MSGT_INPUT,MSGL_ERR,"No command found for key %s" ,mp_input_get_key_name(keys[0]));
+	mp_msg(MSGT_INPUT,MSGL_ERR,MSGTR_INPUT_INPUT_ErrNoCmdForKey,mp_input_get_key_name(keys[0]));
 	for(i = 1; keys[i] != 0 ; i++)
 	  mp_msg(MSGT_INPUT,MSGL_ERR,"-%s",mp_input_get_key_name(keys[i]));
 	mp_msg(MSGT_INPUT,MSGL_ERR,"\n");
@@ -1469,8 +1528,7 @@ mp_input_parse_config(char *file) {
 	/* NOTHING */;
       if(end[0] == '\0' && ! (eof && ((end+1) - buffer) == bs)) {
 	if(iter == buffer) {
-	  mp_msg(MSGT_INPUT,MSGL_ERR,"Buffer is too small for command %s\n",buffer);
-	  mp_input_free_binds(binds);
+	  mp_msg(MSGT_INPUT,MSGL_ERR,MSGTR_INPUT_INPUT_ErrBuffer2SmallForCmd,buffer);
 	  close(fd);
 	  return 0;
 	}
@@ -1495,7 +1553,7 @@ mp_input_parse_config(char *file) {
       continue;
     }
   }
-  mp_msg(MSGT_INPUT,MSGL_ERR,"What are we doing here?\n");
+  mp_msg(MSGT_INPUT,MSGL_ERR,MSGTR_INPUT_INPUT_ErrWhyHere);
   close(fd);
   return 0;
 }
@@ -1503,9 +1561,14 @@ mp_input_parse_config(char *file) {
 extern char *get_path(char *filename);
 
 void
-mp_input_init(void) {
+mp_input_init(int use_gui) {
   char* file;
 
+#ifdef HAVE_NEW_GUI  
+  if(use_gui)
+    mp_input_add_binds(gui_def_cmd_binds);
+#endif
+  
   file = config_file[0] != '/' ? get_path(config_file) : config_file;
   if(!file)
     return;
@@ -1533,7 +1596,7 @@ mp_input_init(void) {
   if(use_joystick) {
     int fd = mp_input_joystick_init(js_dev);
     if(fd < 0)
-      mp_msg(MSGT_INPUT,MSGL_ERR,"Can't init input joystick\n");
+      mp_msg(MSGT_INPUT,MSGL_ERR,MSGTR_INPUT_INPUT_ErrCantInitJoystick);
     else
       mp_input_add_key_fd(fd,1,mp_input_joystick_read,(mp_close_func_t)close);
   }
@@ -1558,13 +1621,13 @@ mp_input_init(void) {
   if(in_file) {
     struct stat st;
     if(stat(in_file,&st))
-      mp_msg(MSGT_INPUT,MSGL_ERR,"Can't stat %s: %s\n",in_file,strerror(errno));
+      mp_msg(MSGT_INPUT,MSGL_ERR,MSGTR_INPUT_INPUT_ErrCantStatFile,in_file,strerror(errno));
     else {
       in_file_fd = open(in_file,S_ISFIFO(st.st_mode) ? O_RDWR : O_RDONLY);
       if(in_file_fd >= 0)
 	mp_input_add_cmd_fd(in_file_fd,1,NULL,(mp_close_func_t)close);
       else
-	mp_msg(MSGT_INPUT,MSGL_ERR,"Can't open %s: %s\n",in_file,strerror(errno));
+	mp_msg(MSGT_INPUT,MSGL_ERR,MSGTR_INPUT_INPUT_ErrCantOpenFile,in_file,strerror(errno));
     }
   }
 

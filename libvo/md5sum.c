@@ -9,7 +9,7 @@
  *
  * Modified for use with MPlayer, detailed CVS changelog at
  * http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
- * $Id: md5sum.c,v 1.2 2005/04/15 18:43:41 diego Exp $
+ * $Id: md5sum.c 17368 2006-01-13 00:23:32Z diego $
  *
  * -------------------------------------------------------------------------- **
  *
@@ -32,7 +32,7 @@
  *
  *  You should have received a copy of the GNU Lesser General Public
  *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
  *
  * -------------------------------------------------------------------------- **
  *

@@ -17,7 +17,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
  *
- * $Id: pnm.h,v 1.1 2002/12/26 17:25:22 arpi Exp $
+ * $Id: pnm.h 15586 2005-05-29 12:54:00Z nicodvb $
  *
  * pnm util functions header by joschka
  */
@@ -32,12 +32,12 @@
 
 typedef struct pnm_s pnm_t;
 
-pnm_t*   pnm_connect (int fd,char *url);
+//pnm_t*   pnm_connect (int fd,char *url);
 
-int      pnm_read (pnm_t *this, char *data, int len);
-void     pnm_close (pnm_t *this);
+//int      pnm_read (pnm_t *this, char *data, int len);
+//void     pnm_close (pnm_t *this);
 
-int      pnm_peek_header (pnm_t *this, char *data);
+//int      pnm_peek_header (pnm_t *this, char *data);
 
 #endif
 

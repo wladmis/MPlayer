@@ -1,5 +1,5 @@
 // FIXME: This needs to be redone properly.
-// Partially sync'ed with help_mp-en.h $Revision: 1.25 $
+// Partially sync'ed with help_mp-en.h $Revision: 18526 $
 // This is a retranslation of the file by Bogdan Butnaru <bogdanb@fastmail.fm>,
 // based on the previous translation by Codre Adrian
 // <codreadrian@softhome.net> (address bounces).
@@ -69,8 +69,6 @@ static char help_text[]=
 #define MSGTR_GetpathProblem "get_path(\"config\") problem\n"
 #define MSGTR_CreatingCfgFile "Creez fiºierul de configurare: %s\n"\
 	"Încearcã '-vo help' pentru o listã cu driveri video disponibili.\n"
-#define MSGTR_InvalidAOdriver "Numele driverului de ieºire audio e greºit: %s\n"\
-	"Foloseºte '-ao help' pentru lista cu driveri audio disponibili.\n"
 #define MSGTR_BuiltinCodecsConf "Folosesc 'codecs.conf' built-in.\n"
 #define MSGTR_CantLoadFont "Nu pot încãrca fontul: %s\n"
 #define MSGTR_CantLoadSub "Nu pot încãrca subtitrarea: %s\n"
@@ -137,7 +135,7 @@ static char help_text[]=
 
 // mencoder.c:
 
-#define MSGTR_UsingPass3ControllFile "Folosesc fiºierul de control pass3: %s\n"
+#define MSGTR_UsingPass3ControlFile "Folosesc fiºierul de control pass3: %s\n"
 #define MSGTR_MissingFilename "\nLipseºte numele fiºierului.\n\n"
 #define MSGTR_CannotOpenFile_Device "Nu pot deschide fiºierul/dispozitivul.\n"
 #define MSGTR_CannotOpenDemuxer "Nu pot deschide demultiplexorul.\n"
@@ -146,15 +144,12 @@ static char help_text[]=
 #define MSGTR_CannotOpenOutputFile "Nu pot deschide fiºierul de ieºire '%s'.\n"
 #define MSGTR_EncoderOpenFailed "Nu pot deschide encoderul.\n"
 #define MSGTR_ForcingOutputFourcc "Forþez ieºirea fourcc la %x [%.4s]\n"
-#define MSGTR_WritingAVIHeader "Scriu header-ul AVI...\n"
 #define MSGTR_DuplicateFrames "\n%d cadre duplicate!\n"
 #define MSGTR_SkipFrame "\nSkipping frame!\n"
 #define MSGTR_ErrorWritingFile "%s: Eroare la scrierea fiºierului.\n"
-#define MSGTR_WritingAVIIndex "\nScriu indexul AVI...\n"
-#define MSGTR_FixupAVIHeader "Repar header-ul AVI...\n"
 #define MSGTR_RecommendedVideoBitrate "Bitrate-ul video recomandatpentru %s CD: %d\n"
-#define MSGTR_VideoStreamResult "\nCanal video: %8.3f kbit/s (%d bps)  dimensiune: %d bytes %5.3f sec %d cadre\n"
-#define MSGTR_AudioStreamResult "\nCanal audio: %8.3f kbit/s (%d bps)  dimensiune: %d bytes %5.3f sec\n"
+#define MSGTR_VideoStreamResult "\nCanal video: %8.3f kbit/s (%d B/s)  dimensiune: %"PRIu64" bytes %5.3f sec %d cadre\n"
+#define MSGTR_AudioStreamResult "\nCanal audio: %8.3f kbit/s (%d B/s)  dimensiune: %"PRIu64" bytes %5.3f sec\n"
 
 // cfg-mencoder.h:
 
@@ -369,9 +364,7 @@ static char help_text[]=
 #define MSGTR_MENU_Chapter "Capitolul %2d"
 #define MSGTR_MENU_AudioLanguages "Limbi pentru audio"
 #define MSGTR_MENU_SubtitleLanguages "Limbi pentru subtitrãri"
-#define MSGTR_MENU_PlayList "Playlist"
 #define MSGTR_MENU_SkinBrowser "Alegere skin"
-#define MSGTR_MENU_Preferences "Preferinþe"
 #define MSGTR_MENU_Exit "Ieºire..."
 #define MSGTR_MENU_Mute "Fãrã sunet"
 #define MSGTR_MENU_Original "Original"
@@ -408,8 +401,6 @@ static char help_text[]=
 #define MSGTR_PLAYLIST_DirectoryTree "Arbore de directoare"
 
 // --- preferences
-#define MSGTR_PREFERENCES_Audio "Audio"
-#define MSGTR_PREFERENCES_Video "Video"
 #define MSGTR_PREFERENCES_SubtitleOSD "Subtitrãri & OSD"
 #define MSGTR_PREFERENCES_Codecs "Codecuri & demuxer"
 #define MSGTR_PREFERENCES_Misc "Altele"
@@ -418,7 +409,7 @@ static char help_text[]=
 #define MSGTR_PREFERENCES_AvailableDrivers "Drivere disponibile:"
 #define MSGTR_PREFERENCES_DoNotPlaySound "Nu reda sunetul"
 #define MSGTR_PREFERENCES_NormalizeSound "Normalizeazã sunetul"
-#define MSGTR_PREFERENCES_EnEqualizer "Activeazã egalizatorul"
+#define MSGTR_PREFERENCES_EnableEqualizer "Activeazã egalizatorul"
 #define MSGTR_PREFERENCES_ExtraStereo "Activeazã extra stereo"
 #define MSGTR_PREFERENCES_Coefficient "Coeficient:"
 #define MSGTR_PREFERENCES_AudioDelay "Decalaj audio"
@@ -452,7 +443,6 @@ static char help_text[]=
 #define MSGTR_PREFERENCES_FRAME_PostProcess "Postprocesare"
 #define MSGTR_PREFERENCES_FRAME_CodecDemuxer "Codec & demuxer"
 #define MSGTR_PREFERENCES_FRAME_Cache "Cache"
-#define MSGTR_PREFERENCES_FRAME_Misc "Altele"
 #define MSGTR_PREFERENCES_Message "Nu uita cã rularea trebuie repornitã pentru ca unele opþiuni sã-ºi facã efectul!"
 #define MSGTR_PREFERENCES_DXR3_VENC "Encoder video:"
 #define MSGTR_PREFERENCES_DXR3_LAVC "Foloseºte LAVC (FFmpeg)"
@@ -502,9 +492,6 @@ static char help_text[]=
 #define MSGTR_PREFERENCES_ShowVideoWindow "Afiºeazã fereastra video cand e inactivã"
 
 #define MSGTR_ABOUT_UHU "Dezvoltare GUI sponsorizatã de UHU Linux\n"
-#define MSGTR_ABOUT_CoreTeam "   echipa MPlayer principalã:\n"
-#define MSGTR_ABOUT_AdditionalCoders "   Alþi progamatori:\n"
-#define MSGTR_ABOUT_MainTesters "   Testeri principali:\n"
 
 // --- messagebox
 #define MSGTR_MSGBOX_LABEL_FatalError "Eroare fatalã!"

@@ -1,5 +1,7 @@
 
-#include "../config.h"
+#include "config.h"
+#include "mp_msg.h"
+#include "help_mp.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -7,16 +9,16 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#include "../libvo/osd.h"
-#include "../libvo/font_load.h"
-#include "../osdep/keycodes.h"
-#include "../asxparser.h"
-#include "../libmpdemux/stream.h"
+#include "libvo/osd.h"
+#include "libvo/font_load.h"
+#include "osdep/keycodes.h"
+#include "asxparser.h"
+#include "libmpdemux/stream.h"
 
 #include "img_format.h"
 #include "mp_image.h"
-#include "../m_option.h"
-#include "../m_struct.h"
+#include "m_option.h"
+#include "m_struct.h"
 #include "menu.h"
 
 extern menu_info_t menu_info_cmdlist;
@@ -63,7 +65,7 @@ static int menu_parse_config(char* buffer) {
   while(1) {
     r = asx_get_element(parser,&buffer,&element,&body,&attribs);
     if(r < 0) {
-      printf("Syntax error at line %d\n",parser->line);
+      mp_msg(MSGT_GLOBAL,MSGL_WARN,MSGTR_LIBMENU_SyntaxErrorAtLine,parser->line);
       asx_parser_free(parser);
       return 0;
     } else if(r == 0) {
@@ -73,7 +75,7 @@ static int menu_parse_config(char* buffer) {
     // Has it a name ?
     name = asx_get_attrib("name",attribs);
     if(!name) {
-      printf("Menu definitions need a name attrib (line %d)\n",parser->line);
+      mp_msg(MSGT_GLOBAL,MSGL_WARN,MSGTR_LIBMENU_MenuDefinitionsNeedANameAttrib,parser->line);
       free(element);
       if(body) free(body);
       asx_free_attribs(attribs);
@@ -98,13 +100,13 @@ static int menu_parse_config(char* buffer) {
       for(i = 0 ; attribs[2*i] ; i++) {
 	if(strcasecmp(attribs[2*i],"name") == 0) continue;
 	if(!m_struct_set(&minfo->priv_st,menu_list[mcount].cfg,attribs[2*i], attribs[2*i+1]))
-	  printf("Bad attrib %s=%s in menu %s at line %d\n",attribs[2*i],attribs[2*i+1],
+	  mp_msg(MSGT_GLOBAL,MSGL_WARN,MSGTR_LIBMENU_BadAttrib,attribs[2*i],attribs[2*i+1],
 		 name,parser->line);
       }
       mcount++;
       memset(&menu_list[mcount],0,sizeof(menu_def_t));
     } else {
-      printf("Unknown menu type %s at line %d\n",element,parser->line);
+      mp_msg(MSGT_GLOBAL,MSGL_WARN,MSGTR_LIBMENU_UnknownMenuType,element,parser->line);
       free(name);
       if(body) free(body);
     }
@@ -130,7 +132,7 @@ int menu_init(char* cfg_file) {
 #endif
   fd = open(cfg_file, O_RDONLY);
   if(fd < 0) {
-    printf("Can't open menu config file: %s\n",cfg_file);
+    mp_msg(MSGT_GLOBAL,MSGL_WARN,MSGTR_LIBMENU_CantOpenConfigFile,cfg_file);
     return 0;
   }
   buffer = malloc(bl);
@@ -138,7 +140,7 @@ int menu_init(char* cfg_file) {
     int r;
     if(bl - br < BUF_MIN) {
       if(bl >= BUF_MAX) {
-	printf("Menu config file is too big (> %d KB)\n",BUF_MAX/1024);
+	mp_msg(MSGT_GLOBAL,MSGL_WARN,MSGTR_LIBMENU_ConfigFileIsTooBig,BUF_MAX/1024);
 	close(fd);
 	free(buffer);
 	return 0;
@@ -151,7 +153,7 @@ int menu_init(char* cfg_file) {
     br += r;
   }
   if(!br) {
-    printf("Menu config file is empty\n");
+    mp_msg(MSGT_GLOBAL,MSGL_WARN,MSGTR_LIBMENU_ConfigFileIsEmpty);
     return 0;
   }
   buffer[br-1] = '\0';
@@ -185,10 +187,14 @@ void menu_dflt_read_key(menu_t* menu,int cmd) {
     menu->read_cmd(menu,MENU_CMD_DOWN);
     break;
   case KEY_LEFT:
+    menu->read_cmd(menu,MENU_CMD_LEFT);
+    break;
   case KEY_ESC:
     menu->read_cmd(menu,MENU_CMD_CANCEL);
     break;
   case KEY_RIGHT:
+    menu->read_cmd(menu,MENU_CMD_RIGHT);
+    break;
   case KEY_ENTER:
     menu->read_cmd(menu,MENU_CMD_OK);
     break;
@@ -204,7 +210,7 @@ menu_t* menu_open(char *name) {
       break;
   }
   if(menu_list[i].name == NULL) {
-    printf("Menu %s not found\n",name);
+    mp_msg(MSGT_GLOBAL,MSGL_WARN,MSGTR_LIBMENU_MenuNotFound,name);
     return NULL;
   }
   m = calloc(1,sizeof(menu_t));
@@ -215,7 +221,7 @@ menu_t* menu_open(char *name) {
   if(m->priv)
     m_struct_free(m->priv_st,m->priv);
   free(m);
-  printf("Menu  %s: init failed\n",name);
+  mp_msg(MSGT_GLOBAL,MSGL_WARN,MSGTR_LIBMENU_MenuInitFailed,name);
   return NULL;
 }
 
@@ -272,6 +278,8 @@ inline static draw_alpha_f get_draw_alpha(uint32_t fmt) {
     return vo_draw_alpha_yv12;
   case IMGFMT_YUY2:
     return vo_draw_alpha_yuy2;
+  case IMGFMT_UYVY:
+    return vo_draw_alpha_uyvy;
   }
 
   return NULL;
@@ -297,7 +305,7 @@ void menu_draw_text(mp_image_t* mpi,char* txt, int x, int y) {
   int font;
 
   if(!draw_alpha) {
-    printf("Unsupported outformat !!!!\n");
+    mp_msg(MSGT_GLOBAL,MSGL_WARN,MSGTR_LIBMENU_UnsupportedOutformat);
     return;
   }
 
@@ -328,7 +336,7 @@ void menu_draw_text_full(mp_image_t* mpi,char* txt,
   draw_alpha_f draw_alpha = get_draw_alpha(mpi->imgfmt);
 
   if(!draw_alpha) {
-    printf("Unsupported outformat !!!!\n");
+    mp_msg(MSGT_GLOBAL,MSGL_WARN,MSGTR_LIBMENU_UnsupportedOutformat);
     return;
   }
 
@@ -554,4 +562,36 @@ char* menu_text_get_next_line(char* txt, int max_width) {
     i += vo_font->charspace;
   }
   return txt;
+}
+
+
+void menu_draw_box(mp_image_t* mpi,unsigned char grey,unsigned char alpha, int x, int y, int w, int h) {
+  draw_alpha_f draw_alpha = get_draw_alpha(mpi->imgfmt);
+  int g;
+  
+  if(!draw_alpha) {
+    mp_msg(MSGT_GLOBAL,MSGL_WARN,MSGTR_LIBMENU_UnsupportedOutformat);
+    return;
+  }
+  
+  if(x > mpi->w || y > mpi->h) return;
+  
+  if(x < 0) w += x, x = 0;
+  if(x+w > mpi->w) w = mpi->w-x;
+  if(y < 0) h += y, y = 0;
+  if(y+h > mpi->h) h = mpi->h-y;
+    
+  g = ((256-alpha)*grey)>>8;
+  if(g < 1) g = 1;
+    
+  {
+    int stride = (w+7)&(~7); // round to 8
+    char pic[stride*h],pic_alpha[stride*h];
+    memset(pic,g,stride*h);
+    memset(pic_alpha,alpha,stride*h);
+    draw_alpha(w,h,pic,pic_alpha,stride,
+               mpi->planes[0] + y * mpi->stride[0] + x * (mpi->bpp>>3),
+               mpi->stride[0]);
+  }
+  
 }

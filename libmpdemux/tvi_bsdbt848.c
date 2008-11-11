@@ -43,6 +43,9 @@
 #ifdef __NetBSD__
 #include <dev/ic/bt8xx.h>
 #include <sys/audioio.h>
+#elif defined(__DragonFly__)
+#include <dev/video/meteor/ioctl_meteor.h>
+#include <dev/video/bktr/ioctl_bt848.h>
 #elif __FreeBSD_version >= 502100
 #include <dev/bktr/ioctl_meteor.h>
 #include <dev/bktr/ioctl_bt848.h>
@@ -61,8 +64,8 @@
 #endif
 #endif
 
-#include "../libaf/af_format.h"
-#include "../libvo/img_format.h"
+#include "libaf/af_format.h"
+#include "libvo/img_format.h"
 #include "tv.h"
 
 /* information about this file */

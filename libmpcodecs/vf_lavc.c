@@ -3,17 +3,15 @@
 #include <string.h>
 #include <inttypes.h>
 
-#include "../config.h"
-#include "../mp_msg.h"
-#include "../help_mp.h"
-
-#ifdef USE_LIBAVCODEC
+#include "config.h"
+#include "mp_msg.h"
+#include "help_mp.h"
 
 #include "img_format.h"
 #include "mp_image.h"
 #include "vf.h"
 
-//#include "../libvo/fastmemcpy.h"
+//#include "libvo/fastmemcpy.h"
 
 #ifdef USE_LIBAVCODEC_SO
 #include <ffmpeg/avcodec.h>
@@ -61,26 +59,38 @@ static int config(struct vf_instance_s* vf,
     lavc_venc_context.width = width;
     lavc_venc_context.height = height;
     
+#if LIBAVCODEC_BUILD >= 4754
+    if(!lavc_venc_context.time_base.num || !lavc_venc_context.time_base.den){
+#else
     if(!lavc_venc_context.frame_rate){
+#endif
 	// guess FPS:
 	switch(height){
 	case 240:
 	case 480:
+#if LIBAVCODEC_BUILD >= 4754
+	    lavc_venc_context.time_base= (AVRational){1001,30000};
+#else
 #if LIBAVCODEC_BUILD >= 4662
 	    lavc_venc_context.frame_rate     = 30000;
 	    lavc_venc_context.frame_rate_base= 1001;
 #else
 	    lavc_venc_context.frame_rate=29.97*FRAME_RATE_BASE; // NTSC
 #endif
+#endif
 	    break;
 	case 576:
 	case 288:
 	default:
+#if LIBAVCODEC_BUILD >= 4754
+	    lavc_venc_context.time_base= (AVRational){1,25};
+#else
 #if LIBAVCODEC_BUILD >= 4662
 	    lavc_venc_context.frame_rate     = 25;
 	    lavc_venc_context.frame_rate_base= 1;
 #else
 	    lavc_venc_context.frame_rate=25*FRAME_RATE_BASE; // PAL
+#endif
 #endif
 	    break;
 //	    lavc_venc_context.frame_rate=vo_fps*FRAME_RATE_BASE; // same as src
@@ -105,7 +115,7 @@ static int config(struct vf_instance_s* vf,
     return vf_next_config(vf,width,height,d_width,d_height,flags,IMGFMT_MPEGPES);
 }
 
-static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
+static int put_image(struct vf_instance_s* vf, mp_image_t *mpi, double pts){
     mp_image_t* dmpi;
     int out_size;
     AVFrame *pic= vf->priv->pic;
@@ -133,7 +143,7 @@ static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
     
     dmpi->planes[0]=(unsigned char*)&vf->priv->pes;
     
-    return vf_next_put_image(vf,dmpi);
+    return vf_next_put_image(vf,dmpi, MP_NOPTS_VALUE);
 }
 
 //===========================================================================//
@@ -191,13 +201,19 @@ static int open(vf_instance_t *vf, char* args){
 	// fixed bitrate (in kbits)
 	lavc_venc_context.bit_rate = 1000*p_quality;
     }
+#if LIBAVCODEC_BUILD >= 4754
+    lavc_venc_context.time_base.num = 1000*1001;
+    lavc_venc_context.time_base.den = (p_fps<1.0) ? 1000*1001*25 : (p_fps * lavc_venc_context.time_base.num);
+#else
 #if LIBAVCODEC_BUILD >= 4662
     lavc_venc_context.frame_rate_base = 1000*1001;
     lavc_venc_context.frame_rate      = (p_fps<1.0) ? 0 : (p_fps * lavc_venc_context.frame_rate_base);
 #else
     lavc_venc_context.frame_rate      = (p_fps<1.0) ? 0 : (p_fps * FRAME_RATE_BASE);
 #endif
+#endif
     lavc_venc_context.gop_size = 0; // I-only
+    lavc_venc_context.pix_fmt= PIX_FMT_YUV420P;
 
     return 1;
 }
@@ -212,4 +228,3 @@ vf_info_t vf_info_lavc = {
 };
 
 //===========================================================================//
-#endif

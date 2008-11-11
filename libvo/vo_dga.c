@@ -283,7 +283,7 @@ static void fillblock(char *strt, int yoff, int lines, int val)
 
 //---------------------------------------------------------
 
-static uint32_t draw_frame(uint8_t * src[])
+static int draw_frame(uint8_t * src[])
 {
 
     int vp_skip = vo_dga_vp_skip;
@@ -352,7 +352,7 @@ static void flip_page(void)
 
 //---------------------------------------------------------
 
-static uint32_t draw_slice(uint8_t * src[], int stride[],
+static int draw_slice(uint8_t * src[], int stride[],
                            int w, int h, int x, int y)
 {
     return 0;
@@ -360,7 +360,7 @@ static uint32_t draw_slice(uint8_t * src[], int stride[],
 
 //---------------------------------------------------------
 
-static uint32_t query_format(uint32_t format)
+static int query_format(uint32_t format)
 {
 
     if ((format & IMGFMT_BGR_MASK) == IMGFMT_BGR &&
@@ -516,7 +516,7 @@ static void init_video_buffers(uint8_t * buffer_base,
     }
 }
 
-static uint32_t config(uint32_t width, uint32_t height,
+static int config(uint32_t width, uint32_t height,
                        uint32_t d_width, uint32_t d_height,
                        uint32_t flags, char *title, uint32_t format)
 {
@@ -627,7 +627,7 @@ static uint32_t config(uint32_t width, uint32_t height,
     vo_dga_vp_width = mX;
     vo_dga_vp_height = mY;
 
-    if ((flags & 0x04) || (flags & 0x01))
+    if ((flags & VOFLAG_SWSCALE) || (flags & VOFLAG_FULLSCREEN))
     {                           /* -zoom or -fs */
         scale_dstW = (d_width + 7) & ~7;
         scale_dstH = d_height;
@@ -636,9 +636,9 @@ static uint32_t config(uint32_t width, uint32_t height,
         aspect_save_screenres(mX, mY);
         aspect_save_orig(scale_srcW, scale_srcH);
         aspect_save_prescale(scale_dstW, scale_dstH);
-        if (flags & 0x01)       /* -fs */
+        if (flags & VOFLAG_FULLSCREEN)       /* -fs */
             aspect(&scale_dstW, &scale_dstH, A_ZOOM);
-        else if (flags & 0x04)  /* -fs */
+        else if (flags & VOFLAG_SWSCALE)  /* -fs */
             aspect(&scale_dstW, &scale_dstH, A_NOZOOM);
         mp_msg(MSGT_VO, MSGL_INFO,
                "vo_dga: Aspect corrected size for SwScaler: %4d x %4d.\n",
@@ -811,7 +811,7 @@ static uint32_t config(uint32_t width, uint32_t height,
     // do some more checkings here ...
 
     mp_msg(MSGT_VO, MSGL_V,
-           "vo_dga: bytes/line: %d, screen res: %dx%d, depth: %d, base: %08x, bpp: %d\n",
+           "vo_dga: bytes/line: %d, screen res: %dx%d, depth: %d, base: %p, bpp: %d\n",
            vo_dga_width, vo_dga_vp_width, vo_dga_vp_height,
            HW_MODE.vdm_bytespp, vo_dga_base, HW_MODE.vdm_bitspp);
 
@@ -863,7 +863,7 @@ static uint32_t config(uint32_t width, uint32_t height,
 
 static int dga_depths_init = 0;
 
-static uint32_t preinit(const char *arg)
+static int preinit(const char *arg)
 {
     if (arg)
     {
@@ -889,7 +889,7 @@ static uint32_t preinit(const char *arg)
                    "resolution supported by DGA driver!\n");
 #endif
         }                       //else{
-        //  mp_msg(MSGT_VO, MSGL_INFO, "vo_dga: X running at: %s\n", 
+        //  mp_msg(MSGT_VO, MSGL_V, "vo_dga: X running at: %s\n", 
         //            vd_GetModeString(vo_dga_XServer_mode));
         //}                                
 
@@ -900,7 +900,7 @@ static uint32_t preinit(const char *arg)
             for (i = 0; i < vo_modecount; i++)
             {
                 mp_msg(MSGT_VO, MSGL_V,
-                       "vo_dga: (%03d) depth=%d, bpp=%d, r=%08x, g=%08x, b=%08x, %d x %d\n",
+                       "vo_dga: (%03d) depth=%d, bpp=%d, r=%08lx, g=%08lx, b=%08lx, %d x %d\n",
                        i, vo_modelines[i].depth,
                        vo_modelines[i].bitsPerPixel,
                        vo_modelines[i].redMask, vo_modelines[i].greenMask,
@@ -974,7 +974,7 @@ static uint32_t get_image(mp_image_t * mpi)
     return (VO_FALSE);
 }
 
-static uint32_t control(uint32_t request, void *data, ...)
+static int control(uint32_t request, void *data, ...)
 {
     switch (request)
     {

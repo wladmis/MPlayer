@@ -11,7 +11,7 @@
  *
  * Modified for use with MPlayer, detailed CVS changelog at
  * http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
- * $Id: pe_image.c,v 1.9 2005/04/15 20:17:12 diego Exp $
+ * $Id: pe_image.c 18487 2006-05-13 18:38:57Z rathann $
  *
  */
 /* Notes:
@@ -821,8 +821,6 @@ WINE_MODREF *PE_CreateModule( HMODULE hModule,
     }
 
     return wm;
-
-    return wm;
 }
 
 /******************************************************************************
@@ -905,7 +903,7 @@ void PE_UnloadLibrary(WINE_MODREF *wm)
  */
 static void __attribute__((noinline)) extend_stack_for_dll_alloca(void)
 {
-#ifndef __FreeBSD__
+#if !defined(__FreeBSD__) && !defined(__DragonFly__)
     volatile int* mem=alloca(0x20000);
     *mem=0x1234;
 #endif

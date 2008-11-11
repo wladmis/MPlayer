@@ -7,11 +7,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
-#include <errno.h>
 
 #include "config.h"
 #include "mp_msg.h"
+#include "subopt-helper.h"
 #include "video_out.h"
 #include "video_out_internal.h"
 #include "sub.h"
@@ -19,8 +18,6 @@
 #ifdef HAVE_NEW_GUI
 #include "Gui/interface.h"
 #endif
-
-#include <errno.h>
 
 #include "gl_common.h"
 #include "aspect.h"
@@ -32,6 +29,13 @@
 #ifdef SYS_DARWIN
 #define TEXTUREFORMAT_ALWAYS GL_RGBA8
 #endif
+
+//! force texture height, useful for debugging
+#define TEXTURE_HEIGHT 128
+#undef TEXTURE_HEIGHT
+//! force texture width, useful for debugging
+#define TEXTURE_WIDTH 128
+#undef TEXTURE_WIDTH
 
 static vo_info_t info = 
 {
@@ -45,11 +49,6 @@ LIBVO_EXTERN(gl2)
 
 /* local data */
 static unsigned char *ImageData=NULL;
-
-/* X11 related variables */
-//static Window vo_window;
-
-//static int texture_id=1;
 
 #ifdef GL_WIN32
     static int gl_vinfo = 0;
@@ -70,16 +69,19 @@ static int int_pause;
 static uint32_t texture_width;
 static uint32_t texture_height;
 static int texnumx, texnumy, raw_line_len;
-static GLfloat texpercx, texpercy;
 static struct TexSquare * texgrid = NULL;
+static GLuint   fragprog;
+static GLuint   lookupTex;
 static GLint    gl_internal_format;
 static int      rgb_sz, r_sz, g_sz, b_sz, a_sz;
-static GLint    gl_bitmap_format;
-static GLint    gl_bitmap_type;
+static GLenum   gl_bitmap_format;
+static GLenum   gl_bitmap_type;
 static int      isGL12 = GL_FALSE;
 
 static int      gl_bilinear=1;
 static int      gl_antialias=0;
+static int      use_yuv;
+static int      use_glFinish;
 
 static void (*draw_alpha_fnc)
                  (int x0,int y0, int w,int h, unsigned char* src, unsigned char *srca, int stride);
@@ -91,24 +93,14 @@ struct TexSquare
 {
   GLubyte *texture;
   GLuint texobj;
+  GLuint uvtexobjs[2];
   int isTexture;
-  GLfloat fx1, fy1, fx2, fy2, fx3, fy3, fx4, fy4;
-  GLfloat xcov, ycov;
+  GLfloat fx, fy, fw, fh;
   int isDirty;
   int dirtyXoff, dirtyYoff, dirtyWidth, dirtyHeight;
 };
 
-static void resetTexturePointers(unsigned char *imageSource);
-
-static void CalcFlatPoint(int x,int y,GLfloat *px,GLfloat *py)
-{
-  *px=(float)x*texpercx;
-  if(*px>1.0) *px=1.0;
-  *py=(float)y*texpercy;
-  if(*py>1.0) *py=1.0;
-}
-
-static GLint getInternalFormat()
+static GLint getInternalFormat(void)
 {
 #ifdef GL_WIN32
   PIXELFORMATDESCRIPTOR pfd;
@@ -158,25 +150,27 @@ static GLint getInternalFormat()
   return GL_RGB;
 }
 
-static int initTextures()
+static int initTextures(void)
 {
   struct TexSquare *tsq=0;
-  int e_x, e_y, s, i=0;
+  GLfloat texpercx, texpercy;
+  int s;
   int x=0, y=0;
   GLint format=0;
   GLenum err;
 
-  /* achieve the 2**e_x:=texture_width, 2**e_y:=texture_height */
-  e_x=0; s=1;
-  while (s<texture_width)
-  { s*=2; e_x++; }
+  // textures smaller than 64x64 might not be supported
+  s=64;
+  while (s<image_width)
+    s*=2;
   texture_width=s;
 
-  e_y=0; s=1;
-  while (s<texture_height)
-  { s*=2; e_y++; }
+  s=64;
+  while (s<image_height)
+    s*=2;
   texture_height=s;
 
+  if (image_format != IMGFMT_YV12)
   gl_internal_format = getInternalFormat();
 
   /* Test the max texture size */
@@ -196,19 +190,9 @@ static int initTextures()
 		texture_height, texture_width);
 
       if (texture_width > texture_height)
-      {
-	e_x--;
-	texture_width = 1;
-	for (i = e_x; i > 0; i--)
-	  texture_width *= 2;
-      }
+        texture_width /= 2;
       else
-      {
-	e_y--;
-	texture_height = 1;
-	for (i = e_y; i > 0; i--)
-	  texture_height *= 2;
-      }
+        texture_height /= 2;
 
       mp_msg (MSGT_VO, MSGL_V, "[%dx%d] !\n", texture_height, texture_width);
 
@@ -220,6 +204,12 @@ static int initTextures()
     }
   }
   while (format != gl_internal_format && texture_width > 1 && texture_height > 1);
+#ifdef TEXTURE_WIDTH
+  texture_width = TEXTURE_WIDTH;
+#endif
+#ifdef TEXTURE_HEIGHT
+  texture_height = TEXTURE_HEIGHT;
+#endif
 
   texnumx = image_width / texture_width;
   if ((image_width % texture_width) > 0)
@@ -235,12 +225,7 @@ static int initTextures()
   /* Allocate the texture memory */
 
   texpercx = (GLfloat) texture_width / (GLfloat) image_width;
-  if (texpercx > 1.0)
-    texpercx = 1.0;
-
   texpercy = (GLfloat) texture_height / (GLfloat) image_height;
-  if (texpercy > 1.0)
-    texpercy = 1.0;
 
   if (texgrid)
     free(texgrid);
@@ -253,37 +238,34 @@ static int initTextures()
 		 (int) texnumx, (int) texture_width, (int) texnumy,
 		 (int) texture_height);
 
+  tsq = texgrid;
   for (y = 0; y < texnumy; y++)
   {
     for (x = 0; x < texnumx; x++)
     {
-      tsq = texgrid + y * texnumx + x;
 
-      if (x == texnumx - 1 && image_width % texture_width)
-	tsq->xcov =
-	  (GLfloat) (image_width % texture_width) / (GLfloat) texture_width;
-      else
-	tsq->xcov = 1.0;
+      tsq->fx = x * texpercx;
+      tsq->fy = y * texpercy;
+      tsq->fw = texpercx;
+      tsq->fh = texpercy;
 
-      if (y == texnumy - 1 && image_height % texture_height)
-	tsq->ycov =
-	  (GLfloat) (image_height % texture_height) / (GLfloat) texture_height;
-      else
-	tsq->ycov = 1.0;
-
-      CalcFlatPoint (x, y, &(tsq->fx1), &(tsq->fy1));
-      CalcFlatPoint (x + 1, y, &(tsq->fx2), &(tsq->fy2));
-      CalcFlatPoint (x + 1, y + 1, &(tsq->fx3), &(tsq->fy3));
-      CalcFlatPoint (x, y + 1, &(tsq->fx4), &(tsq->fy4));
-
-      tsq->isDirty=GL_TRUE;
+      tsq->isDirty=GL_FALSE;
       tsq->isTexture=GL_FALSE;
       tsq->texobj=0;
+      tsq->uvtexobjs[0] = tsq->uvtexobjs[1] = 0;
       tsq->dirtyXoff=0; tsq->dirtyYoff=0; tsq->dirtyWidth=-1; tsq->dirtyHeight=-1;
 
       glGenTextures (1, &(tsq->texobj));
 
       glBindTexture (GL_TEXTURE_2D, tsq->texobj);
+      if (image_format == IMGFMT_YV12) {
+        glGenTextures(2, tsq->uvtexobjs);
+        ActiveTexture(GL_TEXTURE1);
+        glBindTexture (GL_TEXTURE_2D, tsq->uvtexobjs[0]);
+        ActiveTexture(GL_TEXTURE2);
+        glBindTexture (GL_TEXTURE_2D, tsq->uvtexobjs[1]);
+        ActiveTexture(GL_TEXTURE0);
+      }
       err = glGetError ();
       if(err==GL_INVALID_ENUM)
       {
@@ -298,24 +280,23 @@ static int initTextures()
         tsq->isTexture=GL_TRUE;
       }
 
-      glTexImage2D (GL_TEXTURE_2D, 0,
-		    gl_internal_format,
-		    texture_width, texture_height,
-		    0, gl_bitmap_format, gl_bitmap_type, NULL); 
-
-      glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_PRIORITY, 1.0);
-
-      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+      glCreateClearTex(GL_TEXTURE_2D, gl_internal_format, GL_LINEAR,
+                       texture_width, texture_height, 0);
 
       glTexEnvf (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+      if (image_format == IMGFMT_YV12) {
+        ActiveTexture(GL_TEXTURE1);
+        glCreateClearTex(GL_TEXTURE_2D, gl_internal_format, GL_LINEAR,
+                         texture_width / 2, texture_height / 2, 128);
+        ActiveTexture(GL_TEXTURE2);
+        glCreateClearTex(GL_TEXTURE_2D, gl_internal_format, GL_LINEAR,
+                         texture_width / 2, texture_height / 2, 128);
+        ActiveTexture(GL_TEXTURE0);
+      }
 
+      tsq++;
     }	/* for all texnumx */
   }  /* for all texnumy */
-  resetTexturePointers (ImageData);
   
   return 0;
 }
@@ -486,20 +467,20 @@ static void gl_set_antialias (int val)
 }
 
 
-static void drawTextureDisplay ()
+static void drawTextureDisplay (void)
 {
-  struct TexSquare *square;
+  struct TexSquare *square = texgrid;
   int x, y/*, xoff=0, yoff=0, wd, ht*/;
   GLenum err;
 
   glColor3f(1.0,1.0,1.0);
 
+  if (image_format == IMGFMT_YV12)
+    glEnableYUVConversion(GL_TEXTURE_2D, use_yuv);
   for (y = 0; y < texnumy; y++)
   {
     for (x = 0; x < texnumx; x++)
     {
-      square = texgrid + y * texnumx + x;
-
       if(square->isTexture==GL_FALSE)
       {
         mp_msg (MSGT_VO, MSGL_V, "[gl2] ain't a texture(update): texnum x=%d, y=%d, texture=%d\n",
@@ -508,6 +489,13 @@ static void drawTextureDisplay ()
       }
 
       glBindTexture (GL_TEXTURE_2D, square->texobj);
+      if (image_format == IMGFMT_YV12) {
+        ActiveTexture(GL_TEXTURE1);
+        glBindTexture (GL_TEXTURE_2D, square->uvtexobjs[0]);
+        ActiveTexture(GL_TEXTURE2);
+        glBindTexture (GL_TEXTURE_2D, square->uvtexobjs[1]);
+        ActiveTexture(GL_TEXTURE0);
+      }
       err = glGetError ();
       if(err==GL_INVALID_ENUM)
       {
@@ -517,19 +505,22 @@ static void drawTextureDisplay ()
 		mp_msg (MSGT_VO, MSGL_V, "GLERROR glBindTexture := GL_INVALID_OPERATION, texnum x=%d, y=%d, texture=%d\n", x, y, square->texobj);
 	      }
 
+#ifndef NDEBUG
       if(glIsTexture(square->texobj) == GL_FALSE)
       {
         square->isTexture=GL_FALSE;
 	mp_msg (MSGT_VO, MSGL_ERR, "GLERROR ain't a texture(update): texnum x=%d, y=%d, texture=%d\n",
 		x, y, square->texobj);
       }
+#endif
 
       if(square->isDirty)
       {
-	glTexSubImage2D (GL_TEXTURE_2D, 0, 
+	glUploadTex(GL_TEXTURE_2D, gl_bitmap_format,  gl_bitmap_type,
+		 square->texture, image_width * image_bytes,
 		 square->dirtyXoff, square->dirtyYoff,
 		 square->dirtyWidth, square->dirtyHeight,
-		 gl_bitmap_format, gl_bitmap_type, square->texture);
+		 0);
 
         square->isDirty=GL_FALSE;
         square->dirtyXoff=0; square->dirtyYoff=0; square->dirtyWidth=-1; square->dirtyHeight=-1;
@@ -538,29 +529,15 @@ static void drawTextureDisplay ()
         mp_msg (MSGT_VO, MSGL_DBG2, "[gl2] glTexSubImage2D texnum x=%d, y=%d, %d/%d - %d/%d\n", 
 		x, y, square->dirtyXoff, square->dirtyYoff, square->dirtyWidth, square->dirtyHeight);
 
-	glBegin(GL_QUADS);
-
-	glTexCoord2f (0, 0);
-	glVertex2f (square->fx1, square->fy1);
-
-	glTexCoord2f (0, square->ycov);
-	glVertex2f (square->fx4, square->fy4);
-
-	glTexCoord2f (square->xcov, square->ycov);
-	glVertex2f (square->fx3, square->fy3);
-
-	glTexCoord2f (square->xcov, 0);
-	glVertex2f (square->fx2, square->fy2);
-
-	glEnd();
-/*
-#ifndef NDEBUG
-        fprintf (stdout, "[gl2] GL_QUADS texnum x=%d, y=%d, %f/%f %f/%f %f/%f %f/%f\n\n", x, y, square->fx1, square->fy1, square->fx4, square->fy4,
-	square->fx3, square->fy3, square->fx2, square->fy2);
-#endif
-*/
+      glDrawTex(square->fx, square->fy, square->fw, square->fh,
+                0, 0, texture_width, texture_height,
+                texture_width, texture_height,
+                0, image_format == IMGFMT_YV12, 0);
+      square++;
     } /* for all texnumx */
   } /* for all texnumy */
+  if (image_format == IMGFMT_YV12)
+    glDisableYUVConversion(GL_TEXTURE_2D, use_yuv);
 
   /* YES - let's catch this error ... 
    */
@@ -574,9 +551,17 @@ static void resize(int *x,int *y){
   {
 	  glClear(GL_COLOR_BUFFER_BIT);
 	  aspect(x, y, A_ZOOM);
+	  panscan_calc();
+	  *x += vo_panscan_x;
+	  *y += vo_panscan_y;
 	  glViewport( (vo_screenwidth-*x)/2, (vo_screenheight-*y)/2, *x, *y);
   } else { 
 	  //aspect(x, y, A_NOZOOM);
+	if (WinID >= 0) {
+	  int top = 0, left = 0, w = *x, h = *y;
+	  geometry(&top, &left, &w, &h, vo_screenwidth, vo_screenheight);
+	  glViewport(top, left, w, h);
+	} else
 	  glViewport( 0, 0, *x, *y );
   }
 
@@ -610,15 +595,7 @@ static void draw_alpha_null(int x0,int y0, int w,int h, unsigned char* src, unsi
 #ifdef GL_WIN32
 
 static int config_w32(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uint32_t flags, char *title, uint32_t format) {
-    o_dwidth = d_width;
-    o_dheight = d_height;
-    vo_fs = flags & VOFLAG_FULLSCREEN;
-    vo_vm = flags & VOFLAG_MODESWITCHING;
-    
-    vo_dwidth = d_width;
-    vo_dheight = d_height;
-
-    if (!createRenderingContext())
+    if (!vo_w32_config(d_width, d_height, flags))
 	return -1;
 
     if (vo_fs)
@@ -686,14 +663,21 @@ static int choose_glx_visual(Display *dpy, int scr, XVisualInfo *res_vi)
 }
 
 static int config_glx(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uint32_t flags, char *title, uint32_t format) {
+  if (WinID >= 0) {
+    vo_window = WinID ? (Window)WinID : mRootWin;
+    vo_x11_selectinput_witherr(mDisplay, vo_window,
+             StructureNotifyMask | KeyPressMask | PointerMotionMask |
+             ButtonPressMask | ButtonReleaseMask | ExposureMask);
+    return 0;
+  }
   if ( vo_window == None ) 
   {
 	XSizeHints hint;
 	XVisualInfo *vinfo, vinfo_buf;
 	XEvent xev;
 
-		hint.x = 0;
-		hint.y = 0;
+		hint.x = vo_dx;
+		hint.y = vo_dy;
 		hint.width = d_width;
 		hint.height = d_height;
 		hint.flags = PPosition | PSize;
@@ -722,9 +706,6 @@ static int config_glx(uint32_t width, uint32_t height, uint32_t d_width, uint32_
 
 	/* Map window. */
 	XMapWindow(mDisplay, vo_window);
-#ifdef HAVE_XINERAMA
-	vo_x11_xinerama_move(mDisplay,vo_window);
-#endif
 	vo_x11_sizehint( hint.x, hint.y, hint.width, hint.height,0 );
         XClearWindow(mDisplay,vo_window);
 
@@ -745,7 +726,7 @@ static int config_glx(uint32_t width, uint32_t height, uint32_t d_width, uint32_
 		 | ButtonPressMask | ButtonReleaseMask | ExposureMask
         );
   }
-  vo_x11_nofs_sizepos(0, 0, d_width, d_height);
+  vo_x11_nofs_sizepos(vo_dx, vo_dy, d_width, d_height);
   if (vo_fs ^ (flags & VOFLAG_FULLSCREEN))
     vo_x11_fullscreen();
 
@@ -765,12 +746,7 @@ static int config_glx_gui(uint32_t d_width, uint32_t d_height) {
 
 static int initGl(uint32_t d_width, uint32_t d_height)
 {
-  ImageData=malloc(image_width*image_height*image_bytes);
-  memset(ImageData,128,image_width*image_height*image_bytes);
-
-  texture_width=image_width;
-  texture_height=image_height;
-    
+  fragprog = lookupTex = 0;
   if (initTextures() < 0)
     return -1;
 
@@ -778,16 +754,28 @@ static int initGl(uint32_t d_width, uint32_t d_height)
   glDisable(GL_DEPTH_TEST);
   glDepthMask(GL_FALSE);
   glDisable(GL_CULL_FACE);
-
-  glPixelStorei (GL_UNPACK_ROW_LENGTH, image_width);
-
-  /**
-   * may give a little speed up for a kinda burst read ..
-   * Also, the default of 4 will break some files.
-   */
-  glAdjustAlignment(image_width*image_bytes);
-
   glEnable (GL_TEXTURE_2D);
+  if (image_format == IMGFMT_YV12) {
+    switch (use_yuv) {
+      case YUV_CONVERSION_FRAGMENT_LOOKUP:
+        glGenTextures(1, &lookupTex);
+        ActiveTexture(GL_TEXTURE3);
+        glBindTexture(GL_TEXTURE_2D, lookupTex);
+        ActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, 0);
+      case YUV_CONVERSION_FRAGMENT_POW:
+      case YUV_CONVERSION_FRAGMENT:
+        if (!GenPrograms || !BindProgram) {
+          mp_msg(MSGT_VO, MSGL_ERR, "[gl] fragment program functions missing!\n");
+          break;
+        }
+        GenPrograms(1, &fragprog);
+        BindProgram(GL_FRAGMENT_PROGRAM, fragprog);
+        break;
+    }
+    glSetupYUVConversion(GL_TEXTURE_2D, use_yuv, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0,
+                         texture_width, texture_height);
+  }
 
   gl_set_antialias(0);
   gl_set_bilinear(1);
@@ -804,16 +792,13 @@ static int initGl(uint32_t d_width, uint32_t d_height)
 
   drawTextureDisplay ();
 
-  free (ImageData);
-  ImageData = NULL;
-
   return 0;
 }
 
 /* connect to server, create and map window,
  * allocate colors and (shared) memory
  */
-static uint32_t 
+static int 
 config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uint32_t flags, char *title, uint32_t format)
 {
         const unsigned char * glVersion;
@@ -824,11 +809,18 @@ config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uin
 
 	int_pause = 0;
   
+	panscan_init();
 	aspect_save_orig(width,height);
 	aspect_save_prescale(d_width,d_height);
-	aspect_save_screenres(vo_screenwidth,vo_screenheight);
+	update_xinerama_info();
 
 	aspect(&d_width,&d_height,A_NOZOOM);
+	vo_dx = (int)(vo_screenwidth - d_width) / 2;
+	vo_dy = (int)(vo_screenheight - d_height) / 2;
+	geometry(&vo_dx, &vo_dy, &d_width, &d_height,
+	          vo_screenwidth, vo_screenheight);
+	vo_dx += xinerama_x;
+	vo_dy += xinerama_y;
 
 #if defined(HAVE_NEW_GUI) && !defined(GL_WIN32)
 	if (use_gui) {
@@ -866,7 +858,7 @@ config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uin
 	mp_msg(MSGT_VO, MSGL_INFO, "[gl2] You have OpenGL < 1.2 drivers, BAD (16bpp and BGR may be damaged!)\n");
   }
 
-  glFindFormat(format, &image_bpp, NULL, &gl_bitmap_format, &gl_bitmap_type);
+  glFindFormat(format, &image_bpp, &gl_internal_format, &gl_bitmap_format, &gl_bitmap_type);
 
   image_bytes=(image_bpp+7)/8;
 
@@ -886,7 +878,7 @@ config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uin
 			draw_alpha_fnc=draw_alpha_32; break;
   }
 
-  if (initGl(d_width, d_height) == -1)
+  if (initGl(vo_dwidth, vo_dheight) == -1)
       return -1;
 #ifndef GL_WIN32
       if (vo_ontop) vo_x11_setlayer(mDisplay,vo_window, vo_ontop);
@@ -910,24 +902,15 @@ static int gl_handlekey(int key)
 	return 1;
 }
 
-#ifdef GL_WIN32
-
-static void check_events(void) {
-    int e=vo_w32_check_events();
-    if(e&VO_EVENT_RESIZE) resize(&vo_dwidth, &vo_dheight);
-    if(e&VO_EVENT_EXPOSE && int_pause) flip_page();
-}
-
-#else
-
 static void check_events(void)
 {
+	 int e;
+#ifndef GL_WIN32
 	 XEvent         Event;
 	 char           buf[100];
 	 KeySym         keySym;
 	 int            key;
 	 static XComposeStatus stat;
-	 int e;
          
 	 while ( XPending( mDisplay ) )
 	 {
@@ -946,12 +929,11 @@ static void check_events(void)
 	               break;
 	      }
          }
-	 e=vo_x11_check_events(mDisplay);
+#endif
+	 e=vo_check_events();
          if(e&VO_EVENT_RESIZE) resize(&vo_dwidth, &vo_dheight);
          if(e&VO_EVENT_EXPOSE && int_pause) flip_page();
 }
-
-#endif
 
 static void draw_osd(void)
 {
@@ -966,63 +948,88 @@ flip_page(void)
   drawTextureDisplay();
 
 //  glFlush();
+  if (use_glFinish)
   glFinish();
-#ifdef GL_WIN32
-  SwapBuffers(vo_hdc);
-#else
-  glXSwapBuffers( mDisplay,vo_window );
-#endif
+  swapGlBuffers();
 
   if (vo_fs) // Avoid flickering borders in fullscreen mode
     glClear (GL_COLOR_BUFFER_BIT);
 }
 
 //static inline uint32_t draw_slice_x11(uint8_t *src[], uint32_t slice_num)
-static uint32_t draw_slice(uint8_t *src[], int stride[], int w,int h,int x,int y)
+static int draw_slice(uint8_t *src[], int stride[], int w,int h,int x,int y)
 {
+  uint8_t *yptr = src[0], *uptr = src[1], *vptr = src[2];
+  int ystride = stride[0], ustride = stride[1], vstride = stride[2];
+  int rem_h = h;
+  struct TexSquare *texline = &texgrid[y / texture_height * texnumx];
+  int subtex_y = y % texture_width;
+  while (rem_h > 0) {
+    int rem_w = w;
+    struct TexSquare *tsq = &texline[x / texture_width];
+    int subtex_x = x % texture_height;
+    int subtex_h = rem_h;
+    if (subtex_y + subtex_h > texture_height)
+      subtex_h = texture_height - subtex_y;
+    while (rem_w > 0) {
+      int subtex_w = rem_w;
+      if (subtex_x + subtex_w > texture_width)
+        subtex_w = texture_width - subtex_x;
+      ActiveTexture(GL_TEXTURE0);
+      glBindTexture(GL_TEXTURE_2D, tsq->texobj);
+      glUploadTex(GL_TEXTURE_2D, gl_bitmap_format,  gl_bitmap_type,
+                  yptr, ystride, subtex_x, subtex_y,
+                  subtex_w, subtex_h, 0);
+      ActiveTexture(GL_TEXTURE1);
+      glBindTexture(GL_TEXTURE_2D, tsq->uvtexobjs[0]);
+      glUploadTex(GL_TEXTURE_2D, gl_bitmap_format,  gl_bitmap_type,
+                  uptr, ustride, subtex_x / 2, subtex_y / 2,
+                  subtex_w / 2, subtex_h / 2, 0);
+      ActiveTexture(GL_TEXTURE2);
+      glBindTexture(GL_TEXTURE_2D, tsq->uvtexobjs[1]);
+      glUploadTex(GL_TEXTURE_2D, gl_bitmap_format,  gl_bitmap_type,
+                  vptr, vstride, subtex_x / 2, subtex_y / 2,
+                  subtex_w / 2, subtex_h / 2, 0);
+      subtex_x = 0;
+      yptr += subtex_w;
+      uptr += subtex_w / 2;
+      vptr += subtex_w / 2;
+      tsq++;
+      rem_w -= subtex_w;
+    }
+    subtex_y = 0;
+    yptr += subtex_h * ystride - w;
+    uptr += subtex_h / 2 * ustride - w / 2;
+    vptr += subtex_h / 2 * vstride - w / 2;
+    texline += texnumx;
+    rem_h -= subtex_h;
+  }
+  ActiveTexture(GL_TEXTURE0);
     return 0;
 }
 
-static inline uint32_t 
-draw_frame_x11_bgr(uint8_t *src[])
-{
-      resetTexturePointers((unsigned char *)src[0]);
-      ImageData=(unsigned char *)src[0];
-
-      // for(i=0;i<image_height;i++) ImageData[image_width*image_bytes*i+20]=128;
-
-     setupTextureDirtyArea(0, 0, image_width, image_height);
-	return 0; 
-}
-
-static inline uint32_t 
-draw_frame_x11_rgb(uint8_t *src[])
-{
-      resetTexturePointers((unsigned char *)src[0]);
-      ImageData=(unsigned char *)src[0];
-
-     setupTextureDirtyArea(0, 0, image_width, image_height);
-      return 0; 
-}
-
-
-static uint32_t
+static int
 draw_frame(uint8_t *src[])
 {
-    uint32_t res = 0;
-
-    if (IMGFMT_IS_RGB(image_format))
-	res = draw_frame_x11_rgb(src);
-    else
-	res = draw_frame_x11_bgr(src);
-
-    return res;
+  if (image_format == IMGFMT_YV12) {
+    mp_msg(MSGT_VO, MSGL_ERR, "[gl2] error: draw_frame called for YV12!\n");
+    return 0;
+  }
+  ImageData=(unsigned char *)src[0];
+  resetTexturePointers(ImageData);
+  setupTextureDirtyArea(0, 0, image_width, image_height);
+  return 0;
 }
 
-static uint32_t
+static int
 query_format(uint32_t format)
 {
     switch(format){
+    case IMGFMT_YV12:
+      if (use_yuv)
+        return VFCAP_CSP_SUPPORTED | VFCAP_CSP_SUPPORTED_BY_HW | VFCAP_OSD |
+               VFCAP_HWSCALE_UP | VFCAP_HWSCALE_DOWN | VFCAP_ACCEPT_STRIDE;
+      break;
 #ifdef SYS_DARWIN
     case IMGFMT_RGB32:
 #else
@@ -1046,25 +1053,42 @@ uninit(void)
     free(texgrid);
     texgrid = NULL;
   }
-#ifdef GL_WIN32
-  vo_w32_uninit();
-#else
-  vo_x11_uninit();
-#endif
+  vo_uninit();
 }
 
-static uint32_t preinit(const char *arg)
+static opt_t subopts[] = {
+  {"yuv",          OPT_ARG_INT,  &use_yuv,      (opt_test_f)int_non_neg},
+  {"glfinish",     OPT_ARG_BOOL, &use_glFinish, NULL},
+  {NULL}
+};
+
+static int preinit(const char *arg)
 {
-    if(arg) 
-    {
-	mp_msg(MSGT_VO, MSGL_FATAL, "[gl2] Unknown subdevice: %s\n",arg);
-	return ENOSYS;
-    }
+  // set defaults
+  use_yuv = 0;
+  use_glFinish = 1;
+  if (subopt_parse(arg, subopts) != 0) {
+    mp_msg(MSGT_VO, MSGL_FATAL,
+            "\n-vo gl2 command line help:\n"
+            "Example: mplayer -vo gl2:noglfinish\n"
+            "\nOptions:\n"
+            "  noglfinish\n"
+            "    Do not call glFinish() before swapping buffers\n"
+            "  yuv=<n>\n"
+            "    0: use software YUV to RGB conversion.\n"
+            "    1: use register combiners (nVidia only, for older cards).\n"
+            "    2: use fragment program.\n"
+            "    3: use fragment program with gamma correction.\n"
+            "    4: use fragment program with gamma correction via lookup.\n"
+            "    5: use ATI-specific method (for older cards).\n"
+            "\n" );
+    return -1;
+  }
     if( !vo_init() ) return -1; // Can't open X11
     return 0;
 }
 
-static uint32_t control(uint32_t request, void *data, ...)
+static int control(uint32_t request, void *data, ...)
 {
   switch (request) {
   case VOCTRL_PAUSE: return (int_pause=1);
@@ -1074,21 +1098,23 @@ static uint32_t control(uint32_t request, void *data, ...)
   case VOCTRL_GUISUPPORT:
         return VO_TRUE;
   case VOCTRL_ONTOP:
-#ifdef GL_WIN32
-    vo_w32_ontop();
-#else
-    vo_x11_ontop();
-#endif 
+    vo_ontop();
     return VO_TRUE;
   case VOCTRL_FULLSCREEN:
-#ifdef GL_WIN32
-    vo_w32_fullscreen();
-#else
-    vo_x11_fullscreen();
-#endif 
+    vo_fullscreen();
     if (setGlWindow(&gl_vinfo, &gl_context, vo_window) == SET_WINDOW_REINIT)
       initGl(vo_dwidth, vo_dheight);
     resize(&vo_dwidth, &vo_dheight);
+    return VO_TRUE;
+#ifdef GL_WIN32
+  case VOCTRL_BORDER:
+    vo_w32_border();
+    return VO_TRUE;
+#endif
+  case VOCTRL_GET_PANSCAN:
+    return VO_TRUE;
+  case VOCTRL_SET_PANSCAN:
+    resize (&vo_dwidth, &vo_dheight);
     return VO_TRUE;
 #ifndef GL_WIN32
   case VOCTRL_SET_EQUALIZER:

@@ -9,16 +9,15 @@
 #include <gdk/gdkkeysyms.h>
 #include <gtk/gtk.h>
 
-#include "../../app.h"
-#include "../../cfg.h"
+#include "../app.h"
+#include "../cfg.h"
+#include "../../config.h"
 #include "../../help_mp.h"
-#include "../../../config.h"
-#include "../../../help_mp.h"
-#include "../../../mplayer.h"
-#include "../../../libaf/equalizer.h"
-#include "../../../libvo/video_out.h"
+#include "../../mplayer.h"
+#include "../../libaf/equalizer.h"
+#include "../../libvo/video_out.h"
 #include "../widgets.h"
-#include "../mplayer.h"
+#include "mplayer.h"
 
 #include "eq.h"
 #include "common.h"
@@ -563,9 +562,9 @@ GtkWidget * create_EquConfig( void )
   EquConfig=gtk_window_new( GTK_WINDOW_TOPLEVEL );
   gtk_widget_set_name( EquConfig,"EquConfig" );
   gtk_object_set_data( GTK_OBJECT( EquConfig ),"EquConfig",EquConfig );
-  gtk_widget_set_usize( EquConfig,350,198 );
+  gtk_widget_set_usize( EquConfig,350,260 );
   GTK_WIDGET_SET_FLAGS( EquConfig,GTK_CAN_DEFAULT );
-  gtk_window_set_title( GTK_WINDOW( EquConfig ),"Configure Equalizer" );
+  gtk_window_set_title( GTK_WINDOW( EquConfig ),MSGTR_ConfigureEqualizer );
   gtk_window_set_position( GTK_WINDOW( EquConfig ),GTK_WIN_POS_CENTER );
 //  gtk_window_set_modal( GTK_WINDOW( EquConfig ),TRUE );
   gtk_window_set_policy( GTK_WINDOW( EquConfig ),FALSE,FALSE,FALSE );

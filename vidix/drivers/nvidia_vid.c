@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include <inttypes.h>
 #include <unistd.h>
 
@@ -60,6 +61,17 @@ unsigned int vixGetVersion(void){
 #define NV_ARCH_10  0x10
 #define NV_ARCH_20  0x20
 #define NV_ARCH_30  0x30
+
+// since no useful information whatsoever is passed
+// to the equalizer functions we need this
+static struct {
+  uint32_t lum; // luminance (brightness + contrast)
+  uint32_t chrom; // chrominance (saturation + hue)
+  uint8_t red_off; // for NV03/NV04
+  uint8_t green_off;
+  uint8_t blue_off;
+  vidix_video_eq_t vals;
+} eq;
 
 struct nvidia_cards {
   unsigned short chip_id;
@@ -132,10 +144,13 @@ static struct nvidia_cards nvidia_card_ids[] = {
   {DEVICE_NVIDIA_NV31_GEFORCE_FX2,NV_ARCH_30}, 
   {DEVICE_NVIDIA_NV34_GEFORCE_FX,NV_ARCH_30}, 
   {DEVICE_NVIDIA_NV34_GEFORCE_FX2,NV_ARCH_30}, 
+  {DEVICE_NVIDIA_NV34_GEFORCE_FX3,NV_ARCH_30},
+  {DEVICE_NVIDIA_NV34M_GEFORCE_FX,NV_ARCH_30}, 
   {DEVICE_NVIDIA_NV34GL_QUADRO_FX,NV_ARCH_30}, 
   {DEVICE_NVIDIA_NV35_GEFORCE_FX,NV_ARCH_30}, 
   {DEVICE_NVIDIA_NV35_GEFORCE_FX2,NV_ARCH_30}, 
-  {DEVICE_NVIDIA_NV35GL_QUADRO_FX,NV_ARCH_30}
+  {DEVICE_NVIDIA_NV35GL_QUADRO_FX,NV_ARCH_30},
+  {DEVICE_NVIDIA_NV36_GEFORCE_FX,NV_ARCH_30},
 };
 
 
@@ -193,16 +208,6 @@ int vixProbe(int verbose, int force){
 /*
  * PCI-Memory IO access macros.
  */
-#define VID_WR08(p,i,val)  (((uint8_t *)(p))[(i)]=(val))
-#define VID_RD08(p,i)	   (((uint8_t *)(p))[(i)])
-
-#define VID_WR32(p,i,val)  (((uint32_t *)(p))[(i)/4]=(val))
-#define VID_RD32(p,i)	   (((uint32_t *)(p))[(i)/4])
-
-#ifndef USE_RMW_CYCLES
-/*
- * Can be used to inhibit READ-MODIFY-WRITE cycles. On by default.
- */
 
 #define MEM_BARRIER() __asm__ __volatile__ ("" : : : "memory")
 
@@ -212,10 +217,9 @@ int vixProbe(int verbose, int force){
 #define VID_RD08(p,i)     ({ MEM_BARRIER(); ((uint8_t *)(p))[(i)]; })
 
 #undef	VID_WR32
-#define VID_WR32(p,i,val) ({ MEM_BARRIER(); ((uint32_t *)(p))[(i)/4]=(val); })
+#define VID_WR32(p,i,val) ({ MEM_BARRIER(); ((uint32_t *)(p))[(i)/4]=val; })
 #undef	VID_RD32
 #define VID_RD32(p,i)     ({ MEM_BARRIER(); ((uint32_t *)(p))[(i)/4]; })
-#endif /* USE_RMW_CYCLES */
 
 #define VID_AND32(p,i,val) VID_WR32(p,i,VID_RD32(p,i)&(val))
 #define VID_OR32(p,i,val)  VID_WR32(p,i,VID_RD32(p,i)|(val))
@@ -265,7 +269,7 @@ struct rivatv_info {
 	struct rivatv_chip chip;	 /* NV architecture structure		       */
 	void* video_base;		 /* virtual address of control region	       */
 	void* control_base;		 /* virtual address of fb region	       */
-	unsigned long picture_base;	 /* direct pointer to video picture	       */
+	void* picture_base;		 /* direct pointer to video picture	       */
 	unsigned long picture_offset;	 /* offset of video picture in frame buffer    */
 //	struct rivatv_dma dma;           /* DMA structure                              */
     unsigned int cur_frame;
@@ -288,7 +292,7 @@ static unsigned long rivatv_fbsize_nv03 (struct rivatv_chip *chip){
 	}
 	else {
 		/* SGRAM 128. */
-		switch (chip->PFB[0x00000000] & 0x00000003) {
+		switch (VID_RD32(chip->PFB, 0) & 0x00000003) {
 		case 0:
 			return 1024 * 1024 * 8;
 			break;
@@ -325,7 +329,7 @@ static unsigned long rivatv_fbsize_nv04 (struct rivatv_chip *chip){
 }
 
 static unsigned long rivatv_fbsize_nv10 (struct rivatv_chip *chip){
-	return ((VID_RD32 (chip->PFB, 0x20C) >> 20) & 0x000000FF) * 1024 * 1024;
+	return VID_RD32 (chip->PFB, 0x20C) & 0xFFF00000;
 }
 
 //lock funcs
@@ -476,14 +480,13 @@ static void rivatv_overlay_colorkey (rivatv_info* info, unsigned int chromakey){
 }
 
 static void nv_getscreenproperties(struct rivatv_info *info){
-  uint32_t bpp=0;
+  uint32_t bpp=0,x;
   info->chip.lock(&info->chip, 0);
   /*get screen depth*/
   VID_WR08(info->chip.PCIO, 0x03D4,0x28);
   bpp = VID_RD08(info->chip.PCIO,0x03D5)&0x3;
-  if(bpp==3)bpp=4;
-  if((bpp == 2) && (info->chip.PVIDEO[0x00000600/4] & 0x00001000) == 0x0)info->depth=15;           
-  else info->depth = bpp*8;
+  if((bpp == 2) && (VID_RD32(info->chip.PVIDEO,0x600) & 0x00001000) == 0x0)info->depth=15;
+  else info->depth = 0x04 << bpp;
   /*get screen width*/
   VID_WR08(info->chip.PCIO, 0x03D4, 0x1);
   info->screen_x = (1 + VID_RD08(info->chip.PCIO, 0x3D5)) * 8;
@@ -497,6 +500,17 @@ static void nv_getscreenproperties(struct rivatv_info *info){
   /* and the 10th in CRTC_OVERFLOW*/
   info->screen_y |=(VID_RD08(info->chip.PCIO,0x03D5) &0x40)<<3;
   ++info->screen_y;
+
+  /* NV_PCRTC_OFFSET */
+  VID_WR08 (info->chip.PCIO, 0x3D4, 0x13);
+  x = VID_RD08 (info->chip.PCIO, 0x3D5);
+  /* NV_PCRTC_REPAINT0_OFFSET_10_8 */
+  VID_WR08 (info->chip.PCIO, 0x3D4, 0x19);
+  x |= (VID_RD08 (info->chip.PCIO, 0x3D5) & 0xE0) << 3;
+  /* NV_PCRTC_EXTRA_OFFSET_11 */
+  VID_WR08 (info->chip.PCIO, 0x3D4, 0x25);
+  x |= (VID_RD08 (info->chip.PCIO, 0x3D5) & 0x20) << 6; x <<= 3;
+  info->bps = x * bpp;
 }
 
 
@@ -506,10 +520,8 @@ static void nv_getscreenproperties(struct rivatv_info *info){
 void rivatv_overlay_start (struct rivatv_info *info,int bufno){
     uint32_t base, size, offset, xscale, yscale, pan;
     uint32_t value;
-	int x=info->wx?info->wx:8, y=info->wy?info->wy:8;
+	int x=info->wx, y=info->wy;
 	int lwidth=info->d_width, lheight=info->d_height;
-	int bps;
-	int i;
 
     size = info->buffer_size;
 	base = info->picture_offset;
@@ -518,35 +530,18 @@ void rivatv_overlay_start (struct rivatv_info *info,int bufno){
     nv_getscreenproperties(info);
 
     if(info->depth){
-//        bps = info->screen_x * ((info->depth+1)/8);
     	/* get pan offset of the physical screen */
      	pan = rivatv_overlay_pan (info);
     	/* adjust window position depending on the pan offset */
-        bps = 0;
-	info->chip.lock (&info->chip, 0);
-	for (i = 0; (i < 1024) && (bps == 0); i++)
+    	if (info->bps != 0)
 	{
-		if (info->chip.arch != NV_ARCH_03)
-			bps = info->chip.PGRAPH[0x00000670/4];
-		else
-			bps = info->chip.PGRAPH[0x00000650/4];
+	  x = info->wx - (pan % info->bps) * 8 / info->depth;
+    	  y = info->wy - (pan / info->bps);
 	}
-	if (bps == 0)
-	{
-		fprintf(stderr, "[nvidia_vid] reading bps returned 0!!!\n");
-		if (info->bps != 0)
-			bps = info->bps;
-	}
-	else
-	{
-		info->bps = bps;
-	}
-
-    	if (bps != 0)
-	{
-	x = info->wx - (pan % bps) * 8 / info->depth;
-    	y = info->wy - (pan / bps);
-	}
+    } else {
+            // we can't adjust the window position correctly in textmode
+            // setting y to 8 seems to work ok, though
+            if(info->chip.arch < NV_ARCH_10 && y < 8) y = 8;
     }
     
 	    /* adjust negative output window variables */
@@ -584,10 +579,10 @@ void rivatv_overlay_start (struct rivatv_info *info,int bufno){
 		}
 
 		/* NV_PVIDEO_LUMINANCE */
-		VID_WR32 (info->chip.PVIDEO, 0x910 + 0, 0x00001000);
+		VID_WR32 (info->chip.PVIDEO, 0x910 + 0, eq.lum);
 		//VID_WR32 (info->chip.PVIDEO, 0x910 + 4, 0x00001000);
 		/* NV_PVIDEO_CHROMINANCE */
-		VID_WR32 (info->chip.PVIDEO, 0x918 + 0, 0x00001000);
+		VID_WR32 (info->chip.PVIDEO, 0x918 + 0, eq.chrom);
 		//VID_WR32 (info->chip.PVIDEO, 0x918 + 4, 0x00001000);
 
 		/* NV_PVIDEO_OFFSET */
@@ -656,11 +651,11 @@ void rivatv_overlay_start (struct rivatv_info *info,int bufno){
 		VID_WR32 (info->chip.PVIDEO, 0x200, (yscale << 16) | xscale);
 
 		/* NV_PVIDEO_RED_CSC_OFFSET */
-		VID_WR32 (info->chip.PVIDEO, 0x280, 0x69);
+		VID_WR32 (info->chip.PVIDEO, 0x280, eq.red_off);
 		/* NV_PVIDEO_GREEN_CSC_OFFSET */
-		VID_WR32 (info->chip.PVIDEO, 0x284, 0x3e);
+		VID_WR32 (info->chip.PVIDEO, 0x284, eq.green_off);
 		/* NV_PVIDEO_BLUE_CSC_OFFSET */
-		VID_WR32 (info->chip.PVIDEO, 0x288, 0x89);
+		VID_WR32 (info->chip.PVIDEO, 0x288, eq.blue_off);
 		/* NV_PVIDEO_CSC_ADJUST */
 		VID_WR32 (info->chip.PVIDEO, 0x28C, 0x00000); /* No colour correction! */
 
@@ -712,7 +707,7 @@ int vixInit(void){
   info = (rivatv_info*)calloc(1,sizeof(rivatv_info));
   info->control_base = map_phys_mem(pci_info.base0, 0x00C00000 + 0x00008000);
   info->chip.arch =  nvidia_card_ids[find_chip(pci_info.device)].arch;  
-  printf("[nvidia_vid] arch %x register base %x\n",info->chip.arch,(unsigned int)info->control_base);
+  printf("[nvidia_vid] arch %x register base %p\n",info->chip.arch,info->control_base);
   info->chip.PFIFO  = (uint32_t *) (info->control_base + 0x00002000);
   info->chip.FIFO   = (uint32_t *) (info->control_base + 0x00800000);
   info->chip.PMC    = (uint32_t *) (info->control_base + 0x00000000);
@@ -750,7 +745,7 @@ int vixInit(void){
 	    info->video_base = map_phys_mem(pci_info.base1, info->chip.fbsize);
         /* This may trash your screen for resolutions greater than 1024x768, sorry. */
         info->picture_offset = 1024*768* 4 * ((info->chip.fbsize > 4194304)?2:1);
-        info->picture_base = (uint32_t) info->video_base + info->picture_offset;
+        info->picture_base = info->video_base + info->picture_offset;
         info->chip.PRAMIN = (uint32_t *) (info->video_base + 0x00C00000);
         break;
 	}
@@ -761,8 +756,10 @@ int vixInit(void){
 	{
 		info->video_base = map_phys_mem(pci_info.base1, info->chip.fbsize);
 		info->picture_offset = info->chip.fbsize - NV04_BES_SIZE;
+		if(info->chip.fbsize > 16*1024*1024)
+			info->picture_offset -= NV04_BES_SIZE;
 //		info->picture_base = (unsigned long)map_phys_mem(pci_info.base1+info->picture_offset,NV04_BES_SIZE);
-		info->picture_base = (uint32_t) info->video_base + info->picture_offset;
+		info->picture_base = info->video_base + info->picture_offset;
 		break;
 	}
   }
@@ -783,6 +780,15 @@ int vixInit(void){
   info->cur_frame = 0;
   info->use_colorkey = 0;
 
+  eq.lum = 0x00001000;
+  eq.chrom = 0x00001000;
+  memset(&eq.vals, 0, sizeof(vidix_video_eq_t));
+  eq.vals.cap = VEQ_CAP_BRIGHTNESS;
+  if (info->chip.arch > NV_ARCH_04)
+    eq.vals.cap |= VEQ_CAP_CONTRAST | VEQ_CAP_SATURATION | VEQ_CAP_HUE;
+  eq.red_off = 0x69;
+  eq.green_off = 0x3e;
+  eq.blue_off = 0x89;
   return 0;
 }
 
@@ -838,14 +844,14 @@ int vixConfigPlayback(vidix_playback_t *vinfo){
 		    info->d_width, info->d_height, info->wx, info->wy, info->width, info->height, vinfo->fourcc);
     
     
-    vinfo->dga_addr=(void*)(info->picture_base);
+    vinfo->dga_addr=info->picture_base;
 
     switch (vinfo->fourcc)
     {
 	    case IMGFMT_YUY2:
 	    case IMGFMT_UYVY:
 
-		    vinfo->dest.pitch.y = 16;
+		    vinfo->dest.pitch.y = 64;
 		    vinfo->dest.pitch.u = 0;
 		    vinfo->dest.pitch.v = 0;
 
@@ -897,3 +903,32 @@ int vixPlaybackFrameSelect(unsigned int frame){
 	  info->cur_frame = frame/*(frame+1)%info->num_frames*/;
   return 0;
 }
+
+int vixPlaybackSetEq(const vidix_video_eq_t *eq_parm) {
+  double angle;
+  int16_t chrom_cos, chrom_sin;
+  if (eq_parm->cap & VEQ_CAP_BRIGHTNESS)
+    eq.vals.brightness = eq_parm->brightness;
+  if (eq_parm->cap & VEQ_CAP_CONTRAST)
+    eq.vals.contrast = eq_parm->contrast;
+  if (eq_parm->cap & VEQ_CAP_SATURATION)
+    eq.vals.saturation = eq_parm->saturation;
+  if (eq_parm->cap & VEQ_CAP_HUE)
+    eq.vals.hue = eq_parm->hue;
+  eq.lum = (((eq.vals.brightness * 512 + 500) / 1000) << 16) |
+           ((((eq.vals.contrast + 1000) * 8191 + 1000) / 2000) & 0xffff);
+  angle = (double)eq.vals.hue / 1000.0 * 3.1415927;
+  chrom_cos = ((eq.vals.saturation + 1000) * 8191 * cos(angle) + 1000) / 2000;
+  chrom_sin = ((eq.vals.saturation + 1000) * 8191 * sin(angle) + 1000) / 2000;
+  eq.chrom = chrom_sin << 16 | chrom_cos;
+  eq.red_off = 0x69 - eq.vals.brightness * 62 / 1000;
+  eq.green_off = 0x3e + eq.vals.brightness * 62 / 1000;
+  eq.blue_off = 0x89 - eq.vals.brightness * 62 / 1000;
+  return 0;
+}
+
+int vixPlaybackGetEq(vidix_video_eq_t *eq_parm) {
+  memcpy(eq_parm, &eq.vals, sizeof(vidix_video_eq_t));
+  return 0;
+}
+

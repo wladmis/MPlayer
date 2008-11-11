@@ -26,10 +26,12 @@
  *
  */
  
+#include "config.h"
 #include "rmff.h"
 #include "rtsp.h"
 #include "sdpplin.h"
 #include "xbuffer.h"
+#include "mp_msg.h"
 
 /*
 #define LOG
@@ -78,7 +80,7 @@ static char *b64_decode(const char *in, char *out, int *size)
       a[i] = (char) c;
       b[i] = (char) dtable[c];
     }
-    out = xbuffer_ensure_size(out, k+3);
+    out = xbuffer_ensure_size(out, k+4);
     out[k++] = (b[0] << 2) | (b[1] >> 4);
     out[k++] = (b[1] << 4) | (b[2] >> 2);
     out[k++] = (b[2] << 6) | b[3];
@@ -236,7 +238,6 @@ static sdpplin_stream_t *sdpplin_parse_stream(char **data) {
 sdpplin_t *sdpplin_parse(char *data) {
 
   sdpplin_t        *desc=calloc(1,sizeof(sdpplin_t));
-  sdpplin_stream_t *stream;
   char             *buf=xbuffer_init(32);
   char             *decoded=xbuffer_init(32);
   int              handled;
@@ -247,11 +248,17 @@ sdpplin_t *sdpplin_parse(char *data) {
     handled=0;
     
     if (filter(data, "m=", &buf)) {
-      stream=sdpplin_parse_stream(&data);
+      sdpplin_stream_t *stream=sdpplin_parse_stream(&data);
 #ifdef LOG
       printf("got data for stream id %u\n", stream->stream_id);
 #endif
+      if (desc->stream && (stream->stream_id >= 0) && (stream->stream_id < desc->stream_count))
       desc->stream[stream->stream_id]=stream;
+      else
+      {
+      mp_msg(MSGT_OPEN, MSGL_ERR, "sdpplin: got 'm=', but 'a=StreamCount' is still unknown. Broken sdp?\n");
+      free(stream);
+      }
       continue;
     }
 
@@ -284,7 +291,7 @@ sdpplin_t *sdpplin_parse(char *data) {
     }
     
     if(filter(data,"a=StreamCount:integer;",&buf)) {
-      desc->stream_count=atoi(buf);
+      desc->stream_count=(unsigned int)atoi(buf);
       desc->stream=malloc(sizeof(sdpplin_stream_t*)*desc->stream_count);
       handled=1;
       data=nl(data);

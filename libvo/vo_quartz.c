@@ -10,9 +10,8 @@
 	MPlayer Mac OSX Quartz video out module.
 	
 	todo:	-screen overlay output
-			-clear window background after live resize
 			-fit osd in black bar when available
-			-RGB32 lost HW accel in fullscreen
+			-fix RGB32
 			-(add sugestion here)
  */
 
@@ -68,15 +67,10 @@ static MatrixRecord matrix;
 static int EnterMoviesDone = 0;
 static int get_image_done = 0;
 
-extern int vo_rootwin;
-extern int vo_ontop;
-extern int vo_fs; // user want fullscreen
 static int vo_quartz_fs; // we are in fullscreen
 extern float monitor_aspect;
-extern int vo_keepaspect; //keep aspect ratio when resizing
 extern float movie_aspect;
 static float old_movie_aspect;
-extern float vo_panscan;
 
 static int winLevel = 1;
 int levelList[] =
@@ -88,6 +82,7 @@ int levelList[] =
 
 static int int_pause = 0;
 static float winAlpha = 1;
+static int mouseHide = FALSE;
 
 static int device_width;
 static int device_height;
@@ -117,7 +112,6 @@ static MenuRef windMenu;
 static MenuRef movMenu;
 static MenuRef aspectMenu;
 
-static int border = 15;
 enum
 {
 	kQuitCmd			= 1,
@@ -133,11 +127,14 @@ enum
 };
 
 #include "osdep/keycodes.h"
-extern void mplayer_put_key(int code);
 
+extern void mplayer_put_key(int code);
 extern void vo_draw_text(int dxs,int dys,void (*draw_alpha)(int x0,int y0, int w,int h, unsigned char* src, unsigned char *srca, int stride));
 
 //PROTOTYPE/////////////////////////////////////////////////////////////////
+static OSStatus KeyEventHandler(EventHandlerCallRef nextHandler, EventRef event, void *userData);
+static OSStatus MouseEventHandler(EventHandlerCallRef nextHandler, EventRef event, void *userData);
+static OSStatus WindowEventHandler(EventHandlerCallRef nextHandler, EventRef event, void *userData);
 void window_resized();
 void window_ontop();
 void window_fullscreen();
@@ -197,9 +194,6 @@ static inline int convert_key(UInt32 key, UInt32 charcode)
     }
 }
 
-static OSStatus MainWindowEventHandler(EventHandlerCallRef nextHandler, EventRef event, void *userData);
-static OSStatus MainWindowCommandHandler(EventHandlerCallRef nextHandler, EventRef event, void *userData);
-
 static void draw_alpha(int x0, int y0, int w, int h, unsigned char *src, unsigned char *srca, int stride)
 {
 	switch (image_format)
@@ -221,8 +215,8 @@ static void draw_alpha(int x0, int y0, int w, int h, unsigned char *src, unsigne
 	}
 }
 
-//default window event handler
-static OSStatus MainWindowEventHandler(EventHandlerCallRef nextHandler, EventRef event, void *userData)
+//default keyboard event handler
+static OSStatus KeyEventHandler(EventHandlerCallRef nextHandler, EventRef event, void *userData)
 {
     OSStatus result = noErr;
 	UInt32 class = GetEventClass (event);
@@ -260,25 +254,78 @@ static OSStatus MainWindowEventHandler(EventHandlerCallRef nextHandler, EventRef
 		else
 			result = eventNotHandledErr;
 	}
-	else if(class == kEventClassMouse)
+	
+    return result;
+}
+
+//default mouse event handler
+static OSStatus MouseEventHandler(EventHandlerCallRef nextHandler, EventRef event, void *userData)
+{
+    OSStatus result = noErr;
+	UInt32 class = GetEventClass (event);
+	UInt32 kind = GetEventKind (event); 
+
+	result = CallNextEventHandler(nextHandler, event);
+	
+	if(class == kEventClassMouse)
 	{
 		WindowPtr tmpWin;
 		Point mousePos;
+		Point winMousePos;
 
 		GetEventParameter(event, kEventParamMouseLocation, typeQDPoint, 0, sizeof(Point), 0, &mousePos);
+		GetEventParameter(event, kEventParamWindowMouseLocation, typeQDPoint, 0, sizeof(Point), 0, &winMousePos);
 
 		switch (kind)
 		{
+			case kEventMouseMoved:
+			{
+				if(vo_quartz_fs)
+				{
+					CGDisplayShowCursor(kCGDirectMainDisplay);
+					mouseHide = FALSE;
+				}
+			}
+			break;
+			
+			case kEventMouseWheelMoved:
+			{
+				int wheel;
+				short part;
+				
+				GetEventParameter(event, kEventParamMouseWheelDelta, typeSInt32, 0, sizeof(int), 0, &wheel);
+
+				part = FindWindow(mousePos,&tmpWin);
+				
+				if(part == inContent)
+				{
+					if(wheel > 0)
+						mplayer_put_key(MOUSE_BTN3);
+					else
+						mplayer_put_key(MOUSE_BTN4);
+				}
+			}
+			break;
+			
 			case kEventMouseDown:
 			{
 				EventMouseButton button;
 				short part;
-
+				Rect bounds;
+				
+				GetWindowPortBounds(theWindow, &bounds);
 				GetEventParameter(event, kEventParamMouseButton, typeMouseButton, 0, sizeof(EventMouseButton), 0, &button);
 				
 				part = FindWindow(mousePos,&tmpWin);
 				
-				if(part == inMenuBar)
+				if( (winMousePos.h > (bounds.right - 15)) && (winMousePos.v > (bounds.bottom)) )
+				{
+					if(!vo_quartz_fs)
+					{
+						GrowWindow(theWindow, mousePos, NULL);
+					}
+				}
+				else if(part == inMenuBar)
 				{
 					MenuSelect(mousePos);
 					HiliteMenu(0);
@@ -297,34 +344,21 @@ static OSStatus MainWindowEventHandler(EventHandlerCallRef nextHandler, EventRef
 			}		
 			break;
 			
-			case kEventMouseWheelMoved:
-			{
-				int wheel;
-				short part;
-
-				GetEventParameter(event, kEventParamMouseWheelDelta, typeSInt32, 0, sizeof(int), 0, &wheel);
-
-				part = FindWindow(mousePos,&tmpWin);
-				
-				if(part == inContent)
-				{
-					if(wheel > 0)
-						mplayer_put_key(MOUSE_BTN3);
-					else
-						mplayer_put_key(MOUSE_BTN4);
-				}
-			}
+			case kEventMouseUp:
 			break;
 			
+			case kEventMouseDragged:
+			break;
+				
 			default:result = eventNotHandledErr;break;
 		}
 	}
-	
+
     return result;
 }
 
-//default window command handler
-static OSStatus MainWindowCommandHandler(EventHandlerCallRef nextHandler, EventRef event, void *userData)
+//default window event handler
+static OSStatus WindowEventHandler(EventHandlerCallRef nextHandler, EventRef event, void *userData)
 {
     OSStatus result = noErr;
 	uint32_t d_width;
@@ -344,7 +378,7 @@ static OSStatus MainWindowCommandHandler(EventHandlerCallRef nextHandler, EventR
 		switch ( theHICommand.commandID )
 		{
 			case kHICommandQuit:
-				mplayer_put_key(KEY_ESC);
+				mplayer_put_key(KEY_CLOSE_WIN);
 				break;
 				
 			case kHalfScreenCmd:
@@ -353,7 +387,7 @@ static OSStatus MainWindowCommandHandler(EventHandlerCallRef nextHandler, EventR
 						vo_fs = (!(vo_fs)); window_fullscreen();
 					}
 						
-					SizeWindow(theWindow, (d_width/2), ((d_width/movie_aspect)/2)+border, 1);
+					SizeWindow(theWindow, (d_width/2), ((d_width/movie_aspect)/2), 1);
 					window_resized();
 				break;
 
@@ -363,7 +397,7 @@ static OSStatus MainWindowCommandHandler(EventHandlerCallRef nextHandler, EventR
 						vo_fs = (!(vo_fs)); window_fullscreen();
 					}
 						
-					SizeWindow(theWindow, d_width, (d_width/movie_aspect)+border, 1);
+					SizeWindow(theWindow, d_width, (d_width/movie_aspect), 1);
 					window_resized();
 				break;
 
@@ -373,7 +407,7 @@ static OSStatus MainWindowCommandHandler(EventHandlerCallRef nextHandler, EventR
 						vo_fs = (!(vo_fs)); window_fullscreen();
 					}
 						
-					SizeWindow(theWindow, (d_width*2), ((d_width/movie_aspect)*2)+border, 1);
+					SizeWindow(theWindow, (d_width*2), ((d_width/movie_aspect)*2), 1);
 					window_resized();
 				break;
 
@@ -384,29 +418,41 @@ static OSStatus MainWindowCommandHandler(EventHandlerCallRef nextHandler, EventR
 			case kKeepAspectCmd:
 				vo_keepaspect = (!(vo_keepaspect));
 				CheckMenuItem (aspectMenu, 1, vo_keepaspect);
+				window_resized();
 				break;
 				
 			case kAspectOrgCmd:
 				movie_aspect = old_movie_aspect;
-				SizeWindow(theWindow, dstRect.right, (dstRect.right/movie_aspect)+border,1);
+				if(!vo_quartz_fs)
+				{
+					SizeWindow(theWindow, dstRect.right, (dstRect.right/movie_aspect),1);
+				}
 				window_resized();
 				break;
 				
 			case kAspectFullCmd:
 				movie_aspect = 4.0f/3.0f;
-				SizeWindow(theWindow, dstRect.right, (dstRect.right/movie_aspect)+border,1);
+				if(!vo_quartz_fs)
+				{
+					SizeWindow(theWindow, dstRect.right, (dstRect.right/movie_aspect),1);
+				}
 				window_resized();
 				break;
 				
 			case kAspectWideCmd:
 				movie_aspect = 16.0f/9.0f;
-				SizeWindow(theWindow, dstRect.right, (dstRect.right/movie_aspect)+border,1);
+				if(!vo_quartz_fs)
+				{
+					SizeWindow(theWindow, dstRect.right, (dstRect.right/movie_aspect),1);
+				}
 				window_resized();
 				break;
 				
 			case kPanScanCmd:
 				vo_panscan = (!(vo_panscan));
 				CheckMenuItem (aspectMenu, 2, vo_panscan);
+				window_panscan();
+				window_resized();
 				break;
 			
 			default:
@@ -430,13 +476,15 @@ static OSStatus MainWindowCommandHandler(EventHandlerCallRef nextHandler, EventR
 		{
 			case kEventWindowClosed:
 				theWindow = NULL;
-				mplayer_put_key(KEY_ESC);
+				mplayer_put_key(KEY_CLOSE_WIN);
 				break;
 				
 			//resize window
+			case kEventWindowZoomed:
 			case kEventWindowBoundsChanged:
 				window_resized();
 				flip_page();
+				window_resized();
 				break;
 			
 			default:
@@ -523,29 +571,36 @@ static void quartz_CreateWindow(uint32_t d_width, uint32_t d_height, WindowAttri
 	CFRelease(windowTitle);
   
 	//Install event handler
-    const EventTypeSpec commands[] = {
+    const EventTypeSpec win_events[] = {
         { kEventClassWindow, kEventWindowClosed },
 		{ kEventClassWindow, kEventWindowBoundsChanged },
         { kEventClassCommand, kEventCommandProcess }
     };
 
-    const EventTypeSpec events[] = {
+    const EventTypeSpec key_events[] = {
 		{ kEventClassKeyboard, kEventRawKeyDown },
-		{ kEventClassKeyboard, kEventRawKeyRepeat },
-		{ kEventClassMouse, kEventMouseDown },
-		{ kEventClassMouse, kEventMouseWheelMoved }
+		{ kEventClassKeyboard, kEventRawKeyRepeat }
     };
 
-    
-	InstallApplicationEventHandler (NewEventHandlerUPP (MainWindowEventHandler), GetEventTypeCount(events), events, NULL, NULL);	
-	InstallWindowEventHandler (theWindow, NewEventHandlerUPP (MainWindowCommandHandler), GetEventTypeCount(commands), commands, theWindow, NULL);
+	const EventTypeSpec mouse_events[] = {
+		{ kEventClassMouse, kEventMouseMoved },
+		{ kEventClassMouse, kEventMouseWheelMoved },
+		{ kEventClassMouse, kEventMouseDown },
+		{ kEventClassMouse, kEventMouseUp },
+		{ kEventClassMouse, kEventMouseDragged }
+	};
+	
+	InstallApplicationEventHandler (NewEventHandlerUPP (KeyEventHandler), GetEventTypeCount(key_events), key_events, NULL, NULL);
+	InstallApplicationEventHandler (NewEventHandlerUPP (MouseEventHandler), GetEventTypeCount(mouse_events), mouse_events, NULL, NULL);
+	InstallWindowEventHandler (theWindow, NewEventHandlerUPP (WindowEventHandler), GetEventTypeCount(win_events), win_events, theWindow, NULL);
 }
 
-static uint32_t config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uint32_t flags, char *title, uint32_t format)
+static int config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uint32_t flags, char *title, uint32_t format)
 {
 	WindowAttributes	windowAttrs;
 	OSErr				qterr;
 	int i;
+	CGRect tmpBounds;
 
 	//Get Main device info///////////////////////////////////////////////////
 
@@ -609,18 +664,22 @@ static uint32_t config(uint32_t width, uint32_t height, uint32_t d_width, uint32
 	//Create player window//////////////////////////////////////////////////
 	windowAttrs =   kWindowStandardDocumentAttributes
 					| kWindowStandardHandlerAttribute
-					| kWindowCompositingAttribute
 					| kWindowLiveResizeAttribute;
+					
+	windowAttrs &= (~kWindowResizableAttribute);
 					
  	if (theWindow == NULL)
 	{
-		quartz_CreateWindow(d_width, d_height+border, windowAttrs);
+		quartz_CreateWindow(d_width, d_height, windowAttrs);
 		
 		if (theWindow == NULL)
 		{
 			mp_msg(MSGT_VO, MSGL_FATAL, "Quartz error: Couldn't create window !!!!!\n");
 			return -1;
 		}
+		tmpBounds = CGRectMake( 0, 0, winRect.right, winRect.bottom);
+		CreateCGContextForPort(GetWindowPort(theWindow),&context);
+		CGContextFillRect(context, tmpBounds);
 	}
 	else 
 	{
@@ -630,11 +689,6 @@ static uint32_t config(uint32_t width, uint32_t height, uint32_t d_width, uint32
 		SetRect(&oldWinRect, 0, 0, d_width, d_height);
 		SizeWindow (theWindow, d_width, d_height, 1);
  	}
-	
-	//Show window
-	SetThemeWindowBackground( theWindow, kThemeBrushModelessDialogBackgroundActive, TRUE);
-	RepositionWindow(theWindow, NULL, kWindowCenterOnMainScreen);
-	ShowWindow (theWindow);
 	
 	switch (image_format) 
 	{
@@ -797,6 +851,10 @@ static uint32_t config(uint32_t width, uint32_t height, uint32_t d_width, uint32
 		break;
 	}
 	
+	//Show window
+	RepositionWindow(theWindow, NULL, kWindowCenterOnMainScreen);
+	ShowWindow (theWindow);
+	
 	if(vo_fs)
 		window_fullscreen();
 		
@@ -810,6 +868,8 @@ static uint32_t config(uint32_t width, uint32_t height, uint32_t d_width, uint32
 		SetWindowGroupLevel(winGroup, CGWindowLevelForKey(levelList[winLevel]));
 		window_fullscreen();
 	}
+	
+	window_resized();
 	
 	return 0;
 }
@@ -828,21 +888,6 @@ static void check_events(void)
 		SendEventToEventTarget (theEvent, theTarget);
 		ReleaseEvent(theEvent);
 	}
-
-	//update activity every 30 seconds to prevent
-	//screensaver from starting up.
-	DateTimeRec d;
-	unsigned long curTime;
-	static unsigned long lastTime = 0;
-	
-	GetTime(&d);
-	DateToSeconds( &d, &curTime);
-	
-	if( ( (curTime - lastTime) >= 30) || (lastTime == 0))
-	{
-		UpdateSystemActivity(UsrActivity);
-		lastTime = curTime;
-	}
 }
 
 static void draw_osd(void)
@@ -860,7 +905,6 @@ static void flip_page(void)
 		case IMGFMT_RGB32:
 		{
 			CGContextDrawImage (context, bounds, image);
-			CGContextFlush (context);
 		}
 		break;
 			
@@ -887,9 +931,66 @@ static void flip_page(void)
 			}
 		break;
 	}
+	
+	if(!vo_quartz_fs)
+	{
+		//render resize box
+		CGContextBeginPath(context);
+		CGContextSetAllowsAntialiasing(context, false);
+		//CGContextSaveGState(context);
+	
+		//line white
+		CGContextSetRGBStrokeColor (context, 0.2, 0.2, 0.2, 0.5);
+		CGContextMoveToPoint( context, winRect.right-1, 1); CGContextAddLineToPoint( context, winRect.right-1, 1);	
+		CGContextMoveToPoint( context, winRect.right-1, 5); CGContextAddLineToPoint( context, winRect.right-5, 1);
+		CGContextMoveToPoint( context, winRect.right-1, 9); CGContextAddLineToPoint( context, winRect.right-9, 1);
+		CGContextStrokePath( context );
+
+		//line gray
+		CGContextSetRGBStrokeColor (context, 0.4, 0.4, 0.4, 0.5);
+		CGContextMoveToPoint( context, winRect.right-1, 2); CGContextAddLineToPoint( context, winRect.right-2, 1);	
+		CGContextMoveToPoint( context, winRect.right-1, 6); CGContextAddLineToPoint( context, winRect.right-6, 1);
+		CGContextMoveToPoint( context, winRect.right-1, 10); CGContextAddLineToPoint( context, winRect.right-10, 1);
+		CGContextStrokePath( context );
+	
+		//line black
+		CGContextSetRGBStrokeColor (context, 0.6, 0.6, 0.6, 0.5);
+		CGContextMoveToPoint( context, winRect.right-1, 3); CGContextAddLineToPoint( context, winRect.right-3, 1);	
+		CGContextMoveToPoint( context, winRect.right-1, 7); CGContextAddLineToPoint( context, winRect.right-7, 1);
+		CGContextMoveToPoint( context, winRect.right-1, 11); CGContextAddLineToPoint( context, winRect.right-11, 1);
+		CGContextStrokePath( context );
+		
+		//CGContextRestoreGState( context );
+		CGContextFlush (context);
+	}
+
+	//auto hide mouse cursor and futur on-screen control?
+	if(vo_quartz_fs && !mouseHide)
+	{
+		int curTime = TickCount()/60;
+		static int lastTime = 0;
+		
+		if( ((curTime - lastTime) >= 5) || (lastTime == 0) )
+		{
+			CGDisplayHideCursor(kCGDirectMainDisplay);
+			mouseHide = TRUE;
+			lastTime = curTime;
+		}
+	}
+
+	//update activity every 30 seconds to prevent
+	//screensaver from starting up.
+	int curTime = TickCount()/60;
+	static int lastTime = 0;
+		
+	if( ((curTime/ - lastTime) >= 5) || (lastTime == 0) )
+	{
+		UpdateSystemActivity(UsrActivity);
+		lastTime = curTime;
+	}
 }
 
-static uint32_t draw_slice(uint8_t *src[], int stride[], int w,int h,int x,int y)
+static int draw_slice(uint8_t *src[], int stride[], int w,int h,int x,int y)
 {
 	switch (image_format)
 	{
@@ -913,7 +1014,7 @@ static uint32_t draw_slice(uint8_t *src[], int stride[], int w,int h,int x,int y
 	return -1;
 }
 
-static uint32_t draw_frame(uint8_t *src[])
+static int draw_frame(uint8_t *src[])
 {
 	switch (image_format)
 	{
@@ -929,7 +1030,7 @@ static uint32_t draw_frame(uint8_t *src[])
 	return -1;
 }
 
-static uint32_t query_format(uint32_t format)
+static int query_format(uint32_t format)
 {
 	image_format = format;
 	image_qtcodec = 0;
@@ -989,7 +1090,7 @@ static void uninit(void)
 	ShowMenuBar();
 }
 
-static uint32_t preinit(const char *arg)
+static int preinit(const char *arg)
 {
 	int parse_err = 0;
 	
@@ -1105,7 +1206,7 @@ static uint32_t get_yuv_image(mp_image_t *mpi)
 	return VO_FALSE;
 }
 
-static uint32_t control(uint32_t request, void *data, ...)
+static int control(uint32_t request, void *data, ...)
 {
 	switch (request)
 	{
@@ -1167,35 +1268,29 @@ void window_resized()
 	d_height = ((float)d_width/movie_aspect);
 	
 	aspectX = (float)((float)winRect.right/(float)d_width);
-	aspectY = (float)((float)(winRect.bottom-border)/(float)d_height);
+	aspectY = (float)((float)(winRect.bottom)/(float)d_height);
 	
-	if((d_height*aspectX)>(winRect.bottom-border))
+	if((d_height*aspectX)>(winRect.bottom))
 	{
 		padding = (winRect.right - d_width*aspectY)/2;
 		SetRect(&dstRect, padding, 0, d_width*aspectY+padding, d_height*aspectY);
 	}
 	else
 	{
-		padding = ((winRect.bottom-border) - d_height*aspectX)/2;
+		padding = ((winRect.bottom) - d_height*aspectX)/2;
 		SetRect(&dstRect, 0, padding, (d_width*aspectX), d_height*aspectX+padding);
 	}
 	}
 	else
 	{
-		SetRect(&dstRect, 0, 0, winRect.right, winRect.bottom-border);
+		SetRect(&dstRect, 0, 0, winRect.right, winRect.bottom);
 	}
-
-	//Clear Background
-	SetThemeWindowBackground( theWindow, kThemeBrushUtilityWindowBackgroundInactive, TRUE);
-	tmpBounds = CGRectMake( 0, border, winRect.right, winRect.bottom);
-	CreateCGContextForPort(GetWindowPort(theWindow),&context);
-	CGContextClearRect(context, tmpBounds);
 	
 	switch (image_format)
 	{
 		case IMGFMT_RGB32:
 		{
-			bounds = CGRectMake(dstRect.left, dstRect.top+border, dstRect.right-dstRect.left, dstRect.bottom-dstRect.top);
+			bounds = CGRectMake(dstRect.left, dstRect.top, dstRect.right-dstRect.left, dstRect.bottom-dstRect.top);
 			CreateCGContextForPort (GetWindowPort (theWindow), &context);
 			break;
 		}
@@ -1225,6 +1320,11 @@ void window_resized()
 		default:
 			break;
 	}
+	
+	//Clear Background
+	tmpBounds = CGRectMake( 0, 0, winRect.right, winRect.bottom);
+	CreateCGContextForPort(GetWindowPort(theWindow),&context);
+	CGContextFillRect(context, tmpBounds);
 }
 
 void window_ontop()
@@ -1234,26 +1334,7 @@ void window_ontop()
 	//Cycle between level
 	winLevel++;
 	if(winLevel>2)
-		winLevel = 0;
-		
-	//hide menu bar and mouse cursor if in fullscreen and quiting wallpaper mode
-	if(vo_fs)
-	{
-		if(winLevel != 0)
-		{
-			if(device_id == 0)
-			{
-				HideMenuBar();
-				HideCursor();
-			}
-		}
-		else
-		{
-			ShowMenuBar();
-			ShowCursor();
-		}
-	}
-
+		winLevel = 1;
 	}
 	SetWindowGroupLevel(winGroup, CGWindowLevelForKey(levelList[winLevel]));
 }
@@ -1269,8 +1350,9 @@ void window_fullscreen()
 		{
 			if(device_id == 0)
 			{
-				HideMenuBar();
-				HideCursor();
+				SetSystemUIMode( kUIModeAllHidden, kUIOptionAutoShowMenuBar);
+				CGDisplayHideCursor(kCGDirectMainDisplay);
+				mouseHide = TRUE;
 			}
 			
 			if(fs_res_x != 0 || fs_res_y != 0)
@@ -1293,9 +1375,8 @@ void window_fullscreen()
 		}
 		
 		//go fullscreen
-		border = 0;
 		panscan_calc();
-		ChangeWindowAttributes(theWindow, kWindowNoShadowAttribute, kWindowResizableAttribute);
+		ChangeWindowAttributes(theWindow, kWindowNoShadowAttribute, 0);
 		MoveWindow(theWindow, deviceRect.left-(vo_panscan_x >> 1), deviceRect.top-(vo_panscan_y >> 1), 1);
 		SizeWindow(theWindow, device_width+vo_panscan_x, device_height+vo_panscan_y,1);
 
@@ -1303,6 +1384,7 @@ void window_fullscreen()
 	}
 	else //go back to windowed mode
 	{
+		vo_quartz_fs = 0;
 		if(restoreState != NULL)
 		{
 			EndFullScreen(restoreState, NULL);
@@ -1314,20 +1396,18 @@ void window_fullscreen()
 			device_height = deviceRect.bottom;
 			restoreState = NULL;
 		}
-		ShowMenuBar();
+		SetSystemUIMode( kUIModeNormal, NULL);
 
 		//show mouse cursor
-		ShowCursor();
+		CGDisplayShowCursor(kCGDirectMainDisplay);
+		mouseHide = FALSE;
 		
 		//revert window to previous setting
-		border = 15;
-		ChangeWindowAttributes(theWindow, kWindowResizableAttribute, kWindowNoShadowAttribute);
+		ChangeWindowAttributes(theWindow, 0, kWindowNoShadowAttribute);
 		SizeWindow(theWindow, oldWinRect.right, oldWinRect.bottom,1);
 		MoveWindow(theWindow, oldWinBounds.left, oldWinBounds.top, 1);
-
- 		vo_quartz_fs = 0;
 	}
-	
+	window_resized();
 }
 
 void window_panscan()

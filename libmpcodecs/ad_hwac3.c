@@ -18,7 +18,7 @@
 
 #include "ad_internal.h"
 
-#include "../liba52/a52.h"
+#include "liba52/a52.h"
 
 
 static int isdts = -1;
@@ -112,8 +112,8 @@ static int preinit(sh_audio_t *sh)
 static int init(sh_audio_t *sh_audio)
 {
   /* Dolby AC3 passthrough:*/
-  sample_t *a52_samples = a52_init(0);
-  if(a52_samples == NULL)
+  a52_state_t *a52_state = a52_init(0);
+  if(a52_state == NULL)
   {
     mp_msg(MSGT_DECAUDIO, MSGL_ERR, "A52 init failed\n");
     return 0;
@@ -134,8 +134,9 @@ static int control(sh_audio_t *sh,int cmd,void* arg, ...)
 {
   switch(cmd)
   {
+  case ADCTRL_RESYNC_STREAM:
   case ADCTRL_SKIP_FRAME:
-      ac3dts_fillbuff(sh); break; // skip AC3 frame
+      ac3dts_fillbuff(sh);
       return CONTROL_TRUE;
   }
   return CONTROL_UNKNOWN;

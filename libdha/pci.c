@@ -62,7 +62,7 @@
 /* OS depended stuff */
 #if defined (linux)
 #include "sysdep/pci_linux.c"
-#elif defined (__FreeBSD__)
+#elif defined (__FreeBSD__) || defined(__DragonFly__)
 #include "sysdep/pci_freebsd.c"
 #elif defined (__386BSD__)
 #include "sysdep/pci_386bsd.c"
@@ -717,7 +717,7 @@ int pci_config_read(unsigned char bus, unsigned char dev, unsigned char func,
     
     if (len != 4)
     {
-	printf("pci_config_read: reading non-dword not supported!\n");
+	fprintf(stderr,"pci_config_read: Reading non-dword not supported!\n");
 	return(ENOTSUP);
     }
     

@@ -13,7 +13,7 @@
 
     You should have received a copy of the GNU General Public License
     along with this program; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 */
 
 #include <stdio.h>
@@ -22,8 +22,8 @@
 #include <inttypes.h>
 #include <assert.h>
 
-#include "../config.h"
-#include "../mp_msg.h"
+#include "config.h"
+#include "mp_msg.h"
 
 #ifdef HAVE_MALLOC_H
 #include <malloc.h>
@@ -32,7 +32,7 @@
 #include "img_format.h"
 #include "mp_image.h"
 #include "vf.h"
-#include "../libvo/fastmemcpy.h"
+#include "libvo/fastmemcpy.h"
 
 
 //===========================================================================//
@@ -77,7 +77,7 @@ static void interleave(uint8_t *dst, uint8_t *src, int w, int h, int dstStride, 
 	}
 }
 
-static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
+static int put_image(struct vf_instance_s* vf, mp_image_t *mpi, double pts){
 	int w;
 	FilterParam *luma  = &vf->priv->lumaParam;
 	FilterParam *chroma= &vf->priv->chromaParam;
@@ -104,7 +104,7 @@ static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
 			dmpi->stride[2], mpi->stride[2], chroma->interleave, luma->swap);
 	}
     
-	return vf_next_put_image(vf,dmpi);
+	return vf_next_put_image(vf,dmpi, pts);
 }
 
 //===========================================================================//

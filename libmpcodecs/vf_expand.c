@@ -4,18 +4,19 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../config.h"
-#include "../mp_msg.h"
+#include "config.h"
+#include "mp_msg.h"
+#include "help_mp.h"
 
 #include "img_format.h"
 #include "mp_image.h"
 #include "vf.h"
 
-#include "../libvo/fastmemcpy.h"
+#include "libvo/fastmemcpy.h"
 
 #ifdef OSD_SUPPORT
-#include "../libvo/sub.h"
-#include "../libvo/osd.h"
+#include "libvo/sub.h"
+#include "libvo/osd.h"
 #endif
 
 #include "m_option.h"
@@ -27,12 +28,18 @@ static struct vf_priv_s {
     int exp_w,exp_h;
     int exp_x,exp_y;
     int osd;
+    double aspect;
+    int round;
     unsigned char* fb_ptr;
+    int first_slice;
 } vf_priv_dflt = {
   -1,-1,
   -1,-1,
   0,
-  NULL
+  0.,
+  1,
+  NULL,
+  0
 };
 
 extern int opt_screen_size_x;
@@ -176,6 +183,19 @@ static int config(struct vf_instance_s* vf,
       else if ( vf->priv->exp_h < -1 ) vf->priv->exp_h=height - vf->priv->exp_h;
         else if( vf->priv->exp_h<height ) vf->priv->exp_h=height;
 #endif
+    if (vf->priv->aspect) {
+        vf->priv->aspect *= ((double)width/height) / ((double)d_width/d_height);
+        if (vf->priv->exp_h < vf->priv->exp_w / vf->priv->aspect) {
+            vf->priv->exp_h = vf->priv->exp_w / vf->priv->aspect + 0.5;
+        } else {
+            vf->priv->exp_w = vf->priv->exp_h * vf->priv->aspect + 0.5;
+        }
+    }
+    if (vf->priv->round > 1) { // round up.
+        vf->priv->exp_w = (1 + (vf->priv->exp_w - 1) / vf->priv->round) * vf->priv->round;
+        vf->priv->exp_h = (1 + (vf->priv->exp_h - 1) / vf->priv->round) * vf->priv->round;
+    }
+
     if(vf->priv->exp_x<0 || vf->priv->exp_x+width>vf->priv->exp_w) vf->priv->exp_x=(vf->priv->exp_w-width)/2;
     if(vf->priv->exp_y<0 || vf->priv->exp_y+height>vf->priv->exp_h) vf->priv->exp_y=(vf->priv->exp_h-height)/2;
     vf->priv->fb_ptr=NULL;
@@ -213,7 +233,7 @@ static void get_image(struct vf_instance_s* vf, mp_image_t *mpi){
 #if 1
 	if((vf->dmpi->flags & MP_IMGFLAG_DRAW_CALLBACK) &&
 	  !(vf->dmpi->flags & MP_IMGFLAG_DIRECT)){
-	    printf("Full DR not possible, trying SLICES instead!\n");
+	    mp_msg(MSGT_VFILTER, MSGL_INFO, MSGTR_MPCODECS_FullDRNotPossible);
 	    return;
 	}
 #endif
@@ -250,20 +270,25 @@ static void start_slice(struct vf_instance_s* vf, mp_image_t *mpi){
     if(!mpi->priv)
 	mpi->priv=vf->dmpi=vf_get_image(vf->next,mpi->imgfmt,
 //	MP_IMGTYPE_TEMP, MP_IMGFLAG_ACCEPT_STRIDE | MP_IMGFLAG_PREFER_ALIGNED_STRIDE,
-	    mpi->type, mpi->flags, 
+	    MP_IMGTYPE_TEMP, mpi->flags, 
             MAX(vf->priv->exp_w, mpi->width +vf->priv->exp_x), 
             MAX(vf->priv->exp_h, mpi->height+vf->priv->exp_y));
     if(!(vf->dmpi->flags&MP_IMGFLAG_DRAW_CALLBACK))
-	printf("WARNING! next filter doesn't support SLICES, get ready for sig11...\n"); // shouldn't happen.
+	mp_msg(MSGT_VFILTER, MSGL_WARN, MSGTR_MPCODECS_WarnNextFilterDoesntSupportSlices); // shouldn't happen.
+    vf->priv->first_slice = 1;
 }
 
-static void draw_slice(struct vf_instance_s* vf,
-        unsigned char** src, int* stride, int w,int h, int x, int y){
-//    printf("draw_slice() called %d at %d\n",h,y);
-    if(vf->priv->exp_y>0 && y == 0)
+static void draw_top_blackbar_slice(struct vf_instance_s* vf,
+				    unsigned char** src, int* stride, int w,int h, int x, int y){
+    if(vf->priv->exp_y>0 && y == 0) {
 	vf_next_draw_slice(vf, vf->dmpi->planes, vf->dmpi->stride,
 			   vf->dmpi->w,vf->priv->exp_y,0,0);
-    vf_next_draw_slice(vf,src,stride,w,h,x+vf->priv->exp_x,y+vf->priv->exp_y);
+    }
+    
+}
+
+static void draw_bottom_blackbar_slice(struct vf_instance_s* vf,
+				    unsigned char** src, int* stride, int w,int h, int x, int y){
     if(vf->priv->exp_y+vf->h<vf->dmpi->h && y+h == vf->h) {
 	unsigned char *src2[MP_MAX_PLANES];
 	src2[0] = vf->dmpi->planes[0]
@@ -276,17 +301,39 @@ static void draw_slice(struct vf_instance_s* vf,
 	} else {
 	    src2[1] = vf->dmpi->planes[1]; // passthrough rgb8 palette
 	}
-	
 	vf_next_draw_slice(vf, src2, vf->dmpi->stride,
 			   vf->dmpi->w,vf->dmpi->h-(vf->priv->exp_y+vf->h),
 			   0,vf->priv->exp_y+vf->h);
     }
 }
 
-static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
+static void draw_slice(struct vf_instance_s* vf,
+        unsigned char** src, int* stride, int w,int h, int x, int y){
+//    printf("draw_slice() called %d at %d\n",h,y);
+    
+    if (y == 0 && y+h == vf->h) {
+	// special case - only one slice
+	draw_top_blackbar_slice(vf, src, stride, w, h, x, y);
+	vf_next_draw_slice(vf,src,stride,w,h,x+vf->priv->exp_x,y+vf->priv->exp_y);
+	draw_bottom_blackbar_slice(vf, src, stride, w, h, x, y);
+	return;
+    }
+    if (vf->priv->first_slice) {
+	draw_top_blackbar_slice(vf, src, stride, w, h, x, y);
+	draw_bottom_blackbar_slice(vf, src, stride, w, h, x, y);
+    }
+    vf_next_draw_slice(vf,src,stride,w,h,x+vf->priv->exp_x,y+vf->priv->exp_y);
+    if (!vf->priv->first_slice) {
+	draw_top_blackbar_slice(vf, src, stride, w, h, x, y);
+	draw_bottom_blackbar_slice(vf, src, stride, w, h, x, y);
+    }
+    vf->priv->first_slice = 0;
+}
+
+static int put_image(struct vf_instance_s* vf, mp_image_t *mpi, double pts){
     if(mpi->flags&MP_IMGFLAG_DIRECT || mpi->flags&MP_IMGFLAG_DRAW_CALLBACK){
 	vf->dmpi=mpi->priv;
-	if(!vf->dmpi) { printf("Why do we get NULL \n"); return 0; }
+	if(!vf->dmpi) { mp_msg(MSGT_VFILTER, MSGL_WARN, MSGTR_MPCODECS_FunWhydowegetNULL); return 0; }
 	mpi->priv=NULL;
 #ifdef OSD_SUPPORT
 	if(vf->priv->osd) draw_osd(vf,mpi->w,mpi->h);
@@ -294,7 +341,7 @@ static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
 	// we've used DR, so we're ready...
 	if(!(mpi->flags&MP_IMGFLAG_PLANAR))
 	    vf->dmpi->planes[1] = mpi->planes[1]; // passthrough rgb8 palette
-	return vf_next_put_image(vf,vf->dmpi);
+	return vf_next_put_image(vf,vf->dmpi, pts);
     }
 
     // hope we'll get DR buffer:
@@ -310,11 +357,11 @@ static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
 		vf->dmpi->stride[0],mpi->stride[0]);
 	memcpy_pic(vf->dmpi->planes[1]+
 		(vf->priv->exp_y>>mpi->chroma_y_shift)*vf->dmpi->stride[1]+(vf->priv->exp_x>>mpi->chroma_x_shift),
-		mpi->planes[1], mpi->chroma_width, mpi->chroma_height,
+		mpi->planes[1], (mpi->w>>mpi->chroma_x_shift), (mpi->h>>mpi->chroma_y_shift),
 		vf->dmpi->stride[1],mpi->stride[1]);
 	memcpy_pic(vf->dmpi->planes[2]+
 		(vf->priv->exp_y>>mpi->chroma_y_shift)*vf->dmpi->stride[2]+(vf->priv->exp_x>>mpi->chroma_x_shift),
-		mpi->planes[2], mpi->chroma_width, mpi->chroma_height,
+		mpi->planes[2], (mpi->w>>mpi->chroma_x_shift), (mpi->h>>mpi->chroma_y_shift),
 		vf->dmpi->stride[2],mpi->stride[2]);
     } else {
 	memcpy_pic(vf->dmpi->planes[0]+
@@ -326,7 +373,7 @@ static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
 #ifdef OSD_SUPPORT
     if(vf->priv->osd) draw_osd(vf,mpi->w,mpi->h);
 #endif
-    return vf_next_put_image(vf,vf->dmpi);
+    return vf_next_put_image(vf,vf->dmpi, pts);
 }
 
 //===========================================================================//
@@ -348,27 +395,14 @@ static int open(vf_instance_t *vf, char* args){
     vf->draw_slice=draw_slice;
     vf->get_image=get_image;
     vf->put_image=put_image;
-    if(!vf->priv) {
-    vf->priv=malloc(sizeof(struct vf_priv_s));
-    vf->priv->exp_x=
-    vf->priv->exp_y=
-    vf->priv->exp_w=
-    vf->priv->exp_h=-1;
-    vf->priv->osd=0;
-    //  parse args ->
-    } // if(!vf->priv)
-    if(args) sscanf(args, "%d:%d:%d:%d:%d", 
-    &vf->priv->exp_w,
-    &vf->priv->exp_h,
-    &vf->priv->exp_x,
-    &vf->priv->exp_y,
-    &vf->priv->osd);
-    mp_msg(MSGT_VFILTER, MSGL_INFO, "Expand: %d x %d, %d ; %d  (-1=autodetect) osd: %d\n",
+    mp_msg(MSGT_VFILTER, MSGL_INFO, "Expand: %d x %d, %d ; %d, osd: %d, aspect: %lf, round: %d\n",
     vf->priv->exp_w,
     vf->priv->exp_h,
     vf->priv->exp_x,
     vf->priv->exp_y,
-    vf->priv->osd);
+    vf->priv->osd,
+    vf->priv->aspect,
+    vf->priv->round);
     return 1;
 }
 
@@ -379,6 +413,8 @@ static m_option_t vf_opts_fields[] = {
   {"x", ST_OFF(exp_x), CONF_TYPE_INT, M_OPT_MIN, -1, 0, NULL},
   {"y", ST_OFF(exp_y), CONF_TYPE_INT, M_OPT_MIN, -1, 0, NULL},
   {"osd", ST_OFF(osd), CONF_TYPE_FLAG, 0 , 0, 1, NULL},
+  {"aspect", ST_OFF(aspect), CONF_TYPE_DOUBLE, M_OPT_MIN, 0, 0, NULL},
+  {"round", ST_OFF(round), CONF_TYPE_INT, M_OPT_MIN, 1, 0, NULL},
   { NULL, NULL, 0, 0, 0, 0,  NULL }
 };
 

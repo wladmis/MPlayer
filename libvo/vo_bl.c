@@ -213,17 +213,21 @@ static bl_properties_t bls[NO_BLS] = {
 	&bml_init, &bml_write_frame, &bml_close,
 	&udp_init, &udp_send, &udp_close } };
 
-static uint32_t config(uint32_t width, uint32_t height, uint32_t d_width, 
-	uint32_t d_height, uint32_t fullscreen, char *title, uint32_t format)
+static int config(uint32_t width, uint32_t height, uint32_t d_width, 
+	uint32_t d_height, uint32_t flags, char *title, uint32_t format)
 {
 	void * ptr;
 
 	/* adapt size of Blinkenlights UDP stream to size of movie */
 	if (bl->width < 0 || bl->height < 0) {
-		if (bl->width < 0) /* use width of movie */
+		if (bl->width < 0) { /* use width of movie */
 			bl->width = width;
-		if (bl->height < 0) /* use height of movie */
+			bl_packet->width = htons(bl->width);
+		}
+		if (bl->height < 0) { /* use height of movie */
 			bl->height = height;
+			bl_packet->height = htons(bl->height);
+		}
 		/* check for maximum size of UDP packet */
 		if (12 + bl->width*bl->height*bl->channels > 65507) {
 			mp_msg(MSGT_VO, MSGL_ERR, "bl: %dx%d-%d does not fit into an UDP packet\n",
@@ -289,11 +293,11 @@ static void flip_page (void) {
 	return;
 }
 
-static uint32_t draw_frame(uint8_t * src[]) {
+static int draw_frame(uint8_t * src[]) {
 	return 0;
 }
 
-static uint32_t query_format(uint32_t format) {
+static int query_format(uint32_t format) {
 	if (format == bl->img_format) 
 		return VFCAP_CSP_SUPPORTED|VFCAP_CSP_SUPPORTED_BY_HW;
 	return 0;
@@ -316,7 +320,7 @@ static void uninit(void) {
 static void check_events(void) {
 }
 
-static uint32_t draw_slice(uint8_t *srcimg[], int stride[],
+static int draw_slice(uint8_t *srcimg[], int stride[],
 		int wf, int hf, int xf, int yf) {
 	int i, j, w, h, x, y;
 	uint8_t *dst;
@@ -335,7 +339,7 @@ static uint32_t draw_slice(uint8_t *srcimg[], int stride[],
  	return 0;
 }
 
-static uint32_t preinit(const char *arg) {
+static int preinit(const char *arg) {
 	char *p, *q;
 	int end = 0, i;
 	char txt[256];
@@ -461,7 +465,7 @@ static uint32_t preinit(const char *arg) {
 	return 0;
 }
 
-static uint32_t control(uint32_t request, void *data, ...) {
+static int control(uint32_t request, void *data, ...) {
 	switch (request) {
 		case VOCTRL_QUERY_FORMAT:
 			return query_format(*((uint32_t*)data));

@@ -17,7 +17,7 @@
 
     You should have received a copy of the GNU General Public License
     along with this program; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 */
 
 #ifdef CONFIG_DARWIN
@@ -26,14 +26,13 @@
 #define AVV(x...) {x}
 #endif
 
-static const vector signed int vzero =
-  (const vector signed int)AVV(0, 0, 0, 0);
-static const vector unsigned int altivec_vectorShiftInt19 =
-  (const vector unsigned int)AVV(19, 19, 19, 19);
+#define vzero vec_splat_s32(0)
 
 static inline void
 altivec_packIntArrayToCharArray(int *val, uint8_t* dest, int dstW) {
   register int i;
+  vector unsigned int altivec_vectorShiftInt19 =
+    vec_add(vec_splat_u32(10),vec_splat_u32(9));
   if ((unsigned long)dest % 16) {
     /* badly aligned store, we force store alignement */
     /* and will handle load misalignement on val w/ vec_perm */
@@ -400,6 +399,11 @@ static inline int yv12toyuy2_unscaled_altivec(SwsContext *c, uint8_t* src[], int
   const int vertLumPerChroma = 2;  
   register unsigned int y;
 
+  if(width&15){
+    yv12toyuy2( ysrc, usrc, vsrc, dst,c->srcW,srcSliceH, lumStride, chromStride, dstStride);
+    return srcSliceH;
+  }
+
   /* this code assume:
 
   1) dst is 16 bytes-aligned
@@ -473,6 +477,11 @@ static inline int yv12touyvy_unscaled_altivec(SwsContext *c, uint8_t* src[], int
   const int vertLumPerChroma = 2;
   const vector unsigned char yperm = vec_lvsl(0, ysrc);
   register unsigned int y;
+
+  if(width&15){
+    yv12touyvy( ysrc, usrc, vsrc, dst,c->srcW,srcSliceH, lumStride, chromStride, dstStride);
+    return srcSliceH;
+  }
 
   /* this code assume:
 

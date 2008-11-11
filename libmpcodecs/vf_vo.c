@@ -2,13 +2,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../config.h"
-#include "../mp_msg.h"
+#include "config.h"
+#include "mp_msg.h"
 
 #include "mp_image.h"
 #include "vf.h"
 
-#include "../libvo/video_out.h"
+#include "libvo/video_out.h"
 
 //===========================================================================//
 
@@ -32,10 +32,10 @@ static int config(struct vf_instance_s* vf,
          width, height,
          d_width, d_height,
 	 vo_format_name(outfmt),
-         (flags&1)?" [fs]":"",
-         (flags&2)?" [vm]":"",
-         (flags&4)?" [zoom]":"",
-         (flags&8)?" [flip]":"");
+         (flags&VOFLAG_FULLSCREEN)?" [fs]":"",
+         (flags&VOFLAG_MODESWITCHING)?" [vm]":"",
+         (flags&VOFLAG_SWSCALE)?" [zoom]":"",
+         (flags&VOFLAG_FLIPPING)?" [flip]":"");
     mp_msg(MSGT_CPLAYER,MSGL_V,"VO: Description: %s\n",info->name);
     mp_msg(MSGT_CPLAYER,MSGL_V,"VO: Author: %s\n", info->author);
     if(info->comment && strlen(info->comment) > 0)
@@ -100,7 +100,7 @@ static void get_image(struct vf_instance_s* vf,
 }
 
 static int put_image(struct vf_instance_s* vf,
-        mp_image_t *mpi){
+        mp_image_t *mpi, double pts){
   if(!vo_config_count) return 0; // vo not configured?
   // first check, maybe the vo/vf plugin implements draw_image using mpi:
   if(video_out->control(VOCTRL_DRAW_IMAGE,mpi)==VO_TRUE) return 1; // done.

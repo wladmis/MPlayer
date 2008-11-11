@@ -95,7 +95,7 @@ int pva_sync(demuxer_t * demuxer)
 	}
 	if(priv->just_synced)
 	{
-		if(priv!=NULL) priv->synced_stream_id=buffer[2];
+		priv->synced_stream_id=buffer[2];
 		return 1;
 	}
 	else
@@ -104,7 +104,7 @@ int pva_sync(demuxer_t * demuxer)
 	}
 }
 
-int pva_check_file(demuxer_t * demuxer)
+static int pva_check_file(demuxer_t * demuxer)
 {
 	uint8_t buffer[5]={0,0,0,0,0};
 	mp_msg(MSGT_DEMUX, MSGL_V, "Checking for PVA\n");
@@ -112,7 +112,7 @@ int pva_check_file(demuxer_t * demuxer)
 	if(buffer[0]=='A' && buffer[1] == 'V' && buffer[4] == 0x55)
 	{
 		mp_msg(MSGT_DEMUX,MSGL_DBG2, "Success: PVA\n");
-		return 1;
+		return DEMUXER_TYPE_PVA;
 	}
 	else
 	{
@@ -121,7 +121,7 @@ int pva_check_file(demuxer_t * demuxer)
 	}
 }
 
-demuxer_t * demux_open_pva (demuxer_t * demuxer)
+static demuxer_t * demux_open_pva (demuxer_t * demuxer)
 {
 	sh_video_t *sh_video = new_sh_video(demuxer,0);
         sh_audio_t *sh_audio = new_sh_audio(demuxer,0);
@@ -189,7 +189,7 @@ int pva_get_payload(demuxer_t * d,pva_payload_t * payload);
 
 // 0 = EOF or no stream found
 // 1 = successfully read a packet
-int demux_pva_fill_buffer (demuxer_t * demux)
+static int demux_pva_fill_buffer (demuxer_t * demux, demux_stream_t *ds)
 {
 	uint8_t done=0;
 	demux_packet_t * dp;
@@ -283,7 +283,7 @@ int pva_get_payload(demuxer_t * d,pva_payload_t * payload)
 #ifndef PVA_NEW_PREBYTES_CODE
 	demux_packet_t * dp; 	//hack to deliver the preBytes (see PVA doc)
 #endif
-	pva_priv_t * priv=(pva_priv_t *) d->priv;
+	pva_priv_t * priv;
 
 	
 	if(d==NULL)
@@ -292,6 +292,7 @@ int pva_get_payload(demuxer_t * d,pva_payload_t * payload)
 		return 0;
 	}
 
+	priv = (pva_priv_t *)d->priv;
 	d->filepos=stream_tell(d->stream);
 	
 	
@@ -326,7 +327,7 @@ int pva_get_payload(demuxer_t * d,pva_payload_t * payload)
 	{
 		if(stream_read_word(d->stream) != (('A'<<8)|'V'))
 		{
-			mp_msg(MSGT_DEMUX,MSGL_V,"demux_pva: pva_get_payload() missed a SyncWord at %ld!! Trying to sync...\n",stream_tell(d->stream));
+			mp_msg(MSGT_DEMUX,MSGL_V,"demux_pva: pva_get_payload() missed a SyncWord at %"PRId64"!! Trying to sync...\n",(int64_t)stream_tell(d->stream));
 			if(!pva_sync(d))
 			{
 				if (!d->stream->eof)
@@ -350,7 +351,7 @@ int pva_get_payload(demuxer_t * d,pva_payload_t * payload)
 	flags=stream_read_char(d->stream);
 	payload->is_packet_start=flags & 0x10;
 	pack_size=le2me_16(stream_read_word(d->stream));
-	mp_msg(MSGT_DEMUX,MSGL_DBG2,"demux_pva::pva_get_payload(): pack_size=%u field read at offset %lu\n",pack_size,stream_tell(d->stream)-2);
+	mp_msg(MSGT_DEMUX,MSGL_DBG2,"demux_pva::pva_get_payload(): pack_size=%u field read at offset %"PRIu64"\n",pack_size,(int64_t)stream_tell(d->stream)-2);
 	pva_payload_start=stream_tell(d->stream);
 	next_offset=pva_payload_start+pack_size;
 
@@ -466,7 +467,7 @@ int pva_get_payload(demuxer_t * d,pva_payload_t * payload)
 	return 1;
 }
 
-int demux_seek_pva(demuxer_t * demuxer,float rel_seek_secs,int flags)
+static void demux_seek_pva(demuxer_t * demuxer,float rel_seek_secs,float audio_delay,int flags)
 {
 	int total_bitrate=0;
 	off_t dest_offset;
@@ -490,7 +491,7 @@ int demux_seek_pva(demuxer_t * demuxer,float rel_seek_secs,int flags)
 	if(!pva_sync(demuxer))
 	{
 		mp_msg(MSGT_DEMUX,MSGL_V,"demux_pva: Couldn't seek!\n");
-		return 0;
+		return;
 	}
 	
 	/*
@@ -501,13 +502,11 @@ int demux_seek_pva(demuxer_t * demuxer,float rel_seek_secs,int flags)
 	
 	priv->last_video_pts=-1;
 	priv->last_audio_pts=-1;
-	
-	return 1;
 }
 
 
 
-void demux_close_pva(demuxer_t * demuxer)
+static void demux_close_pva(demuxer_t * demuxer)
 {
 	if(demuxer->priv)
 	{
@@ -516,3 +515,19 @@ void demux_close_pva(demuxer_t * demuxer)
 	}
 }
 			
+
+demuxer_desc_t demuxer_desc_pva = {
+  "PVA demuxer",
+  "pva",
+  "PVA",
+  "Matteo Giani",
+  "streams from DVB cards",
+  DEMUXER_TYPE_PVA,
+  0, // unsafe autodetect
+  pva_check_file,
+  demux_pva_fill_buffer,
+  demux_open_pva,
+  demux_close_pva,
+  demux_seek_pva,
+  NULL
+};

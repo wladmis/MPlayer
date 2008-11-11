@@ -22,7 +22,7 @@
  *
  * Modified for use with MPlayer, see libmpeg-0.4.0.diff for the exact changes.
  * detailed CVS changelog at http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
- * $Id: mpeg2.h,v 1.9 2005/02/19 02:32:12 diego Exp $
+ * $Id: mpeg2.h 14733 2005-02-19 02:32:12Z diego $
  */
 
 #ifndef MPEG2_H

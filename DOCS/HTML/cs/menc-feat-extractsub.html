@@ -1,31 +1,31 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>7.7. Extracting DVD subtitles to VOBsub file</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - Multimediální p&#345;ehráva&#269;"><link rel="up" href="mencoder.html" title="Kapitola 7. Encoding with MEncoder"><link rel="previous" href="menc-feat-enc-images.html" title="7.6. Encoding from multiple input image files (JPEG, PNG, TGA, SGI)"><link rel="next" href="aspect.html" title="7.8. Preserving aspect ratio"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">7.7. Extracting DVD subtitles to VOBsub file</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="menc-feat-enc-images.html">P&#345;edcházející</a> </td><th width="60%" align="center">Kapitola 7. Encoding with MEncoder</th><td width="20%" align="right"> <a accesskey="n" href="aspect.html">Dal&#353;í</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="menc-feat-extractsub"></a>7.7. Extracting DVD subtitles to VOBsub file</h2></div></div><p>
-<span class="application">MEncoder</span> is capable of extracting subtitles from
-a DVD into VOBsub formatted files. They consist of a pair of files ending in
-<tt class="filename">.idx</tt> and <tt class="filename">.sub</tt> and are usually
-packaged in a single <tt class="filename">.rar</tt> archive.
-<span class="application">MPlayer</span> can play these with the
-<tt class="option">-vobsub</tt> and <tt class="option">-vobsubid</tt> options.
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>12.8. Extrakce DVD titulk&#367; do VOBsub souboru</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.68.1"><link rel="start" href="index.html" title="MPlayer - Multimediální p&#345;ehráva&#269;"><link rel="up" href="mencoder.html" title="Kapitola 12. Základní pou&#382;ití MEncoderu"><link rel="prev" href="menc-feat-enc-images.html" title="12.7. Enkódování z mno&#382;ství vstupních obrázkových soubor&#367; (JPEG, PNG, TGA, SGI)"><link rel="next" href="aspect.html" title="12.9. Zachování pom&#283;ru stran"><link rel="preface" href="howtoread.html" title="Jak &#269;íst tuto  dokumentaci"><link rel="chapter" href="intro.html" title="Kapitola 1. P&#345;edstavení"><link rel="chapter" href="install.html" title="Kapitola 2. Instalace"><link rel="chapter" href="usage.html" title="Kapitola 3. Pou&#382;ití"><link rel="chapter" href="cd-dvd.html" title="Kapitola 4. Pou&#382;ití CD/DVD"><link rel="chapter" href="faq.html" title="Kapitola 5. &#268;asto Kladené Dotazy (FAQ)"><link rel="chapter" href="containers.html" title="Kapitola 6. Nosné formáty (Containers)"><link rel="chapter" href="codecs.html" title="Kapitola 7. Kodeky"><link rel="chapter" href="video.html" title="Kapitola 8. Výstupní video za&#345;ízení/rozhraní"><link rel="chapter" href="audio.html" title="Kapitola 9. Výstupní zvuková za&#345;ízení"><link rel="chapter" href="tv.html" title="Kapitola 10. TV"><link rel="chapter" href="ports.html" title="Kapitola 11. Porty"><link rel="chapter" href="mencoder.html" title="Kapitola 12. Základní pou&#382;ití MEncoderu"><link rel="chapter" href="encoding-guide.html" title="Kapitola 13. Enkódování s MEncoderem"><link rel="appendix" href="mailinglists.html" title="P&#345;íloha A. E-mailové konference"><link rel="appendix" href="bugreports.html" title="P&#345;íloha B. Jak hlásit chyby"><link rel="appendix" href="bugs.html" title="P&#345;íloha C. Známé chyby"><link rel="appendix" href="skin.html" title="P&#345;íloha D. Formát skin&#367; MPlayeru"><link rel="appendix" href="users-vs-dev.html" title="P&#345;íloha E. Ná&#345;ky vývojá&#345;&#367;"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">12.8. Extrakce DVD titulk&#367; do VOBsub souboru</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="menc-feat-enc-images.html">P&#345;edcházející</a> </td><th width="60%" align="center">Kapitola 12. Základní pou&#382;ití <span class="application">MEncoder</span>u</th><td width="20%" align="right"> <a accesskey="n" href="aspect.html">Dal&#353;í</a></td></tr></table><hr></div><div class="sect1" lang="cs"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="menc-feat-extractsub"></a>12.8. Extrakce DVD titulk&#367; do VOBsub souboru</h2></div></div></div><p>
+<span class="application">MEncoder</span> je schopen vyextrahovat titulky z DVD do
+VOBsub formátovaných soubor&#367;. Ty sestávají ze dvou soubor&#367; zakon&#269;ených
+<tt class="filename">.idx</tt> a <tt class="filename">.sub</tt> a jsou obvykle zabaleny
+v jediném <tt class="filename">.rar</tt> archivu.
+<span class="application">MPlayer</span> je umí p&#345;ehrávat s pomocí voleb
+<tt class="option">-vobsub</tt> a <tt class="option">-vobsubid</tt>.
 </p><p>
-You specify the basename (i.e without the <tt class="filename">.idx</tt> or
-<tt class="filename">.sub</tt> extension) of the output files with
-<tt class="option">-vobsubout</tt> and the index for this subtitle in the
-resulting files with <tt class="option">-vobsuboutindex</tt>.
+Zadejte základní jméno (&#269;ili bez p&#345;ípony <tt class="filename">.idx</tt> nebo
+<tt class="filename">.sub</tt>) výstupních soubor&#367; pomocí volby
+<tt class="option">-vobsubout</tt> a index pro tyto titulky ve zbývajících souborech
+pomocí <tt class="option">-vobsuboutindex</tt>.
 </p><p>
-If the input is not from a DVD you should use <tt class="option">-ifo</tt> to
-indicate the <tt class="filename">.ifo</tt> file needed to construct the
-resulting <tt class="filename">.idx</tt> file.
+Pokud není vstup z DVD, m&#283;li byste pou&#382;ít <tt class="option">-ifo</tt> pro indikaci
+<tt class="filename">.ifo</tt> souboru nutného k vytvo&#345;ení výsledného
+<tt class="filename">.idx</tt> souboru.
 </p><p>
-If the input is not from a DVD and you do not have the
-<tt class="filename">.ifo</tt> file you will need to use the
-<tt class="option">-vobsubid</tt> option to let it know what language id to put in
-the <tt class="filename">.idx</tt> file.
+Pokud vstup není z DVD a nemáte <tt class="filename">.ifo</tt> soubor, budete muset
+pou&#382;ít volbu <tt class="option">-vobsubid</tt> k nastavení, pro které id jazyka se má
+vytvo&#345;it <tt class="filename">.idx</tt> soubor.
 </p><p>
-Each run will append the running subtitle if the <tt class="filename">.idx</tt>
-and <tt class="filename">.sub</tt> files already exist. So you should remove any
-before starting.
-</p><div class="example"><p><b>P&#345;íklad 7.3. Copying two subtitles from a DVD while doing two pass encoding</b></p><pre class="screen">
-rm subtitles.idx subtitles.sub
-mencoder dvd://1 -oac copy -ovc lavc -lavcopts vcodec=mpeg4:vpass=1 -vobsubout subtitles -vobsuboutindex 0 -sid 2
-mencoder dvd://1 -oac copy -ovc lavc -lavcopts vcodec=mpeg4:vpass=2 -vobsubout subtitles -vobsuboutindex 1 -sid 5</pre></div><div class="example"><p><b>P&#345;íklad 7.4. Copying a french subtitle from an MPEG file</b></p><pre class="screen">
-rm subtitles.idx subtitles.sub
-mencoder <i><tt>movie.mpg</tt></i> -ifo <i><tt>movie.ifo</tt></i> -vobsubout subtitles -vobsuboutindex 0 -vobsuboutid fr -sid 1</pre></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="menc-feat-enc-images.html">P&#345;edcházející</a> </td><td width="20%" align="center"><a accesskey="u" href="mencoder.html">Nahoru</a></td><td width="40%" align="right"> <a accesskey="n" href="aspect.html">Dal&#353;í</a></td></tr><tr><td width="40%" align="left" valign="top">7.6. Encoding from multiple input image files (JPEG, PNG, TGA, SGI) </td><td width="20%" align="center"><a accesskey="h" href="index.html">Dom&#367;</a></td><td width="40%" align="right" valign="top"> 7.8. Preserving aspect ratio</td></tr></table></div></body></html>
+Ka&#382;dým spu&#353;t&#283;ním se p&#345;idají b&#283;&#382;ící titulky pokud soubory <tt class="filename">.idx</tt>
+a <tt class="filename">.sub</tt> ji&#382; existují. Tak&#382;e byste je m&#283;li v&#353;echny odstranit
+d&#345;íve ne&#382; za&#269;nete.
+</p><div class="example"><a name="id2584706"></a><p class="title"><b>P&#345;íklad 12.3. Kopírování dvojích titulk&#367; z DVD b&#283;hem dvoupr&#367;chodového enkódování</b></p><pre class="screen">
+rm titulky.idx titulky.sub
+mencoder dvd://1 -oac copy -ovc lavc -lavcopts vcodec=mpeg4:vpass=1 -vobsubout titulky
+mencoder dvd://1 -oac copy -ovc lavc -lavcopts vcodec=mpeg4:mbd=2:trell:vpass=2 -vobsubout titulky -vobsuboutindex 1 -sid 5</pre></div><div class="example"><a name="id2584727"></a><p class="title"><b>P&#345;íklad 12.4. Kopírování francouzských titulk&#367; z MPEG souboru</b></p><pre class="screen">
+rm titulky.idx titulky.sub
+mencoder <em class="replaceable"><code>film.mpg</code></em> -ifo <em class="replaceable"><code>film.ifo</code></em> -vobsubout titulky -vobsuboutindex 0 -vobsuboutid fr -sid 1 -nosound -ovc copy
+</pre></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="menc-feat-enc-images.html">P&#345;edcházející</a> </td><td width="20%" align="center"><a accesskey="u" href="mencoder.html">Nahoru</a></td><td width="40%" align="right"> <a accesskey="n" href="aspect.html">Dal&#353;í</a></td></tr><tr><td width="40%" align="left" valign="top">12.7. Enkódování z mno&#382;ství vstupních obrázkových soubor&#367; (JPEG, PNG, TGA, SGI) </td><td width="20%" align="center"><a accesskey="h" href="index.html">Dom&#367;</a></td><td width="40%" align="right" valign="top"> 12.9. Zachování pom&#283;ru stran</td></tr></table></div></body></html>

@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <sys/time.h>
-#include "../config.h"
+#include "config.h"
 
 const char *timer_name =
 #ifdef HAVE_NANOSLEEP
@@ -29,21 +29,19 @@ int usec_sleep(int usec_delay)
 }
 
 // Returns current time in microseconds
-unsigned int GetTimer(){
+unsigned int GetTimer(void){
   struct timeval tv;
-  struct timezone tz;
 //  float s;
-  gettimeofday(&tv,&tz);
+  gettimeofday(&tv,NULL);
 //  s=tv.tv_usec;s*=0.000001;s+=tv.tv_sec;
   return (tv.tv_sec*1000000+tv.tv_usec);
 }  
 
 // Returns current time in milliseconds
-unsigned int GetTimerMS(){
+unsigned int GetTimerMS(void){
   struct timeval tv;
-  struct timezone tz;
 //  float s;
-  gettimeofday(&tv,&tz);
+  gettimeofday(&tv,NULL);
 //  s=tv.tv_usec;s*=0.000001;s+=tv.tv_sec;
   return (tv.tv_sec*1000+tv.tv_usec/1000);
 }  
@@ -51,7 +49,7 @@ unsigned int GetTimerMS(){
 static unsigned int RelativeTime=0;
 
 // Returns time spent between now and last call in seconds
-float GetRelativeTime(){
+float GetRelativeTime(void){
 unsigned int t,r;
   t=GetTimer();
 //  t*=16;printf("time=%ud\n",t);
@@ -61,7 +59,7 @@ unsigned int t,r;
 }
 
 // Initialize timer, must be called at least once at start
-void InitTimer(){
+void InitTimer(void){
   GetRelativeTime();
 }
 

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- $Revision: 1.11 $ -->
+<!-- $Revision: 18600 $ -->
 <appendix id="bugreports">
 <title>How to report bugs</title>
 <para>
@@ -11,6 +11,20 @@ receive obscene amounts of email. So while your feedback is crucial in improving
 that you have to provide <emphasis role="bold">all</emphasis> of the information
 we request and follow the instructions in this document closely.
 </para>
+<sect1 id="bugreports_security">
+<title>Report security releated bugs</title>
+<para>
+In case you have found an exploitable bug and you would like to do the
+right thing and let us fix it before you disclose it, we would be happy
+to get your security advisory at
+<ulink url="mailto:&#115;&#101;&#99;&#117;&#114;&#105;&#116;&#121;&#64;&#109;&#112;&#108;&#97;&#121;&#101;&#114;&#104;&#113;&#46;&#104;&#117;">&#115;&#101;&#99;&#117;&#114;&#105;&#116;&#121;&#64;&#109;&#112;&#108;&#97;&#121;&#101;&#114;&#104;&#113;&#46;&#104;&#117;</ulink>.
+Please add [SECURITY] or [ADVISORY] in the subject.
+Be sure that your report contains complete and detailed analysis of the bug.
+Sending a fix is highly appreciated.
+Please don't delay your report to write proof-of-concept exploit, you can
+send that one with another mail.
+</para>
+</sect1>
 <sect1 id="bugreports_fix">
 <title>How to fix bugs</title>
 <para>
@@ -22,16 +36,90 @@ get your code included in <application>MPlayer</application>. The people on the
 mailing list will assist you if you have questions.
 </para>
 </sect1>
+<sect1 id="bugreports_regression_test">
+<title>How to do regression testing using Subversion</title>
+<para>
+A problem that can happen sometimes is 'it used to work before, now it
+doesn't anymore...'.
+Here is a step by step procedure to try to pinpoint when the problem
+occurred. This is <emphasis role="bold">not</emphasis> for casual users.
+</para>
+<para>
+First, you'd need to fetch MPlayer's source tree from Subversion.
+Instructions can be found at the bottom of
+<ulink url="http://www.mplayerhq.hu/dload.html">this page</ulink>.
+</para>
+<para>
+You will have now in the mplayer/ directory an image of the Subversion tree, on the
+client side.
+Now update this image to the date you want:
+<screen>
+cd mplayer/
+svn update -r {"2004-08-23"}
+</screen>
+The date format is YYYY-MM-DD HH:MM:SS.
+Using this date format ensure that you will be able to extract patches
+according to the date at which they were committed, as in the
+<ulink url="http://mplayerhq.hu/pipermail/mplayer-cvslog/">MPlayer-cvslog archive</ulink>.
+</para>
+<para>
+Now proceed as for a normal update:
+<screen>
+./configure
+make
+</screen>
+</para>
+<para>
+If any non-programmer reads this, the fastest method to get at the point
+where the problem occurred is to use a binary search &mdash; that is,
+search the date of the breakage by repeatedly dividing the search
+interval in half.
+For example, if the problem occurred in 2003, start at mid-year, then ask
+"Is the problem already here?".
+If yes, go back to the first of April; if not, go to the first of October,
+and so on.
+</para>
+<para>
+If you have lot of free hard disk space (a full compile currently takes
+100 MB, and around 300-350 MB if debugging symbols are enabled), copy the
+oldest known working version before updating it; this will save time if
+you need to go back.
+(It is usually necessary to run 'make distclean' before recompiling an
+earlier version, so if you do not make a backup copy of your original
+source tree, you will have to recompile everything in it when you come
+back to the present.)
+</para>
+<para>
+When you have found the day where the problem happened, continue the search
+using the mplayer-cvslog archive (sorted by date) and a more precise svn
+update including hour, minute and second:
+<screen>
+svn update -r {"2004-08-23 15:17:25"}
+</screen>
+This will allow you to easily find the exact patch that did it.
+</para>
+<para>
+If you find the patch that is the cause of the problem, you have almost won;
+report about it to the
+<ulink url="http://bugzilla.mplayerhq.hu/">MPlayer Bugzilla</ulink> or
+subscribe to 
+<ulink url="http://mplayerhq.hu/mailman/listinfo/mplayer-users">MPlayer-users</ulink>
+and post it there.
+There is a chance that the author will jump in to suggest a fix.
+You may also look hard at the patch until it is coerced to reveal where
+the bug is :-).
+</para>
+</sect1>
 <sect1 id="bugreports_report">
 <title>How to report bugs</title>
 <para>
-First of all please try the latest CVS version of <application>MPlayer</application>
+First of all please try the latest Subversion version of <application>MPlayer</application>
 as your bug might already be fixed there. Development moves extremely fast,
 most problems in official releases are reported within days or even hours, so
-please use <emphasis role="bold">only CVS</emphasis> to report bugs. This
-includes binary packages of <application>MPlayer</application>. CVS
+please use <emphasis role="bold">only Subversion</emphasis> to report bugs. This
+includes binary packages of <application>MPlayer</application>. Subversion
 instructions can be found at the bottom of
-<ulink url="http://www.mplayerhq.hu/homepage/dload.html">this page</ulink> or in
+<ulink url="http://www.mplayerhq.hu/dload.html">this page</ulink> or in
 the README. If this did not help please refer to the list of
 <link linkend="bugs">known bugs</link> and the rest of the documentation. If your
 problem is not known or not solvable by our instructions, then please report the bug.
@@ -99,7 +187,7 @@ receive your answer.
 <para>
 You may need to include log, configuration or sample files in your bug report.
 If some of them are quite big then it is better to upload them to our
-<ulink url="ftp://mplayerhq.hu/MPlayer/incoming/">FTP server</ulink> in a
+<ulink url="ftp://ftp.mplayerhq.hu/MPlayer/incoming/">FTP server</ulink> in a
 compressed format (gzip and bzip2 preferred) and include only the path and file
 name in your bug report. Our mailing lists have a message size limit of 80k, if
 you have something bigger you have to compress or upload it.
@@ -215,7 +303,7 @@ in your bug report.
 </para>
 </sect2>
 
-<sect2 id="bugreports_conpilation">
+<sect2 id="bugreports_compilation">
 <title>Compilation problems</title>
 <para>
 Please include these files:
@@ -244,7 +332,7 @@ diagnose a problem. You can direct the output into a file like this:
 
 <para>
 If your problem is specific to one or more files, then please upload the offender(s) to:
-<ulink url="ftp://mplayerhq.hu/MPlayer/incoming/"/>
+<ulink url="ftp://ftp.mplayerhq.hu/MPlayer/incoming/"/>
 </para>
 
 <para>

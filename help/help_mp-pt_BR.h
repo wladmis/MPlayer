@@ -67,7 +67,6 @@ static char help_text[]=
 #define MSGTR_NoHomeDir "Diretório HOME não encontrado.\n"
 #define MSGTR_GetpathProblem "Problema em get_path(\"config\")\n"
 #define MSGTR_CreatingCfgFile "Criando arquivo de configuração: %s\n"
-#define MSGTR_InvalidAOdriver "Nome do driver de saída de audio inválido: %s\nUse '-ao help' para listar os drivers disponíveis.\n"
 #define MSGTR_CopyCodecsConf "(Copie/link etc/codecs.conf da fonte do MPlayer para ~/.mplayer/codecs.conf)\n"
 #define MSGTR_BuiltinCodecsConf "Usando codecs.conf interno padrão\n"
 #define MSGTR_CantLoadFont "Impossível carregar fonte: %s\n"
@@ -151,7 +150,7 @@ static char help_text[]=
 
 // mencoder.c:
 
-#define MSGTR_UsingPass3ControllFile "Usando controle de arquivo pass3: %s\n"
+#define MSGTR_UsingPass3ControlFile "Usando controle de arquivo pass3: %s\n"
 #define MSGTR_MissingFilename "\nFaltando nome do arquivo!\n\n"
 #define MSGTR_CannotOpenFile_Device "Impossível abrir arquivo/dispositivo\n"
 #define MSGTR_CannotOpenDemuxer "Impossível abrir \"demuxer\"\n"
@@ -160,15 +159,12 @@ static char help_text[]=
 #define MSGTR_CannotOpenOutputFile "Impossível abrir arquivo de saída '%s'\n"
 #define MSGTR_EncoderOpenFailed "Falha ao abrir o codificador\n"
 #define MSGTR_ForcingOutputFourcc "Forçando saída fourcc para %x [%.4s]\n"
-#define MSGTR_WritingAVIHeader "Gravando cabeçalho do AVI...\n"
 #define MSGTR_DuplicateFrames "\n%d quadro(s) duplicado(s)!\n"
 #define MSGTR_SkipFrame "\npulando frame!!!    \n"
 #define MSGTR_ErrorWritingFile "%s: erro gravando arquivo.\n"
-#define MSGTR_WritingAVIIndex "\nGravando índice do AVI...\n"
-#define MSGTR_FixupAVIHeader "Corrigindo cabeçalho do AVI...\n"
 #define MSGTR_RecommendedVideoBitrate "Bitrate do vídeo recomendado para CD de %s: %d\n"
-#define MSGTR_VideoStreamResult "\nTrilha de vídeo: %8.3f kbit/s  (%d bps)  tamanho: %d bytes  %5.3f segundos  %d quadros\n"
-#define MSGTR_AudioStreamResult "\nTrilha de audio: %8.3f kbit/s  (%d bps)  tamanho: %d bytes  %5.3f segundos\n"
+#define MSGTR_VideoStreamResult "\nTrilha de vídeo: %8.3f kbit/s  (%d B/s)  tamanho: %"PRIu64" bytes  %5.3f segundos  %d quadros\n"
+#define MSGTR_AudioStreamResult "\nTrilha de audio: %8.3f kbit/s  (%d B/s)  tamanho: %"PRIu64" bytes  %5.3f segundos\n"
 
 // cfg-mencoder.h:
 
@@ -383,7 +379,7 @@ static char help_text[]=
 #define MSGTR_NEEDLAVCFAME "Desculpe, você não pode reproduzir arquivos não-MPEG com o seu dispositivo DXR3/H+ sem recodificar.\nPor favor habilite lavc ou fame na configuração do DXR3/H+."
 
 // --- skin loader error messages
-#define MSGTR_SKIN_ERRORMESSAGE "[skin] erro no arquivo de configuração do skin na linha: %s"
+#define MSGTR_SKIN_ERRORMESSAGE "[skin] erro no arquivo de configuração do skin na linha %d: %s"
 #define MSGTR_SKIN_WARNING1 "[skin] aviso no arquivo de configuração do skin na linha %d: widget encontrado mas antes de \"section\" não encontrado (%s)"
 #define MSGTR_SKIN_WARNING2 "[skin] aviso no arquivo de configuração do skin na linha %d: widget encontrado mas antes de \"subsection\" não encontrtado (%s)"
 #define MSGTR_SKIN_WARNING3 "[skin] aviso no arquivo de configuração do skin na linha %d: esta sub-seção não é suportada por este widget (%s)"
@@ -394,7 +390,7 @@ static char help_text[]=
 #define MSGTR_SKIN_BITMAP_PNGReadError "erro na leitura do PNG (%s)\n"
 #define MSGTR_SKIN_BITMAP_RLENotSupported "TGA empacotado RLE não suportado (%s)\n"
 #define MSGTR_SKIN_BITMAP_UnknownFileType "tipo de arquivo desconhecido (%s)\n"
-#define MSGTR_SKIN_BITMAP_ConvertError "erro na conversão 24 bit para 32 bit (%s)\n"
+#define MSGTR_SKIN_BITMAP_ConversionError "erro na conversão 24 bit para 32 bit (%s)\n"
 #define MSGTR_SKIN_BITMAP_UnknownMessage "mensagem desconhecida: %s\n"
 #define MSGTR_SKIN_FONT_NotEnoughtMemory "memória insuficiente\n"
 #define MSGTR_SKIN_FONT_TooManyFontsDeclared "muitas fontes declaradas\n"
@@ -437,9 +433,7 @@ static char help_text[]=
 #define MSGTR_MENU_Chapter "Capítulo %2d"
 #define MSGTR_MENU_AudioLanguages "Idiomas do audio"
 #define MSGTR_MENU_SubtitleLanguages "Idiomas da legenda"
-#define MSGTR_MENU_PlayList "Lista de reprodução"
 #define MSGTR_MENU_SkinBrowser "Skins"
-#define MSGTR_MENU_Preferences "Preferências"
 #define MSGTR_MENU_Exit "Sair..."
 #define MSGTR_MENU_Mute "Mudo"
 #define MSGTR_MENU_Original "Original"
@@ -476,8 +470,6 @@ static char help_text[]=
 #define MSGTR_PLAYLIST_DirectoryTree "Árvore de diretórios"
 
 // --- preferences
-#define MSGTR_PREFERENCES_Audio "Audio"
-#define MSGTR_PREFERENCES_Video "Vídeo"
 #define MSGTR_PREFERENCES_SubtitleOSD "Legenda & OSD"
 #define MSGTR_PREFERENCES_Codecs "Codecs & demuxer"
 #define MSGTR_PREFERENCES_Misc "Misc"
@@ -486,7 +478,7 @@ static char help_text[]=
 #define MSGTR_PREFERENCES_AvailableDrivers "Drivers disponíveis:"
 #define MSGTR_PREFERENCES_DoNotPlaySound "Não reproduzir som"
 #define MSGTR_PREFERENCES_NormalizeSound "Normalizar som"
-#define MSGTR_PREFERENCES_EnEqualizer "Habilitar equalizador"
+#define MSGTR_PREFERENCES_EnableEqualizer "Habilitar equalizador"
 #define MSGTR_PREFERENCES_ExtraStereo "Habilitar extra estéreo"
 #define MSGTR_PREFERENCES_Coefficient "Coeficiente:"
 #define MSGTR_PREFERENCES_AudioDelay "Atraso do audio"
@@ -522,7 +514,6 @@ static char help_text[]=
 #define MSGTR_PREFERENCES_FRAME_PostProcess "Pós-processamento"
 #define MSGTR_PREFERENCES_FRAME_CodecDemuxer "Codec & demuxer"
 #define MSGTR_PREFERENCES_FRAME_Cache "Cache"
-#define MSGTR_PREFERENCES_FRAME_Misc "Misc"
 #define MSGTR_PREFERENCES_Message "Por favor lembre que você precisa reiniciar a reprodução para algumas opções fazerem efeito!"
 #define MSGTR_PREFERENCES_DXR3_VENC "Codificador de video:"
 #define MSGTR_PREFERENCES_DXR3_LAVC "Usar LAVC (FFmpeg)"
@@ -569,11 +560,7 @@ static char help_text[]=
 #define MSGTR_PREFERENCES_DVDDevice "Dispositivo de DVD:"
 #define MSGTR_PREFERENCES_FPS "Quadros por segundo do filme:"
 #define MSGTR_PREFERENCES_ShowVideoWindow "Mostrar janela do vídeo quando inativo"
-
 #define MSGTR_ABOUT_UHU "Desenvolvimento do GUI patrocinado por UHU Linux\n"
-#define MSGTR_ABOUT_CoreTeam "   Núcleo do time do MPlayer:\n"
-#define MSGTR_ABOUT_AdditionalCoders "   Programadores adicionais:\n"
-#define MSGTR_ABOUT_MainTesters "   Testadores principais:\n"
 
 // --- messagebox
 #define MSGTR_MSGBOX_LABEL_FatalError "Erro fatal!"

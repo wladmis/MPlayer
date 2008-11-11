@@ -23,7 +23,7 @@
 #endif
 #endif
 
-#include "../libaf/af_format.h"
+#include "libaf/af_format.h"
 
 #include "audio_out.h"
 #include "audio_out_internal.h"
@@ -140,7 +140,7 @@ static int oss2format(int format)
     case AFMT_AC3: return AF_FORMAT_AC3;
 #endif
     }
-    printf("Unknown/not supported OSS format: %x\n", format);
+    mp_msg(MSGT_GLOBAL,MSGL_ERR,MSGTR_AO_OSS_UnknownUnsupportedFormat, format);
     return -1;
 }
 
@@ -160,8 +160,16 @@ static int control(int cmd,void *arg){
 	case AOCONTROL_GET_DEVICE:
 	    *(char**)arg=dsp;
 	    return CONTROL_OK;
+#ifdef SNDCTL_DSP_GETFMTS
 	case AOCONTROL_QUERY_FORMAT:
-	    return CONTROL_TRUE;
+	{
+	    int format;
+	    if (!ioctl(audio_fd, SNDCTL_DSP_GETFMTS, &format))
+		if (format & (int)arg)
+	    	    return CONTROL_TRUE;
+	    return CONTROL_FALSE;
+	}
+#endif
 	case AOCONTROL_GET_VOLUME:
 	case AOCONTROL_SET_VOLUME:
 	{
@@ -207,17 +215,32 @@ static int control(int cmd,void *arg){
 static int init(int rate,int channels,int format,int flags){
   char *mixer_channels [SOUND_MIXER_NRDEVICES] = SOUND_DEVICE_NAMES;
   int oss_format;
+  char *mdev = mixer_device, *mchan = mixer_channel;
 
   mp_msg(MSGT_AO,MSGL_V,"ao2: %d Hz  %d chans  %s\n",rate,channels,
     af_fmt2str_short(format));
 
-  if (ao_subdevice)
+  if (ao_subdevice) {
+    char *m,*c;
+    m = strchr(ao_subdevice,':');
+    if(m) {
+      c = strchr(m+1,':');
+      if(c) {
+        mchan = c+1;
+        c[0] = '\0';
+      }
+      mdev = m+1;
+      m[0] = '\0';
+    }
     dsp = ao_subdevice;
+  }
 
-  if(mixer_device)
-    oss_mixer_device=mixer_device;
-
-  if(mixer_channel){
+  if(mdev)
+    oss_mixer_device=mdev;
+  else
+    oss_mixer_device=PATH_DEV_MIXER;
+  
+  if(mchan){
     int fd, devs, i;
     
     if ((fd = open(oss_mixer_device, O_RDONLY)) == -1){
@@ -228,10 +251,9 @@ static int init(int rate,int channels,int format,int flags){
       close(fd);
       
       for (i=0; i<SOUND_MIXER_NRDEVICES; i++){
-        if(!strcasecmp(mixer_channels[i], mixer_channel)){
+        if(!strcasecmp(mixer_channels[i], mchan)){
           if(!(devs & (1 << i))){
-            mp_msg(MSGT_AO,MSGL_ERR,MSGTR_AO_OSS_ChanNotFound,
-              mixer_channel);
+            mp_msg(MSGT_AO,MSGL_ERR,MSGTR_AO_OSS_ChanNotFound,mchan);
             i = SOUND_MIXER_NRDEVICES+1;
             break;
           }
@@ -240,11 +262,11 @@ static int init(int rate,int channels,int format,int flags){
         }
       }
       if(i==SOUND_MIXER_NRDEVICES){
-        mp_msg(MSGT_AO,MSGL_ERR,MSGTR_AO_OSS_ChanNotFound,
-          mixer_channel);
+        mp_msg(MSGT_AO,MSGL_ERR,MSGTR_AO_OSS_ChanNotFound,mchan);
       }
     }
-  }
+  } else
+    oss_mixer_channel = SOUND_MIXER_PCM;
 
   mp_msg(MSGT_AO,MSGL_V,"audio_setup: using '%s' dsp device\n", dsp);
   mp_msg(MSGT_AO,MSGL_V,"audio_setup: using '%s' mixer device\n", oss_mixer_device);
@@ -297,7 +319,7 @@ ac3_retry:
   }
 #if 0
   if(oss_format!=format2oss(format))
-	mp_msg(MSGT_AO,MSGL_WARN,"WARNING! Your soundcard does NOT support %s sample format! Broken audio or bad playback speed are possible! Try with '-aop list=format'\n",audio_out_format_name(format));
+	mp_msg(MSGT_AO,MSGL_WARN,"WARNING! Your soundcard does NOT support %s sample format! Broken audio or bad playback speed are possible! Try with '-af format'\n",audio_out_format_name(format));
 #endif
 
   ao_data.format = oss2format(oss_format);
@@ -401,7 +423,7 @@ static void uninit(int immed){
 }
 
 // stop playing and empty buffers (for seeking/pause)
-static void reset(){
+static void reset(void){
   int oss_format;
     uninit(1);
     audio_fd=open(dsp, O_WRONLY);
@@ -428,20 +450,20 @@ static void reset(){
 }
 
 // stop playing, keep buffers (for pause)
-static void audio_pause()
+static void audio_pause(void)
 {
     uninit(1);
 }
 
 // resume playing, after audio_pause()
-static void audio_resume()
+static void audio_resume(void)
 {
     reset();
 }
 
 
 // return: how many bytes can be played without blocking
-static int get_space(){
+static int get_space(void){
   int playsize=ao_data.outburst;
 
 #ifdef SNDCTL_DSP_GETOSPACE
@@ -481,7 +503,7 @@ static int play(void* data,int len,int flags){
 static int audio_delay_method=2;
 
 // return: delay in seconds between first and last sample in buffer
-static float get_delay(){
+static float get_delay(void){
   /* Calculate how many bytes/second is sent out */
   if(audio_delay_method==2){
 #ifdef SNDCTL_DSP_GETODELAY

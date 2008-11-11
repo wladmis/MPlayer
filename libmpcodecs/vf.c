@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../config.h"
+#include "config.h"
 #ifdef HAVE_MALLOC_H
 #include <malloc.h>
 #endif
@@ -11,17 +11,17 @@
 #include <assert.h>
 #endif
 
-#include "../mp_msg.h"
-#include "../help_mp.h"
-#include "../m_option.h"
-#include "../m_struct.h"
+#include "mp_msg.h"
+#include "help_mp.h"
+#include "m_option.h"
+#include "m_struct.h"
 
 
 #include "img_format.h"
 #include "mp_image.h"
 #include "vf.h"
 
-#include "../libvo/fastmemcpy.h"
+#include "libvo/fastmemcpy.h"
 
 extern vf_info_t vf_info_vo;
 extern vf_info_t vf_info_rectangle;
@@ -30,7 +30,7 @@ extern vf_info_t vf_info_bmovl;
 #endif
 extern vf_info_t vf_info_crop;
 extern vf_info_t vf_info_expand;
-#ifdef FF_POSTPROCESS
+#if defined(USE_LIBPOSTPROC) || defined(USE_LIBPOSTPROC_SO)
 extern vf_info_t vf_info_pp;
 #endif
 extern vf_info_t vf_info_scale;
@@ -85,8 +85,12 @@ extern vf_info_t vf_info_filmdint;
 extern vf_info_t vf_info_framestep;
 extern vf_info_t vf_info_tile;
 extern vf_info_t vf_info_delogo;
+extern vf_info_t vf_info_remove_logo;
 extern vf_info_t vf_info_hue;
 extern vf_info_t vf_info_spp;
+extern vf_info_t vf_info_uspp;
+extern vf_info_t vf_info_fspp;
+extern vf_info_t vf_info_pp7;
 extern vf_info_t vf_info_yuvcsp;
 extern vf_info_t vf_info_kerndeint;
 extern vf_info_t vf_info_rgbtest;
@@ -95,6 +99,9 @@ extern vf_info_t vf_info_phase;
 extern vf_info_t vf_info_divtc;
 extern vf_info_t vf_info_harddup;
 extern vf_info_t vf_info_softskip;
+extern vf_info_t vf_info_screenshot;
+extern vf_info_t vf_info_mcdeint;
+extern vf_info_t vf_info_yadif;
 
 // list of available filters:
 static vf_info_t* filter_list[]={
@@ -104,7 +111,7 @@ static vf_info_t* filter_list[]={
 #endif
     &vf_info_crop,
     &vf_info_expand,
-#ifdef FF_POSTPROCESS
+#if defined(USE_LIBPOSTPROC) || defined(USE_LIBPOSTPROC_SO)
     &vf_info_pp,
 #endif
     &vf_info_scale,
@@ -165,20 +172,29 @@ static vf_info_t* filter_list[]={
     &vf_info_framestep,
     &vf_info_tile,
     &vf_info_delogo,
+    &vf_info_remove_logo,
     &vf_info_hue,
-#ifdef USE_LIBAVCODEC
+#ifdef USE_LIBAVCODEC_DSPUTIL
     &vf_info_spp,
+    &vf_info_uspp,
+    &vf_info_fspp,
+    &vf_info_qp,
+    &vf_info_mcdeint,
 #endif
     &vf_info_yuvcsp,
     &vf_info_kerndeint,
     &vf_info_rgbtest,
 #ifdef USE_LIBAVCODEC
-    &vf_info_qp,
+    &vf_info_pp7,
 #endif
     &vf_info_phase,
     &vf_info_divtc,
     &vf_info_harddup,
     &vf_info_softskip,
+#ifdef HAVE_PNG
+    &vf_info_screenshot,
+#endif
+    &vf_info_yadif,
     NULL
 };
 
@@ -306,7 +322,7 @@ mp_image_t* vf_get_image(vf_instance_t* vf, unsigned int outfmt, int mp_imgtype,
 		// need to re-allocate buffer memory:
 		free(mpi->planes[0]);
 		mpi->flags&=~MP_IMGFLAG_ALLOCATED;
-		printf("vf.c: have to REALLOCATE buffer memory :(\n");
+		mp_msg(MSGT_VFILTER,MSGL_V,"vf.c: have to REALLOCATE buffer memory :(\n");
 	    }
 //	} else {
 	} {
@@ -393,13 +409,14 @@ mp_image_t* vf_get_image(vf_instance_t* vf, unsigned int outfmt, int mp_imgtype,
 		  (mpi->flags&MP_IMGFLAG_YUV)?"YUV":((mpi->flags&MP_IMGFLAG_SWAPPED)?"BGR":"RGB"),
 		  (mpi->flags&MP_IMGFLAG_PLANAR)?"planar":"packed",
 	          mpi->bpp*mpi->width*mpi->height/8);
-	    mp_msg(MSGT_DECVIDEO,MSGL_DBG2,"(imgfmt: %x, planes: %x,%x,%x strides: %d,%d,%d, chroma: %dx%d, shift: h:%d,v:%d)\n",
+	    mp_msg(MSGT_DECVIDEO,MSGL_DBG2,"(imgfmt: %x, planes: %p,%p,%p strides: %d,%d,%d, chroma: %dx%d, shift: h:%d,v:%d)\n",
 		mpi->imgfmt, mpi->planes[0], mpi->planes[1], mpi->planes[2],
 		mpi->stride[0], mpi->stride[1], mpi->stride[2],
 		mpi->chroma_width, mpi->chroma_height, mpi->chroma_x_shift, mpi->chroma_y_shift);
 	    mpi->flags|=MP_IMGFLAG_TYPE_DISPLAYED;
     }
 
+  mpi->qscale = NULL;
   }
 //    printf("\rVF_MPI: %p %p %p %d %d %d    \n",
 //	mpi->planes[0],mpi->planes[1],mpi->planes[2],
@@ -557,6 +574,7 @@ int vf_config_wrapper(struct vf_instance_s* vf,
 		    int width, int height, int d_width, int d_height,
 		    unsigned int flags, unsigned int outfmt)
 {
+    int r;
     if ((vf->default_caps&VFCAP_CONSTANT) && vf->fmt.have_configured) {
         if ((vf->fmt.orig_width != width)
 	    || (vf->fmt.orig_height != height)
@@ -570,7 +588,9 @@ int vf_config_wrapper(struct vf_instance_s* vf,
     vf->fmt.orig_height = height;
     vf->fmt.orig_width = width;
     vf->fmt.orig_fmt = outfmt;
-    return vf->config(vf, width, height, d_width, d_height, flags, outfmt);
+    r = vf->config(vf, width, height, d_width, d_height, flags, outfmt);
+    if (!r) vf->fmt.have_configured = 0;
+    return r;
 }
 
 int vf_next_config(struct vf_instance_s* vf,
@@ -615,8 +635,8 @@ int vf_next_query_format(struct vf_instance_s* vf, unsigned int fmt){
     return flags;
 }
 
-int vf_next_put_image(struct vf_instance_s* vf,mp_image_t *mpi){
-    return vf->next->put_image(vf->next,mpi);
+int vf_next_put_image(struct vf_instance_s* vf,mp_image_t *mpi, double pts){
+    return vf->next->put_image(vf->next,mpi, pts);
 }
 
 void vf_next_draw_slice(struct vf_instance_s* vf,unsigned char** src, int * stride,int w, int h, int x, int y){
@@ -686,7 +706,7 @@ void vf_uninit_filter_chain(vf_instance_t* vf){
     }
 }
 
-void vf_list_plugins(){
+void vf_list_plugins(void){
     int i=0;
     while(filter_list[i]){
         mp_msg(MSGT_VFILTER,MSGL_INFO,"\t%-10s: %s\n",filter_list[i]->name,filter_list[i]->info);

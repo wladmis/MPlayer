@@ -2,10 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include "mp_image.h"
-#include "../mp_msg.h"
+#include "mp_msg.h"
 #include "vf.h"
 
-#include "../libvo/fastmemcpy.h"
+#include "libvo/fastmemcpy.h"
 
 struct vf_priv_s {
     int x, y, w, h;
@@ -64,7 +64,7 @@ control(struct vf_instance_s* vf, int request, void *data)
     return 0;
 }
 static int
-put_image(struct vf_instance_s* vf, mp_image_t* mpi){
+put_image(struct vf_instance_s* vf, mp_image_t* mpi, double pts){
     mp_image_t* dmpi;
     unsigned int bpp = mpi->bpp / 8;
     unsigned int x, y, w, h;
@@ -144,7 +144,7 @@ put_image(struct vf_instance_s* vf, mp_image_t* mpi){
 	    p += dmpi->stride[0];
 	}
     }
-    return vf_next_put_image(vf, dmpi);
+    return vf_next_put_image(vf, dmpi, pts);
 }
 
 static int

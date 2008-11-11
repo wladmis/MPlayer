@@ -13,7 +13,7 @@
 
     You should have received a copy of the GNU General Public License
     along with this program; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 */
 
 // #include <stdio.h>
@@ -28,10 +28,12 @@
 #include "demuxer.h"
 #include "stheader.h"
 
-#ifdef USE_LIBAVFORMAT
-
+#ifdef USE_LIBAVFORMAT_SO
+#include <ffmpeg/avformat.h>
+#else
 #include "avformat.h"
 #include "avi.h"
+#endif
 
 #define PROBE_BUF_SIZE 2048
 
@@ -44,8 +46,8 @@ typedef struct lavf_priv_t{
     int64_t last_pts;
 }lavf_priv_t;
 
-extern void print_wave_header(WAVEFORMATEX *h);
-extern void print_video_header(BITMAPINFOHEADER *h);
+extern void print_wave_header(WAVEFORMATEX *h, int verbose_level);
+extern void print_video_header(BITMAPINFOHEADER *h, int verbose_level);
 
 int64_t ff_gcd(int64_t a, int64_t b);
 
@@ -101,7 +103,7 @@ static URLProtocol mp_protocol = {
     mp_close,
 };
 
-int lavf_check_file(demuxer_t *demuxer){
+static int lavf_check_file(demuxer_t *demuxer){
     AVProbeData avpd;
     uint8_t buf[PROBE_BUF_SIZE];
     lavf_priv_t *priv;
@@ -112,7 +114,8 @@ int lavf_check_file(demuxer_t *demuxer){
 
     av_register_all();
 
-    stream_read(demuxer->stream, buf, PROBE_BUF_SIZE);
+    if(stream_read(demuxer->stream, buf, PROBE_BUF_SIZE)!=PROBE_BUF_SIZE)
+        return 0;
     avpd.filename= demuxer->stream->url;
     avpd.buf= buf;
     avpd.buf_size= PROBE_BUF_SIZE;
@@ -124,10 +127,10 @@ int lavf_check_file(demuxer_t *demuxer){
     }else
         mp_msg(MSGT_HEADER,MSGL_V,"LAVF_check: %s\n", priv->avif->long_name);
 
-    return 1;
+    return DEMUXER_TYPE_LAVF;
 }
     
-int demux_open_lavf(demuxer_t *demuxer){
+static demuxer_t* demux_open_lavf(demuxer_t *demuxer){
     AVFormatContext *avfc;
     AVFormatParameters ap;
     lavf_priv_t *priv= demuxer->priv;
@@ -151,14 +154,14 @@ int demux_open_lavf(demuxer_t *demuxer){
         
     if(av_open_input_stream(&avfc, &priv->pb, mp_filename, priv->avif, &ap)<0){
         mp_msg(MSGT_HEADER,MSGL_ERR,"LAVF_header: av_open_input_stream() failed\n");
-        return 0;
+        return NULL;
     }
 
     priv->avfc= avfc;
 
     if(av_find_stream_info(avfc) < 0){
         mp_msg(MSGT_HEADER,MSGL_ERR,"LAVF_header: av_find_stream_info() failed\n");
-        return 0;
+        return NULL;
     }
 
     if(avfc->title    [0]) demux_info_add(demuxer, "name"     , avfc->title    );
@@ -172,7 +175,11 @@ int demux_open_lavf(demuxer_t *demuxer){
 
     for(i=0; i<avfc->nb_streams; i++){
         AVStream *st= avfc->streams[i];
+#if LIBAVFORMAT_BUILD >= 4629
+        AVCodecContext *codec= st->codec;
+#else
         AVCodecContext *codec= &st->codec;
+#endif
         
         switch(codec->codec_type){
         case CODEC_TYPE_AUDIO:{
@@ -212,7 +219,25 @@ int demux_open_lavf(demuxer_t *demuxer){
             sh_audio->channels= codec->channels;
             sh_audio->samplerate= codec->sample_rate;
             sh_audio->i_bps= codec->bit_rate/8;
-            if(verbose>=1) print_wave_header(sh_audio->wf);
+            switch (codec->codec_id) {
+              case CODEC_ID_PCM_S8:
+              case CODEC_ID_PCM_U8:
+                sh_audio->samplesize = 1;
+                break;
+              case CODEC_ID_PCM_S16LE:
+              case CODEC_ID_PCM_S16BE:
+              case CODEC_ID_PCM_U16LE:
+              case CODEC_ID_PCM_U16BE:
+                sh_audio->samplesize = 2;
+                break;
+              case CODEC_ID_PCM_ALAW:
+                sh_audio->format = 0x6;
+                break;
+              case CODEC_ID_PCM_MULAW:
+                sh_audio->format = 0x7;
+                break;
+            }
+            if( mp_msg_test(MSGT_HEADER,MSGL_V) ) print_wave_header(sh_audio->wf, MSGL_V);
             if(demuxer->audio->id != i && demuxer->audio->id != -1)
                 st->discard= AVDISCARD_ALL;
             else{
@@ -236,10 +261,20 @@ int demux_open_lavf(demuxer_t *demuxer){
             sh_video->bih= bih;
             sh_video->disp_w= codec->width;
             sh_video->disp_h= codec->height;
+            if (st->time_base.den) { /* if container has time_base, use that */
+                sh_video->video.dwRate= st->time_base.den;
+                sh_video->video.dwScale= st->time_base.num;
+            } else {
+#if LIBAVFORMAT_BUILD >= 4624
+            sh_video->video.dwRate= codec->time_base.den;
+            sh_video->video.dwScale= codec->time_base.num;
+#else
             sh_video->video.dwRate= codec->frame_rate;
             sh_video->video.dwScale= codec->frame_rate_base;
-            sh_video->fps=(float)sh_video->video.dwRate/(float)sh_video->video.dwScale;
-            sh_video->frametime=(float)sh_video->video.dwScale/(float)sh_video->video.dwRate;
+#endif
+            }
+            sh_video->fps=av_q2d(st->r_frame_rate);
+            sh_video->frametime=1/av_q2d(st->r_frame_rate);
             sh_video->format = bih->biCompression;
             sh_video->aspect=   codec->width * codec->sample_aspect_ratio.num 
                               / (float)(codec->height * codec->sample_aspect_ratio.den);
@@ -251,7 +286,7 @@ int demux_open_lavf(demuxer_t *demuxer){
             sh_video->ds= demuxer->video;
             if(codec->extradata_size)
                 memcpy(sh_video->bih + 1, codec->extradata, codec->extradata_size);
-            if(verbose>=1) print_video_header(sh_video->bih);
+            if( mp_msg_test(MSGT_HEADER,MSGL_V) ) print_video_header(sh_video->bih, MSGL_V);
 /*    short 	biPlanes;
     int  	biXPelsPerMeter;
     int  	biYPelsPerMeter;
@@ -276,15 +311,15 @@ int demux_open_lavf(demuxer_t *demuxer){
     if(!priv->video_streams){
         if(!priv->audio_streams){
 	    mp_msg(MSGT_HEADER,MSGL_ERR,"LAVF: no audio or video headers found - broken file?\n");
-            return 0; 
+            return NULL; 
         }
         demuxer->video->id=-2; // audio-only
     } //else if (best_video > 0 && demuxer->video->id == -1) demuxer->video->id = best_video;
 
-    return 1;
+    return demuxer;
 }
 
-int demux_lavf_fill_buffer(demuxer_t *demux){
+static int demux_lavf_fill_buffer(demuxer_t *demux, demux_stream_t *dsds){
     lavf_priv_t *priv= demux->priv;
     AVPacket pkt;
     demux_packet_t *dp;
@@ -339,8 +374,13 @@ int demux_lavf_fill_buffer(demuxer_t *demux){
     }
 
     if(pkt.pts != AV_NOPTS_VALUE){
+#if LIBAVFORMAT_BUILD >= 4624
+        dp->pts=pkt.pts * av_q2d(priv->avfc->streams[id]->time_base);
+        priv->last_pts= dp->pts * AV_TIME_BASE;
+#else
         priv->last_pts= pkt.pts;
         dp->pts=pkt.pts / (float)AV_TIME_BASE;
+#endif
     }
     dp->pos=demux->filepos;
     dp->flags= !!(pkt.flags&PKT_FLAG_KEY);
@@ -349,9 +389,9 @@ int demux_lavf_fill_buffer(demuxer_t *demux){
     return 1;
 }
 
-void demux_seek_lavf(demuxer_t *demuxer, float rel_seek_secs, int flags){
+static void demux_seek_lavf(demuxer_t *demuxer, float rel_seek_secs, float audio_delay, int flags){
     lavf_priv_t *priv = demuxer->priv;
-    mp_msg(MSGT_DEMUX,MSGL_DBG2,"demux_seek_lavf(%p, %f, %d)\n", demuxer, rel_seek_secs, flags);
+    mp_msg(MSGT_DEMUX,MSGL_DBG2,"demux_seek_lavf(%p, %f, %f, %d)\n", demuxer, rel_seek_secs, audio_delay, flags);
     
 #if LIBAVFORMAT_BUILD < 4619
     av_seek_frame(priv->avfc, -1, priv->last_pts + rel_seek_secs*AV_TIME_BASE);
@@ -360,7 +400,7 @@ void demux_seek_lavf(demuxer_t *demuxer, float rel_seek_secs, int flags){
 #endif
 }
 
-int demux_lavf_control(demuxer_t *demuxer, int cmd, void *arg)
+static int demux_lavf_control(demuxer_t *demuxer, int cmd, void *arg)
 {
     lavf_priv_t *priv = demuxer->priv;
     
@@ -369,7 +409,7 @@ int demux_lavf_control(demuxer_t *demuxer, int cmd, void *arg)
 	    if (priv->avfc->duration == 0)
 	        return DEMUXER_CTRL_DONTKNOW;
 	    
-	    *((unsigned long *)arg) = priv->avfc->duration / AV_TIME_BASE;
+	    *((double *)arg) = (double)priv->avfc->duration / AV_TIME_BASE;
 	    return DEMUXER_CTRL_OK;
 
 	case DEMUXER_CTRL_GET_PERCENT_POS:
@@ -384,7 +424,7 @@ int demux_lavf_control(demuxer_t *demuxer, int cmd, void *arg)
     }
 }
 
-void demux_close_lavf(demuxer_t *demuxer)
+static void demux_close_lavf(demuxer_t *demuxer)
 {
     lavf_priv_t* priv = demuxer->priv;
     if (priv){
@@ -396,4 +436,20 @@ void demux_close_lavf(demuxer_t *demuxer)
     }
 }
 
-#endif // USE_LIBAVFORMAT
+
+demuxer_desc_t demuxer_desc_lavf = {
+  "libavformat demuxer",
+  "lavf",
+  "libavformat",
+  "Michael Niedermayer",
+  "supports many formats, requires libavformat",
+  DEMUXER_TYPE_LAVF,
+  0, // Check after other demuxer
+  lavf_check_file,
+  demux_lavf_fill_buffer,
+  demux_open_lavf,
+  demux_close_lavf,
+  demux_seek_lavf,
+  demux_lavf_control
+};
+

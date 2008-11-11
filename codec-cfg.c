@@ -4,7 +4,8 @@
  * (C) 2001
  *
  * to compile tester app: gcc -Iloader/ -DTESTING -o codec-cfg codec-cfg.c
- * to compile CODECS2HTML: gcc -Iloader/ -DCODECS2HTML -o codecs2html codecs-cfg.c
+ * to compile CODECS2HTML:
+ *   gcc -DCODECS2HTML -o codecs2html codec-cfg.c mp_msg.o
  *
  * TODO: implement informat in CODECS2HTML too
  */
@@ -25,13 +26,20 @@
 
 #include "config.h"
 #include "mp_msg.h"
+#ifdef CODECS2HTML
+#ifdef __GNUC__
+#define mp_msg(t, l, m, args...) fprintf(stderr, m, ##args)
+#else
+#define mp_msg(t, l, m, ...) fprintf(stderr, m, __VA_ARGS__)
+#endif
+#endif
 
 #include "help_mp.h"
 
 // for mmioFOURCC:
 #include "libmpdemux/aviheader.h"
 
-#include "libvo/img_format.h"
+#include "libmpcodecs/img_format.h"
 #include "codec-cfg.h"
 
 #ifndef CODECS2HTML
@@ -746,7 +754,7 @@ static void codecs_free(codecs_t* codecs,int count) {
 			free(codecs);
 }
 
-void codecs_uninit_free() {
+void codecs_uninit_free(void) {
 	if (video_codecs)
 	codecs_free(video_codecs,nr_vcodecs);
 	video_codecs=NULL;
@@ -756,19 +764,19 @@ void codecs_uninit_free() {
 }
 
 codecs_t *find_audio_codec(unsigned int fourcc, unsigned int *fourccmap,
-		codecs_t *start)
+		codecs_t *start, int force)
 {
-	return find_codec(fourcc, fourccmap, start, 1);
+	return find_codec(fourcc, fourccmap, start, 1, force);
 }
 
 codecs_t *find_video_codec(unsigned int fourcc, unsigned int *fourccmap,
-		codecs_t *start)
+		codecs_t *start, int force)
 {
-	return find_codec(fourcc, fourccmap, start, 0);
+	return find_codec(fourcc, fourccmap, start, 0, force);
 }
 
 codecs_t* find_codec(unsigned int fourcc,unsigned int *fourccmap,
-		codecs_t *start, int audioflag)
+		codecs_t *start, int audioflag, int force)
 {
 	int i, j;
 	codecs_t *c;
@@ -805,6 +813,7 @@ codecs_t* find_codec(unsigned int fourcc,unsigned int *fourccmap,
 					return c;
 				}
 			}
+			if (force) return c;
 		}
 	}
 	return NULL;
@@ -1066,7 +1075,7 @@ int main(int argc, char* argv[])
 	}
 
         f1=fopen("DOCS/tech/codecs-in.html","rb"); if(!f1) exit(1);
-        f2=fopen("DOCS/en/codecs-status.html","wb"); if(!f2) exit(1);
+        f2=fopen("DOCS/codecs-status.html","wb"); if(!f2) exit(1);
         
         while((c=fgetc(f1))>=0){
             if(c!='%'){
@@ -1077,7 +1086,7 @@ int main(int argc, char* argv[])
             if(d>='0' && d<='9'){
                 // begin section
                 section=d-'0';
-                printf("BEGIN %d\n",section);
+                //printf("BEGIN %d\n",section);
                 if(section>=5){
                     // audio
 		    cl = audio_codecs;

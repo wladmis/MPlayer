@@ -7,7 +7,7 @@
  *
  * Modified for use with MPlayer, changes contained in libdvdread_changes.diff.
  * detailed CVS changelog at http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
- * $Id: bswap.h,v 1.3 2005/03/11 02:40:28 diego Exp $
+ * $Id: bswap.h 15875 2005-06-30 22:48:26Z aurel $
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,6 +32,11 @@
 
 #else 
 
+/* For __FreeBSD_version */
+#if defined(HAVE_SYS_PARAM_H)
+#include <sys/param.h>
+#endif
+
 #if defined(__linux__)
 #include <byteswap.h>
 #define B2N_16(x) x = bswap_16(x)
@@ -49,6 +54,18 @@
 #define B2N_16(x) x = swap16(x)
 #define B2N_32(x) x = swap32(x)
 #define B2N_64(x) x = swap64(x)
+
+#elif defined(__FreeBSD__) && __FreeBSD_version >= 470000
+#include <sys/endian.h>
+#define B2N_16(x) x = be16toh(x)
+#define B2N_32(x) x = be32toh(x)
+#define B2N_64(x) x = be64toh(x)
+
+#elif defined(__DragonFly__)
+#include <sys/endian.h>
+#define B2N_16(x) x = be16toh(x)
+#define B2N_32(x) x = be32toh(x)
+#define B2N_64(x) x = be64toh(x)
 
 #elif defined(ARCH_X86)
 inline static unsigned short bswap_16(unsigned short x)
@@ -90,7 +107,7 @@ inline static unsigned long long int bswap_64(unsigned long long int x)
 
 /* This is a slow but portable implementation, it has multiple evaluation 
  * problems so beware.
- * FreeBSD and Solaris don't have <byteswap.h> or any other such 
+ * Old FreeBSD's and Solaris don't have <byteswap.h> or any other such 
  * functionality! 
  */
 

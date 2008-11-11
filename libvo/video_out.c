@@ -19,6 +19,10 @@
 
 //int vo_flags=0;
 
+int xinerama_screen = -1;
+int xinerama_x;
+int xinerama_y;
+
 // currect resolution/bpp on screen:  (should be autodetected by vo_init())
 int vo_depthonscreen=0;
 int vo_screenwidth=0;
@@ -45,6 +49,7 @@ int vo_adapter_num=0;
 int vo_refresh_rate=0;
 int vo_keepaspect=1;
 int vo_rootwin=0;
+int vo_border=1;
 int WinID = -1;
 
 int vo_pts=0; // for hw decoding
@@ -72,6 +77,7 @@ extern vo_functions_t video_out_fsdga;
 extern vo_functions_t video_out_sdl;
 extern vo_functions_t video_out_3dfx;
 extern vo_functions_t video_out_tdfxfb;
+extern vo_functions_t video_out_s3fb;
 extern vo_functions_t video_out_null;
 //extern vo_functions_t video_out_odivx;
 extern vo_functions_t video_out_zr;
@@ -121,6 +127,9 @@ extern vo_functions_t video_out_tdfx_vid;
 extern vo_functions_t video_out_tga;
 #endif
 #ifdef MACOSX
+#ifdef MACOSX_COREVIDEO
+extern vo_functions_t video_out_macosx;
+#endif
 extern vo_functions_t video_out_quartz;
 #endif
 #ifdef HAVE_PNM
@@ -139,6 +148,9 @@ vo_functions_t* video_out_drivers[] =
         &video_out_directx,
 #endif
 #ifdef MACOSX
+#ifdef MACOSX_COREVIDEO
+	&video_out_macosx,
+#endif
 	&video_out_quartz,
 #endif
 #ifdef HAVE_XMGA
@@ -150,14 +162,14 @@ vo_functions_t* video_out_drivers[] =
 #ifdef HAVE_SYNCFB
         &video_out_syncfb,
 #endif
-#ifdef HAVE_3DFX
-        &video_out_3dfx,
-#endif
 #ifdef HAVE_TDFXFB
         &video_out_tdfxfb,
 #endif
-#ifdef HAVE_XVMC
-        &video_out_xvmc,
+#ifdef HAVE_S3FB
+        &video_out_s3fb,
+#endif
+#ifdef HAVE_3DFX
+        &video_out_3dfx,
 #endif
 #ifdef HAVE_XV
         &video_out_xv,
@@ -167,9 +179,7 @@ vo_functions_t* video_out_drivers[] =
         &video_out_xover,
 #endif
 #ifdef HAVE_GL
-	#ifndef GL_WIN32
 	        &video_out_gl,
-	#endif
         &video_out_gl2,
 #endif
 #ifdef HAVE_DGA
@@ -228,6 +238,9 @@ vo_functions_t* video_out_drivers[] =
 #endif
         &video_out_null,
 	// should not be auto-selected
+#ifdef HAVE_XVMC
+        &video_out_xvmc,
+#endif
 	&video_out_mpegpes,
 	&video_out_yuv4mpeg,
 #ifdef HAVE_PNG
@@ -251,14 +264,15 @@ vo_functions_t* video_out_drivers[] =
         NULL
 };
 
-void list_video_out(){
+void list_video_out(void){
       int i=0;
       mp_msg(MSGT_CPLAYER, MSGL_INFO, MSGTR_AvailableVideoOutputDrivers);
+      mp_msg(MSGT_IDENTIFY, MSGL_INFO, "ID_VIDEO_OUTPUTS\n");
       while (video_out_drivers[i]) {
         const vo_info_t *info = video_out_drivers[i++]->info;
-      	printf("\t%s\t%s\n", info->short_name, info->name);
+      	mp_msg(MSGT_GLOBAL, MSGL_INFO,"\t%s\t%s\n", info->short_name, info->name);
       }
-      printf("\n");
+      mp_msg(MSGT_GLOBAL, MSGL_INFO,"\n");
 }
 
 vo_functions_t* init_best_video_out(char** vo_list){
@@ -343,7 +357,7 @@ range_t *str2range(char *s)
 		if (*s == ',')
 			goto out_err;
 		if (!(r = (range_t *) realloc(r, sizeof(*r) * (i + 2)))) {
-			printf("can't realloc 'r'\n");
+			mp_msg(MSGT_GLOBAL, MSGL_WARN,"can't realloc 'r'\n");
 			return NULL;
 		}
 		tmp_min = strtod(s, &endptr);

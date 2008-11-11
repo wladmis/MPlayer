@@ -7,24 +7,24 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "../app.h"
-#include "../skin/font.h"
-#include "../skin/skin.h"
-#include "../wm/ws.h"
+#include "app.h"
+#include "skin/font.h"
+#include "skin/skin.h"
+#include "wm/ws.h"
 
-#include "../../config.h"
-#include "../../help_mp.h"
-#include "../../libvo/x11_common.h"
-#include "../../libvo/fastmemcpy.h"
+#include "../config.h"
+#include "../help_mp.h"
+#include "../libvo/x11_common.h"
+#include "../libvo/fastmemcpy.h"
 
-#include "../../libmpdemux/stream.h"
-#include "../../mixer.h"
-#include "../../libvo/sub.h"
-#include "../../mplayer.h"
+#include "../libmpdemux/stream.h"
+#include "../mixer.h"
+#include "../libvo/sub.h"
+#include "../mplayer.h"
 
-#include "../../libmpdemux/demuxer.h"
-#include "../../libmpdemux/stheader.h"
-#include "../../codec-cfg.h"
+#include "../libmpdemux/demuxer.h"
+#include "../libmpdemux/stheader.h"
+#include "../codec-cfg.h"
 
 
 #include "play.h"
@@ -268,9 +268,9 @@ void Render( wsTWindow * window,wItem * Items,int nrItems,char * db,int size )
           PutImage( &item->Bitmap,
 	    item->x,item->y,
 	    item->phases,
-	    item->phases * ( item->value / 100.0f ) );
+	    item->phases * ( 1. - item->value / 100.0f ) );
           PutImage( &item->Mask,
-	    item->x,item->y + (int)( ( item->height - item->psy ) * item->value / 100.0f ),
+	    item->x,item->y + (int)( ( item->height - item->psy ) * ( 1. - item->value / 100.0f ) ),
 	    3,item->pressed );
           break;
      case itSLabel:

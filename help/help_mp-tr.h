@@ -54,11 +54,10 @@ static char help_text[]=
 #define MSGTR_Exit_quit "Çýkýþ"
 #define MSGTR_Exit_eof "Dosyanýn Sonu"
 #define MSGTR_Exit_error "Ölümcül Hata"
-#define MSGTR_IntBySignal "\nMPlayer %s modülündeki %d hatasý ile kapandý\n"
+#define MSGTR_IntBySignal "\nMPlayer %d hatasý ile %s modülünde kapandý\n"
 #define MSGTR_NoHomeDir "ANADÝZÝN bulunumadý\n"
 #define MSGTR_GetpathProblem "get_path(\"config\") problemi\n"
 #define MSGTR_CreatingCfgFile "Ayar dosyasý oluþturuluyor: %s\n"
-#define MSGTR_InvalidAOdriver "Yanlýþ Ses çýkýþ sürücüsü adý: %s\n'-ao help' Komutunu kullanarak kullanýlabilir ses çýkýþ sürücüleri görebilirsiniz.\n"
 #define MSGTR_CopyCodecsConf "(etc/codecs.conf'u (MPlayer kaynak aðacýndan) ~/.mplayer/codecs.conf a kopyalayýn/bað yapýn)\n"
 #define MSGTR_BuiltinCodecsConf "Gömülü codecs.conf dosyasý kullanýlýyor\n"
 #define MSGTR_CantLoadFont "Yazýtipi açýlamadý: %s\n"
@@ -118,7 +117,7 @@ static char help_text[]=
 
 // mencoder.c:
 
-#define MSGTR_UsingPass3ControllFile "pass3 kontrol dosyasý kullanýlýyor: %s\n"
+#define MSGTR_UsingPass3ControlFile "pass3 kontrol dosyasý kullanýlýyor: %s\n"
 #define MSGTR_MissingFilename "\nHatalý dosyaadý!\n\n"
 #define MSGTR_CannotOpenFile_Device "dosya/aygýt açýlamadý\n"
 #define MSGTR_CannotOpenDemuxer "Ayrýþtýrýcý açýlamadý\n"
@@ -127,15 +126,12 @@ static char help_text[]=
 #define MSGTR_CannotOpenOutputFile "Çýkýþ dosyasý açýlamadý '%s'\n"
 #define MSGTR_EncoderOpenFailed "Çevirici açýlamadý\n"
 #define MSGTR_ForcingOutputFourcc "Çýkýþ fourcc den zorlanýyor: %x [%.4s]'a\n"
-#define MSGTR_WritingAVIHeader "AVI Baþlýðý yazýlýyor...\n"
 #define MSGTR_DuplicateFrames "\nçift %d çerçevesi/leri!!!    \n"
 #define MSGTR_SkipFrame "\nÇerçeve atla!!!    \n"
 #define MSGTR_ErrorWritingFile "%s: dosya yazarken hata.\n"
-#define MSGTR_WritingAVIIndex "\nAVI içeriði yazýlýyor...\n"
-#define MSGTR_FixupAVIHeader "AVI Baþlýðý düzeltiliyor...\n"
 #define MSGTR_RecommendedVideoBitrate "%s CD si için tavsiye edilen video bitrate: %d\n"
-#define MSGTR_VideoStreamResult "\nVideo biçimi: %8.3f kbit/s  (%d bps)  boyut: %d byte  %5.3f saniye  %d çerçeve\n"
-#define MSGTR_AudioStreamResult "\nSes biçimi: %8.3f kbit/s  (%d bps)  boyut: %d byte    %5.3f saniye\n"
+#define MSGTR_VideoStreamResult "\nVideo biçimi: %8.3f kbit/s  (%d B/s)  boyut: %"PRIu64" byte  %5.3f saniye  %d çerçeve\n"
+#define MSGTR_AudioStreamResult "\nSes biçimi: %8.3f kbit/s  (%d B/s)  boyut: %"PRIu64" byte    %5.3f saniye\n"
 
 // open.c, stream.c:
 #define MSGTR_CdDevNotfound "CD-ROM Sürücüsü '%s' bulunamadý!\n"
@@ -308,7 +304,7 @@ static char help_text[]=
 #define MSGTR_SKIN_BITMAP_PNGReadError "PNG okuma hatasý (%s)\n"
 #define MSGTR_SKIN_BITMAP_RLENotSupported "RLE paket TGA desteklenmiyor (%s)\n"
 #define MSGTR_SKIN_BITMAP_UnknownFileType "bilinmeyen dosya tipi (%s)\n"
-#define MSGTR_SKIN_BITMAP_ConvertError "24 bit den 32 bit e çevirme hatasý (%s)\n"
+#define MSGTR_SKIN_BITMAP_ConversionError "24 bit den 32 bit e çevirme hatasý (%s)\n"
 #define MSGTR_SKIN_BITMAP_UnknownMessage "Bilinmeyen mesaj: %s\n"
 #define MSGTR_SKIN_FONT_NotEnoughtMemory "yetersiz hafýza\n"
 #define MSGTR_SKIN_FONT_TooManyFontsDeclared "Çok fazla yazýtipi tanýtýldý\n"
@@ -351,9 +347,9 @@ static char help_text[]=
 #define MSGTR_MENU_Chapter "Bölüm %2d"
 #define MSGTR_MENU_AudioLanguages "Ses Dilleri"
 #define MSGTR_MENU_SubtitleLanguages "Altyazý Dilleri"
+// TODO: Why is this different from MSGTR_PlayList?
 #define MSGTR_MENU_PlayList "Playlist"
 #define MSGTR_MENU_SkinBrowser "Skin seçici"
-#define MSGTR_MENU_Preferences "Seçenekler"
 #define MSGTR_MENU_Exit "Çýkýþ..."
 #define MSGTR_MENU_Mute "Sesi Kýs"
 #define MSGTR_MENU_Original "Orjinal"
@@ -384,8 +380,6 @@ static char help_text[]=
 #define MSGTR_PLAYLIST_DirectoryTree "Dizin Aðacý"
 
 // --- preferences
-#define MSGTR_PREFERENCES_Audio "Ses"
-#define MSGTR_PREFERENCES_Video "Video"
 #define MSGTR_PREFERENCES_SubtitleOSD "Altyazý & OSD"
 #define MSGTR_PREFERENCES_Misc "Çeþitli"
 
@@ -393,7 +387,7 @@ static char help_text[]=
 #define MSGTR_PREFERENCES_AvailableDrivers "Kullanýlabilir sürücüler:"
 #define MSGTR_PREFERENCES_DoNotPlaySound "Sesleri çalma"
 #define MSGTR_PREFERENCES_NormalizeSound "Sesi normalle"
-#define MSGTR_PREFERENCES_EnEqualizer "Equalizerý Aç"
+#define MSGTR_PREFERENCES_EnableEqualizer "Equalizerý Aç"
 #define MSGTR_PREFERENCES_ExtraStereo "Extra stereoyu aç"
 #define MSGTR_PREFERENCES_Coefficient "Katsayý:"
 #define MSGTR_PREFERENCES_AudioDelay "Ses Gecikmesi"
@@ -427,6 +421,7 @@ static char help_text[]=
 #define MSGTR_PREFERENCES_FRAME_PostProcess "Postprocessing"
 #define MSGTR_PREFERENCES_FRAME_CodecDemuxer "Codec & ayrýþtýrýcý"
 #define MSGTR_PREFERENCES_FRAME_Cache "Tampon"
+// TODO: Why is this different from MSGTR_PREFERENCES_Misc?
 #define MSGTR_PREFERENCES_FRAME_Misc "Diðer"
 #define MSGTR_PREFERENCES_Message "Yaptýðýnýz deðiþikliklerin çalýþabilmesi için lütfen MPlayerý yeniden baþlatýn!"
 #define MSGTR_PREFERENCES_DXR3_VENC "Video çeviricisi:"

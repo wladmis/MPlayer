@@ -33,6 +33,7 @@ typedef struct ogg_codec {
     int8_t *name;
     int (*header)(AVFormatContext *, int);
     int (*packet)(AVFormatContext *, int);
+    uint64_t (*gptopts)(AVFormatContext *, int, uint64_t);
 } ogg_codec_t;
 
 typedef struct ogg_stream {
@@ -49,6 +50,7 @@ typedef struct ogg_stream {
     int header;
     int nsegs, segp;
     uint8_t segments[255];
+    void *private;
 } ogg_stream_t;
 
 typedef struct ogg_state {
@@ -72,12 +74,11 @@ typedef struct ogg {
 #define OGG_FLAG_EOS  4
 
 extern ogg_codec_t vorbis_codec;
-#if 0
+extern ogg_codec_t theora_codec;
+extern ogg_codec_t flac_codec;
 extern ogg_codec_t ogm_video_codec;
 extern ogg_codec_t ogm_audio_codec;
 extern ogg_codec_t ogm_old_codec;
-extern ogg_codec_t flac_codec;
-#endif
 
 extern int vorbis_comment(AVFormatContext *ms, char *buf, int size);
 

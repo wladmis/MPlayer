@@ -57,6 +57,7 @@
 
 #define VOCTRL_ONTOP 25
 #define VOCTRL_ROOTWIN 26
+#define VOCTRL_BORDER 27
 
 // Vo can be used by xover
 #define VOCTRL_XOVERLAY_SUPPORT 22
@@ -105,7 +106,7 @@ typedef struct vo_functions_s
 	 *   arg - currently it's vo_subdevice
 	 *   returns: zero on successful initialization, non-zero on error.
 	 */
-	uint32_t (*preinit)(const char *arg);
+	int (*preinit)(const char *arg);
         /*
          * Initialize (means CONFIGURE) the display driver.
 	 * params:
@@ -116,21 +117,21 @@ typedef struct vo_functions_s
 	 *   format: fourcc of pixel format
          * returns : zero on successful initialization, non-zero on error.
          */
-        uint32_t (*config)(uint32_t width, uint32_t height, uint32_t d_width,
+        int (*config)(uint32_t width, uint32_t height, uint32_t d_width,
 			 uint32_t d_height, uint32_t fullscreen, char *title,
 			 uint32_t format);
 
 	/*
 	 * Control interface
 	 */
-	uint32_t (*control)(uint32_t request, void *data, ...);
+	int (*control)(uint32_t request, void *data, ...);
 
         /*
          * Display a new RGB/BGR frame of the video to the screen.
          * params:
 	 *   src[0] - pointer to the image
          */
-        uint32_t (*draw_frame)(uint8_t *src[]);
+        int (*draw_frame)(uint8_t *src[]);
 
         /*
          * Draw a planar YUV slice to the buffer:
@@ -140,7 +141,7 @@ typedef struct vo_functions_s
 	 *   w,h = width*height of area to be copied (in Y pixels)
          *   x,y = position at the destination image (in Y pixels)
          */
-        uint32_t (*draw_slice)(uint8_t *src[], int stride[], int w,int h, int x,int y);
+        int (*draw_slice)(uint8_t *src[], int stride[], int w,int h, int x,int y);
 
    	/*
          * Draws OSD to the screen buffer
@@ -169,7 +170,7 @@ char *vo_format_name(int format);
 int vo_init(void);
 
 vo_functions_t* init_best_video_out(char** vo_list);
-void list_video_out();
+void list_video_out(void);
 
 // NULL terminated array of all drivers
 extern vo_functions_t* video_out_drivers[];
@@ -177,6 +178,10 @@ extern vo_functions_t* video_out_drivers[];
 extern int vo_flags;
 
 extern int vo_config_count;
+
+extern int xinerama_screen;
+extern int xinerama_x;
+extern int xinerama_y;
 
 // correct resolution/bpp on screen:  (should be autodetected by vo_init())
 extern int vo_depthonscreen;
@@ -201,6 +206,8 @@ extern int vo_adapter_num;
 extern int vo_refresh_rate;
 extern int vo_keepaspect;
 extern int vo_rootwin;
+extern int vo_ontop;
+extern int vo_border;
 
 extern int vo_gamma_brightness;
 extern int vo_gamma_saturation;
@@ -210,7 +217,6 @@ extern int vo_gamma_red_intensity;
 extern int vo_gamma_green_intensity;
 extern int vo_gamma_blue_intensity;
 
-extern int vo_mouse_timer_const;
 extern int vo_nomouse_input;
 
 extern int vo_pts;
@@ -219,6 +225,8 @@ extern float vo_fps;
 extern char *vo_subdevice;
 
 extern int vo_colorkey;
+
+extern int WinID;
 
 #if defined(HAVE_FBDEV)||defined(HAVE_VESA) 
 

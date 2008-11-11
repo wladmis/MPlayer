@@ -14,23 +14,23 @@
 #include <string.h>
 #include <inttypes.h>
 
-#include "../config.h"
-#include "../mp_msg.h"
+#include "config.h"
+#include "mp_msg.h"
 
 #include "img_format.h"
 #include "mp_image.h"
 #include "vf.h"
 
 #ifdef USE_FASTMEMCPY
-#include "../libvo/fastmemcpy.h"
+#include "libvo/fastmemcpy.h"
 #endif
 
 /* We need this #define because we need ../libavcodec/common.h to #define 
  * be2me_32, otherwise the linker will complain that it doesn't exist */
 #define HAVE_AV_CONFIG_H
-#include "../libavcodec/avcodec.h"
-#include "../libavcodec/dsputil.h"
-#include "../libavcodec/mpegvideo.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/dsputil.h"
+#include "libavcodec/mpegvideo.h"
 
 #undef malloc
 #undef free
@@ -375,7 +375,7 @@ static jpeg_enc_t *jpeg_enc_init(int w, int h, int y_psize, int y_rsize,
 
 	j->s->intra_matrix[0] = ff_mpeg1_default_intra_matrix[0];
 	for (i = 1; i < 64; i++) 
-		j->s->intra_matrix[i] = CLAMP_TO_8BIT(
+		j->s->intra_matrix[i] = clip_uint8(
 			(ff_mpeg1_default_intra_matrix[i]*j->s->qscale) >> 3);
 	convert_matrix(j->s, j->s->q_intra_matrix, j->s->q_intra_matrix16, 
 			j->s->intra_matrix, j->s->intra_quant_bias, 8, 8);
@@ -663,7 +663,7 @@ static int config(struct vf_instance_s* vf, int width, int height, int d_width,
 		(priv->fields == 2) ? IMGFMT_ZRMJPEGIT : IMGFMT_ZRMJPEGNI); 
 }
 
-static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
+static int put_image(struct vf_instance_s* vf, mp_image_t *mpi, double pts){
 	struct vf_priv_s *priv = vf->priv;
 	int size = 0;
 	int i;
@@ -679,7 +679,7 @@ static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
 			MP_IMGTYPE_EXPORT, 0, mpi->w, mpi->h);
 	dmpi->planes[0] = (uint8_t*)priv->buf;
 	dmpi->planes[1] = (uint8_t*)size;
-	return vf_next_put_image(vf,dmpi); 
+	return vf_next_put_image(vf,dmpi, pts); 
 }
 
 static int query_format(struct vf_instance_s* vf, unsigned int fmt){

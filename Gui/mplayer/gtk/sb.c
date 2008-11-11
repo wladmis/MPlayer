@@ -9,20 +9,23 @@
 #include "sb.h"
 #include "common.h"
 
-#include "../../app.h"
-#include "../../../config.h"
-#include "../../../help_mp.h"
+#include "../app.h"
+#include "../../config.h"
+#include "../../help_mp.h"
 
 #include "../widgets.h"
-#include "../app.h"
+#include "app.h"
 
 GtkWidget * SkinList = NULL;
 char      * sbSelectedSkin=NULL;
+/* FIXME: Eventually remove the obsolete directory names. */
 char      * sbMPlayerDirInHome=NULL;
+char      * sbMPlayerDirInHome_obsolete=NULL;
 char      * sbMPlayerPrefixDir=NULL;
+char      * sbMPlayerPrefixDir_obsolete=NULL;
 
-char * gtkOldSkin;
-static char * prev;
+char * gtkOldSkin=NULL;
+static char * prev=NULL;
 
 GtkWidget * SkinBrowser = NULL;
 
@@ -74,9 +77,11 @@ int gtkFillSkinList( gchar * mdir )
 
 static void prButton( GtkObject * object,gpointer user_data )
 {
- switch ( (int)user_data )
-  {
-   case 0: // cancel
+ if ( sbSelectedSkin )
+ {
+  switch ( (int)user_data )
+   {
+    case 0: // cancel
 	if ( strcmp( sbSelectedSkin,gtkOldSkin ) ) ChangeSkin( gtkOldSkin );
 	break;
    case 1: // ok
@@ -85,6 +90,7 @@ static void prButton( GtkObject * object,gpointer user_data )
 	skinName=strdup( sbSelectedSkin );
 	break;   
   }
+ }
  HideSkinBrowser();
 }
 
@@ -173,8 +179,12 @@ GtkWidget * create_SkinBrowser( void )
  gtk_signal_connect( GTK_OBJECT( Ok ),"clicked",GTK_SIGNAL_FUNC( prButton ),(void *)1 );
  gtk_signal_connect( GTK_OBJECT( Cancel ),"clicked",GTK_SIGNAL_FUNC( prButton ),(void *)0 );
 
+ if ( ( sbMPlayerDirInHome_obsolete=(char *)calloc( 1,strlen( skinDirInHome_obsolete ) + 4 ) ) != NULL )
+  { strcpy( sbMPlayerDirInHome_obsolete,skinDirInHome_obsolete ); strcat( sbMPlayerDirInHome_obsolete,"/*" ); }
  if ( ( sbMPlayerDirInHome=(char *)calloc( 1,strlen( skinDirInHome ) + 4 ) ) != NULL )
   { strcpy( sbMPlayerDirInHome,skinDirInHome ); strcat( sbMPlayerDirInHome,"/*" ); }
+ if ( ( sbMPlayerPrefixDir_obsolete=(char *)calloc( 1,strlen( skinMPlayerDir ) + 4 ) ) != NULL )
+  { strcpy( sbMPlayerPrefixDir_obsolete,skinMPlayerDir ); strcat( sbMPlayerPrefixDir_obsolete,"/*" ); }
  if ( ( sbMPlayerPrefixDir=(char *)calloc( 1,strlen( skinMPlayerDir ) + 4 ) ) != NULL )
   { strcpy( sbMPlayerPrefixDir,skinMPlayerDir ); strcat( sbMPlayerPrefixDir,"/*" ); }
 

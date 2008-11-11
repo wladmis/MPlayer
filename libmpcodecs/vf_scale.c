@@ -3,16 +3,16 @@
 #include <string.h>
 #include <inttypes.h>
 
-#include "../config.h"
-#include "../mp_msg.h"
-#include "../cpudetect.h"
+#include "config.h"
+#include "mp_msg.h"
+#include "cpudetect.h"
 
 #include "img_format.h"
 #include "mp_image.h"
 #include "vf.h"
 
-#include "../libvo/fastmemcpy.h"
-#include "../postproc/swscale.h"
+#include "libvo/fastmemcpy.h"
+#include "postproc/swscale.h"
 #include "vf_scale.h"
 
 #include "m_option.h"
@@ -27,6 +27,7 @@ static struct vf_priv_s {
     struct SwsContext *ctx2; //for interlaced slices only
     unsigned char* palette;
     int interlaced;
+    int noup;
     int query_format_cache[64];
 } vf_priv_dflt = {
   -1,-1,
@@ -144,12 +145,19 @@ static int config(struct vf_instance_s* vf,
 	}
     }
 
-    if (vf->priv->w < 0 && (-vf->priv->w & 8)) {
-      vf->priv->w = -(-vf->priv->w & ~8);
+    if(vf->priv->noup){
+        if((vf->priv->w > width) + (vf->priv->h > height) >= vf->priv->noup){
+            vf->priv->w= width;
+            vf->priv->h= height;
+        }
+    }
+
+    if (vf->priv->w <= -8) {
+      vf->priv->w += 8;
       round_w = 1;
     }
-    if (vf->priv->h < 0 && (-vf->priv->h & 8)) {
-      vf->priv->h = -(-vf->priv->h & ~8);
+    if (vf->priv->h <= -8) {
+      vf->priv->h += 8;
       round_h = 1;
     }
 
@@ -314,7 +322,7 @@ static void draw_slice(struct vf_instance_s* vf,
     scale(vf->priv->ctx, vf->priv->ctx2, src, stride, y, h, dmpi->planes, dmpi->stride, vf->priv->interlaced);
 }
 
-static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
+static int put_image(struct vf_instance_s* vf, mp_image_t *mpi, double pts){
     mp_image_t *dmpi=mpi->priv;
 
 //    printf("vf_scale::put_image(): processing whole frame! dmpi=%p flag=%d\n",
@@ -338,7 +346,7 @@ static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
 
     if(vf->priv->palette) dmpi->planes[1]=vf->priv->palette; // export palette!
     
-    return vf_next_put_image(vf,dmpi);
+    return vf_next_put_image(vf,dmpi, pts);
 }
 
 static int control(struct vf_instance_s* vf, int request, void* data){
@@ -429,7 +437,7 @@ static int query_format(struct vf_instance_s* vf, unsigned int fmt){
 	int flags;
 	if(!best) return 0;	 // no matching out-fmt
 	flags=vf_next_query_format(vf,best);
-	if(!(flags&3)) return 0; // huh?
+	if(!(flags&(VFCAP_CSP_SUPPORTED|VFCAP_CSP_SUPPORTED_BY_HW))) return 0; // huh?
 	if(fmt!=best) flags&=~VFCAP_CSP_SUPPORTED_BY_HW;
 	// do not allow scaling, if we are before the PP fliter!
 	if(!(flags&VFCAP_POSTPROC)) flags|=VFCAP_SWSCALE;
@@ -492,7 +500,7 @@ int sws_chr_hshift= 0;
 float sws_chr_sharpen= 0.0;
 float sws_lum_sharpen= 0.0;
 
-int get_sws_cpuflags(){
+int get_sws_cpuflags(void){
     return 
           (gCpuCaps.hasMMX   ? SWS_CPU_CAPS_MMX   : 0)
 	| (gCpuCaps.hasMMX2  ? SWS_CPU_CAPS_MMX2  : 0)
@@ -514,7 +522,7 @@ void sws_getFlagsAndFilterFromCmdLine(int *flags, SwsFilter **srcFilterParam, Sw
 		firstTime=0;
 		*flags= SWS_PRINT_INFO;
 	}
-	else if(verbose>1) *flags= SWS_PRINT_INFO;
+	else if( mp_msg_test(MSGT_VFILTER,MSGL_DBG2) ) *flags= SWS_PRINT_INFO;
 
 	if(src_filter) sws_freeFilter(src_filter);
 
@@ -603,6 +611,7 @@ static m_option_t vf_opts_fields[] = {
   // Note that here the 2 field is NULL (ie 0)
   // As we want this option to act on the option struct itself
   {"presize", 0, CONF_TYPE_OBJ_PRESETS, 0, 0, 0, &size_preset},
+  {"noup", ST_OFF(noup), CONF_TYPE_INT, M_OPT_RANGE, 0, 1, NULL},
   { NULL, NULL, 0, 0, 0, 0,  NULL }
 };
 

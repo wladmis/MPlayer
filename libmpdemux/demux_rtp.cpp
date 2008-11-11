@@ -1,5 +1,5 @@
 ////////// Routines (with C-linkage) that interface between "MPlayer"
-////////// and the "LIVE.COM Streaming Media" libraries:
+////////// and the "LIVE555 Streaming Media" libraries:
 
 extern "C" {
 // on MinGW, we must include windows.h before the things it conflicts
@@ -15,38 +15,6 @@ extern "C" {
 #include "liveMedia.hh"
 #include "GroupsockHelper.hh"
 #include <unistd.h>
-
-extern "C" stream_t* stream_open_sdp(int fd, off_t fileSize,
-				     int* file_format) {
-  *file_format = DEMUXER_TYPE_RTP;
-  stream_t* newStream = NULL;
-  do {
-    char* sdpDescription = (char*)malloc(fileSize+1);
-    if (sdpDescription == NULL) break;
-
-    ssize_t numBytesRead = read(fd, sdpDescription, fileSize);
-    if (numBytesRead != fileSize) break;
-    sdpDescription[fileSize] = '\0'; // to be safe
-
-    newStream = (stream_t*)calloc(sizeof (stream_t), 1);
-    if (newStream == NULL) break;
-
-    // Store the SDP description in the 'priv' field, for later use:
-    newStream->priv = sdpDescription; 
-  } while (0);
-  return newStream;
-}
-
-extern "C" int _rtsp_streaming_seek(int /*fd*/, off_t /*pos*/,
-				    streaming_ctrl_t* /*streaming_ctrl*/) {
-  return -1; // For now, we don't handle RTSP stream seeking
-}
-
-extern "C" int rtsp_streaming_start(stream_t* stream) {
-  stream->streaming_ctrl->streaming_seek = _rtsp_streaming_seek;
-
-  return 0;
-}
 
 // A data structure representing input data for each stream:
 class ReadBufferQueue {
@@ -122,6 +90,7 @@ static char* openURL_sip(SIPClient* client, char const* url) {
 }
 
 int rtspStreamOverTCP = 0; 
+int rtsp_port = 0; 
 
 extern "C" int audio_id, video_id, dvdsub_id;
 extern "C" demuxer_t* demux_open_rtp(demuxer_t* demuxer) {
@@ -206,10 +175,13 @@ extern "C" demuxer_t* demux_open_rtp(demuxer_t* demuxer) {
 	continue;
       }
 
+      if (rtsp_port)
+          subsession->setClientPortNum (rtsp_port);
+      
       if (!subsession->initiate()) {
 	fprintf(stderr, "Failed to initiate \"%s/%s\" RTP subsession: %s\n", subsession->mediumName(), subsession->codecName(), env->getResultMsg());
       } else {
-	fprintf(stderr, "Initiated \"%s/%s\" RTP subsession\n", subsession->mediumName(), subsession->codecName());
+	fprintf(stderr, "Initiated \"%s/%s\" RTP subsession on port %d\n", subsession->mediumName(), subsession->codecName(), subsession->clientPortNum());
 
 	// Set the OS's socket receive buffer sufficiently large to avoid
 	// incoming packets getting dropped between successive reads from this
@@ -609,3 +581,20 @@ demux_packet_t* ReadBufferQueue::getPendingBuffer() {
 
   return dp;
 }
+
+
+demuxer_desc_t demuxer_desc_rtp = {
+  "LIVE555 RTP demuxer",
+  "rtp",
+  "",
+  "Ross Finlayson",
+  "requires LIVE555 Streaming Media library",
+  DEMUXER_TYPE_RTP,
+  0, // no autodetect
+  NULL,
+  demux_rtp_fill_buffer,
+  demux_open_rtp,
+  demux_close_rtp,
+  NULL,
+  NULL
+};

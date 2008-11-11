@@ -7,24 +7,24 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "../app.h"
-#include "../skin/font.h"
-#include "../skin/skin.h"
-#include "../wm/ws.h"
+#include "app.h"
+#include "skin/font.h"
+#include "skin/skin.h"
+#include "wm/ws.h"
 
-#include "../../config.h"
-#include "../../help_mp.h"
-#include "../../libvo/x11_common.h"
-#include "../../libvo/fastmemcpy.h"
+#include "../config.h"
+#include "../help_mp.h"
+#include "../libvo/x11_common.h"
+#include "../libvo/fastmemcpy.h"
 
-#include "../../libmpdemux/stream.h"
-#include "../../mixer.h"
-#include "../../libvo/sub.h"
-#include "../../mplayer.h"
+#include "../libmpdemux/stream.h"
+#include "../mixer.h"
+#include "../libvo/sub.h"
+#include "../mplayer.h"
 
-#include "../../libmpdemux/demuxer.h"
-#include "../../libmpdemux/stheader.h"
-#include "../../codec-cfg.h"
+#include "../libmpdemux/demuxer.h"
+#include "../libmpdemux/stheader.h"
+#include "../codec-cfg.h"
 
 #include "play.h"
 #include "widgets.h"
@@ -121,7 +121,7 @@ void mplPBMouseHandle( int Button,int X,int Y,int RX,int RY )
    case wsRMMouseButton:
         mplHideMenu( RX,RY,0 );
         break;
-   case wsPRMouseButton:
+   case wsRRMouseButton:
         gtkShow( evShowPopUpMenu,NULL );
 	break;
 // ---
@@ -154,9 +154,13 @@ void mplPBMouseHandle( int Button,int X,int Y,int RX,int RY )
 	switch( itemtype )
 	 {
 	  case itPotmeter:
-	  case itVPotmeter:
 	  case itHPotmeter:
 	       btnModify( item->msg,(float)( X - item->x ) / item->width * 100.0f );
+	       mplEventHandling( item->msg,item->value );
+	       value=item->value;
+	       break;
+	  case itVPotmeter:
+	       btnModify( item->msg, ( 1. - (float)( Y - item->y ) / item->height) * 100.0f );
 	       mplEventHandling( item->msg,item->value );
 	       value=item->value;
 	       break;
@@ -187,6 +191,9 @@ rollerhandled:
 	       break;
 	  case itPotmeter:
 	       item->value=(float)( X - item->x ) / item->width * 100.0f;
+	       goto potihandled;
+	  case itVPotmeter:
+	       item->value=(1. - (float)( Y - item->y ) / item->height) * 100.0f;
 	       goto potihandled;
 	  case itHPotmeter:
 	       item->value=(float)( X - item->x ) / item->width * 100.0f;

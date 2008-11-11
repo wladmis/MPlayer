@@ -1,9 +1,9 @@
 /* Stuff for correct aspect scaling. */
 #include "aspect.h"
 #include "geometry.h"
-#ifndef ASPECT_TEST
+//#ifndef ASPECT_TEST
 #include "mp_msg.h"
-#endif
+//#endif
 
 //#define ASPECT_DEBUG
 
@@ -14,10 +14,12 @@
 int vo_panscan_x = 0;
 int vo_panscan_y = 0;
 float vo_panscan_amount = 0;
+float vo_panscanrange = 1.0;
 
 #include "video_out.h"
 
 float monitor_aspect=4.0/3.0;
+float monitor_pixel_aspect=0;
 extern float movie_aspect;
 
 static struct {
@@ -52,6 +54,8 @@ void aspect_save_screenres(int scrw, int scrh){
 #endif
   aspdat.scrw = scrw;
   aspdat.scrh = scrh;
+  if (monitor_pixel_aspect)
+    monitor_aspect = monitor_pixel_aspect * scrw / scrh;
 }
 
 /* aspect is called with the source resolution and the
@@ -101,7 +105,7 @@ void aspect(int *srcw, int *srch, int zoom){
 #ifndef ASPECT_TEST
       mp_msg(MSGT_VO,MSGL_WARN,"aspect: Warning: no suitable new res found!\n");
 #else
-      printf("error: no new size found that fits into res!\n");
+      mp_msg(MSGT_VO,MSGL_WARN,"error: no new size found that fits into res!\n");
 #endif
     }
   }
@@ -123,8 +127,12 @@ void panscan_calc( void )
  int fwidth,fheight;
  int vo_panscan_area;
 
+ if (vo_panscanrange > 0) {
  aspect(&fwidth,&fheight,A_ZOOM);
  vo_panscan_area = (aspdat.scrh-fheight);
+   vo_panscan_area *= vo_panscanrange;
+ } else
+   vo_panscan_area = -vo_panscanrange * aspdat.scrh;
 
  vo_panscan_amount = vo_fs ? vo_panscan : 0;
  vo_panscan_x = vo_panscan_area * vo_panscan_amount * aspdat.asp;

@@ -29,6 +29,8 @@ extern af_info_t af_info_sweep;
 extern af_info_t af_info_hrtf;
 extern af_info_t af_info_ladspa;
 extern af_info_t af_info_center;
+extern af_info_t af_info_sinesuppress;
+extern af_info_t af_info_karaoke;
 
 static af_info_t* filter_list[]={ 
    &af_info_dummy,
@@ -57,6 +59,8 @@ static af_info_t* filter_list[]={
    &af_info_ladspa,
 #endif
    &af_info_center,
+   &af_info_sinesuppress,
+   &af_info_karaoke,
    NULL 
 };
 
@@ -104,7 +108,7 @@ af_instance_t* af_create(af_stream_t* s, char* name)
   af_instance_t* new=malloc(sizeof(af_instance_t));
   if(!new){
     af_msg(AF_MSG_ERROR,"[libaf] Could not allocate memory\n");
-    return NULL;
+    goto err_out;
   }  
   memset(new,0,sizeof(af_instance_t));
 
@@ -113,7 +117,7 @@ af_instance_t* af_create(af_stream_t* s, char* name)
 
   // Find filter from name
   if(NULL == (new->info=af_find(name)))
-    return NULL;
+    goto err_out;
 
   /* Make sure that the filter is not already in the list if it is
      non-reentrant */
@@ -121,8 +125,7 @@ af_instance_t* af_create(af_stream_t* s, char* name)
     if(af_get(s,name)){
       af_msg(AF_MSG_ERROR,"[libaf] There can only be one instance of" 
 	     " the filter '%s' in each stream\n",name);  
-      free(new);
-      return NULL;
+      goto err_out;
     }
   }
   
@@ -139,6 +142,7 @@ af_instance_t* af_create(af_stream_t* s, char* name)
       return new; 
   }
   
+err_out:
   free(new);
   af_msg(AF_MSG_ERROR,"[libaf] Couldn't create or open audio filter '%s'\n",
 	 name);  
@@ -294,6 +298,11 @@ int af_reinit(af_stream_t* s, af_instance_t* af)
 	}
 	af=new->next;
       }
+      else {
+        af_msg(AF_MSG_ERROR, "[libaf] Automatic filter insertion disabled "
+               "but formats do not match. Giving up.\n");
+        return AF_ERROR;
+      }
       break;
     }
     case AF_DETACH:{ // Filter is redundant and wants to be unloaded
@@ -329,12 +338,11 @@ void af_uninit(af_stream_t* s)
    and output should contain the format of the current movie and the
    formate of the preferred output respectively. The function is
    reentrant i.e. if called with an already initialized stream the
-   stream will be reinitialized. If the binary parameter
-   "force_output" is set, the output format will be converted to the
-   format given in "s", otherwise the output fromat in the last filter
-   will be copied "s". The return value is 0 if success and -1 if
-   failure */
-int af_init(af_stream_t* s, int force_output)
+   stream will be reinitialized.
+   If one of the prefered output parameters is 0 the one that needs
+   no conversion is used (i.e. the output format in the last filter).
+   The return value is 0 if success and -1 if failure */
+int af_init(af_stream_t* s)
 {
   int i=0;
 
@@ -368,17 +376,16 @@ int af_init(af_stream_t* s, int force_output)
   if(AF_OK != af_reinit(s,s->first))
     return -1;
 
-  // If force_output isn't set do not compensate for output format
-  if(!force_output){
-    memcpy(&s->output, s->last->data, sizeof(af_data_t));
-    return 0;
-  }
+  // make sure the chain is not empty and valid (e.g. because of AF_DETACH)
+  if (!s->first)
+    if (!af_append(s,s->first,"dummy") || AF_OK != af_reinit(s,s->first))
+      return -1;
 
   // Check output format
   if((AF_INIT_TYPE_MASK & s->cfg.force) != AF_INIT_FORCE){
     af_instance_t* af = NULL; // New filter
     // Check output frequency if not OK fix with resample
-    if(s->last->data->rate!=s->output.rate){
+    if(s->output.rate && s->last->data->rate!=s->output.rate){
       // try to find a filter that can change samplrate
       af = af_control_any_rev(s, AF_CONTROL_RESAMPLE_RATE | AF_CONTROL_SET,
                &(s->output.rate));
@@ -423,7 +430,7 @@ int af_init(af_stream_t* s, int force_output)
       
     // Check number of output channels fix if not OK
     // If needed always inserted last -> easy to screw up other filters
-    if(s->last->data->nch!=s->output.nch){
+    if(s->output.nch && s->last->data->nch!=s->output.nch){
       if(!strcmp(s->last->info->name,"format"))
 	af = af_prepend(s,s->last,"channels");
       else
@@ -436,7 +443,7 @@ int af_init(af_stream_t* s, int force_output)
     }
     
     // Check output format fix if not OK
-    if(s->last->data->format != s->output.format){
+    if(s->output.format && s->last->data->format != s->output.format){
       if(strcmp(s->last->info->name,"format"))
 	af = af_append(s,s->last,"format");
       else
@@ -453,6 +460,9 @@ int af_init(af_stream_t* s, int force_output)
     if(AF_OK != af_reinit(s,s->first))
       return -1;
 
+    if (!s->output.format) s->output.format = s->last->data->format;
+    if (!s->output.nch) s->output.nch = s->last->data->nch;
+    if (!s->output.rate) s->output.rate = s->last->data->rate;
     if((s->last->data->format != s->output.format) || 
        (s->last->data->nch    != s->output.nch)    || 
        (s->last->data->rate   != s->output.rate))  {
@@ -497,6 +507,7 @@ af_data_t* af_play(af_stream_t* s, af_data_t* data)
   af_instance_t* af=s->first; 
   // Iterate through all filters 
   do{
+    if (data->len <= 0) break;
     data=af->play(af,data);
     af=af->next;
   }while(af);
@@ -622,11 +633,7 @@ inline int af_resize_local_buffer(af_instance_t* af, af_data_t* data)
   return AF_OK;
 }
 
-/**
- * \brief send control to all filters, starting with the last, until
- *        one responds with AF_OK
- * \return The instance that accepted the command or NULL if none did.
- */
+// documentation in af.h
 af_instance_t *af_control_any_rev (af_stream_t* s, int cmd, void* arg) {
   int res = AF_UNKNOWN;
   af_instance_t* filt = s->last;
@@ -641,6 +648,8 @@ af_instance_t *af_control_any_rev (af_stream_t* s, int cmd, void* arg) {
 
 /**
  * \brief calculate greatest common divisior of a and b.
+ * \ingroup af_filter
+ *
  *   Extended for negative and 0 values. If both are 0 the result is 1.
  *   The sign of the result will be so that it has the same sign as b.
  */
@@ -663,6 +672,8 @@ int af_gcd(register int a, register int b) {
 
 /**
  * \brief cancel down a fraction f
+ * \param f fraction to cancel down
+ * \ingroup af_filter
  */
 void af_frac_cancel(frac_t *f) {
   int gcd = af_gcd(f->n, f->d);
@@ -672,7 +683,11 @@ void af_frac_cancel(frac_t *f) {
 
 /**
  * \brief multiply out by in and store result in out.
- *        the resulting fraction wil be cancelled down
+ * \param out [inout] fraction to multiply by in
+ * \param in [in] fraction to multiply out by
+ * \ingroup af_filter
+ *
+ *        the resulting fraction will be cancelled down
  *        if in and out were.
  */
 void af_frac_mul(frac_t *out, const frac_t *in) {

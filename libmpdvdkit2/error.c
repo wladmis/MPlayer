@@ -5,7 +5,7 @@
  *
  * Modified for use with MPlayer, changes contained in libdvdcss_changes.diff.
  * detailed CVS changelog at http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
- * $Id: error.c,v 1.5 2005/03/01 06:41:41 diego Exp $
+ * $Id: error.c 16715 2005-10-09 10:18:24Z diego $
  *
  * Author: Samuel Hocevar <sam@zoy.org>
  *
@@ -28,7 +28,14 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <limits.h>
+
+#ifdef HAVE_SYS_PARAM_H
+#   include <sys/param.h>
+#endif
+
+#ifdef HAVE_LIMITS_H
+#   include <limits.h>
+#endif
 
 #include "dvdcss.h"
 
@@ -39,7 +46,7 @@
 /*****************************************************************************
  * Error messages
  *****************************************************************************/
-void _dvdcss_error( dvdcss_t dvdcss, char *psz_string )
+void _print_error( dvdcss_t dvdcss, char *psz_string )
 {
     if( dvdcss->b_errors )
     {
@@ -52,11 +59,13 @@ void _dvdcss_error( dvdcss_t dvdcss, char *psz_string )
 /*****************************************************************************
  * Debug messages
  *****************************************************************************/
-void _dvdcss_debug( dvdcss_t dvdcss, char *psz_string )
+#if 0
+void _print_debug( dvdcss_t dvdcss, char *psz_string )
 {
     if( dvdcss->b_debug )
     {
         fprintf( stderr, "libdvdcss debug: %s\n", psz_string );
     }
 }
+#endif
 

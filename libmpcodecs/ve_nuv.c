@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../config.h"
-#include "../mp_msg.h"
+#include "config.h"
+#include "mp_msg.h"
 
 #include "m_option.h"
 
@@ -93,11 +93,11 @@ static int control(struct vf_instance_s* vf, int request, void* data){
 }
 
 static int query_format(struct vf_instance_s* vf, unsigned int fmt){
-  if(fmt==IMGFMT_I420) return 3;
+  if(fmt==IMGFMT_I420) return VFCAP_CSP_SUPPORTED | VFCAP_CSP_SUPPORTED_BY_HW;
   return 0;
 }
 
-static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
+static int put_image(struct vf_instance_s* vf, mp_image_t *mpi, double pts){
   struct rtframeheader* ench = (struct rtframeheader*)vf->priv->buffer;
   uint8_t* data = vf->priv->buffer + FRAMEHEADERSIZE;
   uint8_t* zdata = vf->priv->zbuffer + FRAMEHEADERSIZE;
@@ -118,7 +118,7 @@ static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
   
     le2me_rtframeheader(ench);
     mux_v->buffer=vf->priv->buffer;
-    muxer_write_chunk(mux_v,FRAMEHEADERSIZE + 128*sizeof(long int), 0x10);
+    muxer_write_chunk(mux_v,FRAMEHEADERSIZE + 128*sizeof(long int), 0x10, MP_NOPTS_VALUE, MP_NOPTS_VALUE);
     vf->priv->tbl_wrote = 1;
     memset(ench,0,FRAMEHEADERSIZE); // Reset the header
   }
@@ -175,7 +175,7 @@ static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
   ench->packetlength = len;
   le2me_rtframeheader(ench);
   mux_v->buffer=(void*)ench;
-  muxer_write_chunk(mux_v, len + FRAMEHEADERSIZE, 0x10);
+  muxer_write_chunk(mux_v, len + FRAMEHEADERSIZE, 0x10, pts, pts);
   return 1;
 }
 

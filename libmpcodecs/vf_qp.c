@@ -13,7 +13,7 @@
 
     You should have received a copy of the GNU General Public License
     along with this program; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 */
 
 #include <stdio.h>
@@ -22,12 +22,10 @@
 #include <math.h>
 #include <inttypes.h>
 
-#include "../config.h"
+#include "config.h"
 
-#ifdef USE_LIBAVCODEC
-
-#include "../mp_msg.h"
-#include "../cpudetect.h"
+#include "mp_msg.h"
+#include "cpudetect.h"
 
 #if 1
 double ff_eval(char *s, double *const_value, const char **const_name,
@@ -36,13 +34,17 @@ double ff_eval(char *s, double *const_value, const char **const_name,
                void *opaque);
 #endif
 
-#ifdef USE_LIBAVCODEC_SO
-#include <ffmpeg/avcodec.h>
-#include <ffmpeg/dsputil.h>
-#else
-#include "../libavcodec/avcodec.h"
-#include "../libavcodec/dsputil.h"
-#endif
+// Needed to bring in lrintf.
+#define HAVE_AV_CONFIG_H
+
+#include "libavcodec/avcodec.h"
+#include "libavcodec/dsputil.h"
+#include "libavutil/common.h"
+
+/* FIXME: common.h defines printf away when HAVE_AV_CONFIG
+ * is defined, but mp_image.h needs printf.
+ */
+#undef printf
 
 #ifdef HAVE_MALLOC_H
 #include <malloc.h>
@@ -51,7 +53,7 @@ double ff_eval(char *s, double *const_value, const char **const_name,
 #include "img_format.h"
 #include "mp_image.h"
 #include "vf.h"
-#include "../libvo/fastmemcpy.h"
+#include "libvo/fastmemcpy.h"
 
 
 struct vf_priv_s {
@@ -68,7 +70,7 @@ static int config(struct vf_instance_s* vf,
         int i;
 
 	vf->priv->qp_stride= (width+15)>>4;
-        vf->priv->qp= malloc(vf->priv->qp_stride*h*sizeof(int8_t));
+        vf->priv->qp= av_malloc(vf->priv->qp_stride*h*sizeof(int8_t));
         
         for(i=-129; i<128; i++){
             double const_values[]={
@@ -109,7 +111,7 @@ static void get_image(struct vf_instance_s* vf, mp_image_t *mpi){
     mpi->flags|=MP_IMGFLAG_DIRECT;
 }
 
-static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
+static int put_image(struct vf_instance_s* vf, mp_image_t *mpi, double pts){
 	mp_image_t *dmpi;
         int x,y;
 
@@ -149,16 +151,16 @@ static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
             }
         }
 
-	return vf_next_put_image(vf,dmpi);
+	return vf_next_put_image(vf,dmpi, pts);
 }
 
 static void uninit(struct vf_instance_s* vf){
 	if(!vf->priv) return;
 
-	if(vf->priv->qp) free(vf->priv->qp);
+	if(vf->priv->qp) av_free(vf->priv->qp);
 	vf->priv->qp= NULL;
 	
-	free(vf->priv);
+	av_free(vf->priv);
 	vf->priv=NULL;
 }
 
@@ -168,7 +170,7 @@ static int open(vf_instance_t *vf, char* args){
     vf->put_image=put_image;
     vf->get_image=get_image;
     vf->uninit=uninit;
-    vf->priv=malloc(sizeof(struct vf_priv_s));
+    vf->priv=av_malloc(sizeof(struct vf_priv_s));
     memset(vf->priv, 0, sizeof(struct vf_priv_s));
     
 //    avcodec_init();
@@ -186,5 +188,3 @@ vf_info_t vf_info_qp = {
     open,
     NULL
 };
-
-#endif //USE_LIBAVCODEC

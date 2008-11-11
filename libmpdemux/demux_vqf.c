@@ -7,21 +7,20 @@
 #include "stream.h"
 #include "demuxer.h"
 #include "stheader.h"
-#include "../libmpcodecs/vqf.h"
+#include "libmpcodecs/vqf.h"
 
-extern void resync_audio_stream(sh_audio_t *sh_audio);
-
-int demux_probe_vqf(demuxer_t* demuxer) 
+static int demux_probe_vqf(demuxer_t* demuxer) 
 {
   char buf[KEYWORD_BYTES];
   stream_t *s;
   s = demuxer->stream;
-  stream_read(s,buf,KEYWORD_BYTES);
-  if(memcmp(buf,"TWIN",KEYWORD_BYTES)==0) return 1; /*version: 97012000*/
+  if(stream_read(s,buf,KEYWORD_BYTES)!=KEYWORD_BYTES)
+    return 0;
+  if(memcmp(buf,"TWIN",KEYWORD_BYTES)==0) return DEMUXER_TYPE_VQF; /*version: 97012000*/
   return 0;
 }
 
-demuxer_t* demux_open_vqf(demuxer_t* demuxer) {
+static demuxer_t* demux_open_vqf(demuxer_t* demuxer) {
   sh_audio_t* sh_audio;
   WAVEFORMATEX* w;
   stream_t *s;
@@ -142,7 +141,7 @@ demuxer_t* demux_open_vqf(demuxer_t* demuxer) {
     {
     demuxer->movi_start=stream_tell(s);
     demuxer->movi_end=demuxer->movi_start+chunk_size-8;
-    mp_msg(MSGT_DEMUX, MSGL_V, "Found data at %llX size %llu\n",demuxer->movi_start,demuxer->movi_end);
+    mp_msg(MSGT_DEMUX, MSGL_V, "Found data at %"PRIX64" size %"PRIu64"\n",demuxer->movi_start,demuxer->movi_end);
     /* Done! play it */
     break;
     }
@@ -160,7 +159,7 @@ demuxer_t* demux_open_vqf(demuxer_t* demuxer) {
   return demuxer;
 }
 
-int demux_vqf_fill_buffer(demuxer_t* demuxer, demux_stream_t *ds) {
+static int demux_vqf_fill_buffer(demuxer_t* demuxer, demux_stream_t *ds) {
   sh_audio_t* sh_audio = demuxer->audio->sh;
   int l = sh_audio->wf->nAvgBytesPerSec;
   off_t spos = stream_tell(demuxer->stream);
@@ -180,7 +179,7 @@ int demux_vqf_fill_buffer(demuxer_t* demuxer, demux_stream_t *ds) {
   return 1;
 }
 
-void demux_seek_vqf(demuxer_t *demuxer,float rel_seek_secs,int flags){
+static void demux_seek_vqf(demuxer_t *demuxer,float rel_seek_secs,float audio_delay,int flags){
 #if 0
   stream_t* s = demuxer->stream;
   sh_audio_t* sh_audio = demuxer->audio->sh;
@@ -194,8 +193,24 @@ void demux_seek_vqf(demuxer_t *demuxer,float rel_seek_secs,int flags){
 
   pos -= (pos % (sh_audio->channels * sh_audio->samplesize) );
   stream_seek(s,pos);
-  resync_audio_stream(sh_audio);
 #endif
 }
 
-void demux_close_vqf(demuxer_t* demuxer) {}
+static void demux_close_vqf(demuxer_t* demuxer) {}
+
+
+demuxer_desc_t demuxer_desc_vqf = {
+  "TwinVQ demuxer",
+  "vqf",
+  "VQF",
+  "Nick Kurshev",
+  "ported frm MPlayerXP",
+  DEMUXER_TYPE_VQF,
+  1, // safe autodetect
+  demux_probe_vqf,
+  demux_vqf_fill_buffer,
+  demux_open_vqf,
+  demux_close_vqf,
+  demux_seek_vqf,
+  NULL
+};

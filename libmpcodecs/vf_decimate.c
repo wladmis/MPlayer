@@ -2,15 +2,16 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../config.h"
-#include "../mp_msg.h"
-#include "../cpudetect.h"
+#include "config.h"
+#include "mp_msg.h"
+#include "cpudetect.h"
+#include "asmalign.h"
 
 #include "img_format.h"
 #include "mp_image.h"
 #include "vf.h"
 
-#include "../libvo/fastmemcpy.h"
+#include "libvo/fastmemcpy.h"
 
 
 struct vf_priv_s {
@@ -28,7 +29,7 @@ static int diff_MMX(unsigned char *old, unsigned char *new, int os, int ns)
 		"pxor %%mm4, %%mm4 \n\t"
 		"pxor %%mm7, %%mm7 \n\t"
 		
-		".balign 16 \n\t"
+		ASMALIGN16
 		"1: \n\t"
 		
 		"movq (%%"REG_S"), %%mm0 \n\t"
@@ -110,7 +111,7 @@ static int diff_to_drop(int hi, int lo, float frac, mp_image_t *old, mp_image_t 
 		new->w*(new->bpp/8), new->h, old->stride[0], new->stride[0]);
 }
 
-static int put_image(struct vf_instance_s* vf, mp_image_t *mpi)
+static int put_image(struct vf_instance_s* vf, mp_image_t *mpi, double pts)
 {
 	mp_image_t *dmpi;
 
@@ -143,7 +144,7 @@ static int put_image(struct vf_instance_s* vf, mp_image_t *mpi)
 			mpi->chroma_width, mpi->chroma_height,
 			dmpi->stride[2], mpi->stride[2]);
 	}
-	return vf_next_put_image(vf, dmpi);
+	return vf_next_put_image(vf, dmpi, pts);
 }
 
 static void uninit(struct vf_instance_s* vf)

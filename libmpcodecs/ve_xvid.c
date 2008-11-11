@@ -9,8 +9,8 @@
 #define INFINITY HUGE_VAL
 #endif
 
-#include "../config.h"
-#include "../mp_msg.h"
+#include "config.h"
+#include "mp_msg.h"
 
 #ifdef HAVE_XVID3
 
@@ -378,6 +378,10 @@ config(struct vf_instance_s* vf,
 
     vbrInit(&fp->vbr_state);
 
+#ifdef XVID_API_UNSTABLE
+    fp->mux->decoder_delay = enc_param.max_bframes ? 1 : 0;
+#endif
+
     return 1;
 }
 
@@ -430,7 +434,7 @@ query_format(struct vf_instance_s* vf, unsigned int fmt)
 }
 
 static int
-put_image(struct vf_instance_s* vf, mp_image_t *mpi)
+put_image(struct vf_instance_s* vf, mp_image_t *mpi, double pts)
 {
     XVID_ENC_STATS enc_stats;
     struct vf_priv_s *fp = vf->priv;
@@ -523,7 +527,10 @@ put_image(struct vf_instance_s* vf, mp_image_t *mpi)
 #endif
     
     // write output
-    muxer_write_chunk(fp->mux, fp->enc_frame.length, fp->enc_frame.intra==1 ? 0x10 : 0);
+    if (fp->enc_frame.length > 0)
+    muxer_write_chunk(fp->mux, fp->enc_frame.length, fp->enc_frame.intra==1 ? 0x10 : 0, MP_NOPTS_VALUE, MP_NOPTS_VALUE);
+    else
+		++fp->mux->encoder_delay;
 
     // update the VBR engine
     vbrUpdate(&fp->vbr_state, enc_stats.quant, fp->enc_frame.intra,

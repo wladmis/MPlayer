@@ -14,7 +14,7 @@ for DLL to know too much about its environment.
 /*
  * Modified for use with MPlayer, detailed CVS changelog at
  * http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
- * $Id: win32.c,v 1.98 2005/04/15 20:17:12 diego Exp $
+ * $Id: win32.c 18581 2006-06-05 18:41:01Z rtogni $
  */
 
 #include "config.h"
@@ -189,7 +189,7 @@ static void longcount_stub(long long* z)
 }
 
 #ifdef MPLAYER
-#include "../mp_msg.h"
+#include "mp_msg.h"
 #endif
 int LOADER_DEBUG=1; // active only if compiled with -DDETAILED_OUT
 //#define DETAILED_OUT
@@ -214,7 +214,7 @@ static inline void dbgprintf(char* fmt, ...)
     }
 #endif
 #ifdef MPLAYER
-    if (verbose > 2)
+    if ( mp_msg_test(MSGT_WIN32,MSGL_DBG3) )
     {
 	va_list va;
 	
@@ -938,9 +938,7 @@ static void WINAPI expGetSystemInfo(SYSTEM_INFO* si)
     dbgprintf("GetSystemInfo(%p) =>\n", si);
 
     if (cache) {
-	memcpy(si,&cachedsi,sizeof(*si));
-	DumpSystemInfo(si);
-	return;
+	goto exit;
     }
     memset(PF,0,sizeof(PF));
     pf_set = 1;
@@ -961,13 +959,15 @@ static void WINAPI expGetSystemInfo(SYSTEM_INFO* si)
 #ifdef MPLAYER
     /* mplayer's way to detect PF's */
     {
-#include "../cpudetect.h"
+#include "cpudetect.h"
 	extern CpuCaps gCpuCaps;
 
 	if (gCpuCaps.hasMMX)
 	    PF[PF_MMX_INSTRUCTIONS_AVAILABLE] = TRUE;
 	if (gCpuCaps.hasSSE)
 	    PF[PF_XMMI_INSTRUCTIONS_AVAILABLE] = TRUE;
+	if (gCpuCaps.hasSSE2)
+	    PF[PF_XMMI64_INSTRUCTIONS_AVAILABLE] = TRUE;
 	if (gCpuCaps.has3DNow)
 	    PF[PF_AMD3D_INSTRUCTIONS_AVAILABLE] = TRUE;
 
@@ -993,7 +993,7 @@ static void WINAPI expGetSystemInfo(SYSTEM_INFO* si)
 
 /* disable cpuid based detection (mplayer's cpudetect.c does this - see above) */
 #ifndef MPLAYER
-#if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__svr4__)
+#if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__svr4__) || defined(__DragonFly__)
     do_cpuid(1, regs);
     switch ((regs[0] >> 8) & 0xf) {			// cpu family
     case 3: cachedsi.dwProcessorType = PROCESSOR_INTEL_386;
@@ -1034,7 +1034,14 @@ static void WINAPI expGetSystemInfo(SYSTEM_INFO* si)
 	FILE *f = fopen ("/proc/cpuinfo", "r");
 
 	if (!f)
-	    return;
+	{
+#ifdef MPLAYER
+	  mp_msg(MSGT_WIN32, MSGL_WARN, "expGetSystemInfo: "
+	                     "/proc/cpuinfo not readable! "
+	                     "Expect bad performance and/or weird behaviour\n");
+#endif
+	  goto exit;
+	}
 	while (fgets(line,200,f)!=NULL) {
 	    char	*s,*value;
 
@@ -1141,8 +1148,10 @@ static void WINAPI expGetSystemInfo(SYSTEM_INFO* si)
 		    PF[PF_MMX_INSTRUCTIONS_AVAILABLE] = TRUE;
 		if (strstr(value,"tsc"))
 		    PF[PF_RDTSC_INSTRUCTION_AVAILABLE] = TRUE;
-		if (strstr(value,"xmm"))
+		if (strstr(value,"xmm") || strstr(value,"sse"))
 		    PF[PF_XMMI_INSTRUCTIONS_AVAILABLE] = TRUE;
+		if (strstr(value,"sse2"))
+		    PF[PF_XMMI64_INSTRUCTIONS_AVAILABLE] = TRUE;
 		if (strstr(value,"3dnow"))
 		    PF[PF_AMD3D_INSTRUCTIONS_AVAILABLE] = TRUE;
 	    }
@@ -1158,6 +1167,7 @@ static void WINAPI expGetSystemInfo(SYSTEM_INFO* si)
     }
 #endif /* __linux__ */
     cache = 1;
+exit:
     memcpy(si,&cachedsi,sizeof(*si));
     DumpSystemInfo(si);
 }
@@ -3322,6 +3332,7 @@ static int WINAPI expIsRectEmpty(CONST RECT *lprc)
 }
 
 static int _adjust_fdiv=0; //what's this? - used to adjust division
+static int _winver = 0x510; // windows version
 
 
 
@@ -3738,6 +3749,16 @@ static WIN_BOOL WINAPI expGetProcessAffinityMask(HANDLE hProcess,
     if(lpSystemAffinityMask)*lpSystemAffinityMask=1;
     return 1;
 }
+
+// Fake implementation: does nothing, but does it right :)
+static WIN_BOOL WINAPI expSetProcessAffinityMask(HANDLE hProcess,
+                                              LPDWORD dwProcessAffinityMask)
+{
+    dbgprintf("SetProcessAffinityMask(0x%x, 0x%x) => 1\n",
+	      hProcess, dwProcessAffinityMask);
+
+    return 1;
+};
 
 static int WINAPI expMulDiv(int nNumber, int nNumerator, int nDenominator)
 {
@@ -4528,6 +4549,12 @@ static void WINAPI expGlobalMemoryStatus(
         lpmem->dwAvailPageFile++;
 }
 
+static INT WINAPI expGetThreadPriority(HANDLE hthread)
+{
+    dbgprintf("GetThreadPriority(%p)\n",hthread);
+    return 0;
+}
+
 /**********************************************************************
  * SetThreadPriority [KERNEL32.@]  Sets priority for thread.
  *
@@ -4690,6 +4717,10 @@ static int WINAPI expDialogBoxParamA(void *inst, const char *name,
     return 0x42424242;
 }
 
+static void WINAPI expRegisterClipboardFormatA(const char *name) {
+    dbgprintf("RegisterClipboardFormatA(0x%x = %s)\n", name, name);
+}
+
 /* needed by imagepower mjpeg2k */
 static void *exprealloc(void *ptr, size_t size)
 {
@@ -4704,6 +4735,32 @@ static void *exprealloc(void *ptr, size_t size)
 static WIN_BOOL WINAPI expGetOpenFileNameA(/*LPOPENFILENAMEA*/ void* lpfn)
 {
     return 1;
+}
+
+static char * WINAPI expPathFindExtensionA(const char *path) {
+  char *ext;
+  if (!path)
+    ext = NULL;
+  else {
+    ext = strrchr(path, '.');
+    if (!ext)
+      ext = &path[strlen(path)];
+  }
+  dbgprintf("PathFindExtensionA(0x%x = %s) => 0x%x, %s\n", path, path, ext, ext);
+  return ext;
+}
+
+static char * WINAPI expPathFindFileNameA(const char *path) {
+  char *name;
+  if (!path || strlen(path) < 2)
+    name = path;
+  else {
+    name = strrchr(path - 1, '\\');
+    if (!name)
+      name = path;
+  }
+  dbgprintf("PathFindFileNameA(0x%x = %s) => 0x%x, %s\n", path, path, name, name);
+  return name;
 }
 
 static double expfloor(double x)
@@ -4729,6 +4786,29 @@ static double exp_CIsin(void)
 
     dbgprintf("_CIsin(%lf)\n", x);
     return sin(x);
+}
+
+static double exp_CIsqrt(void)
+{
+    FPU_DOUBLE(x);
+
+    dbgprintf("_CIsqrt(%lf)\n", x);
+    return sqrt(x);
+}
+
+/* Needed by rp8 sipr decoder */
+static LPSTR WINAPI expCharNextA(LPCSTR ptr)
+{
+    if (!*ptr) return (LPSTR)ptr;
+//    dbgprintf("CharNextA(0x%08x), %s\n", ptr, ptr);
+    return (LPSTR)(ptr + 1);
+}
+
+// Fake implementation, needed by wvc1dmod.dll
+static int WINAPI expPropVariantClear(void *pvar)
+{
+//    dbgprintf("PropVariantclear (0x%08x), %s\n", ptr, ptr);
+    return 1;
 }
 
 struct exports
@@ -4897,10 +4977,12 @@ struct exports exp_kernel32[]=
     FF(SetThreadAffinityMask,-1)
     FF(GetCurrentProcessId,-1)
     FF(GlobalMemoryStatus,-1)
+    FF(GetThreadPriority,-1)
     FF(SetThreadPriority,-1)
     FF(ExitProcess,-1)
     {"LoadLibraryExA", -1, (void*)&LoadLibraryExA},
     FF(SetThreadIdealProcessor,-1)
+    FF(SetProcessAffinityMask, -1)
 };
 
 struct exports exp_msvcrt[]={
@@ -4912,6 +4994,7 @@ struct exports exp_msvcrt[]={
     {"??3@YAXPAX@Z", -1, expdelete},
     {"??2@YAPAXI@Z", -1, expnew},
     {"_adjust_fdiv", -1, (void*)&_adjust_fdiv},
+    {"_winver",-1,(void*)&_winver},
     FF(strrchr, -1)
     FF(strchr, -1)
     FF(strlen, -1)
@@ -4942,6 +5025,7 @@ struct exports exp_msvcrt[]={
     FF(_CIpow,-1)
     FF(_CIcos,-1)
     FF(_CIsin,-1)
+    FF(_CIsqrt,-1)
     FF(ldexp,-1)
     FF(frexp,-1)
     FF(sprintf,-1)
@@ -4951,6 +5035,9 @@ struct exports exp_msvcrt[]={
     FF(printf,-1)
     FF(getenv,-1)
     FF(floor,-1)
+/* needed by frapsvid.dll */
+    {"strstr",-1,(char *)&strstr},
+    {"qsort",-1,(void *)&qsort},
 #ifdef MPLAYER
     FF(_EH_prolog,-1)
 #endif
@@ -5021,6 +5108,8 @@ struct exports exp_user32[]={
 #endif
     FF(MessageBeep, -1)
     FF(DialogBoxParamA, -1)
+    FF(RegisterClipboardFormatA, -1)
+    FF(CharNextA, -1)
 };
 struct exports exp_advapi32[]={
     FF(RegCloseKey, -1)
@@ -5057,6 +5146,7 @@ struct exports exp_ole32[]={
     FF(CoTaskMemAlloc, -1)
     FF(CoTaskMemFree, -1)
     FF(StringFromGUID2, -1)
+    FF(PropVariantClear, -1)
 };
 // do we really need crtdll ???
 // msvcrt is the correct place probably...
@@ -5121,6 +5211,8 @@ struct exports exp_pncrt[]={
     FF(_CIpow,-1)
     FF(calloc,-1)
     FF(memmove, -1)
+    FF(ldexp, -1)
+    FF(frexp, -1)
 };
 #endif
 
@@ -5132,6 +5224,11 @@ struct exports exp_ddraw[]={
 
 struct exports exp_comdlg32[]={
     FF(GetOpenFileNameA, -1)
+};
+
+struct exports exp_shlwapi[]={
+    FF(PathFindExtensionA, -1)
+    FF(PathFindFileNameA, -1)
 };
 
 #define LL(X) \
@@ -5158,6 +5255,7 @@ struct libs libraries[]={
     LL(ddraw)
 #endif
     LL(comdlg32)
+    LL(shlwapi)
 };
 
 static void ext_stubs(void)

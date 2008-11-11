@@ -3,17 +3,18 @@
 #include <string.h>
 #include <inttypes.h>
 
-#include "../config.h"
-#include "../mp_msg.h"
-#include "../cpudetect.h"
+#include "config.h"
+#include "mp_msg.h"
+#include "cpudetect.h"
+#include "asmalign.h"
 
 #include "img_format.h"
 #include "mp_image.h"
 #include "vf.h"
 
-#include "../libvo/video_out.h"
-#include "../libvo/fastmemcpy.h"
-#include "../postproc/rgb2rgb.h"
+#include "libvo/video_out.h"
+#include "libvo/fastmemcpy.h"
+#include "postproc/rgb2rgb.h"
 
 #include "m_option.h"
 #include "m_struct.h"
@@ -51,7 +52,7 @@ static void process_MMX(unsigned char *dest, int dstride, unsigned char *src, in
 			"movq (%6), %%mm4 \n\t"
 			"pxor %%mm0, %%mm0 \n\t"
 			"movl %4, %%eax\n\t"
-                       ".balign 16 \n\t"
+                       ASMALIGN16
 			"1: \n\t"
 			"movq (%0), %%mm1 \n\t"
 			"movq (%0), %%mm2 \n\t"
@@ -116,7 +117,7 @@ static void (*process)(unsigned char *dest, int dstride, unsigned char *src, int
 
 /* FIXME: add packed yuv version of process */
 
-static int put_image(struct vf_instance_s* vf, mp_image_t *mpi)
+static int put_image(struct vf_instance_s* vf, mp_image_t *mpi, double pts)
 {
 	mp_image_t *dmpi;
 
@@ -142,7 +143,7 @@ static int put_image(struct vf_instance_s* vf, mp_image_t *mpi)
 			vf->priv->contrast);
 	}
 
-	return vf_next_put_image(vf,dmpi);
+	return vf_next_put_image(vf,dmpi, pts);
 }
 
 static int control(struct vf_instance_s* vf, int request, void* data)

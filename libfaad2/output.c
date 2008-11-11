@@ -20,7 +20,7 @@
 ** forbidden.
 **
 ** Initially modified for use with MPlayer by Rich Felker on 2005/03/29
-** $Id: output.c,v 1.11 2005/04/05 05:43:41 rfelker Exp $
+** $Id: output.c 18142 2006-04-18 19:39:34Z rtognimp $
 ** detailed CVS changelog at http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
 **/
 
@@ -589,7 +589,7 @@ void* output_to_PCM(NeAACDecHandle hDecoder,
     {
         for (ch = 0; ch < channels; ch++)
         {
-            int32_t tmp = input[ch][i];
+            int32_t tmp = input[hDecoder->internal_channel[ch]][i];
             tmp += (1 << (REAL_BITS-1));
             tmp >>= REAL_BITS;
 	    if ((tmp+0x8000) & ~0xffff) tmp = ~(tmp>>31)-0x8000;

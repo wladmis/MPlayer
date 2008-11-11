@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-2"?>
-<!-- synced with 1.57 -->
+<!-- synced with 1.58 -->
 <sect1 id="install">
 <title>Instalacja</title>
 
@@ -166,7 +166,7 @@ Potrzebujesz dość nowego sprzętu. Jeśli używasz Linuksa, zalecane są jądra z ser
   <emphasis role="bold">Kodeki Win32</emphasis>: Jeśli zamierzasz używać
   <application>MPlayera</application> na architekturze x86, będziesz ich prawdopodobnie
   potrzebował. Ściągnij pakiet z naszej
-  <ulink url="http://www.mplayerhq.hu/homepage/design7/codecs.html">strony kodeków</ulink>
+  <ulink url="http://www.mplayerhq.hu/design7/codecs.html">strony kodeków</ulink>
   i umieść je w katalogu <filename class="directory">/usr/local/lib/codecs</filename>
   <emphasis role="bold">PRZED</emphasis> kompilacją <application>MPlayera</application>,
   w przeciwnym wypadku obsługa Win32 nie będzie wkompilowana!
@@ -559,16 +559,16 @@ z przyczyn technicznych.
 <para>
 Jako że <application>MPlayer</application> nie zawiera żadnej skórki, musisz
 je ściągnąć, jeżeli chcesz używać GUI. Sprawdź <ulink
-url="http://www.mplayerhq.hu/homepage/dload.html">stronę z zasobami do pobrania</ulink>.
+url="http://www.mplayerhq.hu/dload.html">stronę z zasobami do pobrania</ulink>.
 Skórki powinny być rozpakowane do katalogu dostępnego dla wszystkich (<filename
-class="directory">$PREFIX/share/mplayer/Skin</filename>) lub do <filename
-class="directory">$HOME/.mplayer/Skin</filename>.
+class="directory">$PREFIX/share/mplayer/skins</filename>) lub do <filename
+class="directory">$HOME/.mplayer/skins</filename>.
 <application>MPlayer</application> sprawdza je w poszukiwaniu
 folderu nazwanego <filename class="directory">default</filename>, ale
 możesz użyć opcji <option>-skin <replaceable>nowaskórka</replaceable></option>
 lub wpisać do pliku konfiguracyjnego <literal>skin=nowaskórka</literal>, aby
 program korzystał ze skórki w katalogu
-<filename class="directory">*/Skin/nowaskórka</filename>.
+<filename class="directory">*/skins/nowaskórka</filename>.
 </para>
 </sect1>
 

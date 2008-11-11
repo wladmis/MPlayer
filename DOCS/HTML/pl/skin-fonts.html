@@ -1,39 +1,39 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>D.3. Czcionki</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - Odtwarzacz filmów"><link rel="up" href="skin.html" title="Dodatek D. Format skórki MPlayera"><link rel="previous" href="skin-file.html" title="D.2. Plik skin"><link rel="next" href="skin-gui.html" title="D.4. Sygna&#322;y GUI"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">D.3. Czcionki</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="skin-file.html">Poprzedni</a> </td><th width="60%" align="center">Dodatek D. Format skórki MPlayera</th><td width="20%" align="right"> <a accesskey="n" href="skin-gui.html">Nast&#281;pny</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="skin-fonts"></a>D.3. Czcionki</h2></div></div><p>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=iso-8859-2"><title>D.3. Czcionki</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.68.1"><link rel="start" href="index.html" title="MPlayer - Odtwarzacz filmów"><link rel="up" href="skin.html" title="Dodatek D. Format skórki MPlayera"><link rel="prev" href="skin-file.html" title="D.2. Plik skin"><link rel="next" href="skin-gui.html" title="D.4. Sygna³y GUI"><link rel="preface" href="howtoread.html" title="Jak czytaæ tê dokumentacjê"><link rel="chapter" href="intro.html" title="Rozdzia³ 1. Wprowadzenie"><link rel="chapter" href="features.html" title="Rozdzia³ 2. Mo¿liwo¶ci"><link rel="chapter" href="usage.html" title="Rozdzia³ 3. Sposób u¿ycia"><link rel="chapter" href="faq.html" title="Rozdzia³ 4. FAQ - Czêsto Zadawane Pytania"><link rel="chapter" href="cd-dvd.html" title="Rozdzia³ 5. U¿ywanie CD/DVD"><link rel="chapter" href="ports.html" title="Rozdzia³ 6. Porty"><link rel="chapter" href="mencoder.html" title="Rozdzia³ 7. Kodowanie z MEncoderem"><link rel="appendix" href="mailinglists.html" title="Dodatek A. Listy dyskusyjne"><link rel="appendix" href="bugreports.html" title="Dodatek B. Jak zg³aszaæ b³êdy"><link rel="appendix" href="bugs.html" title="Dodatek C. Znane b³êdy"><link rel="appendix" href="skin.html" title="Dodatek D. Format skórki MPlayera"><link rel="appendix" href="users-vs-dev.html" title="Dodatek E. Deweloperzy wyrywaj± sobie w³osy"><link rel="subsection" href="skin-fonts.html#skin-fonts-symbols" title="D.3.1. Znaki specjalne (symbole)"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">D.3. Czcionki</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="skin-file.html">Poprzedni</a> </td><th width="60%" align="center">Dodatek D. Format skórki <span class="application">MPlayera</span></th><td width="20%" align="right"> <a accesskey="n" href="skin-gui.html">Nastêpny</a></td></tr></table><hr></div><div class="sect1" lang="pl"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="skin-fonts"></a>D.3. Czcionki</h2></div></div></div><p>
 Jak wspomniano w sekcji na temat fragmentów skórki, czcionka jest definiowana
-przez obrazek i plik opisuj&#261;cy. Mo&#380;esz umie&#347;ci&#263; znaki gdziekolwiek na obrazku,
-ale miej pewno&#347;&#263;, &#380;eich pozycja i rozmiar jest dok&#322;adnie podana w pliku
-opisuj&#261;cym.
+przez obrazek i plik opisuj±cy. Mo¿esz umie¶ciæ znaki gdziekolwiek na obrazku,
+ale miej pewno¶æ, ¿eich pozycja i rozmiar jest dok³adnie podana w pliku
+opisuj±cym.
 </p><p>
-Plik opisuj&#261;cy czcionk&#281; (o rozszerzeniu <tt class="filename">.fnt</tt>) mo&#380;e posiada&#263;
-linie komentarzy zaczynaj&#261;ce si&#281; znakiem '<tt>;</tt>'. Plik musi
-zawiera&#263; linie w postaci:
+Plik opisuj±cy czcionkê (o rozszerzeniu <tt class="filename">.fnt</tt>) mo¿e posiadaæ
+linie komentarzy zaczynaj±ce siê znakiem '<code class="literal">;</code>'. Plik musi
+zawieraæ linie w postaci:
 <a name="skin-font-image"></a>
-<pre class="programlisting">image = <i><tt>obrazek</tt></i></pre>
-Gdzie <tt><i><tt>obrazek</tt></i></tt> jest nazw&#261; pliku
-graficznego, który zawiera czcionk&#281; (nie musisz dopisywa&#263; jego rozszerzenia).
+</p><pre class="programlisting">image = <em class="replaceable"><code>obrazek</code></em></pre><p>
+Gdzie <code class="literal"><em class="replaceable"><code>obrazek</code></em></code> jest nazw± pliku
+graficznego, który zawiera czcionkê (nie musisz dopisywaæ jego rozszerzenia).
 <a name="skin-font-char"></a>
-<pre class="programlisting">"char" = X, Y, szeroko&#347;&#263;, wysoko&#347;&#263;</pre>
-<tt>X</tt> oraz <tt>Y</tt> okre&#347;laj&#261; pozycj&#281; znaku
-<tt>char</tt> na obrazku (<tt>0,0</tt> to górny lewy naro&#380;nik).
-<tt>szeroko&#347;&#263;</tt> i <tt>wysoko&#347;&#263;</tt> to rozmiar znaku
+</p><pre class="programlisting">"char" = X, Y, szeroko¶æ, wysoko¶æ</pre><p>
+<code class="literal">X</code> oraz <code class="literal">Y</code> okre¶laj± pozycjê znaku
+<code class="literal">char</code> na obrazku (<code class="literal">0,0</code> to górny lewy naro¿nik).
+<code class="literal">szeroko¶æ</code> i <code class="literal">wysoko¶æ</code> to rozmiar znaku
 w pikselach.
 </p><p>
-Przyk&#322;ad: definiujemy znaki A, B, C przy u&#380;yciu pliku <tt class="filename">font.png</tt>.
-<pre class="programlisting">
-; Mo&#380;e by&#263; "font" zamiast "font.png".
+Przyk³ad: definiujemy znaki A, B, C przy u¿yciu pliku <tt class="filename">font.png</tt>.
+</p><pre class="programlisting">
+; Mo¿e byæ "font" zamiast "font.png".
 image = font.png
 
-; Trzy znaki wystarcz&#261; do tej demonstracji :-)
+; Trzy znaki wystarcz± do tej demonstracji :-)
 "A" =  0,0, 7,13
 "B" =  7,0, 7,13
 "C" = 14,0, 7,13
-</pre>
-</p><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="skin-fonts-symbols"></a>D.3.1. Znaki specjalne (symbole)</h3></div></div><p>
-Niektóre znaki maj&#261; specjalne znaczenie, gdy s&#261; zwracane przez pewne zmienne
-u&#380;ywane w <a href="skin-file.html#skin-dlabel">dlabel</a>. Znaki te mog&#261; by&#263;
-wy&#347;wietlane jako symbole w ten sposób, &#380;e np. podczas odtwarzania strumienia DVD
-widoczne jest &#322;adne logo zamiast znaku '<tt>d</tt>'.
+</pre><p>
+</p><div class="sect2" lang="pl"><div class="titlepage"><div><div><h3 class="title"><a name="skin-fonts-symbols"></a>D.3.1. Znaki specjalne (symbole)</h3></div></div></div><p>
+Niektóre znaki maj± specjalne znaczenie, gdy s± zwracane przez pewne zmienne
+u¿ywane w <a href="skin-file.html#skin-dlabel">dlabel</a>. Znaki te mog± byæ
+wy¶wietlane jako symbole w ten sposób, ¿e np. podczas odtwarzania strumienia DVD
+widoczne jest ³adne logo zamiast znaku '<code class="literal">d</code>'.
 </p><p>
-Poni&#380;sza tablica zawiera znaki u&#380;ywane do wy&#347;wietlania symboli (wymagaj&#261; one
+Poni¿sza tablica zawiera znaki u¿ywane do wy¶wietlania symboli (wymagaj± one
 oddzielnych czcionek).
-</p><div class="informaltable"><table border="1"><colgroup><col><col></colgroup><thead><tr><th>Znak</th><th>Symbol</th></tr></thead><tbody><tr><td><span class="keycap"><b>p</b></span></td><td>odtwarzanie</td></tr><tr><td><span class="keycap"><b>s</b></span></td><td>stop</td></tr><tr><td><span class="keycap"><b>e</b></span></td><td>pauza</td></tr><tr><td><span class="keycap"><b>n</b></span></td><td>bez d&#378;wi&#281;ku</td></tr><tr><td><span class="keycap"><b>m</b></span></td><td>d&#378;wi&#281;k mono</td></tr><tr><td><span class="keycap"><b>t</b></span></td><td>d&#378;wi&#281;k stereo</td></tr><tr><td><span class="keycap"><b>f</b></span></td><td>strumie&#324; z pliku</td></tr><tr><td><span class="keycap"><b>v</b></span></td><td>strumie&#324; z Video CD</td></tr><tr><td><span class="keycap"><b>d</b></span></td><td>strumie&#324; z DVD</td></tr><tr><td><span class="keycap"><b>u</b></span></td><td>strumie&#324; z URL</td></tr></tbody></table></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="skin-file.html">Poprzedni</a> </td><td width="20%" align="center"><a accesskey="u" href="skin.html">Pocz&#261;tek rozdzia&#322;u</a></td><td width="40%" align="right"> <a accesskey="n" href="skin-gui.html">Nast&#281;pny</a></td></tr><tr><td width="40%" align="left" valign="top">D.2. Plik skin </td><td width="20%" align="center"><a accesskey="h" href="index.html">Spis tre&#347;ci</a></td><td width="40%" align="right" valign="top"> D.4. Sygna&#322;y GUI</td></tr></table></div></body></html>
+</p><div class="informaltable"><table border="1"><colgroup><col><col></colgroup><thead><tr><th>Znak</th><th>Symbol</th></tr></thead><tbody><tr><td><span class="keycap"><b>p</b></span></td><td>odtwarzanie</td></tr><tr><td><span class="keycap"><b>s</b></span></td><td>stop</td></tr><tr><td><span class="keycap"><b>e</b></span></td><td>pauza</td></tr><tr><td><span class="keycap"><b>n</b></span></td><td>bez d¼wiêku</td></tr><tr><td><span class="keycap"><b>m</b></span></td><td>d¼wiêk mono</td></tr><tr><td><span class="keycap"><b>t</b></span></td><td>d¼wiêk stereo</td></tr><tr><td><span class="keycap"><b>f</b></span></td><td>strumieñ z pliku</td></tr><tr><td><span class="keycap"><b>v</b></span></td><td>strumieñ z Video CD</td></tr><tr><td><span class="keycap"><b>d</b></span></td><td>strumieñ z DVD</td></tr><tr><td><span class="keycap"><b>u</b></span></td><td>strumieñ z URL</td></tr></tbody></table></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="skin-file.html">Poprzedni</a> </td><td width="20%" align="center"><a accesskey="u" href="skin.html">Pocz±tek rozdzia³u</a></td><td width="40%" align="right"> <a accesskey="n" href="skin-gui.html">Nastêpny</a></td></tr><tr><td width="40%" align="left" valign="top">D.2. Plik skin </td><td width="20%" align="center"><a accesskey="h" href="index.html">Spis tre¶ci</a></td><td width="40%" align="right" valign="top"> D.4. Sygna³y GUI</td></tr></table></div></body></html>

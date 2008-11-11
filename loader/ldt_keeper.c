@@ -15,7 +15,7 @@
 /*
  * Modified for use with MPlayer, detailed CVS changelog at
  * http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
- * $Id: ldt_keeper.c,v 1.17 2005/04/15 20:17:12 diego Exp $
+ * $Id: ldt_keeper.c 18363 2006-04-30 21:17:30Z diego $
  */
 
 #include "ldt_keeper.h"
@@ -50,7 +50,7 @@ int modify_ldt(int func, void *ptr, unsigned long bytecount);
 }
 #endif
 #else
-#if defined(__NetBSD__) || defined(__FreeBSD__) || defined(__OpenBSD__)
+#if defined(__NetBSD__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__DragonFly__)
 #include <machine/segments.h>
 #include <machine/sysarch.h>
 #endif
@@ -60,12 +60,14 @@ int modify_ldt(int func, void *ptr, unsigned long bytecount);
 #include <sys/sysi86.h>
 
 /* solaris x86: add missing prototype for sysi86() */
+#ifdef HAVE_SYSI86
 #ifdef  __cplusplus
 extern "C" {
 #endif
 int sysi86(int, void*);
 #ifdef  __cplusplus
 }
+#endif
 #endif
 
 #ifndef NUMSYSLDTS             /* SunOS 2.5.1 does not define NUMSYSLDTS */
@@ -165,7 +167,7 @@ static int LDT_Modify( int func, struct modify_ldt_ldt_s *ptr,
 #endif
 #endif
 
-#if defined(__NetBSD__) || defined(__FreeBSD__) || defined(__OpenBSD__)
+#if defined(__NetBSD__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__DragonFly__)
 static void LDT_EntryToBytes( unsigned long *buffer, const struct modify_ldt_ldt_s *content )
 {
     *buffer++ = ((content->base_addr & 0x0000ffff) << 16) |
@@ -227,7 +229,7 @@ ldt_fs_t* Setup_LDT_Keeper(void)
     }
 #endif /*linux*/
 
-#if defined(__NetBSD__) || defined(__FreeBSD__) || defined(__OpenBSD__)
+#if defined(__NetBSD__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__DragonFly__)
     {
         unsigned long d[2];
 
@@ -244,9 +246,12 @@ ldt_fs_t* Setup_LDT_Keeper(void)
             perror("install_fs");
 	    printf("Couldn't install fs segment, expect segfault\n");
             printf("Did you reconfigure the kernel with \"options USER_LDT\"?\n");
+#ifdef __OpenBSD__
+	    printf("On newer OpenBSD systems did you set machdep.userldt to 1?\n");
+#endif
         }
     }
-#endif  /* __NetBSD__ || __FreeBSD__ || __OpenBSD__ */
+#endif  /* __NetBSD__ || __FreeBSD__ || __OpenBSD__ || __DragonFly__ */
 
 #if defined(__svr4__)
     {

@@ -59,7 +59,6 @@ static char help_text[]=
 #define MSGTR_NoHomeDir "Μη δυνατή η εύρεση του HOME φακέλου\n"
 #define MSGTR_GetpathProblem "get_path(\"config\") πρόβλημα\n"
 #define MSGTR_CreatingCfgFile "Δημιουργία του αρχείου config: %s\n"
-#define MSGTR_InvalidAOdriver "Λάθος όνομα για τον οδηγό εξόδου ήχου: %s\nΧρησιμοποιήστε '-ao help' για να έχετε τη λίστα των διαθέσιμων οδηγών εξόδου ήχου.\n"
 #define MSGTR_CopyCodecsConf "(αντιγραφή/συντόμευση etc/codecs.conf (από τον πηγαίο κώδικα του MPlayer) στο ~/.mplayer/codecs.conf)\n"
 #define MSGTR_BuiltinCodecsConf "Χρήση του ενσωματωμένου προεπιλεγμένου codecs.conf\n"
 #define MSGTR_CantLoadFont "Μη δυνατότητα φόρτωσης της γραμματοσειράς: %s\n"
@@ -68,10 +67,10 @@ static char help_text[]=
 #define MSGTR_CantOpenDumpfile "Αδύνατο το άνοιγμα του dump αρχείου!!!\n"
 #define MSGTR_CoreDumped "core dumped :)\n"
 #define MSGTR_FPSnotspecified "Μη ορισμένα FPS (ή λάθος) στην επικεφαλίδα! Χρησιμοποιήστε την επιλογή -fps!\n"
-#define MSGTR_TryForceAudioFmtStr "Προσπάθεια  επιβολής της οικογένειας του οδηγού του ήχου %d...\n"
+#define MSGTR_TryForceAudioFmtStr "Προσπάθεια  επιβολής της οικογένειας του οδηγού του ήχου %s...\n"
 #define MSGTR_CantFindAudioCodec "Δεν είναι δυνατή η εύρεση του format του οδηγού του ήχου 0x%X!\n"
 #define MSGTR_RTFMCodecs "Διαβάστε DOCS/HTML/en/codecs.html!\n"
-#define MSGTR_TryForceVideoFmtStr "Προσπάθεια  επιβολής της οικογένειας του οδηγού του βίντεο %d...\n"
+#define MSGTR_TryForceVideoFmtStr "Προσπάθεια  επιβολής της οικογένειας του οδηγού του βίντεο %s...\n"
 #define MSGTR_CantFindVideoCodec "Δεν είναι δυνατή η εύρεση του οδηγού  για τον συγκεκριμένο -vo και το format του βίντεο 0x%X!\n"
 #define MSGTR_VOincompCodec "Λυπάμαι, η επιλεγμένη συσκευή video_out δεν είναι συμβατή με αυτό τον οδηγό.\n"
 #define MSGTR_CannotInitVO "Σφάλμα: Αδύνατη η αρχικοποίηση του οδηγού του βίντεο!\n"
@@ -146,7 +145,7 @@ static char help_text[]=
 
 // mencoder.c:
 
-#define MSGTR_UsingPass3ControllFile "Χρήση του αρχείου ελέγχου pass3: %s\n"
+#define MSGTR_UsingPass3ControlFile "Χρήση του αρχείου ελέγχου pass3: %s\n"
 #define MSGTR_MissingFilename "\n Παράλειψη ονόματος αρχείου!\n\n"
 #define MSGTR_CannotOpenFile_Device "Αδύνατο το άνοιγμα του αρχείου/συσκευή\n"
 #define MSGTR_CannotOpenDemuxer "Αδύνατο το άνοιγμα του demuxer\n"
@@ -155,15 +154,12 @@ static char help_text[]=
 #define MSGTR_CannotOpenOutputFile "Αδύνατο το άνοιγμα του αρχείου εξόδου '%s'\n"
 #define MSGTR_EncoderOpenFailed "Αποτυχία κατά το άνοιγμα του κωδικοποιητή \n"
 #define MSGTR_ForcingOutputFourcc "Εξαναγκασμός χρήσης εξόδου fourcc σε %x [%.4s]\n"
-#define MSGTR_WritingAVIHeader "Εγγραφή επικεφαλίδας του AVI...\n"
 #define MSGTR_DuplicateFrames "\n διπλασιασμός %d καρέ!!!    \n"
 #define MSGTR_SkipFrame "\n παράλειψη καρέ!!!    \n"
 #define MSGTR_ErrorWritingFile "%s: σφάλμα εγγραφής αρχείου.\n"
-#define MSGTR_WritingAVIIndex "\n Εγγραφή του index του AVI...\n"
-#define MSGTR_FixupAVIHeader "Διόρθωση επικεφαλίδας του AVI...\n"
 #define MSGTR_RecommendedVideoBitrate "Προτεινόμενο bitrate του βίντεο για %s CD: %d\n"
-#define MSGTR_VideoStreamResult "\n Κανάλι βίντεο: %8.3f kbit/s  (%d bps)  μέγεθος: %d bytes  %5.3f δευτερόλεπτα  %d καρέ\n"
-#define MSGTR_AudioStreamResult "\n Κανάλι ήχου: %8.3f kbit/s  (%d bps)  μέγεθος: %d bytes  %5.3f δευτερόλεπτα\n"
+#define MSGTR_VideoStreamResult "\n Κανάλι βίντεο: %8.3f kbit/s  (%d B/s)  μέγεθος: %"PRIu64" bytes  %5.3f δευτερόλεπτα  %d καρέ\n"
+#define MSGTR_AudioStreamResult "\n Κανάλι ήχου: %8.3f kbit/s  (%d B/s)  μέγεθος: %"PRIu64" bytes  %5.3f δευτερόλεπτα\n"
 
 // cfg-mencoder.h:
 
@@ -311,12 +307,12 @@ static char help_text[]=
 #define MSGTR_UsingExternalPP "[PP] Χρήση εξωτερικού φίλτρου προεπεξεργασίας, μέγιστο q = %d\n"
 #define MSGTR_UsingCodecPP "[PP] Χρήση φίλτρου προεπεξεργασίας για το codec, μέγιστο q = %d\n"
 #define MSGTR_VideoAttributeNotSupportedByVO_VD "Η ιδιότητα για το βίντεο '%s' δεν υποστηρίζεται από το επιλεγμένο vo και vd! \n"
-#define MSGTR_VideoCodecFamilyNotAvailableStr "Η αίτηση για την οικογένεια του codec βίντεο [%s] (vfm=%d) δεν διατίθεται (ενεργοποιήστε το κατά την μετάφραση του προγράμματος!)\n"
-#define MSGTR_AudioCodecFamilyNotAvailableStr "Η αίτηση για την οικογένεια του codec ήχου [%s] (afm=%d) δεν διατίθεται (ενεργοποιήστε το κατά την μετάφραση του προγράμματος!)\n"
+#define MSGTR_VideoCodecFamilyNotAvailableStr "Η αίτηση για την οικογένεια του codec βίντεο [%s] (vfm=%s) δεν διατίθεται (ενεργοποιήστε το κατά την μετάφραση του προγράμματος!)\n"
+#define MSGTR_AudioCodecFamilyNotAvailableStr "Η αίτηση για την οικογένεια του codec ήχου [%s] (afm=%s) δεν διατίθεται (ενεργοποιήστε το κατά την μετάφραση του προγράμματος!)\n"
 #define MSGTR_OpeningVideoDecoder "Άνοιγμα αποκωδικοποιητή βίντεο: [%s] %s\n"
 #define MSGTR_OpeningAudioDecoder "Άνοιγμα αποκωδικοποιητή ήχου: [%s] %s\n"
-#define MSGTR_UninitVideoStr "uninit βίντεο: %d  \n"
-#define MSGTR_UninitAudioStr "uninit ήχο: %d  \n"
+#define MSGTR_UninitVideoStr "uninit βίντεο: %s  \n"
+#define MSGTR_UninitAudioStr "uninit ήχο: %s  \n"
 #define MSGTR_VDecoderInitFailed "Αποτυχία αρχικοποίησης του VDecoder :(\n"
 #define MSGTR_ADecoderInitFailed "Αποτυχία αρχικοποίησης του ADecoder :(\n"
 #define MSGTR_ADecoderPreinitFailed "Αποτυχία προαρχικοποίησης του ADecoder :(\n"
@@ -343,7 +339,7 @@ static char help_text[]=
 #define MSGTR_MovieAspectUndefined "Η αναλογία της ταινίας δεν είναι ορισμένη - δεν εφαρμόζεται προκλιμάκωση.\n"
 
 // vd_dshow.c, vd_dmo.c
-#define MSGTR_DownloadCodecPackage "Θα πρέπει να αναβαθμήσετε ή να εγκαταστήσετε το πακέτο με τα codecs.\nΔείτε τη διεύθυνση http://mplayerhq.hu/homepage/dload.html\n"
+#define MSGTR_DownloadCodecPackage "Θα πρέπει να αναβαθμήσετε ή να εγκαταστήσετε το πακέτο με τα codecs.\nΔείτε τη διεύθυνση http://www.mplayerhq.hu/dload.html\n"
 #define MSGTR_DShowInitOK "Πληροφορία: το βίντεο codec Win32/DShow αρχικοποιήθηκε επιτυχώς.\n"
 #define MSGTR_DMOInitOK "Πληροφορία: το βίντεο codec Win32/DMO αρχικοποιήθηκε επιτυχώς.\n"
 
@@ -401,7 +397,7 @@ static char help_text[]=
 #define MSGTR_SKIN_BITMAP_PNGReadError "σφάλμα κατά την ανάγνωση του PNG (%s)\n"
 #define MSGTR_SKIN_BITMAP_RLENotSupported "Το RLE packed TGA δεν υποστηρίζεται (%s)\n"
 #define MSGTR_SKIN_BITMAP_UnknownFileType "μη αναγνωρίσιμο είδος αρχείου (%s)\n"
-#define MSGTR_SKIN_BITMAP_ConvertError "σφάλμα κατά τη μετατροπή από 24 bit σε 32 bit (%s)\n"
+#define MSGTR_SKIN_BITMAP_ConversionError "σφάλμα κατά τη μετατροπή από 24 bit σε 32 bit (%s)\n"
 #define MSGTR_SKIN_BITMAP_UnknownMessage "μη αναγνωρίσιμο μήνυμα: %s\n"
 #define MSGTR_SKIN_FONT_NotEnoughtMemory "δεν υπάρχει αρκετή μνήμη διαθέσιμη\n"
 #define MSGTR_SKIN_FONT_TooManyFontsDeclared "πολλαπλές ορισμένες γραμματοσειρές\n"
@@ -444,8 +440,8 @@ static char help_text[]=
 #define MSGTR_MENU_Chapter "Κεφάλαιο %2d"
 #define MSGTR_MENU_AudioLanguages "Γλώσσες ήχου"
 #define MSGTR_MENU_SubtitleLanguages "Γλώσσες υποτίτλων"
-#define MSGTR_MENU_PlayList "Λίστα Αναπαραγωγής"
 #define MSGTR_MENU_SkinBrowser "Λίστα skins"
+// TODO: Why is this different from MSGTR_Preferences?
 #define MSGTR_MENU_Preferences "Ρυθμίσεις"
 #define MSGTR_MENU_Exit "Έξοδος..."
 #define MSGTR_MENU_Mute "Απενεργοποίηση ήχου"
@@ -483,8 +479,6 @@ static char help_text[]=
 #define MSGTR_PLAYLIST_DirectoryTree "Δένδρο καταλόγων"
 
 // --- preferences
-#define MSGTR_PREFERENCES_Audio "Ήχος"
-#define MSGTR_PREFERENCES_Video "Βίντεο"
 #define MSGTR_PREFERENCES_SubtitleOSD "Υπότιτλοι και OSD"
 #define MSGTR_PREFERENCES_Codecs "Codecs και demuxer"
 #define MSGTR_PREFERENCES_Misc "Διάφορα"
@@ -493,7 +487,7 @@ static char help_text[]=
 #define MSGTR_PREFERENCES_AvailableDrivers "Διαθέσιμοι οδηγοί:"
 #define MSGTR_PREFERENCES_DoNotPlaySound "Μη-αναπαραγωγή ήχου"
 #define MSGTR_PREFERENCES_NormalizeSound "Κανονικοποίηση ήχου"
-#define MSGTR_PREFERENCES_EnEqualizer "Ενεργοποίηση του equalizer"
+#define MSGTR_PREFERENCES_EnableEqualizer "Ενεργοποίηση του equalizer"
 #define MSGTR_PREFERENCES_ExtraStereo "Ενεργοποίηση του extra stereo"
 #define MSGTR_PREFERENCES_Coefficient "Coefficient:"
 #define MSGTR_PREFERENCES_AudioDelay "Καθυστέρηση ήχου"
@@ -529,7 +523,6 @@ static char help_text[]=
 #define MSGTR_PREFERENCES_FRAME_PostProcess "Προεπεξεργασία"
 #define MSGTR_PREFERENCES_FRAME_CodecDemuxer "Codec και demuxer"
 #define MSGTR_PREFERENCES_FRAME_Cache "Cache"
-#define MSGTR_PREFERENCES_FRAME_Misc "Διάφορα"
 #define MSGTR_PREFERENCES_Message "Προσοχή, μερικές λειτουργίες χρειάζονται επανεκκίνιση αναπαραγωγής."
 #define MSGTR_PREFERENCES_DXR3_VENC "Κωδικοποιητής βίντεο:"
 #define MSGTR_PREFERENCES_DXR3_LAVC "Χρήση του LAVC (FFmpeg)"
@@ -579,9 +572,6 @@ static char help_text[]=
 #define MSGTR_PREFERENCES_ShowVideoWindow "Εμφάνιση του Video Window όταν δεν είναι ενεργοποιημένο"
 
 #define MSGTR_ABOUT_UHU "Η ανάπτυξη του GUI προωθείται από την UHU Linux\n"
-#define MSGTR_ABOUT_CoreTeam "   Κύρια ομάδα του MPlayer:\n"
-#define MSGTR_ABOUT_AdditionalCoders "   Επιπλέον προγραμματιστές:\n"
-#define MSGTR_ABOUT_MainTesters "   Βασικοί δοκιμαστές:\n"
 
 // --- messagebox
 #define MSGTR_MSGBOX_LABEL_FatalError "Κρίσιμο σφάλμα..."

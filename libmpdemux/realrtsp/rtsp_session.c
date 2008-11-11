@@ -39,6 +39,7 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
+#include <inttypes.h>
 
 #include "rtsp.h"
 #include "rtsp_session.h"
@@ -71,13 +72,12 @@ struct rtsp_session_s {
 };
 
 //rtsp_session_t *rtsp_session_start(char *mrl) {
-rtsp_session_t *rtsp_session_start(int fd, char **mrl, char *path, char *host, int port, int *redir) {
+rtsp_session_t *rtsp_session_start(int fd, char **mrl, char *path, char *host, int port, int *redir, uint32_t bandwidth) {
 
   rtsp_session_t *rtsp_session=malloc(sizeof(rtsp_session_t));
   char *server;
   char *mrl_line = NULL;
   rmff_header_t *h;
-  uint32_t bandwidth=10485800;
 
   rtsp_session->recv = xbuffer_init(BUF_SIZE);
 

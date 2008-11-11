@@ -11,7 +11,9 @@ extern int vo_ontop;
 
 extern int vo_init(void);
 extern void vo_w32_uninit(void);
+extern void vo_w32_ontop(void);
 extern void vo_w32_fullscreen(void);
 extern int vo_w32_check_events(void);
-extern int createRenderingContext(void);
+extern int vo_w32_config(uint32_t, uint32_t, uint32_t);
 extern void destroyRenderingContext(void);
+extern void update_xinerama_info(void);

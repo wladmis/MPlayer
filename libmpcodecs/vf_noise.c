@@ -13,7 +13,7 @@
 
     You should have received a copy of the GNU General Public License
     along with this program; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 */
 
 #include <stdio.h>
@@ -22,9 +22,10 @@
 #include <inttypes.h>
 #include <math.h>
 
-#include "../config.h"
-#include "../mp_msg.h"
-#include "../cpudetect.h"
+#include "config.h"
+#include "mp_msg.h"
+#include "cpudetect.h"
+#include "asmalign.h"
 
 #ifdef HAVE_MALLOC_H
 #include <malloc.h>
@@ -33,7 +34,7 @@
 #include "img_format.h"
 #include "mp_image.h"
 #include "vf.h"
-#include "../libvo/fastmemcpy.h"
+#include "libvo/fastmemcpy.h"
 
 #define MAX_NOISE 4096
 #define MAX_SHIFT 1024
@@ -65,7 +66,8 @@ struct vf_priv_s {
 	unsigned int outfmt;
 };
 
-static int nonTempRandShift[MAX_RES]= {-1};
+static int nonTempRandShift_init;
+static int nonTempRandShift[MAX_RES];
 
 static int patt[4] = {
     -1,0,1,0
@@ -128,10 +130,11 @@ static int8_t *initNoise(FilterParam *fp){
 	    for (j = 0; j < 3; j++)
 		fp->prev_shift[i][j] = noise + (rand()&(MAX_SHIFT-1));
 
-	if(nonTempRandShift[0]==-1){
+	if(!nonTempRandShift_init){
 		for(i=0; i<MAX_RES; i++){
 			nonTempRandShift[i]= rand()&(MAX_SHIFT-1);
 		}
+		nonTempRandShift_init = 1;
 	}
 
 	fp->noise= noise;
@@ -151,7 +154,7 @@ static inline void lineNoise_MMX(uint8_t *dst, uint8_t *src, int8_t *noise, int 
 		"pcmpeqb %%mm7, %%mm7		\n\t"
 		"psllw $15, %%mm7		\n\t"
 		"packsswb %%mm7, %%mm7		\n\t"
-		".balign 16			\n\t"
+		ASMALIGN16   
 		"1:				\n\t"
 		"movq (%0, %%"REG_a"), %%mm0	\n\t"
 		"movq (%1, %%"REG_a"), %%mm1	\n\t"
@@ -180,7 +183,7 @@ static inline void lineNoise_MMX2(uint8_t *dst, uint8_t *src, int8_t *noise, int
 		"pcmpeqb %%mm7, %%mm7		\n\t"
 		"psllw $15, %%mm7		\n\t"
 		"packsswb %%mm7, %%mm7		\n\t"
-		".balign 16			\n\t"
+		ASMALIGN16  
 		"1:				\n\t"
 		"movq (%0, %%"REG_a"), %%mm0	\n\t"
 		"movq (%1, %%"REG_a"), %%mm1	\n\t"
@@ -218,7 +221,7 @@ static inline void lineNoiseAvg_MMX(uint8_t *dst, uint8_t *src, int len, int8_t 
 
 	asm volatile(
 		"mov %5, %%"REG_a"		\n\t"
-		".balign 16			\n\t"
+		ASMALIGN16   
 		"1:				\n\t"
 		"movq (%1, %%"REG_a"), %%mm1	\n\t"
 		"movq (%0, %%"REG_a"), %%mm0	\n\t"
@@ -333,7 +336,7 @@ static void get_image(struct vf_instance_s* vf, mp_image_t *mpi){
     mpi->flags|=MP_IMGFLAG_DIRECT;
 }
 
-static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
+static int put_image(struct vf_instance_s* vf, mp_image_t *mpi, double pts){
 	mp_image_t *dmpi;
 
 	if(!(mpi->flags&MP_IMGFLAG_DIRECT)){
@@ -359,7 +362,7 @@ static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
 	if(gCpuCaps.hasMMX2) asm volatile ("sfence\n\t");
 #endif
 
-	return vf_next_put_image(vf,dmpi);
+	return vf_next_put_image(vf,dmpi, pts);
 }
 
 static void uninit(struct vf_instance_s* vf){

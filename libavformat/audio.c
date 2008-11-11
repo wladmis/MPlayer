@@ -14,14 +14,18 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 #include "avformat.h"
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#ifdef __OpenBSD__
+#include <soundcard.h>
+#else
 #include <sys/soundcard.h>
+#endif
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
@@ -49,7 +53,11 @@ static int audio_open(AudioData *s, int is_output, const char *audio_device)
 
     /* open linux audio device */
     if (!audio_device)
+#ifdef __OpenBSD__
+        audio_device = "/dev/sound";
+#else
         audio_device = "/dev/dsp";
+#endif
 
     if (is_output)
         audio_fd = open(audio_device, O_WRONLY);
@@ -79,7 +87,7 @@ static int audio_open(AudioData *s, int is_output, const char *audio_device)
 
     /* select format : favour native format */
     err = ioctl(audio_fd, SNDCTL_DSP_GETFMTS, &tmp);
-    
+
 #ifdef WORDS_BIGENDIAN
     if (tmp & AFMT_S16_BE) {
         tmp = AFMT_S16_BE;
@@ -115,7 +123,7 @@ static int audio_open(AudioData *s, int is_output, const char *audio_device)
         perror("SNDCTL_DSP_SETFMT");
         goto fail;
     }
-    
+
     tmp = (s->channels == 2);
     err = ioctl(audio_fd, SNDCTL_DSP_STEREO, &tmp);
     if (err < 0) {
@@ -124,7 +132,7 @@ static int audio_open(AudioData *s, int is_output, const char *audio_device)
     }
     if (tmp)
         s->channels = 2;
-    
+
     tmp = s->sample_rate;
     err = ioctl(audio_fd, SNDCTL_DSP_SPEED, &tmp);
     if (err < 0) {
@@ -154,8 +162,8 @@ static int audio_write_header(AVFormatContext *s1)
     int ret;
 
     st = s1->streams[0];
-    s->sample_rate = st->codec.sample_rate;
-    s->channels = st->codec.channels;
+    s->sample_rate = st->codec->sample_rate;
+    s->channels = st->codec->channels;
     ret = audio_open(s, 1, NULL);
     if (ret < 0) {
         return AVERROR_IO;
@@ -209,7 +217,7 @@ static int audio_read_header(AVFormatContext *s1, AVFormatParameters *ap)
     AVStream *st;
     int ret;
 
-    if (!ap || ap->sample_rate <= 0 || ap->channels <= 0)
+    if (ap->sample_rate <= 0 || ap->channels <= 0)
         return -1;
 
     st = av_new_stream(s1, 0);
@@ -226,12 +234,12 @@ static int audio_read_header(AVFormatContext *s1, AVFormatParameters *ap)
     }
 
     /* take real parameters */
-    st->codec.codec_type = CODEC_TYPE_AUDIO;
-    st->codec.codec_id = s->codec_id;
-    st->codec.sample_rate = s->sample_rate;
-    st->codec.channels = s->channels;
+    st->codec->codec_type = CODEC_TYPE_AUDIO;
+    st->codec->codec_id = s->codec_id;
+    st->codec->sample_rate = s->sample_rate;
+    st->codec->channels = s->channels;
 
-    av_set_pts_info(st, 48, 1, 1000000);  /* 48 bits pts in us */
+    av_set_pts_info(st, 64, 1, 1000000);  /* 64 bits pts in us */
     return 0;
 }
 
@@ -241,7 +249,7 @@ static int audio_read_packet(AVFormatContext *s1, AVPacket *pkt)
     int ret, bdelay;
     int64_t cur_time;
     struct audio_buf_info abufi;
-    
+
     if (av_new_packet(pkt, s->frame_size) < 0)
         return AVERROR_IO;
     for(;;) {
@@ -263,7 +271,7 @@ static int audio_read_packet(AVFormatContext *s1, AVPacket *pkt)
         if (ret == -1 && (errno == EAGAIN || errno == EINTR)) {
             av_free_packet(pkt);
             pkt->size = 0;
-            pkt->pts = av_gettime() & ((1LL << 48) - 1);
+            pkt->pts = av_gettime();
             return 0;
         }
         if (!(ret == 0 || (ret == -1 && (errno == EAGAIN || errno == EINTR)))) {
@@ -283,7 +291,7 @@ static int audio_read_packet(AVFormatContext *s1, AVPacket *pkt)
     cur_time -= (bdelay * 1000000LL) / (s->sample_rate * s->channels);
 
     /* convert to wanted units */
-    pkt->pts = cur_time & ((1LL << 48) - 1);
+    pkt->pts = cur_time;
 
     if (s->flip_left && s->channels == 2) {
         int i;

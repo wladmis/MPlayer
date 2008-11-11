@@ -25,9 +25,9 @@
 #include "huffman.h"
 #include "mp3.h"
 #include "bswap.h"
-#include "../cpudetect.h"
-//#include "../liba52/mm_accel.h"
-#include "../mp_msg.h"
+#include "cpudetect.h"
+//#include "liba52/mm_accel.h"
+#include "mp_msg.h"
 
 #include "fastmemcpy.h"
 
@@ -68,7 +68,7 @@ extern int mp3_read(char *buf,int size);
 /*
  * Modified for use with MPlayer, for details see the CVS changelog at
  * http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
- * $Id: sr1.c,v 1.32 2005/04/15 22:21:34 diego Exp $
+ * $Id: sr1.c 18102 2006-04-15 14:33:19Z diego $
  */
 
 
@@ -394,7 +394,7 @@ extern void dct64_MMX_3dnow(real *, real *, real *);
 extern void dct64_MMX_3dnowex(real *, real *, real *);
 void (*dct64_MMX_func)(real *, real *, real *);
 
-#include "../cpudetect.h"
+#include "cpudetect.h"
 
 // Init decoder tables.  Call first, once!
 #ifdef USE_FAKE_MONO
@@ -444,6 +444,13 @@ void MP3_Init(){
     {
 	synth_func = synth_1to1_pent;
 	mp_msg(MSGT_DECAUDIO,MSGL_V,"mp3lib: using Pentium optimized decore!\n");
+    }
+    else
+#endif
+#ifdef HAVE_ALTIVEC
+    if (gCpuCaps.hasAltiVec)
+    {
+	mp_msg(MSGT_DECAUDIO,MSGL_V,"mp3lib: using AltiVec optimized decore!\n");
     }
     else
 #endif
@@ -523,7 +530,7 @@ int MP3_DecodeFrame(unsigned char *hova,short single){
 }
 
 // Prints last frame header in ascii.
-void MP3_PrintHeader(){
+void MP3_PrintHeader(void){
         static char *modes[4] = { "Stereo", "Joint-Stereo", "Dual-Channel", "Single-Channel" };
         static char *layers[4] = { "???" , "I", "II", "III" };
 

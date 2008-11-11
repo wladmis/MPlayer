@@ -18,6 +18,7 @@
 #include "config.h"
 #include "mp_msg.h"
 #include "cpudetect.h"
+#include "asmalign.h"
 
 #include "img_format.h"
 #include "mp_image.h"
@@ -135,7 +136,7 @@ void affine_1d_MMX (eq2_param_t *par, unsigned char *dst, unsigned char *src,
       "movq (%6), %%mm4 \n\t"
       "pxor %%mm0, %%mm0 \n\t"
       "movl %4, %%eax\n\t"
-      ".balign 16 \n\t"
+      ASMALIGN16
       "1: \n\t"
       "movq (%0), %%mm1 \n\t"
       "movq (%0), %%mm2 \n\t"
@@ -224,7 +225,7 @@ void apply_lut (eq2_param_t *par, unsigned char *dst, unsigned char *src,
 }
 
 static
-int put_image (vf_instance_t *vf, mp_image_t *src)
+int put_image (vf_instance_t *vf, mp_image_t *src, double pts)
 {
   unsigned      i;
   vf_eq2_t      *eq2;
@@ -264,7 +265,7 @@ int put_image (vf_instance_t *vf, mp_image_t *src)
     }
   }
 
-  return vf_next_put_image (vf, dst);
+  return vf_next_put_image (vf, dst, pts);
 }
 
 static

@@ -15,6 +15,8 @@
     note: triple buffering requires VBE 3.0 - need volunteers.
 */
 #include "config.h"
+#include "mp_msg.h"
+#include "help_mp.h"
 #include "gtf.h"
 #include <stdio.h>
 #ifdef HAVE_MALLOC_H
@@ -30,29 +32,28 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+#include <vbe.h>
 
 #include "video_out.h"
 #include "video_out_internal.h"
 
 #include "fastmemcpy.h"
 #include "sub.h"
-#include "osdep/vbelib.h"
 #include "bswap.h"
 #include "aspect.h"
 #include "vesa_lvo.h"
 #ifdef CONFIG_VIDIX
 #include "vosub_vidix.h"
 #endif
+#include "mp_msg.h"
 
-#include "../postproc/swscale.h"
-#include "../libmpcodecs/vf_scale.h"
+#include "postproc/swscale.h"
+#include "libmpcodecs/vf_scale.h"
 
 
 #ifdef HAVE_PNG
 extern vo_functions_t video_out_png;
 #endif
-
-extern int verbose;
 
 extern char *monitor_hfreq_str;
 extern char *monitor_vfreq_str;
@@ -153,7 +154,7 @@ static char * vbeErrToStr(int err)
   return retval;
 }
 
-#define PRINT_VBE_ERR(name,err) { printf("vo_vesa: %s returns: %s\n",name,vbeErrToStr(err)); fflush(stdout); }
+#define PRINT_VBE_ERR(name,err) { mp_msg(MSGT_VO,MSGL_WARN, "vo_vesa: %s returns: %s\n",name,vbeErrToStr(err)); fflush(stdout); }
 
 static void vesa_term( void )
 {
@@ -189,7 +190,7 @@ static inline void __vbeSwitchBank(unsigned long offset)
     show_err:
     vesa_term();
     PRINT_VBE_ERR("vbeSetWindow",err);
-    printf("vo_vesa: Fatal error occurred! Can't continue\n");
+    mp_msg(MSGT_VO,MSGL_WARN, MSGTR_LIBVO_VESA_FatalErrorOccurred);
     abort();
   }
   win.low = new_offset * gran;
@@ -275,13 +276,13 @@ static void __vbeCopyData(uint8_t *image)
 }
 
 /* is called for yuv only */
-static uint32_t draw_slice(uint8_t *image[], int stride[], int w,int h,int x,int y)
+static int draw_slice(uint8_t *image[], int stride[], int w,int h,int x,int y)
 {
     int dstride=HAS_DGA()?video_mode_info.XResolution:dstW;
     uint8_t *dst[3]= {dga_buffer, NULL, NULL};
     int dstStride[3];
-    if(verbose > 2)
-	printf("vo_vesa: draw_slice was called: w=%u h=%u x=%u y=%u\n",w,h,x,y);
+    if( mp_msg_test(MSGT_VO,MSGL_DBG3) )
+	mp_msg(MSGT_VO,MSGL_DBG3, "vo_vesa: draw_slice was called: w=%u h=%u x=%u y=%u\n",w,h,x,y);
     dstStride[0]=dstride*((dstBpp+7)/8);
     dstStride[1]=
     dstStride[2]=dstStride[0]>>1;
@@ -361,8 +362,8 @@ static void draw_alpha_null(int x0,int y0, int w,int h, unsigned char* src, unsi
 static void draw_osd(void)
 {
  uint32_t w,h;
- if(verbose > 2)
-	printf("vo_vesa: draw_osd was called\n");
+ if( mp_msg_test(MSGT_VO,MSGL_DBG3) )
+	mp_msg(MSGT_VO,MSGL_DBG3, "vo_vesa: draw_osd was called\n");
  {
 #ifdef OSD_OUTSIDE_MOVIE
    w = HAS_DGA()?video_mode_info.XResolution:dstW;
@@ -377,8 +378,8 @@ static void draw_osd(void)
 
 static void flip_page(void)
 {
-  if(verbose > 2)
-	printf("vo_vesa: flip_page was called\n");
+  if( mp_msg_test(MSGT_VO,MSGL_DBG3) )
+	mp_msg(MSGT_VO,MSGL_DBG3, "vo_vesa: flip_page was called\n");
   if(flip_trigger) 
   {
     if(!HAS_DGA()) __vbeCopyData(dga_buffer);
@@ -391,7 +392,7 @@ static void flip_page(void)
     {
       vesa_term();
       PRINT_VBE_ERR("vbeSetDisplayStart",err);
-      printf("vo_vesa: Fatal error occurred! Can't continue\n");
+      mp_msg(MSGT_VO,MSGL_WARN, MSGTR_LIBVO_VESA_FatalErrorOccurred);
       abort();
     }
     multi_idx = multi_idx ? 0 : 1;
@@ -410,10 +411,10 @@ static void flip_page(void)
 }
 
 /* is called for rgb only */
-static uint32_t draw_frame(uint8_t *src[])
+static int draw_frame(uint8_t *src[])
 {
-    if(verbose > 2)
-        printf("vo_vesa: draw_frame was called\n");
+    if( mp_msg_test(MSGT_VO,MSGL_DBG3) )
+        mp_msg(MSGT_VO,MSGL_DBG3, "vo_vesa: draw_frame was called\n");
     if(sws)
     {
 	int dstride=HAS_DGA()?video_mode_info.XResolution:dstW;
@@ -457,18 +458,21 @@ static uint32_t parseSubDevice(const char *sd)
    else
    if(memcmp(sd,"vidix",5) == 0) vidix_name = &sd[5]; /* vidix_name will be valid within init() */
 #endif
-   else { printf("vo_vesa: Unknown subdevice: '%s'\n", sd); return 0xFFFFFFFFUL; }
+   else { mp_msg(MSGT_VO,MSGL_WARN, MSGTR_LIBVO_VESA_UnkownSubdevice, sd); return 0xFFFFFFFFUL; }
    return flags;
 }
 
-static uint32_t query_format(uint32_t format)
+static int query_format(uint32_t format)
 {
-    if(verbose > 2)
-        printf("vo_vesa: query_format was called: %x (%s)\n",format,vo_format_name(format));
+    if( mp_msg_test(MSGT_VO,MSGL_DBG3) )
+        mp_msg(MSGT_VO,MSGL_DBG3, "vo_vesa: query_format was called: %x (%s)\n",format,vo_format_name(format));
 #ifdef CONFIG_VIDIX
     if(vidix_name)return(vidix_query_fourcc(format));
 #endif
-    return 1 | VFCAP_OSD | VFCAP_SWSCALE | VFCAP_ACCEPT_STRIDE; /* due new SwScale code */
+    if (format == IMGFMT_MPEGPES)
+	return 0;
+    // FIXME: this is just broken...
+    return VFCAP_CSP_SUPPORTED | VFCAP_OSD | VFCAP_SWSCALE | VFCAP_ACCEPT_STRIDE; /* due new SwScale code */
 }
 
 static void paintBkGnd( void )
@@ -535,14 +539,14 @@ unsigned fillMultiBuffer( unsigned long vsize, unsigned nbuffs )
   screen_size = video_mode_info.XResolution*video_mode_info.YResolution*((dstBpp+7)/8);
   if(screen_size%64) screen_size=((screen_size/64)*64)+64;
   total = vsize / screen_size;
-  if(verbose) printf("vo_vesa: Can use up to %u video buffers\n",total);
+  if( mp_msg_test(MSGT_VO,MSGL_V) )
+    mp_msg(MSGT_VO,MSGL_V, "vo_vesa: Can use up to %u video buffers\n",total);
   i = 0;
   offset = 0;
   total = min(total,nbuffs);
   while(i < total) { multi_buff[i++] = offset; offset += screen_size; }
   if(!i)
-    printf("vo_vesa: Your have too small size of video memory for this mode:\n"
-	   "vo_vesa: Requires: %08lX exists: %08lX\n", screen_size, vsize);
+    mp_msg(MSGT_VO,MSGL_WARN, MSGTR_LIBVO_VESA_YouHaveTooLittleVideoMemory, screen_size, vsize);
   return i;
 }
 
@@ -561,8 +565,7 @@ static int set_refresh(unsigned x, unsigned y, unsigned mode,struct VesaCRTCInfo
     monitor_dotclock = str2range(monitor_dotclock_str);
     
 		if (!monitor_hfreq || !monitor_vfreq || !monitor_dotclock) {
-			printf("vo_vesa: you have to specify the capabilities of"
-					" the monitor. Not changing refresh rate.\n");
+			mp_msg(MSGT_VO,MSGL_WARN, MSGTR_LIBVO_VESA_YouHaveToSpecifyTheCapabilitiesOfTheMonitor);
 			return 0;
 		}
 
@@ -599,8 +602,7 @@ static int set_refresh(unsigned x, unsigned y, unsigned mode,struct VesaCRTCInfo
     
     if (!in_range(monitor_vfreq,crtc_pass->RefreshRate/100)||
 	!in_range(monitor_hfreq,H_freq*1000)) {
-        printf( "vo_vesa: Unable to fit the mode into monitor's limitation."
-		" Not changing refresh rate.\n");
+        mp_msg(MSGT_VO,MSGL_WARN, MSGTR_LIBVO_VESA_UnableToFitTheMode);
 	return 0;
     }
 
@@ -614,7 +616,7 @@ static int set_refresh(unsigned x, unsigned y, unsigned mode,struct VesaCRTCInfo
  * bit 3 (0x08) enables flipping (-flip) (NK: and for what?)
  */
 
-static uint32_t
+static int
 config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uint32_t flags, char *title, uint32_t format)
 {
   struct VbeInfoBlock vib;  
@@ -630,16 +632,16 @@ config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uin
 	fs_mode = 0;
         if(subdev_flags == 0xFFFFFFFEUL)
 	{
-	  printf("vo_vesa: detected internal fatal error: init is called before preinit\n");
+	  mp_msg(MSGT_VO,MSGL_ERR, MSGTR_LIBVO_VESA_DetectedInternalFatalError);
 	  return -1;
 	}
 	if(subdev_flags == 0xFFFFFFFFUL) return -1;
-	if(flags & 0x8)
+	if(flags & VOFLAG_FLIPPING)
 	{
-	  printf("vo_vesa: switch -flip is not supported\n");
+	  mp_msg(MSGT_VO,MSGL_WARN, MSGTR_LIBVO_VESA_SwitchFlipIsNotSupported);
 	}
-	if(flags & 0x04) use_scaler = 1;
-	if(flags & 0x01)
+	if(flags & VOFLAG_SWSCALE) use_scaler = 1;
+	if(flags & VOFLAG_FULLSCREEN)
 	{
 	  if(use_scaler) use_scaler = 2;
 	  else          fs_mode = 1;
@@ -649,30 +651,29 @@ config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uin
 	if((err=vbeGetControllerInfo(&vib)) != VBE_OK)
 	{
 	  PRINT_VBE_ERR("vbeGetControllerInfo",err);
-	  printf("vo_vesa: possible reason: No VBE2 BIOS found\n");
+	  mp_msg(MSGT_VO,MSGL_ERR, MSGTR_LIBVO_VESA_PossibleReasonNoVbe2BiosFound);
 	  return -1;
 	}
 	/* Print general info here */
-	printf("vo_vesa: Found VESA VBE BIOS Version %x.%x Revision: %x\n",
+	mp_msg(MSGT_VO,MSGL_INFO, MSGTR_LIBVO_VESA_FoundVesaVbeBiosVersion,
 		(int)(vib.VESAVersion >> 8) & 0xff,
 		(int)(vib.VESAVersion & 0xff),
 		(int)(vib.OemSoftwareRev & 0xffff));
-	printf("vo_vesa: Video memory: %u Kb\n",vib.TotalMemory*64);
-	printf("vo_vesa: VESA Capabilities: %s %s %s %s %s\n"
+	mp_msg(MSGT_VO,MSGL_INFO, MSGTR_LIBVO_VESA_VideoMemory,vib.TotalMemory*64);
+	mp_msg(MSGT_VO,MSGL_INFO, MSGTR_LIBVO_VESA_Capabilites
 		,vib.Capabilities & VBE_DAC_8BIT ? "8-bit DAC," : "6-bit DAC,"
 		,vib.Capabilities & VBE_NONVGA_CRTC ? "non-VGA CRTC,":"VGA CRTC,"
 		,vib.Capabilities & VBE_SNOWED_RAMDAC ? "snowed RAMDAC,":"normal RAMDAC,"
 		,vib.Capabilities & VBE_STEREOSCOPIC ? "stereoscopic,":"no stereoscopic,"
 		,vib.Capabilities & VBE_STEREO_EVC ? "Stereo EVC":"no stereo");
-	printf("vo_vesa: !!! Below will be printed OEM info. !!!\n");
-	printf("vo_vesa: You should watch 5 OEM related lines below else you've broken vm86\n");
-	printf("vo_vesa: OEM info: %s\n",vib.OemStringPtr);
-	printf("vo_vesa: OEM Revision: %x\n",vib.OemSoftwareRev);
-	printf("vo_vesa: OEM vendor: %s\n",vib.OemVendorNamePtr);
-	printf("vo_vesa: OEM Product Name: %s\n",vib.OemProductNamePtr);
-	printf("vo_vesa: OEM Product Rev: %s\n",vib.OemProductRevPtr);
-	printf("vo_vesa: Hint: To get workable TV-Out you should have plugged tv-connector in\n"
-	       "vo_vesa: before booting PC since VESA BIOS initializes itself only during POST\n");
+	mp_msg(MSGT_VO,MSGL_INFO, MSGTR_LIBVO_VESA_BelowWillBePrintedOemInfo);
+	mp_msg(MSGT_VO,MSGL_INFO, MSGTR_LIBVO_VESA_YouShouldSee5OemRelatedLines);
+	mp_msg(MSGT_VO,MSGL_INFO, MSGTR_LIBVO_VESA_OemInfo,vib.OemStringPtr);
+	mp_msg(MSGT_VO,MSGL_INFO, MSGTR_LIBVO_VESA_OemRevision,vib.OemSoftwareRev);
+	mp_msg(MSGT_VO,MSGL_INFO, MSGTR_LIBVO_VESA_OemVendor,vib.OemVendorNamePtr);
+	mp_msg(MSGT_VO,MSGL_INFO, MSGTR_LIBVO_VESA_OemProductName,vib.OemProductNamePtr);
+	mp_msg(MSGT_VO,MSGL_INFO, MSGTR_LIBVO_VESA_OemProductRev,vib.OemProductRevPtr);
+	mp_msg(MSGT_VO,MSGL_INFO, MSGTR_LIBVO_VESA_Hint);
 	/* Find best mode here */
 	num_modes = 0;
 	mode_ptr = vib.VideoModePtr;
@@ -712,17 +713,17 @@ config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uin
 		   dstFourcc = IMGFMT_BGR16;
 		   break;
 	}
-	if(verbose)
+	if( mp_msg_test(MSGT_VO,MSGL_V) )
 	{
-	  printf("vo_vesa: Requested mode: %ux%u@%u (%s)\n",width,height,bpp,vo_format_name(format));
-	  printf("vo_vesa: Total modes found: %u\n",num_modes);
+	  mp_msg(MSGT_VO,MSGL_V, "vo_vesa: Requested mode: %ux%u@%u (%s)\n",width,height,bpp,vo_format_name(format));
+	  mp_msg(MSGT_VO,MSGL_V, "vo_vesa: Total modes found: %u\n",num_modes);
 	  mode_ptr = vib.VideoModePtr;
-	  printf("vo_vesa: Mode list:");
+	  mp_msg(MSGT_VO,MSGL_V, "vo_vesa: Mode list:");
 	  for(i = 0;i < num_modes;i++)
 	  {
-	    printf(" %04X",mode_ptr[i]);
+	    mp_msg(MSGT_VO,MSGL_V, " %04X",mode_ptr[i]);
 	  }
-	  printf("\nvo_vesa: Modes in detail:\n");
+	  mp_msg(MSGT_VO,MSGL_V, "\nvo_vesa: Modes in detail:\n");
 	}
 	mode_ptr = vib.VideoModePtr;
 	if(use_scaler)
@@ -755,9 +756,9 @@ config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uin
 				best_mode_idx = i;
 			   }
 		   }
-		if(verbose)
+		if( mp_msg_test(MSGT_VO,MSGL_V) )
 		{
-		  printf("vo_vesa: Mode (%03u): mode=%04X %ux%u@%u attr=%04X\n"
+		  mp_msg(MSGT_VO,MSGL_V, "vo_vesa: Mode (%03u): mode=%04X %ux%u@%u attr=%04X\n"
 			 "vo_vesa:             #planes=%u model=%u(%s) #pages=%u\n"
 			 "vo_vesa:             winA=%X(attr=%u) winB=%X(attr=%u) winSize=%u winGran=%u\n"
 			 "vo_vesa:             direct_color=%u DGA_phys_addr=%08lX\n"
@@ -766,7 +767,7 @@ config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uin
 			 ,vmib.WinASegment,vmib.WinAAttributes,vmib.WinBSegment,vmib.WinBAttributes,vmib.WinSize,vmib.WinGranularity
 			 ,vmib.DirectColorModeInfo,vmib.PhysBasePtr);
 		  if(vmib.MemoryModel == 6 || vmib.MemoryModel == 7)
-			printf("vo_vesa:             direct_color_info = %u:%u:%u:%u\n"
+			mp_msg(MSGT_VO,MSGL_V, "vo_vesa:             direct_color_info = %u:%u:%u:%u\n"
 				,vmib.RedMaskSize,vmib.GreenMaskSize,vmib.BlueMaskSize,vmib.RsvdMaskSize);
 		  fflush(stdout);
 		}
@@ -780,14 +781,15 @@ config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uin
 			PRINT_VBE_ERR("vbeGetMode",err);
 			return -1;
 		}
-		if(verbose) printf("vo_vesa: Initial video mode: %x\n",init_mode);
+		if( mp_msg_test(MSGT_VO,MSGL_V) ) {
+			mp_msg(MSGT_VO,MSGL_V, "vo_vesa: Initial video mode: %x\n",init_mode); }
 		if((err=vbeGetModeInfo(video_mode,&video_mode_info)) != VBE_OK)
 		{
 			PRINT_VBE_ERR("vbeGetModeInfo",err);
 			return -1;
 		}
 		dstBpp = video_mode_info.BitsPerPixel;
-		printf("vo_vesa: Using VESA mode (%u) = %x [%ux%u@%u]\n"
+ 		mp_msg(MSGT_VO,MSGL_INFO, MSGTR_LIBVO_VESA_UsingVesaMode
 			,best_mode_idx,video_mode,video_mode_info.XResolution
 			,video_mode_info.YResolution,dstBpp);
 		if(subdev_flags & SUBDEV_NODGA) video_mode_info.PhysBasePtr = 0;
@@ -822,10 +824,11 @@ config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uin
 		    sws = sws_getContextFromCmdLine(srcW,srcH,srcFourcc,dstW,dstH,dstFourcc);
 		    if(!sws)
 		    {
-			printf("vo_vesa: Can't initialize SwScaler\n");
+ 			mp_msg(MSGT_VO,MSGL_WARN, MSGTR_LIBVO_VESA_CantInitializeSwscaler);
 			return -1;
 		    }
-		    else if(verbose) printf("vo_vesa: Using SW BES emulator\n");
+		    else if( mp_msg_test(MSGT_VO,MSGL_V) ) {
+			mp_msg(MSGT_VO,MSGL_V, "vo_vesa: Using SW BES emulator\n"); }
 		}
 		if((video_mode_info.WinAAttributes & FRAME_MODE) == FRAME_MODE)
 		   win.idx = 0; /* frame A */
@@ -841,7 +844,7 @@ config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uin
 		    vsize = vib.TotalMemory*64*1024;
 		    lfb = vbeMapVideoBuffer(video_mode_info.PhysBasePtr,vsize);
 		    if(lfb == NULL)
-		      printf("vo_vesa: Can't use DGA. Force bank switching mode. :(\n");
+		      mp_msg(MSGT_VO,MSGL_WARN, MSGTR_LIBVO_VESA_CantUseDga);
 		    else
 		    {
 		      video_base = win.ptr = lfb;
@@ -849,37 +852,38 @@ config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uin
 		      win.high = vsize;
 		      win.idx = -1; /* HAS_DGA() is on */
 		      video_mode |= VESA_MODE_USE_LINEAR;
-		      printf("vo_vesa: Using DGA (physical resources: %08lXh, %08lXh)"
+ 		      mp_msg(MSGT_VO,MSGL_INFO, MSGTR_LIBVO_VESA_UsingDga
 			     ,video_mode_info.PhysBasePtr
 			     ,vsize);
-		      if(verbose) printf(" at %08lXh",(unsigned long)lfb);
+		      if( mp_msg_test(MSGT_VO,MSGL_V) ) {
+			printf(" at %08lXh",(unsigned long)lfb); }
 		      printf("\n");
 		      if(!(multi_size = fillMultiBuffer(vsize,2))) return -1;
 		      if(vo_doublebuffering && multi_size < 2)
-			printf("vo_vesa: Can't use double buffering: not enough video memory\n");
+ 			mp_msg(MSGT_VO,MSGL_WARN, MSGTR_LIBVO_VESA_CantUseDoubleBuffering);
 		    }
 		}
 		if(win.idx == -2)
 		{
-		   printf("vo_vesa: Can't find neither DGA nor relocatable window's frame.\n");
+ 		   mp_msg(MSGT_VO,MSGL_ERR, MSGTR_LIBVO_VESA_CantFindNeitherDga);
 		   return -1;
 		}
 		if(!HAS_DGA())
 		{
 		  if(subdev_flags & SUBDEV_FORCEDGA)
 		  {
-			printf("vo_vesa: you've forced DGA. Exiting\n");
+ 			mp_msg(MSGT_VO,MSGL_ERR, MSGTR_LIBVO_VESA_YouveForcedDga);
 			return -1;
 		  }
 		  if(!(win_seg = win.idx == 0 ? video_mode_info.WinASegment:video_mode_info.WinBSegment))
 		  {
-		    printf("vo_vesa: Can't find valid window address\n");
+ 		    mp_msg(MSGT_VO,MSGL_ERR, MSGTR_LIBVO_VESA_CantFindValidWindowAddress);
 		    return -1;
 		  }
 		  win.ptr = PhysToVirtSO(win_seg,0);
 		  win.low = 0L;
 		  win.high= video_mode_info.WinSize*1024;
-		  printf("vo_vesa: Using bank switching mode (physical resources: %08lXh, %08lXh)\n"
+ 		  mp_msg(MSGT_VO,MSGL_INFO, MSGTR_LIBVO_VESA_UsingBankSwitchingMode
 			 ,(unsigned long)win.ptr,(unsigned long)win.high);
 		}
 		if(video_mode_info.XResolution > dstW)
@@ -888,8 +892,8 @@ config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uin
 		if(video_mode_info.YResolution > dstH)
 		    y_offset = (video_mode_info.YResolution - dstH) / 2;
 		else y_offset = 0;
-		if(verbose)
-		  printf("vo_vesa: image: %ux%u screen = %ux%u x_offset = %u y_offset = %u\n"
+		if( mp_msg_test(MSGT_VO,MSGL_V) )
+ 		  mp_msg(MSGT_VO,MSGL_V, "vo_vesa: image: %ux%u screen = %ux%u x_offset = %u y_offset = %u\n"
 			,dstW,dstH
 			,video_mode_info.XResolution,video_mode_info.YResolution
 			,x_offset,y_offset);
@@ -909,10 +913,11 @@ config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uin
 		  {
 		    if(!(dga_buffer = memalign(64,video_mode_info.XResolution*video_mode_info.YResolution*dstBpp)))
 		    {
-		      printf("vo_vesa: Can't allocate temporary buffer\n");
+ 		      mp_msg(MSGT_VO,MSGL_ERR, MSGTR_LIBVO_VESA_CantAllocateTemporaryBuffer);
 		      return -1;
 		    }
-		    if(verbose) printf("vo_vesa: dga emulator was allocated = %p\n",dga_buffer);
+		    if( mp_msg_test(MSGT_VO,MSGL_V) ) {
+			mp_msg(MSGT_VO,MSGL_V, "vo_vesa: dga emulator was allocated = %p\n",dga_buffer); }
 		  }
 		}
 		if((err=vbeSaveState(&init_state)) != VBE_OK)
@@ -945,28 +950,28 @@ config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uin
 		if (neomagic_tvout) {
 		    err = vbeSetTV(video_mode,neomagic_tvnorm);
 		    if (err!=0x4f) {
-		    printf("vo_vesa: Sorry unsupported mode, try -x 640 -zoom\n");
+ 		    mp_msg(MSGT_VO,MSGL_WARN, MSGTR_LIBVO_VESA_SorryUnsupportedMode);
 		    }
 		    else {
-		    printf("vo_vesa: Oh you really have picture on TV!\n");
+ 		    mp_msg(MSGT_VO,MSGL_INFO, MSGTR_LIBVO_VESA_OhYouReallyHavePictureOnTv);
 		    } 
 		}
 		/* Now we are in video mode!!!*/
 		/* Below 'return -1' is impossible */
-		if(verbose)
+		if( mp_msg_test(MSGT_VO,MSGL_V) )
 		{
-		  printf("vo_vesa: Graphics mode was activated\n");
+		  mp_msg(MSGT_VO,MSGL_V, "vo_vesa: Graphics mode was activated\n");
 		  fflush(stdout);
 		}
 		if(lvo_name)
 		{
 		  if(vlvo_init(width,height,x_offset,y_offset,dstW,dstH,format,dstBpp) != 0)
 		  {
-		    printf("vo_vesa: Can't initialize Linux Video Overlay\n");
+ 		    mp_msg(MSGT_VO,MSGL_ERR, MSGTR_LIBVO_VESA_CantInitialozeLinuxVideoOverlay);
 		    vesa_term();
 		    return -1;
 		  }
-		  else printf("vo_vesa: Using video overlay: %s\n",lvo_name);
+		  else mp_msg(MSGT_VO,MSGL_INFO, MSGTR_LIBVO_VESA_UsingVideoOverlay,lvo_name);
 		  lvo_opened = 1;
 		}
 #ifdef CONFIG_VIDIX
@@ -977,11 +982,11 @@ config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uin
 				dstH,format,dstBpp,
 				video_mode_info.XResolution,video_mode_info.YResolution) != 0)
 		  {
-		    printf("vo_vesa: Can't initialize VIDIX driver\n");
+		    mp_msg(MSGT_VO,MSGL_ERR, MSGTR_LIBVO_VESA_CantInitializeVidixDriver);
 		    vesa_term();
 		    return -1;
 		  }
-		  else printf("vo_vesa: Using VIDIX\n");
+		  else mp_msg(MSGT_VO,MSGL_INFO, MSGTR_LIBVO_VESA_UsingVidix);
 		  vidix_start();
 
 		  /* set colorkey */       
@@ -1007,12 +1012,12 @@ config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uin
 	}
 	else
 	{
-	  printf("vo_vesa: Can't find mode for: %ux%u@%u\n",width,height,bpp);
+ 	  mp_msg(MSGT_VO,MSGL_ERR, MSGTR_LIBVO_VESA_CantFindModeFor,width,height,bpp);
 	  return -1;
 	}
-	if(verbose)
+	if( mp_msg_test(MSGT_VO,MSGL_V) )
 	{
-	  printf("vo_vesa: VESA initialization complete\n");
+	  mp_msg(MSGT_VO,MSGL_INFO, MSGTR_LIBVO_VESA_InitializationComplete);
 	  fflush(stdout);
 	}
 	if(HAS_DGA() && vo_doublebuffering)
@@ -1021,13 +1026,13 @@ config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uin
 	    {
 		win.ptr = dga_buffer = video_base + multi_buff[i];
                 clear_screen();	/* Clear screen for stupid BIOSes */
-		if(verbose>1) paintBkGnd();
+		if( mp_msg_test(MSGT_VO,MSGL_DBG2) ) paintBkGnd();
 	    }
 	}
 	else
 	{
             clear_screen();	/* Clear screen for stupid BIOSes */
-	    if(verbose>1)
+	    if( mp_msg_test(MSGT_VO,MSGL_DBG2) )
 	    {
 	        int x;
 	        x = (video_mode_info.XResolution/video_mode_info.XCharSize)/2-strlen(title)/2;
@@ -1044,25 +1049,26 @@ uninit(void)
 {
     // not inited
     vesa_term();
-    if(verbose > 2)
-        printf("vo_vesa: uninit was called\n");
+    if( mp_msg_test(MSGT_VO,MSGL_DBG3) )
+        mp_msg(MSGT_VO,MSGL_DBG3, "vo_vesa: uninit was called\n");
 }
 
 
 static void check_events(void)
 {
-    if(verbose > 2)
-        printf("vo_vesa: check_events was called\n");
+    if( mp_msg_test(MSGT_VO,MSGL_DBG3) )
+        mp_msg(MSGT_VO,MSGL_DBG3, "vo_vesa: check_events was called\n");
 /* Nothing to do */
 }
 
-static uint32_t preinit(const char *arg)
+static int preinit(const char *arg)
 {
   int pre_init_err = 0;
   int fd;
-  if(verbose>1) printf("vo_vesa: preinit(%s) was called\n",arg);
-  if(verbose > 2)
-        printf("vo_vesa: subdevice %s is being initialized\n",arg);
+  if( mp_msg_test(MSGT_VO,MSGL_DBG2) )
+        mp_msg(MSGT_VO,MSGL_DBG2, "vo_vesa: preinit(%s) was called\n",arg);
+  if( mp_msg_test(MSGT_VO,MSGL_DBG3) )
+        mp_msg(MSGT_VO,MSGL_DBG3, "vo_vesa: subdevice %s is being initialized\n",arg);
   subdev_flags = 0;
   lvo_name = NULL;
 #ifdef CONFIG_VIDIX
@@ -1080,12 +1086,12 @@ static uint32_t preinit(const char *arg)
   	return -1;
   else
   	close(fd);
-  if(verbose > 2)
-        printf("vo_subdevice: initialization returns: %i\n",pre_init_err);
+  if( mp_msg_test(MSGT_VO,MSGL_DBG3) )
+        mp_msg(MSGT_VO,MSGL_DBG3, "vo_subdevice: initialization returns: %i\n",pre_init_err);
   return pre_init_err;
 }
 
-static uint32_t control(uint32_t request, void *data, ...)
+static int control(uint32_t request, void *data, ...)
 {
   switch (request) {
   case VOCTRL_QUERY_FORMAT:

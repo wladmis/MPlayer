@@ -36,7 +36,7 @@ pocos dias e incluso en horas, use por favor
 <emphasis role="bold">solo CVS</emphasis> para informar de fallos.
 Esto incluye los paquetes binarios de <application>MPlayer</application>.
 Instrucciones para el CVS pueden encontrarse al final de
-<ulink url="http://www.mplayerhq.hu/homepage/dload.html">esta página</ulink>
+<ulink url="http://www.mplayerhq.hu/dload.html">esta página</ulink>
 o en el README. Si esto no le ayuda diríjase a la lista de
 <link linkend="bugs">fallos conocidos</link> y al resto de la documentación.
 Si su problema no es conocido o no se puede solucionar siguiendo nuestras
@@ -105,7 +105,7 @@ una respuesta.
 <para>
 Necesita incluir un historial, archivos de configuración o muestras en su informe
 de error. Si alguno de estos es muy grande entonces es mejor subirlos a nuestro
-<ulink url="ftp://mplayerhq.hu/MPlayer/incoming/">servidor FTP</ulink> en un
+<ulink url="ftp://ftp.mplayerhq.hu/MPlayer/incoming/">servidor FTP</ulink> en un
 formato comprimido (gzip y bzip2 preferentemente) e incluir solo la ruta al nombre
 del archivo en su informe de error. Nuestras listas de correo tienen un límite
 en el tamaño del mensaje de 80k, si tiene algo más grande entonces deberá comprimirlo

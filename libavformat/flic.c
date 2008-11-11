@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
 /**
@@ -33,6 +33,8 @@
 
 #define FLIC_FILE_MAGIC_1 0xAF11
 #define FLIC_FILE_MAGIC_2 0xAF12
+#define FLIC_FILE_MAGIC_3 0xAF44  /* Flic Type for Extended FLX Format which
+                                     originated in Dave's Targa Animator (DTA) */
 #define FLIC_CHUNK_MAGIC_1 0xF1FA
 #define FLIC_CHUNK_MAGIC_2 0xF5FA
 #define FLIC_MC_PTS_INC 6000  /* pts increment for Magic Carpet game FLIs */
@@ -56,7 +58,8 @@ static int flic_probe(AVProbeData *p)
 
     magic_number = LE_16(&p->buf[4]);
     if ((magic_number != FLIC_FILE_MAGIC_1) &&
-        (magic_number != FLIC_FILE_MAGIC_2))
+        (magic_number != FLIC_FILE_MAGIC_2) &&
+        (magic_number != FLIC_FILE_MAGIC_3))
         return 0;
 
     return AVPROBE_SCORE_MAX;
@@ -86,19 +89,19 @@ static int flic_read_header(AVFormatContext *s,
     if (!st)
         return AVERROR_NOMEM;
     flic->video_stream_index = st->index;
-    st->codec.codec_type = CODEC_TYPE_VIDEO;
-    st->codec.codec_id = CODEC_ID_FLIC;
-    st->codec.codec_tag = 0;  /* no fourcc */
-    st->codec.width = LE_16(&header[0x08]);
-    st->codec.height = LE_16(&header[0x0A]);
+    st->codec->codec_type = CODEC_TYPE_VIDEO;
+    st->codec->codec_id = CODEC_ID_FLIC;
+    st->codec->codec_tag = 0;  /* no fourcc */
+    st->codec->width = LE_16(&header[0x08]);
+    st->codec->height = LE_16(&header[0x0A]);
 
-    if (!st->codec.width || !st->codec.height)
+    if (!st->codec->width || !st->codec->height)
         return AVERROR_INVALIDDATA;
 
     /* send over the whole 128-byte FLIC header */
-    st->codec.extradata_size = FLIC_HEADER_SIZE;
-    st->codec.extradata = av_malloc(FLIC_HEADER_SIZE);
-    memcpy(st->codec.extradata, header, FLIC_HEADER_SIZE);
+    st->codec->extradata_size = FLIC_HEADER_SIZE;
+    st->codec->extradata = av_malloc(FLIC_HEADER_SIZE);
+    memcpy(st->codec->extradata, header, FLIC_HEADER_SIZE);
 
     av_set_pts_info(st, 33, 1, 90000);
 
@@ -113,10 +116,10 @@ static int flic_read_header(AVFormatContext *s,
         url_fseek(pb, 12, SEEK_SET);
 
         /* send over abbreviated FLIC header chunk */
-        av_free(st->codec.extradata);
-        st->codec.extradata_size = 12;
-        st->codec.extradata = av_malloc(12);
-        memcpy(st->codec.extradata, header, 12);
+        av_free(st->codec->extradata);
+        st->codec->extradata_size = 12;
+        st->codec->extradata = av_malloc(12);
+        memcpy(st->codec->extradata, header, 12);
 
     } else if (magic_number == FLIC_FILE_MAGIC_1) {
         /*
@@ -129,7 +132,8 @@ static int flic_read_header(AVFormatContext *s,
          *  therefore, the frame pts increment = n * 1285.7
          */
         flic->frame_pts_inc = speed * 1285.7;
-    } else if (magic_number == FLIC_FILE_MAGIC_2) {
+    } else if ((magic_number == FLIC_FILE_MAGIC_2) ||
+               (magic_number == FLIC_FILE_MAGIC_3)) {
         /*
          * in this case, the speed (n) is number of milliseconds between frames:
          *
@@ -178,8 +182,9 @@ static int flic_read_packet(AVFormatContext *s,
             }
             pkt->stream_index = flic->video_stream_index;
             pkt->pts = flic->pts;
+            pkt->pos = url_ftell(pb);
             memcpy(pkt->data, preamble, FLIC_PREAMBLE_SIZE);
-            ret = get_buffer(pb, pkt->data + FLIC_PREAMBLE_SIZE, 
+            ret = get_buffer(pb, pkt->data + FLIC_PREAMBLE_SIZE,
                 size - FLIC_PREAMBLE_SIZE);
             if (ret != size - FLIC_PREAMBLE_SIZE) {
                 av_free_packet(pkt);
@@ -205,7 +210,7 @@ static int flic_read_close(AVFormatContext *s)
 
 static AVInputFormat flic_iformat = {
     "flic",
-    "FLI/FLC animation format",
+    "FLI/FLC/FLX animation format",
     sizeof(FlicDemuxContext),
     flic_probe,
     flic_read_header,

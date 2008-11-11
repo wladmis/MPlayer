@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-2"?>
-<!-- synced with 1.23 -->
+<!-- synced with r18427 -->
 
 <bookinfo id="toc">
 <title><application>MPlayer</application> - The Movie Player</title>
@@ -11,7 +11,8 @@
   <year>2002</year>
   <year>2003</year>
   <year>2004</year>
-  <year>2005</year>  
+  <year>2005</year>
+  <year>2006</year>  
   <holder>MPlayer team</holder>
 </copyright>
 <!--
@@ -40,7 +41,7 @@
 
 <para>
 Ha ez az első találkozásod az <application>MPlayer</application>-rel, olvass
-el mindent innnentől egészen a <link linkend="install">Telepítés fejezet</link>
+el mindent innentől egészen a <link linkend="install">Telepítés fejezet</link>
 végéig, közben kövesed a
 linkeket. Ha van kérdésed, keress rá a <link linkend="toc">tartalomjegyzékben</link>,
 olvasd el a <xref linkend="faq"/>-t, vagy greppelj a file-okban. A legtöbb
@@ -141,7 +142,7 @@ alkotó codec-ekkel, audiót tekintve pedig
   Bemeneti file A/V szinkronizálása (PTS-alapú, az <option>-mc 0</option> opcióval kikapcsolható)
   </simpara></listitem>
 <listitem><simpara>
-  FPS javítás az <option>-ofps</option> opcióval (hasznos ha 30000/1001 fps-es
+  fps javítás az <option>-ofps</option> opcióval (hasznos ha 30000/1001 fps-es
   VOB-ot kódolsz 24000/1001 fps-es AVI-ba)
   </simpara></listitem>
 <listitem><simpara>
@@ -171,18 +172,25 @@ a GNU General Public License v2 értelmében terjeszthető.
 </para>
 
 &history.xml;
-&install.xml;
 </chapter>
 
-&features.xml;
+&install.xml;
+
 &usage.xml;
-&faq.xml;
 &cd-dvd.xml;
+&faq.xml;
+
+&formats.xml;
+&codecs.xml;
+&video.xml;
+&audio.xml;
+&tvinput.xml;
+
 &ports.xml;
 &mencoder.xml;
+&encoding-guide.xml;
 &mail-lists.xml;
 &bugreports.xml;
 &bugs.xml;
 &skin.xml;
 &users-vs-dev.xml;
-&patches.xml;

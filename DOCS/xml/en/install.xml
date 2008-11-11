@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- $Revision: 1.57 $ -->
-<sect1 id="install">
+<!-- $Revision: 17975 $ -->
+<chapter id="install">
 <title>Installation</title>
 
 <para>
@@ -22,8 +22,7 @@ contain. It will take some time, but it IS worth it.
 You need a fairly recent system. On Linux, 2.4.x kernels are recommended.
 </para>
 
-
-<sect2 id="softreq">
+<sect1 id="softreq">
 <title>Software requirements</title>
 
 <itemizedlist>
@@ -96,7 +95,7 @@ You need a fairly recent system. On Linux, 2.4.x kernels are recommended.
   <emphasis role="bold">libvorbis</emphasis> - optional, needed for playing OGG Vorbis audio.
   </para></listitem>
 <listitem><para>
-  <emphasis role="bold"><ulink url="http://www.live.com/mplayer/">LIVE.COM Streaming Media</ulink></emphasis>
+  <emphasis role="bold"><ulink url="http://www.live555.com/mplayer/">LIVE555 Streaming Media</ulink></emphasis>
   - optional, needed for playing RTSP/RTP streams.
   </para></listitem>
 <listitem><para>
@@ -132,10 +131,10 @@ You need a fairly recent system. On Linux, 2.4.x kernels are recommended.
   <filename>./configure</filename> where that file is.
   </para></listitem>
 </itemizedlist>
-</sect2>
+</sect1>
 
 
-<sect2>
+<sect1 id="installation_codecs">
 <title>Codecs</title>
 
 <itemizedlist>
@@ -163,7 +162,7 @@ You need a fairly recent system. On Linux, 2.4.x kernels are recommended.
   <emphasis role="bold">Win32 codecs</emphasis>: If you plan to use
   <application>MPlayer</application> on x86 architecture, you will possibly need
   them. Download a codec package from our
-  <ulink url="http://www.mplayerhq.hu/homepage/design7/codecs.html">codecs page</ulink>
+  <ulink url="http://www.mplayerhq.hu/design7/codecs.html">codecs page</ulink>
   and put the codecs in <filename class="directory">/usr/local/lib/codecs</filename>
   <emphasis role="bold">BEFORE</emphasis> compiling <application>MPlayer</application>,
   otherwise no Win32 support will be compiled!
@@ -258,10 +257,10 @@ You need a fairly recent system. On Linux, 2.4.x kernels are recommended.
   section for installation instructions and more information.
   </para></listitem>
 </itemizedlist>
-</sect2>
+</sect1>
 
 
-<sect2 id="video-cards">
+<sect1 id="video-cards">
 <title>Video cards</title>
 
 <para>
@@ -271,7 +270,7 @@ the other cards don't.
 </para>
 
 
-<sect3 id="yuv-cards">
+<sect2 id="yuv-cards">
 <title>YUV cards</title>
 
 <para>
@@ -348,10 +347,10 @@ zooming), thus fullscreen is nice and very fast.
   </para></listitem>
 </itemizedlist>
 </para>
-</sect3>
+</sect2>
 
 
-<sect3 id="non-yuv-cards" xreflabel="Non-YUV cards">
+<sect2 id="non-yuv-cards" xreflabel="Non-YUV cards">
 <title>Non-YUV cards</title>
 
 <para>
@@ -377,10 +376,10 @@ it works with the following drivers:
   </simpara></listitem>
 </itemizedlist>
 </para>
-</sect3>
+</sect2>
 
 <!-- FIXME: find a more logical organization for this section -->
-<sect3 id="cirrus-logic-cards" xreflabel="Cirrus-Logic cards">
+<sect2 id="cirrus-logic-cards" xreflabel="Cirrus-Logic cards">
 <title>Cirrus-Logic cards</title>
 <itemizedlist>
 <listitem><para>
@@ -410,11 +409,11 @@ it works with the following drivers:
 </itemizedlist>
 </para></listitem>
 </itemizedlist>
-</sect3>
 </sect2>
+</sect1>
 
 
-<sect2 id="sound-cards">
+<sect1 id="sound-cards">
 <title>Sound cards</title>
 
 <itemizedlist>
@@ -435,10 +434,10 @@ it works with the following drivers:
   to read the <link linkend="audio">sound card</link> section!</emphasis>
   </simpara></listitem>
 </itemizedlist>
-</sect2>
+</sect1>
 
 
-<sect2>
+<sect1 id="features">
 <title>Features</title>
 
 <itemizedlist>
@@ -521,7 +520,6 @@ font file and telling <application>MPlayer</application> to use it.
 See the <link linkend="subosd">Subtitles and OSD</link> section for details.
 </para>
 
-</sect2>
 </sect1>
 
 <!-- ********** -->
@@ -530,8 +528,8 @@ See the <link linkend="subosd">Subtitles and OSD</link> section for details.
 <title>What about the GUI?</title>
 
 <para>
-The GUI needs GTK 1.2.x (it isn't fully GTK, but the panels are). The skins
-are stored in PNG format, so GTK, <systemitem class="library">libpng</systemitem>
+The GUI needs GTK 1.2.x or GTK 2.0 (it isn't fully GTK, but the panels are).
+The skins are stored in PNG format, so GTK, <systemitem class="library">libpng</systemitem>
 (and their devel stuff, usually called <systemitem class="library">gtk-dev</systemitem>
 and <systemitem class="library">libpng-dev</systemitem>) has to be installed.
 You can build it by specifying <option>--enable-gui</option> during
@@ -547,15 +545,15 @@ line, due to technical reasons.
 <para>
 As <application>MPlayer</application> doesn't have a skin included, you
 have to download them if you want to use the GUI. See the <ulink
-url="http://www.mplayerhq.hu/homepage/dload.html">download page</ulink>.
+url="http://www.mplayerhq.hu/dload.html">download page</ulink>.
 They should be extracted to the usual system-wide directory (<filename
-class="directory">$PREFIX/share/mplayer/Skin</filename>), or to <filename
-class="directory">$HOME/.mplayer/Skin</filename>.
+class="directory">$PREFIX/share/mplayer/skins</filename>), or to <filename
+class="directory">$HOME/.mplayer/skins</filename>.
 <application>MPlayer</application> by default looks in these directories
 for a directory named <filename class="directory">default</filename>, but
 you can use the <option>-skin <replaceable>newskin</replaceable></option>
 option, or the <literal>skin=newskin</literal> config file directive to use
-the skin in <filename class="directory">*/Skin/newskin</filename>
+the skin in <filename class="directory">*/skins/newskin</filename>
 directory.
 </para>
 </sect1>
@@ -665,7 +663,7 @@ you have to pass the option <option>-sub
 
 <para>
 If you experience a growing delay between the movie and the subtitles when
-using a MicroDVD subtitle file, most likely the frame rate of the movie and
+using a MicroDVD subtitle file, most likely the framerate of the movie and
 the subtitle file are different. Please note that the MicroDVD subtitle
 format uses absolute frame numbers for its timing, but there is no fps
 information in it, and therefore the <option>-subfps</option> option should
@@ -957,3 +955,5 @@ It's a clear way for everyone to become root.
 </para></note>
 </para>
 </sect1>
+
+</chapter>

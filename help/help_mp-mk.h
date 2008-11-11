@@ -59,7 +59,6 @@ static char help_text[]=
 #define MSGTR_NoHomeDir "Не може да го пронајде HOME директориумот.\n"
 #define MSGTR_GetpathProblem "get_path(\"конфигурирај\") проблем"
 #define MSGTR_CreatingCfgFile "Создавање на конфигурациона датотека: %s\n"
-#define MSGTR_InvalidAOdriver "Невалидно име на излезниот аудио драјвер: %s\nКористи '-ao help' за да добиете листа на достапни аудио драјвери.\n"
 #define MSGTR_CopyCodecsConf "(Копирај/линкувај etc/codecs.conf од MPlayer изворните кодови во ~/.mplayer/codecs.conf)\n"
 #define MSGTR_BuiltinCodecsConf "Користи вградени стандардни codecs.conf\n"
 #define MSGTR_CantLoadFont "Не може да се вчита фонтот: %s\n"
@@ -140,13 +139,13 @@ static char help_text[]=
 "- MPlayer падна. Ова не треба да се случува..\n"\
 "  Може да е баг во кодот на MPlayer или_ во вашите драјвери _или_ во вашата\n"\
 "  gcc верзија. Ако мислете дека тоа е грешка од MPlayer, ве молиме прочитајте\n"\
-"  DOCS/en/bugreports.html и следете ги инструкциите. Не можеме и нема\n"\
+"  DOCS/HTML/en/bugreports.html и следете ги инструкциите. Не можеме и нема\n"\
 "  да ви помогнеме доколку не ни ја обезбедите оваа информација кога пријавувате можен баг.\n"
 
 
 // mencoder.c:
 
-#define MSGTR_UsingPass3ControllFile "Користи pass3 контролна датотека: %s\n"
+#define MSGTR_UsingPass3ControlFile "Користи pass3 контролна датотека: %s\n"
 #define MSGTR_MissingFilename "\nНедостасува името на датотеката.\n\n"
 #define MSGTR_CannotOpenFile_Device "Не може да ја/го отвори датотеката/уредот.\n"
 #define MSGTR_CannotOpenDemuxer "Не може да го отвори демуксерот.\n"
@@ -155,15 +154,12 @@ static char help_text[]=
 #define MSGTR_CannotOpenOutputFile "Не може да ја отвори излезната датотека '%s'.\n"
 #define MSGTR_EncoderOpenFailed "Не успеа да се отвори енкодерот.\n"
 #define MSGTR_ForcingOutputFourcc "Присилување на излезното fourcc на %x [%.4s]\n"
-#define MSGTR_WritingAVIHeader "Запишување на AVI хедерот...\n"
 #define MSGTR_DuplicateFrames "\n%d дуплирање на фрејмо(ви)т!\n"
 #define MSGTR_SkipFrame "\nПрескокнување на фрејмот!\n"
 #define MSGTR_ErrorWritingFile "%s: Грешка при запишување на датотеката.\n"
-#define MSGTR_WritingAVIIndex "\nЗапишување на AVI индексот...\n"
-#define MSGTR_FixupAVIHeader "Поправање на AVI хедерот...\n"
 #define MSGTR_RecommendedVideoBitrate "Препорачана видео битрата за %s CD: %d\n"
-#define MSGTR_VideoStreamResult "\nВидео проток: %8.3f kbit/s  (%d bps)  големина: %d бајти %5.3f сек %d фрејма\n"
-#define MSGTR_AudioStreamResult "\nАудио проток: %8.3f kbit/s (%d bps) големина: %d бајти %5.3f сек\n"
+#define MSGTR_VideoStreamResult "\nВидео проток: %8.3f kbit/s  (%d B/s)  големина: %"PRIu64" бајти %5.3f сек %d фрејма\n"
+#define MSGTR_AudioStreamResult "\nАудио проток: %8.3f kbit/s (%d B/s) големина: %"PRIu64" бајти %5.3f сек\n"
 
 // cfg-mencoder.h:
 
@@ -392,7 +388,7 @@ static char help_text[]=
 #define MSGTR_SKIN_BITMAP_PNGReadError "PNG грешка во читањето ( %s )\n"
 #define MSGTR_SKIN_BITMAP_RLENotSupported "RLE пакуван TGA не е подржан ( %s )\n"
 #define MSGTR_SKIN_BITMAP_UnknownFileType "непознат тип на датотека ( %s )\n"
-#define MSGTR_SKIN_BITMAP_ConvertError "грешка при конвертирање од 24 бита во 32 бита ( %s )\n"
+#define MSGTR_SKIN_BITMAP_ConversionError "грешка при конвертирање од 24 бита во 32 бита ( %s )\n"
 #define MSGTR_SKIN_BITMAP_UnknownMessage "непозната порака: %s\n"
 #define MSGTR_SKIN_FONT_NotEnoughtMemory "нема доволно меморија\n"
 #define MSGTR_SKIN_FONT_TooManyFontsDeclared "премногу означени фонтови\n"
@@ -435,9 +431,7 @@ static char help_text[]=
 #define MSGTR_MENU_Chapter "Поглавје %2d"
 #define MSGTR_MENU_AudioLanguages "Аудио јазици"
 #define MSGTR_MENU_SubtitleLanguages "Јазици на преводите"
-#define MSGTR_MENU_PlayList "Плејлиста"
 #define MSGTR_MENU_SkinBrowser "Разгледувач на скинови"
-#define MSGTR_MENU_Preferences "Подесувања"
 #define MSGTR_MENU_Exit "Излези ..."
 #define MSGTR_MENU_Mute "Мутирај"
 #define MSGTR_MENU_Original "Оригинал"
@@ -474,8 +468,6 @@ static char help_text[]=
 #define MSGTR_PLAYLIST_DirectoryTree "Дрво на директориумите"
 
 // --- својства
-#define MSGTR_PREFERENCES_Audio "Аудио"
-#define MSGTR_PREFERENCES_Video "Видео"
 #define MSGTR_PREFERENCES_SubtitleOSD "Преводи и OSD"
 #define MSGTR_PREFERENCES_Codecs "Кодеци и демуксер"
 #define MSGTR_PREFERENCES_Misc "Разно"
@@ -484,7 +476,7 @@ static char help_text[]=
 #define MSGTR_PREFERENCES_AvailableDrivers "Достапни драјвери:"
 #define MSGTR_PREFERENCES_DoNotPlaySound "Не го пуштај звукот"
 #define MSGTR_PREFERENCES_NormalizeSound "Нормализирај го звукот"
-#define MSGTR_PREFERENCES_EnEqualizer "Овозможи еквилајзер"
+#define MSGTR_PREFERENCES_EnableEqualizer "Овозможи еквилајзер"
 #define MSGTR_PREFERENCES_ExtraStereo "Овозможи екстра стерео"
 #define MSGTR_PREFERENCES_Coefficient "Коефициент:"
 #define MSGTR_PREFERENCES_AudioDelay "Аудио задоцнување"
@@ -520,7 +512,6 @@ static char help_text[]=
 #define MSGTR_PREFERENCES_FRAME_PostProcess "ПостПроцесирање"
 #define MSGTR_PREFERENCES_FRAME_CodecDemuxer "Кодек и демуксер"
 #define MSGTR_PREFERENCES_FRAME_Cache "Кеш"
-#define MSGTR_PREFERENCES_FRAME_Misc "Разно"
 #define MSGTR_PREFERENCES_Message "Ве молиме запомтете дека треба да го рестартирате плејбекот за да можат некои опции да проработат!"
 #define MSGTR_PREFERENCES_DXR3_VENC "Видео енкодер:"
 #define MSGTR_PREFERENCES_DXR3_LAVC "Користи LAVC (ffmpeg)"
@@ -570,9 +561,6 @@ static char help_text[]=
 #define MSGTR_PREFERENCES_ShowVideoWindow "Прикажи го видео прозорецот кога не е активен"
 
 #define MSGTR_ABOUT_UHU "GUI развивањето спонзорирано од UHU Linux\n"
-#define MSGTR_ABOUT_CoreTeam "   Тимот за јадрото на MPlayer:\n"
-#define MSGTR_ABOUT_AdditionalCoders "   Други програмери:\n"
-#define MSGTR_ABOUT_MainTesters "   Главни Тестери:\n"
 
 // --- messagebox
 #define MSGTR_MSGBOX_LABEL_FatalError "Фатална Грешка!"

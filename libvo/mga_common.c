@@ -5,6 +5,7 @@
 #include "postproc/rgb2rgb.h"
 #include "libmpcodecs/vf_scale.h"
 #include "mp_msg.h"
+#include "help_mp.h"
 
 // mga_vid drawing functions
 static void set_window( void );		/* forward declaration to kill warnings */
@@ -102,7 +103,7 @@ draw_slice_g400(uint8_t *image[], int stride[], int w,int h,int x,int y)
 
 }
 
-static uint32_t
+static int
 draw_slice(uint8_t *src[], int stride[], int w,int h,int x,int y)
 {
 
@@ -135,10 +136,10 @@ vo_mga_flip_page(void)
 
 }
 
-static uint32_t
+static int
 draw_frame(uint8_t *src[])
 {
-    printf("!!! mga::draw_frame() called !!!\n");
+    mp_msg(MSGT_VO,MSGL_WARN,"!!! mga::draw_frame() called !!!\n");
     return 0;
 }
 
@@ -195,7 +196,7 @@ draw_image(mp_image_t *mpi){
     return VO_TRUE;
 }
 
-static uint32_t
+static int
 query_format(uint32_t format)
 {
     switch(format){
@@ -204,7 +205,7 @@ query_format(uint32_t format)
     case IMGFMT_IYUV:
     case IMGFMT_YUY2:
     case IMGFMT_UYVY:
-        return 3 | VFCAP_OSD|VFCAP_HWSCALE_UP|VFCAP_HWSCALE_DOWN|VFCAP_ACCEPT_STRIDE;
+        return VFCAP_CSP_SUPPORTED | VFCAP_CSP_SUPPORTED_BY_HW | VFCAP_OSD|VFCAP_HWSCALE_UP|VFCAP_HWSCALE_DOWN|VFCAP_ACCEPT_STRIDE;
     }
     return 0;
 }
@@ -226,10 +227,10 @@ static void mga_fullscreen()
 	mga_vid_config.x_org=(vo_screenwidth-w)/2;
 	mga_vid_config.y_org=(vo_screenheight-h)/2;
 	if ( ioctl( f,MGA_VID_CONFIG,&mga_vid_config ) )
-		printf( "Error in mga_vid_config ioctl (wrong mga_vid.o version?)" );
+		mp_msg(MSGT_VO,MSGL_WARN, MSGTR_LIBVO_MGA_ErrorInConfigIoctl );
 }
 
-static uint32_t control(uint32_t request, void *data, ...)
+static int control(uint32_t request, void *data, ...)
 {
   switch (request) {
   case VOCTRL_QUERY_FORMAT:
@@ -248,7 +249,7 @@ static uint32_t control(uint32_t request, void *data, ...)
 
      if (ioctl(f,MGA_VID_GET_LUMA,&prev)) {
 	perror("Error in mga_vid_config ioctl()");
-        printf("Could not get luma values from the kernel module!\n");
+    mp_msg(MSGT_VO,MSGL_WARN, MSGTR_LIBVO_MGA_CouldNotGetLumaValuesFromTheKernelModule);    
 	return VO_FALSE;
      }
 
@@ -269,7 +270,7 @@ static uint32_t control(uint32_t request, void *data, ...)
      
      if (ioctl(f,MGA_VID_SET_LUMA,luma)) {
 	perror("Error in mga_vid_config ioctl()");
-        printf("Could not set luma values in the kernel module!\n");
+        mp_msg(MSGT_VO,MSGL_WARN, MSGTR_LIBVO_MGA_CouldNotSetLumaValuesFromTheKernelModule);
 	return VO_FALSE;
      }
 
@@ -287,7 +288,7 @@ static uint32_t control(uint32_t request, void *data, ...)
 
      if (ioctl(f,MGA_VID_GET_LUMA,&luma)) {
 	perror("Error in mga_vid_config ioctl()");
-        printf("Could not get luma values from the kernel module!\n");
+        mp_msg(MSGT_VO,MSGL_WARN, MSGTR_LIBVO_MGA_CouldNotGetLumaValuesFromTheKernelModule);
 	return VO_FALSE;
      }
      
@@ -310,7 +311,7 @@ static uint32_t control(uint32_t request, void *data, ...)
     if (vo_screenwidth && vo_screenheight)
 	mga_fullscreen();
     else
-	printf("Screen width/height unknown!\n");
+	mp_msg(MSGT_VO,MSGL_WARN, MSGTR_LIBVO_MGA_ScreenWidthHeightUnknown);
     return VO_TRUE;
   case VOCTRL_GET_PANSCAN:
       if ( !vo_fs ) return VO_FALSE;
@@ -367,7 +368,7 @@ static int mga_init(int width,int height,unsigned int format){
 	    mga_vid_config.frame_size = ((width + 31) & ~31) * height * 2;
             mga_vid_config.format=MGA_VID_FORMAT_UYVY; break;
         default: 
-            printf("mga: invalid output format %0X\n",format);
+            mp_msg(MSGT_VO,MSGL_WARN, MSGTR_LIBVO_MGA_InvalidOutputFormat,format);
             return (-1);
         }
 
@@ -385,11 +386,11 @@ static int mga_init(int width,int height,unsigned int format){
 	if (ioctl(f,MGA_VID_CONFIG,&mga_vid_config))
 	{
 		perror("Error in mga_vid_config ioctl()");
-                printf("Your mga_vid driver version is incompatible with this MPlayer version!\n");
+                mp_msg(MSGT_VO,MSGL_WARN, MSGTR_LIBVO_MGA_IncompatibleDriverVersion);
 		return -1;
 	}
 	
-	printf("[mga] Using %d buffers.\n",mga_vid_config.num_frames);
+	mp_msg(MSGT_VO,MSGL_INFO, MSGTR_LIBVO_MGA_UsingBuffers,mga_vid_config.num_frames);
 
 	frames[0] = (char*)mmap(0,mga_vid_config.frame_size*mga_vid_config.num_frames,PROT_WRITE,MAP_SHARED,f,0);
 	frames[1] = frames[0] + 1*mga_vid_config.frame_size;
@@ -418,7 +419,7 @@ static int mga_uninit(){
   return 0;
 }
 
-static uint32_t preinit(const char *vo_subdevice)
+static int preinit(const char *vo_subdevice)
 {
   const char *devname=vo_subdevice?vo_subdevice:"/dev/mga_vid";
 	sws_rgb2rgb_init(get_sws_cpuflags());
@@ -427,7 +428,7 @@ static uint32_t preinit(const char *vo_subdevice)
 	if(f == -1)
 	{
 		perror("open");
-		printf("vo_mga: Couldn't open %s\n",devname);
+		mp_msg(MSGT_VO,MSGL_WARN, MSGTR_LIBVO_MGA_CouldntOpen,devname);
 		return(-1);
 	}
 

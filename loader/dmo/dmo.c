@@ -1,7 +1,7 @@
 /*
  * Modified for use with MPlayer, detailed CVS changelog at
  * http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
- * $Id: dmo.c,v 1.3 2005/04/15 20:17:13 diego Exp $
+ * $Id: dmo.c 15167 2005-04-15 20:17:14Z diego $
  */
 
 #include "config.h"

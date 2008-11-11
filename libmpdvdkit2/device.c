@@ -5,7 +5,7 @@
  *
  * Modified for use with MPlayer, changes contained in libdvdcss_changes.diff.
  * detailed CVS changelog at http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
- * $Id: device.c,v 1.7 2005/03/01 06:41:41 diego Exp $
+ * $Id: device.c 16715 2005-10-09 10:18:24Z diego $
  *
  * Authors: Stéphane Borel <stef@via.ecp.fr>
  *          Samuel Hocevar <sam@zoy.org>
@@ -34,11 +34,23 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef HAVE_ERRNO_H
+#   include <errno.h>
+#endif
 #include <sys/types.h>
 #include <sys/stat.h>
+#ifdef HAVE_SYS_PARAM_H
+#   include <sys/param.h>
+#endif
 #include <fcntl.h>
-#include <unistd.h>
-#include <limits.h>
+
+#ifdef HAVE_UNISTD_H
+#   include <unistd.h>
+#endif
+
+#ifdef HAVE_LIMITS_H
+#   include <limits.h>
+#endif
 
 #if defined( WIN32 ) && !defined( SYS_CYGWIN )
 #   include <io.h>                                                 /* read() */
@@ -129,12 +141,9 @@ int _dvdcss_use_ioctls( dvdcss_t dvdcss )
 
 int _dvdcss_open ( dvdcss_t dvdcss )
 {
-    char psz_debug[200];
     char const *psz_device = dvdcss->psz_device;
 
-    snprintf( psz_debug, 199, "opening target `%s'", psz_device );
-    psz_debug[199] = '\0';
-    _dvdcss_debug( dvdcss, psz_debug );
+    print_debug( dvdcss, "opening target `%s'", psz_device );
 
 #if defined( WIN32 )
     dvdcss->b_file = 1;
@@ -149,7 +158,7 @@ int _dvdcss_open ( dvdcss_t dvdcss )
 
     if( !dvdcss->b_file && WIN2K )
     {
-        _dvdcss_debug( dvdcss, "using Win2K API for access" );
+        print_debug( dvdcss, "using Win2K API for access" );
         dvdcss->pf_seek  = win2k_seek;
         dvdcss->pf_read  = win2k_read;
         dvdcss->pf_readv = win_readv;
@@ -157,7 +166,7 @@ int _dvdcss_open ( dvdcss_t dvdcss )
     }
     else if( !dvdcss->b_file )
     {
-        _dvdcss_debug( dvdcss, "using ASPI for access" );
+        print_debug( dvdcss, "using ASPI for access" );
         dvdcss->pf_seek  = aspi_seek;
         dvdcss->pf_read  = aspi_read;
         dvdcss->pf_readv = win_readv;
@@ -166,7 +175,7 @@ int _dvdcss_open ( dvdcss_t dvdcss )
     else
 #endif
     {
-        _dvdcss_debug( dvdcss, "using libc for access" );
+        print_debug( dvdcss, "using libc for access" );
         dvdcss->pf_seek  = libc_seek;
         dvdcss->pf_read  = libc_read;
         dvdcss->pf_readv = libc_readv;
@@ -181,7 +190,9 @@ int _dvdcss_raw_open ( dvdcss_t dvdcss, char const *psz_device )
 
     if( dvdcss->i_raw_fd == -1 )
     {
-        _dvdcss_error( dvdcss, "failed opening raw device, continuing" );
+        print_debug( dvdcss, "cannot open %s (%s)",
+                             psz_device, strerror(errno) );
+        print_error( dvdcss, "failed to open raw device, but continuing" );
         return -1;
     }
     else
@@ -250,7 +261,9 @@ static int libc_open ( dvdcss_t dvdcss, char const *psz_device )
 
     if( dvdcss->i_fd == -1 )
     {
-        _dvdcss_error( dvdcss, "failed opening device" );
+        print_debug( dvdcss, "cannot open %s (%s)",
+                             psz_device, strerror(errno) );
+        print_error( dvdcss, "failed to open device" );
         return -1;
     }
 
@@ -273,21 +286,21 @@ static int win2k_open ( dvdcss_t dvdcss, char const *psz_device )
      * won't send back the right result).
      * (See Microsoft Q241374: Read and Write Access Required for SCSI
      * Pass Through Requests) */
-    (HANDLE) dvdcss->i_fd =
+    dvdcss->i_fd = (int)
                 CreateFile( psz_dvd, GENERIC_READ | GENERIC_WRITE,
                             FILE_SHARE_READ | FILE_SHARE_WRITE,
                             NULL, OPEN_EXISTING,
                             FILE_FLAG_RANDOM_ACCESS, NULL );
 
     if( (HANDLE) dvdcss->i_fd == INVALID_HANDLE_VALUE )
-        (HANDLE) dvdcss->i_fd =
+        dvdcss->i_fd = (int)
                     CreateFile( psz_dvd, GENERIC_READ, FILE_SHARE_READ,
                                 NULL, OPEN_EXISTING,
                                 FILE_FLAG_RANDOM_ACCESS, NULL );
 
     if( (HANDLE) dvdcss->i_fd == INVALID_HANDLE_VALUE )
     {
-        _dvdcss_error( dvdcss, "failed opening device" );
+        print_error( dvdcss, "failed opening device" );
         return -1;
     }
 
@@ -302,24 +315,24 @@ static int aspi_open( dvdcss_t dvdcss, char const * psz_device )
     DWORD dwSupportInfo;
     struct w32_aspidev *fd;
     int i, j, i_hostadapters;
-    long (*lpGetSupport)( void );
-    long (*lpSendCommand)( void* );
+    GETASPI32SUPPORTINFO lpGetSupport;
+    SENDASPI32COMMAND lpSendCommand;
     char c_drive = psz_device[0];
 
     /* load aspi and init w32_aspidev structure */
     hASPI = LoadLibrary( "wnaspi32.dll" );
     if( hASPI == NULL )
     {
-        _dvdcss_error( dvdcss, "unable to load wnaspi32.dll" );
+        print_error( dvdcss, "unable to load wnaspi32.dll" );
         return -1;
     }
 
-    (FARPROC) lpGetSupport = GetProcAddress( hASPI, "GetASPI32SupportInfo" );
-    (FARPROC) lpSendCommand = GetProcAddress( hASPI, "SendASPI32Command" );
+    lpGetSupport = (GETASPI32SUPPORTINFO) GetProcAddress( hASPI, "GetASPI32SupportInfo" );
+    lpSendCommand = (SENDASPI32COMMAND) GetProcAddress( hASPI, "SendASPI32Command" );
 
     if(lpGetSupport == NULL || lpSendCommand == NULL )
     {
-        _dvdcss_error( dvdcss, "unable to get aspi function pointers" );
+        print_error( dvdcss, "unable to get aspi function pointers" );
         FreeLibrary( hASPI );
         return -1;
     }
@@ -328,14 +341,14 @@ static int aspi_open( dvdcss_t dvdcss, char const * psz_device )
 
     if( HIBYTE( LOWORD ( dwSupportInfo ) ) == SS_NO_ADAPTERS )
     {
-        _dvdcss_error( dvdcss, "no ASPI adapters found" );
+        print_error( dvdcss, "no ASPI adapters found" );
         FreeLibrary( hASPI );
         return -1;
     }
 
     if( HIBYTE( LOWORD ( dwSupportInfo ) ) != SS_COMP )
     {
-        _dvdcss_error( dvdcss, "unable to initalize aspi layer" );
+        print_error( dvdcss, "unable to initalize aspi layer" );
         FreeLibrary( hASPI );
         return -1;
     }
@@ -343,7 +356,7 @@ static int aspi_open( dvdcss_t dvdcss, char const * psz_device )
     i_hostadapters = LOBYTE( LOWORD( dwSupportInfo ) );
     if( i_hostadapters == 0 )
     {
-        _dvdcss_error( dvdcss, "no ASPI adapters ready" );
+        print_error( dvdcss, "no ASPI adapters ready" );
         FreeLibrary( hASPI );
         return -1;
     }
@@ -351,7 +364,7 @@ static int aspi_open( dvdcss_t dvdcss, char const * psz_device )
     fd = malloc( sizeof( struct w32_aspidev ) );
     if( fd == NULL )
     {
-        _dvdcss_error( dvdcss, "not enough memory" );
+        print_error( dvdcss, "not enough memory" );
         FreeLibrary( hASPI );
         return -1;
     }
@@ -402,7 +415,7 @@ static int aspi_open( dvdcss_t dvdcss, char const * psz_device )
                 {
                     free( (void*) fd );
                     FreeLibrary( hASPI );
-                    _dvdcss_error( dvdcss,"this is not a cdrom drive" );
+                    print_error( dvdcss,"this is not a cdrom drive" );
                     return -1;
                 }
             }
@@ -411,7 +424,7 @@ static int aspi_open( dvdcss_t dvdcss, char const * psz_device )
 
     free( (void*) fd );
     FreeLibrary( hASPI );
-    _dvdcss_error( dvdcss, "unable to get haid and target (aspi)" );
+    print_error( dvdcss, "unable to get haid and target (aspi)" );
     return -1;
 }
 #endif
@@ -429,12 +442,12 @@ static int libc_seek( dvdcss_t dvdcss, int i_blocks )
         return i_blocks;
     }
 
-    i_seek = lseek( dvdcss->i_read_fd,
-                    (off_t)i_blocks * (off_t)DVDCSS_BLOCK_SIZE, SEEK_SET );
+    i_seek = (off_t)i_blocks * (off_t)DVDCSS_BLOCK_SIZE;
+    i_seek = lseek( dvdcss->i_read_fd, i_seek, SEEK_SET );
 
     if( i_seek < 0 )
     {
-        _dvdcss_error( dvdcss, "seek error" );
+        print_error( dvdcss, "seek error" );
         dvdcss->i_pos = -1;
         return i_seek;
     }
@@ -511,20 +524,20 @@ static int aspi_seek( dvdcss_t dvdcss, int i_blocks )
  *****************************************************************************/
 static int libc_read ( dvdcss_t dvdcss, void *p_buffer, int i_blocks )
 {
-    off_t i_ret;
+    off_t i_size, i_ret;
 
-    i_ret = read( dvdcss->i_read_fd, p_buffer,
-                  (off_t)i_blocks * DVDCSS_BLOCK_SIZE );
+    i_size = (off_t)i_blocks * (off_t)DVDCSS_BLOCK_SIZE;
+    i_ret = read( dvdcss->i_read_fd, p_buffer, i_size );
 
     if( i_ret < 0 )
     {
-        _dvdcss_error( dvdcss, "read error" );
+        print_error( dvdcss, "read error" );
         dvdcss->i_pos = -1;
         return i_ret;
     }
 
     /* Handle partial reads */
-    if( i_ret != (off_t)i_blocks * DVDCSS_BLOCK_SIZE )
+    if( i_ret != i_size )
     {
         int i_seek;
 
@@ -667,7 +680,7 @@ static int win_readv ( dvdcss_t dvdcss, struct iovec *p_iovec, int i_blocks )
         dvdcss->p_readv_buffer = malloc( dvdcss->i_readv_buf_size );
         if( !dvdcss->p_readv_buffer )
         {
-            _dvdcss_error( dvdcss, " failed (readv)" );
+            print_error( dvdcss, " failed (readv)" );
             dvdcss->i_pos = -1;
             return -1;
         }

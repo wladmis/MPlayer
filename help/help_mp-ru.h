@@ -62,7 +62,6 @@ static char help_text[]=
 #define MSGTR_NoHomeDir "Не могу найти HOME(домашний) каталог\n"
 #define MSGTR_GetpathProblem "проблемы в get_path(\"config\")\n"
 #define MSGTR_CreatingCfgFile "Создание файла конфигурации: %s\n"
-#define MSGTR_InvalidAOdriver "Недопустимое имя драйвера аудио вывода: %s\nСм. '-ao help' чтобы получить список доступных драйверов.\n"
 #define MSGTR_CopyCodecsConf "(скопируйте/создайте_ссылку etc/codecs.conf (из исходников MPlayer) в ~/.mplayer/codecs.conf)\n"
 #define MSGTR_BuiltinCodecsConf "Используется встроенный codecs.conf.\n"
 #define MSGTR_CantLoadFont "Не могу загрузить шрифт: %s\n"
@@ -112,8 +111,8 @@ static char help_text[]=
 #define MSGTR_AvailableAudioOutputDrivers "Доступные драйвера вывода звука:\n"
 #define MSGTR_AvailableAudioCodecs "Доступные аудио кодеки:\n"
 #define MSGTR_AvailableVideoCodecs "Доступные видео кодеки:\n"
-#define MSGTR_AvailableAudioFm "\nДоступные (скомпилированные) семейства/драйверы аудио кодеков:\n"
-#define MSGTR_AvailableVideoFm "\nДоступные (скомпилированные) семейства/драйверы видео кодеков:\n"
+#define MSGTR_AvailableAudioFm "Доступные (скомпилированные) семейства/драйверы аудио кодеков:\n"
+#define MSGTR_AvailableVideoFm "Доступные (скомпилированные) семейства/драйверы видео кодеков:\n"
 #define MSGTR_AvailableFsType "Доступные режимы изменения полноэкранного слоя:\n"
 #define MSGTR_UsingRTCTiming "Используется аппаратная Linux RTC синхронизация (%ldГц).\n"
 #define MSGTR_CannotReadVideoProperties "Видео: Не могу прочитать свойства.\n"
@@ -162,10 +161,6 @@ static char help_text[]=
 #define MSGTR_AudioFilterChainPreinitError "Ошибка в цепочке pre-init аудиофильтра!\n"
 #define MSGTR_LinuxRTCReadError "Ошибка чтения Linux RTC: %s\n"
 #define MSGTR_SoftsleepUnderflow "Предупреждение! Недопустимо низкое значение программной задержки!\n"
-#define MSGTR_AnsSubVisibility "ANS_SUB_VISIBILITY=%ld\n"
-#define MSGTR_AnsLength "ANS_LENGTH=%ld\n"
-#define MSGTR_AnsVoFullscreen "ANS_VO_FULLSCREEN=%ld\n"
-#define MSGTR_AnsPercentPos "ANS_PERCENT_POSITION=%ld\n"
 #define MSGTR_DvdnavNullEvent "Событие DVDNAV NULL?!\n"
 #define MSGTR_DvdnavHighlightEventBroken "Событие DVDNAV: Событие выделения сломано\n"
 #define MSGTR_DvdnavEvent "Событие DVDNAV: %s\n"
@@ -181,8 +176,6 @@ static char help_text[]=
 #define MSGTR_DvdnavNavSpuClutChange "Событие DVDNAV: Изменение Nav SPU CLUT\n"
 #define MSGTR_DvdnavNavSeekDone "Событие DVDNAV: Завершено позиционирование Nav\n"
 #define MSGTR_MenuCall "Вызов меню\n"
-
-#define MSGTR_EdlCantUseBothModes "Нельзя использовать -edl и -edlout одновременно.\n"
 #define MSGTR_EdlOutOfMem "Не могу выделить достаточный объём памяти для хранения данных EDL.\n"
 #define MSGTR_EdlRecordsNo "Читение %d EDL действий.\n"
 #define MSGTR_EdlQueueEmpty "Нет действий EDL, которые следует исполнить (очередь пуста).\n"
@@ -197,7 +190,7 @@ static char help_text[]=
 
 // mencoder.c:
 
-#define MSGTR_UsingPass3ControllFile "Использую следующий файл для контроля 3-го прохода: %s\n"
+#define MSGTR_UsingPass3ControlFile "Использую следующий файл для контроля 3-го прохода: %s\n"
 #define MSGTR_MissingFilename "\nПропущено имя файла.\n\n"
 #define MSGTR_CannotOpenFile_Device "Не могу открыть файл/устройство.\n"
 #define MSGTR_CannotOpenDemuxer "Не могу открыть демуксер [demuxer].\n"
@@ -206,18 +199,15 @@ static char help_text[]=
 #define MSGTR_CannotOpenOutputFile "Не могу открыть файл вывода '%s'.\n"
 #define MSGTR_EncoderOpenFailed "Не могу открыть кодировщик.\n"
 #define MSGTR_ForcingOutputFourcc "Выходной fourcc форсирован в %x [%.4s]\n"
-#define MSGTR_WritingAVIHeader "Пишу заголовок AVI...\n"
 #define MSGTR_DuplicateFrames "\n%d повторяющийся(хся) кадр(а/ов)!\n"
 #define MSGTR_SkipFrame "\nПропускаю кадр!\n"
 #define MSGTR_ErrorWritingFile "%s: Ошибка при записи файла.\n"
-#define MSGTR_WritingAVIIndex "\nПишу индекс AVI...\n"
-#define MSGTR_FixupAVIHeader "Подправляю заголовок AVI...\n"
 #define MSGTR_RecommendedVideoBitrate "Рекомендуемый битпоток для %s CD: %d\n"
-#define MSGTR_VideoStreamResult "\nПоток видео: %8.3f кбит/с  (%d bps)  размер: %d байт(а/ов)  %5.3f сек.  %d кадр(а/ов)\n"
-#define MSGTR_AudioStreamResult "\nПоток аудио: %8.3f кбит/с  (%d bps)  размер: %d байт(а/ов)  %5.3f сек.\n"
+#define MSGTR_VideoStreamResult "\nПоток видео: %8.3f кбит/с  (%d B/s)  размер: %"PRIu64" байт(а/ов)  %5.3f сек.  %d кадр(а/ов)\n"
+#define MSGTR_AudioStreamResult "\nПоток аудио: %8.3f кбит/с  (%d B/s)  размер: %"PRIu64" байт(а/ов)  %5.3f сек.\n"
 #define MSGTR_OpenedStream "успех: формат: %d  данные: 0x%X - 0x%x\n"
 #define MSGTR_VCodecFramecopy "видеокодек: копирование кадров (%dx%d %dbpp fourcc=%x)\n"
-#define MSGTR_ACodecFramecopy "аудиокодек: копирование кадров (формат=%x цепочек=%d скорость=%ld битов=%d bps=%ld образец=%ld)\n"
+#define MSGTR_ACodecFramecopy "аудиокодек: копирование кадров (формат=%x цепочек=%d скорость=%d битов=%d B/s=%d образец=%d)\n"
 #define MSGTR_CBRPCMAudioSelected "Выбрано CBR PCM аудио\n"
 #define MSGTR_MP3AudioSelected "Выбрано MP3 аудио\n"
 #define MSGTR_CannotAllocateBytes "Не могу выделить память для %d байт\n"
@@ -227,7 +217,7 @@ static char help_text[]=
 #define MSGTR_LimitingAudioPreload "Ограничиваю предзагрузку аудио до 0.4с\n"
 #define MSGTR_IncreasingAudioDensity "Увеличиваю плотность аудио до 4\n"
 #define MSGTR_ZeroingAudioPreloadAndMaxPtsCorrection "Форсирую предзагрузку аудио в 0, максимальную коррекцию pts в 0\n"
-#define MSGTR_CBRAudioByterate "\n\nCBR аудио: %ld байт/сек, %d байт/блок\n"
+#define MSGTR_CBRAudioByterate "\n\nCBR аудио: %d байт/сек, %d байт/блок\n"
 #define MSGTR_LameVersion "Версия LAME %s (%s)\n\n"
 #define MSGTR_InvalidBitrateForLamePreset "Ошибка: Заданный битпоток вне допустимого значения для данной предустановки\n"\
 "\n"\
@@ -331,7 +321,7 @@ static char help_text[]=
 "mw-us => 40kbps/mono        voice => 56kbps/mono\n"\
 "fm/radio/tape => 112kbps    hifi => 160kbps\n"\
 "cd => 192kbps               studio => 256kbps"
-#define MSGTR_ConfigfileError "ошибка в конфигурационном файле"
+#define MSGTR_ConfigFileError "ошибка в конфигурационном файле"
 #define MSGTR_ErrorParsingCommandLine "ошибка при разборе синтаксиса командной строки"
 #define MSGTR_VideoStreamRequired "Наличие видеопотока обязательно!\n"
 #define MSGTR_ForcingInputFPS "входные кадры/сек будут заменены на %5.2f\n"
@@ -570,7 +560,7 @@ static char help_text[]=
 #define MSGTR_MovieAspectUndefined "Movie-Aspect не определён - премасштабирование не применяется.\n"
 
 // vd_dshow.c, vd_dmo.c
-#define MSGTR_DownloadCodecPackage "Вам нужно обновить/установить пакет бинарных кодеков.\nЗайдите на http://mplayerhq.hu/homepage/dload.html\n"
+#define MSGTR_DownloadCodecPackage "Вам нужно обновить/установить пакет бинарных кодеков.\nЗайдите на http://www.mplayerhq.hu/dload.html\n"
 #define MSGTR_DShowInitOK "ИНФОРМАЦИЯ: Win32/DShow видео кодек успешно инициализирован.\n"
 #define MSGTR_DMOInitOK "ИНФОРМАЦИЯ: Win32/DMO видео кодек успешно инициализирован.\n"
 
@@ -593,6 +583,7 @@ static char help_text[]=
 #define MSGTR_FontSelect "Выбор шрифта..."
 #define MSGTR_PlayList "Плейлист"
 #define MSGTR_Equalizer "Эквалайзер"
+#define MSGTR_ConfigureEqualizer "Настройка каналов"
 #define MSGTR_SkinBrowser "Просмотрщик скинов"
 #define MSGTR_Network "Сетевые потоки..."
 #define MSGTR_Preferences "Настройки"
@@ -633,7 +624,7 @@ static char help_text[]=
 #define MSGTR_SKIN_BITMAP_PNGReadError "ошибка чтения PNG (%s)\n"
 #define MSGTR_SKIN_BITMAP_RLENotSupported "RLE упакованный TGA не поддерживается (%s)\n"
 #define MSGTR_SKIN_BITMAP_UnknownFileType "неизвестный тип файла (%s)\n"
-#define MSGTR_SKIN_BITMAP_ConvertError "ошибка преобразования 24-бит в 32-бит (%s)\n"
+#define MSGTR_SKIN_BITMAP_ConversionError "ошибка преобразования 24-бит в 32-бит (%s)\n"
 #define MSGTR_SKIN_BITMAP_UnknownMessage "неизвестное сообщение: %s\n"
 #define MSGTR_SKIN_FONT_NotEnoughtMemory "не хватает памяти\n"
 #define MSGTR_SKIN_FONT_TooManyFontsDeclared "Объявлено слишком много шрифтов.\n"
@@ -678,9 +669,9 @@ static char help_text[]=
 #define MSGTR_MENU_Chapter "Глава %2d"
 #define MSGTR_MENU_AudioLanguages "Аудио языки"
 #define MSGTR_MENU_SubtitleLanguages "Язык субтитров"
+// TODO: Why is this different from MSGTR_PlayList?
 #define MSGTR_MENU_PlayList "Список воспроизведения"
 #define MSGTR_MENU_SkinBrowser "Просмотрщик шкур"
-#define MSGTR_MENU_Preferences "Настройки"
 #define MSGTR_MENU_Exit "Выход..."
 #define MSGTR_MENU_Mute "Отключить звук"
 #define MSGTR_MENU_Original "Исходный"
@@ -688,6 +679,7 @@ static char help_text[]=
 #define MSGTR_MENU_AudioTrack "Аудио дорожка"
 #define MSGTR_MENU_Track "дорожка %d"
 #define MSGTR_MENU_VideoTrack "Видео дорожка"
+#define MSGTR_MENU_Subtitles "Субтитры"
 
 // --- equalizer
 #define MSGTR_EQU_Audio "Аудио"
@@ -717,8 +709,6 @@ static char help_text[]=
 #define MSGTR_PLAYLIST_DirectoryTree "Дерево каталогов"
 
 // --- preferences
-#define MSGTR_PREFERENCES_Audio "Аудио"
-#define MSGTR_PREFERENCES_Video "Видео"
 #define MSGTR_PREFERENCES_SubtitleOSD "Субтитры и OSD"
 #define MSGTR_PREFERENCES_Codecs "Кодеки и демуксер [demuxer]"
 #define MSGTR_PREFERENCES_Misc "Разное"
@@ -728,7 +718,7 @@ static char help_text[]=
 #define MSGTR_PREFERENCES_AvailableDrivers "Доступные драйверы:"
 #define MSGTR_PREFERENCES_DoNotPlaySound "Не проигрывать звук"
 #define MSGTR_PREFERENCES_NormalizeSound "Нормализовать звук"
-#define MSGTR_PREFERENCES_EnEqualizer "Включить эквалайзер"
+#define MSGTR_PREFERENCES_EnableEqualizer "Включить эквалайзер"
 #define MSGTR_PREFERENCES_ExtraStereo "Включить дополнительное стерео"
 #define MSGTR_PREFERENCES_Coefficient "Коэффициент:"
 #define MSGTR_PREFERENCES_AudioDelay "Задержка аудио"
@@ -764,7 +754,6 @@ static char help_text[]=
 #define MSGTR_PREFERENCES_FRAME_PostProcess "Постобработка"
 #define MSGTR_PREFERENCES_FRAME_CodecDemuxer "Кодек и демуксер [demuxer]"
 #define MSGTR_PREFERENCES_FRAME_Cache "Кэш"
-#define MSGTR_PREFERENCES_FRAME_Misc "Разное"
 #define MSGTR_PREFERENCES_Audio_Device "Устройство:"
 #define MSGTR_PREFERENCES_Audio_Mixer "Микшер:"
 #define MSGTR_PREFERENCES_Audio_MixerChannel "Канал микшера:"
@@ -815,11 +804,7 @@ static char help_text[]=
 #define MSGTR_PREFERENCES_DVDDevice "DVD устройство:"
 #define MSGTR_PREFERENCES_FPS "FPS фильма:"
 #define MSGTR_PREFERENCES_ShowVideoWindow "Показывать окно видео, когда неактивен"
-
 #define MSGTR_ABOUT_UHU "Разработка GUI спонсирована UHU Linux\n"
-#define MSGTR_ABOUT_CoreTeam "   Основная команда MPlayer'а:\n"
-#define MSGTR_ABOUT_AdditionalCoders "   Дополнительные кодеры:\n"
-#define MSGTR_ABOUT_MainTesters "   Главные тестеры:\n"
 
 // --- messagebox
 #define MSGTR_MSGBOX_LABEL_FatalError "Фатальная ошибка!"
@@ -927,7 +912,6 @@ static char help_text[]=
 #define MSGTR_AO_OSS_ChanNotFound "[AO OSS] инициализация аудио: У микшера аудиокарты отсутствует канал '%s',\nиспользую канал по умолчанию.\n"
 #define MSGTR_AO_OSS_CantOpenDev "[AO OSS] инициализация аудио: Не могу открыть аудиоустройство %s: %s\n"
 #define MSGTR_AO_OSS_CantMakeFd "[AO OSS] инициализация аудио: Не могу заблокировать файловый описатель: %s\n"
-#define MSGTR_AO_OSS_CantSetAC3 "[AO OSS] Не могу установить аудиоустройство %s в режим AC3 вывода, пробую S16...\n"
 #define MSGTR_AO_OSS_CantSetChans "[AO OSS] инициализация аудио: Не могу установить аудиоустройство в %d-канальный режим.\n"
 #define MSGTR_AO_OSS_CantUseGetospace "[AO OSS] инициализация аудио: драйвер не поддерживает SNDCTL_DSP_GETOSPACE :-(\n"
 #define MSGTR_AO_OSS_CantUseSelect "[AO OSS]\n   ***  Ваш аудиодрайвер НЕ поддерживает select()  ***\n Перекомпилируйте MPlayer с #undef HAVE_AUDIO_SELECT в config.h !\n\n"
@@ -958,7 +942,7 @@ static char help_text[]=
 
 // ao_pcm.c
 #define MSGTR_AO_PCM_FileInfo "[AO PCM] Файл: %s (%s)\nPCM: Частота воспроизведения: %i Гц Каналы: %s Формат %s\n"
-#define MSGTR_AO_PCM_HintInfo "[AO PCM] Информация: наиболее быстрый дампинг достигается с -vc dummy -vo null\nPCM: Информация: для записи WAVE файлов используйте -waveheader (по умолчанию).\n"
+#define MSGTR_AO_PCM_HintInfo "[AO PCM] Информация: наиболее быстрый дампинг достигается с -vc dummy -vo null\nPCM: Информация: для записи WAVE файлов используйте -ao pcm:waveheader (по умолчанию).\n"
 #define MSGTR_AO_PCM_CantOpenOutputFile "[AO PCM] Не могу открыть %s для записи!\n"
 
 // ao_sdl.c

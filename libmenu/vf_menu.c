@@ -1,5 +1,7 @@
 
-#include "../config.h"
+#include "config.h"
+#include "mp_msg.h"
+#include "help_mp.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,17 +11,17 @@
 #include <malloc.h>
 #endif
 
-#include "../mp_msg.h"
+#include "mp_msg.h"
 
-#include "../libmpcodecs/img_format.h"
-#include "../libmpcodecs/mp_image.h"
-#include "../libmpcodecs/vf.h"
+#include "libmpcodecs/img_format.h"
+#include "libmpcodecs/mp_image.h"
+#include "libmpcodecs/vf.h"
 
-#include "../libvo/fastmemcpy.h"
-#include "../libvo/video_out.h"
-#include "../libvo/font_load.h"
-#include "../input/input.h"
-#include "../m_struct.h"
+#include "libvo/fastmemcpy.h"
+#include "libvo/video_out.h"
+#include "libvo/font_load.h"
+#include "input/input.h"
+#include "m_struct.h"
 #include "menu.h"
 
 extern vo_functions_t* video_out;
@@ -37,7 +39,7 @@ struct vf_priv_s {
   menu_t* current;
 };
 
-static int put_image(struct vf_instance_s* vf, mp_image_t *mpi);
+static int put_image(struct vf_instance_s* vf, mp_image_t *mpi, double pts);
 
 static mp_image_t* alloc_mpi(int w, int h, uint32_t fmt) {
   mp_image_t* mpi = new_mp_image(w,h);
@@ -76,7 +78,7 @@ static mp_image_t* alloc_mpi(int w, int h, uint32_t fmt) {
 
 void vf_menu_pause_update(struct vf_instance_s* vf) {
   if(pause_mpi) {
-    put_image(vf,pause_mpi);
+    put_image(vf,pause_mpi, MP_NOPTS_VALUE);
     // Don't draw the osd atm
     //vf->control(vf,VFCTRL_DRAW_OSD,NULL);
     video_out->flip_page();
@@ -105,6 +107,10 @@ static int cmd_filter(mp_cmd_t* cmd, int paused, struct vf_priv_s * priv) {
       menu_read_cmd(priv->current,MENU_CMD_UP);
     else if(strcmp(arg,"down") == 0)
       menu_read_cmd(priv->current,MENU_CMD_DOWN);
+    else if(strcmp(arg,"left") == 0)
+      menu_read_cmd(priv->current,MENU_CMD_LEFT);
+    else if(strcmp(arg,"right") == 0)
+      menu_read_cmd(priv->current,MENU_CMD_RIGHT);
     else if(strcmp(arg,"ok") == 0)
       menu_read_cmd(priv->current,MENU_CMD_OK);
     else if(strcmp(arg,"cancel") == 0)
@@ -112,7 +118,7 @@ static int cmd_filter(mp_cmd_t* cmd, int paused, struct vf_priv_s * priv) {
     else if(strcmp(arg,"hide") == 0)
       priv->current->show = 0;
     else
-      printf("Unknown menu command: '%s'\n",arg);
+      mp_msg(MSGT_GLOBAL,MSGL_WARN,MSGTR_LIBMENU_UnknownMenuCommand,arg);
     return 1;
   }
   case MP_CMD_SET_MENU : {
@@ -120,7 +126,7 @@ static int cmd_filter(mp_cmd_t* cmd, int paused, struct vf_priv_s * priv) {
     menu_t* l = priv->current;
     priv->current = menu_open(menu);
     if(!priv->current) {
-      printf("Failed to open menu '%s'\n",menu);
+      mp_msg(MSGT_GLOBAL,MSGL_WARN,MSGTR_LIBMENU_FailedToOpenMenu,menu);
       priv->current = l;
       priv->current->show = 0;
     } else {
@@ -169,7 +175,7 @@ inline static void copy_mpi(mp_image_t *dmpi, mp_image_t *mpi) {
 
 
 
-static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
+static int put_image(struct vf_instance_s* vf, mp_image_t *mpi, double pts){
   mp_image_t *dmpi = NULL;
 
   if(vf->priv->current->show 
@@ -231,7 +237,7 @@ static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
     dmpi->planes[2] = mpi->planes[2];
     dmpi->priv      = mpi->priv;
   }
-  return vf_next_put_image(vf,dmpi);
+  return vf_next_put_image(vf,dmpi, pts);
 }
 
 static void uninit(vf_instance_t *vf) {

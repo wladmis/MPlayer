@@ -1,7 +1,7 @@
 /*
  * Modified for use with MPlayer, for details see the CVS changelog at
  * http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
- * $Id: mpg123.h,v 1.9 2005/04/15 22:21:34 diego Exp $
+ * $Id: mpg123.h 16990 2005-11-15 18:14:07Z diego $
  */
 
 /*
@@ -9,7 +9,7 @@
  * used source: musicout.h from mpegaudio package
  */
 
-#include "../config.h"
+#include "config.h"
 
 #ifndef M_PI
 #define M_PI		3.141592653589793238462
@@ -120,7 +120,6 @@ extern int synth_1to1_pent( real *,int,short * );
 extern void make_decode_tables_MMX(long scaleval);
 extern int synth_1to1_MMX( real *,int,short * );
 extern int synth_1to1_MMX_s(real *, int, short *, short *, int *);
-extern void dct64(real *a,real *b,real *c);
 
 extern void dct36_3dnow(real *,real *,real *,real *,real *);
 extern void dct36_3dnowex(real *,real *,real *,real *,real *);

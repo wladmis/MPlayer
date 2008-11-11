@@ -37,9 +37,7 @@
 #define MP_CMD_GET_PERCENT_POS 35
 #define MP_CMD_SUB_STEP 36
 #define MP_CMD_TV_SET_CHANNEL 37
-#ifdef USE_EDL
 #define MP_CMD_EDL_MARK 38
-#endif
 #define MP_CMD_SUB_ALIGNMENT 39
 #define MP_CMD_TV_LAST_CHANNEL 40
 #define MP_CMD_OSD_SHOW_TEXT 41
@@ -64,6 +62,14 @@
 #define MP_CMD_RUN 60
 #define MP_CMD_SUB_LOG 61
 #define MP_CMD_SWITCH_AUDIO 62
+#define MP_CMD_GET_TIME_POS 63
+#define MP_CMD_SUB_LOAD 64
+#define MP_CMD_SUB_REMOVE 65
+#define MP_CMD_KEYDOWN_EVENTS 66
+#define MP_CMD_VO_BORDER 67
+#define MP_CMD_SET_PROPERTY 68
+#define MP_CMD_GET_PROPERTY 69
+#define MP_CMD_OSD_SHOW_PROPERTY_TEXT 70
 
 #define MP_CMD_GUI_EVENTS       5000
 #define MP_CMD_GUI_LOADFILE     5001
@@ -112,6 +118,8 @@
 #define MP_INPUT_DEAD -2
 // No input was available
 #define MP_INPUT_NOTHING -3
+//! Input will be available if you try again
+#define MP_INPUT_RETRY -4
 
 // For the key's drivers, if possible you can send key up and key down
 // events. Key up is the default, to send a key down you must use the 
@@ -223,7 +231,7 @@ mp_cmd_clone(mp_cmd_t* cmd);
 
 // When you create a new driver you should add it in these 2 functions.
 void
-mp_input_init(void);
+mp_input_init(int use_gui);
 
 void
 mp_input_uninit(void);

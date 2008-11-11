@@ -53,8 +53,10 @@
 #include <unistd.h>
 
 #include "config.h"
+#include "subopt-helper.h"
 #include "video_out.h"
 #include "video_out_internal.h"
+#include "mp_msg.h"
 
 #define MPLAYER_VERSION 0.90
 #define VO_GIF_REVISION 6
@@ -67,9 +69,6 @@ static vo_info_t info = {
 };
 
 LIBVO_EXTERN(gif89a)
-
-extern int verbose;
-extern int vo_config_count;
 
 
 // how many frames per second we are aiming for during output.
@@ -106,44 +105,37 @@ static char *gif_filename = NULL;
 // the default output filename
 #define DEFAULT_FILE "out.gif"
 
-static uint32_t preinit(const char *arg)
-{
-	float fps;
-	if (verbose) printf("GIF89a: Preinit entered\n");
-		
-	target_fps = 0;
-	fps = 0;
-	
-	if (arg) {
-		char *temp = NULL;
-		if (sscanf(arg, "%f", &fps)) {
-			if (fps < 0) fps = 0;
-			// find the next argument
-			temp = strchr(arg, ':');
-			if (temp != NULL) temp++;
-		} else {
-			// find the first argument
-			temp = (char *)arg;
-		}
+static opt_t subopts[] = {
+  {"output",       OPT_ARG_MSTRZ, &gif_filename, NULL, 0},
+  {"fps",          OPT_ARG_FLOAT, &target_fps,   NULL, 0},
+  {NULL, 0, NULL, NULL, 0}
+};
 
-		if (temp != NULL) {
-			if (*temp != '\0') {
-				gif_filename = strdup(temp);
-			}
-		}
+static int preinit(const char *arg)
+{
+	target_fps = 0;
+
+	if (subopt_parse(arg, subopts) != 0) {
+		mp_msg(MSGT_VO, MSGL_FATAL,
+			"\n-vo gif89a command line help:\n"
+			"Example: mplayer -vo gif89a:output=file.gif:fps=4.9\n"
+			"\nOptions:\n"
+			"  output=<filename>\n"
+			"    Specify the output file.  The default is out.gif.\n"
+			"  fps=<rate>\n"
+			"    Specify the target framerate.  The default is 5.0.\n"
+			"\n");
+		return -1;
 	}
 
-	if (fps > vo_fps)
-		fps = vo_fps; // i will not duplicate frames.
-	
-	if (fps <= 0) {
+	if (target_fps > vo_fps)
+		target_fps = vo_fps; // i will not duplicate frames.
+
+	if (target_fps <= 0) {
 		target_fps = default_fps;
-		if (verbose)
-			printf("GIF89a: default, %.2f fps\n", target_fps);
+		mp_msg(MSGT_VO, MSGL_V, "GIF89a: default, %.2f fps\n", target_fps);
 	} else {
-		target_fps = fps;
-		if (verbose)
-			printf("GIF89a: output fps forced to %.2f\n", target_fps);
+		mp_msg(MSGT_VO, MSGL_V, "GIF89a: output fps forced to %.2f\n", target_fps);
 	}
 	
 	ideal_delay = 100 / target_fps; // in centiseconds
@@ -152,20 +144,17 @@ static uint32_t preinit(const char *arg)
 	
 	if (gif_filename == NULL) {
 		gif_filename = strdup(DEFAULT_FILE);
-		if (verbose)
-			printf("GIF89a: default, file \"%s\"\n", gif_filename);
+		mp_msg(MSGT_VO, MSGL_V, "GIF89a: default, file \"%s\"\n", gif_filename);
 	} else {
-		if (verbose)
-			printf("GIF89a: file forced to \"%s\"\n", gif_filename);
+		mp_msg(MSGT_VO, MSGL_V, "GIF89a: file forced to \"%s\"\n", gif_filename);
 	}
 	
-	if (verbose)
-		printf("GIF89a: Preinit OK\n");
+	mp_msg(MSGT_VO, MSGL_DBG2, "GIF89a: Preinit OK\n");
 	return 0;
 }
 
-static uint32_t config(uint32_t s_width, uint32_t s_height, uint32_t d_width,
-		uint32_t d_height, uint32_t fullscreen, char *title,
+static int config(uint32_t s_width, uint32_t s_height, uint32_t d_width,
+		uint32_t d_height, uint32_t flags, char *title,
 		uint32_t format)
 {
 #ifdef HAVE_GIF_4
@@ -174,10 +163,8 @@ static uint32_t config(uint32_t s_width, uint32_t s_height, uint32_t d_width,
 	char LB2[] = { 1, 0, 0 };
 #endif
 
-	if (verbose) {
-		printf("GIF89a: Config entered [%ix%i]\n",s_width,s_height);
-		printf("GIF89a: With requested format: %s\n",vo_format_name(format));
-	}
+	mp_msg(MSGT_VO, MSGL_DBG2, "GIF89a: Config entered [%dx%d]\n", s_width,s_height);
+	mp_msg(MSGT_VO, MSGL_DBG2, "GIF89a: With requested format: %s\n", vo_format_name(format));
 	
 	// save these for later.
 	img_width = s_width;
@@ -186,8 +173,7 @@ static uint32_t config(uint32_t s_width, uint32_t s_height, uint32_t d_width,
 	// multiple configs without uninit are not allowed.
 	// this is because config opens a new gif file.
 	if (vo_config_count > 0) {
-		if (verbose)
-			printf("GIF89a: Reconfigure attempted.\n");
+		mp_msg(MSGT_VO, MSGL_V, "GIF89a: Reconfigure attempted.\n");
 		return 0;
 	}
 	// reconfigure need not be a fatal error, so return 0.
@@ -196,7 +182,7 @@ static uint32_t config(uint32_t s_width, uint32_t s_height, uint32_t d_width,
 	// gif will have the dimensions of the first movie.
 	
 	if (format != IMGFMT_RGB24) {
-		printf("GIF89a: Error - given unsupported colorspace.\n");
+		mp_msg(MSGT_VO, MSGL_ERR, "GIF89a: Error - given unsupported colorspace.\n");
 		return 1;
 	}
 	
@@ -207,31 +193,34 @@ static uint32_t config(uint32_t s_width, uint32_t s_height, uint32_t d_width,
 #ifdef HAVE_GIF_4
 	EGifSetGifVersion("89a");
 #else
-	printf("GIF89a: Your version of libungif needs to be upgraded.\n");
-	printf("GIF89a: Some functionality has been disabled.\n");
+	mp_msg(MSGT_VO, MSGL_ERR, "GIF89a: Your version of libungif needs to be upgraded.\n");
+	mp_msg(MSGT_VO, MSGL_ERR, "GIF89a: Some functionality has been disabled.\n");
 #endif
 	
 	new_gif = EGifOpenFileName(gif_filename, 0);
 	if (new_gif == NULL) {
-		printf("GIF89a: error opening file \"%s\" for output.\n", gif_filename);
+		mp_msg(MSGT_VO, MSGL_ERR, "GIF89a: error opening file \"%s\" for output.\n", gif_filename);
 		return 1;
 	}
 
 	slice_data = malloc(img_width * img_height * 3);
 	if (slice_data == NULL) {
-		printf("GIF89a: malloc failed.\n");
+		mp_msg(MSGT_VO, MSGL_ERR, "GIF89a: malloc failed.\n");
 		return 1;
 	}
 
 	reduce_data = malloc(img_width * img_height);
 	if (reduce_data == NULL) {
-		printf("GIF89a: malloc failed.\n");
+		free(slice_data); slice_data = NULL;
+		mp_msg(MSGT_VO, MSGL_ERR, "GIF89a: malloc failed.\n");
 		return 1;
 	}
 
 	reduce_cmap = MakeMapObject(256, NULL);
 	if (reduce_cmap == NULL) {
-		printf("GIF89a: malloc failed.\n");
+		free(slice_data); slice_data = NULL;
+		free(reduce_data); reduce_data = NULL;
+		mp_msg(MSGT_VO, MSGL_ERR, "GIF89a: malloc failed.\n");
 		return 1;
 	}
 	
@@ -251,8 +240,7 @@ static uint32_t config(uint32_t s_width, uint32_t s_height, uint32_t d_width,
 	EGifPutExtensionLast(new_gif, 0, 3, LB2);
 #endif
 
-	if (verbose)
-		printf("GIF89a: Config finished.\n");
+	mp_msg(MSGT_VO, MSGL_DBG2, "GIF89a: Config finished.\n");
 	return 0;
 }
 
@@ -296,7 +284,7 @@ static void flip_page(void)
 	// quantize the image
 	ret = gif_reduce(img_width, img_height, slice_data, reduce_data, reduce_cmap->Colors);
 	if (ret == GIF_ERROR) {
-		printf("GIF89a: Quantize failed.\n");
+		mp_msg(MSGT_VO, MSGL_ERR, "GIF89a: Quantize failed.\n");
 		return;
 	}
 
@@ -322,12 +310,12 @@ static void flip_page(void)
 	EGifPutLine(new_gif, reduce_data, img_width * img_height);
 }
 
-static uint32_t draw_frame(uint8_t *src[])
+static int draw_frame(uint8_t *src[])
 {
 	return 1;
 }
 
-static uint32_t draw_slice(uint8_t *src[], int stride[], int w, int h, int x, int y)
+static int draw_slice(uint8_t *src[], int stride[], int w, int h, int x, int y)
 {
 	uint8_t *dst, *frm;
 	int i;
@@ -341,14 +329,14 @@ static uint32_t draw_slice(uint8_t *src[], int stride[], int w, int h, int x, in
 	return 0;
 }
 
-static uint32_t query_format(uint32_t format)
+static int query_format(uint32_t format)
 {
 	if (format == IMGFMT_RGB24)
 		return VFCAP_CSP_SUPPORTED | VFCAP_CSP_SUPPORTED_BY_HW | VFCAP_TIMER | VFCAP_ACCEPT_STRIDE;
 	return 0;
 }
 
-static uint32_t control(uint32_t request, void *data, ...)
+static int control(uint32_t request, void *data, ...)
 {
 	if (request == VOCTRL_QUERY_FORMAT) {
 		return query_format(*((uint32_t*)data));
@@ -362,8 +350,7 @@ static uint32_t control(uint32_t request, void *data, ...)
 
 static void uninit(void)
 {
-	if (verbose)
-		printf("GIF89a: Uninit entered\n");
+	mp_msg(MSGT_VO, MSGL_DBG2, "GIF89a: Uninit entered\n");
 	
 	if (new_gif != NULL) {
 		char temp[256];

@@ -8,7 +8,7 @@
  *
  * Modified for use with MPlayer, changes contained in libdvdcss_changes.diff.
  * detailed CVS changelog at http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
- * $Id: libdvdcss.c,v 1.14 2005/03/01 06:41:41 diego Exp $
+ * $Id: libdvdcss.c 18110 2006-04-15 21:45:29Z reimar $
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  */
 
-/*
+/**
  * \mainpage libdvdcss developer documentation
  *
  * \section intro Introduction
@@ -90,7 +90,10 @@
  *     values. This will speed up descrambling of DVDs which are in the
  *     cache. The DVDCSS_CACHE directory is created if it does not exist,
  *     and a subdirectory is created named after the DVD's title or
- *     manufacturing date.
+ *     manufacturing date. If DVDCSS_CACHE is not set or is empty, \e libdvdcss
+ *     will use the default value which is "${HOME}/.dvdcss/" under Unix and
+ *     "C:\Documents and Settings\$USER\Application Data\dvdcss\" under Win32.
+ *     The special value "off" disables caching.
  */
 
 /*
@@ -103,10 +106,26 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#ifdef HAVE_SYS_PARAM_H
+#   include <sys/param.h>
+#endif
+#ifdef HAVE_PWD_H
+#   include <pwd.h>
+#endif
 #include <fcntl.h>
 #include <errno.h>
-#include <unistd.h>
-#include <limits.h>
+
+#ifdef HAVE_UNISTD_H
+#   include <unistd.h>
+#endif
+
+#ifdef HAVE_LIMITS_H
+#   include <limits.h>
+#endif
+
+#ifdef HAVE_DIRECT_H
+#   include <direct.h>
+#endif
 
 #include "dvdcss.h"
 
@@ -115,12 +134,6 @@
 #include "libdvdcss.h"
 #include "ioctl.h"
 #include "device.h"
-
-#ifndef HAVE_MPLAYER
- #include "get_path.c"
-#else
- extern char * get_path( char * filename );
-#endif
 
 /**
  * \brief Symbol for version checks.
@@ -192,7 +205,7 @@ extern dvdcss_t dvdcss_open ( char *psz_target )
     {
         int i = atoi( psz_verbose );
 
-        if( i >= 2 ) dvdcss->b_debug = 1;
+        if( i >= 2 ) dvdcss->b_debug = i;
         if( i >= 1 ) dvdcss->b_errors = 1;
     }
 
@@ -215,8 +228,8 @@ extern dvdcss_t dvdcss_open ( char *psz_target )
         }
         else
         {
-            _dvdcss_error( dvdcss, "unknown decrypt method, please choose "
-                                   "from 'title', 'key' or 'disc'" );
+            print_error( dvdcss, "unknown decrypt method, please choose "
+                                 "from 'title', 'key' or 'disc'" );
             free( dvdcss->psz_device );
             free( dvdcss );
             return NULL;
@@ -224,22 +237,102 @@ extern dvdcss_t dvdcss_open ( char *psz_target )
     }
 
     /*
+     *  If DVDCSS_CACHE was not set, try to guess a default value
+     */
+    if( psz_cache == NULL || psz_cache[0] == '\0' )
+    {
+#ifdef HAVE_DIRECT_H
+        typedef HRESULT( WINAPI *SHGETFOLDERPATH )
+                       ( HWND, int, HANDLE, DWORD, LPTSTR );
+
+#   define CSIDL_FLAG_CREATE 0x8000
+#   define CSIDL_APPDATA 0x1A
+#   define SHGFP_TYPE_CURRENT 0
+
+        char psz_home[MAX_PATH];
+        HINSTANCE p_dll;
+        SHGETFOLDERPATH p_getpath;
+
+        *psz_home = '\0';
+
+        /* Load the shfolder dll to retrieve SHGetFolderPath */
+        p_dll = LoadLibrary( "shfolder.dll" );
+        if( p_dll )
+        {
+            p_getpath = (void*)GetProcAddress( p_dll, "SHGetFolderPathA" );
+            if( p_getpath )
+            {
+                /* Get the "Application Data" folder for the current user */
+                if( p_getpath( NULL, CSIDL_APPDATA | CSIDL_FLAG_CREATE,
+                               NULL, SHGFP_TYPE_CURRENT, psz_home ) == S_OK )
+                {
+                    FreeLibrary( p_dll );
+                }
+                else
+                {
+                    *psz_home = '\0';
+                }
+            }
+            FreeLibrary( p_dll );
+        }
+
+        /* Cache our keys in
+         * C:\Documents and Settings\$USER\Application Data\dvdcss\ */
+        if( *psz_home )
+        {
+            snprintf( psz_buffer, PATH_MAX, "%s/dvdcss", psz_home );
+            psz_buffer[PATH_MAX-1] = '\0';
+            psz_cache = psz_buffer;
+        }
+#else
+        char *psz_home = NULL;
+#   ifdef HAVE_PWD_H
+        struct passwd *p_pwd;
+
+        /* Try looking in password file for home dir. */
+        p_pwd = getpwuid(getuid());
+        if( p_pwd )
+        {
+            psz_home = p_pwd->pw_dir;
+        }
+#   endif
+
+        if( psz_home == NULL )
+        {
+            psz_home = getenv( "HOME" );
+        }
+        if( psz_home == NULL )
+        {
+            psz_home = getenv( "USERPROFILE" );
+        }
+
+        /* Cache our keys in ${HOME}/.dvdcss/ */
+        if( psz_home )
+        {
+            snprintf( psz_buffer, PATH_MAX, "%s/.dvdcss", psz_home );
+            psz_buffer[PATH_MAX-1] = '\0';
+            psz_cache = psz_buffer;
+        }
+#endif
+    }
+
+    /*
      *  Find cache dir from the DVDCSS_CACHE environment variable
      */
     if( psz_cache != NULL )
     {
-        if( psz_cache[0] == '\0' )
+        if( psz_cache[0] == '\0' || !strcmp( psz_cache, "off" ) )
         {
             psz_cache = NULL;
         }
         /* Check that we can add the ID directory and the block filename */
-        else if( strlen( psz_cache ) + 1 + 32 + 1 + 10 + 1 > PATH_MAX )
+        else if( strlen( psz_cache ) + 1 + 32 + 1 + (KEY_SIZE * 2) + 10 + 1
+                  > PATH_MAX )
         {
-            _dvdcss_error( dvdcss, "cache directory name is too long" );
+            print_error( dvdcss, "cache directory name is too long" );
             psz_cache = NULL;
         }
     }
-    else psz_cache = get_path( "DVDKeys" );
 
     /*
      *  Open device
@@ -261,14 +354,14 @@ extern dvdcss_t dvdcss_open ( char *psz_target )
         if( i_ret < 0 )
         {
             /* Disable the CSS ioctls and hope that it works? */
-            _dvdcss_debug( dvdcss,
-                           "could not check whether the disc was scrambled" );
+            print_debug( dvdcss,
+                         "could not check whether the disc was scrambled" );
             dvdcss->b_ioctls = 0;
         }
         else
         {
-            _dvdcss_debug( dvdcss, i_ret ? "disc is scrambled"
-                                         : "disc is unscrambled" );
+            print_debug( dvdcss, i_ret ? "disc is scrambled"
+                                       : "disc is unscrambled" );
             dvdcss->b_scrambled = i_ret;
         }
     }
@@ -287,11 +380,31 @@ extern dvdcss_t dvdcss_open ( char *psz_target )
         }
     }
 
+    /* If the cache is enabled, write the cache directory tag */
+    if( psz_cache )
+    {
+        char *psz_tag = "Signature: 8a477f597d28d172789f06886806bc55\r\n"
+            "# This file is a cache directory tag created by libdvdcss.\r\n"
+            "# For information about cache directory tags, see:\r\n"
+            "#   http://www.brynosaurus.com/cachedir/\r\n";
+        unsigned char psz_tagfile[PATH_MAX+1+12+1];
+        int i_fd;
+
+        sprintf( psz_tagfile, "%s/CACHEDIR.TAG", psz_cache );
+        i_fd = open( psz_tagfile, O_RDWR|O_CREAT, 0644 );
+        if( i_fd >= 0 )
+        {
+            write( i_fd, psz_tag, strlen(psz_tag) );
+            close( i_fd );
+        }
+    }
+
     /* If the cache is enabled, extract a unique disc ID */
     if( psz_cache )
     {
         uint8_t p_sector[DVDCSS_BLOCK_SIZE];
         unsigned char   psz_debug[PATH_MAX+30];
+        unsigned char   psz_key[1 + KEY_SIZE * 2 + 1];
         unsigned char * psz_title, * psz_serial;
         int i;
 
@@ -358,13 +471,31 @@ extern dvdcss_t dvdcss_open ( char *psz_target )
         {
             if( psz_serial[i] < '0' || psz_serial[i] > '9' )
             {
-                sprintf( psz_serial,
-                         "%.2X%.2X%.2X%.2X%.2X%.2X%.2X%.2X",
+                unsigned char psz_tmp[16 + 1];
+                sprintf( psz_tmp,
+                         "%.2x%.2x%.2x%.2x%.2x%.2x%.2x%.2x",
                          psz_serial[0], psz_serial[1], psz_serial[2],
                          psz_serial[3], psz_serial[4], psz_serial[5],
                          psz_serial[6], psz_serial[7] );
+                memcpy( psz_serial, psz_tmp, 16 );
                 break;
             }
+        }
+
+        /* Get disk key, since some discs have got same title, manufacturing
+         * date and serial number, but different keys */
+        if( dvdcss->b_scrambled )
+        {
+             psz_key[0] = '-';
+             for( i = 0; i < KEY_SIZE; i++ )
+             {
+                 sprintf( &psz_key[1+i*2], "%.2x", dvdcss->css.p_disc_key[i] );
+             }
+             psz_key[1 + KEY_SIZE * 2] = '\0';
+        }
+        else
+        {
+             psz_key[0] = 0;
         }
 
         /* We have a disc name or ID, we can create the cache dir */
@@ -376,14 +507,13 @@ extern dvdcss_t dvdcss_open ( char *psz_target )
 #endif
         if( i_ret < 0 && errno != EEXIST )
         {
-            _dvdcss_error( dvdcss, "failed creating cache directory" );
+            print_error( dvdcss, "failed creating cache directory" );
             dvdcss->psz_cachefile[0] = '\0';
             goto nocache;
         }
-        i += sprintf( dvdcss->psz_cachefile + i, "/");
 
-//        i += sprintf( dvdcss->psz_cachefile + i, "/%s", psz_data );
-	i += sprintf( dvdcss->psz_cachefile + i, "/%s#%s", psz_title, psz_serial );
+        i += sprintf( dvdcss->psz_cachefile + i, "/%s-%s%s", psz_title,
+                      psz_serial, psz_key );
 #if !defined( WIN32 ) || defined( SYS_CYGWIN )
         i_ret = mkdir( dvdcss->psz_cachefile, 0755 );
 #else
@@ -391,7 +521,7 @@ extern dvdcss_t dvdcss_open ( char *psz_target )
 #endif
         if( i_ret < 0 && errno != EEXIST )
         {
-            _dvdcss_error( dvdcss, "failed creating cache subdirectory" );
+            print_error( dvdcss, "failed creating cache subdirectory" );
             dvdcss->psz_cachefile[0] = '\0';
             goto nocache;
         }
@@ -402,7 +532,7 @@ extern dvdcss_t dvdcss_open ( char *psz_target )
 
         sprintf( psz_debug, "using CSS key cache dir: %s",
                             dvdcss->psz_cachefile );
-        _dvdcss_debug( dvdcss, psz_debug );
+        print_debug( dvdcss, psz_debug );
     }
     nocache:
 
@@ -522,7 +652,7 @@ extern int dvdcss_read ( dvdcss_t dvdcss, void *p_buffer,
         {
             if( ((uint8_t*)p_buffer)[0x14] & 0x30 )
             {
-                _dvdcss_error( dvdcss, "no key but found encrypted block" );
+                print_error( dvdcss, "no key but found encrypted block" );
                 /* Only return the initial range of unscrambled blocks? */
                 /* or fail completely? return 0; */
                 break;

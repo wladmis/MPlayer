@@ -16,7 +16,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  *
  */
 
@@ -235,7 +235,7 @@ typedef struct VC9Context{
      */
     //@{
     int profile;          ///< 2bits, Profile
-    int frmrtq_postproc;  ///< 3bits, 
+    int frmrtq_postproc;  ///< 3bits,
     int bitrtq_postproc;  ///< 5bits, quantized framerate-based postprocessing strength
     int fastuvmc;         ///< Rounding of qpel vector to hpel ? (not in Simple)
     int extended_mv;      ///< Ext MV in P/B (not in Simple)
@@ -321,6 +321,11 @@ typedef struct VC9Context{
     BitPlane over_flags_plane;    ///< Overflags bitplane
     uint8_t condover;
     uint16_t *hrd_rate, *hrd_buffer;
+    uint8_t *hrd_fullness;
+    uint8_t range_mapy_flag;
+    uint8_t range_mapuv_flag;
+    uint8_t range_mapy;
+    uint8_t range_mapuv;
     //@}
 #endif
 } VC9Context;
@@ -353,14 +358,14 @@ static int get_prefix(GetBitContext *gb, int stop, int len)
   UPDATE_CACHE(re, gb);
   buf=GET_CACHE(re, gb); //Still not sure
   if (stop) buf = ~buf;
-  
+
   log= av_log2(-buf); //FIXME: -?
   if (log < limit){
     LAST_SKIP_BITS(re, gb, log+1);
     CLOSE_READER(re, gb);
     return log;
   }
-  
+
   LAST_SKIP_BITS(re, gb, limit);
   CLOSE_READER(re, gb);
   return limit;
@@ -459,8 +464,9 @@ static int decode_hrd(VC9Context *v, GetBitContext *gb)
 {
     int i, num;
 
-    num = get_bits(gb, 5);
+    num = 1 + get_bits(gb, 5);
 
+    /*hrd rate*/
     if (v->hrd_rate || num != v->hrd_num_leaky_buckets)
     {
         av_freep(&v->hrd_rate);
@@ -468,31 +474,48 @@ static int decode_hrd(VC9Context *v, GetBitContext *gb)
     if (!v->hrd_rate) v->hrd_rate = av_malloc(num*sizeof(uint16_t));
     if (!v->hrd_rate) return -1;
 
+    /*hrd buffer*/
     if (v->hrd_buffer || num != v->hrd_num_leaky_buckets)
     {
         av_freep(&v->hrd_buffer);
     }
     if (!v->hrd_buffer) v->hrd_buffer = av_malloc(num*sizeof(uint16_t));
-    if (!v->hrd_buffer) return -1;
+    if (!v->hrd_buffer)
+    {
+        av_freep(&v->hrd_rate);
+        return -1;
+    }
 
+    /*hrd fullness*/
+    if (v->hrd_fullness || num != v->hrd_num_leaky_buckets)
+    {
+        av_freep(&v->hrd_buffer);
+    }
+    if (!v->hrd_fullness) v->hrd_fullness = av_malloc(num*sizeof(uint8_t));
+    if (!v->hrd_fullness)
+    {
+        av_freep(&v->hrd_rate);
+        av_freep(&v->hrd_buffer);
+        return -1;
+    }
     v->hrd_num_leaky_buckets = num;
 
     //exponent in base-2 for rate
-    v->bit_rate_exponent = get_bits(gb, 4);
+    v->bit_rate_exponent = 6 + get_bits(gb, 4);
     //exponent in base-2 for buffer_size
-    v->buffer_size_exponent = get_bits(gb, 4);
+    v->buffer_size_exponent = 4 + get_bits(gb, 4);
 
     for (i=0; i<num; i++)
     {
         //mantissae, ordered (if not, use a function ?
-        v->hrd_rate[i] = get_bits(gb, 16);
+        v->hrd_rate[i] = 1 + get_bits(gb, 16);
         if (i && v->hrd_rate[i-1]>=v->hrd_rate[i])
         {
             av_log(v->s.avctx, AV_LOG_ERROR, "HDR Rates aren't strictly increasing:"
                    "%i vs %i\n", v->hrd_rate[i-1], v->hrd_rate[i]);
             return -1;
         }
-        v->hrd_buffer[i] = get_bits(gb, 16);
+        v->hrd_buffer[i] = 1 + get_bits(gb, 16);
         if (i && v->hrd_buffer[i-1]<v->hrd_buffer[i])
         {
             av_log(v->s.avctx, AV_LOG_ERROR, "HDR Buffers aren't decreasing:"
@@ -536,22 +559,22 @@ static int decode_advanced_sequence_header(AVCodecContext *avctx, GetBitContext 
     /* 6.1.7, p21 */
     if (get_bits(gb, 1) /* pic_size_flag */)
     {
-        avctx->coded_width = get_bits(gb, 12);
-        avctx->coded_height = get_bits(gb, 12);
+        avctx->coded_width = get_bits(gb, 12) << 1;
+        avctx->coded_height = get_bits(gb, 12) << 1;
         if ( get_bits(gb, 1) /* disp_size_flag */)
         {
             avctx->width = get_bits(gb, 14);
             avctx->height = get_bits(gb, 14);
         }
 
-        /* 6.1.7.4, p22 */
+        /* 6.1.7.4, p23 */
         if ( get_bits(gb, 1) /* aspect_ratio_flag */)
         {
             aspect_ratio = get_bits(gb, 4); //SAR
             if (aspect_ratio == 0x0F) //FF_ASPECT_EXTENDED
             {
-                avctx->sample_aspect_ratio.num = get_bits(gb, 8);
-                avctx->sample_aspect_ratio.den = get_bits(gb, 8);
+                avctx->sample_aspect_ratio.num = 1 + get_bits(gb, 8);
+                avctx->sample_aspect_ratio.den = 1 + get_bits(gb, 8);
             }
             else if (aspect_ratio == 0x0E)
             {
@@ -570,9 +593,9 @@ static int decode_advanced_sequence_header(AVCodecContext *avctx, GetBitContext 
     }
 
     /* 6.1.8, p23 */
-    if ( !get_bits(gb, 1) /* framerateflag */)
+    if ( get_bits(gb, 1) /* framerateflag */)
     {
-        if ( get_bits(gb, 1) /* framerateind */)
+        if ( !get_bits(gb, 1) /* framerateind */)
         {
             nr = get_bits(gb, 8);
             dr = get_bits(gb, 4);
@@ -585,25 +608,28 @@ static int decode_advanced_sequence_header(AVCodecContext *avctx, GetBitContext 
             {
                 av_log(avctx, AV_LOG_ERROR,
                        "Reserved FRAMERATENR %i not handled\n", nr);
-           }
+                nr = 5; /* overflow protection */
+            }
             if (dr<1)
             {
                 av_log(avctx, AV_LOG_ERROR, "0 is forbidden for FRAMERATEDR\n");
-           }
+                return -1;
+            }
             if (dr>2)
             {
                 av_log(avctx, AV_LOG_ERROR,
                        "Reserved FRAMERATEDR %i not handled\n", dr);
+                dr = 2; /* overflow protection */
             }
-            avctx->frame_rate_base = fps_nr[dr];
-            avctx->frame_rate = fps_nr[nr];
+            avctx->time_base.num = fps_nr[dr - 1];
+            avctx->time_base.den = fps_nr[nr - 1];
         }
         else
         {
             nr = get_bits(gb, 16);
             // 0.03125->2048Hz / 0.03125Hz
-            avctx->frame_rate = 1000000;
-            avctx->frame_rate_base = 31250*(1+nr);
+            avctx->time_base.den = 1000000;
+            avctx->time_base.num = 31250*(1+nr);
         }
     }
 
@@ -615,7 +641,7 @@ static int decode_advanced_sequence_header(AVCodecContext *avctx, GetBitContext 
         v->color_prim = get_bits(gb, 8);
         if (v->color_prim<1)
         {
-            av_log(avctx, AV_LOG_ERROR, "0 for COLOR_PRIM is reserved\n");
+            av_log(avctx, AV_LOG_ERROR, "0 for COLOR_PRIM is forbidden\n");
             return -1;
         }
         if (v->color_prim == 3 || v->color_prim>6)
@@ -627,6 +653,11 @@ static int decode_advanced_sequence_header(AVCodecContext *avctx, GetBitContext 
 
         //Opto-electronic transfer characteristics
         v->transfer_char = get_bits(gb, 8);
+        if (v->transfer_char < 1)
+        {
+            av_log(avctx, AV_LOG_ERROR, "0 for TRAMSFER_CHAR is forbidden\n");
+            return -1;
+        }
         if (v->transfer_char == 3 || v->transfer_char>8)
         {
             av_log(avctx, AV_LOG_DEBUG, "Reserved TRANSFERT_CHAR %i found\n",
@@ -636,8 +667,12 @@ static int decode_advanced_sequence_header(AVCodecContext *avctx, GetBitContext 
 
         //Matrix coefficient for primariev->YCbCr
         v->matrix_coef = get_bits(gb, 8);
-        if (v->matrix_coef < 1) return -1; //forbidden
-        if ((v->matrix_coef>3 && v->matrix_coef<6) || v->matrix_coef>7)
+        if (v->matrix_coef < 1)
+        {
+            av_log(avctx, AV_LOG_ERROR, "0 for MATRIX_COEF is forbidden\n");
+            return -1;
+        }
+        if ((v->matrix_coef > 2 && v->matrix_coef < 6) || v->matrix_coef > 7)
         {
             av_log(avctx, AV_LOG_DEBUG, "Reserved MATRIX_COEF %i found\n",
                    v->color_prim);
@@ -652,12 +687,16 @@ static int decode_advanced_sequence_header(AVCodecContext *avctx, GetBitContext 
       if (decode_hrd(v, gb) < 0) return -1;
     }
 
+    /*reset scaling ranges, 6.2.2 & 6.2.3, p33*/
+    v->range_mapy_flag = 0;
+    v->range_mapuv_flag = 0;
+
     av_log(avctx, AV_LOG_DEBUG, "Advanced profile not supported yet\n");
     return -1;
 }
 #endif
 
-/** 
+/**
  * Decode Simple/Main Profiles sequence header
  * @see Figure 7-8, p16-17
  * @param avctx Codec context
@@ -671,12 +710,19 @@ static int decode_sequence_header(AVCodecContext *avctx, GetBitContext *gb)
     av_log(avctx, AV_LOG_DEBUG, "Header: %0X\n", show_bits(gb, 32));
     v->profile = get_bits(gb, 2);
     if (v->profile == 2)
-        av_log(avctx, AV_LOG_ERROR, "Profile 2 is reserved\n");
+    {
+        av_log(avctx, AV_LOG_ERROR, "Profile value 2 is forbidden\n");
+        return -1;
+    }
 
 #if HAS_ADVANCED_PROFILE
     if (v->profile == PROFILE_ADVANCED)
     {
         v->level = get_bits(gb, 3);
+        if(v->level >= 5)
+        {
+            av_log(avctx, AV_LOG_ERROR, "Reserved LEVEL %i\n",v->level);
+        }
         v->chromaformat = get_bits(gb, 2);
         if (v->chromaformat != 1)
         {
@@ -702,6 +748,11 @@ static int decode_sequence_header(AVCodecContext *avctx, GetBitContext *gb)
     // (bitrate-32kbps)/64kbps
     v->bitrtq_postproc = get_bits(gb, 5); //common
     v->s.loop_filter = get_bits(gb, 1); //common
+    if(v->s.loop_filter == 1 && v->profile == PROFILE_SIMPLE)
+    {
+        av_log(avctx, AV_LOG_ERROR,
+               "LOOPFILTER shell not be enabled in simple profile\n");
+    }
 
 #if HAS_ADVANCED_PROFILE
     if (v->profile < PROFILE_ADVANCED)
@@ -740,7 +791,7 @@ static int decode_sequence_header(AVCodecContext *avctx, GetBitContext *gb)
     }
     v->dquant =  get_bits(gb, 2); //common
     v->vstransform =  get_bits(gb, 1); //common
-    
+
 #if HAS_ADVANCED_PROFILE
     if (v->profile < PROFILE_ADVANCED)
 #endif
@@ -762,6 +813,11 @@ static int decode_sequence_header(AVCodecContext *avctx, GetBitContext *gb)
     {
         v->s.resync_marker = get_bits(gb, 1);
         v->rangered = get_bits(gb, 1);
+        if (v->rangered && v->profile == PROFILE_SIMPLE)
+        {
+            av_log(avctx, AV_LOG_DEBUG,
+                   "RANGERED should be set to 0 in simple profile\n");
+        }
     }
 
     v->s.max_b_frames = avctx->max_b_frames = get_bits(gb, 3); //common
@@ -808,7 +864,7 @@ static int decode_sequence_header(AVCodecContext *avctx, GetBitContext *gb)
 static int advanced_entry_point_process(AVCodecContext *avctx, GetBitContext *gb)
 {
     VC9Context *v = avctx->priv_data;
-    int range_mapy_flag, range_mapuv_flag, i;
+    int i;
     if (v->profile != PROFILE_ADVANCED)
     {
         av_log(avctx, AV_LOG_ERROR,
@@ -819,20 +875,21 @@ static int advanced_entry_point_process(AVCodecContext *avctx, GetBitContext *gb
     {
         //Update buffer fullness
         av_log(avctx, AV_LOG_DEBUG, "Buffer fullness update\n");
+        assert(v->hrd_num_leaky_buckets > 0);
         for (i=0; i<v->hrd_num_leaky_buckets; i++)
-            skip_bits(gb, 8);
+            v->hrd_fullness[i] = get_bits(gb, 8);
     }
-    if ((range_mapy_flag = get_bits(gb, 1)))
+    if ((v->range_mapy_flag = get_bits(gb, 1)))
     {
         //RANGE_MAPY
         av_log(avctx, AV_LOG_DEBUG, "RANGE_MAPY\n");
-        skip_bits(gb, 3);
+        v->range_mapy = get_bits(gb, 3);
     }
-    if ((range_mapuv_flag = get_bits(gb, 1)))
+    if ((v->range_mapuv_flag = get_bits(gb, 1)))
     {
         //RANGE_MAPUV
         av_log(avctx, AV_LOG_DEBUG, "RANGE_MAPUV\n");
-        skip_bits(gb, 3);
+        v->range_mapuv = get_bits(gb, 3);
     }
     if (v->panscanflag)
     {
@@ -872,12 +929,12 @@ static int advanced_entry_point_process(AVCodecContext *avctx, GetBitContext *gb
  * @todo TODO: Take into account stride
  * @todo TODO: Allow use of external buffers ?
  */
-int alloc_bitplane(BitPlane *bp, int width, int height)
+static int alloc_bitplane(BitPlane *bp, int width, int height)
 {
     if (!bp || bp->width<0 || bp->height<0) return -1;
     bp->data = (uint8_t*)av_malloc(width*height);
     if (!bp->data) return -1;
-    bp->width = bp->stride = width; 
+    bp->width = bp->stride = width;
     bp->height = height;
     return 0;
 }
@@ -885,13 +942,13 @@ int alloc_bitplane(BitPlane *bp, int width, int height)
 /** Free the bitplane's buffer
  * @param bp Bitplane which buffer is to free
  */
-void free_bitplane(BitPlane *bp)
+static void free_bitplane(BitPlane *bp)
 {
     bp->width = bp->stride = bp->height = 0;
     if (bp->data) av_freep(&bp->data);
 }
 
-/** Decode rows by checking if they are skiped
+/** Decode rows by checking if they are skipped
  * @param plane Buffer to store decoded bits
  * @param[in] width Width of this buffer
  * @param[in] height Height of this buffer
@@ -904,13 +961,13 @@ static void decode_rowskip(uint8_t* plane, int width, int height, int stride, Ge
         if (!get_bits(gb, 1)) //rowskip
             memset(plane, 0, width);
         else
-            for (x=0; x<width; x++) 
+            for (x=0; x<width; x++)
                 plane[x] = get_bits(gb, 1);
         plane += stride;
     }
 }
 
-/** Decode columns by checking if they are skiped
+/** Decode columns by checking if they are skipped
  * @param plane Buffer to store decoded bits
  * @param[in] width Width of this buffer
  * @param[in] height Height of this buffer
@@ -963,7 +1020,7 @@ static int bitplane_decoding(BitPlane *bp, VC9Context *v)
             offset = x = 1;
         }
         else offset = x = 0;
-        
+
         for (y=0; y<bp->height; y++)
         {
             for(; x<bp->width; x+=2)
@@ -1105,7 +1162,7 @@ static int vop_dquant_decoding(VC9Context *v)
 }
 
 /***********************************************************************/
-/** 
+/**
  * @defgroup all_frame_hdr All VC9 profiles frame header
  * @brief Part of the frame header decoding from all profiles
  * @warning Only pro/epilog differs between Simple/Main and Advanced => check caller
@@ -1126,14 +1183,14 @@ static int decode_b_picture_primary_header(VC9Context *v)
     if (v->profile == PROFILE_SIMPLE)
     {
         av_log(v->s.avctx, AV_LOG_ERROR, "Found a B frame while in Simple Profile!\n");
-        return FRAME_SKIPED;
+        return FRAME_SKIPPED;
     }
     v->bfraction = vc9_bfraction_lut[get_vlc2(gb, vc9_bfraction_vlc.table,
                                               VC9_BFRACTION_VLC_BITS, 2)];
     if (v->bfraction < -1)
     {
         av_log(v->s.avctx, AV_LOG_ERROR, "Invalid BFRaction\n");
-        return FRAME_SKIPED;
+        return FRAME_SKIPPED;
     }
     else if (!v->bfraction)
     {
@@ -1431,7 +1488,7 @@ static int decode_p_picture_secondary_header(VC9Context *v)
 
 
 /***********************************************************************/
-/** 
+/**
  * @defgroup std_frame_hdr VC9 Simple/Main Profiles header decoding
  * @brief Part of the frame header decoding belonging to Simple/Main Profiles
  * @warning Only pro/epilog differs between Simple/Main and Advanced =>
@@ -1474,7 +1531,7 @@ static int standard_decode_picture_primary_header(VC9Context *v)
     case B_TYPE: status = decode_b_picture_primary_header(v); break;
     }
 
-    if (status == FRAME_SKIPED)
+    if (status == FRAME_SKIPPED)
     {
       av_log(v->s.avctx, AV_LOG_INFO, "Skipping frame...\n");
       return status;
@@ -1499,7 +1556,7 @@ static int standard_decode_picture_secondary_header(VC9Context *v)
     case BI_TYPE:
     case I_TYPE: break; //Nothing needed as it's done in the epilog
     }
-    if (status < 0) return FRAME_SKIPED;
+    if (status < 0) return FRAME_SKIPPED;
 
     /* AC Syntax */
     v->c_ac_table_index = decode012(gb);
@@ -1516,14 +1573,14 @@ static int standard_decode_picture_secondary_header(VC9Context *v)
 
 #if HAS_ADVANCED_PROFILE
 /***********************************************************************/
-/** 
+/**
  * @defgroup adv_frame_hdr VC9 Advanced Profile header decoding
  * @brief Part of the frame header decoding belonging to Advanced Profiles
  * @warning Only pro/epilog differs between Simple/Main and Advanced =>
  *          check caller
  * @{
  */
-/** Frame header decoding, primary part 
+/** Frame header decoding, primary part
  * @param v VC9 context
  * @return Status
  */
@@ -1540,7 +1597,7 @@ static int advanced_decode_picture_primary_header(VC9Context *v)
     }
 
     type = get_prefix(gb, 0, 4);
-    if (type > 4 || type < 0) return FRAME_SKIPED;
+    if (type > 4 || type < 0) return FRAME_SKIPPED;
     v->s.pict_type = type_table[type];
     av_log(v->s.avctx, AV_LOG_INFO, "AP Frame Type: %i\n", v->s.pict_type);
 
@@ -1578,7 +1635,7 @@ static int advanced_decode_picture_primary_header(VC9Context *v)
     case I_TYPE: if (decode_i_picture_primary_header(v) < 0) return -1;
     case P_TYPE: if (decode_p_picture_primary_header(v) < 0) return -1;
     case BI_TYPE:
-    case B_TYPE: if (decode_b_picture_primary_header(v) < 0) return FRAME_SKIPED;
+    case B_TYPE: if (decode_b_picture_primary_header(v) < 0) return FRAME_SKIPPED;
     default: return -1;
     }
 }
@@ -1597,9 +1654,9 @@ static int advanced_decode_picture_secondary_header(VC9Context *v)
     case P_TYPE: status = decode_p_picture_secondary_header(v); break;
     case B_TYPE: status = decode_b_picture_secondary_header(v); break;
     case BI_TYPE:
-    case I_TYPE: status = decode_i_picture_secondary_header(v); break; 
+    case I_TYPE: status = decode_i_picture_secondary_header(v); break;
     }
-    if (status<0) return FRAME_SKIPED;
+    if (status<0) return FRAME_SKIPPED;
 
     /* AC Syntax */
     v->c_ac_table_index = decode012(gb);
@@ -1616,7 +1673,7 @@ static int advanced_decode_picture_secondary_header(VC9Context *v)
 /** @} */ //End for adv_frame_hdr
 
 /***********************************************************************/
-/** 
+/**
  * @defgroup block VC9 Block-level functions
  * @see 7.1.4, p91 and 8.1.1.7, p(1)04
  * @todo TODO: Integrate to MpegEncContext facilities
@@ -1705,28 +1762,28 @@ static inline int vc9_pred_dc(MpegEncContext *s, int n,
     int a, b, c, wrap, pred, scale;
     int16_t *dc_val;
     static const uint16_t dcpred[31] = {
-        1024,  512,  341,  256,  205,  171,  146,  128, 
-         114,  102,   93,   85,   79,   73,   68,   64, 
-          60,   57,   54,   51,   49,   47,   45,   43, 
+        1024,  512,  341,  256,  205,  171,  146,  128,
+         114,  102,   93,   85,   79,   73,   68,   64,
+          60,   57,   54,   51,   49,   47,   45,   43,
           41,   39,   38,   37,   35,   34,   33
     };
 
     /* find prediction - wmv3_dc_scale always used here in fact */
     if (n < 4)     scale = s->y_dc_scale;
     else           scale = s->c_dc_scale;
-    
+
     wrap = s->block_wrap[n];
     dc_val= s->dc_val[0] + s->block_index[n];
 
     /* B C
-     * A X 
+     * A X
      */
     a = dc_val[ - 1];
     b = dc_val[ - 1 - wrap];
     c = dc_val[ - wrap];
-    
+
     /* XXX: Rule B is used only for I and BI frames in S/M/C profile
-     *      with overlap filtering off 
+     *      with overlap filtering off
      */
     if ((s->pict_type == I_TYPE || s->pict_type == BI_TYPE) &&
         1 /* XXX: overlap filtering off */)
@@ -1775,7 +1832,7 @@ static inline int vc9_pred_dc(MpegEncContext *s, int n,
  * @todo TODO: Process the blocks
  * @todo TODO: Use M$ MPEG-4 cbp prediction
  */
-int vc9_decode_block(VC9Context *v, DCTELEM block[64], int n, int coded, int mquant)
+static int vc9_decode_block(VC9Context *v, DCTELEM block[64], int n, int coded, int mquant)
 {
     GetBitContext *gb = &v->s.gb;
     MpegEncContext *s = &v->s;
@@ -1830,7 +1887,7 @@ int vc9_decode_block(VC9Context *v, DCTELEM block[64], int n, int coded, int mqu
         dcdiff += vc9_pred_dc(s, n, &dc_val, &dc_pred_dir);
         *dc_val = dcdiff;
         /* Store the quantized DC coeff, used for prediction */
-        
+
         if (n < 4) {
             block[0] = dcdiff * s->y_dc_scale;
         } else {
@@ -1886,7 +1943,7 @@ int vc9_decode_block(VC9Context *v, DCTELEM block[64], int n, int coded, int mqu
 /** @} */ //End for group block
 
 /***********************************************************************/
-/** 
+/**
  * @defgroup std_mb VC9 Macroblock-level functions in Simple/Main Profiles
  * @see 7.1.4, p91 and 8.1.1.7, p(1)04
  * @todo TODO: Integrate to MpegEncContext facilities
@@ -1901,18 +1958,18 @@ static inline int vc9_coded_block_pred(MpegEncContext * s, int n, uint8_t **code
     wrap = s->b8_stride;
 
     /* B C
-     * A X 
+     * A X
      */
     a = s->coded_block[xy - 1       ];
     b = s->coded_block[xy - 1 - wrap];
     c = s->coded_block[xy     - wrap];
-    
+
     if (b == c) {
         pred = a;
     } else {
         pred = c;
     }
-    
+
     /* store value */
     *coded_block_ptr = &s->coded_block[xy];
 
@@ -1922,11 +1979,11 @@ static inline int vc9_coded_block_pred(MpegEncContext * s, int n, uint8_t **code
 /** Decode one I-frame MB (in Simple/Main profile)
  * @todo TODO: Extend to AP
  */
-int vc9_decode_i_mb(VC9Context *v, DCTELEM block[6][64])
+static int vc9_decode_i_mb(VC9Context *v, DCTELEM block[6][64])
 {
     int i, cbp, val;
     uint8_t *coded_val;
-    uint32_t * const mb_type_ptr= &v->s.current_picture.mb_type[ v->s.mb_x + v->s.mb_y*v->s.mb_stride ];
+//    uint32_t * const mb_type_ptr= &v->s.current_picture.mb_type[ v->s.mb_x + v->s.mb_y*v->s.mb_stride ];
 
     v->s.mb_intra = 1;
     cbp = get_vlc2(&v->s.gb, ff_msmp4_mb_i_vlc.table, MB_INTRA_VLC_BITS, 2);
@@ -1956,14 +2013,14 @@ int vc9_decode_i_mb(VC9Context *v, DCTELEM block[6][64])
  * @todo TODO: Extend to AP
  * @fixme FIXME: DC value for inter blocks not set
  */
-int vc9_decode_p_mb(VC9Context *v, DCTELEM block[6][64])
+static int vc9_decode_p_mb(VC9Context *v, DCTELEM block[6][64])
 {
     MpegEncContext *s = &v->s;
     GetBitContext *gb = &s->gb;
     int i, mb_offset = s->mb_x + s->mb_y*s->mb_width; /* XXX: mb_stride */
     int cbp; /* cbp decoding stuff */
     int hybrid_pred; /* Prediction types */
-    int mv_mode_bit = 0; 
+    int mv_mode_bit = 0;
     int mqdiff, mquant; /* MB quantization */
     int ttmb; /* MB Transform type */
     int status;
@@ -1987,7 +2044,7 @@ int vc9_decode_p_mb(VC9Context *v, DCTELEM block[6][64])
         if (!v->skip_mb_plane.data[mb_offset])
         {
             GET_MVDATA(dmv_x, dmv_y);
-            
+
             /* hybrid mv pred, 8.3.5.3.4 */
             if (v->mv_mode == MV_PMODE_1MV ||
                 v->mv_mode == MV_PMODE_MIXED_MV)
@@ -2093,7 +2150,7 @@ int vc9_decode_p_mb(VC9Context *v, DCTELEM block[6][64])
             return 0;
         }
     }
-    
+
     /* Should never happen */
     return -1;
 }
@@ -2103,7 +2160,7 @@ int vc9_decode_p_mb(VC9Context *v, DCTELEM block[6][64])
  * @warning XXX: Used for decoding BI MBs
  * @fixme FIXME: DC value for inter blocks not set
  */
-int vc9_decode_b_mb(VC9Context *v, DCTELEM block[6][64])
+static int vc9_decode_b_mb(VC9Context *v, DCTELEM block[6][64])
 {
     MpegEncContext *s = &v->s;
     GetBitContext *gb = &v->s.gb;
@@ -2111,21 +2168,21 @@ int vc9_decode_b_mb(VC9Context *v, DCTELEM block[6][64])
     int b_mv_type = BMV_TYPE_BACKWARD;
     int mquant, mqdiff; /* MB quant stuff */
     int ttmb; /* MacroBlock transform type */
-    
+
     static const int size_table[6] = { 0, 2, 3, 4, 5, 8 },
         offset_table[6] = { 0, 1, 3, 7, 15, 31 };
     int mb_has_coeffs = 1; /* last_flag */
     int dmv1_x, dmv1_y, dmv2_x, dmv2_y; /* Differential MV components */
     int index, index1; /* LUT indices */
     int val, sign; /* MVDATA temp values */
-    
+
     mb_offset = s->mb_width*s->mb_y + s->mb_x; //FIXME: arrays aren't using stride
 
     if (v->direct_mb_plane.is_raw)
         v->direct_mb_plane.data[mb_offset] = get_bits(gb, 1);
     if (v->skip_mb_plane.is_raw)
         v->skip_mb_plane.data[mb_offset] = get_bits(gb, 1);
-            
+
     if (!v->direct_mb_plane.data[mb_offset])
     {
         if (v->skip_mb_plane.data[mb_offset])
@@ -2135,7 +2192,7 @@ int vc9_decode_b_mb(VC9Context *v, DCTELEM block[6][64])
                 b_mv_type < 3) b_mv_type = 1-b_mv_type;
         }
         else
-        { 
+        {
             GET_MVDATA(dmv1_x, dmv1_y);
             if (!s->mb_intra /* b_mv1 tells not intra */)
             {
@@ -2191,7 +2248,7 @@ int vc9_decode_b_mb(VC9Context *v, DCTELEM block[6][64])
 static int standard_decode_mbs(VC9Context *v)
 {
     MpegEncContext *s = &v->s;
-    
+
     /* Set transform type info depending on pq */
     if (v->pq < 5)
     {
@@ -2208,7 +2265,7 @@ static int standard_decode_mbs(VC9Context *v)
         v->tt_index = 2;
         v->ttblk4x4 = 2;
     }
-    
+
     if (s->pict_type != I_TYPE)
     {
         /* Select proper long MV range */
@@ -2247,7 +2304,7 @@ static int standard_decode_mbs(VC9Context *v)
 
 #if HAS_ADVANCED_PROFILE
 /***********************************************************************/
-/** 
+/**
  * @defgroup adv_mb VC9 Macroblock-level functions in Advanced Profile
  * @todo TODO: Integrate to MpegEncContext facilities
  * @todo TODO: Code P, B and BI
@@ -2298,6 +2355,8 @@ static int vc9_decode_init(AVCodecContext *avctx)
         return -1;
     if (vc9_init_common(v) < 0) return -1;
 
+    av_log(avctx, AV_LOG_INFO, "This decoder is not supposed to produce picture. Dont report this as a bug!\n");
+
     avctx->coded_width = avctx->width;
     avctx->coded_height = avctx->height;
     if (avctx->codec_id == CODEC_ID_WMV3)
@@ -2310,7 +2369,7 @@ static int vc9_decode_init(AVCodecContext *avctx)
         // samples we can decode
 
         init_get_bits(&gb, avctx->extradata, avctx->extradata_size*8);
-        
+
         if (decode_sequence_header(avctx, &gb) < 0)
           return -1;
 
@@ -2367,7 +2426,7 @@ static int vc9_decode_frame(AVCodecContext *avctx,
 {
     VC9Context *v = avctx->priv_data;
     MpegEncContext *s = &v->s;
-    int ret = FRAME_SKIPED, len;
+    int ret = FRAME_SKIPPED, len;
     AVFrame *pict = data;
     uint8_t *tmp_buf;
     v->s.avctx = avctx;
@@ -2384,25 +2443,25 @@ static int vc9_decode_frame(AVCodecContext *avctx,
     if (avctx->codec_id == CODEC_ID_VC9)
     {
 #if 0
-	// search for IDU's
-	// FIXME
-	uint32_t scp = 0;
-	int scs = 0, i = 0;
+        // search for IDU's
+        // FIXME
+        uint32_t scp = 0;
+        int scs = 0, i = 0;
 
-	while (i < buf_size)
-	{
-	    for (; i < buf_size && scp != 0x000001; i++)
-		scp = ((scp<<8)|buf[i])&0xffffff;
+        while (i < buf_size)
+        {
+            for (; i < buf_size && scp != 0x000001; i++)
+                scp = ((scp<<8)|buf[i])&0xffffff;
 
-	    if (scp != 0x000001)
-		break; // eof ?
-	
-	    scs = buf[i++];	
+            if (scp != 0x000001)
+                break; // eof ?
 
-	    init_get_bits(gb, buf+i, (buf_size-i)*8);
-	
-	    switch(scs)
-	    {
+            scs = buf[i++];
+
+            init_get_bits(gb, buf+i, (buf_size-i)*8);
+
+            switch(scs)
+            {
             case 0x0A: //Sequence End Code
                 return 0;
             case 0x0B: //Slice Start Code
@@ -2426,11 +2485,11 @@ static int vc9_decode_frame(AVCodecContext *avctx,
                 av_log(avctx, AV_LOG_ERROR,
                        "Unsupported IDU suffix %lX\n", scs);
             }
-	    
-	    i += get_bits_count(gb)*8;
-	}
+
+            i += get_bits_count(gb)*8;
+        }
 #else
-	av_abort();
+        av_abort();
 #endif
     }
     else
@@ -2454,12 +2513,12 @@ static int vc9_decode_frame(AVCodecContext *avctx,
 
     //No IDU - we mimic ff_h263_decode_frame
     s->bitstream_buffer_size=0;
-        
+
     if (!s->context_initialized) {
         if (MPV_common_init(s) < 0) //we need the idct permutaton for reading a custom matrix
             return -1;
     }
-    
+
     //we need to set current_picture_ptr before reading the header, otherwise we cant store anyting im there
     if(s->current_picture_ptr==NULL || s->current_picture_ptr->data[0]){
         s->current_picture_ptr= &s->picture[ff_find_unused_picture(s, 0)];
@@ -2470,7 +2529,7 @@ static int vc9_decode_frame(AVCodecContext *avctx,
     else
 #endif
         ret= standard_decode_picture_primary_header(v);
-    if (ret == FRAME_SKIPED) return buf_size;
+    if (ret == FRAME_SKIPPED) return buf_size;
     /* skip if the header was thrashed */
     if (ret < 0){
         av_log(s->avctx, AV_LOG_ERROR, "header damaged\n");
@@ -2498,7 +2557,7 @@ static int vc9_decode_frame(AVCodecContext *avctx,
     /* skip everything if we are in a hurry>=5 */
     if(avctx->hurry_up>=5)
         return buf_size; //FIXME simulating all buffer consumed
-    
+
     if(s->next_p_frame_damaged){
         if(s->pict_type==B_TYPE)
             return buf_size; //FIXME simulating all buffer consumed
@@ -2518,7 +2577,7 @@ static int vc9_decode_frame(AVCodecContext *avctx,
     else
 #endif
         ret = standard_decode_picture_secondary_header(v);
-    if (ret<0) return FRAME_SKIPED; //FIXME Non fatal for now
+    if (ret<0) return FRAME_SKIPPED; //FIXME Non fatal for now
 
     //We consider the image coded in only one slice
 #if HAS_ADVANCED_PROFILE
@@ -2530,15 +2589,15 @@ static int vc9_decode_frame(AVCodecContext *avctx,
             case P_TYPE: ret = decode_p_mbs(v); break;
             case B_TYPE:
             case BI_TYPE: ret = decode_b_mbs(v); break;
-            default: ret = FRAME_SKIPED;
+            default: ret = FRAME_SKIPPED;
         }
-        if (ret == FRAME_SKIPED) return buf_size; //We ignore for now failures
+        if (ret == FRAME_SKIPPED) return buf_size; //We ignore for now failures
     }
     else
 #endif
     {
         ret = standard_decode_mbs(v);
-        if (ret == FRAME_SKIPED) return buf_size;
+        if (ret == FRAME_SKIPPED) return buf_size;
     }
 
     ff_er_frame_end(s);
@@ -2547,22 +2606,21 @@ static int vc9_decode_frame(AVCodecContext *avctx,
 
     assert(s->current_picture.pict_type == s->current_picture_ptr->pict_type);
     assert(s->current_picture.pict_type == s->pict_type);
-    if(s->pict_type==B_TYPE || s->low_delay){
-        *pict= *(AVFrame*)&s->current_picture;
+
+    if (s->pict_type == B_TYPE || s->low_delay) {
+        *pict= *(AVFrame*)s->current_picture_ptr;
+    } else if (s->last_picture_ptr != NULL) {
+        *pict= *(AVFrame*)s->last_picture_ptr;
+    }
+
+    if(s->last_picture_ptr || s->low_delay){
+        *data_size = sizeof(AVFrame);
         ff_print_debug_info(s, pict);
-    } else {
-        *pict= *(AVFrame*)&s->last_picture;
-        if(pict)
-            ff_print_debug_info(s, pict);
     }
 
     /* Return the Picture timestamp as the frame number */
     /* we substract 1 because it is added on utils.c    */
     avctx->frame_number = s->picture_number - 1;
-
-    /* dont output the last pic after seeking */
-    if(s->last_picture_ptr || s->low_delay)
-        *data_size = sizeof(AVFrame);
 
     av_log(avctx, AV_LOG_DEBUG, "Consumed %i/%i bits\n",
            get_bits_count(&s->gb), buf_size*8);

@@ -15,6 +15,14 @@
 #include "stheader.h"
 #include "bswap.h"
 
+#ifdef USE_LIBAVCODEC_SO
+#include <ffmpeg/avcodec.h>
+#elif defined(USE_LIBAVCODEC)
+#include "libavcodec/avcodec.h"
+#else
+#define FF_INPUT_BUFFER_PADDING_SIZE 8
+#endif
+
 /* parameters ! */
 int vivo_param_version = -1;
 char *vivo_param_acodec = NULL;
@@ -105,8 +113,8 @@ static void vivo_parse_text_header(demuxer_t *demux, int header_len)
 	header_len -= strlen(token)+2;
 	if (sscanf(token, "%[^:]:%[^\n]", opt, param) != 2)
 	{
-	    mp_msg(MSGT_DEMUX, MSGL_V, "viv_text_header_parser: bad line: '%s' at ~%p\n",
-		token, stream_tell(demux->stream));
+	    mp_msg(MSGT_DEMUX, MSGL_V, "viv_text_header_parser: bad line: '%s' at ~%#"PRIx64"\n",
+		token, (int64_t)stream_tell(demux->stream));
 	    break;
 	}
 	mp_dbg(MSGT_DEMUX, MSGL_DBG3, "token: '%s' (%d bytes/%d bytes left)\n",
@@ -221,7 +229,7 @@ static void vivo_parse_text_header(demuxer_t *demux, int header_len)
 	free(param);
 }
 
-int vivo_check_file(demuxer_t* demuxer){
+static int vivo_check_file(demuxer_t* demuxer){
     int i=0;
     int len;
     int c;
@@ -281,7 +289,7 @@ int vivo_check_file(demuxer_t* demuxer){
 
     stream_seek(demuxer->stream, orig_pos);
 
-return 1;
+return DEMUXER_TYPE_VIVO;
 }
 
 static int audio_pos=0;
@@ -290,7 +298,7 @@ static int audio_rate=0;
 // return value:
 //     0 = EOF or no stream found
 //     1 = successfully read a packet
-int demux_vivo_fill_buffer(demuxer_t *demux){
+static int demux_vivo_fill_buffer(demuxer_t *demux, demux_stream_t *dsds){
   demux_stream_t *ds=NULL;
   int c;
   int len=0;
@@ -356,8 +364,8 @@ int demux_vivo_fill_buffer(demuxer_t *demux){
       audio_pos+=len;
       break;
   default:
-      mp_msg(MSGT_DEMUX,MSGL_WARN,"VIVO - unknown ID found: %02X at pos %lu contact author!\n",
-        c, stream_tell(demux->stream));
+      mp_msg(MSGT_DEMUX,MSGL_WARN,"VIVO - unknown ID found: %02X at pos %"PRIu64" contact author!\n",
+        c, (int64_t)stream_tell(demux->stream));
       return 0;
   }
 
@@ -379,7 +387,10 @@ int demux_vivo_fill_buffer(demuxer_t *demux){
       } else {
         // append data to it!
         demux_packet_t* dp=ds->asf_packet;
-        dp->buffer=realloc(dp->buffer,dp->len+len);
+        if(dp->len + len + FF_INPUT_BUFFER_PADDING_SIZE < 0)
+	    return 0;
+        dp->buffer=realloc(dp->buffer,dp->len+len+FF_INPUT_BUFFER_PADDING_SIZE);
+        memset(dp->buffer+dp->len+len, 0, FF_INPUT_BUFFER_PADDING_SIZE);
         //memcpy(dp->buffer+dp->len,data,len);
 	stream_read(demux->stream,dp->buffer+dp->len,len);
         mp_dbg(MSGT_DEMUX,MSGL_DBG4,"data appended! %d+%d\n",dp->len,len);
@@ -537,12 +548,12 @@ static int h263_decode_picture_header(unsigned char *b_ptr)
 
 
 
-void demux_open_vivo(demuxer_t* demuxer){
+static demuxer_t* demux_open_vivo(demuxer_t* demuxer){
     vivo_priv_t* priv=demuxer->priv;
 
   if(!ds_fill_buffer(demuxer->video)){
     mp_msg(MSGT_DEMUX,MSGL_ERR,"VIVO: " MSGTR_MissingVideoStreamBug);
-    return;
+    return NULL;
   }
 
     audio_pos=0;
@@ -616,7 +627,7 @@ void demux_open_vivo(demuxer_t* demuxer){
 		/* disable seeking */
 		demuxer->seekable = 0;
 
-		printf("VIVO Video stream %d size: display: %dx%d, codec: %ux%u\n",
+		mp_msg(MSGT_DEMUX,MSGL_STATUS,"VIVO Video stream %d size: display: %dx%d, codec: %ux%u\n",
 		    demuxer->video->id, sh->disp_w, sh->disp_h, sh->bih->biWidth,
 		    sh->bih->biHeight);
 }
@@ -714,13 +725,13 @@ if (demuxer->audio->id >= -1){
 		sh->ds=demuxer->audio;
 		demuxer->audio->id=1;
 nosound:
-		return;
+		return demuxer;
 }
+}
+    return demuxer;
 }
 
-}
-
-void demux_close_vivo(demuxer_t *demuxer)
+static void demux_close_vivo(demuxer_t *demuxer)
 {
     vivo_priv_t* priv=demuxer->priv;
  
@@ -737,3 +748,20 @@ void demux_close_vivo(demuxer_t *demuxer)
     }
     return;
 }
+
+
+demuxer_desc_t demuxer_desc_vivo = {
+  "Vivo demuxer",
+  "vivo",
+  "VIVO",
+  "A'rpi, Alex Beregszasi",
+  "",
+  DEMUXER_TYPE_VIVO,
+  0, // unsafe autodetect
+  vivo_check_file,
+  demux_vivo_fill_buffer,
+  demux_open_vivo,
+  demux_close_vivo,
+  NULL,
+  NULL
+};

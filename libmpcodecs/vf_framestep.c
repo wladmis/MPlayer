@@ -51,15 +51,16 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../config.h"
-#include "../mp_msg.h"
-#include "../cpudetect.h"
+#include "config.h"
+#include "mp_msg.h"
+#include "help_mp.h"
+#include "cpudetect.h"
 
 #include "img_format.h"
 #include "mp_image.h"
 #include "vf.h"
 
-#include "../libvo/fastmemcpy.h"
+#include "libvo/fastmemcpy.h"
 
 /* Uncomment if you want to print some info on the format */
 // #define DUMP_FORMAT_DATA
@@ -75,7 +76,7 @@ struct vf_priv_s {
 };
 
 /* Filter handler */
-static int put_image(struct vf_instance_s* vf, mp_image_t *mpi)
+static int put_image(struct vf_instance_s* vf, mp_image_t *mpi, double pts)
 {
     mp_image_t        *dmpi;
     struct vf_priv_s  *priv;
@@ -88,7 +89,7 @@ static int put_image(struct vf_instance_s* vf, mp_image_t *mpi)
      */
     if (priv->dump_iframe) {
         if (mpi->pict_type == 1) {
-            printf("I!\n");
+            mp_msg(MSGT_VFILTER, MSGL_INFO, "I!\n");
         }
     }
 
@@ -125,7 +126,7 @@ static int put_image(struct vf_instance_s* vf, mp_image_t *mpi)
         dmpi->height    = mpi->height;
 
         /* Chain to next filter / output ... */
-        return vf_next_put_image(vf, dmpi);
+        return vf_next_put_image(vf, dmpi, pts);
     }
 
     /* Skip the frame */
@@ -172,7 +173,7 @@ static int open(vf_instance_t *vf, char* args)
                 if (*args != '\0') {
                     p->frame_step = atoi(args);
                     if (p->frame_step <= 0) {
-                        printf("Error parsing argument\n");
+                        mp_msg(MSGT_VFILTER, MSGL_WARN, MSGTR_MPCODECS_ErrorParsingArgument);
                         return(0);
                     }
                 }

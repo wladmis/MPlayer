@@ -22,7 +22,7 @@
  *
  * Modified for use with MPlayer, see libmpeg-0.4.0.diff for the exact changes.
  * detailed CVS changelog at http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
- * $Id: motion_comp_mmx.c,v 1.7 2005/02/19 02:32:12 diego Exp $
+ * $Id: motion_comp_mmx.c 17567 2006-02-09 14:08:03Z rathann $
  */
 
 #include "config.h"
@@ -67,7 +67,7 @@ static mmx_t round4 = {0x0002000200020002LL};
  * unrolling will help
  */
 
-static inline void mmx_zero_reg ()
+static inline void mmx_zero_reg (void)
 {
     /* load 0 into mm0 */
     pxor_r2r (mm0, mm0);

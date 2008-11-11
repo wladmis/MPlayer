@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
 /**
@@ -188,25 +188,25 @@ static int ea_read_header(AVFormatContext *s,
         return AVERROR_NOMEM;
     av_set_pts_info(st, 33, 1, 90000);
     ea->video_stream_index = st->index;
-    st->codec.codec_type = CODEC_TYPE_VIDEO;
-    st->codec.codec_id = CODEC_ID_EA_MJPEG;
-    st->codec.codec_tag = 0;  /* no fourcc */
-#endif    
+    st->codec->codec_type = CODEC_TYPE_VIDEO;
+    st->codec->codec_id = CODEC_ID_EA_MJPEG;
+    st->codec->codec_tag = 0;  /* no fourcc */
+#endif
 
     /* initialize the audio decoder stream */
     st = av_new_stream(s, 0);
     if (!st)
         return AVERROR_NOMEM;
     av_set_pts_info(st, 33, 1, EA_SAMPLE_RATE);
-    st->codec.codec_type = CODEC_TYPE_AUDIO;
-    st->codec.codec_id = CODEC_ID_ADPCM_EA;
-    st->codec.codec_tag = 0;  /* no tag */
-    st->codec.channels = ea->num_channels;
-    st->codec.sample_rate = EA_SAMPLE_RATE;
-    st->codec.bits_per_sample = EA_BITS_PER_SAMPLE;
-    st->codec.bit_rate = st->codec.channels * st->codec.sample_rate *
-        st->codec.bits_per_sample / 4;
-    st->codec.block_align = st->codec.channels * st->codec.bits_per_sample;
+    st->codec->codec_type = CODEC_TYPE_AUDIO;
+    st->codec->codec_id = CODEC_ID_ADPCM_EA;
+    st->codec->codec_tag = 0;  /* no tag */
+    st->codec->channels = ea->num_channels;
+    st->codec->sample_rate = EA_SAMPLE_RATE;
+    st->codec->bits_per_sample = EA_BITS_PER_SAMPLE;
+    st->codec->bit_rate = st->codec->channels * st->codec->sample_rate *
+        st->codec->bits_per_sample / 4;
+    st->codec->block_align = st->codec->channels * st->codec->bits_per_sample;
 
     ea->audio_stream_index = st->index;
     ea->audio_frame_counter = 0;
@@ -234,23 +234,19 @@ static int ea_read_packet(AVFormatContext *s,
         switch (chunk_type) {
         /* audio data */
         case SCDl_TAG:
-            if (av_new_packet(pkt, chunk_size))
+            ret = av_get_packet(pb, pkt, chunk_size);
+            if (ret != chunk_size)
                 ret = AVERROR_IO;
             else {
-                ret = get_buffer(pb, pkt->data, chunk_size);
-                if (ret != chunk_size)
-                    ret = AVERROR_IO;
-                else {
                     pkt->stream_index = ea->audio_stream_index;
                     pkt->pts = 90000;
                     pkt->pts *= ea->audio_frame_counter;
                     pkt->pts /= EA_SAMPLE_RATE;
 
-                    /* 2 samples/byte, 1 or 2 samples per frame depending 
+                    /* 2 samples/byte, 1 or 2 samples per frame depending
                      * on stereo; chunk also has 12-byte header */
                     ea->audio_frame_counter += ((chunk_size - 12) * 2) /
                         ea->num_channels;
-                }
             }
 
             packet_read = 1;

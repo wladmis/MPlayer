@@ -1,5 +1,7 @@
 
 #include "config.h"
+#include "mp_msg.h"
+#include "help_mp.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -13,6 +15,7 @@ typedef struct dd_priv {
   demuxer_t* sd;
 } dd_priv_t;
 
+extern demuxer_desc_t demuxer_desc_demuxers;
 
 demuxer_t*  new_demuxers_demuxer(demuxer_t* vd, demuxer_t* ad, demuxer_t* sd) {
   demuxer_t* ret;
@@ -34,11 +37,13 @@ demuxer_t*  new_demuxers_demuxer(demuxer_t* vd, demuxer_t* ad, demuxer_t* sd) {
   ret->video = vd->video;
   ret->audio = ad->audio;
   ret->sub = sd->sub;
-  
+
+  ret->desc = &demuxer_desc_demuxers;
+
   return ret;
 }
 
-int demux_demuxers_fill_buffer(demuxer_t *demux,demux_stream_t *ds) {
+static int demux_demuxers_fill_buffer(demuxer_t *demux,demux_stream_t *ds) {
   dd_priv_t* priv;
 
   priv=demux->priv;
@@ -50,11 +55,11 @@ int demux_demuxers_fill_buffer(demuxer_t *demux,demux_stream_t *ds) {
   else if(ds->demuxer == priv->sd)
     return demux_fill_buffer(priv->sd,ds);
  
-  printf("Demux demuxers fill_buffer error : bad demuxer : not vd, ad nor sd\n");
+  mp_msg(MSGT_DEMUX,MSGL_WARN,MSGTR_MPDEMUX_DEMUXERS_FillBufferError);
   return 0;
 }
 
-void demux_demuxers_seek(demuxer_t *demuxer,float rel_seek_secs,int flags) {
+static void demux_demuxers_seek(demuxer_t *demuxer,float rel_seek_secs,float audio_delay,int flags) {
   dd_priv_t* priv;
   float pos;
   priv=demuxer->priv;
@@ -63,13 +68,13 @@ void demux_demuxers_seek(demuxer_t *demuxer,float rel_seek_secs,int flags) {
   priv->sd->stream->eof = 0;
 
   // Seek video
-  demux_seek(priv->vd,rel_seek_secs,flags);
+  demux_seek(priv->vd,rel_seek_secs,audio_delay,flags);
   // Get the new pos
   pos = demuxer->video->pts;
 
   if(priv->ad != priv->vd) {
     sh_audio_t* sh = (sh_audio_t*)demuxer->audio->sh;
-    demux_seek(priv->ad,pos,1);
+    demux_seek(priv->ad,pos,audio_delay,1);
     // In case the demuxer don't set pts
     if(!demuxer->audio->pts)
       demuxer->audio->pts = pos-((ds_tell_pts(demuxer->audio)-sh->a_in_buffer_len)/(float)sh->i_bps);
@@ -77,11 +82,11 @@ void demux_demuxers_seek(demuxer_t *demuxer,float rel_seek_secs,int flags) {
   }
 
   if(priv->sd != priv->vd)
-      demux_seek(priv->sd,pos,1);
+      demux_seek(priv->sd,pos,audio_delay,1);
 
 }
 
-void demux_close_demuxers(demuxer_t* demuxer) {
+static void demux_close_demuxers(demuxer_t* demuxer) {
   int i;
   dd_priv_t* priv = demuxer->priv;
   stream_t *s;
@@ -101,11 +106,34 @@ void demux_close_demuxers(demuxer_t* demuxer) {
   }
 
   free(priv);
-  if(demuxer->info) {
-    for(i=0;demuxer->info[i] != NULL; i++)
-      free(demuxer->info[i]);
-    free(demuxer->info);
-  }
-  free(demuxer);
 }
   
+
+static int demux_demuxers_control(demuxer_t *demuxer,int cmd, void *arg){
+  dd_priv_t* priv = demuxer->priv;
+  switch (cmd) {
+    case DEMUXER_CTRL_GET_TIME_LENGTH:
+      *((double *)arg) = demuxer_get_time_length(priv->vd);
+      return DEMUXER_CTRL_OK;
+    case DEMUXER_CTRL_GET_PERCENT_POS:
+      *((int *)arg) = demuxer_get_percent_pos(priv->vd);
+      return DEMUXER_CTRL_OK;
+  }
+  return DEMUXER_CTRL_NOTIMPL;
+}
+
+demuxer_desc_t demuxer_desc_demuxers = {
+  "Demuxers demuxer",
+  "", // Not selectable
+  "",
+  "?",
+  "internal use only",
+  DEMUXER_TYPE_DEMUXERS,
+  0, // no autodetect
+  NULL,
+  demux_demuxers_fill_buffer,
+  NULL,
+  demux_close_demuxers,
+  demux_demuxers_seek,
+  demux_demuxers_control
+};

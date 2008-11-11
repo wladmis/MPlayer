@@ -1,7 +1,7 @@
 /*
  * Modified for use with MPlayer, for details see the CVS changelog at
  * http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
- * $Id: decode_i586.c,v 1.8 2005/04/15 22:21:34 diego Exp $
+ * $Id: decode_i586.c 16990 2005-11-15 18:14:07Z diego $
  */
 
 /*
@@ -27,10 +27,10 @@
 *
 * Stefan Bieschewski <stb@acm.org>
 *
-* $Id: decode_i586.c,v 1.8 2005/04/15 22:21:34 diego Exp $
+* $Id: decode_i586.c 16990 2005-11-15 18:14:07Z diego $
 */
-#include "../config.h"
-#include "../mangle.h"
+#include "config.h"
+#include "mangle.h"
 #define real float /* ugly - but only way */
 
 static long attribute_used buffs[1088]={0};
@@ -82,7 +82,7 @@ int synth_1to1_pent(real *bandPtr, int channel, short *samples)
 "        leal (%%ecx,%%ebp,4),%%eax\n\t"
 ".L74:\n\t"
 "        pushl %%eax\n\t"
-"        call "MANGLE(dct64)"\n\t"
+"        call "MANGLE(mp3lib_dct64)"\n\t"
 "        addl $12,%%esp\n\t"
 "        movl %4,%%edx\n\t"
 "        leal 0(,%%edx,4),%%edx\n\t"

@@ -1,7 +1,7 @@
 /*
  * Modified for use with MPlayer, for details see the CVS changelog at
  * http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
- * $Id: tabinit.c,v 1.7 2005/04/15 22:21:35 diego Exp $
+ * $Id: tabinit.c 15168 2005-04-15 22:21:35Z diego $
  */
 
 real mp3lib_decwin[(512+32)];

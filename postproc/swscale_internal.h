@@ -13,7 +13,7 @@
 
     You should have received a copy of the GNU General Public License
     along with this program; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 */
 
 #ifndef SWSCALE_INTERNAL_H
@@ -29,7 +29,7 @@
 #define AVV(x...) {x}
 #endif
 
-#include "../mp_msg.h"
+#include "mp_msg.h"
 
 #define MSG_WARN(args...) mp_msg(MSGT_SWS,MSGL_WARN, ##args )
 #define MSG_FATAL(args...) mp_msg(MSGT_SWS,MSGL_FATAL, ##args )
@@ -60,6 +60,7 @@ typedef struct SwsContext{
 	int chrIntHSubSample, chrIntVSubSample;
 	int chrDstHSubSample, chrDstVSubSample;
 	int vChrDrop;
+        int sliceDir;
 	double param[2];
 
 	int16_t **lumPixBuf;
@@ -123,8 +124,8 @@ typedef struct SwsContext{
 #define LUM_MMX_FILTER_OFFSET "11*8"
 #define CHR_MMX_FILTER_OFFSET "11*8+4*4*256"
 #define DSTW_OFFSET  "11*8+4*4*256*2" //do not change, its hardcoded in the asm
-#define ESP_OFFSET  "11*8+4*4*256*2+4"
-#define VROUNDER_OFFSET "11*8+4*4*256*2+8"
+#define ESP_OFFSET  "11*8+4*4*256*2+8"
+#define VROUNDER_OFFSET "11*8+4*4*256*2+16"
                   
 	uint64_t redDither   __attribute__((aligned(8)));
 	uint64_t greenDither __attribute__((aligned(8)));
@@ -141,7 +142,7 @@ typedef struct SwsContext{
 	int32_t  lumMmxFilter[4*MAX_FILTER_SIZE];
 	int32_t  chrMmxFilter[4*MAX_FILTER_SIZE];
 	int dstW;
-	int esp;
+	uint64_t esp __attribute__((aligned(8)));
 	uint64_t vRounder     __attribute__((aligned(8)));
 
 #ifdef HAVE_ALTIVEC
@@ -153,6 +154,7 @@ typedef struct SwsContext{
   vector signed short   CGV;
   vector signed short   OY;
   vector unsigned short CSHIFT;
+  vector signed short *vYCoeffsBank, *vCCoeffsBank;
 
 #endif
 

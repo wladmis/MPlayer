@@ -1,0 +1,22 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=KOI8-R"><title>7.1. Audio/Video synchronization</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.68.1"><link rel="start" href="index.html" title="MPlayer - The Movie Player"><link rel="up" href="audio.html" title="Глава 7. Audio output devices"><link rel="prev" href="audio.html" title="Глава 7. Audio output devices"><link rel="next" href="troubleshooting.html" title="7.2. Troubleshooting"><link rel="preface" href="howtoread.html" title="Как читать эту документацию"><link rel="chapter" href="intro.html" title="Глава 1. Введение"><link rel="chapter" href="usage.html" title="Глава 2. Использование"><link rel="chapter" href="cd-dvd.html" title="Глава 3. Использование CD/DVD"><link rel="chapter" href="faq.html" title="Глава 4. Frequently Asked Questions"><link rel="chapter" href="features.html" title="Глава 5. Возможности"><link rel="chapter" href="video.html" title="Глава 6. Video output devices"><link rel="chapter" href="audio.html" title="Глава 7. Audio output devices"><link rel="chapter" href="ports.html" title="Глава 8. Портинг"><link rel="chapter" href="mencoder.html" title="Глава 9. Basic usage of MEncoder"><link rel="chapter" href="encoding-guide.html" title="Глава 10. Encoding with MEncoder"><link rel="appendix" href="mailinglists.html" title="Приложение A. Почтовые рассылки"><link rel="appendix" href="bugreports.html" title="Приложение B. Как сообщать об ошибках"><link rel="appendix" href="bugs.html" title="Приложение C. Известные проблемы"><link rel="appendix" href="skin.html" title="Приложение D. MPlayer skin format"><link rel="appendix" href="users-vs-dev.html" title="Приложение E. Плач разработчиков"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">7.1. Audio/Video synchronization</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="audio.html">Пред.</a> </td><th width="60%" align="center">Глава 7. Audio output devices</th><td width="20%" align="right"> <a accesskey="n" href="troubleshooting.html">След.</a></td></tr></table><hr></div><div class="sect1" lang="ru"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="sync"></a>7.1. Audio/Video synchronization</h2></div></div></div><p>
+Linux sound card drivers have compatibility problems. This is because
+<span class="application">MPlayer</span> relies on an in-built feature of
+<span class="emphasis"><em>properly</em></span> coded sound drivers that enable them to
+maintain correct audio/video sync. Regrettably, some driver authors
+don't take the care to code this feature since it is not needed for
+playing MP3s or sound effects.
+</p><p>
+Other media players like <a href="http://avifile.sf.net" target="_top">aviplay</a>
+or <a href="http://xinehq.de" target="_top">xine</a> possibly work
+out-of-the-box with these drivers because they use "simple" methods
+with internal timing. Measuring showed that their methods are not as
+efficient as <span class="application">MPlayer</span>'s.
+</p><p>
+Using <span class="application">MPlayer</span> with a properly written audio
+driver will never result in A/V desyncs related to the audio, except
+only with very badly created files (check the man page for workarounds).
+</p><p>
+If you happen to have a bad audio driver, try the <tt class="option">-autosync</tt>
+option, it should sort out your problems. See the man page for detailed
+information.
+</p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="audio.html">Пред.</a> </td><td width="20%" align="center"><a accesskey="u" href="audio.html">Уровень выше</a></td><td width="40%" align="right"> <a accesskey="n" href="troubleshooting.html">След.</a></td></tr><tr><td width="40%" align="left" valign="top">Глава 7. Audio output devices </td><td width="20%" align="center"><a accesskey="h" href="index.html">Начало</a></td><td width="40%" align="right" valign="top"> 7.2. Troubleshooting</td></tr></table></div></body></html>

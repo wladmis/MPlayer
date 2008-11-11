@@ -3,7 +3,14 @@ LIBNAME = libmpeg2.a
 
 include ../config.mak
 
-SRCS	= alloc.c cpu_accel.c cpu_state.c decode.c header.c idct.c motion_comp.c slice.c
+SRCS	= alloc.c \
+	  cpu_accel.c\
+	  cpu_state.c \
+	  decode.c \
+	  header.c \
+	  idct.c \
+	  motion_comp.c \
+	  slice.c \
 
 OBJS	= $(SRCS:.c=.o)
 INCLUDE = -I. -I../libvo -I.. $(EXTRA_INC)
@@ -45,8 +52,8 @@ all:	$(LIBNAME)
 clean:
 	rm -f *.o *.a *~
 
-distclean:
-	rm -f Makefile.bak *.o *.a *~ .depend
+distclean: clean
+	rm -f .depend
 
 dep:    depend
 

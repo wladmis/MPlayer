@@ -22,8 +22,8 @@
 #include <inttypes.h>
 #include <math.h>
 
-#include "../config.h"
-#include "../mp_msg.h"
+#include "config.h"
+#include "mp_msg.h"
 
 #ifdef HAVE_MALLOC_H
 #include <malloc.h>
@@ -32,7 +32,7 @@
 #include "img_format.h"
 #include "mp_image.h"
 #include "vf.h"
-#include "../libvo/fastmemcpy.h"
+#include "libvo/fastmemcpy.h"
 
 //===========================================================================//
 
@@ -76,7 +76,7 @@ static inline int IsYUY2(mp_image_t *mpi)
 #define PLANAR_U 1
 #define PLANAR_V 2
 
-static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
+static int put_image(struct vf_instance_s* vf, mp_image_t *mpi, double pts){
 	int cw= mpi->w >> mpi->chroma_x_shift;
 	int ch= mpi->h >> mpi->chroma_y_shift;
         int W = mpi->w, H = mpi->h;
@@ -272,7 +272,7 @@ static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
 		}
 	}
 
-	return vf_next_put_image(vf,dmpi);
+	return vf_next_put_image(vf,dmpi, pts);
 }
 
 //===========================================================================//

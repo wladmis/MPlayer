@@ -68,11 +68,14 @@
 #include <inttypes.h>
 #include <assert.h>
 #include "config.h"
+#ifdef HAVE_MALLOC_H
+#include <malloc.h>
+#endif
 #include "rgb2rgb.h"
 #include "swscale.h"
 #include "swscale_internal.h"
-#include "../mangle.h"
-#include "../libvo/img_format.h" //FIXME try to reduce dependency of such stuff
+#include "mangle.h"
+#include "libvo/img_format.h" //FIXME try to reduce dependency of such stuff
 
 #undef PROFILE_THE_BEAST
 #undef INC_SCALING
@@ -139,7 +142,7 @@ do {					 \
       y2 = vec_perm (o3,o2,perm_rgb_3);	 \
 } while(0)
 
-#define vec_mstrgb24(x0,x1,x2,ptr)        \
+#define vec_mstbgr24(x0,x1,x2,ptr)        \
 do {					 \
   typeof(x0) _0,_1,_2;			 \
   vec_merge3 (x0,x1,x2,_0,_1,_2);	 \
@@ -148,7 +151,7 @@ do {					 \
   vec_st (_2, 0, ptr++);		 \
 }  while (0);
 
-#define vec_mstbgr24(x0,x1,x2,ptr)       \
+#define vec_mstrgb24(x0,x1,x2,ptr)       \
 do {					 \
   typeof(x0) _0,_1,_2;			 \
   vec_merge3 (x2,x1,x0,_0,_1,_2);	 \
@@ -207,11 +210,9 @@ do {										       \
              (vector unsigned char)AVV(0x10,0x08,0x10,0x09,0x10,0x0A,0x10,0x0B,\
                                     0x10,0x0C,0x10,0x0D,0x10,0x0E,0x10,0x0F))
 
-#define vec_clip(x) \
-  vec_max (vec_min (x, (typeof(x))AVV(235)), (typeof(x))AVV(16))
-
-#define vec_packclp_a(x,y) \
-  (vector unsigned char)vec_pack (vec_clip (x), vec_clip (y))
+#define vec_clip_s16(x) \
+  vec_max (vec_min (x, (vector signed short)AVV(235,235,235,235,235,235,235,235)),\
+                       (vector signed short)AVV(16, 16, 16, 16, 16, 16, 16, 16 ))
 
 #define vec_packclp(x,y) \
   (vector unsigned char)vec_packs \
@@ -277,7 +278,7 @@ static int altivec_##name (SwsContext *c,                                  \
   vector signed short R1,G1,B1;						   \
   vector unsigned char R,G,B;						   \
 									   \
-  vector unsigned char *uivP, *vivP;			   		   \
+  vector unsigned char *y1ivP, *y2ivP, *uivP, *vivP;			   \
   vector unsigned char align_perm;					   \
 									   \
   vector signed short 							   \
@@ -291,7 +292,7 @@ static int altivec_##name (SwsContext *c,                                  \
   vector unsigned short lCSHIFT = c->CSHIFT;				   \
 									   \
   ubyte *y1i   = in[0];							   \
-  ubyte *y2i   = in[0]+w;						   \
+  ubyte *y2i   = in[0]+instrides[0];					   \
   ubyte *ui    = in[1];							   \
   ubyte *vi    = in[2];							   \
 									   \
@@ -303,7 +304,7 @@ static int altivec_##name (SwsContext *c,                                  \
         (oplanes[0]+srcSliceY*outstrides[0]+outstrides[0]);		   \
 									   \
 									   \
-  instrides_scl[0] = instrides[0];					   \
+  instrides_scl[0] = instrides[0]*2-w;  /* the loop moves y{1,2}i by w */  \
   instrides_scl[1] = instrides[1]-w/2;  /* the loop moves ui by w/2 */	   \
   instrides_scl[2] = instrides[2]-w/2;  /* the loop moves vi by w/2 */	   \
 									   \
@@ -314,10 +315,16 @@ static int altivec_##name (SwsContext *c,                                  \
 									   \
     for (j=0;j<w/16;j++) {						   \
 									   \
-      y0 = vec_ldl (0,y1i);						   \
-      y1 = vec_ldl (0,y2i);						   \
+      y1ivP = (vector unsigned char *)y1i;				   \
+      y2ivP = (vector unsigned char *)y2i;				   \
       uivP = (vector unsigned char *)ui;				   \
       vivP = (vector unsigned char *)vi;				   \
+									   \
+      align_perm = vec_lvsl (0, y1i);					   \
+      y0 = (vector unsigned char)vec_perm (y1ivP[0], y1ivP[1], align_perm);\
+									   \
+      align_perm = vec_lvsl (0, y2i);					   \
+      y1 = (vector unsigned char)vec_perm (y2ivP[0], y2ivP[1], align_perm);\
 									   \
       align_perm = vec_lvsl (0, ui);					   \
       u = (vector signed char)vec_perm (uivP[0], uivP[1], align_perm);	   \
@@ -414,11 +421,11 @@ static int altivec_##name (SwsContext *c,                                  \
 #define out_rgba(a,b,c,ptr)  vec_mstrgb32(typeof(a),a,b,c,((typeof (a))AVV(0)),ptr)
 #define out_argb(a,b,c,ptr)  vec_mstrgb32(typeof(a),((typeof (a))AVV(0)),a,b,c,ptr)
 #define out_rgb24(a,b,c,ptr) vec_mstrgb24(a,b,c,ptr)
-#define out_bgr24(a,b,c,ptr) vec_mstbgr24(c,b,a,ptr)
+#define out_bgr24(a,b,c,ptr) vec_mstbgr24(a,b,c,ptr)
 
-DEFCSP420_CVT (yuv2_abgr32, out_abgr)
+DEFCSP420_CVT (yuv2_abgr, out_abgr)
 #if 1
-DEFCSP420_CVT (yuv2_bgra32, out_argb)
+DEFCSP420_CVT (yuv2_bgra, out_bgra)
 #else
 static int altivec_yuv2_bgra32 (SwsContext *c,                                  
 				unsigned char **in, int *instrides,	   
@@ -570,8 +577,8 @@ static int altivec_yuv2_bgra32 (SwsContext *c,
 #endif
 
 
-DEFCSP420_CVT (yuv2_rgba32, out_rgba)
-DEFCSP420_CVT (yuv2_argb32, out_argb)
+DEFCSP420_CVT (yuv2_rgba, out_rgba)
+DEFCSP420_CVT (yuv2_argb, out_argb)
 DEFCSP420_CVT (yuv2_rgb24,  out_rgb24)
 DEFCSP420_CVT (yuv2_bgr24,  out_bgr24)
 
@@ -697,14 +704,18 @@ SwsFunc yuv2rgb_init_altivec (SwsContext *c)
     case IMGFMT_BGR24:
       MSG_WARN("ALTIVEC: Color Space BGR24\n");
       return altivec_yuv2_bgr24;
-    case IMGFMT_RGB32:
-      MSG_WARN("ALTIVEC: Color Space ARGB32\n");
-      return altivec_yuv2_argb32;
-    case IMGFMT_BGR32:
-      MSG_WARN("ALTIVEC: Color Space BGRA32\n");
-      //      return profile_altivec_bgra32;
-
-      return altivec_yuv2_bgra32;
+    case IMGFMT_ARGB:
+      MSG_WARN("ALTIVEC: Color Space ARGB\n");
+      return altivec_yuv2_argb;
+    case IMGFMT_ABGR:
+      MSG_WARN("ALTIVEC: Color Space ABGR\n");
+      return altivec_yuv2_abgr;
+    case IMGFMT_RGBA:
+      MSG_WARN("ALTIVEC: Color Space RGBA\n");
+      return altivec_yuv2_rgba;
+    case IMGFMT_BGRA:
+      MSG_WARN("ALTIVEC: Color Space BGRA\n");
+      return altivec_yuv2_bgra;
     default: return NULL;
     }
     break;
@@ -744,7 +755,7 @@ void yuv2rgb_altivec_init_tables (SwsContext *c, const int inv_table[4],int brig
   buf.tmp[5] = -((inv_table[3]>>1)*(contrast>>16)*(saturation>>16));	//cgv
 
 
-  c->CSHIFT = (vector unsigned short)vec_splat((vector unsigned short)AVV(2),0);
+  c->CSHIFT = (vector unsigned short)vec_splat_u16(2);
   c->CY  = vec_splat ((vector signed short)buf.vec, 0);
   c->OY  = vec_splat ((vector signed short)buf.vec, 1);
   c->CRV  = vec_splat ((vector signed short)buf.vec, 2);
@@ -771,8 +782,6 @@ altivec_yuv2packedX (SwsContext *c,
 		       uint8_t *dest, int dstW, int dstY)
 {
   int i,j;
-  short tmp __attribute__((aligned (16)));
-  int16_t *p;
   short *f;
   vector signed short X,X0,X1,Y0,U0,V0,Y1,U1,V1,U,V;
   vector signed short R0,G0,B0,R1,G1,B1;
@@ -780,33 +789,14 @@ altivec_yuv2packedX (SwsContext *c,
   vector unsigned char R,G,B,pels[3];
   vector unsigned char *out,*nout;
 
-  vector signed short   RND = vec_splat((vector signed short)AVV(1<<3),0);
-  vector unsigned short SCL = vec_splat((vector unsigned short)AVV(4),0);
+  vector signed short   RND = vec_splat_s16(1<<3);
+  vector unsigned short SCL = vec_splat_u16(4);
   unsigned long scratch[16] __attribute__ ((aligned (16)));
-
-  vector signed short *vYCoeffsBank, *vCCoeffsBank;
 
   vector signed short *YCoeffs, *CCoeffs;
 
-  vYCoeffsBank = malloc (sizeof (vector signed short)*lumFilterSize*dstW);
-  vCCoeffsBank = malloc (sizeof (vector signed short)*chrFilterSize*dstW);
-
-  for (i=0;i<lumFilterSize*dstW;i++) {
-    tmp = c->vLumFilter[i];
-    p = &vYCoeffsBank[i];
-    for (j=0;j<8;j++)
-      p[j] = tmp;
-  }
-
-  for (i=0;i<chrFilterSize*dstW;i++) {
-    tmp = c->vChrFilter[i];
-    p = &vCCoeffsBank[i];
-    for (j=0;j<8;j++)
-      p[j] = tmp;
-  }
-
-  YCoeffs = vYCoeffsBank+dstY*lumFilterSize;
-  CCoeffs = vCCoeffsBank+dstY*chrFilterSize;
+  YCoeffs = c->vYCoeffsBank+dstY*lumFilterSize;
+  CCoeffs = c->vCCoeffsBank+dstY*chrFilterSize;
 
   out = (vector unsigned char *)dest;
 
@@ -837,10 +827,10 @@ altivec_yuv2packedX (SwsContext *c,
     U  = vec_sra (U,  SCL);
     V  = vec_sra (V,  SCL);
 
-    Y0 = vec_clip (Y0);
-    Y1 = vec_clip (Y1);
-    U  = vec_clip (U);
-    V  = vec_clip (V);
+    Y0 = vec_clip_s16 (Y0);
+    Y1 = vec_clip_s16 (Y1);
+    U  = vec_clip_s16 (U);
+    V  = vec_clip_s16 (V);
 
     /* now we have
       Y0= y0 y1 y2 y3 y4 y5 y6 y7     Y1= y8 y9 y10 y11 y12 y13 y14 y15
@@ -864,7 +854,26 @@ altivec_yuv2packedX (SwsContext *c,
     G  = vec_packclp (G0,G1);
     B  = vec_packclp (B0,B1);
 
-    out_rgba (R,G,B,out);
+    switch(c->dstFormat) {
+      case IMGFMT_ABGR: out_abgr (R,G,B,out); break;
+      case IMGFMT_BGRA: out_bgra (R,G,B,out); break;
+      case IMGFMT_RGBA: out_rgba (R,G,B,out); break;
+      case IMGFMT_ARGB: out_argb (R,G,B,out); break;
+      case IMGFMT_RGB24: out_rgb24 (R,G,B,out); break;
+      case IMGFMT_BGR24: out_bgr24 (R,G,B,out); break;
+      default:
+        {
+          /* If this is reached, the caller should have called yuv2packedXinC
+             instead. */
+          static int printed_error_message;
+          if(!printed_error_message) {
+            MSG_ERR("altivec_yuv2packedX doesn't support %s output\n",
+                    vo_format_name(c->dstFormat));
+            printed_error_message=1;
+          }
+          return;
+        }
+    }
   }
 
   if (i < dstW) {
@@ -896,10 +905,10 @@ altivec_yuv2packedX (SwsContext *c,
     U  = vec_sra (U,  SCL);
     V  = vec_sra (V,  SCL);
 
-    Y0 = vec_clip (Y0);
-    Y1 = vec_clip (Y1);
-    U  = vec_clip (U);
-    V  = vec_clip (V);
+    Y0 = vec_clip_s16 (Y0);
+    Y1 = vec_clip_s16 (Y1);
+    U  = vec_clip_s16 (U);
+    V  = vec_clip_s16 (V);
 
     /* now we have
        Y0= y0 y1 y2 y3 y4 y5 y6 y7     Y1= y8 y9 y10 y11 y12 y13 y14 y15
@@ -924,12 +933,21 @@ altivec_yuv2packedX (SwsContext *c,
     B  = vec_packclp (B0,B1);
 
     nout = (vector unsigned char *)scratch;
-    out_rgba (R,G,B,nout);
+    switch(c->dstFormat) {
+      case IMGFMT_ABGR: out_abgr (R,G,B,nout); break;
+      case IMGFMT_BGRA: out_bgra (R,G,B,nout); break;
+      case IMGFMT_RGBA: out_rgba (R,G,B,nout); break;
+      case IMGFMT_ARGB: out_argb (R,G,B,nout); break;
+      case IMGFMT_RGB24: out_rgb24 (R,G,B,nout); break;
+      case IMGFMT_BGR24: out_bgr24 (R,G,B,nout); break;
+      default:
+        /* Unreachable, I think. */
+        MSG_ERR("altivec_yuv2packedX doesn't support %s output\n",
+                vo_format_name(c->dstFormat));
+        return;
+    }
 
     memcpy (&((uint32_t*)dest)[i], scratch, (dstW-i)/4);
   }
-
-  if (vYCoeffsBank) free (vYCoeffsBank);
-  if (vCCoeffsBank) free (vCCoeffsBank);
 
 }

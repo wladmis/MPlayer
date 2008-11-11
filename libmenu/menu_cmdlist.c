@@ -1,5 +1,7 @@
 
-#include "../config.h"
+#include "config.h"
+#include "mp_msg.h"
+#include "help_mp.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -9,16 +11,16 @@
 #include "img_format.h"
 #include "mp_image.h"
 
-#include "../m_option.h"
-#include "../m_struct.h"
-#include "../asxparser.h"
+#include "m_option.h"
+#include "m_struct.h"
+#include "asxparser.h"
 #include "menu.h"
 #include "menu_list.h"
 
-#include "../libvo/font_load.h"
+#include "libvo/font_load.h"
 
-#include "../input/input.h"
-#include "../version.h"
+#include "input/input.h"
+#include "version.h"
 
 
 
@@ -27,6 +29,8 @@ struct list_entry_s {
 
   char* ok;
   char* cancel;
+  char* left;
+  char* right;
 };
 
 struct menu_priv_s {
@@ -47,6 +51,12 @@ static m_option_t cfg_fields[] = {
 
 static void read_cmd(menu_t* menu,int cmd) {
   switch(cmd) {
+  case MENU_CMD_RIGHT:
+    if(mpriv->p.current->right) {
+      mp_cmd_t* c = mp_input_parse_cmd(mpriv->p.current->right);
+      if(c) mp_input_queue_cmd(c);
+      break;
+    } // fallback on ok if right is not defined
   case MENU_CMD_OK: {
     if(mpriv->p.current->ok) {
       mp_cmd_t* c = mp_input_parse_cmd(mpriv->p.current->ok);
@@ -54,6 +64,12 @@ static void read_cmd(menu_t* menu,int cmd) {
 	mp_input_queue_cmd(c);
     }
    } break;
+  case MENU_CMD_LEFT:
+    if(mpriv->p.current->left) {
+      mp_cmd_t* c = mp_input_parse_cmd(mpriv->p.current->left);
+      if(c) mp_input_queue_cmd(c);
+      break;
+    } // fallback on cancel if left is not defined
   case MENU_CMD_CANCEL:
     if(mpriv->p.current->cancel) {
       mp_cmd_t* c = mp_input_parse_cmd(mpriv->p.current->cancel);
@@ -84,7 +100,7 @@ static void close(menu_t* menu) {
 }
 
 static int parse_args(menu_t* menu,char* args) {
-  char *element,*body, **attribs, *name, *ok, *cancel;
+  char *element,*body, **attribs, *name;
   list_entry_t* m = NULL;
   int r;
   ASX_Parser_t* parser = asx_parser_new();
@@ -92,30 +108,30 @@ static int parse_args(menu_t* menu,char* args) {
   while(1) {
     r = asx_get_element(parser,&args,&element,&body,&attribs);
     if(r < 0) {
-      printf("Syntax error at line %d\n",parser->line);
+      mp_msg(MSGT_GLOBAL,MSGL_WARN,MSGTR_LIBMENU_SyntaxErrorAtLine,parser->line);
       asx_parser_free(parser);
       return -1;
     } else if(r == 0) {      
       asx_parser_free(parser);
       if(!m)
-	printf("No entry found in the menu definition\n");
+	mp_msg(MSGT_GLOBAL,MSGL_WARN,MSGTR_LIBMENU_NoEntryFoundInTheMenuDefinition);
       return m ? 1 : 0;
     }
     // Has it a name ?
     name = asx_get_attrib("name",attribs);
     if(!name) {
-      printf("List menu entry definitions need a name (line %d)\n",parser->line);
+      mp_msg(MSGT_GLOBAL,MSGL_WARN,MSGTR_LIBMENU_ListMenuEntryDefinitionsNeedAName,parser->line);
       free(element);
       if(body) free(body);
       asx_free_attribs(attribs);
       continue;
     }
-    ok = asx_get_attrib("ok",attribs);
-    cancel = asx_get_attrib("cancel",attribs);
     m = calloc(1,sizeof(struct list_entry_s));
     m->p.txt = name;
-    m->ok = ok;
-    m->cancel = cancel;
+    m->ok = asx_get_attrib("ok",attribs);
+    m->cancel = asx_get_attrib("cancel",attribs);
+    m->left = asx_get_attrib("left",attribs);
+    m->right = asx_get_attrib("right",attribs);
     menu_list_add_entry(menu,m);
 
     free(element);
@@ -131,7 +147,7 @@ static int open(menu_t* menu, char* args) {
   menu->close = close;
 
   if(!args) {
-    printf("List menu need an argument\n");
+    mp_msg(MSGT_GLOBAL,MSGL_WARN,MSGTR_LIBMENU_ListMenuNeedsAnArgument);
     return 0;
   }
  

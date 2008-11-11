@@ -72,7 +72,8 @@ static uint8_t *center = NULL; // where to begin writing our image (centered?)
 static struct fb_fix_screeninfo fb_finfo; // fixed info
 static struct fb_var_screeninfo fb_vinfo; // variable info
 static struct fb_var_screeninfo fb_orig_vinfo; // variable info to restore later
-static struct fb_cmap fb_oldcmap; // cmap to restore later
+static unsigned short fb_ored[256], fb_ogreen[256], fb_oblue[256];
+static struct fb_cmap fb_oldcmap = { 0, 256, fb_ored, fb_ogreen, fb_oblue };
 static int fb_cmap_changed = 0; //  to restore map
 static int fb_pixel_size;	// 32:  4  24:  3  16:  2  15:  2
 static int fb_bpp;		// 32: 32  24: 24  16: 16  15: 15
@@ -193,7 +194,7 @@ err_out:
 	return -1;
 }
 
-static uint32_t preinit(const char *subdevice)
+static int preinit(const char *subdevice)
 {
 	if (subdevice)
 	{
@@ -203,12 +204,12 @@ static uint32_t preinit(const char *subdevice)
 	return fb_preinit(0);
 }
 
-static uint32_t config(uint32_t width, uint32_t height, uint32_t d_width,
+static int config(uint32_t width, uint32_t height, uint32_t d_width,
 		uint32_t d_height, uint32_t flags, char *title,
 		uint32_t format)
 {
 	struct fb_cmap *cmap;
-	int fs = flags & 0x01;
+	int fs = flags & VOFLAG_FULLSCREEN;
 
 	out_width = width;
 	out_height = height;
@@ -279,8 +280,9 @@ static uint32_t config(uint32_t width, uint32_t height, uint32_t d_width,
 		}
 	}
 
-	center = frame_buffer + (out_width - in_width) * fb_pixel_size /
-		2 + ( (out_height - in_height) / 2 ) * fb_line_len;
+	center = frame_buffer +
+	         ( (out_width - in_width) / 2 ) * fb_pixel_size +
+		 ( (out_height - in_height) / 2 ) * fb_line_len;
 
 #ifndef USE_CONVERT2FB
 	if (!(next_frame = (uint8_t *) realloc(next_frame, in_width * in_height * fb_pixel_size))) {
@@ -293,7 +295,7 @@ static uint32_t config(uint32_t width, uint32_t height, uint32_t d_width,
 	return 0;
 }
 
-static uint32_t query_format(uint32_t format)
+static int query_format(uint32_t format)
 {
 	// open the device, etc.
 	if (fb_preinit(0)) return 0;
@@ -337,9 +339,9 @@ static void draw_osd(void)
 }
 
 // all csp support stride
-static uint32_t draw_frame(uint8_t *src[]) { return 1; }
+static int draw_frame(uint8_t *src[]) { return 1; }
 
-static uint32_t draw_slice(uint8_t *src[], int stride[], int w, int h, int x, int y)
+static int draw_slice(uint8_t *src[], int stride[], int w, int h, int x, int y)
 {
 	uint8_t *in = src[0];
 #ifdef USE_CONVERT2FB
@@ -396,7 +398,7 @@ static void uninit(void)
 	fb_preinit(1); // so that later calls to preinit don't fail
 }
 
-static uint32_t control(uint32_t request, void *data, ...)
+static int control(uint32_t request, void *data, ...)
 {
   switch (request) {
   case VOCTRL_QUERY_FORMAT:

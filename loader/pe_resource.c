@@ -11,7 +11,7 @@
  *
  * Modified for use with MPlayer, detailed CVS changelog at
  * http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
- * $Id: pe_resource.c,v 1.4 2005/04/15 20:17:12 diego Exp $
+ * $Id: pe_resource.c 15167 2005-04-15 20:17:14Z diego $
  *
  */
 #include "config.h"

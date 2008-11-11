@@ -1,7 +1,7 @@
 /*
  * Modified for use with MPlayer, detailed CVS changelog at
  * http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
- * $Id: win32.h,v 1.12 2005/04/15 20:17:12 diego Exp $
+ * $Id: win32.h 15167 2005-04-15 20:17:14Z diego $
  */
 
 #ifndef loader_win32_h

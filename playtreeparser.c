@@ -1,4 +1,7 @@
 
+/// \file
+/// \ingroup PlaytreeParser
+
 #include "config.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -436,7 +439,7 @@ parse_smil(play_tree_parser_t* p) {
     strstrip(line);
     if(line[0] == '\0') // Ignore empties
       continue;
-    if (strncasecmp(line,"<smil",5)==0)
+    if (strncasecmp(line,"<smil",5)==0 || strncasecmp(line,"<?wpl",5)==0)
       break; // smil header found
     else
       return NULL; //line not smil exit
@@ -452,7 +455,7 @@ parse_smil(play_tree_parser_t* p) {
     if (line[0]=='\0')
       continue;
     if (!entrymode) { // all entries filled so far 
-      if (strncasecmp(line,"<video",6)==0  || strncasecmp(line,"<audio",6)==0) {
+      if (strncasecmp(line,"<video",6)==0  || strncasecmp(line,"<audio",6)==0 || strncasecmp(line,"<media",6)) {
         pos=strstr(line,"src=");   // Is source present on this line
         if (pos !=NULL) {
           s_start=pos+5;

@@ -227,7 +227,7 @@ typedef FILE rar_stream_t;
 /**********************************************************************/
 
 static ssize_t
-getline(char **lineptr, size_t *n, rar_stream_t *stream)
+vobsub_getline(char **lineptr, size_t *n, rar_stream_t *stream)
 {
     size_t res = 0;
     int c;
@@ -656,12 +656,9 @@ vobsub_add_id(vobsub_t *vob, const char *id, size_t idlen, const unsigned int in
 	memcpy(vob->spu_streams[index].id, id, idlen);
     }
     vob->spu_streams_current = index;
-    if (identify)
-    {
-	mp_msg(MSGT_GLOBAL, MSGL_INFO, "ID_VOBSUB_ID=%d\n", index);
-	if (id && idlen)
-	    mp_msg(MSGT_GLOBAL, MSGL_INFO, "ID_VSID_%d_LANG=%s\n", index, vob->spu_streams[index].id);
-    }
+    mp_msg(MSGT_IDENTIFY, MSGL_INFO, "ID_VOBSUB_ID=%d\n", index);
+    if (id && idlen)
+	mp_msg(MSGT_IDENTIFY, MSGL_INFO, "ID_VSID_%d_LANG=%s\n", index, vob->spu_streams[index].id);
     mp_msg(MSGT_VOBSUB,MSGL_V,"[vobsub] subtitle (vobsubid): %d language %s\n",
 		index, vob->spu_streams[index].id);
     return 0;
@@ -949,7 +946,7 @@ vobsub_parse_one_line(vobsub_t *vob, rar_stream_t *fd)
 	size_t line_reserve = 0;
 	char *line = NULL;
     do {
-	line_size = getline(&line, &line_reserve, fd);
+	line_size = vobsub_getline(&line, &line_reserve, fd);
 	if (line_size < 0) {
 	    break;
 	}

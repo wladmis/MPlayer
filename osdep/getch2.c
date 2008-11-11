@@ -1,6 +1,6 @@
 /* GyS-TermIO v2.0 (for GySmail v3)          (C) 1999 A'rpi/ESP-team */
 
-#include "../config.h"
+#include "config.h"
 
 //#define USE_TERMCAP
 #if !defined(__OS2__) && !defined(__MORPHOS__)
@@ -40,6 +40,7 @@ static char getch2_buf[BUF_LEN];
 
 int screen_width=80;
 int screen_height=24;
+char * erase_to_end_of_line = NULL;
 
 typedef struct {
   int len;
@@ -88,6 +89,7 @@ int load_termcap(char *termtype){
   screen_height=tgetnum("li");
   if(screen_width<1 || screen_width>255) screen_width=80;
   if(screen_height<1 || screen_height>255) screen_height=24;
+  erase_to_end_of_line= tgetstr("cd",&term_p);
 
   termcap_add("kP",KEY_PGUP);
   termcap_add("kN",KEY_PGDWN);
@@ -116,7 +118,7 @@ int load_termcap(char *termtype){
 
 #endif
 
-void get_screen_size(){
+void get_screen_size(void){
 #ifdef USE_IOCTL
   struct winsize ws;
   if (ioctl(0, TIOCGWINSZ, &ws) < 0 || !ws.ws_row || !ws.ws_col) return;
@@ -215,12 +217,12 @@ found:
 
 static int getch2_status=0;
 
-void getch2_enable(){
+void getch2_enable(void){
 #ifdef HAVE_TERMIOS
 struct termios tio_new;
-#if defined(__NetBSD__) || defined(__svr4__) || defined(__CYGWIN__) || defined(__OS2__) || defined(__GLIBC__)
+#if defined(__NetBSD__) || defined(__svr4__) || defined(__CYGWIN__) || defined(__OS2__) || defined(__GLIBC__) || defined(_AIX)
     tcgetattr(0,&tio_orig);
-#elif defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__bsdi__) || defined(__APPLE__)
+#elif defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__bsdi__) || defined(__APPLE__) || defined(__DragonFly__)
     ioctl(0,TIOCGETA,&tio_orig);
 #else
     ioctl(0,TCGETS,&tio_orig);
@@ -229,9 +231,9 @@ struct termios tio_new;
     tio_new.c_lflag &= ~(ICANON|ECHO); /* Clear ICANON and ECHO. */
     tio_new.c_cc[VMIN] = 1;
     tio_new.c_cc[VTIME] = 0;
-#if defined(__NetBSD__) || defined(__svr4__) || defined(__CYGWIN__) || defined(__OS2__) || defined(__GLIBC__)
+#if defined(__NetBSD__) || defined(__svr4__) || defined(__CYGWIN__) || defined(__OS2__) || defined(__GLIBC__) || defined(_AIX)
     tcsetattr(0,TCSANOW,&tio_new);
-#elif defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__bsdi__) || defined(__APPLE__)
+#elif defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__bsdi__) || defined(__APPLE__) || defined(__DragonFly__)
     ioctl(0,TIOCSETA,&tio_new);
 #else
     ioctl(0,TCSETS,&tio_new);
@@ -240,12 +242,12 @@ struct termios tio_new;
     getch2_status=1;
 }
 
-void getch2_disable(){
+void getch2_disable(void){
     if(!getch2_status) return; // already disabled / never enabled
 #ifdef HAVE_TERMIOS
-#if defined(__NetBSD__) || defined(__svr4__) || defined(__CYGWIN__) || defined(__OS2__) || defined(__GLIBC__)
+#if defined(__NetBSD__) || defined(__svr4__) || defined(__CYGWIN__) || defined(__OS2__) || defined(__GLIBC__) || defined(_AIX)
     tcsetattr(0,TCSANOW,&tio_orig);
-#elif defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__bsdi__) || defined(__APPLE__)
+#elif defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__bsdi__) || defined(__APPLE__) || defined(__DragonFly__)
     ioctl(0,TIOCSETA,&tio_orig);
 #else
     ioctl(0,TCSETS,&tio_orig);

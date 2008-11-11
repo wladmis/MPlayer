@@ -9,58 +9,53 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <inttypes.h>
 
 #include "url.h"
 #include "mp_msg.h"
+#include "help_mp.h"
+
+#ifndef SIZE_MAX
+#define SIZE_MAX ((size_t)-1)
+#endif
 
 URL_t*
 url_new(const char* url) {
 	int pos1, pos2,v6addr = 0;
-	URL_t* Curl;
+	URL_t* Curl = NULL;
         char *escfilename=NULL;
-        char *unescfilename=NULL;
 	char *ptr1=NULL, *ptr2=NULL, *ptr3=NULL, *ptr4=NULL;
 	int jumpSize = 3;
 
 	if( url==NULL ) return NULL;
 	
-        // Create temp filename space
-        unescfilename=malloc(strlen(url)+1);
-        if (!unescfilename ) {
-                mp_msg(MSGT_NETWORK,MSGL_FATAL,"Memory allocation failed!\n");
-                return NULL;
+        if (strlen(url) > (SIZE_MAX / 3 - 1)) {
+                mp_msg(MSGT_NETWORK,MSGL_FATAL,MSGTR_MemAllocFailed);
+                goto err_out;
         }
         escfilename=malloc(strlen(url)*3+1);
         if (!escfilename ) {
-                free(unescfilename);
-                mp_msg(MSGT_NETWORK,MSGL_FATAL,"Memory allocation failed!\n");
-                return NULL;
+                mp_msg(MSGT_NETWORK,MSGL_FATAL,MSGTR_MemAllocFailed);
+                goto err_out;
         }
 
 	// Create the URL container
 	Curl = (URL_t*)malloc(sizeof(URL_t));
 	if( Curl==NULL ) {
-		mp_msg(MSGT_NETWORK,MSGL_FATAL,"Memory allocation failed!\n");
-                if (unescfilename) free(unescfilename);
-                if (escfilename) free(escfilename);
-		return NULL;
+		mp_msg(MSGT_NETWORK,MSGL_FATAL,MSGTR_MemAllocFailed);
+		goto err_out;
 	}
 
 	// Initialisation of the URL container members
 	memset( Curl, 0, sizeof(URL_t) );
 
-        //create unescaped/escaped versions of url
-        url_unescape_string(unescfilename,url);  // this is to prevent us from escaping an unescaped string
-                                                 // violating RFC 2396
-        url_escape_string(escfilename,unescfilename);
-        free(unescfilename);
+	url_escape_string(escfilename,url);
 
 	// Copy the url in the URL container
 	Curl->url = strdup(escfilename);
 	if( Curl->url==NULL ) {
-		mp_msg(MSGT_NETWORK,MSGL_FATAL,"Memory allocation failed!\n");
-		url_free(Curl);
-		return NULL;
+		mp_msg(MSGT_NETWORK,MSGL_FATAL,MSGTR_MemAllocFailed);
+		goto err_out;
 	}
         mp_msg(MSGT_OPEN,MSGL_V,"Filename for url is now %s\n",escfilename);
 
@@ -73,16 +68,14 @@ url_new(const char* url) {
 			jumpSize = 1;
 		} else {
 		        mp_msg(MSGT_NETWORK,MSGL_V,"Not an URL!\n");
-		        url_free(Curl);
-			return NULL;
+			goto err_out;
 		}
 	}
 	pos1 = ptr1-escfilename;
 	Curl->protocol = (char*)malloc(pos1+1);
 	if( Curl->protocol==NULL ) {
-		mp_msg(MSGT_NETWORK,MSGL_FATAL,"Memory allocation failed!\n");
-		url_free(Curl);
-		return NULL;
+		mp_msg(MSGT_NETWORK,MSGL_FATAL,MSGTR_MemAllocFailed);
+		goto err_out;
 	}
 	strncpy(Curl->protocol, escfilename, pos1);
 	Curl->protocol[pos1] = '\0';
@@ -103,9 +96,8 @@ url_new(const char* url) {
 		int len = ptr2-ptr1;
 		Curl->username = (char*)malloc(len+1);
 		if( Curl->username==NULL ) {
-			mp_msg(MSGT_NETWORK,MSGL_FATAL,"Memory allocation failed!\n");
-			url_free(Curl);
-			return NULL;
+			mp_msg(MSGT_NETWORK,MSGL_FATAL,MSGTR_MemAllocFailed);
+			goto err_out;
 		}
 		strncpy(Curl->username, ptr1, len);
 		Curl->username[len] = '\0';
@@ -117,9 +109,8 @@ url_new(const char* url) {
 			Curl->username[ptr3-ptr1]='\0';
 			Curl->password = (char*)malloc(len2+1);
 			if( Curl->password==NULL ) {
-				mp_msg(MSGT_NETWORK,MSGL_FATAL,"Memory allocation failed!\n");
-				url_free(Curl);
-				return NULL;
+				mp_msg(MSGT_NETWORK,MSGL_FATAL,MSGTR_MemAllocFailed);
+				goto err_out;
 			}
 			strncpy( Curl->password, ptr3+1, len2);
 			Curl->password[len2]='\0';
@@ -170,9 +161,8 @@ url_new(const char* url) {
 	// copy the hostname in the URL container
 	Curl->hostname = (char*)malloc(pos2-pos1+1);
 	if( Curl->hostname==NULL ) {
-		mp_msg(MSGT_NETWORK,MSGL_FATAL,"Memory allocation failed!\n");
-		url_free(Curl);
-		return NULL;
+		mp_msg(MSGT_NETWORK,MSGL_FATAL,MSGTR_MemAllocFailed);
+		goto err_out;
 	}
 	strncpy(Curl->hostname, ptr1, pos2-pos1);
 	Curl->hostname[pos2-pos1] = '\0';
@@ -186,9 +176,8 @@ url_new(const char* url) {
 			// copy the path/filename in the URL container
 			Curl->file = strdup(ptr2);
 			if( Curl->file==NULL ) {
-				mp_msg(MSGT_NETWORK,MSGL_FATAL,"Memory allocation failed!\n");
-				url_free(Curl);
-				return NULL;
+				mp_msg(MSGT_NETWORK,MSGL_FATAL,MSGTR_MemAllocFailed);
+				goto err_out;
 			}
 		}
 	} 
@@ -196,15 +185,18 @@ url_new(const char* url) {
 	if( Curl->file==NULL ) {
 		Curl->file = (char*)malloc(2);
 		if( Curl->file==NULL ) {
-			mp_msg(MSGT_NETWORK,MSGL_FATAL,"Memory allocation failed!\n");
-			url_free(Curl);
-			return NULL;
+			mp_msg(MSGT_NETWORK,MSGL_FATAL,MSGTR_MemAllocFailed);
+			goto err_out;
 		}
 		strcpy(Curl->file, "/");
 	}
 	
         free(escfilename);
 	return Curl;
+err_out:
+	if (escfilename) free(escfilename);
+	if (Curl) url_free(Curl);
+	return NULL;
 }
 
 void
@@ -247,10 +239,8 @@ url_unescape_string(char *outbuf, const char *inbuf)
         *outbuf++='\0'; //add nullterm to string
 }
 
-/* Replace specific characters in the URL string by an escape sequence */
-/* works like strcpy(), but without return argument */
-void
-url_escape_string(char *outbuf, const char *inbuf) {
+static void
+url_escape_string_part(char *outbuf, const char *inbuf) {
 	unsigned char c,c1,c2;
         int i,len=strlen(inbuf);
 
@@ -265,12 +255,7 @@ url_escape_string(char *outbuf, const char *inbuf) {
 		if(	(c >= 'A' && c <= 'Z') ||
 			(c >= 'a' && c <= 'z') ||
 			(c >= '0' && c <= '9') ||
-			(c >= 0x7f) ||						/* fareast languages(Chinese, Korean, Japanese) */
-			c=='-' || c=='_' || c=='.' || c=='!' || c=='~' ||	/* mark characters */
-			c=='*' || c=='\'' || c=='(' || c==')' || 	 	/* do not touch escape character */
-			c==';' || c=='/' || c=='?' || c==':' || c=='@' || 	/* reserved characters */
-			c=='&' || c=='=' || c=='+' || c=='$' || c==',' || 	/* see RFC 2396 */
-			c=='\0' ) {                                             /* string term char */
+			(c >= 0x7f)) {
 			*outbuf++ = c;
                 } else if ( c=='%' && ((c1 >= '0' && c1 <= '9') || (c1 >= 'A' && c1 <= 'F')) &&
                            ((c2 >= '0' && c2 <= '9') || (c2 >= 'A' && c2 <= 'F'))) {
@@ -278,7 +263,7 @@ url_escape_string(char *outbuf, const char *inbuf) {
                             *outbuf++=c;                      // already
 			      
                                                               // dont escape again
-                            mp_msg(MSGT_NETWORK,MSGL_ERR,"string appears to be already escaped in url_escape %c%c1%c2\n",c,c1,c2);
+                            mp_msg(MSGT_NETWORK,MSGL_ERR,MSGTR_MPDEMUX_URL_StringAlreadyEscaped,c,c1,c2);
                                                               // error as this should not happen against RFC 2396
                                                               // to escape a string twice
 		} else {
@@ -295,6 +280,67 @@ url_escape_string(char *outbuf, const char *inbuf) {
 		}
 	}
         *outbuf++='\0';
+}
+
+/* Replace specific characters in the URL string by an escape sequence */
+/* works like strcpy(), but without return argument */
+void
+url_escape_string(char *outbuf, const char *inbuf) {
+	unsigned char c;
+        int i = 0,j,len = strlen(inbuf);
+	char* tmp,*unesc = NULL, *in;
+	
+	// Look if we have an ip6 address, if so skip it there is
+	// no need to escape anything in there.
+	tmp = strstr(inbuf,"://[");
+	if(tmp) {
+		tmp = strchr(tmp+4,']');
+		if(tmp && (tmp[1] == '/' || tmp[1] == ':' ||
+			   tmp[1] == '\0')) {
+			i = tmp+1-inbuf;
+			strncpy(outbuf,inbuf,i);
+			outbuf += i;
+			tmp = NULL;
+		}
+	}
+	
+	while(i < len) {
+		// look for the next char that must be kept
+		for  (j=i;j<len;j++) {
+			c = inbuf[j];
+			if(c=='-' || c=='_' || c=='.' || c=='!' || c=='~' ||	/* mark characters */
+			   c=='*' || c=='\'' || c=='(' || c==')' || 	 	/* do not touch escape character */
+			   c==';' || c=='/' || c=='?' || c==':' || c=='@' || 	/* reserved characters */
+			   c=='&' || c=='=' || c=='+' || c=='$' || c==',') 	/* see RFC 2396 */
+				break;
+		}
+		// we are on a reserved char, write it out
+		if(j == i) {
+			*outbuf++ = c;
+			i++;
+			continue;
+		}
+		// we found one, take that part of the string
+		if(j < len) {
+			if(!tmp) tmp = malloc(len+1);
+			strncpy(tmp,inbuf+i,j-i);
+			tmp[j-i] = '\0';
+			in = tmp;
+		} else // take the rest of the string
+			in = (char*)inbuf+i;
+		
+		if(!unesc) unesc = malloc(len+1);
+		// unescape first to avoid escaping escape
+		url_unescape_string(unesc,in);
+		// then escape, including mark and other reserved chars
+		// that can come from escape sequences
+		url_escape_string_part(outbuf,unesc);
+		outbuf += strlen(outbuf);
+		i += strlen(in);
+	}
+	*outbuf = '\0';
+	if(tmp) free(tmp);
+	if(unesc) free(unesc);
 }
 
 #ifdef __URL_DEBUG

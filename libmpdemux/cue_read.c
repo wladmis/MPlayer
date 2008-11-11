@@ -11,11 +11,14 @@
 
 #include "config.h"
 #include "mp_msg.h"
-//#include "help_mp.h"
+#include "help_mp.h"
 
 #include "stream.h"
 
 #include "cue_read.h"
+#include "help_mp.h"
+#include "m_option.h"
+#include "m_struct.h"
 
 #define byte    unsigned char
 #define SIZERAW 2352
@@ -31,6 +34,25 @@
 #define MODE1_2048 30
 #define MODE2_2336 40
 #define UNKNOWN -1
+
+static struct stream_priv_s {
+  char* filename;
+} stream_priv_dflts = {
+  NULL
+};
+
+#define ST_OFF(f) M_ST_OFF(struct stream_priv_s,f)
+/// URL definition
+static m_option_t stream_opts_fields[] = {
+  { "string", ST_OFF(filename), CONF_TYPE_STRING, 0, 0 ,0, NULL},
+  { NULL, NULL, 0, 0, 0, 0,  NULL }
+};
+static struct m_struct_st stream_opts = {
+  "cue",
+  sizeof(struct stream_priv_s),
+  &stream_priv_dflts,
+  stream_opts_fields
+};
 
 static FILE* fd_cue;
 static int fd_bin = 0;
@@ -74,7 +96,7 @@ static struct cue_track_pos {
 static int nTracks = 0;
 
 /* presumes Line is preloaded with the "current" line of the file */
-int cue_getTrackinfo(char *Line, tTrack *track)
+static int cue_getTrackinfo(char *Line, tTrack *track)
 {
   char inum[3];
   char min;
@@ -128,7 +150,7 @@ int cue_getTrackinfo(char *Line, tTrack *track)
     else if (strncmp(&Line[4], "PREGAP ", 7)==0) { ; /* ignore */ }
     else if (strncmp(&Line[4], "FLAGS ", 6)==0)  { ; /* ignore */ }
     else mp_msg (MSGT_OPEN,MSGL_INFO,
-                 "[bincue] Unexpected cuefile line: %s\n", Line);
+                 MSGTR_MPDEMUX_CUEREAD_UnexpectedCuefileLine, Line);
   }
   return(0);
 }
@@ -139,13 +161,14 @@ int cue_getTrackinfo(char *Line, tTrack *track)
  * on the arrays to have the same size, thus we need to make
  * sure the sizes are in sync.
  */
-int cue_find_bin (char *firstline) {
+static int cue_find_bin (char *firstline) {
   int i,j;
   char s[256];
   char t[256];
 
   /* get the filename out of that */
   /*                      12345 6  */
+  mp_msg (MSGT_OPEN,MSGL_INFO, "[bincue] cue_find_bin(%s)\n", firstline);
   if (strncmp(firstline, "FILE \"",6)==0)
   {
     i = 0;
@@ -178,7 +201,7 @@ int cue_find_bin (char *firstline) {
   fd_bin = open (bin_filename, O_RDONLY);
   if (fd_bin == -1)
   {
-    mp_msg(MSGT_OPEN,MSGL_STATUS, "[bincue] bin filename tested: %s\n",
+    mp_msg(MSGT_OPEN,MSGL_STATUS, MSGTR_MPDEMUX_CUEREAD_BinFilenameTested,
            bin_filename);
 
     /* now try to find it with the path of the cue file */
@@ -187,7 +210,7 @@ int cue_find_bin (char *firstline) {
     if (fd_bin == -1)
     {
       mp_msg(MSGT_OPEN,MSGL_STATUS,
-             "[bincue] bin filename tested: %s\n", s);
+             MSGTR_MPDEMUX_CUEREAD_BinFilenameTested, s);
       /* now I would say the whole filename is shit, build our own */
       strncpy(s, cue_filename, strlen(cue_filename) - 3 );
       s[strlen(cue_filename) - 3] = '\0';
@@ -196,7 +219,7 @@ int cue_find_bin (char *firstline) {
       if (fd_bin == -1)
       {
         mp_msg(MSGT_OPEN,MSGL_STATUS,
-               "[bincue] bin filename tested: %s\n", s);
+               MSGTR_MPDEMUX_CUEREAD_BinFilenameTested, s);
 
         /* ok try it with path */
         snprintf(t, sizeof( t ), "%s/%s", bincue_path, s);
@@ -204,7 +227,7 @@ int cue_find_bin (char *firstline) {
         if (fd_bin == -1)
         {
           mp_msg(MSGT_OPEN,MSGL_STATUS,
-                 "[bincue] bin filename tested: %s\n",t);
+                 MSGTR_MPDEMUX_CUEREAD_BinFilenameTested,t);
           /* now I would say the whole filename is shit, build our own */
           strncpy(s, cue_filename, strlen(cue_filename) - 3 );
           s[strlen(cue_filename) - 3] = '\0';
@@ -213,18 +236,18 @@ int cue_find_bin (char *firstline) {
           if (fd_bin == -1)
           {
             mp_msg(MSGT_OPEN,MSGL_STATUS,
-                   "[bincue] bin filename tested: %s \n", s);
+                   MSGTR_MPDEMUX_CUEREAD_BinFilenameTested, s);
             /* ok try it with path */
             snprintf(t, sizeof( t ), "%s/%s", bincue_path, s);
             fd_bin = open (t, O_RDONLY);
             if (fd_bin == -1)
             {
               mp_msg(MSGT_OPEN,MSGL_STATUS,
-                     "[bincue] bin filename tested: %s\n", s);
+                     MSGTR_MPDEMUX_CUEREAD_BinFilenameTested, s);
 
               /* I'll give up */
               mp_msg(MSGT_OPEN,MSGL_ERR,
-                     "[bincue] couldn't find the bin file - giving up\n");
+                     MSGTR_MPDEMUX_CUEREAD_CannotFindBinFile);
               return -1;
             }
           }
@@ -237,7 +260,7 @@ int cue_find_bin (char *firstline) {
   }
 
   mp_msg(MSGT_OPEN,MSGL_INFO,
-         "[bincue] using bin file %s\n", bin_filename);
+         MSGTR_MPDEMUX_CUEREAD_UsingBinFile, bin_filename);
   return 0;
 }
 
@@ -245,13 +268,13 @@ static inline int cue_msf_2_sector(int minute, int second, int frame) {
  return frame + (second + minute * 60 ) * 75;
 }
 
-static inline int cue_get_msf() {
+static inline int cue_get_msf(void) {
   return cue_msf_2_sector (cue_current_pos.minute,
                            cue_current_pos.second,
                            cue_current_pos.frame);
 }
 
-inline void cue_set_msf(unsigned int sect){
+static inline void cue_set_msf(unsigned int sect){
   cue_current_pos.frame=sect%75;
   sect=sect/75;
   cue_current_pos.second=sect%60;
@@ -271,14 +294,14 @@ static inline int cue_mode_2_sector_size(int mode)
 
     default:
       mp_msg(MSGT_OPEN,MSGL_FATAL,
-             "[bincue] unknown mode for binfile. should not happen. aborting\n");
+             MSGTR_MPDEMUX_CUEREAD_UnknownModeForBinfile);
       abort();
   }
 
 }
 
 
-int cue_read_cue (char *in_cue_filename)
+static int cue_read_cue (char *in_cue_filename)
 {
   struct stat filestat;
   char sLine[256];
@@ -302,13 +325,13 @@ int cue_read_cue (char *in_cue_filename)
      if (*t == '\0')
        strcpy(t, "/");
   }
-  printf ("dirname: %s\n", t);
+  
   strlcpy(bincue_path,t,sizeof( bincue_path ));
-
+  mp_msg(MSGT_OPEN,MSGL_V,"dirname: %s, cuepath: %s\n", t, bincue_path);
 
   /* no path at all? */
   if (strcmp(bincue_path, ".") == 0) {
-    printf ("bincue_path: %s\n", bincue_path);
+    mp_msg(MSGT_OPEN,MSGL_V,"bincue_path: %s\n", bincue_path);
     strlcpy(cue_filename,in_cue_filename,sizeof( cue_filename ));
   } else {
     strlcpy(cue_filename,in_cue_filename + strlen(bincue_path) + 1,
@@ -322,7 +345,7 @@ int cue_read_cue (char *in_cue_filename)
   if (fd_cue == NULL)
   {
     mp_msg(MSGT_OPEN,MSGL_ERR,
-           "[bincue] cannot open %s\n", in_cue_filename);
+           MSGTR_MPDEMUX_CUEREAD_CannotOpenCueFile, in_cue_filename);
     return -1;
   }
 
@@ -332,7 +355,7 @@ int cue_read_cue (char *in_cue_filename)
   if(! fgets( sLine, 256, fd_cue ) )
   {
     mp_msg(MSGT_OPEN,MSGL_ERR,
-           "[bincue] error reading from  %s\n", in_cue_filename);
+           MSGTR_MPDEMUX_CUEREAD_ErrReadingFromCueFile, in_cue_filename);
     fclose (fd_cue);
     return -1;
   }
@@ -348,7 +371,7 @@ int cue_read_cue (char *in_cue_filename)
   if(! fgets( sLine, 256, fd_cue ) )
   {
     mp_msg(MSGT_OPEN,MSGL_ERR,
-           "[bincue] error reading from  %s\n", in_cue_filename);
+           MSGTR_MPDEMUX_CUEREAD_ErrReadingFromCueFile, in_cue_filename);
     fclose (fd_cue);
     return -1;
   }
@@ -358,7 +381,7 @@ int cue_read_cue (char *in_cue_filename)
     if (cue_getTrackinfo(sLine, &tracks[nTracks++]) != 0)
     {
       mp_msg(MSGT_OPEN,MSGL_ERR,
-             "[bincue] error reading from  %s\n", in_cue_filename);
+             MSGTR_MPDEMUX_CUEREAD_ErrReadingFromCueFile, in_cue_filename);
       fclose (fd_cue);
       return -1;
     }
@@ -367,7 +390,7 @@ int cue_read_cue (char *in_cue_filename)
   /* make a fake track with stands for the Lead out */
   if (fstat (fd_bin, &filestat) == -1) {
     mp_msg(MSGT_OPEN,MSGL_ERR,
-           "[bincue] error getting size of bin file\n");
+           MSGTR_MPDEMUX_CUEREAD_ErrGettingBinFileSize);
     fclose (fd_cue);
     return -1;
   }
@@ -410,7 +433,7 @@ int cue_read_cue (char *in_cue_filename)
 
 
 
-int cue_read_toc_entry() {
+static int cue_read_toc_entry(void) {
 
   int track = cue_current_pos.track - 1;
 
@@ -440,37 +463,7 @@ int cue_read_toc_entry() {
   return 0;
 }
 
-int cue_read_raw(char *buf) {
-  int position;
-  int track = cue_current_pos.track - 1;
-
-  /* get the mode of the bin file part and calc the positon */
-  position = tracks[track].start_offset +
-             (cue_msf_2_sector(cue_current_pos.minute,
-                               cue_current_pos.second,
-                               cue_current_pos.frame) -
-              tracks[track].start_sector)
-             * cue_mode_2_sector_size(tracks[track].mode);
-
-  /* check if the track is at its end*/
-  if (position >= tracks[track+1].start_offset)
-    return -1;
-
-  if (lseek (fd_bin, position, SEEK_SET) == -1) {
-    mp_msg(MSGT_OPEN,MSGL_ERR,
-           "[bincue] unexpected end of bin file\n");
-    return -1;
-  }
-
-  if (!read (fd_bin, buf, VCD_SECTOR_SIZE))
-    return -1;
-  else
-    return VCD_SECTOR_DATA;
-}
-
-
-
-int cue_vcd_seek_to_track (int track){
+static int cue_vcd_seek_to_track (int track){
   cue_current_pos.track  = track;
 
   if (cue_read_toc_entry ())
@@ -479,7 +472,7 @@ int cue_vcd_seek_to_track (int track){
   return VCD_SECTOR_DATA * cue_get_msf();
 }
 
-int cue_vcd_get_track_end (int track){
+static int cue_vcd_get_track_end (int track){
   cue_current_pos.frame = tracks[track].frame;
   cue_current_pos.second = tracks[track].second;
   cue_current_pos.minute = tracks[track].minute;
@@ -487,13 +480,13 @@ int cue_vcd_get_track_end (int track){
   return VCD_SECTOR_DATA * cue_get_msf();
 }
 
-void cue_vcd_read_toc(){
+static void cue_vcd_read_toc(void){
   int i;
   for (i = 0; i < nTracks; ++i) {
 
     mp_msg(MSGT_OPEN,MSGL_INFO,
-           "track %02d:  format=%d  %02d:%02d:%02d\n",
-           i,
+           MSGTR_MPDEMUX_CUEREAD_InfoTrackFormat,
+           i+1,
            tracks[i].mode,
            tracks[i].minute,
            tracks[i].second,
@@ -502,14 +495,30 @@ void cue_vcd_read_toc(){
   }
 }
 
+static int cue_vcd_read(stream_t *stream, char *mem, int size) {
+  unsigned long position;
+  int track = cue_current_pos.track - 1;
 
-static char vcd_buf[VCD_SECTOR_SIZE];
+  position = tracks[track].start_offset +
+             (cue_msf_2_sector(cue_current_pos.minute,
+                               cue_current_pos.second,
+                               cue_current_pos.frame) -
+              tracks[track].start_sector)
+             * cue_mode_2_sector_size(tracks[track].mode);
 
-int cue_vcd_read(char *mem){
+  
+  if(position >= tracks[track+1].start_offset)
+    return 0;
 
-  if (cue_read_raw(vcd_buf)==-1) return 0; // EOF?
+  if(lseek(fd_bin, position+VCD_SECTOR_OFFS, SEEK_SET) == -1) {
+    mp_msg(MSGT_OPEN,MSGL_ERR, MSGTR_MPDEMUX_CUEREAD_UnexpectedBinFileEOF);
+    return 0;
+  }
 
-  memcpy(mem,&vcd_buf[VCD_SECTOR_OFFS],VCD_SECTOR_DATA);
+  if(read(fd_bin, mem, VCD_SECTOR_DATA) != VCD_SECTOR_DATA) {
+    mp_msg(MSGT_OPEN,MSGL_ERR, MSGTR_MPDEMUX_CUEREAD_CannotReadNBytesOfPayload, VCD_SECTOR_DATA);
+    return 0;
+  }
 
   cue_current_pos.frame++;
   if (cue_current_pos.frame==75){
@@ -523,3 +532,73 @@ int cue_vcd_read(char *mem){
 
   return VCD_SECTOR_DATA;
 }
+
+static int seek(stream_t *s,off_t newpos) {
+  s->pos=newpos;
+  cue_set_msf(s->pos/VCD_SECTOR_DATA);
+  return 1;
+}
+
+
+static int open_s(stream_t *stream,int mode, void* opts, int* file_format) {
+  struct stream_priv_s* p = (struct stream_priv_s*)opts;
+  int ret,ret2,f,track = 0;
+  char *filename = NULL, *colon = NULL;
+
+  if(mode != STREAM_READ || !p->filename) {
+    m_struct_free(&stream_opts,opts);
+    return STREAM_UNSUPORTED;
+  }
+  filename = strdup(p->filename);
+  if(!filename) {
+    m_struct_free(&stream_opts,opts);
+    return STREAM_UNSUPORTED;
+  }
+  colon = strstr(filename, ":");
+  if(colon) {
+    if(strlen(colon)>1)
+      track = atoi(colon+1);
+    *colon = 0;
+  }
+  if(!track)
+    track = 1;
+  
+  f = cue_read_cue(filename);
+  if(f < 0) {
+    m_struct_free(&stream_opts,opts);
+    return STREAM_UNSUPORTED;
+  }
+  cue_vcd_read_toc();
+  ret2=cue_vcd_get_track_end(track);
+  ret=cue_vcd_seek_to_track(track);
+  if(ret<0){ 
+    mp_msg(MSGT_OPEN,MSGL_ERR,MSGTR_ErrTrackSelect " (seek)\n");
+    return STREAM_UNSUPORTED;
+  }
+  mp_msg(MSGT_OPEN,MSGL_INFO,MSGTR_MPDEMUX_CUEREAD_CueStreamInfo_FilenameTrackTracksavail, filename, track, ret, ret2);
+
+  stream->fd = f;
+  stream->type = STREAMTYPE_VCDBINCUE;
+  stream->sector_size = VCD_SECTOR_DATA;
+  stream->flags = STREAM_READ | STREAM_SEEK_FW;
+  stream->start_pos = ret;
+  stream->end_pos = ret2;
+  stream->fill_buffer = cue_vcd_read;
+  stream->seek = seek;
+
+  free(filename);
+  m_struct_free(&stream_opts,opts);
+  return STREAM_OK;
+}
+
+stream_info_t stream_info_cue = {
+  "CUE track",
+  "cue",
+  "Albeu",
+  "based on the code from ???",
+  open_s,
+  { "cue", NULL },
+  &stream_opts,
+  1 // Urls are an option string
+};
+

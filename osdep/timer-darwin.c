@@ -22,8 +22,8 @@
 #include <sys/time.h>
 #include <mach/mach_time.h>
 
-#include "../config.h"
-#include "../mp_msg.h"
+#include "config.h"
+#include "mp_msg.h"
 #include "timer.h"
 
 /* global variables */
@@ -34,10 +34,20 @@ const char *timer_name = "Darwin accurate";
 
 
 
+/* the core sleep function, uses floats and is used in MPlayer G2 */
+float sleep_accurate(float time_frame)
+{
+	uint64_t deadline = time_frame / timebase_ratio + mach_absolute_time();
+	
+	mach_wait_until(deadline);
+	
+	return (mach_absolute_time() - deadline) * timebase_ratio;
+}
+
 /* wrapper for MPlayer G1 */
 int usec_sleep(int usec_delay)
 {
-  return usleep(usec_delay);
+  return sleep_accurate(usec_delay / 1e6) * 1e6;
 }
 
 

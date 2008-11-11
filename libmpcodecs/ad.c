@@ -20,6 +20,7 @@ extern ad_functions_t mpcodecs_ad_mp3lib;
 extern ad_functions_t mpcodecs_ad_ffmpeg;
 extern ad_functions_t mpcodecs_ad_liba52;
 extern ad_functions_t mpcodecs_ad_hwac3;
+extern ad_functions_t mpcodecs_ad_hwmpa;
 extern ad_functions_t mpcodecs_ad_pcm;
 extern ad_functions_t mpcodecs_ad_dvdpcm;
 extern ad_functions_t mpcodecs_ad_alaw;
@@ -33,12 +34,13 @@ extern ad_functions_t mpcodecs_ad_acm;
 extern ad_functions_t mpcodecs_ad_msgsm;
 extern ad_functions_t mpcodecs_ad_faad;
 extern ad_functions_t mpcodecs_ad_libvorbis;
+extern ad_functions_t mpcodecs_ad_speex;
 extern ad_functions_t mpcodecs_ad_libmad;
 extern ad_functions_t mpcodecs_ad_realaud;
 extern ad_functions_t mpcodecs_ad_libdv;
 extern ad_functions_t mpcodecs_ad_qtaudio;
-extern ad_functions_t mpcodecs_ad_ra1428;
 extern ad_functions_t mpcodecs_ad_twin;
+extern ad_functions_t mpcodecs_ad_libmusepack;
 
 ad_functions_t* mpcodecs_ad_drivers[] =
 {
@@ -50,6 +52,7 @@ ad_functions_t* mpcodecs_ad_drivers[] =
   &mpcodecs_ad_liba52,
   &mpcodecs_ad_hwac3,
 #endif
+  &mpcodecs_ad_hwmpa,
 #ifdef USE_LIBAVCODEC
   &mpcodecs_ad_ffmpeg,
 #endif
@@ -77,6 +80,9 @@ ad_functions_t* mpcodecs_ad_drivers[] =
 #ifdef HAVE_OGGVORBIS
   &mpcodecs_ad_libvorbis,
 #endif
+#ifdef HAVE_SPEEX
+  &mpcodecs_ad_speex,
+#endif
 #ifdef USE_LIBMAD
   &mpcodecs_ad_libmad,
 #endif
@@ -86,6 +92,8 @@ ad_functions_t* mpcodecs_ad_drivers[] =
 #ifdef HAVE_LIBDV095
   &mpcodecs_ad_libdv,
 #endif
-  &mpcodecs_ad_ra1428,
+#ifdef HAVE_MUSEPACK
+  &mpcodecs_ad_libmusepack,
+#endif
   NULL
 };

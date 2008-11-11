@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- $Revision: 1.16 $ -->
+<!-- $Revision: 18606 $ -->
 <appendix id="mailinglists">
 <title>Mailing lists</title>
 <para>
@@ -81,14 +81,14 @@ fix or you have noticed a possible bug/problem in the commit).
 </para>
 <para>This list is about <application>MPlayer</application> documentation
 and homepage discussions.
-Documentation and homepage related CVS logs are also sent here.
+Documentation and homepage related SVN logs are also sent here.
 </para></listitem>
 <listitem><para>
 <ulink url="http://mplayerhq.hu/mailman/listinfo/mplayer-translations"><application>MPlayer</application>-translations</ulink>
 </para>
 <para>This list is about <application>MPlayer</application> documentation
 and homepage translation discussions.
-Documentation and homepage translation CVS logs are also sent here.
+Documentation and homepage translation Subversion logs are also sent here.
 </para></listitem>
 <listitem><para>
 <ulink url="http://mplayerhq.hu/mailman/listinfo/mplayer-cygwin"><application>MPlayer</application>-cygwin</ulink>
@@ -120,7 +120,7 @@ News releases.
 <para>List for discussion about <application>MPlayer</application>'s OS/2 port.
 </para></listitem>
 <listitem><para>
-<ulink url="http://mplayerhq.hu/mailman/listinfo/mplayer-qt-codecs-porting"><application>MPlayer</application>-qt-codecs-porting</ulink> (INACTIVE)
+<ulink url="http://mplayerhq.hu/mailman/listinfo/qt-codecs-porting">qt-codecs-porting</ulink> (INACTIVE)
 </para>
 <para>List for discussion about QuickTime codec support.
 </para></listitem>

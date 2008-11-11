@@ -113,7 +113,7 @@ static void flip_page(void)
     vo_mga_flip_page();
 }
 
-static uint32_t config(uint32_t width, uint32_t height, uint32_t d_width,
+static int config(uint32_t width, uint32_t height, uint32_t d_width,
                        uint32_t d_height, uint32_t flags, char *title,
                        uint32_t format)
 {
@@ -127,17 +127,20 @@ static uint32_t config(uint32_t width, uint32_t height, uint32_t d_width,
 
     aspect_save_orig(width, height);
     aspect_save_prescale(d_width, d_height);
-    aspect_save_screenres(vo_screenwidth, vo_screenheight);
+    update_xinerama_info();
 
     mvWidth = width;
     mvHeight = height;
 
     vo_panscan_x = vo_panscan_y = vo_panscan_amount = 0;
 
+    aspect(&d_width, &d_height, A_NOZOOM);
     vo_dx = (vo_screenwidth - d_width) / 2;
     vo_dy = (vo_screenheight - d_height) / 2;
     geometry(&vo_dx, &vo_dy, &d_width, &d_height, vo_screenwidth,
              vo_screenheight);
+    vo_dx += xinerama_x;
+    vo_dy += xinerama_y;
     vo_dwidth = d_width;
     vo_dheight = d_height;
     vo_mouse_autohide = 1;
@@ -169,15 +172,13 @@ static uint32_t config(uint32_t width, uint32_t height, uint32_t d_width,
 
     inited = 1;
 
-    aspect(&d_width, &d_height, A_NOZOOM);
-
 #ifdef HAVE_NEW_GUI
     if (use_gui)
         guiGetEvent(guiSetShVideo, 0);  // the GUI will set up / resize the window
     else
 #endif
     {
-        if (flags & 1)
+        if (flags & VOFLAG_FULLSCREEN)
             aspect(&dwidth, &dheight, A_ZOOM);
 
         XGetWindowAttributes(mDisplay, mRootWin, &attribs);
@@ -213,6 +214,7 @@ static uint32_t config(uint32_t width, uint32_t height, uint32_t d_width,
                                            ButtonPressMask |
                                            ButtonReleaseMask |
                                            ExposureMask);
+                XMapWindow(mDisplay, vo_window);
             } else
                 XSelectInput(mDisplay, vo_window, ExposureMask);
 
@@ -237,13 +239,10 @@ static uint32_t config(uint32_t width, uint32_t height, uint32_t d_width,
                 XStoreName(mDisplay, vo_window, mTitle);
                 XMapWindow(mDisplay, vo_window);
 
-                if (flags & 1)
+                if (flags & VOFLAG_FULLSCREEN)
                     vo_x11_fullscreen();
 
-#ifdef HAVE_XINERAMA
-                vo_x11_xinerama_move(mDisplay, vo_window);
-#endif
-            } else if (!(flags & 1))
+            } else if (!(flags & VOFLAG_FULLSCREEN))
                 XMoveResizeWindow(mDisplay, vo_window, vo_dx, vo_dy,
                                   vo_dwidth, vo_dheight);
         }
@@ -254,7 +253,7 @@ static uint32_t config(uint32_t width, uint32_t height, uint32_t d_width,
 
     }                           // !GUI
 
-    if ((flags & 1) && (!WinID))
+    if ((flags & VOFLAG_FULLSCREEN) && (!WinID))
     {
         vo_dx = 0;
         vo_dy = 0;

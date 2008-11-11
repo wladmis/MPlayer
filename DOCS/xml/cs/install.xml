@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="iso-8859-2"?>
-<!-- Synced to: 1.57 -->
-<sect1 id="install">
+<!-- Synced to: 1.63 -->
+<chapter id="install">
 <title>Instalace</title>
 
 <para>
@@ -21,8 +21,7 @@ za to.
 Budete potřebovat poměrně zánovní systém. Na Linuxu doporučujeme jádro řady 2.4.x.
 </para>
 
-
-<sect2 id="softreq">
+<sect1 id="softreq">
 <title>Softwarové požadavky</title>
 
 <itemizedlist>
@@ -99,7 +98,7 @@ Budete potřebovat poměrně zánovní systém. Na Linuxu doporučujeme jádro řady 2.4.
   OGG Vorbis zvuku.
   </para></listitem>
 <listitem><para>
-  <emphasis role="bold"><ulink url="http://www.live.com/mplayer/">LIVE.COM Streaming Media</ulink></emphasis>
+  <emphasis role="bold"><ulink url="http://www.live555.com/mplayer/">LIVE555 Streaming Media</ulink></emphasis>
   - volitelná, nutná pro přehrávání RTSP/RTP datových proudů.
   </para></listitem>
 <listitem><para>
@@ -136,10 +135,10 @@ Budete potřebovat poměrně zánovní systém. Na Linuxu doporučujeme jádro řady 2.4.
   kde ten soubor najde.
   </para></listitem>
 </itemizedlist>
-</sect2>
+</sect1>
 
 
-<sect2>
+<sect1 id="installation_codecs">
 <title>Kodeky</title>
 
 <itemizedlist>
@@ -170,7 +169,7 @@ Budete potřebovat poměrně zánovní systém. Na Linuxu doporučujeme jádro řady 2.4.
   <application>MPlayer</application> na x86 architektuře, možná je budete
   potřebovat.
   Stáhněte si balíček s kodeky z naší
-  <ulink url="http://www.mplayerhq.hu/homepage/design7/codecs.html">kodekové stránky</ulink>
+  <ulink url="http://www.mplayerhq.hu/design7/codecs.html">kodekové stránky</ulink>
   a rozbalte je do <filename class="directory">/usr/local/lib/codecs</filename>
   <emphasis role="bold">PŘED</emphasis> kompilací <application>MPlayer</application>u,
   jinak nebude zakompilována podpora pro Win32!
@@ -272,10 +271,10 @@ Budete potřebovat poměrně zánovní systém. Na Linuxu doporučujeme jádro řady 2.4.
   pro návod na instalaci a více informací.
   </para></listitem>
 </itemizedlist>
-</sect2>
+</sect1>
 
 
-<sect2 id="video-cards">
+<sect1 id="video-cards">
 <title>Video karty</title>
 
 <para>
@@ -285,7 +284,7 @@ druhé ji nemají.
 </para>
 
 
-<sect3 id="yuv-cards">
+<sect2 id="yuv-cards">
 <title>YUV karty</title>
 
 <para>
@@ -375,10 +374,10 @@ která se jim vejde do paměti, při <emphasis role="bold">nízkém zatížení CPU</emp
   </para></listitem>
 </itemizedlist>
 </para>
-</sect3>
+</sect2>
 
 
-<sect3 id="non-yuv-cards" xreflabel="Ne-YUV karty">
+<sect2 id="non-yuv-cards" xreflabel="Ne-YUV karty">
 <title>Ne-YUV karty</title>
 
 <para>
@@ -406,10 +405,10 @@ což pracuje s těmito ovladači:
   </simpara></listitem>
 </itemizedlist>
 </para>
-</sect3>
+</sect2>
 
 <!-- FIXME: find a more logical organization for this section -->
-<sect3 id="cirrus-logic-cards" xreflabel="Karty Cirrus-Logic">
+<sect2 id="cirrus-logic-cards" xreflabel="Karty Cirrus-Logic">
 <title>Karty Cirrus-Logic</title>
 <itemizedlist>
 <listitem><para>
@@ -441,11 +440,11 @@ což pracuje s těmito ovladači:
 </itemizedlist>
 </para></listitem>
 </itemizedlist>
-</sect3>
 </sect2>
+</sect1>
 
 
-<sect2 id="sound-cards">
+<sect1 id="sound-cards">
 <title>Zvukové karty</title>
 
 <itemizedlist>
@@ -470,10 +469,10 @@ což pracuje s těmito ovladači:
   <link linkend="audio">zvukové karty</link>!</emphasis>
   </simpara></listitem>
 </itemizedlist>
-</sect2>
+</sect1>
 
 
-<sect2>
+<sect1 id="features">
 <title>Vlastnosti</title>
 
 <itemizedlist>
@@ -559,7 +558,6 @@ což pracuje s těmito ovladači:
   Detaily viz sekce <link linkend="subosd">Titulky a OSD</link>.
 </para>
 
-</sect2>
 </sect1>
 
 <!-- ********** -->
@@ -568,8 +566,8 @@ což pracuje s těmito ovladači:
 <title>Chtěli byste GUI?</title>
 
 <para>
-  GUI potřebuje GTK 1.2.x (není plně GTK, ale panely jsou). Skiny jsou uloženy
-  v PNG formátu,
+  GUI potřebuje GTK 1.2.x nebo GTK 2.0 (není plně GTK, ale panely jsou).
+  Skiny jsou uloženy v PNG formátu,
   takže GTK, <systemitem class="library">libpng</systemitem>
   (a jejich příslušenství, obvykle nazývané <systemitem class="library">gtk-dev</systemitem>
   a <systemitem class="library">libpng-dev</systemitem>) musí být nainstalovány.
@@ -586,15 +584,15 @@ což pracuje s těmito ovladači:
 <para>
   Protože <application>MPlayer</application> nemá přibalen žádný skin, budete si
   muset nějaký stáhnout abyste mohli používat GUI. Viz naši <ulink
-  url="http://www.mplayerhq.hu/homepage/dload.html">download stránku</ulink>.
+  url="http://www.mplayerhq.hu/dload.html">download stránku</ulink>.
   Skiny by měly být rozbaleny do obvyklého systémového adresáře
-  (<filename class="directory">$PREFIX/share/mplayer/Skin</filename>),
-  nebo do <filename class="directory">$HOME/.mplayer/Skin</filename>.
+  (<filename class="directory">$PREFIX/share/mplayer/skins</filename>),
+  nebo do <filename class="directory">$HOME/.mplayer/skins</filename>.
   <application>MPlayer</application> ve výchozím stavu hledá v těchto adresářích
   podadresář jménem <filename class="directory">default</filename>, ale
   můžete použít volbu <option>-skin <replaceable>nový_skin</replaceable></option>
   nebo direktivu <literal>skin=nový_skin</literal> konfiguračního souboru pro
-  použití skinu v adresáři <filename class="directory">*/Skin/nový_skin</filename>.
+  použití skinu v adresáři <filename class="directory">*/skins/nový_skin</filename>.
 </para>
 </sect1>
 
@@ -1008,3 +1006,5 @@ To je nejlepší cesta jak umožnit každému být rootem.
 </para></note>
 </para>
 </sect1>
+
+</chapter>

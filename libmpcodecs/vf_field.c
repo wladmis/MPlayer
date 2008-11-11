@@ -2,13 +2,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../config.h"
-#include "../mp_msg.h"
+#include "config.h"
+#include "mp_msg.h"
 
 #include "mp_image.h"
 #include "vf.h"
 
-#include "../libvo/fastmemcpy.h"
+#include "libvo/fastmemcpy.h"
 
 struct vf_priv_s {
     int field;
@@ -22,7 +22,7 @@ static int config(struct vf_instance_s* vf,
     return vf_next_config(vf,width,height/2,d_width,d_height,flags,outfmt);
 }
 
-static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
+static int put_image(struct vf_instance_s* vf, mp_image_t *mpi, double pts){
     vf->dmpi=vf_get_image(vf->next,mpi->imgfmt,
 	MP_IMGTYPE_EXPORT, MP_IMGFLAG_ACCEPT_STRIDE,
 	mpi->width, mpi->height/2);
@@ -40,7 +40,7 @@ static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
     } else
 	vf->dmpi->planes[1]=mpi->planes[1]; // passthru bgr8 palette!!!
     
-    return vf_next_put_image(vf,vf->dmpi);
+    return vf_next_put_image(vf,vf->dmpi, pts);
 }
 
 //===========================================================================//

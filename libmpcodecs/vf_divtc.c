@@ -4,16 +4,17 @@
 #include <limits.h>
 #include <math.h>
 
-#include "../config.h"
-#include "../mp_msg.h"
-#include "../cpudetect.h"
-#include "../bswap.h"
+#include "config.h"
+#include "mp_msg.h"
+#include "cpudetect.h"
+#include "bswap.h"
+#include "asmalign.h"
 
 #include "img_format.h"
 #include "mp_image.h"
 #include "vf.h"
 
-#include "../libvo/fastmemcpy.h"
+#include "libvo/fastmemcpy.h"
 
 vf_info_t vf_info_divtc;
 
@@ -41,7 +42,7 @@ static int diff_MMX(unsigned char *old, unsigned char *new, int os, int ns)
 	"pxor %%mm4, %%mm4 \n\t"
 	"pxor %%mm7, %%mm7 \n\t"
 
-	".balign 16 \n\t"
+	ASMALIGN16
 	"1: \n\t"
 
 	"movq (%%"REG_S"), %%mm0 \n\t"
@@ -235,7 +236,7 @@ static int match(struct vf_priv_s *p, int *diffs,
    return m;
    }
 
-static int put_image(struct vf_instance_s* vf, mp_image_t *mpi)
+static int put_image(struct vf_instance_s* vf, mp_image_t *mpi, double pts)
    {
    mp_image_t *dmpi, *tmpi=0;
    int n, m, f, newphase;
@@ -342,19 +343,20 @@ static int put_image(struct vf_instance_s* vf, mp_image_t *mpi)
 	 if(p->deghost>0)
 	    {
 	    tmpi=vf_get_image(vf->next, mpi->imgfmt,
-			      MP_IMGTYPE_TEMP, MP_IMGFLAG_ACCEPT_STRIDE,
+			      MP_IMGTYPE_TEMP, MP_IMGFLAG_ACCEPT_STRIDE |
+			      MP_IMGFLAG_READABLE,
 			      mpi->width, mpi->height);
 	    vf_clone_mpi_attributes(tmpi, mpi);
 
 	    imgop((void *)memcpy_pic, tmpi, mpi, 0);
 	    imgop(deghost_plane, tmpi, dmpi, p->deghost);
 	    imgop((void *)memcpy_pic, dmpi, mpi, 0);
-	    return vf_next_put_image(vf, tmpi);
+	    return vf_next_put_image(vf, tmpi, MP_NOPTS_VALUE);
 	    }
       }
 
    imgop((void *)memcpy_pic, dmpi, mpi, 0);
-   return vf_next_put_image(vf, dmpi);
+   return vf_next_put_image(vf, dmpi, MP_NOPTS_VALUE);
    }
 
 static int analyze(struct vf_priv_s *p)

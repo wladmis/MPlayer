@@ -3,16 +3,17 @@
 #include <string.h>
 #include <inttypes.h>
 
-#include "../config.h"
-#include "../mp_msg.h"
-#include "../cpudetect.h"
+#include "config.h"
+#include "mp_msg.h"
+#include "cpudetect.h"
+#include "asmalign.h"
 
 #include "img_format.h"
 #include "mp_image.h"
 #include "vf.h"
 
-#include "../libvo/fastmemcpy.h"
-#include "../postproc/rgb2rgb.h"
+#include "libvo/fastmemcpy.h"
+#include "postproc/rgb2rgb.h"
 
 struct vf_priv_s {
 	int field;
@@ -40,7 +41,7 @@ static void halfpack_MMX(unsigned char *dst, unsigned char *src[3],
 	for (h/=2; h; h--) {
 		asm (
 			"pxor %%mm0, %%mm0 \n\t"
-			".balign 16 \n\t"
+			ASMALIGN16
 			"1: \n\t"
 			"movq (%0), %%mm1 \n\t"
 			"movq (%0), %%mm2 \n\t"
@@ -143,7 +144,7 @@ static void (*halfpack)(unsigned char *dst, unsigned char *src[3],
 	int dststride, int srcstride[3], int w, int h);
 
 
-static int put_image(struct vf_instance_s* vf, mp_image_t *mpi)
+static int put_image(struct vf_instance_s* vf, mp_image_t *mpi, double pts)
 {
 	mp_image_t *dmpi;
 
@@ -164,7 +165,7 @@ static int put_image(struct vf_instance_s* vf, mp_image_t *mpi)
 			mpi->stride, mpi->w, mpi->h);
 	}
 
-	return vf_next_put_image(vf,dmpi);
+	return vf_next_put_image(vf,dmpi, pts);
 }
 
 static int config(struct vf_instance_s* vf,

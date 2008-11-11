@@ -14,10 +14,10 @@
 
 #include "cpudetect.h"
 
-#include "../libaf/af_format.h"
+#include "libaf/af_format.h"
 
-#include "../liba52/a52.h"
-#include "../liba52/mm_accel.h"
+#include "liba52/a52.h"
+#include "liba52/mm_accel.h"
 
 static sample_t * a52_samples;
 static a52_state_t a52_state;
@@ -73,7 +73,7 @@ while(1){
     if(length>=7 && length<=3840) break; /* we're done.*/
     /* bad file => resync*/
     if(sh_audio->format!=0x2000) swab(sh_audio->a_in_buffer,sh_audio->a_in_buffer,8);
-    memcpy(sh_audio->a_in_buffer,sh_audio->a_in_buffer+1,7);
+    memmove(sh_audio->a_in_buffer,sh_audio->a_in_buffer+1,7);
     --sh_audio->a_in_buffer_len;
 }
     mp_msg(MSGT_DECAUDIO,MSGL_DBG2,"a52: len=%d  flags=0x%X  %d Hz %d bit/s\n",length,flags,sample_rate,bit_rate);
@@ -126,6 +126,7 @@ static int preinit(sh_audio_t *sh)
 {
   /* Dolby AC3 audio: */
   /* however many channels, 2 bytes in a word, 256 samples in a block, 6 blocks in a frame */
+  if (sh->samplesize < 2) sh->samplesize = 2;
   sh->audio_out_minsize=audio_output_channels*sh->samplesize*256*6;
   sh->audio_in_minsize=3840;
   a52_level = 1.0;
@@ -263,8 +264,9 @@ static int control(sh_audio_t *sh,int cmd,void* arg, ...)
 {
     switch(cmd)
     {
+      case ADCTRL_RESYNC_STREAM:
       case ADCTRL_SKIP_FRAME:
-	  a52_fillbuff(sh); break; // skip AC3 frame
+	  a52_fillbuff(sh);
 	  return CONTROL_TRUE;
       case ADCTRL_SET_VOLUME: {
 	  float vol = *(float*)arg;
@@ -286,6 +288,10 @@ static int decode_audio(sh_audio_t *sh_audio,unsigned char *buf,int minlen,int m
     sample_t level=a52_level, bias=384;
     int flags=a52_flags|A52_ADJUST_LEVEL;
     int i,len=-1;
+	if (maxlen / sh_audio->samplesize / 256 / sh_audio->channels < 6) {
+	    mp_msg(MSGT_DECAUDIO, MSGL_V, "maxlen too small in decode_audio\n");
+	    return len;
+	}
 	if (sh_audio->sample_format == AF_FORMAT_FLOAT_NE)
 	    bias = 0;
 	if(!sh_audio->a_in_buffer_len) 

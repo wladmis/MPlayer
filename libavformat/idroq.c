@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
 /**
@@ -78,19 +78,19 @@ static int roq_read_header(AVFormatContext *s,
     unsigned int chunk_type;
 
     /* get the main header */
-    if (get_buffer(pb, preamble, RoQ_CHUNK_PREAMBLE_SIZE) != 
+    if (get_buffer(pb, preamble, RoQ_CHUNK_PREAMBLE_SIZE) !=
         RoQ_CHUNK_PREAMBLE_SIZE)
         return AVERROR_IO;
     roq->framerate = LE_16(&preamble[6]);
     roq->frame_pts_inc = 90000 / roq->framerate;
 
     /* init private context parameters */
-    roq->width = roq->height = roq->audio_channels = roq->video_pts = 
+    roq->width = roq->height = roq->audio_channels = roq->video_pts =
     roq->audio_frame_count = 0;
 
     /* scan the first n chunks searching for A/V parameters */
     for (i = 0; i < RoQ_CHUNKS_TO_SCAN; i++) {
-        if (get_buffer(pb, preamble, RoQ_CHUNK_PREAMBLE_SIZE) != 
+        if (get_buffer(pb, preamble, RoQ_CHUNK_PREAMBLE_SIZE) !=
             RoQ_CHUNK_PREAMBLE_SIZE)
             return AVERROR_IO;
 
@@ -101,7 +101,7 @@ static int roq_read_header(AVFormatContext *s,
 
         case RoQ_INFO:
             /* fetch the width and height; reuse the preamble bytes */
-            if (get_buffer(pb, preamble, RoQ_CHUNK_PREAMBLE_SIZE) != 
+            if (get_buffer(pb, preamble, RoQ_CHUNK_PREAMBLE_SIZE) !=
                 RoQ_CHUNK_PREAMBLE_SIZE)
                 return AVERROR_IO;
             roq->width = LE_16(&preamble[0]);
@@ -145,11 +145,11 @@ static int roq_read_header(AVFormatContext *s,
     /* set the pts reference (1 pts = 1/90000) */
     av_set_pts_info(st, 33, 1, 90000);
     roq->video_stream_index = st->index;
-    st->codec.codec_type = CODEC_TYPE_VIDEO;
-    st->codec.codec_id = CODEC_ID_ROQ;
-    st->codec.codec_tag = 0;  /* no fourcc */
-    st->codec.width = roq->width;
-    st->codec.height = roq->height;
+    st->codec->codec_type = CODEC_TYPE_VIDEO;
+    st->codec->codec_id = CODEC_ID_ROQ;
+    st->codec->codec_tag = 0;  /* no fourcc */
+    st->codec->width = roq->width;
+    st->codec->height = roq->height;
 
     if (roq->audio_channels) {
         st = av_new_stream(s, 0);
@@ -157,15 +157,15 @@ static int roq_read_header(AVFormatContext *s,
             return AVERROR_NOMEM;
         av_set_pts_info(st, 33, 1, 90000);
         roq->audio_stream_index = st->index;
-        st->codec.codec_type = CODEC_TYPE_AUDIO;
-        st->codec.codec_id = CODEC_ID_ROQ_DPCM;
-        st->codec.codec_tag = 0;  /* no tag */
-        st->codec.channels = roq->audio_channels;
-        st->codec.sample_rate = RoQ_AUDIO_SAMPLE_RATE;
-        st->codec.bits_per_sample = 16;
-        st->codec.bit_rate = st->codec.channels * st->codec.sample_rate *
-            st->codec.bits_per_sample;
-        st->codec.block_align = st->codec.channels * st->codec.bits_per_sample;
+        st->codec->codec_type = CODEC_TYPE_AUDIO;
+        st->codec->codec_id = CODEC_ID_ROQ_DPCM;
+        st->codec->codec_tag = 0;  /* no tag */
+        st->codec->channels = roq->audio_channels;
+        st->codec->sample_rate = RoQ_AUDIO_SAMPLE_RATE;
+        st->codec->bits_per_sample = 16;
+        st->codec->bit_rate = st->codec->channels * st->codec->sample_rate *
+            st->codec->bits_per_sample;
+        st->codec->block_align = st->codec->channels * st->codec->bits_per_sample;
     }
 
     return 0;
@@ -190,7 +190,7 @@ static int roq_read_packet(AVFormatContext *s,
             return AVERROR_IO;
 
         /* get the next chunk preamble */
-        if ((ret = get_buffer(pb, preamble, RoQ_CHUNK_PREAMBLE_SIZE)) != 
+        if ((ret = get_buffer(pb, preamble, RoQ_CHUNK_PREAMBLE_SIZE)) !=
             RoQ_CHUNK_PREAMBLE_SIZE)
             return AVERROR_IO;
 
@@ -211,23 +211,21 @@ static int roq_read_packet(AVFormatContext *s,
             codebook_offset = url_ftell(pb) - RoQ_CHUNK_PREAMBLE_SIZE;
             codebook_size = chunk_size;
             url_fseek(pb, codebook_size, SEEK_CUR);
-            if (get_buffer(pb, preamble, RoQ_CHUNK_PREAMBLE_SIZE) != 
+            if (get_buffer(pb, preamble, RoQ_CHUNK_PREAMBLE_SIZE) !=
                 RoQ_CHUNK_PREAMBLE_SIZE)
                 return AVERROR_IO;
-            chunk_size = LE_32(&preamble[2]) + RoQ_CHUNK_PREAMBLE_SIZE * 2 + 
+            chunk_size = LE_32(&preamble[2]) + RoQ_CHUNK_PREAMBLE_SIZE * 2 +
                 codebook_size;
 
             /* rewind */
             url_fseek(pb, codebook_offset, SEEK_SET);
 
             /* load up the packet */
-            if (av_new_packet(pkt, chunk_size))
+            ret= av_get_packet(pb, pkt, chunk_size);
+            if (ret != chunk_size)
                 return AVERROR_IO;
             pkt->stream_index = roq->video_stream_index;
             pkt->pts = roq->video_pts;
-            ret = get_buffer(pb, pkt->data, chunk_size);
-            if (ret != chunk_size)
-                ret = AVERROR_IO;
 
             roq->video_pts += roq->frame_pts_inc;
             packet_read = 1;
@@ -254,6 +252,7 @@ static int roq_read_packet(AVFormatContext *s,
                 roq->audio_frame_count += (chunk_size / roq->audio_channels);
             }
 
+            pkt->pos= url_ftell(pb);
             ret = get_buffer(pb, pkt->data + RoQ_CHUNK_PREAMBLE_SIZE,
                 chunk_size);
             if (ret != chunk_size)

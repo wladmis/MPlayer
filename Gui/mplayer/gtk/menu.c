@@ -3,19 +3,19 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../../../config.h"
-#include "../../../help_mp.h"
-#include "../../../mplayer.h"
-#include "../../../mixer.h"
+#include "../../config.h"
+#include "../../help_mp.h"
+#include "../../mplayer.h"
+#include "../../mixer.h"
 
-#include "../../app.h"
+#include "../app.h"
 
 #include "menu.h"
 #include "../widgets.h"
-#include "../app.h"
+#include "app.h"
 
-#include "../../../libmpdemux/stream.h"
-#include "../../../libmpdemux/demuxer.h"
+#include "../../libmpdemux/stream.h"
+#include "../../libmpdemux/demuxer.h"
 
 #include "../pixmaps/ab.xpm"
 #include "../pixmaps/half.xpm"
@@ -377,6 +377,8 @@ char * GetLanguage( int language )
  return NULL;
 }
 
+extern int global_sub_size;
+
 GtkWidget * DVDSubMenu;
 GtkWidget * DVDTitleMenu;
 GtkWidget * DVDChapterMenu;
@@ -569,6 +571,20 @@ GtkWidget * create_PopUpMenu( void )
         }
      }
    }
+  
+  /* cheap subtitle switching for non-DVD streams */
+  if ( global_sub_size && guiIntfStruct.StreamType != STREAMTYPE_DVD )
+   {
+    int i;
+    SubMenu=AddSubMenu( window1, (const char*)empty_xpm, Menu, MSGTR_MENU_Subtitles );
+    AddMenuItem( window1, (const char*)empty_xpm, SubMenu, MSGTR_MENU_None, (-1 << 16) + evSetSubtitle );
+    for ( i=0;i < global_sub_size;i++ )
+     {
+      char tmp[32];
+      snprintf( tmp, 32, MSGTR_MENU_Track, i );
+      AddMenuItem( window1,(const char*)empty_xpm,SubMenu,tmp,( i << 16 ) + evSetSubtitle );
+     }
+   }
 
   AddSeparator( Menu );
   MenuItem=AddMenuCheckItem( window1, (const char*)sound_xpm, Menu,MSGTR_MENU_Mute,mixer.muted,evMute );
@@ -594,14 +610,13 @@ GtkWidget * create_PopUpMenu( void )
     N=AddMenuCheckItem( window1, (const char*)normal_xpm, Menu,MSGTR_MENU_NormalSize"      ",b1,evNormalSize );
     D=AddMenuCheckItem( window1, (const char*)double_xpm, Menu,MSGTR_MENU_DoubleSize,b2,evDoubleSize );
     F=AddMenuCheckItem( window1, (const char*)fs_xpm, Menu,MSGTR_MENU_FullScreen,appMPlayer.subWindow.isFullScreen,evFullScreen );
-   }
-
   if ( !gtkShowVideoWindow && !guiIntfStruct.Playing )
    {
     gtk_widget_set_sensitive( H,FALSE );
     gtk_widget_set_sensitive( N,FALSE );
     gtk_widget_set_sensitive( D,FALSE );
     gtk_widget_set_sensitive( F,FALSE );
+   }
    }
 
   AddSeparator( Menu );

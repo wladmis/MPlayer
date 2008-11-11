@@ -92,7 +92,7 @@ int set_video_colors(sh_video_t *sh_video,char *item,int value)
     if(mpvdec)
 	if( mpvdec->control(sh_video,VDCTRL_SET_EQUALIZER, item, (int *)value)
 	    == CONTROL_OK) return 1;
-    mp_msg(MSGT_DECVIDEO,MSGL_INFO,MSGTR_VideoAttributeNotSupportedByVO_VD,item);
+    mp_msg(MSGT_DECVIDEO,MSGL_V,MSGTR_VideoAttributeNotSupportedByVO_VD,item);
     return 0;
 }
 
@@ -149,9 +149,10 @@ void uninit_video(sh_video_t *sh_video){
     sh_video->inited=0;
 }
 
-void vfm_help(){
+void vfm_help(void){
     int i;
     mp_msg(MSGT_DECVIDEO,MSGL_INFO,MSGTR_AvailableVideoFm);
+    mp_msg(MSGT_IDENTIFY, MSGL_INFO, "ID_VIDEO_DRIVERS\n");
     mp_msg(MSGT_DECVIDEO,MSGL_INFO,"   vfm:    info:  (comment)\n");
     for (i=0; mpcodecs_vd_drivers[i] != NULL; i++)
 	mp_msg(MSGT_DECVIDEO,MSGL_INFO,"%8s  %s (%s)\n",
@@ -161,22 +162,27 @@ void vfm_help(){
 }
 
 int init_video(sh_video_t *sh_video,char* codecname,char* vfm,int status){
+    int force = 0;
     unsigned int orig_fourcc=sh_video->bih?sh_video->bih->biCompression:0;
     sh_video->codec=NULL;
     sh_video->vf_inited=0;
+    if (codecname && codecname[0] == '+') {
+      codecname = &codecname[1];
+      force = 1;
+    }
 
     while(1){
 	int i;
 	// restore original fourcc:
 	if(sh_video->bih) sh_video->bih->biCompression=orig_fourcc;
-	if(!(sh_video->codec=find_codec(sh_video->format,
+	if(!(sh_video->codec=find_video_codec(sh_video->format,
           sh_video->bih?((unsigned int*) &sh_video->bih->biCompression):NULL,
-          sh_video->codec,0) )) break;
+          sh_video->codec,force) )) break;
 	// ok we found one codec
 	if(sh_video->codec->flags&CODECS_FLAG_SELECTED) continue; // already tried & failed
 	if(codecname && strcmp(sh_video->codec->name,codecname)) continue; // -vc
 	if(vfm && strcmp(sh_video->codec->drv,vfm)) continue; // vfm doesn't match
-	if(sh_video->codec->status<status) continue; // too unstable
+	if(!force && sh_video->codec->status<status) continue; // too unstable
 	sh_video->codec->flags|=CODECS_FLAG_SELECTED; // tagging it
 	// ok, it matches all rules, let's find the driver!
 	for (i=0; mpcodecs_vd_drivers[i] != NULL; i++)
@@ -290,14 +296,14 @@ if(!sh_video->inited){
     return 0; // failed
 }
 
-mp_msg(MSGT_DECVIDEO,MSGL_INFO,"Selected video codec: [%s] vfm:%s (%s)\n",
+mp_msg(MSGT_DECVIDEO,MSGL_INFO,MSGTR_SelectedVideoCodec,
     sh_video->codec->name,sh_video->codec->drv,sh_video->codec->info);
 return 1; // success
 }
 
 extern int vo_directrendering;
 
-int decode_video(sh_video_t *sh_video,unsigned char *start,int in_size,int drop_frame){
+int decode_video(sh_video_t *sh_video,unsigned char *start,int in_size,int drop_frame, double pts){
 vf_instance_t* vf;
 mp_image_t *mpi=NULL;
 unsigned int t=GetTimer();
@@ -329,7 +335,7 @@ if(!mpi || drop_frame) return 0; // error / skipped frame
 
 //vo_draw_image(video_out,mpi);
 vf=sh_video->vfilter;
-ret = vf->put_image(vf,mpi); // apply video filters and call the leaf vo/ve
+ret = vf->put_image(vf,mpi, pts); // apply video filters and call the leaf vo/ve
 if(ret>0) vf->control(vf,VFCTRL_DRAW_OSD,NULL);
 
     t2=GetTimer()-t2;

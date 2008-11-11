@@ -3,16 +3,16 @@
 #include <string.h>
 #include <inttypes.h>
 
-#include "../config.h"
-#include "../mp_msg.h"
-#include "../cpudetect.h"
+#include "config.h"
+#include "mp_msg.h"
+#include "cpudetect.h"
 
 #include "img_format.h"
 #include "mp_image.h"
 #include "vf.h"
 
-#include "../libvo/fastmemcpy.h"
-#include "../postproc/rgb2rgb.h"
+#include "libvo/fastmemcpy.h"
+#include "postproc/rgb2rgb.h"
 
 struct vf_priv_s {
 	int skipline;
@@ -79,20 +79,21 @@ static void toright(unsigned char *dst[3], unsigned char *src[3],
 	}
 }
 
-static int put_image(struct vf_instance_s* vf, mp_image_t *mpi)
+static int put_image(struct vf_instance_s* vf, mp_image_t *mpi, double pts)
 {
 	mp_image_t *dmpi;
 
 	// hope we'll get DR buffer:
 	dmpi=vf_get_image(vf->next, IMGFMT_YV12,
-			  MP_IMGTYPE_TEMP, MP_IMGFLAG_ACCEPT_STRIDE,
+			  MP_IMGTYPE_TEMP, MP_IMGFLAG_ACCEPT_STRIDE |
+			  (vf->priv->scaleh == 1) ? MP_IMGFLAG_READABLE : 0,
 			  mpi->w * vf->priv->scalew,
 			  mpi->h / vf->priv->scaleh - vf->priv->skipline);
 
 	toright(dmpi->planes, mpi->planes, dmpi->stride,
 		mpi->stride, mpi->w, mpi->h, vf->priv);
 
-	return vf_next_put_image(vf,dmpi);
+	return vf_next_put_image(vf,dmpi, pts);
 }
 
 static int config(struct vf_instance_s* vf,

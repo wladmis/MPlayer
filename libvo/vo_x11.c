@@ -44,6 +44,7 @@ int XShmGetEventBase(Display *);
 #include "libmpcodecs/vf_scale.h"
 
 #include "mp_msg.h"
+#include "help_mp.h"
 
 #ifdef HAVE_NEW_GUI
 #include "Gui/interface.h"
@@ -148,7 +149,7 @@ extern int sws_flags;
 
 static XVisualInfo vinfo;
 
-static void getMyXImage()
+static void getMyXImage(void)
 {
 #ifdef HAVE_SHM
     if (mLocalDisplay && XShmQueryExtension(mDisplay))
@@ -238,7 +239,7 @@ static void getMyXImage()
 #endif
 }
 
-static void freeMyXImage()
+static void freeMyXImage(void)
 {
 #ifdef HAVE_SHM
     if (Shmem_Flag)
@@ -254,7 +255,7 @@ static void freeMyXImage()
     myximage = NULL;
 }
 
-static uint32_t config(uint32_t width, uint32_t height, uint32_t d_width,
+static int config(uint32_t width, uint32_t height, uint32_t d_width,
                        uint32_t d_height, uint32_t flags, char *title,
                        uint32_t format)
 {
@@ -281,25 +282,28 @@ static uint32_t config(uint32_t width, uint32_t height, uint32_t d_width,
     old_vo_dheight = -1;
 
     if (!title)
-        title = strdup("MPlayer X11 (XImage/Shm) render");
+        title = "MPlayer X11 (XImage/Shm) render";
 
     in_format = format;
     srcW = width;
     srcH = height;
+    update_xinerama_info();
     vo_dx = (vo_screenwidth - d_width) / 2;
     vo_dy = (vo_screenheight - d_height) / 2;
     geometry(&vo_dx, &vo_dy, &d_width, &d_height, vo_screenwidth,
              vo_screenheight);
+    vo_dx += xinerama_x;
+    vo_dy += xinerama_y;
     vo_dwidth = d_width;
     vo_dheight = d_height;
 
-    if (flags & 0x03)
+    if (flags & (VOFLAG_FULLSCREEN|VOFLAG_MODESWITCHING))
         fullscreen = 1;
-    if (flags & 0x02)
+    if (flags & VOFLAG_MODESWITCHING)
         vm = 1;
-    if (flags & 0x08)
+    if (flags & VOFLAG_FLIPPING)
         Flip_Flag = 1;
-    zoomFlag = flags & 0x04;
+    zoomFlag = flags & VOFLAG_SWSCALE;
 
     int_pause = 0;
 // if(!fullscreen) zoomFlag=1; //it makes no sense to avoid zooming on windowd mode
@@ -377,6 +381,8 @@ static uint32_t config(uint32_t width, uint32_t height, uint32_t d_width,
             vo_window = WinID ? ((Window) WinID) : mRootWin;
             if (WinID)
             {
+                int border;
+                Window win;
                 XUnmapWindow(mDisplay, vo_window);
                 XChangeWindowAttributes(mDisplay, vo_window, xswamask,
                                         &xswa);
@@ -389,6 +395,9 @@ static uint32_t config(uint32_t width, uint32_t height, uint32_t d_width,
                                            ButtonReleaseMask |
                                            ExposureMask);
                 XMapWindow(mDisplay, vo_window);
+                XGetGeometry(mDisplay, vo_window, &mRootWin,
+                             &vo_dx, &vo_dy, &vo_dwidth, &vo_dheight,
+                             &border, &depth);
             } else
                 XSelectInput(mDisplay, vo_window, ExposureMask);
         } else
@@ -417,9 +426,6 @@ static uint32_t config(uint32_t width, uint32_t height, uint32_t d_width,
 
                 if (fullscreen)
                     vo_x11_fullscreen();
-#ifdef HAVE_XINERAMA
-                vo_x11_xinerama_move(mDisplay, vo_window);
-#endif
             } else if (!fullscreen)
                 XMoveResizeWindow(mDisplay, vo_window, vo_dx, vo_dy,
                                   vo_dwidth, vo_dheight);
@@ -572,7 +578,7 @@ static void flip_page(void)
     XSync(mDisplay, False);
 }
 
-static uint32_t draw_slice(uint8_t * src[], int stride[], int w, int h,
+static int draw_slice(uint8_t * src[], int stride[], int w, int h,
                            int x, int y)
 {
     uint8_t *dst[3];
@@ -629,7 +635,7 @@ static uint32_t draw_slice(uint8_t * src[], int stride[], int w, int h,
     return 0;
 }
 
-static uint32_t draw_frame(uint8_t * src[])
+static int draw_frame(uint8_t * src[])
 {
 #if 0
     int stride[3] = { 0, 0, 0 };
@@ -649,7 +655,7 @@ static uint32_t draw_frame(uint8_t * src[])
 
     return draw_slice(src, stride, srcW, srcH, 0, 0);
 #else
-    printf("draw_frame() called!!!!!!\n");
+    mp_msg(MSGT_VO,MSGL_INFO, MSGTR_LIBVO_X11_DrawFrameCalled);
     return -1;
 #endif
 }
@@ -680,7 +686,7 @@ static uint32_t get_image(mp_image_t * mpi)
     return (VO_TRUE);
 }
 
-static uint32_t query_format(uint32_t format)
+static int query_format(uint32_t format)
 {
     mp_msg(MSGT_VO, MSGL_DBG2,
            "vo_x11: query_format was called: %x (%s)\n", format,
@@ -690,10 +696,10 @@ static uint32_t query_format(uint32_t format)
         if (IMGFMT_BGR_DEPTH(format) <= 8)
             return 0;           // TODO 8bpp not yet fully implemented
         if (IMGFMT_BGR_DEPTH(format) == vo_depthonscreen)
-            return 3 | VFCAP_OSD | VFCAP_SWSCALE | VFCAP_FLIP |
+            return VFCAP_CSP_SUPPORTED | VFCAP_CSP_SUPPORTED_BY_HW | VFCAP_OSD | VFCAP_SWSCALE | VFCAP_FLIP |
                 VFCAP_ACCEPT_STRIDE;
         else
-            return 1 | VFCAP_OSD | VFCAP_SWSCALE | VFCAP_FLIP |
+            return VFCAP_CSP_SUPPORTED | VFCAP_OSD | VFCAP_SWSCALE | VFCAP_FLIP |
                 VFCAP_ACCEPT_STRIDE;
     }
 
@@ -709,7 +715,7 @@ static uint32_t query_format(uint32_t format)
         case IMGFMT_I420:
         case IMGFMT_IYUV:
         case IMGFMT_YV12:
-            return 1 | VFCAP_OSD | VFCAP_SWSCALE | VFCAP_ACCEPT_STRIDE;
+            return VFCAP_CSP_SUPPORTED | VFCAP_OSD | VFCAP_SWSCALE | VFCAP_ACCEPT_STRIDE;
     }
     return 0;
 }
@@ -732,7 +738,7 @@ static void uninit(void)
     sws_freeContext(swsContext);
 }
 
-static uint32_t preinit(const char *arg)
+static int preinit(const char *arg)
 {
     if (arg)
     {
@@ -745,7 +751,7 @@ static uint32_t preinit(const char *arg)
     return 0;
 }
 
-static uint32_t control(uint32_t request, void *data, ...)
+static int control(uint32_t request, void *data, ...)
 {
     switch (request)
     {

@@ -29,9 +29,9 @@ int tv_param_on = 0;
 #include "demuxer.h"
 #include "stheader.h"
 
-#include "../libaf/af_format.h"
-#include "../libvo/img_format.h"
-#include "../libvo/fastmemcpy.h"
+#include "libaf/af_format.h"
+#include "libvo/img_format.h"
+#include "libvo/fastmemcpy.h"
 
 #include "tv.h"
 
@@ -53,7 +53,7 @@ char *tv_param_driver = "dummy";
 int tv_param_width = -1;
 int tv_param_height = -1;
 int tv_param_input = 0; /* used in v4l and bttv */
-int tv_param_outfmt = IMGFMT_YV12;
+int tv_param_outfmt = -1;
 float tv_param_fps = -1.0;
 char **tv_param_channels = NULL;
 int tv_param_audio_id = 0;
@@ -90,7 +90,7 @@ char *tv_channel_last_real;
 */
 /* fill demux->video and demux->audio */
 
-int demux_tv_fill_buffer(demuxer_t *demux, demux_stream_t *ds)
+static int demux_tv_fill_buffer(demuxer_t *demux, demux_stream_t *ds)
 {
     tvi_handle_t *tvh=(tvi_handle_t*)(demux->priv);
     demux_packet_t* dp;
@@ -165,6 +165,16 @@ static int open_tv(tvi_handle_t *tvh)
 {
     int i;
     tvi_functions_t *funcs = tvh->functions;
+    int tv_fmt_list[] = {
+      IMGFMT_YV12,
+      IMGFMT_I420,
+      IMGFMT_UYVY,
+      IMGFMT_YUY2,
+      IMGFMT_RGB32,
+      IMGFMT_RGB24,
+      IMGFMT_RGB16,
+      IMGFMT_RGB15
+    };
 
     if (funcs->control(tvh->priv, TVI_CONTROL_IS_VIDEO, 0) != TVI_CONTROL_TRUE)
     {
@@ -172,6 +182,16 @@ static int open_tv(tvi_handle_t *tvh)
 	return 0;
     }
 
+    if (tv_param_outfmt == -1)
+      for (i = 0; i < sizeof (tv_fmt_list) / sizeof (*tv_fmt_list); i++)
+        {
+          tv_param_outfmt = tv_fmt_list[i];
+          if (funcs->control (tvh->priv, TVI_CONTROL_VID_SET_FORMAT,
+                              &tv_param_outfmt) == TVI_CONTROL_TRUE)
+            break;
+        }
+    else
+    {
     switch(tv_param_outfmt)
     {
 	case IMGFMT_YV12:
@@ -180,8 +200,10 @@ static int open_tv(tvi_handle_t *tvh)
 	case IMGFMT_YUY2:
 	case IMGFMT_RGB32:
 	case IMGFMT_RGB24:
-	case IMGFMT_RGB16:
-	case IMGFMT_RGB15:
+	case IMGFMT_BGR32:
+	case IMGFMT_BGR24:
+	case IMGFMT_BGR16:
+	case IMGFMT_BGR15:
 	    break;
 	default:
 	    mp_msg(MSGT_TV, MSGL_ERR, "==================================================================\n");
@@ -192,6 +214,7 @@ static int open_tv(tvi_handle_t *tvh)
 	    mp_msg(MSGT_TV, MSGL_ERR, "==================================================================\n");
     }
     funcs->control(tvh->priv, TVI_CONTROL_VID_SET_FORMAT, &tv_param_outfmt);
+    }
 
     /* set some params got from cmdline */
     funcs->control(tvh->priv, TVI_CONTROL_SPC_SET_INPUT, &tv_param_input);
@@ -201,7 +224,6 @@ static int open_tv(tvi_handle_t *tvh)
 	mp_msg(MSGT_TV, MSGL_V, "Selected norm id: %d\n", tv_param_normid);
 	if (funcs->control(tvh->priv, TVI_CONTROL_TUN_SET_NORM, &tv_param_normid) != TVI_CONTROL_TRUE) {
 	    mp_msg(MSGT_TV, MSGL_ERR, "Error: Cannot set norm!\n");
-	    return 0;
 	}
     } else {
 #endif
@@ -211,7 +233,6 @@ static int open_tv(tvi_handle_t *tvh)
     mp_msg(MSGT_TV, MSGL_V, "Selected norm: %s\n", tv_param_norm);
     if (funcs->control(tvh->priv, TVI_CONTROL_TUN_SET_NORM, &tvh->norm) != TVI_CONTROL_TRUE) {
 	mp_msg(MSGT_TV, MSGL_ERR, "Error: Cannot set norm!\n");
-	return 0;
     }
 #ifdef HAVE_TV_V4L2
     }
@@ -354,7 +375,7 @@ static int open_tv(tvi_handle_t *tvh)
   	  tv_channel_current->prev->next = NULL;
 	free(tv_channel_current);
     } else 
-	    tv_channel_last_real = malloc(sizeof(char)*5);
+	    tv_channel_last_real = malloc(5);
 
     if (tv_channel_list) {
 	int i;
@@ -452,18 +473,18 @@ done:
 	return 1;
 }
 
-int demux_open_tv(demuxer_t *demuxer)
+static demuxer_t* demux_open_tv(demuxer_t *demuxer)
 {
     tvi_handle_t *tvh;
     sh_video_t *sh_video;
     sh_audio_t *sh_audio = NULL;
     tvi_functions_t *funcs;
     
-    if(!(tvh=tv_begin())) return 0;
-    if (!tv_init(tvh)) return 0;
+    if(!(tvh=tv_begin())) return NULL;
+    if (!tv_init(tvh)) return NULL;
     if (!open_tv(tvh)){
 	tv_uninit(tvh);
-	return 0;
+	return NULL;
     }
     funcs = tvh->functions;
     demuxer->priv=tvh;
@@ -589,7 +610,7 @@ no_audio:
     if(!(funcs->start(tvh->priv))){
 	// start failed :(
 	tv_uninit(tvh);
-	return 0;
+	return NULL;
     }
 
     /* set color eq */
@@ -598,13 +619,13 @@ no_audio:
     tv_set_color_options(tvh, TV_COLOR_SATURATION, tv_param_saturation);
     tv_set_color_options(tvh, TV_COLOR_CONTRAST, tv_param_contrast);
 
-    return 1;
+    return demuxer;
 }
 
-int demux_close_tv(demuxer_t *demuxer)
+static void demux_close_tv(demuxer_t *demuxer)
 {
     tvi_handle_t *tvh=(tvi_handle_t*)(demuxer->priv);
-    return(tvh->functions->uninit(tvh->priv));
+    tvh->functions->uninit(tvh->priv);
 }
 
 /* ================== STREAM_TV ===================== */
@@ -658,22 +679,39 @@ int tv_set_color_options(tvi_handle_t *tvh, int opt, int value)
     switch(opt)
     {
 	case TV_COLOR_BRIGHTNESS:
-	    funcs->control(tvh->priv, TVI_CONTROL_VID_SET_BRIGHTNESS, &value);
-	    break;
+	    return funcs->control(tvh->priv, TVI_CONTROL_VID_SET_BRIGHTNESS, &value);
 	case TV_COLOR_HUE:
-	    funcs->control(tvh->priv, TVI_CONTROL_VID_SET_HUE, &value);
-	    break;
+	    return funcs->control(tvh->priv, TVI_CONTROL_VID_SET_HUE, &value);
 	case TV_COLOR_SATURATION:
-	    funcs->control(tvh->priv, TVI_CONTROL_VID_SET_SATURATION, &value);
-	    break;
+	    return funcs->control(tvh->priv, TVI_CONTROL_VID_SET_SATURATION, &value);
 	case TV_COLOR_CONTRAST:
-	    funcs->control(tvh->priv, TVI_CONTROL_VID_SET_CONTRAST, &value);
-	    break;
+	    return funcs->control(tvh->priv, TVI_CONTROL_VID_SET_CONTRAST, &value);
 	default:
 	    mp_msg(MSGT_TV, MSGL_WARN, "Unknown color option (%d) specified!\n", opt);
     }
     
-    return(1);
+    return(TVI_CONTROL_UNKNOWN);
+}
+
+int tv_get_color_options(tvi_handle_t *tvh, int opt, int* value)
+{
+    tvi_functions_t *funcs = tvh->functions;
+
+    switch(opt)
+    {
+	case TV_COLOR_BRIGHTNESS:
+	    return funcs->control(tvh->priv, TVI_CONTROL_VID_GET_BRIGHTNESS, value);
+	case TV_COLOR_HUE:
+	    return funcs->control(tvh->priv, TVI_CONTROL_VID_GET_HUE, value);
+	case TV_COLOR_SATURATION:
+	    return funcs->control(tvh->priv, TVI_CONTROL_VID_GET_SATURATION, value);
+	case TV_COLOR_CONTRAST:
+	    return funcs->control(tvh->priv, TVI_CONTROL_VID_GET_CONTRAST, value);
+	default:
+	    mp_msg(MSGT_TV, MSGL_WARN, "Unknown color option (%d) specified!\n", opt);
+    }
+    
+    return(TVI_CONTROL_UNKNOWN);
 }
 
 int tv_get_freq(tvi_handle_t *tvh, unsigned long *freq)
@@ -736,22 +774,25 @@ int tv_step_channel_real(tvi_handle_t *tvh, int direction)
 int tv_step_channel(tvi_handle_t *tvh, int direction) {
 	if (tv_channel_list) {
 		if (direction == TV_CHANNEL_HIGHER) {
-			if (tv_channel_current->next) {
-				tv_channel_last = tv_channel_current;
+			tv_channel_last = tv_channel_current;
+			if (tv_channel_current->next)
 				tv_channel_current = tv_channel_current->next;
+			else
+				tv_channel_current = tv_channel_list;
 				tv_set_freq(tvh, (unsigned long)(((float)tv_channel_current->freq/1000)*16));
 				mp_msg(MSGT_TV, MSGL_INFO, "Selected channel: %s - %s (freq: %.3f)\n",
 			tv_channel_current->number, tv_channel_current->name, (float)tv_channel_current->freq/1000);
-			}
 		}
 		if (direction == TV_CHANNEL_LOWER) {
-			if (tv_channel_current->prev) {
-				tv_channel_last = tv_channel_current;
+			tv_channel_last = tv_channel_current;
+			if (tv_channel_current->prev)
 				tv_channel_current = tv_channel_current->prev;
+			else
+				while (tv_channel_current->next)
+					tv_channel_current = tv_channel_current->next;
 				tv_set_freq(tvh, (unsigned long)(((float)tv_channel_current->freq/1000)*16));
 				mp_msg(MSGT_TV, MSGL_INFO, "Selected channel: %s - %s (freq: %.3f)\n",
 			tv_channel_current->number, tv_channel_current->name, (float)tv_channel_current->freq/1000);
-			}
 		}
 	} else tv_step_channel_real(tvh, direction);
 	return(1);
@@ -831,6 +872,16 @@ int tv_last_channel(tvi_handle_t *tvh) {
 
 int tv_step_norm(tvi_handle_t *tvh)
 {
+  tvh->norm++;
+  if (tvh->functions->control(tvh->priv, TVI_CONTROL_TUN_SET_NORM,
+                              &tvh->norm) != TVI_CONTROL_TRUE) {
+    tvh->norm = 0;
+    if (tvh->functions->control(tvh->priv, TVI_CONTROL_TUN_SET_NORM,
+                                &tvh->norm) != TVI_CONTROL_TRUE) {
+      mp_msg(MSGT_TV, MSGL_ERR, "Error: Cannot set norm!\n");
+      return 0;
+    }
+  }
     return(1);
 }
 
@@ -850,5 +901,21 @@ int tv_set_norm(tvi_handle_t *tvh, char* norm)
     }
     return(1);
 }
+
+demuxer_desc_t demuxer_desc_tv = {
+  "Tv card demuxer",
+  "tv",
+  "TV",
+  "Alex Beregszaszi, Charles R. Henrich",
+  "?",
+  DEMUXER_TYPE_TV,
+  0, // no autodetect
+  NULL,
+  demux_tv_fill_buffer,
+  demux_open_tv,
+  demux_close_tv,
+  NULL,
+  NULL
+};
 
 #endif /* USE_TV */

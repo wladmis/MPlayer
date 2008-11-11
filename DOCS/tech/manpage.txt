@@ -90,11 +90,12 @@ SYNOPSIS
     A description of MPlayer's playtree.
 DESCRIPTION
     A general description of MPlayer, MEncoder, GMPlayer and its features.
-KEYBOARD CONTROL
-    A description of MPlayer's input system and the default keyboard controls.
+INTERACTIVE CONTROL
+    A description of MPlayer's input system and the interactive controls.
 USAGE
-    Some general notes about the options and a description of the config file
-    format.
+    Some general notes about usage.
+CONFIGURATION FILES
+    A description of the configuration file format.
 GENERAL OPTIONS
     General options that are common to both MPlayer and MEncoder.
 PLAYER OPTIONS (MPLAYER ONLY)
@@ -123,11 +124,12 @@ CODEC SPECIFIC ENCODING OPTIONS (MENCODER ONLY)
     Codec specific option descriptions (lavc,divx4,xvid,lame) (MEncoder only).
 FILES
     A list and description of all installed/used files/directories.
-EXAMPLES
+EXAMPLES OF MPLAYER USAGE
+    Basic examples. Again: no long descriptions/processes.
+EXAMPLES OF MENCODER USAGE
     Basic examples. Again: no long descriptions/processes.
 BUGS
 AUTHORS
-STANDARD DISCLAIMER
 
 
 
@@ -189,7 +191,7 @@ Option descriptions:
 
 Macro definitions (see beginning of man page):
 
-    - SS      Starting value of the suboption column
+    - .SS     Starting value of the suboption column
     - .IPs    Add new suboption (we use .TP for normal options and .IP for
               the rest)
     - .RSs    Begin of suboptions, end with .RE

@@ -8,16 +8,16 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../config.h"
-#include "../mp_msg.h"
-#include "../bswap.h"
+#include "config.h"
+#include "mp_msg.h"
+#include "bswap.h"
 
 #ifdef WIN32_LOADER 
 #include "ldt_keeper.h" 
 #endif 
 
 #ifdef USE_QTX_CODECS
-#include "../loader/qtx/qtxsdk/components.h"
+#include "loader/qtx/qtxsdk/components.h"
 #include "wine/windef.h"
 
 #include "codec-cfg.h"
@@ -134,7 +134,7 @@ static int config(struct vf_instance_s* vf,
 
 
 
-    memset(&desc,0,sizeof(cdesc));
+    memset(&cdesc,0,sizeof(cdesc));
     cdesc.componentType= (((unsigned char)'i')<<24)|
 			(((unsigned char)'m')<<16)|
 			(((unsigned char)'c')<<8)|
@@ -146,13 +146,13 @@ static int config(struct vf_instance_s* vf,
     cdesc.componentFlagsMask=0;
 
 
-    mp_msg(MSGT_MENCODER,MSGL_DBG2,"Count = %d\n",CountComponents(&cdesc));
+    mp_msg(MSGT_MENCODER,MSGL_DBG2,"Count = %ld\n",CountComponents(&cdesc));
     compressor=FindNextComponent(NULL,&cdesc);
     if(!compressor){
 	mp_msg(MSGT_MENCODER,MSGL_ERR,"Cannot find requested component\n");
 	return(0);
     }
-    mp_msg(MSGT_MENCODER,MSGL_DBG2,"Found it! ID = 0x%X\n",compressor);
+    mp_msg(MSGT_MENCODER,MSGL_DBG2,"Found it! ID = %p\n",compressor);
 
 //	cres= FindCodec (fourcc,anyCodec,&compressor,&decompressor );
 //	printf("FindCodec returned:%i compressor: 0x%X decompressor: 0x%X\n",cres&0xFFFF,compressor,decompressor);
@@ -166,13 +166,13 @@ static int control(struct vf_instance_s* vf, int request, void* data){
 }
 
 static int query_format(struct vf_instance_s* vf, unsigned int fmt){
-    if(fmt==IMGFMT_YUY2) return 3;
+    if(fmt==IMGFMT_YUY2) return VFCAP_CSP_SUPPORTED | VFCAP_CSP_SUPPORTED_BY_HW;
     return 0;
 }
 
 static int codec_inited = 0;
 
-static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
+static int put_image(struct vf_instance_s* vf, mp_image_t *mpi, double pts){
 
     OSErr cres;
     long framesizemax;
@@ -218,7 +218,7 @@ if(!codec_inited){
        bswap_32(format),
        compressor,
        &framesizemax );
-    mp_msg(MSGT_MENCODER,MSGL_DBG2,"GetMaxCompressionSize returned:%i : MaxSize:%i\n",cres&0xFFFF,framesizemax);
+    mp_msg(MSGT_MENCODER,MSGL_DBG2,"GetMaxCompressionSize returned:%i : MaxSize:%li\n",cres&0xFFFF,framesizemax);
     frame_comp=malloc(framesizemax);
 
     desc = (ImageDescriptionHandle)NewHandleClear(MAX_IDSIZE); //memory where the desc will be stored
@@ -260,7 +260,7 @@ if(!codec_inited){
     printf("Size %i->%i   \n",stride*height,compressedsize);
     printf("Ratio: %i:1\n",(stride*height)/compressedsize);
 #endif
-    muxer_write_chunk(mux_v, compressedsize , similarity?0:0x10);
+    muxer_write_chunk(mux_v, compressedsize , similarity?0:0x10, MP_NOPTS_VALUE, MP_NOPTS_VALUE);
 
     if(((*desc)->idSize)>MAX_IDSIZE){
 	mp_msg(MSGT_MENCODER,MSGL_ERR,"FATAL! idSize=%d too big, increase MAX_IDSIZE in ve_qtvideo.c!\n",((*desc)->idSize));

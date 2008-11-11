@@ -12,6 +12,8 @@
 #include <stddef.h>
 #include <inttypes.h> /* for __WORDSIZE */
 
+#include "asmalign.h"
+
 #ifndef __WORDSIZE
 // #warning You have misconfigured system and probably will lose performance!
 #define __WORDSIZE MP_WORDSIZE
@@ -40,8 +42,13 @@
 #define PREFETCHW "prefetcht0"
 #define PAVGB	  "pavgb"
 #else
+#ifdef __APPLE__
+#define PREFETCH "#"
+#define PREFETCHW "#"
+#else
 #define PREFETCH "/nop"
 #define PREFETCHW "/nop"
+#endif
 #endif
 
 #ifdef HAVE_3DNOW
@@ -56,10 +63,14 @@
 #define SFENCE "sfence"
 #else
 #define MOVNTQ "movq"
+#ifdef __APPLE__
+#define SFENCE "#"
+#else
 #define SFENCE "/nop"
 #endif
+#endif
 
-static inline void RENAME(rgb24to32)(const uint8_t *src,uint8_t *dst,unsigned src_size)
+static inline void RENAME(rgb24to32)(const uint8_t *src,uint8_t *dst,long src_size)
 {
   uint8_t *dest = dst;
   const uint8_t *s = src;
@@ -104,10 +115,12 @@ static inline void RENAME(rgb24to32)(const uint8_t *src,uint8_t *dst,unsigned sr
   while(s < end)
   {
 #ifdef WORDS_BIGENDIAN
+    /* RGB24 (= R,G,B) -> RGB32 (= A,B,G,R) */
     *dest++ = 0;
-    *dest++ = *s++;
-    *dest++ = *s++;
-    *dest++ = *s++;
+    *dest++ = s[2];
+    *dest++ = s[1];
+    *dest++ = s[0];
+    s+=3;
 #else
     *dest++ = *s++;
     *dest++ = *s++;
@@ -117,7 +130,7 @@ static inline void RENAME(rgb24to32)(const uint8_t *src,uint8_t *dst,unsigned sr
   }
 }
 
-static inline void RENAME(rgb32to24)(const uint8_t *src,uint8_t *dst,unsigned src_size)
+static inline void RENAME(rgb32to24)(const uint8_t *src,uint8_t *dst,long src_size)
 {
   uint8_t *dest = dst;
   const uint8_t *s = src;
@@ -188,10 +201,12 @@ static inline void RENAME(rgb32to24)(const uint8_t *src,uint8_t *dst,unsigned sr
   while(s < end)
   {
 #ifdef WORDS_BIGENDIAN
+    /* RGB32 (= A,B,G,R) -> RGB24 (= R,G,B) */
     s++;
-    *dest++ = *s++;
-    *dest++ = *s++;
-    *dest++ = *s++;
+    dest[2] = *s++;
+    dest[1] = *s++;
+    dest[0] = *s++;
+    dest += 3;
 #else
     *dest++ = *s++;
     *dest++ = *s++;
@@ -207,7 +222,7 @@ static inline void RENAME(rgb32to24)(const uint8_t *src,uint8_t *dst,unsigned sr
  MMX2, 3DNOW optimization by Nick Kurshev
  32bit c version, and and&add trick by Michael Niedermayer
 */
-static inline void RENAME(rgb15to16)(const uint8_t *src,uint8_t *dst,unsigned src_size)
+static inline void RENAME(rgb15to16)(const uint8_t *src,uint8_t *dst,long src_size)
 {
   register const uint8_t* s=src;
   register uint8_t* d=dst;
@@ -256,7 +271,7 @@ static inline void RENAME(rgb15to16)(const uint8_t *src,uint8_t *dst,unsigned sr
     }
 }
 
-static inline void RENAME(rgb16to15)(const uint8_t *src,uint8_t *dst,unsigned src_size)
+static inline void RENAME(rgb16to15)(const uint8_t *src,uint8_t *dst,long src_size)
 {
   register const uint8_t* s=src;
   register uint8_t* d=dst;
@@ -312,7 +327,7 @@ static inline void RENAME(rgb16to15)(const uint8_t *src,uint8_t *dst,unsigned sr
     }
 }
 
-static inline void RENAME(rgb32to16)(const uint8_t *src, uint8_t *dst, unsigned src_size)
+static inline void RENAME(rgb32to16)(const uint8_t *src, uint8_t *dst, long src_size)
 {
 	const uint8_t *s = src;
 	const uint8_t *end;
@@ -328,7 +343,7 @@ static inline void RENAME(rgb32to16)(const uint8_t *src, uint8_t *dst, unsigned 
 		"movq %3, %%mm5			\n\t"
 		"movq %4, %%mm6			\n\t"
 		"movq %5, %%mm7			\n\t"
-		".balign 16			\n\t"
+		ASMALIGN16
 		"1:				\n\t"
 		PREFETCH" 32(%1)		\n\t"
 		"movd	(%1), %%mm0		\n\t"
@@ -408,7 +423,7 @@ static inline void RENAME(rgb32to16)(const uint8_t *src, uint8_t *dst, unsigned 
 	}
 }
 
-static inline void RENAME(rgb32tobgr16)(const uint8_t *src, uint8_t *dst, unsigned int src_size)
+static inline void RENAME(rgb32tobgr16)(const uint8_t *src, uint8_t *dst, long src_size)
 {
 	const uint8_t *s = src;
 	const uint8_t *end;
@@ -464,13 +479,12 @@ static inline void RENAME(rgb32tobgr16)(const uint8_t *src, uint8_t *dst, unsign
 #endif
 	while(s < end)
 	{
-		// FIXME on bigendian
-		const int src= *s; s += 4;
-		*d++ = ((src&0xF8)<<8) + ((src&0xFC00)>>5) + ((src&0xF80000)>>19);
+		register int rgb = *(uint32_t*)s; s += 4;
+		*d++ = ((rgb&0xF8)<<8) + ((rgb&0xFC00)>>5) + ((rgb&0xF80000)>>19);
 	}
 }
 
-static inline void RENAME(rgb32to15)(const uint8_t *src, uint8_t *dst, unsigned src_size)
+static inline void RENAME(rgb32to15)(const uint8_t *src, uint8_t *dst, long src_size)
 {
 	const uint8_t *s = src;
 	const uint8_t *end;
@@ -486,7 +500,7 @@ static inline void RENAME(rgb32to15)(const uint8_t *src, uint8_t *dst, unsigned 
 		"movq %3, %%mm5			\n\t"
 		"movq %4, %%mm6			\n\t"
 		"movq %5, %%mm7			\n\t"
-		".balign 16			\n\t"
+		ASMALIGN16
 		"1:				\n\t"
 		PREFETCH" 32(%1)		\n\t"
 		"movd	(%1), %%mm0		\n\t"
@@ -561,13 +575,12 @@ static inline void RENAME(rgb32to15)(const uint8_t *src, uint8_t *dst, unsigned 
 #endif
 	while(s < end)
 	{
-		// FIXME on bigendian
-		const int src= *s; s += 4;
-		*d++ = ((src&0xFF)>>3) + ((src&0xF800)>>6) + ((src&0xF80000)>>9);
+		register int rgb = *(uint32_t*)s; s += 4;
+		*d++ = ((rgb&0xFF)>>3) + ((rgb&0xF800)>>6) + ((rgb&0xF80000)>>9);
 	}
 }
 
-static inline void RENAME(rgb32tobgr15)(const uint8_t *src, uint8_t *dst, unsigned src_size)
+static inline void RENAME(rgb32tobgr15)(const uint8_t *src, uint8_t *dst, long src_size)
 {
 	const uint8_t *s = src;
 	const uint8_t *end;
@@ -623,13 +636,12 @@ static inline void RENAME(rgb32tobgr15)(const uint8_t *src, uint8_t *dst, unsign
 #endif
 	while(s < end)
 	{
-		// FIXME on bigendian
-		const int src= *s; s += 4;
-		*d++ = ((src&0xF8)<<7) + ((src&0xF800)>>6) + ((src&0xF80000)>>19);
+		register int rgb = *(uint32_t*)s; s += 4;
+		*d++ = ((rgb&0xF8)<<7) + ((rgb&0xF800)>>6) + ((rgb&0xF80000)>>19);
 	}
 }
 
-static inline void RENAME(rgb24to16)(const uint8_t *src, uint8_t *dst, unsigned src_size)
+static inline void RENAME(rgb24to16)(const uint8_t *src, uint8_t *dst, long src_size)
 {
 	const uint8_t *s = src;
 	const uint8_t *end;
@@ -692,7 +704,7 @@ static inline void RENAME(rgb24to16)(const uint8_t *src, uint8_t *dst, unsigned 
 	}
 }
 
-static inline void RENAME(rgb24tobgr16)(const uint8_t *src, uint8_t *dst, unsigned int src_size)
+static inline void RENAME(rgb24tobgr16)(const uint8_t *src, uint8_t *dst, long src_size)
 {
 	const uint8_t *s = src;
 	const uint8_t *end;
@@ -755,7 +767,7 @@ static inline void RENAME(rgb24tobgr16)(const uint8_t *src, uint8_t *dst, unsign
 	}
 }
 
-static inline void RENAME(rgb24to15)(const uint8_t *src, uint8_t *dst, unsigned src_size)
+static inline void RENAME(rgb24to15)(const uint8_t *src, uint8_t *dst, long src_size)
 {
 	const uint8_t *s = src;
 	const uint8_t *end;
@@ -818,7 +830,7 @@ static inline void RENAME(rgb24to15)(const uint8_t *src, uint8_t *dst, unsigned 
 	}
 }
 
-static inline void RENAME(rgb24tobgr15)(const uint8_t *src, uint8_t *dst, unsigned src_size)
+static inline void RENAME(rgb24tobgr15)(const uint8_t *src, uint8_t *dst, long src_size)
 {
 	const uint8_t *s = src;
 	const uint8_t *end;
@@ -904,7 +916,7 @@ static inline void RENAME(rgb24tobgr15)(const uint8_t *src, uint8_t *dst, unsign
        |
    Original Bits
 */
-static inline void RENAME(rgb15to24)(const uint8_t *src, uint8_t *dst, unsigned src_size)
+static inline void RENAME(rgb15to24)(const uint8_t *src, uint8_t *dst, long src_size)
 {
 	const uint16_t *end;
 #ifdef HAVE_MMX
@@ -1046,7 +1058,7 @@ static inline void RENAME(rgb15to24)(const uint8_t *src, uint8_t *dst, unsigned 
 	}
 }
 
-static inline void RENAME(rgb16to24)(const uint8_t *src, uint8_t *dst, unsigned src_size)
+static inline void RENAME(rgb16to24)(const uint8_t *src, uint8_t *dst, long src_size)
 {
 	const uint16_t *end;
 #ifdef HAVE_MMX
@@ -1187,7 +1199,7 @@ static inline void RENAME(rgb16to24)(const uint8_t *src, uint8_t *dst, unsigned 
 	}
 }
 
-static inline void RENAME(rgb15to32)(const uint8_t *src, uint8_t *dst, unsigned src_size)
+static inline void RENAME(rgb15to32)(const uint8_t *src, uint8_t *dst, long src_size)
 {
 	const uint16_t *end;
 #ifdef HAVE_MMX
@@ -1247,14 +1259,13 @@ static inline void RENAME(rgb15to32)(const uint8_t *src, uint8_t *dst, unsigned 
 		int bgr= *s++;
 		*((uint32_t*)d)++ = ((bgr&0x1F)<<3) + ((bgr&0x3E0)<<6) + ((bgr&0x7C00)<<9);
 #else
-//FIXME this is very likely wrong for bigendian (and the following converters too)
 		register uint16_t bgr;
 		bgr = *s++;
 #ifdef WORDS_BIGENDIAN
 		*d++ = 0;
-		*d++ = (bgr&0x1F)<<3;
-		*d++ = (bgr&0x3E0)>>2;
 		*d++ = (bgr&0x7C00)>>7;
+		*d++ = (bgr&0x3E0)>>2;
+		*d++ = (bgr&0x1F)<<3;
 #else
 		*d++ = (bgr&0x1F)<<3;
 		*d++ = (bgr&0x3E0)>>2;
@@ -1266,7 +1277,7 @@ static inline void RENAME(rgb15to32)(const uint8_t *src, uint8_t *dst, unsigned 
 	}
 }
 
-static inline void RENAME(rgb16to32)(const uint8_t *src, uint8_t *dst, unsigned src_size)
+static inline void RENAME(rgb16to32)(const uint8_t *src, uint8_t *dst, long src_size)
 {
 	const uint16_t *end;
 #ifdef HAVE_MMX
@@ -1326,9 +1337,9 @@ static inline void RENAME(rgb16to32)(const uint8_t *src, uint8_t *dst, unsigned 
 		bgr = *s++;
 #ifdef WORDS_BIGENDIAN
 		*d++ = 0;
-		*d++ = (bgr&0x1F)<<3;
-		*d++ = (bgr&0x7E0)>>3;
 		*d++ = (bgr&0xF800)>>8;
+		*d++ = (bgr&0x7E0)>>3;
+		*d++ = (bgr&0x1F)<<3;
 #else
 		*d++ = (bgr&0x1F)<<3;
 		*d++ = (bgr&0x7E0)>>3;
@@ -1338,13 +1349,13 @@ static inline void RENAME(rgb16to32)(const uint8_t *src, uint8_t *dst, unsigned 
 	}
 }
 
-static inline void RENAME(rgb32tobgr32)(const uint8_t *src, uint8_t *dst, unsigned int src_size)
+static inline void RENAME(rgb32tobgr32)(const uint8_t *src, uint8_t *dst, long src_size)
 {
 #ifdef HAVE_MMX
 /* TODO: unroll this loop */
 	asm volatile (
 		"xor %%"REG_a", %%"REG_a"	\n\t"
-		".balign 16			\n\t"
+		ASMALIGN16
 		"1:				\n\t"
 		PREFETCH" 32(%0, %%"REG_a")	\n\t"
 		"movq (%0, %%"REG_a"), %%mm0	\n\t"
@@ -1361,7 +1372,7 @@ static inline void RENAME(rgb32tobgr32)(const uint8_t *src, uint8_t *dst, unsign
 		"add $8, %%"REG_a"		\n\t"
 		"cmp %2, %%"REG_a"		\n\t"
 		" jb 1b				\n\t"
-		:: "r" (src), "r"(dst), "r" ((long)src_size-7)
+		:: "r" (src), "r"(dst), "r" (src_size-7)
 		: "%"REG_a
 	);
 
@@ -1385,7 +1396,7 @@ static inline void RENAME(rgb32tobgr32)(const uint8_t *src, uint8_t *dst, unsign
 #endif
 }
 
-static inline void RENAME(rgb24tobgr24)(const uint8_t *src, uint8_t *dst, unsigned int src_size)
+static inline void RENAME(rgb24tobgr24)(const uint8_t *src, uint8_t *dst, long src_size)
 {
 	unsigned i;
 #ifdef HAVE_MMX
@@ -1394,7 +1405,7 @@ static inline void RENAME(rgb24tobgr24)(const uint8_t *src, uint8_t *dst, unsign
 		"movq "MANGLE(mask24r)", %%mm5	\n\t"
 		"movq "MANGLE(mask24g)", %%mm6	\n\t"
 		"movq "MANGLE(mask24b)", %%mm7	\n\t"
-		".balign 16			\n\t"
+		ASMALIGN16
 		"1:				\n\t"
 		PREFETCH" 32(%1, %%"REG_a")	\n\t"
 		"movq   (%1, %%"REG_a"), %%mm0	\n\t" // BGR BGR BG
@@ -1453,18 +1464,18 @@ static inline void RENAME(rgb24tobgr24)(const uint8_t *src, uint8_t *dst, unsign
 }
 
 static inline void RENAME(yuvPlanartoyuy2)(const uint8_t *ysrc, const uint8_t *usrc, const uint8_t *vsrc, uint8_t *dst,
-	unsigned int width, unsigned int height,
-	int lumStride, int chromStride, int dstStride, int vertLumPerChroma)
+	long width, long height,
+	long lumStride, long chromStride, long dstStride, long vertLumPerChroma)
 {
-	unsigned y;
-	const unsigned chromWidth= width>>1;
+	long y;
+	const long chromWidth= width>>1;
 	for(y=0; y<height; y++)
 	{
 #ifdef HAVE_MMX
 //FIXME handle 2 lines a once (fewer prefetch, reuse some chrom, but very likely limited by mem anyway)
 		asm volatile(
 			"xor %%"REG_a", %%"REG_a"	\n\t"
-			".balign 16			\n\t"
+			ASMALIGN16
 			"1:				\n\t"
 			PREFETCH" 32(%1, %%"REG_a", 2)	\n\t"
 			PREFETCH" 32(%2, %%"REG_a")	\n\t"
@@ -1492,7 +1503,7 @@ static inline void RENAME(yuvPlanartoyuy2)(const uint8_t *ysrc, const uint8_t *u
 			"add $8, %%"REG_a"		\n\t"
 			"cmp %4, %%"REG_a"		\n\t"
 			" jb 1b				\n\t"
-			::"r"(dst), "r"(ysrc), "r"(usrc), "r"(vsrc), "g" ((long)chromWidth)
+			::"r"(dst), "r"(ysrc), "r"(usrc), "r"(vsrc), "g" (chromWidth)
 			: "%"REG_a
 		);
 #else
@@ -1598,26 +1609,26 @@ asm(    EMMS" \n\t"
  * problem for anyone then tell me, and ill fix it)
  */
 static inline void RENAME(yv12toyuy2)(const uint8_t *ysrc, const uint8_t *usrc, const uint8_t *vsrc, uint8_t *dst,
-	unsigned int width, unsigned int height,
-	int lumStride, int chromStride, int dstStride)
+	long width, long height,
+	long lumStride, long chromStride, long dstStride)
 {
 	//FIXME interpolate chroma
 	RENAME(yuvPlanartoyuy2)(ysrc, usrc, vsrc, dst, width, height, lumStride, chromStride, dstStride, 2);
 }
 
 static inline void RENAME(yuvPlanartouyvy)(const uint8_t *ysrc, const uint8_t *usrc, const uint8_t *vsrc, uint8_t *dst,
-	unsigned int width, unsigned int height,
-	int lumStride, int chromStride, int dstStride, int vertLumPerChroma)
+	long width, long height,
+	long lumStride, long chromStride, long dstStride, long vertLumPerChroma)
 {
-	unsigned y;
-	const unsigned chromWidth= width>>1;
+	long y;
+	const long chromWidth= width>>1;
 	for(y=0; y<height; y++)
 	{
 #ifdef HAVE_MMX
 //FIXME handle 2 lines a once (fewer prefetch, reuse some chrom, but very likely limited by mem anyway)
 		asm volatile(
 			"xor %%"REG_a", %%"REG_a"	\n\t"
-			".balign 16			\n\t"
+			ASMALIGN16
 			"1:				\n\t"
 			PREFETCH" 32(%1, %%"REG_a", 2)	\n\t"
 			PREFETCH" 32(%2, %%"REG_a")	\n\t"
@@ -1645,7 +1656,7 @@ static inline void RENAME(yuvPlanartouyvy)(const uint8_t *ysrc, const uint8_t *u
 			"add $8, %%"REG_a"		\n\t"
 			"cmp %4, %%"REG_a"		\n\t"
 			" jb 1b				\n\t"
-			::"r"(dst), "r"(ysrc), "r"(usrc), "r"(vsrc), "g" ((long)chromWidth)
+			::"r"(dst), "r"(ysrc), "r"(usrc), "r"(vsrc), "g" (chromWidth)
 			: "%"REG_a
 		);
 #else
@@ -1705,8 +1716,8 @@ asm(    EMMS" \n\t"
  * problem for anyone then tell me, and ill fix it)
  */
 static inline void RENAME(yv12touyvy)(const uint8_t *ysrc, const uint8_t *usrc, const uint8_t *vsrc, uint8_t *dst,
-	unsigned int width, unsigned int height,
-	int lumStride, int chromStride, int dstStride)
+	long width, long height,
+	long lumStride, long chromStride, long dstStride)
 {
 	//FIXME interpolate chroma
 	RENAME(yuvPlanartouyvy)(ysrc, usrc, vsrc, dst, width, height, lumStride, chromStride, dstStride, 2);
@@ -1717,8 +1728,8 @@ static inline void RENAME(yv12touyvy)(const uint8_t *ysrc, const uint8_t *usrc, 
  * width should be a multiple of 16
  */
 static inline void RENAME(yuv422ptoyuy2)(const uint8_t *ysrc, const uint8_t *usrc, const uint8_t *vsrc, uint8_t *dst,
-	unsigned int width, unsigned int height,
-	int lumStride, int chromStride, int dstStride)
+	long width, long height,
+	long lumStride, long chromStride, long dstStride)
 {
 	RENAME(yuvPlanartoyuy2)(ysrc, usrc, vsrc, dst, width, height, lumStride, chromStride, dstStride, 1);
 }
@@ -1729,11 +1740,11 @@ static inline void RENAME(yuv422ptoyuy2)(const uint8_t *ysrc, const uint8_t *usr
  * problem for anyone then tell me, and ill fix it)
  */
 static inline void RENAME(yuy2toyv12)(const uint8_t *src, uint8_t *ydst, uint8_t *udst, uint8_t *vdst,
-	unsigned int width, unsigned int height,
-	int lumStride, int chromStride, int srcStride)
+	long width, long height,
+	long lumStride, long chromStride, long srcStride)
 {
-	unsigned y;
-	const unsigned chromWidth= width>>1;
+	long y;
+	const long chromWidth= width>>1;
 	for(y=0; y<height; y+=2)
 	{
 #ifdef HAVE_MMX
@@ -1741,7 +1752,7 @@ static inline void RENAME(yuy2toyv12)(const uint8_t *src, uint8_t *ydst, uint8_t
 			"xor %%"REG_a", %%"REG_a"	\n\t"
 			"pcmpeqw %%mm7, %%mm7		\n\t"
 			"psrlw $8, %%mm7		\n\t" // FF,00,FF,00...
-			".balign 16			\n\t"
+			ASMALIGN16
 			"1:				\n\t"
 			PREFETCH" 64(%0, %%"REG_a", 4)	\n\t"
 			"movq (%0, %%"REG_a", 4), %%mm0	\n\t" // YUYV YUYV(0)
@@ -1785,7 +1796,7 @@ static inline void RENAME(yuy2toyv12)(const uint8_t *src, uint8_t *ydst, uint8_t
 			"add $8, %%"REG_a"		\n\t"
 			"cmp %4, %%"REG_a"		\n\t"
 			" jb 1b				\n\t"
-			::"r"(src), "r"(ydst), "r"(udst), "r"(vdst), "g" ((long)chromWidth)
+			::"r"(src), "r"(ydst), "r"(udst), "r"(vdst), "g" (chromWidth)
 			: "memory", "%"REG_a
 		);
 
@@ -1794,7 +1805,7 @@ static inline void RENAME(yuy2toyv12)(const uint8_t *src, uint8_t *ydst, uint8_t
 
 		asm volatile(
 			"xor %%"REG_a", %%"REG_a"	\n\t"
-			".balign 16			\n\t"
+			ASMALIGN16
 			"1:				\n\t"
 			PREFETCH" 64(%0, %%"REG_a", 4)	\n\t"
 			"movq (%0, %%"REG_a", 4), %%mm0	\n\t" // YUYV YUYV(0)
@@ -1815,11 +1826,11 @@ static inline void RENAME(yuy2toyv12)(const uint8_t *src, uint8_t *ydst, uint8_t
 			"cmp %4, %%"REG_a"		\n\t"
 			" jb 1b				\n\t"
 
-			::"r"(src), "r"(ydst), "r"(udst), "r"(vdst), "g" ((long)chromWidth)
+			::"r"(src), "r"(ydst), "r"(udst), "r"(vdst), "g" (chromWidth)
 			: "memory", "%"REG_a
 		);
 #else
-		unsigned i;
+		long i;
 		for(i=0; i<chromWidth; i++)
 		{
 			ydst[2*i+0] 	= src[4*i+0];
@@ -1850,7 +1861,7 @@ asm volatile(   EMMS" \n\t"
 
 static inline void RENAME(yvu9toyv12)(const uint8_t *ysrc, const uint8_t *usrc, const uint8_t *vsrc,
 	uint8_t *ydst, uint8_t *udst, uint8_t *vdst,
-	unsigned int width, unsigned int height, int lumStride, int chromStride)
+	long width, long height, long lumStride, long chromStride)
 {
 	/* Y Plane */
 	memcpy(ydst, ysrc, width*height);
@@ -1858,9 +1869,9 @@ static inline void RENAME(yvu9toyv12)(const uint8_t *ysrc, const uint8_t *usrc, 
 	/* XXX: implement upscaling for U,V */
 }
 
-static inline void RENAME(planar2x)(const uint8_t *src, uint8_t *dst, int srcWidth, int srcHeight, int srcStride, int dstStride)
+static inline void RENAME(planar2x)(const uint8_t *src, uint8_t *dst, long srcWidth, long srcHeight, long srcStride, long dstStride)
 {
-	int x,y;
+	long x,y;
 	
 	dst[0]= src[0];
         
@@ -1919,7 +1930,7 @@ static inline void RENAME(planar2x)(const uint8_t *src, uint8_t *dst, int srcWid
 
 		);
 #else
-		const int mmxSize=1;
+		const long mmxSize=1;
 #endif
 		dst[0        ]= (3*src[0] +   src[srcStride])>>2;
 		dst[dstStride]= (  src[0] + 3*src[srcStride])>>2;
@@ -1967,11 +1978,11 @@ asm volatile(   EMMS" \n\t"
  * chrominance data is only taken from every secound line others are ignored FIXME write HQ version
  */
 static inline void RENAME(uyvytoyv12)(const uint8_t *src, uint8_t *ydst, uint8_t *udst, uint8_t *vdst,
-	unsigned int width, unsigned int height,
-	int lumStride, int chromStride, int srcStride)
+	long width, long height,
+	long lumStride, long chromStride, long srcStride)
 {
-	unsigned y;
-	const unsigned chromWidth= width>>1;
+	long y;
+	const long chromWidth= width>>1;
 	for(y=0; y<height; y+=2)
 	{
 #ifdef HAVE_MMX
@@ -1979,7 +1990,7 @@ static inline void RENAME(uyvytoyv12)(const uint8_t *src, uint8_t *ydst, uint8_t
 			"xorl %%eax, %%eax		\n\t"
 			"pcmpeqw %%mm7, %%mm7		\n\t"
 			"psrlw $8, %%mm7		\n\t" // FF,00,FF,00...
-			".balign 16			\n\t"
+			ASMALIGN16
 			"1:				\n\t"
 			PREFETCH" 64(%0, %%eax, 4)	\n\t"
 			"movq (%0, %%eax, 4), %%mm0	\n\t" // UYVY UYVY(0)
@@ -2032,7 +2043,7 @@ static inline void RENAME(uyvytoyv12)(const uint8_t *src, uint8_t *ydst, uint8_t
 
 		asm volatile(
 			"xorl %%eax, %%eax		\n\t"
-			".balign 16			\n\t"
+			ASMALIGN16
 			"1:				\n\t"
 			PREFETCH" 64(%0, %%eax, 4)	\n\t"
 			"movq (%0, %%eax, 4), %%mm0	\n\t" // YUYV YUYV(0)
@@ -2057,7 +2068,7 @@ static inline void RENAME(uyvytoyv12)(const uint8_t *src, uint8_t *ydst, uint8_t
 			: "memory", "%eax"
 		);
 #else
-		unsigned i;
+		long i;
 		for(i=0; i<chromWidth; i++)
 		{
 			udst[i] 	= src[4*i+0];
@@ -2093,15 +2104,15 @@ asm volatile(   EMMS" \n\t"
  * chrominance data is only taken from every secound line others are ignored in the C version FIXME write HQ version
  */
 static inline void RENAME(rgb24toyv12)(const uint8_t *src, uint8_t *ydst, uint8_t *udst, uint8_t *vdst,
-	unsigned int width, unsigned int height,
-	int lumStride, int chromStride, int srcStride)
+	long width, long height,
+	long lumStride, long chromStride, long srcStride)
 {
-	unsigned y;
-	const unsigned chromWidth= width>>1;
+	long y;
+	const long chromWidth= width>>1;
 #ifdef HAVE_MMX
 	for(y=0; y<height-2; y+=2)
 	{
-		unsigned i;
+		long i;
 		for(i=0; i<2; i++)
 		{
 			asm volatile(
@@ -2110,7 +2121,7 @@ static inline void RENAME(rgb24toyv12)(const uint8_t *src, uint8_t *ydst, uint8_
 				"movq "MANGLE(w1111)", %%mm5		\n\t"
 				"pxor %%mm7, %%mm7		\n\t"
 				"lea (%%"REG_a", %%"REG_a", 2), %%"REG_b"\n\t"
-				".balign 16			\n\t"
+				ASMALIGN16
 				"1:				\n\t"
 				PREFETCH" 64(%0, %%"REG_b")	\n\t"
 				"movd (%0, %%"REG_b"), %%mm0	\n\t"
@@ -2170,7 +2181,7 @@ static inline void RENAME(rgb24toyv12)(const uint8_t *src, uint8_t *ydst, uint8_
 				MOVNTQ" %%mm0, (%1, %%"REG_a")	\n\t"
 				"add $8, %%"REG_a"		\n\t"
 				" js 1b				\n\t"
-				: : "r" (src+width*3), "r" (ydst+width), "g" ((long)-width)
+				: : "r" (src+width*3), "r" (ydst+width), "g" (-width)
 				: "%"REG_a, "%"REG_b
 			);
 			ydst += lumStride;
@@ -2184,7 +2195,7 @@ static inline void RENAME(rgb24toyv12)(const uint8_t *src, uint8_t *ydst, uint8_
 			"pxor %%mm7, %%mm7		\n\t"
 			"lea (%%"REG_a", %%"REG_a", 2), %%"REG_b"\n\t"
 			"add %%"REG_b", %%"REG_b"	\n\t"
-			".balign 16			\n\t"
+			ASMALIGN16
 			"1:				\n\t"
 			PREFETCH" 64(%0, %%"REG_b")	\n\t"
 			PREFETCH" 64(%1, %%"REG_b")	\n\t"
@@ -2322,7 +2333,7 @@ static inline void RENAME(rgb24toyv12)(const uint8_t *src, uint8_t *ydst, uint8_
 			"movd %%mm0, (%3, %%"REG_a")	\n\t"
 			"add $4, %%"REG_a"		\n\t"
 			" js 1b				\n\t"
-			: : "r" (src+chromWidth*6), "r" (src+srcStride+chromWidth*6), "r" (udst+chromWidth), "r" (vdst+chromWidth), "g" ((long)-chromWidth)
+			: : "r" (src+chromWidth*6), "r" (src+srcStride+chromWidth*6), "r" (udst+chromWidth), "r" (vdst+chromWidth), "g" (-chromWidth)
 			: "%"REG_a, "%"REG_b
 		);
 
@@ -2339,7 +2350,7 @@ static inline void RENAME(rgb24toyv12)(const uint8_t *src, uint8_t *ydst, uint8_
 #endif
 	for(; y<height; y+=2)
 	{
-		unsigned i;
+		long i;
 		for(i=0; i<chromWidth; i++)
 		{
 			unsigned int b= src[6*i+0];
@@ -2389,13 +2400,13 @@ static inline void RENAME(rgb24toyv12)(const uint8_t *src, uint8_t *ydst, uint8_
 }
 
 void RENAME(interleaveBytes)(uint8_t *src1, uint8_t *src2, uint8_t *dest,
-			    unsigned width, unsigned height, int src1Stride,
-			    int src2Stride, int dstStride){
-	unsigned h;
+			    long width, long height, long src1Stride,
+			    long src2Stride, long dstStride){
+	long h;
 
 	for(h=0; h < height; h++)
 	{
-		unsigned w;
+		long w;
 
 #ifdef HAVE_MMX
 #ifdef HAVE_SSE2
@@ -2414,7 +2425,7 @@ void RENAME(interleaveBytes)(uint8_t *src1, uint8_t *src2, uint8_t *dest,
 			"add $16, %%"REG_a"		\n\t"
 			"cmp %3, %%"REG_a"		\n\t"
 			" jb 1b				\n\t"
-			::"r"(dest), "r"(src1), "r"(src2), "r" ((long)width-15)
+			::"r"(dest), "r"(src1), "r"(src2), "r" (width-15)
 			: "memory", "%"REG_a""
 		);
 #else
@@ -2440,7 +2451,7 @@ void RENAME(interleaveBytes)(uint8_t *src1, uint8_t *src2, uint8_t *dest,
 			"add $16, %%"REG_a"		\n\t"
 			"cmp %3, %%"REG_a"		\n\t"
 			" jb 1b				\n\t"
-			::"r"(dest), "r"(src1), "r"(src2), "r" ((long)width-15)
+			::"r"(dest), "r"(src1), "r"(src2), "r" (width-15)
 			: "memory", "%"REG_a
 		);
 #endif
@@ -2471,12 +2482,11 @@ void RENAME(interleaveBytes)(uint8_t *src1, uint8_t *src2, uint8_t *dest,
 
 static inline void RENAME(vu9_to_vu12)(const uint8_t *src1, const uint8_t *src2,
 			uint8_t *dst1, uint8_t *dst2,
-			unsigned width, unsigned height,
-			int srcStride1, int srcStride2,
-			int dstStride1, int dstStride2)
+			long width, long height,
+			long srcStride1, long srcStride2,
+			long dstStride1, long dstStride2)
 {
-    unsigned int y,x,h;
-    int w;
+    long y,x,w,h;
     w=width/2; h=height/2;
 #ifdef HAVE_MMX
     asm volatile(
@@ -2575,11 +2585,11 @@ static inline void RENAME(vu9_to_vu12)(const uint8_t *src1, const uint8_t *src2,
 
 static inline void RENAME(yvu9_to_yuy2)(const uint8_t *src1, const uint8_t *src2, const uint8_t *src3,
 			uint8_t *dst,
-			unsigned width, unsigned height,
-			int srcStride1, int srcStride2,
-			int srcStride3, int dstStride)
+			long width, long height,
+			long srcStride1, long srcStride2,
+			long srcStride3, long dstStride)
 {
-    unsigned long y,x,w,h;
+    long y,x,w,h;
     w=width/2; h=height;
     for(y=0;y<h;y++){
 	const uint8_t* yp=src1+srcStride1*y;
@@ -2644,7 +2654,7 @@ static inline void RENAME(yvu9_to_yuy2)(const uint8_t *src1, const uint8_t *src2
 #endif
 	for(; x<w; x++)
 	{
-	    const int x2= x<<2;
+	    const long x2= x<<2;
 	    d[8*x+0]=yp[x2];
 	    d[8*x+1]=up[x];
 	    d[8*x+2]=yp[x2+1];

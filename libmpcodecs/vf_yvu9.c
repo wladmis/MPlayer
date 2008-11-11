@@ -3,15 +3,16 @@
 #include <string.h>
 #include <inttypes.h>
 
-#include "../config.h"
-#include "../mp_msg.h"
+#include "config.h"
+#include "mp_msg.h"
+#include "help_mp.h"
 
 #include "img_format.h"
 #include "mp_image.h"
 #include "vf.h"
 
-#include "../libvo/fastmemcpy.h"
-#include "../postproc/rgb2rgb.h"
+#include "libvo/fastmemcpy.h"
+#include "postproc/rgb2rgb.h"
 
 //===========================================================================//
 
@@ -20,14 +21,14 @@ static int config(struct vf_instance_s* vf,
 	unsigned int flags, unsigned int outfmt){
     
     if(vf_next_query_format(vf,IMGFMT_YV12)<=0){
-	printf("yv12 not supported by next filter/vo :(\n");
+	mp_msg(MSGT_VFILTER, MSGL_WARN, MSGTR_MPCODECS_WarnNextFilterDoesntSupport, "YVU9");
 	return 0;
     }
     
     return vf_next_config(vf,width,height,d_width,d_height,flags,IMGFMT_YV12);
 }
 
-static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
+static int put_image(struct vf_instance_s* vf, mp_image_t *mpi, double pts){
     mp_image_t *dmpi;
     int y,w,h;
 
@@ -57,7 +58,7 @@ static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
 
     vf_clone_mpi_attributes(dmpi, mpi);
     
-    return vf_next_put_image(vf,dmpi);
+    return vf_next_put_image(vf,dmpi, pts);
 }
 
 //===========================================================================//

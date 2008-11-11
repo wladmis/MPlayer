@@ -22,7 +22,7 @@
  *
  * Modified for use with MPlayer, see libmpeg-0.4.0.diff for the exact changes.
  * detailed CVS changelog at http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
- * $Id: cpu_state.c,v 1.7 2005/02/19 02:32:12 diego Exp $
+ * $Id: cpu_state.c 15484 2005-05-15 20:11:34Z nplourde $
  */
 
 #include "config.h"
@@ -48,18 +48,18 @@ static void state_restore_mmx (cpu_state_t * state)
 #endif
 
 #if defined( ARCH_PPC ) && defined( HAVE_ALTIVEC )
-#ifdef HAVE_ALTIVEC_H	/* gnu */
-#define LI(a,b) "li " #a "," #b "\n\t"
-#define STVX0(a,b,c) "stvx " #a ",0," #c "\n\t"
-#define STVX(a,b,c) "stvx " #a "," #b "," #c "\n\t"
-#define LVX0(a,b,c) "lvx " #a ",0," #c "\n\t"
-#define LVX(a,b,c) "lvx " #a "," #b "," #c "\n\t"
-#else			/* apple */
+#if defined( __APPLE_CC__ ) && defined( __APPLE_ALTIVEC__ )	/* apple */
 #define LI(a,b) "li r" #a "," #b "\n\t"
 #define STVX0(a,b,c) "stvx v" #a ",0,r" #c "\n\t"
 #define STVX(a,b,c) "stvx v" #a ",r" #b ",r" #c "\n\t"
 #define LVX0(a,b,c) "lvx v" #a ",0,r" #c "\n\t"
 #define LVX(a,b,c) "lvx v" #a ",r" #b ",r" #c "\n\t"
+#else			/* gnu */
+#define LI(a,b) "li " #a "," #b "\n\t"
+#define STVX0(a,b,c) "stvx " #a ",0," #c "\n\t"
+#define STVX(a,b,c) "stvx " #a "," #b "," #c "\n\t"
+#define LVX0(a,b,c) "lvx " #a ",0," #c "\n\t"
+#define LVX(a,b,c) "lvx " #a "," #b "," #c "\n\t"
 #endif
 
 static void state_save_altivec (cpu_state_t * state)

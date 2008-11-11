@@ -1,3 +1,7 @@
+
+/// \file
+/// \ingroup Options
+
 #include "config.h"
 
 #include <stdlib.h>
@@ -15,7 +19,7 @@
 
 // Don't free for 'production' atm
 #ifndef MP_DEBUG
-#define NO_FREE
+//#define NO_FREE
 #endif
 
 m_option_t* m_option_list_find(m_option_t* list,char* name) {
@@ -289,7 +293,7 @@ static int parse_position(m_option_t* opt,char *name, char *param, void* dst, in
   if (param == NULL)
     return M_OPT_MISSING_PARAM;
   if (sscanf(param, sizeof(off_t) == sizeof(int) ?
-	     "%d%c" : "%lld%c", &tmp_off, &dummy) != 1) {
+	     "%d%c" : "%"PRId64"%c", &tmp_off, &dummy) != 1) {
     mp_msg(MSGT_CFGPARSER, MSGL_ERR, "The %s option must be an integer: %s\n",opt->name,param);
     return M_OPT_INVALID;
   }
@@ -297,20 +301,16 @@ static int parse_position(m_option_t* opt,char *name, char *param, void* dst, in
   if (opt->flags & M_OPT_MIN)
     if (tmp_off < opt->min) {
       mp_msg(MSGT_CFGPARSER, MSGL_ERR,
-	     (sizeof(off_t) == sizeof(int) ?
-	      "The %s option must be >= %d: %s\n" :
-	      "The %s option must be >= %lld: %s\n"),
-	     name, (off_t) opt->min, param);
+	      "The %s option must be >= %"PRId64": %s\n",
+	     name, (int64_t) opt->min, param);
       return M_OPT_OUT_OF_RANGE;
     }
 
   if (opt->flags & M_OPT_MAX)
     if (tmp_off > opt->max) {
       mp_msg(MSGT_CFGPARSER, MSGL_ERR,
-	     (sizeof(off_t) == sizeof(int) ?
-	      "The %s option must be <= %d: %s\n" :
-	      "The %s option must be <= %lld: %s\n"),
-	     name, (off_t) opt->max, param);
+	      "The %s option must be <= %"PRId64": %s\n",
+	     name, (int64_t) opt->max, param);
       return M_OPT_OUT_OF_RANGE;
     }
 
@@ -320,7 +320,7 @@ static int parse_position(m_option_t* opt,char *name, char *param, void* dst, in
 }
 
 static char* print_position(m_option_t* opt,  void* val) {
-  return dup_printf(sizeof(off_t) == sizeof(int) ?  "%d" : "%lld",VAL(val));
+  return dup_printf("%"PRId64,(int64_t)VAL(val));
 }
 
 m_option_type_t m_option_type_position = {
@@ -722,7 +722,7 @@ static void copy_func_pf(m_option_t* opt,void* dst, void* src) {
     free_func_pf(dst);
 
   while(s) {
-    d = (m_func_save_t*)malloc(sizeof(m_func_save_t));
+    d = (m_func_save_t*)calloc(1,sizeof(m_func_save_t));
     d->name = strdup(s->name);
     d->param = s->param ? strdup(s->param) : NULL;
     if(last)
@@ -826,8 +826,10 @@ m_option_type_t m_option_type_func = {
 /////////////////// Print
 
 static int parse_print(m_option_t* opt,char *name, char *param, void* dst, int src) {
-  if(opt->type->flags&M_OPT_TYPE_INDIRECT)
+  if(opt->type == CONF_TYPE_PRINT_INDIRECT) 
     mp_msg(MSGT_CFGPARSER, MSGL_INFO, "%s", *(char **) opt->p);
+  else if(opt->type == CONF_TYPE_PRINT_FUNC)
+    return ((m_opt_func_full_t) opt->p)(opt,name,param);
   else
     mp_msg(MSGT_CFGPARSER, MSGL_INFO, "%s", (char *) opt->p);
 
@@ -853,7 +855,20 @@ m_option_type_t m_option_type_print_indirect = {
   "Print",
   "",
   0,
-  M_OPT_TYPE_INDIRECT,
+  0,
+  parse_print,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL
+};
+
+m_option_type_t m_option_type_print_func = {
+  "Print",
+  "",
+  0,
+  M_OPT_TYPE_ALLOW_WILDCARD,
   parse_print,
   NULL,
   NULL,
@@ -872,7 +887,6 @@ static int parse_subconf(m_option_t* opt,char *name, char *param, void* dst, int
   char *subopt;
   int nr = 0,i,r;
   m_option_t *subopts;
-  char *token;
   char *p;
   char** lst = NULL;
 
@@ -881,20 +895,54 @@ static int parse_subconf(m_option_t* opt,char *name, char *param, void* dst, int
 
   subparam = malloc(strlen(param)+1);
   subopt = malloc(strlen(param)+1);
-  p = strdup(param); // In case that param is a static string (cf man strtok)
+  p = param;
 
   subopts = opt->p;
 
-  token = strtok(p, (char *)&(":"));
-  while(token)
+  while(p[0])
     {
-      int sscanf_ret;
+      int sscanf_ret = 1;
+      int optlen = strcspn(p, ":=");
       /* clear out */
       subopt[0] = subparam[0] = 0;
+      strlcpy(subopt, p, optlen + 1);
+      p = &p[optlen];
+      if (p[0] == '=') {
+        sscanf_ret = 2;
+        p = &p[1];
+        if (p[0] == '"') {
+          p = &p[1];
+          optlen = strcspn(p, "\"");
+          strlcpy(subparam, p, optlen + 1);
+          p = &p[optlen];
+          if (p[0] != '"') {
+            mp_msg(MSGT_CFGPARSER, MSGL_ERR, "Terminating '\"' missing for '%s'\n", subopt);
+            return M_OPT_INVALID;
+          }
+          p = &p[1];
+        } else if (p[0] == '%') {
+          p = &p[1];
+          optlen = (int)strtol(p, &p, 0);
+          if (!p || p[0] != '%' || (optlen > strlen(p) - 1)) {
+            mp_msg(MSGT_CFGPARSER, MSGL_ERR, "Invalid length %i for '%s'\n", optlen, subopt);
+            return M_OPT_INVALID;
+          }
+          p = &p[1];
+          strlcpy(subparam, p, optlen + 1);
+          p = &p[optlen];
+        } else {
+          optlen = strcspn(p, ":");
+          strlcpy(subparam, p, optlen + 1);
+          p = &p[optlen];
+        }
+      }
+      if (p[0] == ':')
+        p = &p[1];
+      else if (p[0]) {
+        mp_msg(MSGT_CFGPARSER, MSGL_ERR, "Incorrect termination for '%s'\n", subopt);
+        return M_OPT_INVALID;
+      }
 			    
-      sscanf_ret = sscanf(token, "%[^=]=%[^:]", subopt, subparam);
-
-      mp_msg(MSGT_CFGPARSER, MSGL_DBG3, "token: '%s', subopt='%s', subparam='%s' (ret: %d)\n", token, subopt, subparam, sscanf_ret);
       switch(sscanf_ret)
 	{
 	case 1:
@@ -918,16 +966,11 @@ static int parse_subconf(m_option_t* opt,char *name, char *param, void* dst, int
 	    nr++;
 	  }
 	  break;
-	default:
-	  mp_msg(MSGT_CFGPARSER, MSGL_ERR, "Invalid subconfig argument! ('%s')\n", token);
-	  return M_OPT_INVALID;
 	}
-      token = strtok(NULL, (char *)&(":"));
     }
 
   free(subparam);
   free(subopt);
-  free(p);
   if(dst)
     VAL(dst) = lst;
 
@@ -1005,7 +1048,7 @@ static int parse_imgfmt(m_option_t* opt,char *name, char *param, void* dst, int 
     for(i = 0 ; mp_imgfmt_list[i].name ; i++)
       mp_msg(MSGT_CFGPARSER, MSGL_INFO, " %s",mp_imgfmt_list[i].name);
     mp_msg(MSGT_CFGPARSER, MSGL_INFO, "\n");
-    return M_OPT_EXIT;
+    return M_OPT_EXIT - 1;
   }
   
   if (sscanf(param, "0x%x", &fmt) != 1)
@@ -1093,7 +1136,7 @@ static int parse_afmt(m_option_t* opt,char *name, char *param, void* dst, int sr
     for(i = 0 ; mp_afmt_list[i].name ; i++)
       mp_msg(MSGT_CFGPARSER, MSGL_INFO, " %s",mp_afmt_list[i].name);
     mp_msg(MSGT_CFGPARSER, MSGL_INFO, "\n");
-    return M_OPT_EXIT;
+    return M_OPT_EXIT - 1;
   }
   
   if (sscanf(param, "0x%x", &fmt) != 1)
@@ -1172,7 +1215,8 @@ static int get_obj_param(char* opt_name,char* obj_name, m_struct_t* desc,
     }
     r = m_option_parse(opt,str,p,NULL,M_CONFIG_FILE);
     if(r < 0) {
-      mp_msg(MSGT_CFGPARSER, MSGL_ERR, "Option %s: Error while parsing %s parameter %s (%s)\n",opt_name,obj_name,str,p);
+      if(r > M_OPT_EXIT)
+        mp_msg(MSGT_CFGPARSER, MSGL_ERR, "Option %s: Error while parsing %s parameter %s (%s)\n",opt_name,obj_name,str,p);
       eq[0] = '=';
       return r;
     }
@@ -1190,7 +1234,8 @@ static int get_obj_param(char* opt_name,char* obj_name, m_struct_t* desc,
     opt = &desc->fields[(*nold)];
     r = m_option_parse(opt,opt->name,str,NULL,M_CONFIG_FILE);
     if(r < 0) {
-      mp_msg(MSGT_CFGPARSER, MSGL_ERR, "Option %s: Error while parsing %s parameter %s (%s)\n",opt_name,obj_name,opt->name,str);
+      if(r > M_OPT_EXIT)
+        mp_msg(MSGT_CFGPARSER, MSGL_ERR, "Option %s: Error while parsing %s parameter %s (%s)\n",opt_name,obj_name,opt->name,str);
       return r;
     }
     if(dst) {
@@ -1212,7 +1257,7 @@ static int get_obj_params(char* opt_name, char* name,char* params,
     char min[50],max[50];
     if(!desc->fields) {
       printf("%s doesn't have any options.\n\n",name);
-      return M_OPT_EXIT;
+      return M_OPT_EXIT - 1;
     }
     printf("\n Name                 Type            Min        Max\n\n");
     for(n = 0 ; desc->fields[n].name ; n++) {
@@ -1233,7 +1278,7 @@ static int get_obj_params(char* opt_name, char* name,char* params,
 	     max);
     }
     printf("\n");
-    return M_OPT_EXIT;
+    return M_OPT_EXIT - 1;
   }
 
   for(nopts = 0 ; desc->fields[nopts].name ; nopts++)
@@ -1261,7 +1306,15 @@ static int get_obj_params(char* opt_name, char* name,char* params,
     last_ptr = ptr+1;
   }
   if(r < 0) return r;
+  if (!last_ptr[0]) // count an empty field at the end, too
+    nold++;
+  if (nold > nopts) {
+    mp_msg(MSGT_CFGPARSER, MSGL_ERR, "Too many options for %s\n", name);
+    return M_OPT_OUT_OF_RANGE;
+  }
   if(!_ret) // Just test
+    return 1;
+  if (n == 0) // No options or only empty options
     return 1;
 
   ret = malloc((n+2)*2*sizeof(char*));
@@ -1308,6 +1361,8 @@ static int parse_obj_params(m_option_t* opt,char *name,
   if(r < 0)
     return r;
   if(!dst)
+    return 1;
+  if (!opts) // no arguments given
     return 1;
 
   for(r = 0 ; opts[r] ; r += 2)
@@ -1375,6 +1430,10 @@ static int parse_obj_settings(char* opt,char* str,m_obj_list_t* list,
 
   if(param) {
     if(!desc && _ret) {
+      if(!strcmp(param,"help")) {
+        mp_msg(MSGT_CFGPARSER, MSGL_INFO, "Option %s: %s have no option description.\n",opt,str);
+        return M_OPT_EXIT - 1;
+      }
       plist = calloc(4,sizeof(char*));
       plist[0] = strdup("_oldargs_");
       plist[1] = strdup(param);
@@ -1529,11 +1588,13 @@ static int parse_obj_settings_list(m_option_t* opt,char *name,
   if(!strcmp(param,"help")) {
     m_obj_list_t* ol = opt->priv;
     mp_msg(MSGT_VFILTER,MSGL_INFO,"Available video filters:\n");
+    mp_msg(MSGT_IDENTIFY, MSGL_INFO, "ID_VIDEO_FILTERS\n");
     for(n = 0 ; ol->list[n] ; n++)
       mp_msg(MSGT_VFILTER,MSGL_INFO,"  %-15s: %s\n",
 	     M_ST_MB(char*,ol->list[n],ol->name_off),
 	     M_ST_MB(char*,ol->list[n],ol->info_off));
-    return M_OPT_EXIT;
+    mp_msg(MSGT_VFILTER,MSGL_INFO,"\n");
+    return M_OPT_EXIT - 1;
   }
   ptr = str = strdup(param);
 
@@ -1676,7 +1737,7 @@ static int parse_obj_presets(m_option_t* opt,char *name,
 	pre +=  s) 
       mp_msg(MSGT_CFGPARSER, MSGL_ERR, " %s",pre_name);
     mp_msg(MSGT_CFGPARSER, MSGL_ERR, "\n");
-    return M_OPT_EXIT;
+    return M_OPT_EXIT - 1;
   }
 
   for(pre_name = M_ST_MB(char*,pre,obj_p->name_off) ; pre_name ;
@@ -1742,6 +1803,12 @@ static int parse_custom_url(m_option_t* opt,char *name,
     }
     mp_msg(MSGT_CFGPARSER, MSGL_ERR,"Option %s: URL doesn't have a valid protocol!\n",name);
     return M_OPT_INVALID;
+  }
+  if(m_option_list_find(desc->fields,"string")) {
+    if(strlen(ptr1)>3) {
+      m_struct_set(desc,dst,"string",ptr1+3);
+      return 1;
+    }
   }
   pos1 = ptr1-url;
   if(dst && m_option_list_find(desc->fields,"protocol")) {

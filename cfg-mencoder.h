@@ -22,33 +22,7 @@ extern m_option_t divx4opts_conf[];
 #endif
 
 #ifdef HAVE_MP3LAME
-m_option_t lameopts_conf[]={
-	{"q", &lame_param_quality, CONF_TYPE_INT, CONF_RANGE, 0, 9, NULL},
-	{"aq", &lame_param_algqual, CONF_TYPE_INT, CONF_RANGE, 0, 9, NULL},
-	{"vbr", &lame_param_vbr, CONF_TYPE_INT, CONF_RANGE, 0, vbr_max_indicator, NULL},
-	{"cbr", &lame_param_vbr, CONF_TYPE_FLAG, 0, 0, 0, NULL},
-	{"abr", &lame_param_vbr, CONF_TYPE_FLAG, 0, 0, vbr_abr, NULL},
-	{"mode", &lame_param_mode, CONF_TYPE_INT, CONF_RANGE, 0, MAX_INDICATOR, NULL},
-	{"padding", &lame_param_padding, CONF_TYPE_INT, CONF_RANGE, 0, PAD_MAX_INDICATOR, NULL},
-	{"br", &lame_param_br, CONF_TYPE_INT, CONF_RANGE, 0, 1024, NULL},
-	{"ratio", &lame_param_ratio, CONF_TYPE_INT, CONF_RANGE, 0, 100, NULL},
-	{"vol", &lame_param_scale, CONF_TYPE_FLOAT, CONF_RANGE, 0, 10, NULL},
-	{"lowpassfreq",&lame_param_lowpassfreq, CONF_TYPE_INT, CONF_RANGE, -1, 48000,0},
-	{"highpassfreq",&lame_param_highpassfreq, CONF_TYPE_INT, CONF_RANGE, -1, 48000,0},
-	{"nofree", &lame_param_free_format, CONF_TYPE_FLAG, 0, 0, 0, NULL},
-	{"free", &lame_param_free_format, CONF_TYPE_FLAG, 0, 0, 1, NULL},
-	{"br_min", &lame_param_br_min, CONF_TYPE_INT, CONF_RANGE, 0, 1024, NULL},
-	{"br_max", &lame_param_br_max, CONF_TYPE_INT, CONF_RANGE, 0, 1024, NULL},
-#if HAVE_MP3LAME >= 392
-	{"fast", &lame_param_fast, CONF_TYPE_FLAG, 0, 0, 1, NULL},
-	{"preset", &lame_param_preset, CONF_TYPE_STRING, 0, 0, 0, NULL},
-#else
-	{"fast", "MPlayer was built without -lameopts fast support (requires libmp3lame >=3.92).\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
-	{"preset", "MPlayer was built without -lameopts preset support (requires libmp3lame >=3.92).\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
-#endif
-	{"help", MSGTR_MEncoderMP3LameHelp, CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
-	{NULL, NULL, 0, 0, 0, 0, NULL}
-};
+extern m_option_t lameopts_conf[];
 #endif
 
 #ifdef USE_LIBAVCODEC
@@ -57,6 +31,14 @@ extern m_option_t lavcopts_conf[];
 
 #ifdef HAVE_TOOLAME
 extern m_option_t toolameopts_conf[];
+#endif
+
+#ifdef HAVE_TWOLAME
+extern m_option_t twolameopts_conf[];
+#endif
+
+#ifdef HAVE_FAAC
+extern m_option_t faacopts_conf[];
 #endif
 
 #ifdef USE_WIN32DLL
@@ -73,7 +55,7 @@ extern m_option_t x264encopts_conf[];
 
 extern m_option_t nuvopts_conf[];
 extern m_option_t mpegopts_conf[];
-#ifdef USE_LIBAVFORMAT
+#if defined(USE_LIBAVFORMAT) ||  defined(USE_LIBAVFORMAT_SO)
 extern m_option_t lavfopts_conf[];
 #endif
 
@@ -81,7 +63,6 @@ m_option_t ovc_conf[]={
 	{"copy", &out_video_codec, CONF_TYPE_FLAG, 0, 0, VCODEC_COPY, NULL},
 	{"frameno", &out_video_codec, CONF_TYPE_FLAG, 0, 0, VCODEC_FRAMENO, NULL},
 	{"divx4", &out_video_codec, CONF_TYPE_FLAG, 0, 0, VCODEC_DIVX4, NULL},
-//	{"raw", &out_video_codec, CONF_TYPE_FLAG, 0, 0, VCODEC_RAW, NULL},
 	{"lavc", &out_video_codec, CONF_TYPE_FLAG, 0, 0, VCODEC_LIBAVCODEC, NULL},
 //	{"null", &out_video_codec, CONF_TYPE_FLAG, 0, 0, VCODEC_NULL, NULL},
 	{"raw", &out_video_codec, CONF_TYPE_FLAG, 0, 0, VCODEC_RAW, NULL},
@@ -107,7 +88,7 @@ m_option_t ovc_conf[]={
 	"   lavc     - libavcodec codecs - best quality!\n"
 #endif
 #ifdef USE_WIN32DLL
-	"   vfw      - VfW DLLs, currently only AVID is supported.\n"
+	"   vfw      - VfW DLLs, read DOCS/HTML/en/encoding-guide.html.\n"
 	"   qtvideo  - QuickTime DLLs, currently only SVQ1/3 are supported.\n"
 #endif
 #ifdef HAVE_LIBDV095
@@ -141,6 +122,16 @@ m_option_t oac_conf[]={
 #else
 	{"toolame", "MPlayer was compiled without libtoolame. See README or DOCS.\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
 #endif
+#ifdef HAVE_TWOLAME
+	{"twolame", &out_audio_codec, CONF_TYPE_FLAG, 0, 0, ACODEC_TWOLAME, NULL},
+#else
+	{"twolame", "MPlayer was compiled without libtwolame. See README or DOCS.\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
+#endif
+#ifdef HAVE_FAAC
+	{"faac", &out_audio_codec, CONF_TYPE_FLAG, 0, 0, ACODEC_FAAC, NULL},
+#else
+	{"faac", "MPlayer was compiled without libfaac. See README or DOCS.\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
+#endif
 	{"help", "\nAvailable codecs:\n"
 	"   copy     - frame copy, without re-encoding (useful for AC3)\n"
 	"   pcm      - uncompressed PCM audio\n"
@@ -152,6 +143,12 @@ m_option_t oac_conf[]={
 #endif
 #ifdef HAVE_TOOLAME
 	"   toolame  - Toolame MP2 audio encoder\n"
+#endif
+#ifdef HAVE_TWOLAME
+	"   twolame  - Twolame MP2 audio encoder\n"
+#endif
+#ifdef HAVE_FAAC
+	"   faac     - FAAC AAC audio encoder\n"
 #endif
 	"\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
 	{NULL, NULL, 0, 0, 0, 0, NULL}
@@ -180,14 +177,19 @@ m_option_t info_conf[]={
 m_option_t of_conf[]={
 	{"avi", &out_file_format, CONF_TYPE_FLAG, 0, 0, MUXER_TYPE_AVI, NULL},
 	{"mpeg", &out_file_format, CONF_TYPE_FLAG, 0, 0, MUXER_TYPE_MPEG, NULL},
-#ifdef USE_LIBAVFORMAT
+#if defined(USE_LIBAVFORMAT) ||  defined(USE_LIBAVFORMAT_SO)
 	{"lavf", &out_file_format, CONF_TYPE_FLAG, 0, 0, MUXER_TYPE_LAVF, NULL},
 #endif
 	{"rawvideo", &out_file_format, CONF_TYPE_FLAG, 0, 0, MUXER_TYPE_RAWVIDEO, NULL},
+	{"rawaudio", &out_file_format, CONF_TYPE_FLAG, 0, 0, MUXER_TYPE_RAWAUDIO, NULL},
 	{"help", "\nAvailable output formats:\n"
 	"   avi      - Microsoft Audio/Video Interleaved\n"
 	"   mpeg     - MPEG-1/2 system stream format\n"
+#if defined(USE_LIBAVFORMAT) ||  defined(USE_LIBAVFORMAT_SO)
+	"   lavf     - FFmpeg libavformat muxers\n"
+#endif
 	"   rawvideo - (video only, one stream only) raw stream, no muxing\n"
+	"   rawaudio - (audio only, one stream only) raw stream, no muxing\n"
 	"\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
 	{NULL, NULL, 0, 0, 0, 0, NULL}
 };
@@ -200,10 +202,10 @@ m_option_t mencoder_opts[]={
 
 	{"endpos", &end_at_string, CONF_TYPE_STRING, 0, 0, 0, NULL},
 
-#ifdef USE_EDL
+	{"frameno-file", &frameno_filename, CONF_TYPE_STRING, CONF_GLOBAL, 0, 0, NULL},
+
         {"hr-edl-seek", &edl_seek_type, CONF_TYPE_FLAG, 0, 0, 1, NULL},
         {"nohr-edl-seek", &edl_seek_type, CONF_TYPE_FLAG, 0, 1, 0, NULL},
-#endif
 
 	// set output framerate - recommended for variable-FPS (ASF etc) files
 	// and for 29.97FPS progressive MPEG2 streams
@@ -217,7 +219,7 @@ m_option_t mencoder_opts[]={
 
 	{"audio-density", &audio_density, CONF_TYPE_INT, CONF_RANGE|CONF_GLOBAL, 1, 50, NULL},
 	{"audio-preload", &audio_preload, CONF_TYPE_FLOAT, CONF_RANGE|CONF_GLOBAL, 0, 2, NULL},
-	{"audio-delay",   &audio_delay, CONF_TYPE_FLOAT, CONF_MIN|CONF_GLOBAL, 0, 0, NULL},
+	{"audio-delay",   &audio_delay_fix, CONF_TYPE_FLOAT, CONF_GLOBAL, 0, 0, NULL},
 
 	{"x", "-x is obsolete, use -vf scale=w:h for scaling.\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
 	{"xsize", "-xsize is obsolete, use -vf crop=w:h:x:y for cropping.\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
@@ -229,6 +231,8 @@ m_option_t mencoder_opts[]={
 	// output file format
 	{"of", of_conf, CONF_TYPE_SUBCONFIG, CONF_GLOBAL, 0, 0, NULL},
 
+	// override audio format tag in output file
+	{"fafmttag", &force_audiofmttag, CONF_TYPE_INT, CONF_GLOBAL, 0, 0, NULL},
 	// override FOURCC in output file
 	{"ffourcc", &force_fourcc, CONF_TYPE_STRING, CONF_GLOBAL, 4, 4, NULL},
 
@@ -270,8 +274,18 @@ m_option_t mencoder_opts[]={
 #else
 	{"toolameopts", "MPlayer was compiled without libtoolame. See README or DOCS.\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
 #endif
+#ifdef HAVE_TWOLAME
+	{"twolameopts", twolameopts_conf, CONF_TYPE_SUBCONFIG, CONF_GLOBAL, 0, 0, NULL},
+#else
+	{"twolameopts", "MPlayer was compiled without libtwolame. See README or DOCS.\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
+#endif
+#ifdef HAVE_FAAC
+	{"faacopts", faacopts_conf, CONF_TYPE_SUBCONFIG, CONF_GLOBAL, 0, 0, NULL},
+#else
+	{"faacopts", "MPlayer was compiled without libfaac. See README or DOCS.\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
+#endif
 #ifdef USE_WIN32DLL
-	{"vfwopts", vfwopts_conf, CONF_TYPE_SUBCONFIG, CONF_GLOBAL, 0, 0, NULL},
+	{"xvfwopts", vfwopts_conf, CONF_TYPE_SUBCONFIG, CONF_GLOBAL, 0, 0, NULL},
 #endif
 #if defined(HAVE_XVID3) || defined(HAVE_XVID4)
 	{"xvidencopts", xvidencopts_conf, CONF_TYPE_SUBCONFIG, CONF_GLOBAL, 0, 0, NULL},
@@ -282,7 +296,7 @@ m_option_t mencoder_opts[]={
 
 	{"nuvopts",  nuvopts_conf, CONF_TYPE_SUBCONFIG, CONF_GLOBAL, 0, 0, NULL},
 	{"mpegopts",  mpegopts_conf, CONF_TYPE_SUBCONFIG, CONF_GLOBAL, 0, 0, NULL},
-#ifdef USE_LIBAVFORMAT
+#if defined(USE_LIBAVFORMAT) ||  defined(USE_LIBAVFORMAT_SO)
 	{"lavfopts",  lavfopts_conf, CONF_TYPE_SUBCONFIG, CONF_GLOBAL, 0, 0, NULL},
 #endif	
 

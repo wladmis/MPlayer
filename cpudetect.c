@@ -20,7 +20,7 @@ CpuCaps gCpuCaps;
 #include <machine/cpu.h>
 #endif
 
-#ifdef __FreeBSD__
+#if defined(__FreeBSD__) || defined(__DragonFly__)
 #include <sys/types.h>
 #include <sys/sysctl.h>
 #endif
@@ -31,6 +31,10 @@ CpuCaps gCpuCaps;
 
 #ifdef WIN32
 #include <windows.h>
+#endif
+
+#ifdef __AMIGAOS4__
+#include <proto/exec.h>
 #endif
 
 //#define X86_FXSR_MAGIC
@@ -45,7 +49,7 @@ static void check_os_katmai_support( void );
 
 #if 1
 // return TRUE if cpuid supported
-static int has_cpuid()
+static int has_cpuid(void)
 {
 	long a, c;
 
@@ -114,16 +118,23 @@ void GetCpuCaps( CpuCaps *caps)
 			(char*) (regs+1),(char*) (regs+3),(char*) (regs+2), regs[0]);
 	if (regs[0]>=0x00000001)
 	{
-		char *tmpstr;
+		char *tmpstr, *ptmpstr;
 		unsigned cl_size;
 
 		do_cpuid(0x00000001, regs2);
 
 		caps->cpuType=(regs2[0] >> 8)&0xf;
+		caps->cpuModel=(regs2[0] >> 4)&0xf;
+
+// see AMD64 Architecture Programmer's Manual, Volume 3: General-purpose and
+// System Instructions, Table 3-2: Effective family computation, page 120.
 		if(caps->cpuType==0xf){
-		    // use extended family (P4, IA64)
-		    caps->cpuType=8+((regs2[0]>>20)&255);
+		    // use extended family (P4, IA64, K8)
+		    caps->cpuType=0xf+((regs2[0]>>20)&255);
 		}
+		if(caps->cpuType==0xf || caps->cpuType==6)
+		    caps->cpuModel |= ((regs2[0]>>16)&0xf) << 4;
+
 		caps->cpuStepping=regs2[0] & 0xf;
 
 		// general feature flags:
@@ -135,11 +146,13 @@ void GetCpuCaps( CpuCaps *caps)
 		cl_size = ((regs2[1] >> 8) & 0xFF)*8;
 		if(cl_size) caps->cl_size = cl_size;
 
-		tmpstr=GetCpuFriendlyName(regs, regs2);
+		ptmpstr=tmpstr=GetCpuFriendlyName(regs, regs2);
+		while(*ptmpstr == ' ')
+		    ptmpstr++;
 		mp_msg(MSGT_CPUDETECT,MSGL_INFO,"CPU: %s ",tmpstr);
 		free(tmpstr);
-		mp_msg(MSGT_CPUDETECT,MSGL_INFO,"(Family: %d, Stepping: %d)\n",
-		    caps->cpuType, caps->cpuStepping);
+		mp_msg(MSGT_CPUDETECT,MSGL_INFO,"(Family: %d, Model: %d, Stepping: %d)\n",
+		    caps->cpuType, caps->cpuModel, caps->cpuStepping);
 
 	}
 	do_cpuid(0x80000000, regs);
@@ -157,7 +170,7 @@ void GetCpuCaps( CpuCaps *caps)
 		mp_msg(MSGT_CPUDETECT,MSGL_V,"extended cache-info: %d\n",regs2[2]&0x7FFFFFFF);
 		caps->cl_size  = regs2[2] & 0xFF;
 	}
-	mp_msg(MSGT_CPUDETECT,MSGL_INFO,"Detected cache-line size is %u bytes\n",caps->cl_size);
+	mp_msg(MSGT_CPUDETECT,MSGL_V,"Detected cache-line size is %u bytes\n",caps->cl_size);
 #if 0
 	mp_msg(MSGT_CPUDETECT,MSGL_INFO,"cpudetect: MMX=%d MMX2=%d SSE=%d SSE2=%d 3DNow=%d 3DNowExt=%d\n",
 		gCpuCaps.hasMMX,
@@ -169,7 +182,7 @@ void GetCpuCaps( CpuCaps *caps)
 #endif
 
 		/* FIXME: Does SSE2 need more OS support, too? */
-#if defined(__linux__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__CYGWIN__) || defined(__OpenBSD__)
+#if defined(__linux__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__CYGWIN__) || defined(__OpenBSD__) || defined(__DragonFly__)
 		if (caps->hasSSE)
 			check_os_katmai_support();
 		if (!caps->hasSSE)
@@ -218,7 +231,7 @@ void GetCpuCaps( CpuCaps *caps)
 
 char *GetCpuFriendlyName(unsigned int regs[], unsigned int regs2[]){
 #include "cputable.h" /* get cpuname and cpuvendors */
-	char vendor[17];
+	char vendor[13];
 	char *retname;
 	int i;
 
@@ -228,6 +241,19 @@ char *GetCpuFriendlyName(unsigned int regs[], unsigned int regs2[]){
 	}
 
 	sprintf(vendor,"%.4s%.4s%.4s",(char*)(regs+1),(char*)(regs+3),(char*)(regs+2));
+
+	do_cpuid(0x80000000,regs);
+	if (regs[0] >= 0x80000004)
+	{
+		// CPU has built-in namestring
+		retname[0] = '\0';
+		for (i = 0x80000002; i <= 0x80000004; i++)
+		{
+			do_cpuid(i, regs);
+			strncat(retname, (char*)regs, 16);
+		}
+		return retname;
+	}
 
 	for(i=0; i<MAX_VENDORS; i++){
 		if(!strcmp(cpuvendors[i].string,vendor)){
@@ -324,7 +350,7 @@ static void check_os_katmai_support( void )
 #ifdef ARCH_X86_64
    gCpuCaps.hasSSE=1;
    gCpuCaps.hasSSE2=1;
-#elif defined(__FreeBSD__)
+#elif defined(__FreeBSD__) || defined(__DragonFly__)
    int has_sse=0, ret;
    size_t len=sizeof(has_sse);
 
@@ -465,6 +491,7 @@ static void check_os_katmai_support( void )
 #ifdef SYS_DARWIN
 #include <sys/sysctl.h>
 #else
+#ifndef __AMIGAOS4__
 #include <signal.h>
 #include <setjmp.h>
 
@@ -481,11 +508,13 @@ static void sigill_handler (int sig)
     canjump = 0;
     siglongjmp (jmpbuf, 1);
 }
+#endif //__AMIGAOS4__
 #endif
 
 void GetCpuCaps( CpuCaps *caps)
 {
 	caps->cpuType=0;
+	caps->cpuModel=0;
 	caps->cpuStepping=0;
 	caps->hasMMX=0;
 	caps->hasMMX2=0;
@@ -514,6 +543,13 @@ void GetCpuCaps( CpuCaps *caps)
                                 caps->hasAltiVec = 1;
         }
 #else /* SYS_DARWIN */
+#ifdef __AMIGAOS4__
+        ULONG result = 0;
+
+        GetCPUInfoTags(GCIT_VectorUnit, &result, TAG_DONE);
+        if (result == VECTORTYPE_ALTIVEC)
+        	caps->hasAltiVec = 1;
+#else
 /* no Darwin, do it the brute-force way */
 /* this is borrowed from the libmpeg2 library */
         {
@@ -532,6 +568,7 @@ void GetCpuCaps( CpuCaps *caps)
             caps->hasAltiVec = 1;
           }
         }
+#endif //__AMIGAOS4__
 #endif /* SYS_DARWIN */
         mp_msg(MSGT_CPUDETECT,MSGL_INFO,"AltiVec %sfound\n", (caps->hasAltiVec ? "" : "not "));
 #endif /* HAVE_ALTIVEC */

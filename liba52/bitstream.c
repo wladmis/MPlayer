@@ -8,7 +8,7 @@
  *
  * Modified for use with MPlayer, changes contained in liba52_changes.diff.
  * detailed CVS changelog at http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
- * $Id: bitstream.c,v 1.3 2005/03/22 23:27:18 diego Exp $
+ * $Id: bitstream.c 17567 2006-02-09 14:08:03Z rathann $
  *
  * a52dec is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -59,7 +59,7 @@ void bitstream_set_ptr (uint8_t * buf)
 }
 
 static inline void
-bitstream_fill_current()
+bitstream_fill_current(void)
 {
     uint32_t tmp;
 

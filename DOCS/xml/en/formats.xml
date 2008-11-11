@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- $Revision: 1.21 $ -->
-<sect1 id="formats">
-<title>Supported formats</title>
+<!-- $Revision: 18247 $ -->
+<chapter id="containers">
+<title>Containers</title>
 
 <para>
 It is important to clarify a common mistake. When people see a file with a
@@ -12,15 +12,15 @@ popular belief such a file <emphasis>can</emphasis> contain MPEG-1 video.
 
 <para>
 You see, a <emphasis role="bold">codec</emphasis> is not the same as a
-<emphasis role="bold">file format</emphasis>.
+<emphasis role="bold">container format</emphasis>.
 Examples of video <emphasis role="bold">codecs</emphasis> are: MPEG-1, MPEG-2,
 MPEG-4 (DivX), Indeo5, 3ivx.
-Examples of file <emphasis role="bold">formats</emphasis> are: MPG, AVI, ASF.
+Examples of container <emphasis role="bold">formats</emphasis> are: MPG, AVI, ASF.
 </para>
 
 <para>
 In theory, you can put an OpenDivX video and MP3 audio
-into an <emphasis role="bold">MPG format file</emphasis>. However, most
+into an <emphasis role="bold">MPG container</emphasis>. However, most
 players will not play it, since they expect MPEG-1 video and MP2 audio (unlike
 <emphasis role="bold">AVI</emphasis>, <emphasis role="bold">MPG</emphasis>
 does not have the necessary fields to describe its video and audio streams).
@@ -30,10 +30,10 @@ Or you might put MPEG-1 video into an AVI file.
 </para>
 
 
-<sect2 id="video-formats">
+<sect1 id="video-formats">
 <title>Video formats</title>
 
-<sect3 id="mpg-vob-dat">
+<sect2 id="mpg-vob-dat">
 <title>MPEG files</title>
 
 <para>
@@ -81,14 +81,14 @@ functional.
 One important feature of MPGs is that they have a field to describe the
 aspect ratio of the video stream within. For example SVCDs have 480x480
 resolution video, and in the header that field is set to 4:3, so that it is
-played at 640x480. AVI files do not have this field, so they have to be
+played at 640x480. AVI files often lack this field, so they have to be
 rescaled during encoding or played with the <option>-aspect</option>
 option.
 </para>
-</sect3>
+</sect2>
 
 
-<sect3 id="avi">
+<sect2 id="avi">
 <title>AVI files</title>
 
 <para>
@@ -167,10 +167,10 @@ that most AVI encoders/multiplexers create bad files when using VBR audio.
 There are only two known exceptions: <application>NanDub</application> and
 <link linkend="mencoder"><application>MEncoder</application></link>.
 </para>
-</sect3>
+</sect2>
 
 
-<sect3 id="asf-wmv">
+<sect2 id="asf-wmv">
 <title>ASF/WMV files</title>
 <para>
 ASF (Active Streaming Format) comes from Microsoft. They developed two
@@ -182,10 +182,10 @@ there is no compatibility at all (it is just another legal game).
 v2.0 files :). Note that ASF files nowadays come with the extension
 <filename>.WMA</filename> or <filename>.WMV</filename>.
 </para>
-</sect3>
+</sect2>
 
 
-<sect3 id="mov">
+<sect2 id="mov">
 <title>QuickTime/MOV files</title>
 
 <para>
@@ -204,10 +204,10 @@ Most new QuickTime files use <emphasis role="bold">Sorenson</emphasis> video and
 QDesign Music audio. See our <link linkend="sorenson">Sorenson</link> codec section.
 </para>
 </note>
-</sect3>
+</sect2>
 
 
-<sect3 id="vivo">
+<sect2 id="vivo">
 <title>VIVO files</title>
 
 <para>
@@ -231,10 +231,10 @@ See the
 <link linkend="vivo-audio">VIVO audio codec</link>
 sections for installation instructions.
 </para>
-</sect3>
+</sect2>
 
 
-<sect3 id="fli">
+<sect2 id="fli">
 <title>FLI files</title>
 <para>
 <emphasis role="bold">FLI</emphasis> is a very old file format used by
@@ -244,10 +244,10 @@ even able to seek within them (useful when looping with the
 <option>-loop</option> option). FLI files do not have keyframes, so the
 picture will be messy for a short time after seeking.
 </para>
-</sect3>
+</sect2>
 
 
-<sect3 id="realmedia">
+<sect2 id="realmedia">
 <title>RealMedia (RM) files</title>
 
 <para>
@@ -257,10 +257,10 @@ Here are the lists of the supported <link
 linkend="realvideo">RealVideo</link> and <link
 linkend="realaudio">RealAudio</link> codecs.
 </para>
-</sect3>
+</sect2>
 
 
-<sect3 id="nuppelvideo">
+<sect2 id="nuppelvideo">
 <title>NuppelVideo files</title>
 <para>
 <ulink url="http://frost.htu.tuwien.ac.at/~roman/nuppelvideo/">NuppelVideo</ulink>
@@ -272,10 +272,10 @@ compressed, and YV12+lzo compressed frames.
 them with <application>MEncoder</application> to MPEG-4 (DivX)/etc!) them all.
 Seeking works.
 </para>
-</sect3>
+</sect2>
 
 
-<sect3 id="yuv4mpeg">
+<sect2 id="yuv4mpeg">
 <title>yuv4mpeg files</title>
 <para>
 <ulink url="http://mjpeg.sf.net">yuv4mpeg / yuv4mpeg2</ulink>
@@ -284,27 +284,27 @@ is a file format used by the
 You can grab, produce, filter or encode video in this format using these tools.
 The file format is really a sequence of uncompressed YUV 4:2:0 images.
 </para>
-</sect3>
+</sect2>
 
 
-<sect3 id="film">
+<sect2 id="film">
 <title>FILM files</title>
 <para>
 This format is used on old Sega Saturn CD-ROM games.
 </para>
-</sect3>
+</sect2>
 
 
-<sect3 id="roq">
+<sect2 id="roq">
 <title>RoQ files</title>
 <para>
 RoQ files are multimedia files used in some ID games such as Quake III and
 Return to Castle Wolfenstein.
 </para>
-</sect3>
+</sect2>
 
 
-<sect3 id="ogg">
+<sect2 id="ogg">
 <title>OGG/OGM files</title>
 <para>
 This is a new fileformat from <ulink url="http://www.xiph.org">Xiphophorus</ulink>.
@@ -313,30 +313,30 @@ It can contain any video or audio codec, CBR or VBR. You'll need
 <systemitem class="library">libvorbis</systemitem> installed before
 compiling <application>MPlayer</application> to be able to play it.
 </para>
-</sect3>
+</sect2>
 
 
-<sect3 id="sdp">
+<sect2 id="sdp">
 <title>SDP files</title>
 <para>
 <ulink url="ftp://ftp.rfc-editor.org/in-notes/rfc2327.txt">SDP</ulink> is an
 IETF standard format for describing video and/or audio RTP streams.
-(The &quot;<ulink url="http://www.live.com/mplayer/">LIVE.COM Streaming Media</ulink>&quot;
+(The &quot;<ulink url="http://www.live555.com/mplayer/">LIVE555 Streaming Media</ulink>&quot;
 are required.)
 </para>
-</sect3>
+</sect2>
 
 
-<sect3 id="pva">
+<sect2 id="pva">
 <title>PVA files</title>
 <para>
 PVA is an MPEG-like format used by DVB TV boards' software (e.g.:
 <application>MultiDec</application>, <application>WinTV</application> under Windows).
 </para>
-</sect3>
+</sect2>
 
 
-<sect3 id="nsv">
+<sect2 id="nsv">
 <title>NSV files</title>
 <para>
 NSV (NullSoft Video) is the file format used by the
@@ -350,10 +350,29 @@ can't be decoded yet. Moreover streams from that site need an extra
 depacketization layer that still has to be implemented (those files are
 unplayable anyway because they use VLB audio).
 </para>
-</sect3>
+</sect2>
 
 
-<sect3 id="gif">
+<sect2 id="matroska">
+<title>Matroska files</title>
+<para>
+Matroska is an open container format.
+Read more on the <ulink url="http://www.matroska.org/">official site</ulink>.
+</para>
+</sect2>
+
+
+<sect2 id="nut">
+<title>NUT files</title>
+<para>
+NUT is the container format developed by <application>MPlayer</application> and
+<application>FFmpeg</application> folks. Both projects support it.
+Read more on the <ulink url="http://www.nut.hu/">official site</ulink>.
+</para>
+</sect2>
+
+
+<sect2 id="gif">
 <title>GIF files</title>
 <para>
 The <emphasis role="bold">GIF</emphasis> format is a common format for web
@@ -387,12 +406,12 @@ download a copy from the
 homepage</ulink>. For detailed technical information, have a look at the
 <ulink url="http://www.w3.org/Graphics/GIF/spec-gif89a.txt">GIF89a specification</ulink>.
 </para>
-</sect3>
 </sect2>
+</sect1>
 
 <!-- ********** -->
 
-<sect2 id="audio-formats">
+<sect1 id="audio-formats">
 <title>Audio formats</title>
 
 <para>
@@ -403,7 +422,7 @@ a recommended usage of <application>MPlayer</application>, you better use <ulink
 url="http://www.xmms.org">XMMS</ulink>.
 </para>
 
-<sect3 id="mp3">
+<sect2 id="mp3">
 <title>MP3 files</title>
 <para>
 You may have problems playing certain MP3 files that
@@ -413,35 +432,18 @@ for certain broken MPEG files and thus will remain like this for the
 foreseeable future. The <option>-demuxer</option> flag described in the
 man page may help you in these cases.
 </para>
-</sect3>
+</sect2>
 
-<sect3 id="wav">
-<title>WAV files</title>
-<para>
-</para>
-</sect3>
-
-<sect3 id="ogg-vorbis">
+<sect2 id="ogg-vorbis">
 <title>OGG/OGM files (Vorbis)</title>
 <para>
 Requires properly installed
 <systemitem class="library">libogg</systemitem> and
 <systemitem class="library">libvorbis</systemitem>.
 </para>
-</sect3>
+</sect2>
 
-<sect3 id="wma-asf">
-<title>WMA/ASF files</title>
-<para>
-</para>
-</sect3>
-
-<sect3 id="mp4">
-<title>MP4 files</title>
-<para></para>
-</sect3>
-
-<sect3 id="cdda">
+<sect2 id="cdda">
 <title>CD audio</title>
 <para>
 <application>MPlayer</application> can use <application>cdparanoia</application>
@@ -453,9 +455,9 @@ to play CDDA (Audio CD). The scope of this section does not contain enumerating
 See the man page's <option>-cdda</option> option which can be used to pass
 options to <application>cdparanoia</application>.
 </para>
-</sect3>
+</sect2>
 
-<sect3 id="xmms">
+<sect2 id="xmms">
 <title>XMMS</title>
 <para>
 <application>MPlayer</application> can use <application>XMMS</application> input
@@ -472,6 +474,7 @@ If that does not work, you might need to set the <application>XMMS</application>
 plugin and library path explicitly by way of the <option>--with-xmmsplugindir</option>
 and <option>--with-xmmslibdir</option> options.
 </para>
-</sect3>
 </sect2>
 </sect1>
+
+</chapter>

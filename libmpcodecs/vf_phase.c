@@ -3,14 +3,14 @@
 #include <string.h>
 #include <limits.h>
 
-#include "../config.h"
-#include "../mp_msg.h"
+#include "config.h"
+#include "mp_msg.h"
 
 #include "img_format.h"
 #include "mp_image.h"
 #include "vf.h"
 
-#include "../libvo/fastmemcpy.h"
+#include "libvo/fastmemcpy.h"
 
 enum mode { PROGRESSIVE, TOP_FIRST, BOTTOM_FIRST,
 	    TOP_FIRST_ANALYZE, BOTTOM_FIRST_ANALYZE,
@@ -59,7 +59,7 @@ static void do_plane(unsigned char *to, unsigned char *from,
  * (the result is actually multiplied by 25)
  */
 
-#define diff(a, as, b, bs) (t=(*a-b[bs]<<2)+a[as<<1]-b[-bs], t*t)
+#define diff(a, as, b, bs) (t=((*a-b[bs])<<2)+a[as<<1]-b[-bs], t*t)
 
 /*
  * Find which field combination has the smallest average squared difference
@@ -166,19 +166,19 @@ static enum mode analyze_plane(unsigned char *old, unsigned char *new,
 	 mode=PROGRESSIVE;
       }
 
-   if(verbose)
+   if( mp_msg_test(MSGT_VFILTER,MSGL_V) )
       {
-      printf("%c", mode==BOTTOM_FIRST?'b':mode==TOP_FIRST?'t':'p');
-      if(tdiff==65536.0) printf("     N/A "); else printf(" %8.2f", tdiff);
-      if(bdiff==65536.0) printf("     N/A "); else printf(" %8.2f", bdiff);
-      if(pdiff==65536.0) printf("     N/A "); else printf(" %8.2f", pdiff);
-      printf("        \n");
+      mp_msg(MSGT_VFILTER, MSGL_INFO, "%c", mode==BOTTOM_FIRST?'b':mode==TOP_FIRST?'t':'p');
+      if(tdiff==65536.0) mp_msg(MSGT_VFILTER, MSGL_INFO,"     N/A "); else mp_msg(MSGT_VFILTER, MSGL_INFO," %8.2f", tdiff);
+      if(bdiff==65536.0) mp_msg(MSGT_VFILTER, MSGL_INFO,"     N/A "); else mp_msg(MSGT_VFILTER, MSGL_INFO," %8.2f", bdiff);
+      if(pdiff==65536.0) mp_msg(MSGT_VFILTER, MSGL_INFO,"     N/A "); else mp_msg(MSGT_VFILTER, MSGL_INFO," %8.2f", pdiff);
+      mp_msg(MSGT_VFILTER, MSGL_INFO,"        \n");
       }
 
    return mode;
    }
 
-static int put_image(struct vf_instance_s* vf, mp_image_t *mpi)
+static int put_image(struct vf_instance_s* vf, mp_image_t *mpi, double pts)
    {
    mp_image_t *dmpi;
    int w;
@@ -219,7 +219,7 @@ static int put_image(struct vf_instance_s* vf, mp_image_t *mpi)
 	       &vf->priv->buf[2], mode);
       }
 
-   return vf_next_put_image(vf, dmpi);
+   return vf_next_put_image(vf, dmpi, MP_NOPTS_VALUE);
    }
 
 static void uninit(struct vf_instance_s* vf)

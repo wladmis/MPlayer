@@ -80,7 +80,6 @@ int mScreen;
 int mLocalDisplay;
 
 /* output window id */
-extern int WinID;
 int vo_mouse_autohide = 0;
 int vo_wm_type = 0;
 int vo_fs_type = 0; // needs to be accessible for GUI X11 code
@@ -101,6 +100,8 @@ static Atom XA_WIN_PROTOCOLS;
 static Atom XA_WIN_LAYER;
 static Atom XA_WIN_HINTS;
 static Atom XA_BLACKBOX_PID;
+static Atom XAWM_PROTOCOLS;
+static Atom XAWM_DELETE_WINDOW;
 
 #define XA_INIT(x) XA##x = XInternAtom(mDisplay, #x, False)
 
@@ -109,11 +110,6 @@ static int vo_old_y = 0;
 static int vo_old_width = 0;
 static int vo_old_height = 0;
 
-#ifdef HAVE_XINERAMA
-int xinerama_screen = 0;
-int xinerama_x = 0;
-int xinerama_y = 0;
-#endif
 #ifdef HAVE_XF86VM
 XF86VidModeModeInfo **vidmodes = NULL;
 XF86VidModeModeLine modeline;
@@ -206,7 +202,7 @@ static int x11_errorhandler(Display * display, XErrorEvent * event)
     mp_msg(MSGT_VO, MSGL_ERR, "X11 error: %s\n", msg);
 
     mp_msg(MSGT_VO, MSGL_V,
-           "Type: %x, display: %x, resourceid: %x, serial: %x\n",
+           "Type: %x, display: %p, resourceid: %lx, serial: %lx\n",
            event->type, event->display, event->resourceid, event->serial);
     mp_msg(MSGT_VO, MSGL_V,
            "Error code: %x, request code: %x, minor code: %x\n",
@@ -220,6 +216,7 @@ static int x11_errorhandler(Display * display, XErrorEvent * event)
 void fstype_help(void)
 {
     mp_msg(MSGT_VO, MSGL_INFO, MSGTR_AvailableFsType);
+    mp_msg(MSGT_IDENTIFY, MSGL_INFO, "ID_FULL_SCREEN_TYPES\n");
 
     mp_msg(MSGT_VO, MSGL_INFO, "    %-15s %s\n", "none",
            "don't set fullscreen window layer");
@@ -239,7 +236,7 @@ void fstype_help(void)
            "use _NETWM_STATE_STAYS_ON_TOP hint if available");
     mp_msg(MSGT_VO, MSGL_INFO,
            "You can also negate the settings with simply putting '-' in the beginning");
-    mp_msg(MSGT_VO, MSGL_INFO, "\n\n");
+    mp_msg(MSGT_VO, MSGL_INFO, "\n");
 }
 
 static void fstype_dump(int fstype)
@@ -361,6 +358,45 @@ static void init_atoms(void)
     XA_INIT(_WIN_LAYER);
     XA_INIT(_WIN_HINTS);
     XA_INIT(_BLACKBOX_PID);
+    XA_INIT(WM_PROTOCOLS);
+    XA_INIT(WM_DELETE_WINDOW);
+}
+
+void update_xinerama_info(void) {
+    int screen = xinerama_screen;
+    xinerama_x = xinerama_y = 0;
+#ifdef HAVE_XINERAMA
+    if (screen >= -1 && XineramaIsActive(mDisplay))
+    {
+        XineramaScreenInfo *screens;
+        int num_screens;
+
+        screens = XineramaQueryScreens(mDisplay, &num_screens);
+        if (screen >= num_screens)
+            screen = num_screens - 1;
+        if (screen == -1) {
+            int x = vo_dx + vo_dwidth / 2;
+            int y = vo_dy + vo_dheight / 2;
+            for (screen = num_screens - 1; screen > 0; screen--) {
+               int left = screens[screen].x_org;
+               int right = left + screens[screen].width;
+               int top = screens[screen].y_org;
+               int bottom = top + screens[screen].height;
+               if (left <= x && x <= right && top <= y && y <= bottom)
+                   break;
+            }
+        }
+        if (screen < 0)
+            screen = 0;
+        vo_screenwidth = screens[screen].width;
+        vo_screenheight = screens[screen].height;
+        xinerama_x = screens[screen].x_org;
+        xinerama_y = screens[screen].y_org;
+
+        XFree(screens);
+    }
+#endif
+    aspect_save_screenres(vo_screenwidth, vo_screenheight);
 }
 
 int vo_init(void)
@@ -410,25 +446,6 @@ int vo_init(void)
 
     init_atoms();
 
-#ifdef HAVE_XINERAMA
-    if (XineramaIsActive(mDisplay))
-    {
-        XineramaScreenInfo *screens;
-        int num_screens;
-
-        screens = XineramaQueryScreens(mDisplay, &num_screens);
-        if (xinerama_screen >= num_screens)
-            xinerama_screen = 0;
-        if (!vo_screenwidth)
-            vo_screenwidth = screens[xinerama_screen].width;
-        if (!vo_screenheight)
-            vo_screenheight = screens[xinerama_screen].height;
-        xinerama_x = screens[xinerama_screen].x_org;
-        xinerama_y = screens[xinerama_screen].y_org;
-
-        XFree(screens);
-    } else
-#endif
 #ifdef HAVE_XF86VM
     {
         int clock;
@@ -505,7 +522,7 @@ int vo_init(void)
         mLocalDisplay = 1;
     else
         mLocalDisplay = 0;
-    mp_msg(MSGT_VO, MSGL_INFO,
+    mp_msg(MSGT_VO, MSGL_V,
            "vo: X11 running at %dx%d with depth %d and %d bpp (\"%s\" => %s display)\n",
            vo_screenwidth, vo_screenheight, depth, vo_depthonscreen,
            dispName, mLocalDisplay ? "local" : "remote");
@@ -547,16 +564,16 @@ void vo_x11_putkey_ext(int keysym)
     switch (keysym)
     {
         case XF86XK_AudioPause:
-            mplayer_put_key(KEY_XF86_PAUSE);
+            mplayer_put_key(KEY_PAUSE);
             break;
         case XF86XK_AudioStop:
-            mplayer_put_key(KEY_XF86_STOP);
+            mplayer_put_key(KEY_STOP);
             break;
         case XF86XK_AudioPrev:
-            mplayer_put_key(KEY_XF86_PREV);
+            mplayer_put_key(KEY_PREV);
             break;
         case XF86XK_AudioNext:
-            mplayer_put_key(KEY_XF86_NEXT);
+            mplayer_put_key(KEY_NEXT);
             break;
         default:
             break;
@@ -585,6 +602,9 @@ void vo_x11_putkey(int key)
             break;
         case wsEscape:
             mplayer_put_key(KEY_ESC);
+            break;
+        case wsTab:
+            mplayer_put_key(KEY_TAB);
             break;
         case wsEnter:
             mplayer_put_key(KEY_ENTER);
@@ -645,14 +665,6 @@ void vo_x11_putkey(int key)
             break;
         case wsF12:
             mplayer_put_key(KEY_F + 12);
-            break;
-        case wsq:
-        case wsQ:
-            mplayer_put_key('q');
-            break;
-        case wsp:
-        case wsP:
-            mplayer_put_key('p');
             break;
         case wsMinus:
         case wsGrayMinus:
@@ -727,15 +739,6 @@ void vo_x11_putkey(int key)
         case wsGrayEnter:
             mplayer_put_key(KEY_KPENTER);
             break;
-        case wsm:
-        case wsM:
-            mplayer_put_key('m');
-            break;
-        case wso:
-        case wsO:
-            mplayer_put_key('o');
-            break;
-
         case wsGrave:
             mplayer_put_key('`');
             break;
@@ -864,10 +867,6 @@ typedef struct
     long state;
 } MotifWmHints;
 
-extern int vo_depthonscreen;
-extern int vo_screenwidth;
-extern int vo_screenheight;
-
 static MotifWmHints vo_MotifWmHints;
 static Atom vo_MotifHints = None;
 
@@ -957,7 +956,7 @@ void vo_setwindow(Window w, GC g)
 }
 #endif
 
-void vo_x11_uninit()
+void vo_x11_uninit(void)
 {
     saver_on(mDisplay);
     if (vo_window != None)
@@ -1002,8 +1001,8 @@ void vo_x11_uninit()
     }
 }
 
-int vo_mouse_timer_const = 30;
-static int vo_mouse_counter = 30;
+static unsigned int mouse_timer;
+static int mouse_waiting_hide;
 
 int vo_x11_check_events(Display * mydisplay)
 {
@@ -1015,8 +1014,11 @@ int vo_x11_check_events(Display * mydisplay)
 
 // unsigned long  vo_KeyTable[512];
 
-    if ((vo_mouse_autohide) && (--vo_mouse_counter == 0))
+    if ((vo_mouse_autohide) && mouse_waiting_hide &&
+                                 (GetTimerMS() - mouse_timer >= 1000)) {
         vo_hidecursor(mydisplay, vo_window);
+        mouse_waiting_hide = 0;
+    }
 
     while (XPending(mydisplay))
     {
@@ -1085,14 +1087,16 @@ int vo_x11_check_events(Display * mydisplay)
                 if (vo_mouse_autohide)
                 {
                     vo_showcursor(mydisplay, vo_window);
-                    vo_mouse_counter = vo_mouse_timer_const;
+                    mouse_waiting_hide = 1;
+                    mouse_timer = GetTimerMS();
                 }
                 break;
             case ButtonPress:
                 if (vo_mouse_autohide)
                 {
                     vo_showcursor(mydisplay, vo_window);
-                    vo_mouse_counter = vo_mouse_timer_const;
+                    mouse_waiting_hide = 1;
+                    mouse_timer = GetTimerMS();
                 }
                 // Ignore mouse whell press event
                 if (Event.xbutton.button > 3)
@@ -1113,7 +1117,8 @@ int vo_x11_check_events(Display * mydisplay)
                 if (vo_mouse_autohide)
                 {
                     vo_showcursor(mydisplay, vo_window);
-                    vo_mouse_counter = vo_mouse_timer_const;
+                    mouse_waiting_hide = 1;
+                    mouse_timer = GetTimerMS();
                 }
 #ifdef HAVE_NEW_GUI
                 // Ignor mouse button 1 - 3 under gui 
@@ -1140,6 +1145,11 @@ int vo_x11_check_events(Display * mydisplay)
                 vo_hint.win_gravity = old_gravity;
                 XSetWMNormalHints(mDisplay, vo_window, &vo_hint);
                 vo_fs_flip = 0;
+                break;
+	    case ClientMessage:
+                if (Event.xclient.message_type == XAWM_PROTOCOLS &&
+                    Event.xclient.data.l[0] == XAWM_DELETE_WINDOW)
+                    mplayer_put_key(KEY_CLOSE_WIN);
                 break;
         }
     }
@@ -1245,6 +1255,7 @@ Window vo_x11_create_smooth_window(Display * mDisplay, Window mRoot,
     ret_win =
         XCreateWindow(mDisplay, mRootWin, x, y, width, height, 0, depth,
                       CopyFromParent, vis, xswamask, &xswa);
+    XSetWMProtocols(mDisplay, ret_win, &XAWM_DELETE_WINDOW, 1);
     if (!f_gc)
         f_gc = XCreateGC(mDisplay, ret_win, 0, 0);
     XSetForeground(mDisplay, f_gc, 0);
@@ -1316,7 +1327,7 @@ void vo_x11_setlayer(Display * mDisplay, Window vo_window, int layer)
         xev.data.l[0] = layer ? fs_layer : orig_layer;  // if not fullscreen, stay on default layer
         xev.data.l[1] = CurrentTime;
         mp_msg(MSGT_VO, MSGL_V,
-               "[x11] Layered style stay on top (layer %d).\n",
+               "[x11] Layered style stay on top (layer %ld).\n",
                xev.data.l[0]);
         XSendEvent(mDisplay, mRootWin, False, SubstructureNotifyMask,
                    (XEvent *) & xev);
@@ -1464,8 +1475,9 @@ void vo_x11_fullscreen(void)
             vo_old_y = vo_dy;
             vo_old_width = vo_dwidth;
             vo_old_height = vo_dheight;
-            x = 0;
-            y = 0;
+            update_xinerama_info();
+            x = xinerama_x;
+            y = xinerama_y;
             w = vo_screenwidth;
             h = vo_screenheight;
         }
@@ -1498,10 +1510,6 @@ void vo_x11_fullscreen(void)
     /* some WMs lose ontop after fullscreeen */
     if ((!(vo_fs)) & vo_ontop)
         vo_x11_setlayer(mDisplay, vo_window, vo_ontop);
-
-#ifdef HAVE_XINERAMA
-    vo_x11_xinerama_move(mDisplay, vo_window);
-#endif
 
     XMapRaised(mDisplay, vo_window);
     XRaiseWindow(mDisplay, vo_window);
@@ -1589,8 +1597,7 @@ void xscreensaver_heartbeat(void)
     unsigned int time = GetTimerMS();
     XEvent ev;
 
-    if (mDisplay && xs_windowid &&
-        ((time - time_last) > 30000 || (time - time_last) < 0))
+    if (mDisplay && xs_windowid && (time - time_last) > 30000)
     {
         time_last = time;
 
@@ -1603,8 +1610,10 @@ void xscreensaver_heartbeat(void)
         ev.xclient.data.l[0] = (long) deactivate;
 
         mp_msg(MSGT_VO, MSGL_DBG2, "Pinging xscreensaver.\n");
+        old_handler = XSetErrorHandler(badwindow_handler);
         XSendEvent(mDisplay, xs_windowid, False, 0L, &ev);
         XSync(mDisplay, False);
+        XSetErrorHandler(old_handler);        
     }
 }
 
@@ -1615,12 +1624,11 @@ static void xscreensaver_disable(Display * dpy)
     xs_windowid = find_xscreensaver_window(dpy);
     if (!xs_windowid)
     {
-        mp_msg(MSGT_VO, MSGL_INFO,
-               "xscreensaver_disable: Could not find xscreensaver window.\n");
+        mp_msg(MSGT_VO, MSGL_INFO, MSGTR_CouldNotFindXScreenSaver);
         return;
     }
     mp_msg(MSGT_VO, MSGL_INFO,
-           "xscreensaver_disable: xscreensaver wid=%d.\n", xs_windowid);
+           "xscreensaver_disable: xscreensaver wid=%ld.\n", xs_windowid);
 
     deactivate = XInternAtom(dpy, "DEACTIVATE", False);
     screensaver = XInternAtom(dpy, "SCREENSAVER", False);
@@ -1794,17 +1802,6 @@ void vo_x11_selectinput_witherr(Display * display, Window w,
     }
 }
 
-#ifdef HAVE_XINERAMA
-void vo_x11_xinerama_move(Display * dsp, Window w)
-{
-    if (XineramaIsActive(dsp) && !geometry_xy_changed)
-    {
-        /* printf("XXXX Xinerama screen: x: %hd y: %hd\n",xinerama_x,xinerama_y); */
-        XMoveWindow(dsp, w, xinerama_x, xinerama_y);
-    }
-}
-#endif
-
 #ifdef HAVE_XF86VM
 void vo_vm_switch(uint32_t X, uint32_t Y, int *modeline_width,
                   int *modeline_height)
@@ -1818,12 +1815,12 @@ void vo_vm_switch(uint32_t X, uint32_t Y, int *modeline_width,
     if (XF86VidModeQueryExtension(mDisplay, &vm_event, &vm_error))
     {
         XF86VidModeQueryVersion(mDisplay, &vm_ver, &vm_rev);
-        mp_msg(MSGT_VO, MSGL_V, "XF86VidMode Extension v%i.%i\n", vm_ver,
+        mp_msg(MSGT_VO, MSGL_V, "XF86VidMode extension v%i.%i\n", vm_ver,
                vm_rev);
         have_vm = 1;
     } else
         mp_msg(MSGT_VO, MSGL_WARN,
-               "XF86VidMode Extenstion not available.\n");
+               "XF86VidMode extension not available.\n");
 
     if (have_vm)
     {
@@ -1845,8 +1842,7 @@ void vo_vm_switch(uint32_t X, uint32_t Y, int *modeline_width,
                     j = i;
                 }
 
-        mp_msg(MSGT_VO, MSGL_INFO,
-               "XF86VM: Selected video mode %dx%d for image size %dx%d.\n",
+        mp_msg(MSGT_VO, MSGL_INFO, MSGTR_SelectedVideoMode,
                *modeline_width, *modeline_height, X, Y);
         XF86VidModeLockModeSwitch(mDisplay, mScreen, 0);
         XF86VidModeSwitchToMode(mDisplay, mScreen, vidmodes[j]);
@@ -1920,7 +1916,7 @@ int vo_find_depth_from_visuals(Display * dpy, int screen,
         for (i = 0; i < nvisuals; i++)
         {
             mp_msg(MSGT_VO, MSGL_V,
-                   "vo: X11 truecolor visual %#x, depth %d, R:%lX G:%lX B:%lX\n",
+                   "vo: X11 truecolor visual %#lx, depth %d, R:%lX G:%lX B:%lX\n",
                    visuals[i].visualid, visuals[i].depth,
                    visuals[i].red_mask, visuals[i].green_mask,
                    visuals[i].blue_mask);
@@ -2282,6 +2278,58 @@ static Atom xv_intern_atom_if_exists( char const * atom_name )
 
   return xv_atom;
 }
+
+/**
+ * \brief Try to enable vsync for xv.
+ * \return Returns -1 if not available, 0 on failure and 1 on success.
+ */
+int vo_xv_enable_vsync()
+{
+  Atom xv_atom = xv_intern_atom_if_exists("XV_SYNC_TO_VBLANK");
+  if (xv_atom == None)
+    return -1;
+  return XvSetPortAttribute(mDisplay, xv_port, xv_atom, 1) == Success;
+}
+
+/**
+ * \brief Get maximum supported source image dimensions.
+ *
+ *   This function does not set the variables pointed to by
+ * width and height if the information could not be retreived.
+ * So the caller is reponsible for initing them properly.
+ *
+ * \param width [out] The maximum width gets stored here.
+ * \param height [out] The maximum height gets stored here.
+ *
+ */
+void vo_xv_get_max_img_dim( uint32_t * width, uint32_t * height )
+{
+  XvEncodingInfo * encodings;
+  //unsigned long num_encodings, idx; to int or too long?!
+  unsigned int num_encodings, idx;
+
+  XvQueryEncodings( mDisplay, xv_port, &num_encodings, &encodings);
+
+  if ( encodings )
+  {
+      for ( idx = 0; idx < num_encodings; ++idx )
+      {
+          if ( strcmp( encodings[idx].name, "XV_IMAGE" ) == 0 )
+          {
+              *width  = encodings[idx].width;
+              *height = encodings[idx].height;
+              break;
+          }
+      }
+  }
+
+  mp_msg( MSGT_VO, MSGL_V,
+          "[xv common] Maximum source image dimensions: %ux%u\n",
+          *width, *height );
+
+  XvFreeEncodingInfo( encodings );
+}
+
 /**
  * \brief Print information about the colorkey method and source.
  *
@@ -2312,27 +2360,27 @@ void vo_xv_print_ck_info()
   switch ( xv_ck_info.source )
   {
     case CK_SRC_CUR:      
-      mp_msg( MSGT_VO, MSGL_V, "Using colorkey from Xv (0x%06x).\n",
+      mp_msg( MSGT_VO, MSGL_V, "Using colorkey from Xv (0x%06lx).\n",
               xv_colorkey );
       break;
     case CK_SRC_USE:
       if ( xv_ck_info.method == CK_METHOD_AUTOPAINT )
       {
         mp_msg( MSGT_VO, MSGL_V,
-                "Ignoring colorkey from MPlayer (0x%06x).\n",
+                "Ignoring colorkey from MPlayer (0x%06lx).\n",
                 xv_colorkey );
       }
       else
       {
         mp_msg( MSGT_VO, MSGL_V,
-                "Using colorkey from MPlayer (0x%06x)."
+                "Using colorkey from MPlayer (0x%06lx)."
                 " Use -colorkey to change.\n",
                 xv_colorkey );
       }
       break;
     case CK_SRC_SET:
       mp_msg( MSGT_VO, MSGL_V,
-              "Setting and using colorkey from MPlayer (0x%06x)."
+              "Setting and using colorkey from MPlayer (0x%06lx)."
               " Use -colorkey to change.\n",
               xv_colorkey );
       break;
@@ -2497,9 +2545,9 @@ int xv_test_ck( void * arg )
 {
   strarg_t * strarg = (strarg_t *)arg;
 
-  if ( strncmp( "use", strarg->str, 3 ) == 0 ||
-       strncmp( "set", strarg->str, 3 ) == 0 ||
-       strncmp( "cur", strarg->str, 3 ) == 0    )
+  if ( strargcmp( strarg, "use" ) == 0 ||
+       strargcmp( strarg, "set" ) == 0 ||
+       strargcmp( strarg, "cur" ) == 0    )
   {
     return 1;
   }
@@ -2511,9 +2559,9 @@ int xv_test_ckm( void * arg )
 {
   strarg_t * strarg = (strarg_t *)arg;
 
-  if ( strncmp( "bg", strarg->str, 2 ) == 0 ||
-       strncmp( "man", strarg->str, 3 ) == 0 ||
-       strncmp( "auto", strarg->str, 4 ) == 0    )
+  if ( strargcmp( strarg, "bg" ) == 0 ||
+       strargcmp( strarg, "man" ) == 0 ||
+       strargcmp( strarg, "auto" ) == 0    )
   {
     return 1;
   }

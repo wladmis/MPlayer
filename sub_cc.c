@@ -17,6 +17,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "config.h"
 #include "sub_cc.h"
 
 #include "subreader.h"
@@ -67,7 +68,7 @@ static void clear_buffer(subtitle *buf)
 }
 
 
-void subcc_init()
+void subcc_init(void)
 {
 	int i;
 	//printf("subcc_init(): initing...\n");
@@ -99,7 +100,7 @@ static void append_char(char c)
 	{
 		if(cursor_pos==CC_MAX_LINE_LENGTH-1)
 		{
-			printf("sub_cc.c: append_char() reached CC_MAX_LINE_LENGTH!\n");
+			fprintf(stderr,"sub_cc.c: append_char() reached CC_MAX_LINE_LENGTH!\n");
 			return;
 		}
 		bb->text[bb->lines - 1][cursor_pos++]=c;
@@ -107,7 +108,7 @@ static void append_char(char c)
 }
 
 
-static void swap_buffers()
+static void swap_buffers(void)
 {
 	subtitle *foo;
 	foo=fb;
@@ -185,7 +186,7 @@ static void cc_decode_EIA608(unsigned short int data)
   lastcode=data;  
 }
 
-static void subcc_decode()
+static void subcc_decode(void)
 {
   /* The first number may denote a channel number. I don't have the
    * EIA-708 standard, so it is hard to say.

@@ -3,15 +3,16 @@ include ../config.mak
 
 LIBNAME = libosdep.a
 
-SRCS= shmem.c strsep.c strl.c vsscanf.c scandir.c gettimeofday.c fseeko.c \
-      swab.c
-      # timer.c
-
-ifeq ($(TARGET_ARCH_X86),yes)
-ifeq ($(TARGET_OS),Linux)
-SRCS += lrmi.c vbelib.c
-endif
-endif
+SRCS= shmem.c \
+      strsep.c \
+      strl.c \
+      vsscanf.c \
+      scandir.c \
+      gettimeofday.c \
+      fseeko.c \
+      swab.c \
+      setenv.c \
+      # timer.c \
 
 getch = getch2.c
 timer = timer-lx.c
@@ -53,8 +54,8 @@ all:    $(LIBNAME)
 clean:
 	rm -f *.o *.a *~
 
-distclean:
-	rm -f Makefile.bak *.o *.a *~ .depend
+distclean: clean
+	rm -f .depend
 
 dep:    depend
 

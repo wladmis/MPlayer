@@ -2,11 +2,11 @@
 #define NAV_READ_H_INCLUDED
 
 /*
- * Copyright (C) 2000, 2001 Håkan Hjort <d95hjort@dtek.chalmers.se>.
+ * Copyright (C) 2000, 2001, 2002 Håkan Hjort <d95hjort@dtek.chalmers.se>.
  *
  * Modified for use with MPlayer, changes contained in libdvdread_changes.diff.
  * detailed CVS changelog at http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
- * $Id: nav_read.h,v 1.3 2005/03/11 02:40:28 diego Exp $
+ * $Id: nav_read.h 15875 2005-06-30 22:48:26Z aurel $
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,17 +25,27 @@
 
 #include "nav_types.h"
 
+/**
+ * Parsing of NAV data, PCI and DSI parts.
+ */
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
- * Reads the PCI packet data pointed to into pci struct.
- */
+ * Reads the PCI packet data pointed to into th pci struct.
+ * 
+ * @param pci Pointer to the PCI data structure to be filled in.
+ * @param bufffer Pointer to the buffer of the on disc PCI data.
+ */  
 void navRead_PCI(pci_t *, unsigned char *);
 
 /**
  * Reads the DSI packet data pointed to into dsi struct.
+ * 
+ * @param dsi Pointer to the DSI data structure to be filled in.
+ * @param bufffer Pointer to the buffer of the on disc DSI data.
  */
 void navRead_DSI(dsi_t *, unsigned char *);
 

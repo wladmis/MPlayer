@@ -6,7 +6,7 @@
 
    Modified for use with MPlayer, for details see the CVS changelog at
    http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
-   $Id: dvb_defaults.h,v 1.3 2005/04/16 12:51:09 diego Exp $
+   $Id: dvb_defaults.h 15179 2005-04-16 12:51:09Z diego $
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License

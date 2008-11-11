@@ -2,15 +2,16 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../config.h"
-#include "../mp_msg.h"
-#include "../cpudetect.h"
+#include "config.h"
+#include "mp_msg.h"
+#include "cpudetect.h"
+#include "asmalign.h"
 
 #include "img_format.h"
 #include "mp_image.h"
 #include "vf.h"
 
-#include "../libvo/fastmemcpy.h"
+#include "libvo/fastmemcpy.h"
 
 
 struct metrics {
@@ -67,7 +68,7 @@ static void block_diffs_MMX(struct metrics *m, unsigned char *old, unsigned char
 		"pxor %%mm5, %%mm5 \n\t" // 4 odd difference sums
 		"pxor %%mm7, %%mm7 \n\t" // all zeros
 		
-		".balign 16 \n\t"
+		ASMALIGN16  
 		"1: \n\t"
 		
 		// Even difference
@@ -127,7 +128,7 @@ static void block_diffs_MMX(struct metrics *m, unsigned char *old, unsigned char
 		"pxor %%mm5, %%mm5 \n\t" // Temporal noise
 		"pxor %%mm6, %%mm6 \n\t" // Current spacial noise
 		
-		".balign 16 \n\t"
+		ASMALIGN16  
 		"2: \n\t"
 		
 		"movq (%%"REG_S"), %%mm0 \n\t"
@@ -181,7 +182,7 @@ static void block_diffs_MMX(struct metrics *m, unsigned char *old, unsigned char
 		"pxor %%mm5, %%mm5 \n\t"
 		"pxor %%mm6, %%mm6 \n\t"
 		
-		".balign 16 \n\t"
+		ASMALIGN16
 		"3: \n\t"
 		
 		"movq (%%"REG_S"), %%mm0 \n\t"
@@ -426,9 +427,9 @@ static void copy_image(mp_image_t *dmpi, mp_image_t *mpi, int field)
 static int do_put_image(struct vf_instance_s* vf, mp_image_t *dmpi)
 {
 	struct vf_priv_s *p = vf->priv;
-	int dropflag;
+	int dropflag=0;
 
-	switch (p->drop && !p->dropnext) {
+	if (!p->dropnext) switch (p->drop) {
 	case 0:
 		dropflag = 0;
 		break;
@@ -449,10 +450,10 @@ static int do_put_image(struct vf_instance_s* vf, mp_image_t *dmpi)
 	}
 
 	p->outframes++;
-	return vf_next_put_image(vf, dmpi);
+	return vf_next_put_image(vf, dmpi, MP_NOPTS_VALUE);
 }
 
-static int put_image(struct vf_instance_s* vf, mp_image_t *mpi)
+static int put_image(struct vf_instance_s* vf, mp_image_t *mpi, double pts)
 {
 	int ret=0;
 	struct vf_priv_s *p = vf->priv;

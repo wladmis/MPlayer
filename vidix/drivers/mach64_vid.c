@@ -128,14 +128,14 @@ static uint32_t SAVED_OVERLAY_GRAPHICS_KEY_CLR;
 #define GETREG(TYPE,PTR,OFFZ)		(*((volatile TYPE*)((PTR)+(OFFZ))))
 #define SETREG(TYPE,PTR,OFFZ,VAL)	(*((volatile TYPE*)((PTR)+(OFFZ))))=VAL
 
-#define INREG8(addr)		GETREG(uint8_t,(uint32_t)mach64_mmio_base,((addr)^0x100)<<2)
-#define OUTREG8(addr,val)	SETREG(uint8_t,(uint32_t)mach64_mmio_base,((addr)^0x100)<<2,val)
+#define INREG8(addr)		GETREG(uint8_t,(uint8_t *)mach64_mmio_base,((addr)^0x100)<<2)
+#define OUTREG8(addr,val)	SETREG(uint8_t,(uint8_t *)mach64_mmio_base,((addr)^0x100)<<2,val)
 
 static inline uint32_t INREG (uint32_t addr) {
-	uint32_t tmp = GETREG(uint32_t,(uint32_t)mach64_mmio_base,((addr)^0x100)<<2);
+	uint32_t tmp = GETREG(uint32_t,(uint8_t *)mach64_mmio_base,((addr)^0x100)<<2);
 	return le2me_32(tmp);
 }
-#define OUTREG(addr,val)	SETREG(uint32_t,(uint32_t)mach64_mmio_base,((addr)^0x100)<<2,le2me_32(val))
+#define OUTREG(addr,val)	SETREG(uint32_t,(uint8_t *)mach64_mmio_base,((addr)^0x100)<<2,le2me_32(val))
 
 #define OUTREGP(addr,val,mask)  					\
 	do {								\
@@ -304,7 +304,7 @@ static int mach64_get_vert_stretch(void)
     return ret;
 }
 
-static void mach64_vid_make_default()
+static void mach64_vid_make_default(void)
 {
   mach64_fifo_wait(5);
   OUTREG(SCALER_COLOUR_CNTL,0x00101000);
@@ -465,7 +465,7 @@ int vixInit(void)
   }
   if(__verbose>0) printf("[mach64] version %s\n", VERSION);
   
-  if((mach64_mmio_base = map_phys_mem(pci_info.base2,0x4000))==(void *)-1) return ENOMEM;
+  if((mach64_mmio_base = map_phys_mem(pci_info.base2,0x1000))==(void *)-1) return ENOMEM;
   mach64_wait_for_idle();
   mach64_ram_size = INREG(MEM_CNTL) & CTL_MEM_SIZEB;
   if (mach64_ram_size < 8) mach64_ram_size = (mach64_ram_size + 1) * 512;
@@ -522,7 +522,7 @@ void vixDestroy(void)
   OUTREG(OVERLAY_GRAPHICS_KEY_CLR,SAVED_OVERLAY_GRAPHICS_KEY_CLR);
   
   unmap_phys_mem(mach64_mem_base,mach64_ram_size);
-  unmap_phys_mem(mach64_mmio_base,0x4000);
+  unmap_phys_mem(mach64_mmio_base,0x1000);
 }
 
 int vixGetCapability(vidix_capability_t *to)

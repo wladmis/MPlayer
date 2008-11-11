@@ -162,6 +162,10 @@ static int parse_fbmode_cfg(char *cfgfile)
 	int in_mode_def = 0;
 	int tmp, i;
 
+	/* If called more than once, reuse parsed data */
+	if (nr_modes)
+		return nr_modes;
+
 	mp_msg(MSGT_VO, MSGL_V, "Reading %s: ", cfgfile);
 
 	if ((fp = fopen(cfgfile, "r")) == NULL) {
@@ -549,7 +553,8 @@ static uint8_t *center;	/* thx .so :) */
 static struct fb_fix_screeninfo fb_finfo;
 static struct fb_var_screeninfo fb_orig_vinfo;
 static struct fb_var_screeninfo fb_vinfo;
-static struct fb_cmap fb_oldcmap;
+static unsigned short fb_ored[256], fb_ogreen[256], fb_oblue[256];
+static struct fb_cmap fb_oldcmap = { 0, 256, fb_ored, fb_ogreen, fb_oblue };
 static int fb_cmap_changed = 0;
 static int fb_pixel_size;	// 32:  4  24:  3  16:  2  15:  2
 static int fb_bpp;		// 32: 32  24: 24  16: 16  15: 15
@@ -792,16 +797,16 @@ static void vt_set_textarea(int u, int l)
 	}
 }
 
-static uint32_t config(uint32_t width, uint32_t height, uint32_t d_width,
+static int config(uint32_t width, uint32_t height, uint32_t d_width,
 		uint32_t d_height, uint32_t flags, char *title,
 		uint32_t format)
 {
 	struct fb_cmap *cmap;
-	int vm = flags & 0x02;
-	int zoom = flags & 0x04;
+	int vm = flags & VOFLAG_MODESWITCHING;
+	int zoom = flags & VOFLAG_SWSCALE;
 	int vt_fd;
 
-	fs = flags & 0x01;
+	fs = flags & VOFLAG_FULLSCREEN;
 
 	if(pre_init_err == -2)
 	{
@@ -1004,8 +1009,9 @@ static uint32_t config(uint32_t width, uint32_t height, uint32_t d_width,
 		return 1;
 	    }
 
-	    center = frame_buffer + (out_width - in_width) * fb_pixel_size /
-		    2 + ( (out_height - in_height) / 2 ) * fb_line_len +
+	    center = frame_buffer +
+		    ( (out_width - in_width) / 2 ) * fb_pixel_size +
+		    ( (out_height - in_height) / 2 ) * fb_line_len +
 		    x_offset * fb_pixel_size + y_offset * fb_line_len;
 
 	    mp_msg(MSGT_VO, MSGL_DBG2, "frame_buffer @ %p\n", frame_buffer);
@@ -1030,7 +1036,7 @@ static uint32_t config(uint32_t width, uint32_t height, uint32_t d_width,
 	return 0;
 }
 
-static uint32_t query_format(uint32_t format)
+static int query_format(uint32_t format)
 {
 	if (!fb_preinit(0))
 		return 0;
@@ -1052,20 +1058,20 @@ static void draw_alpha(int x0, int y0, int w, int h, unsigned char *src,
 {
 	unsigned char *dst;
 
-	dst = center + (fb_line_len * y0 + x0) * fb_pixel_size;
+	dst = center + fb_line_len * y0 + fb_pixel_size * x0;
 
 	(*draw_alpha_p)(w, h, src, srca, stride, dst, fb_line_len);
 }
 
-static uint32_t draw_frame(uint8_t *src[]) { return 1; }
+static int draw_frame(uint8_t *src[]) { return 1; }
 
-static uint32_t draw_slice(uint8_t *src[], int stride[], int w, int h, int x,
+static int draw_slice(uint8_t *src[], int stride[], int w, int h, int x,
 		int y)
 {
 	uint8_t *d;
 	uint8_t *s;
 
-	d = center + (fb_line_len * y + x) * fb_pixel_size;
+	d = center + fb_line_len * y + fb_pixel_size * x;
 
 	s = src[0];
 	while (h) {
@@ -1120,7 +1126,7 @@ static void uninit(void)
 	fb_preinit(1);
 }
 
-static uint32_t preinit(const char *vo_subdevice)
+static int preinit(const char *vo_subdevice)
 {
     pre_init_err = 0;
 
@@ -1161,7 +1167,7 @@ static uint32_t get_image(mp_image_t *mpi)
     return(VO_TRUE);
 }
 
-static uint32_t control(uint32_t request, void *data, ...)
+static int control(uint32_t request, void *data, ...)
 {
   switch (request) {
   case VOCTRL_GET_IMAGE:

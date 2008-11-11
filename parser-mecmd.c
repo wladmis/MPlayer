@@ -1,3 +1,7 @@
+
+/// \file
+/// \ingroup ConfigParsers MEntry
+
 #include "config.h"
 
 #include <stdio.h>
@@ -51,6 +55,7 @@ m_config_parse_me_command_line(m_config_t *config, int argc, char **argv)
   int tmp;
   char *opt;
   int no_more_opts = 0;
+  int opt_exit = 0;
   m_entry_t *lst = NULL, *entry = NULL;
 	
 #ifdef MP_DEBUG
@@ -67,7 +72,7 @@ m_config_parse_me_command_line(m_config_t *config, int argc, char **argv)
     //next:
     opt = argv[i];
     /* check for -- (no more options id.) except --help! */
-    if ((*opt == '-') && (*(opt+1) == '-') && (*(opt+2) != 'h'))
+    if ((*opt == '-') && (*(opt+1) == '-') && (*(opt+2) == 0))
       {
 	no_more_opts = 1;
 	if (i+1 >= argc)
@@ -87,17 +92,27 @@ m_config_parse_me_command_line(m_config_t *config, int argc, char **argv)
 	mp_opt = m_config_get_option(config,opt);
 	if(!mp_opt) {
 	  tmp = M_OPT_UNKNOWN;
-	  mp_msg(MSGT_CFGPARSER, MSGL_ERR, "%s is not an MEncoder option\n",opt);
+	  mp_msg(MSGT_CFGPARSER, MSGL_ERR, "-%s is not an MEncoder option\n",opt);
 	  goto err_out;
 	}
 	if(!entry || (mp_opt->flags & M_OPT_GLOBAL)){
 	  tmp = m_config_set_option(config, opt, argv[i + 1]);
+	  if (tmp <= M_OPT_EXIT) {
+	    opt_exit = 1;
+	    tmp = M_OPT_EXIT - tmp;
+	  }
+	  else
 	  if(tmp < 0){
 //	    mp_msg(MSGT_CFGPARSER, MSGL_ERR, "m_config_set_option() failed (%d)\n",tmp);
+	    mp_msg(MSGT_CFGPARSER, MSGL_FATAL, "Error parsing option on the command line: -%s\n",opt);
 	    goto err_out;
 	  }
 	} else {
 	  tmp = m_config_check_option(config, opt, argv[i + 1]);
+	  if (tmp <= M_OPT_EXIT) {
+	    opt_exit = 1;
+	    tmp = M_OPT_EXIT - tmp;
+	  }
 	  if(tmp >= 0) {
 	    entry->opts = realloc(entry->opts,(no+2)*2*sizeof(char*));
 	    entry->opts[2*no] = strdup(opt);
@@ -106,8 +121,6 @@ m_config_parse_me_command_line(m_config_t *config, int argc, char **argv)
 	    no++;
 	  } else {
 //	    mp_msg(MSGT_CFGPARSER, MSGL_ERR, "m_config_set_option() failed (%d)\n",tmp);
-	    if(tmp == M_OPT_EXIT)
-	      exit(0);
 	    goto err_out;
 	  }
 	}
@@ -124,6 +137,8 @@ m_config_parse_me_command_line(m_config_t *config, int argc, char **argv)
       }
   }
 
+  if (opt_exit)
+    exit(0);
   if(nf == 0) {
     m_entry_list_free(lst);
     mp_msg(MSGT_CFGPARSER, MSGL_ERR, "No file given\n");

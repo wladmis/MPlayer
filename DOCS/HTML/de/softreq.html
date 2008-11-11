@@ -1,0 +1,93 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>2.1. Softwareanforderungen</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.68.1"><link rel="start" href="index.html" title="MPlayer - Movie Player"><link rel="up" href="install.html" title="Kapitel 2. Installation"><link rel="prev" href="install.html" title="Kapitel 2. Installation"><link rel="next" href="installation_codecs.html" title="2.2. Codecs"><link rel="preface" href="howtoread.html" title="Wie diese Dokumentation gelesen werden soll"><link rel="chapter" href="intro.html" title="Kapitel 1. Einführung"><link rel="chapter" href="install.html" title="Kapitel 2. Installation"><link rel="chapter" href="usage.html" title="Kapitel 3. Gebrauch"><link rel="chapter" href="cd-dvd.html" title="Kapitel 4. CD/DVD usage"><link rel="chapter" href="faq.html" title="Kapitel 5. Häufig gestellte Fragen"><link rel="chapter" href="containers.html" title="Kapitel 6. Containerformate"><link rel="chapter" href="codecs.html" title="Kapitel 7. Codecs"><link rel="chapter" href="video.html" title="Kapitel 8. Videoausgabegeräte"><link rel="chapter" href="audio.html" title="Kapitel 9. Audioausgabegeräte"><link rel="chapter" href="tv.html" title="Kapitel 10. TV"><link rel="chapter" href="ports.html" title="Kapitel 11. Portierungen"><link rel="chapter" href="mencoder.html" title="Kapitel 12. Allgemeiner Gebrauch von MEncoder"><link rel="chapter" href="encoding-guide.html" title="Kapitel 13. Encodieren mit MEncoder"><link rel="appendix" href="mailinglists.html" title="Anhang A. Mailing-Listen"><link rel="appendix" href="bugreports.html" title="Anhang B. Wie Fehler (Bugs) berichtet werden"><link rel="appendix" href="bugs.html" title="Anhang C. Bekannte Fehler"><link rel="appendix" href="skin.html" title="Anhang D. MPlayers Skinformat"><link rel="appendix" href="users-vs-dev.html" title="Anhang E. Aufschrei der Entwickler"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">2.1. Softwareanforderungen</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="install.html">Zurück</a> </td><th width="60%" align="center">Kapitel 2. Installation</th><td width="20%" align="right"> <a accesskey="n" href="installation_codecs.html">Weiter</a></td></tr></table><hr></div><div class="sect1" lang="de"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="softreq"></a>2.1. Softwareanforderungen</h2></div></div></div><div class="itemizedlist"><ul type="disc"><li><p>
+  <span class="bold"><strong>binutils</strong></span> - empfohlene Version ist <span class="bold"><strong>2.11.x</strong></span>.
+  Dieses Programm ist verantwortlich für die Generierung von Instruktionen für
+  MMX/3DNow!/usw. und daher sehr wichtig.
+</p></li><li><p>
+  <span class="bold"><strong>gcc</strong></span> - empfohlene Versionen sind: 
+  <span class="bold"><strong>2.95.3</strong></span> (vielleicht <span class="bold"><strong>2.95.4</strong></span>) und <span class="bold"><strong>3.2+</strong></span>.
+  Benutze <span class="bold"><strong>niemals</strong></span> 2.96 oder 3.0.x! Diese
+  generieren im Falle von <span class="application">MPlayer</span> fehlerhaften Code.
+  Solltest du dich dafür entscheiden, die von gcc-Version 2.96 zu wechseln,
+  dann entscheide dich nicht zu Gunsten von 3.x, nur weil es neuer ist. Frühe
+  Veröffentlichungen von 3.x waren fehlerhafter als 2.96. Downgrade also zu
+  2.95.x (downgrade auch <code class="systemitem">libstdc++</code>,
+  andere Programme könnten dies benötigen) oder wechsle die Version überhaupt
+  nicht (in diesem Falle sei jedoch gewarnt, dass es zur Laufzeit Probleme
+  geben kann). Solltest du dich für 3.x entscheiden, versuche die neueste
+  Version zu bekommen, frühe Versionen hatten verschiedenartige Fehler, benutze
+  also mindestens Version 3.1, diese ist getestet und funktioniert. Für
+  detaillierte Informationen über die Fehler in gcc 2.96 (die immernoch NICHT
+  korrigiert sind, die in <span class="application">MPlayer</span> UMGANGEN wurden!),
+  siehe Abschnitt <a href="gcc-296.html" title="E.1. GCC 2.96">gcc 2.96</a> und die <a href="faq.html">FAQ</a>.
+  </p></li><li><p>
+  <span class="bold"><strong>XFree86</strong></span> - empfohlene Version ist
+  <span class="bold"><strong>immer die neueste</strong></span> (4.3). Normalerweise
+  möchte das jeder. Mit XFree86 4.0.2 beginnend enthält es die <a href="output-trad.html#xv" title="8.2.1. Xv">XVideo</a>-Erweiterung (irgendwo als <span class="bold"><strong>Xv</strong></span> bezeichnet), die bei Karten, die dies unterstützen,
+  für die YUV-Hardwarebeschleunigung (schnelle Bilddarstellung) benötigt wird.
+  Stelle auch sicher, dass das <span class="bold"><strong>Entwicklerpaket</strong></span>
+  installiert ist, sonst wird es nicht funktionieren.
+  Bei manchen Grafikkarten benötigst du kein XFree86. Siehe Liste unten.
+  </p></li><li><p>
+  <span class="bold"><strong>make</strong></span> - empfohlene Version ist
+  <span class="bold"><strong>immer die neueste</strong></span> (mindestens 3.79.x). Dies
+  ist normalerweise nicht so wichtig.
+  </p></li><li><p>
+  <span class="bold"><strong>SDL</strong></span> - ist nicht zwingend notwendig, kann 
+  in manchen Fällen aber helfen (schlechter Klang, Grafikkarten, die zusammen
+  mit  dem xv-Treiber komischerweise hinterherhingen).
+  Benutze immer die neueste Version (beginnend bei 1.2.x).
+  </p></li><li><p>
+  <span class="bold"><strong>libjpeg</strong></span> - optionaler JPEG-Decoder, der
+  von der Option <tt class="option">-mf</tt> und für mache QT MOV-Dateien verwendet
+  wird. Nützlich sowohl für <span class="application">MPlayer</span> als auch
+  <span class="application">MEncoder</span>, wenn du vorhast, mit JPEG-Dateien zu
+  arbeiten.
+  </p></li><li><p>
+  <span class="bold"><strong>libpng</strong></span> - empfohlen und
+  Standard-(M)PNG-Decoder. Wird für die GUI benötigt.
+  Nützlich sowohl für <span class="application">MPlayer</span> als auch
+  <span class="application">MEncoder</span>.
+  </p></li><li><p>
+  <span class="bold"><strong>lame</strong></span> - empfohlen, benötigt für
+  Audioencodierung in das MP3-Format mit <span class="application">MEncoder</span>,
+  empfohlene Version ist <span class="emphasis"><em>immer die neueste</em></span> (mindestens
+  3.90).
+  </p></li><li><p>
+  <span class="bold"><strong>zlib</strong></span> - empfohlen, benötigt für die
+  Unterstützung von komprimierten MOV-Headern und PNG.
+  </p></li><li><p>
+  <span class="bold"><strong>libogg</strong></span> - optional, benötigt für die
+  Wiedergabe von Dateien im OGG-Format.
+  </p></li><li><p>
+  <span class="bold"><strong>libvorbis</strong></span> - optional, benötigt für die
+  Audiowiedergabe von OGG Vorbis.
+  </p></li><li><p>
+  <span class="bold"><strong><a href="http://www.live555.com/mplayer/" target="_top">LIVE555 Streaming Media</a></strong></span>
+  - optional, benötigt für die Wiedergabe von RTSP/RTP-Streams.
+  </p></li><li><p>
+  <span class="bold"><strong>directfb</strong></span> - optional, von
+  <a href="http://www.directfb.org" target="_top">http://www.directfb.org</a>. Version 0.9.13 ist mindestens
+  erforderlich.
+  </p></li><li><p>
+  <span class="bold"><strong>cdparanoia</strong></span> - optional, für CDDA-Unterstützung
+  </p></li><li><p>
+  <span class="bold"><strong>libfreetype</strong></span> - optional, für Unterstützung 
+  von TTF-Schriftarten. Version 2.0.9 ist mindestens erforderlich.
+  </p></li><li><p>
+  <span class="bold"><strong>libxmms</strong></span> - optional, für Unterstützung des
+  XMMS-Input-Plugins. Version 1.2.7 ist mindestens erforderlich.
+  </p></li><li><p>
+  <span class="bold"><strong>libsmb</strong></span> - optional, für Samba-Unterstützung.
+  </p></li><li><p>
+  <span class="bold"><strong>ALSA</strong></span> - optional, für Unterstützung der
+  Audioausgabe mit ALSA. Version 0.9.0rc4 ist mindestens erforderlich.
+  </p></li><li><p>
+  <span class="bold"><strong>bio2jack</strong></span> - optional, für
+  Unterstützung der Audioausgabe mit JACK, wird nur zur Compilezeit benötigt.
+  Du kannst es von
+  <a href="http://bio2jack.sf.net/" target="_top">http://bio2jack.sf.net</a> beziehen.
+  Da es keine Installationsoptionen hat, musst du die Datei
+  <tt class="filename">libbio2jack.a</tt> manuell in deinen Bibliothekspfad
+  kopieren, oder benutze die Option <tt class="option">--with-bio2jack=DIR</tt>, damit
+  <tt class="filename">./configure</tt> weiß, wo sich die Datei befindet.
+  </p></li></ul></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="install.html">Zurück</a> </td><td width="20%" align="center"><a accesskey="u" href="install.html">Nach oben</a></td><td width="40%" align="right"> <a accesskey="n" href="installation_codecs.html">Weiter</a></td></tr><tr><td width="40%" align="left" valign="top">Kapitel 2. Installation </td><td width="20%" align="center"><a accesskey="h" href="index.html">Zum Anfang</a></td><td width="40%" align="right" valign="top"> 2.2. Codecs</td></tr></table></div></body></html>

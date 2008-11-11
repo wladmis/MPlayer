@@ -22,7 +22,10 @@
 ** Commercial non-GPL licensing of this software is possible.
 ** For more info contact Ahead Software through Mpeg4AAClicense@nero.com.
 **
-** $Id: ps_dec.c,v 1.8 2004/06/30 12:45:56 menno Exp $
+** Initially modified for use with MPlayer on 2005/12/05
+** $Id: ps_dec.c,v 1.10 2004/09/04 14:56:28 menno Exp $
+** detailed CVS changelog at http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
+** local_changes.diff contains the exact changes to this file.
 **/
 
 #include "common.h"
@@ -159,7 +162,7 @@ typedef struct
 
 /* static function declarations */
 static void ps_data_decode(ps_info *ps);
-static hyb_info *hybrid_init();
+static hyb_info *hybrid_init(void);
 static void channel_filter2(hyb_info *hyb, uint8_t frame_len, const real_t *filter,
                             qmf_t *buffer, qmf_t **X_hybrid);
 static void INLINE DCT3_4_unscaled(real_t *y, real_t *x);
@@ -189,7 +192,7 @@ static void ps_mix_phase(ps_info *ps, qmf_t X_left[38][64], qmf_t X_right[38][64
 /*  */
 
 
-static hyb_info *hybrid_init()
+static hyb_info *hybrid_init(void)
 {
     uint8_t i;
 
@@ -1935,8 +1938,8 @@ ps_info *ps_init(uint8_t sr_index)
 /* main Parametric Stereo decoding function */
 uint8_t ps_decode(ps_info *ps, qmf_t X_left[38][64], qmf_t X_right[38][64])
 {
-    qmf_t X_hybrid_left[32][32] = {{0}};
-    qmf_t X_hybrid_right[32][32] = {{0}};
+    qmf_t X_hybrid_left[32][32] = {{{0}}};
+    qmf_t X_hybrid_right[32][32] = {{{0}}};
 
     /* delta decoding of the bitstream data */
     ps_data_decode(ps);

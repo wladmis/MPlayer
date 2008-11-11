@@ -44,6 +44,7 @@
 #include "sub.h"
 #include "mp_msg.h"
 #include "aspect.h"
+#include "subopt-helper.h"
 
 #ifndef min
 #define min(x,y) (((x)<(y))?(x):(y))
@@ -62,8 +63,6 @@ static vo_info_t info = {
 };
 
 LIBVO_EXTERN(directfb)
-
-extern int verbose;
 
 /******************************
 *      vo_directfb globals    *
@@ -128,7 +127,6 @@ static void (*draw_alpha_p)(int w, int h, unsigned char *src,
 ******************************/
 
 /* command line/config file options */
-char *dfb_params;
 static int layer_id = -1;
 static int buffer_mode = 1;
 static int use_input = 1;
@@ -143,103 +141,57 @@ if (frame && framelocked) frame->Unlock(frame);
 if (primary && primarylocked) primary->Unlock(primary);
 }
 
+static int get_parity(strarg_t *arg) {
+  if (strargcmp(arg, "top") == 0)
+    return 0;
+  if (strargcmp(arg, "bottom") == 0)
+    return 1;
+  return -1;
+}
 
-static uint32_t preinit(const char *arg)
+static int check_parity(void *arg) {
+  return get_parity(arg) != -1;
+}
+
+static int get_mode(strarg_t *arg) {
+  if (strargcmp(arg, "single") == 0)
+    return 1;
+  if (strargcmp(arg, "double") == 0)
+    return 2;
+  if (strargcmp(arg, "triple") == 0)
+    return 3;
+  return 0;
+}
+
+static int check_mode(void *arg) {
+  return get_mode(arg) != 0;
+}
+
+static int preinit(const char *arg)
 {
     DFBResult ret;
+    strarg_t mode_str = {0, NULL};
+    strarg_t par_str = {0, NULL};
+    strarg_t dfb_params = {0, NULL};
+    opt_t subopts[] = {
+      {"input",       OPT_ARG_BOOL, &use_input,  NULL},
+      {"buffermode",  OPT_ARG_STR,  &mode_str,   check_mode},
+      {"fieldparity", OPT_ARG_STR,  &par_str,    check_parity},
+      {"layer",       OPT_ARG_INT,  &layer_id,   NULL},
+      {"dfbopts",     OPT_ARG_STR,  &dfb_params, NULL},
+      {NULL}
+    };
 
     mp_msg(MSGT_VO, MSGL_INFO,"DirectFB: Preinit entered\n");
 
     if (dfb) return 0; // we are already inited!
 
+    // set defaults
     buffer_mode = 1 + vo_doublebuffering; // honor -double switch
-
-// config stuff - borrowed from dfbmga (to be as compatible as it could be :-)
-    
-     if (vo_subdevice) {
-          int show_help = 0;
-          int opt_no = 0;
-          while (*vo_subdevice != '\0') {
-               if (!strncmp(vo_subdevice, "input", 5)) {
-                    use_input = !opt_no;
-                    vo_subdevice += 5;
-                    opt_no = 0;
-               } else if (!strncmp(vo_subdevice, "buffermode=", 11)) {
-                    if (opt_no) {
-                         show_help = 1;
-                         break;
-                    }
-                    vo_subdevice += 11;
-                    if (!strncmp(vo_subdevice, "single", 6)) {
-                         buffer_mode = 1;
-                         vo_subdevice += 6;
-                    } else if (!strncmp(vo_subdevice, "double", 6)) {
-                         buffer_mode = 2;
-                         vo_subdevice += 6;
-                    } else if (!strncmp(vo_subdevice, "triple", 6)) {
-                         buffer_mode = 3;
-                         vo_subdevice += 6;
-                    } else {
-                         show_help = 1;
-                         break;
-                    }
-                    opt_no = 0;
-               } else if (!strncmp(vo_subdevice, "fieldparity=", 12)) {
-                    if (opt_no) {
-                         show_help = 1;
-                         break;
-                    }
-                    vo_subdevice += 12;
-                    if (!strncmp(vo_subdevice, "top", 3)) {
-                         field_parity = 0;
-                         vo_subdevice += 3;
-                    } else if (!strncmp(vo_subdevice, "bottom", 6)) {
-                         field_parity = 1;
-                         vo_subdevice += 6;
-                    } else {
-                         show_help = 1;
-                         break;
-                    }
-                    opt_no = 0;
-               } else if (!strncmp(vo_subdevice, "layer=", 6)) {
-		    int tmp=-1;
-                    if (opt_no) {
-                         show_help = 1;
-                         break;
-                    }
-                    vo_subdevice += 6;
-		    if (sscanf(vo_subdevice,"%i",&tmp)) {
-			 layer_id=tmp;
-			 mp_msg(MSGT_VO, MSGL_INFO,"DirectFB: Layer id is forced to %i\n",layer_id);
-		    } else {
-                         show_help = 1;
-                         break;
-                    }
-                    opt_no = 0;
-               } else if (!strncmp(vo_subdevice, "no", 2)) {
-                    if (opt_no) {
-                         show_help = 1;
-                         break;
-                    }
-                    vo_subdevice += 2;
-                    opt_no = 1;
-               } else if (*vo_subdevice == ':') {
-                    if (opt_no) {
-                         show_help = 1;
-                         break;
-                    }
-                    vo_subdevice++;
-                    opt_no = 0;
-               } else if (!strncmp(vo_subdevice, "help", 4)) {
-                    show_help = 1;
-                    vo_subdevice += 4;
-                    break;
-               } else  {
-                    vo_subdevice++;
-	       }
-          }
-	       
-          if (show_help) {
+    layer_id = -1;
+    use_input = 1;
+    field_parity = -1;
+     if (subopt_parse(arg, subopts) != 0) {
                mp_msg( MSGT_VO, MSGL_ERR,
                        "\n-vo directfb command line help:\n"
                        "Example: mplayer -vo directfb:layer=1:buffermode=single\n"
@@ -255,23 +207,29 @@ static uint32_t preinit(const char *arg)
                        "  fieldparity=(top|bottom)\n"
                        "    top      Top field first\n"
                        "    bottom   Bottom field first\n"
+		       "  dfbopts=<str>\n"
+		       "    Specify a parameter list for DirectFB\n"
                        "\n" );
                return -1;
-          }
      }
+    if (mode_str.len)
+      buffer_mode = get_mode(&mode_str);
+    if (par_str.len)
+      field_parity = get_parity(&par_str);
 
 
-	if (dfb_params)
+	if (dfb_params.len > 0)
 	{
 	    int argc = 2;
 	    char arg0[10] = "mplayer";
-	    char arg1[256] = "--dfb:";
+	    char *arg1 = (char *)malloc(dfb_params.len + 7);
 	    char* argv[3];
 	    char ** a;
 	    
 	    a = &argv[0];
 	    
-	    strncat(arg1,dfb_params,249);
+	    strcpy(arg1, "--dfb:");
+	    strncat(arg1, dfb_params.str, dfb_params.len);
 
 	    argv[0]=arg0;
 	    argv[1]=arg1;
@@ -279,6 +237,7 @@ static uint32_t preinit(const char *arg)
 	    
     	    DFBCHECK (DirectFBInit (&argc,&a));
 
+	    free(arg1);
 	} else {
 	
         DFBCHECK (DirectFBInit (NULL,NULL));
@@ -447,7 +406,7 @@ DFBEnumerationResult test_format_callback( unsigned int                 id,
     return DFENUM_OK;
 }
 
-static uint32_t query_format(uint32_t format)
+static int query_format(uint32_t format)
 {
 	int ret = VFCAP_CSP_SUPPORTED|VFCAP_CSP_SUPPORTED_BY_HW|VFCAP_OSD; // osd should be removed in future -> will be handled outside...
 	enum1_t params;
@@ -523,8 +482,8 @@ return DFENUM_OK;
 
 #define CONFIG_ERROR -1
 
-static uint32_t config(uint32_t s_width, uint32_t s_height, uint32_t d_width,
-		uint32_t d_height, uint32_t fullscreen, char *title,
+static int config(uint32_t s_width, uint32_t s_height, uint32_t d_width,
+		uint32_t d_height, uint32_t flags, char *title,
 		uint32_t format)
 {
   /*
@@ -533,10 +492,10 @@ static uint32_t config(uint32_t s_width, uint32_t s_height, uint32_t d_width,
 
 // decode flags
 
-	int fs = fullscreen & 0x01;
-        int vm = fullscreen & 0x02;
-	int zoom = fullscreen & 0x04;
-	int flip = fullscreen & 0x08;
+	int fs = flags & VOFLAG_FULLSCREEN;
+        int vm = flags & VOFLAG_MODESWITCHING;
+	int zoom = flags & VOFLAG_SWSCALE;
+	int flip = flags & VOFLAG_FLIPPING;
 
 	DFBSurfaceDescription dsc;
         DFBResult             ret;
@@ -942,13 +901,13 @@ if (buffer) {
 
       DFBInputEvent event;
 
-//if (verbose) printf ("DirectFB: Check events entered\n");
+//if ( mp_msg_test(MSGT_VO,MSGL_V) ) printf ("DirectFB: Check events entered\n");
      if (buffer->GetEvent(buffer, DFB_EVENT (&event)) == DFB_OK) {
 
      if (event.type == DIET_KEYPRESS) { 
     		switch (event.key_symbol) {
                                 case DIKS_ESCAPE:
-					mplayer_put_key('q');
+					mplayer_put_key(KEY_ESC);
 				break;
 				case DIKS_PAGE_UP: mplayer_put_key(KEY_PAGE_UP);break;
 				case DIKS_PAGE_DOWN: mplayer_put_key(KEY_PAGE_DOWN);break;
@@ -971,7 +930,7 @@ if (buffer) {
     buffer->Reset(buffer);
 
 }
-//if (verbose) printf ("DirectFB: Check events finished\n");
+//if ( mp_msg_test(MSGT_VO,MSGL_V) ) printf ("DirectFB: Check events finished\n");
 }
 
 static void flip_page(void)
@@ -980,7 +939,7 @@ static void flip_page(void)
 
 	unlock(); // unlock frame & primary
 
-//	if (verbose) printf("DirectFB: Flip page entered");
+//	if ( mp_msg_test(MSGT_VO,MSGL_V) ) printf("DirectFB: Flip page entered");
 	
 	DFBCHECK (primary->SetBlittingFlags(primary,flags));
 
@@ -1182,7 +1141,7 @@ static uint32_t get_image(mp_image_t *mpi)
         void *dst;
         int pitch;
 
-//    if (verbose) printf("DirectFB: get_image() called\n");
+//    if ( mp_msg_test(MSGT_VO,MSGL_V) ) printf("DirectFB: get_image() called\n");
     if(mpi->flags&MP_IMGFLAG_READABLE) return VO_FALSE; // slow video ram 
     if(mpi->type==MP_IMGTYPE_STATIC) return VO_FALSE; // it is not static
 
@@ -1238,14 +1197,14 @@ static uint32_t get_image(mp_image_t *mpi)
        }
        
        mpi->flags|=MP_IMGFLAG_DIRECT;
-//       if (verbose) printf("DirectFB: get_image() SUCCESS -> Direct Rendering ENABLED\n");
+//       if ( mp_msg_test(MSGT_VO,MSGL_V) ) printf("DirectFB: get_image() SUCCESS -> Direct Rendering ENABLED\n");
        return VO_TRUE;
 
     } 
     return VO_FALSE;
 }
 
-static uint32_t draw_slice(uint8_t *src[], int stride[], int w, int h, int x, int y)
+static int draw_slice(uint8_t *src[], int stride[], int w, int h, int x, int y)
 {
         int i;
 	unsigned int pitch;
@@ -1254,7 +1213,7 @@ static uint32_t draw_slice(uint8_t *src[], int stride[], int w, int h, int x, in
         void *srcp;
 	unsigned int p;
 
-//        if (verbose) printf("DirectFB: draw_slice entered\n");
+//        if ( mp_msg_test(MSGT_VO,MSGL_V) ) printf("DirectFB: draw_slice entered\n");
 
 	unlock();
 
@@ -1335,13 +1294,13 @@ static uint32_t put_image(mp_image_t *mpi){
     DFBSurfaceDescription dsc;
     DFBRectangle rect;
     
-//    if (verbose) printf("DirectFB: Put_image entered %i %i %i %i %i %i\n",mpi->x,mpi->y,mpi->w,mpi->h,mpi->width,mpi->height);
+//    if ( mp_msg_test(MSGT_VO,MSGL_V) ) printf("DirectFB: Put_image entered %i %i %i %i %i %i\n",mpi->x,mpi->y,mpi->w,mpi->h,mpi->width,mpi->height);
 
     unlock();
 
     // already out?
     if((mpi->flags&(MP_IMGFLAG_DIRECT|MP_IMGFLAG_DRAW_CALLBACK))) {
-//        if (verbose) printf("DirectFB: Put_image - nothing todo\n");
+//        if ( mp_msg_test(MSGT_VO,MSGL_V) ) printf("DirectFB: Put_image - nothing todo\n");
 	return VO_TRUE;
     }
 
@@ -1353,7 +1312,7 @@ static uint32_t put_image(mp_image_t *mpi){
 	void *src;
 	unsigned int p;
 
-//        if (verbose) printf("DirectFB: Put_image - planar branch\n");
+//        if ( mp_msg_test(MSGT_VO,MSGL_V) ) printf("DirectFB: Put_image - planar branch\n");
 	if (frame) {
 		DFBCHECK (frame->Lock(frame,DSLF_WRITE|DSLF_READ,&dst,&pitch));
 		framelocked = 1;
@@ -1437,7 +1396,7 @@ static uint32_t put_image(mp_image_t *mpi){
 	unsigned int pitch;
         void *dst;
 
-//        if (verbose) printf("DirectFB: Put_image - non planar branch\n");
+//        if ( mp_msg_test(MSGT_VO,MSGL_V) ) printf("DirectFB: Put_image - non planar branch\n");
 	if (frame) {
 		DFBCHECK (frame->Lock(frame,DSLF_WRITE,&dst,&pitch));
 		framelocked = 1;
@@ -1455,7 +1414,7 @@ static uint32_t put_image(mp_image_t *mpi){
 
 
 
-static uint32_t control(uint32_t request, void *data, ...)
+static int control(uint32_t request, void *data, ...)
 {
   switch (request) {
     case VOCTRL_QUERY_FORMAT:
@@ -1492,7 +1451,7 @@ static uint32_t control(uint32_t request, void *data, ...)
 
 // unused function
 
-static uint32_t draw_frame(uint8_t *src[])
+static int draw_frame(uint8_t *src[])
 {
 	return -1;
 }

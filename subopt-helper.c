@@ -32,6 +32,7 @@
 /* prototypes for argument parsing */
 static char const * parse_int( char const * const str, int * const valp );
 static char const * parse_str( char const * const str, strarg_t * const valp );
+static char const * parse_float( char const * const str, float * const valp );
 
 /**
  * \brief Try to parse all options in str and fail if it was not possible.
@@ -162,6 +163,10 @@ int subopt_parse( char const * const str, opt_t * opts )
                   }
                   break;
                 }
+              case OPT_ARG_FLOAT:
+                last = parse_float( &str[parse_pos],
+                                  (float *)opts[idx].valp );
+                break;
               default:
                 assert( 0 && "Arg type of suboption doesn't exist!" );
                 last = NULL; // break parsing!
@@ -247,10 +252,44 @@ static char const * parse_int( char const * const str, int * const valp )
   return endp;
 }
 
-static char const * parse_str( char const * const str, strarg_t * const valp )
+static char const * parse_float( char const * const str, float * const valp )
+{
+  char * endp;
+
+  assert( str && "parse_float(): str == NULL" );
+
+  *valp = strtod( str, &endp );
+
+  /* nothing was converted */
+  if ( str == endp ) { return NULL; }
+
+  return endp;
+}
+
+#define QUOTE_CHAR '%'
+static char const * parse_str( char const * str, strarg_t * const valp )
 {
   char const * match = strchr( str, ':' );
 
+  if (str[0] == QUOTE_CHAR) {
+    int len = 0;
+    str = &str[1];
+    len = (int)strtol(str, (char **)&str, 0);
+    if (!str || str[0] != QUOTE_CHAR || (len > strlen(str) - 1))
+      return NULL;
+    str = &str[1];
+    match = &str[len];
+  }
+  else
+  if (str[0] == '"') {
+    str = &str[1];
+    match = strchr(str, '"');
+    if (!match)
+      return NULL;
+    valp->len = match - str;
+    valp->str = str;
+    return &match[1];
+  }
   if ( !match )
     match = &str[strlen(str)];
 
@@ -281,3 +320,22 @@ int int_pos( int * i )
 
   return 0;
 }
+
+/*** little helpers */
+
+/** \brief compare the stings just as strcmp does */
+int strargcmp(strarg_t *arg, char *str) {
+  int res = strncmp(arg->str, str, arg->len);
+  if (!res && arg->len != strlen(str))
+    res = arg->len - strlen(str);
+  return res;
+}
+
+/** \brief compare the stings just as strcasecmp does */
+int strargcasecmp(strarg_t *arg, char *str) {
+  int res = strncasecmp(arg->str, str, arg->len);
+  if (!res && arg->len != strlen(str))
+    res = arg->len - strlen(str);
+  return res;
+}
+

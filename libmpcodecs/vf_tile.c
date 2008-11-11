@@ -37,18 +37,16 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../config.h"
-#include "../mp_msg.h"
-#include "../cpudetect.h"
+#include "config.h"
+#include "mp_msg.h"
+#include "help_mp.h"
+#include "cpudetect.h"
 
 #include "img_format.h"
 #include "mp_image.h"
 #include "vf.h"
 
-#include "../libvo/fastmemcpy.h"
-
-/* external */
-extern int verbose;
+#include "libvo/fastmemcpy.h"
 
 /* private data */
 struct vf_priv_s {
@@ -93,7 +91,7 @@ static int config(struct vf_instance_s* vf,
 }
 
 /* Filter handler */
-static int put_image(struct vf_instance_s* vf, mp_image_t *mpi)
+static int put_image(struct vf_instance_s* vf, mp_image_t *mpi, double pts)
 {
     mp_image_t        *dmpi;
     struct vf_priv_s  *priv;
@@ -170,7 +168,7 @@ static int put_image(struct vf_instance_s* vf, mp_image_t *mpi)
         /* Display the composition */
         dmpi->width  = xw;
         dmpi->height = yh;
-        return vf_next_put_image(vf, dmpi);
+        return vf_next_put_image(vf, dmpi, MP_NOPTS_VALUE);
     }
     else {
         /* Skip the frame */
@@ -281,7 +279,7 @@ static int open(vf_instance_t *vf, char* args)
 //    er |= parse_int( &args, &p->bkgSet, 0 );
 
     if (er) {
-        printf("Error parsing argument\n");
+        mp_msg(MSGT_VFILTER, MSGL_ERR, MSGTR_MPCODECS_ErrorParsingArgument);
         return(0);
     }
     /* Load some default */
@@ -290,7 +288,7 @@ static int open(vf_instance_t *vf, char* args)
     }
 
     /* Say what happen: use mp_msg(...)? */
-    if (verbose) {
+    if ( mp_msg_test(MSGT_VFILTER,MSGL_V) ) {
         printf("vf_tile: tiling %d * %d, output every %d frames\n",
                p->xtile,
                p->ytile,

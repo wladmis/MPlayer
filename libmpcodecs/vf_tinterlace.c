@@ -13,21 +13,21 @@
 
     You should have received a copy of the GNU General Public License
     along with this program; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "../config.h"
-#include "../mp_msg.h"
+#include "config.h"
+#include "mp_msg.h"
 
 #include "img_format.h"
 #include "mp_image.h"
 #include "vf.h"
 
-#include "../libvo/fastmemcpy.h"
+#include "libvo/fastmemcpy.h"
 
 struct vf_priv_s {
 	int mode;
@@ -35,7 +35,23 @@ struct vf_priv_s {
 	mp_image_t *dmpi;
 };
 
-static int put_image(struct vf_instance_s* vf, mp_image_t *mpi)
+// Copied verbatim from vf_telecine.c:
+static inline void *my_memcpy_pic(void * dst, void * src, int bytesPerLine, int height, int dstStride, int srcStride)
+{
+	int i;
+	void *retval=dst;
+
+	for(i=0; i<height; i++)
+	{
+		memcpy(dst, src, bytesPerLine);
+		src+= srcStride;
+		dst+= dstStride;
+	}
+
+	return retval;
+}
+
+static int put_image(struct vf_instance_s* vf, mp_image_t *mpi, double pts)
 {
 	int ret = 0;
 	mp_image_t *dmpi;
@@ -46,7 +62,7 @@ static int put_image(struct vf_instance_s* vf, mp_image_t *mpi)
 		if (dmpi == NULL) {
 			dmpi = vf_get_image(vf->next, mpi->imgfmt,
 					    MP_IMGTYPE_STATIC, MP_IMGFLAG_ACCEPT_STRIDE |
-					    MP_IMGFLAG_PRESERVE | MP_IMGFLAG_READABLE,
+					    MP_IMGFLAG_PRESERVE,
 					    mpi->width, mpi->height*2);
 
 			vf->priv->dmpi = dmpi;
@@ -74,16 +90,16 @@ static int put_image(struct vf_instance_s* vf, mp_image_t *mpi)
 					   mpi->chroma_width, mpi->chroma_height,
 					   dmpi->stride[2]*2, mpi->stride[2]);
 			}
-			ret = vf_next_put_image(vf, dmpi);
+			ret = vf_next_put_image(vf, dmpi, MP_NOPTS_VALUE);
 		}
 		break;
 	case 1:
 		if (vf->priv->frame & 1)
-			ret = vf_next_put_image(vf, mpi);
+			ret = vf_next_put_image(vf, mpi, MP_NOPTS_VALUE);
 		break;
 	case 2:
 		if ((vf->priv->frame & 1) == 0)
-			ret = vf_next_put_image(vf, mpi);
+			ret = vf_next_put_image(vf, mpi, MP_NOPTS_VALUE);
 		break;
 	case 3:
 		dmpi = vf_get_image(vf->next, mpi->imgfmt,
@@ -114,7 +130,58 @@ static int put_image(struct vf_instance_s* vf, mp_image_t *mpi)
 					   dmpi->stride[2]*2, mpi->stride[2]);
 			}
 		}
-		ret = vf_next_put_image(vf, dmpi);
+		ret = vf_next_put_image(vf, dmpi, MP_NOPTS_VALUE);
+		break;
+	case 4:
+		// Interleave even lines (only) from Frame 'i' with odd
+		// lines (only) from Frame 'i+1', halving the Frame
+		// rate and preserving image height.
+
+		dmpi = vf->priv->dmpi;
+		
+		// @@ Need help:  Should I set dmpi->fields to indicate
+		// that the (new) frame will be interlaced!?  E.g. ...
+		// dmpi->fields |= MP_IMGFIELD_INTERLACED;
+		// dmpi->fields |= MP_IMGFIELD_TOP_FIRST;
+		// etc.
+		
+		if (dmpi == NULL) {
+			dmpi = vf_get_image(vf->next, mpi->imgfmt,
+					    MP_IMGTYPE_STATIC, MP_IMGFLAG_ACCEPT_STRIDE |
+					    MP_IMGFLAG_PRESERVE,
+					    mpi->width, mpi->height);
+
+			vf->priv->dmpi = dmpi;
+
+			my_memcpy_pic(dmpi->planes[0], mpi->planes[0], mpi->w, mpi->h/2,
+				      dmpi->stride[0]*2, mpi->stride[0]*2);
+			if (mpi->flags & MP_IMGFLAG_PLANAR) {
+				my_memcpy_pic(dmpi->planes[1], mpi->planes[1],
+					      mpi->chroma_width, mpi->chroma_height/2,
+					      dmpi->stride[1]*2, mpi->stride[1]*2);
+				my_memcpy_pic(dmpi->planes[2], mpi->planes[2],
+					      mpi->chroma_width, mpi->chroma_height/2,
+					      dmpi->stride[2]*2, mpi->stride[2]*2);
+			}
+		} else {
+			vf->priv->dmpi = NULL;
+
+			my_memcpy_pic(dmpi->planes[0]+dmpi->stride[0], 
+				      mpi->planes[0]+mpi->stride[0],
+				      mpi->w, mpi->h/2, 
+				      dmpi->stride[0]*2, mpi->stride[0]*2);
+			if (mpi->flags & MP_IMGFLAG_PLANAR) {
+				my_memcpy_pic(dmpi->planes[1]+dmpi->stride[1], 
+					      mpi->planes[1]+mpi->stride[1],
+					      mpi->chroma_width, mpi->chroma_height/2,
+					      dmpi->stride[1]*2, mpi->stride[1]*2);
+				my_memcpy_pic(dmpi->planes[2]+dmpi->stride[2], 
+					      mpi->planes[2]+mpi->stride[2],
+					      mpi->chroma_width, mpi->chroma_height/2,
+					      dmpi->stride[2]*2, mpi->stride[2]*2);
+			}
+			ret = vf_next_put_image(vf, dmpi, MP_NOPTS_VALUE);
+		}
 		break;
 	}
 
@@ -145,6 +212,7 @@ static int config(struct vf_instance_s* vf,
 		return vf_next_config(vf,width,height*2,d_width,d_height*2,flags,outfmt);
 	case 1:			/* odd frames */
 	case 2:			/* even frames */
+	case 4:			/* alternate frame (height-preserving) interlacing */
 		return vf_next_config(vf,width,height,d_width,d_height,flags,outfmt);
 	}
 	return 0;

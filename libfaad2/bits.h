@@ -23,7 +23,7 @@
 ** For more info contact Ahead Software through Mpeg4AAClicense@nero.com.
 **
 ** Initially modified for use with MPlayer by Arpad Gereöffy on 2003/08/30
-** $Id: bits.h,v 1.7 2005/02/19 02:19:21 diego Exp $
+** $Id: bits.h 18142 2006-04-18 19:39:34Z rtognimp $
 ** detailed CVS changelog at http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
 ** local_changes.diff contains the exact changes to this file.
 **/

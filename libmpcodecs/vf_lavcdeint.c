@@ -3,17 +3,15 @@
 #include <string.h>
 #include <inttypes.h>
 
-#include "../config.h"
-#include "../mp_msg.h"
-#include "../help_mp.h"
-
-#ifdef USE_LIBAVCODEC
+#include "config.h"
+#include "mp_msg.h"
+#include "help_mp.h"
 
 #include "img_format.h"
 #include "mp_image.h"
 #include "vf.h"
 
-//#include "../libvo/fastmemcpy.h"
+//#include "libvo/fastmemcpy.h"
 
 #ifdef USE_LIBAVCODEC_SO
 #include <ffmpeg/avcodec.h>
@@ -105,7 +103,7 @@ config (struct vf_instance_s* vf,
 }
 
 static int 
-put_image (struct vf_instance_s* vf, mp_image_t *mpi)
+put_image (struct vf_instance_s* vf, mp_image_t *mpi, double pts)
 {
   struct vf_priv_s *priv = vf->priv;
   mp_image_t* dmpi;
@@ -137,7 +135,7 @@ put_image (struct vf_instance_s* vf, mp_image_t *mpi)
       return 0;
     }
   
-  return vf_next_put_image(vf, dmpi);
+  return vf_next_put_image(vf, dmpi, pts);
 }
 
 
@@ -189,6 +187,3 @@ vf_info_t vf_info_lavcdeint = {
 
 
 //===========================================================================//
-
-#endif /* USE_LIBAVCODEC */
-

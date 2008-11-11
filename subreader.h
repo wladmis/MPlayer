@@ -29,7 +29,7 @@ extern int sub_format;
 
 #define MAX_SUBTITLE_FILES 128
 
-#define SUB_MAX_TEXT 10
+#define SUB_MAX_TEXT 12
 #define SUB_ALIGNMENT_BOTTOMLEFT       1
 #define SUB_ALIGNMENT_BOTTOMCENTER     2
 #define SUB_ALIGNMENT_BOTTOMRIGHT      3
@@ -69,10 +69,11 @@ sub_data* sub_read_file (char *filename, float pts);
 subtitle* subcp_recode1 (subtitle *sub);
 // enca_fd is the file enca uses to determine the codepage.
 // setting to NULL disables enca.
-void subcp_open (FILE *enca_fd); /* for demux_ogg.c */
+struct stream_st;
+void subcp_open (struct stream_st *st); /* for demux_ogg.c */
 void subcp_close (void); /* for demux_ogg.c */
 #ifdef HAVE_ENCA
-void* guess_cp(FILE *enca_fd, char *preferred_language, char *fallback);
+void* guess_cp(struct stream_st *st, char *preferred_language, char *fallback);
 #endif
 char ** sub_filenames(char *path, char *fname);
 void list_sub_file(sub_data* subd);

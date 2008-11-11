@@ -61,7 +61,6 @@ static char help_text[]=
 #define MSGTR_NoHomeDir "Kunne ikke finde hjemmekatalog\n"
 #define MSGTR_GetpathProblem "get_path(\"config\") problem\n"
 #define MSGTR_CreatingCfgFile "Genererer konfigurationsfil: %s\n"
-#define MSGTR_InvalidAOdriver "Ugyldig lyddriver: %s\nBrug '-ao help' for at få en komplet liste over gyldige lyddrivere.\n"
 #define MSGTR_CopyCodecsConf "(kopier/link etc/codecs.conf (fra MPlayer kilde katalog) til ~/.mplayer/codecs.conf)\n"
 #define MSGTR_BuiltinCodecsConf "Benytter indbyggede standardværdier for codecs.conf\n"
 #define MSGTR_CantLoadFont "Kunne ikke indlæse skrifttype: %s\n"
@@ -147,7 +146,7 @@ static char help_text[]=
 
 // mencoder.c:
 
-#define MSGTR_UsingPass3ControllFile "Benytter 3. pass kontrolfilen: %s\n"
+#define MSGTR_UsingPass3ControlFile "Benytter 3. pass kontrolfilen: %s\n"
 #define MSGTR_MissingFilename "\nFilnavn mangler\n\n"
 #define MSGTR_CannotOpenFile_Device "Kunne ikke åbne fil/enhed\n"
 #define MSGTR_CannotOpenDemuxer "Kunne ikke åbne demuxer\n"
@@ -156,15 +155,12 @@ static char help_text[]=
 #define MSGTR_CannotOpenOutputFile "Kunne ikke åbne '%s' til skrivning\n"
 #define MSGTR_EncoderOpenFailed "Kunne ikke åbne enkoderen\n"
 #define MSGTR_ForcingOutputFourcc "Tvinger udgangskode (fourcc) til %x [%.4s]\n"
-#define MSGTR_WritingAVIHeader "Skriver AVI header...\n"
 #define MSGTR_DuplicateFrames "\n%d ens billede(r)!!!    \n"
 #define MSGTR_SkipFrame "\nSpringer over billede!!!    \n"
 #define MSGTR_ErrorWritingFile "%s: Fejl ved skrivning til fil.\n"
-#define MSGTR_WritingAVIIndex "\nSkriver AVI index...\n"
-#define MSGTR_FixupAVIHeader "Fixup AVI header...\n"
 #define MSGTR_RecommendedVideoBitrate "Anbefalet video bitrate til %s CD: %d\n"
-#define MSGTR_VideoStreamResult "\nVideospor: %8.3f kbit/s  (%d bps)  størrelse: %d bytes  %5.3f sek.  %d billeder\n"
-#define MSGTR_AudioStreamResult "\nAudiospor: %8.3f kbit/s  (%d bps)  størrelse: %d bytes  %5.3f sek.\n"
+#define MSGTR_VideoStreamResult "\nVideospor: %8.3f kbit/s  (%d B/s)  størrelse: %"PRIu64" bytes  %5.3f sek.  %d billeder\n"
+#define MSGTR_AudioStreamResult "\nAudiospor: %8.3f kbit/s  (%d B/s)  størrelse: %"PRIu64" bytes  %5.3f sek.\n"
 
 // cfg-mencoder.h:
 
@@ -389,7 +385,7 @@ static char help_text[]=
 #define MSGTR_SKIN_BITMAP_PNGReadError "PNG læse fejl (%s)\n"
 #define MSGTR_SKIN_BITMAP_RLENotSupported "RLE pakket TGA ikke supporteret (%s)\n"
 #define MSGTR_SKIN_BITMAP_UnknownFileType "ukendt filtype (%s)\n"
-#define MSGTR_SKIN_BITMAP_ConvertError "Fejl i 24 bit to 32 bit convertering (%s)\n"
+#define MSGTR_SKIN_BITMAP_ConversionError "Fejl i 24 bit to 32 bit convertering (%s)\n"
 #define MSGTR_SKIN_BITMAP_UnknownMessage "ukendt besked: %s\n"
 #define MSGTR_SKIN_FONT_NotEnoughtMemory "ikke nok ram\n"
 #define MSGTR_SKIN_FONT_TooManyFontsDeclared "for mange skrifttyper specificeret\n"
@@ -432,9 +428,9 @@ static char help_text[]=
 #define MSGTR_MENU_Chapter "Kapitel %2d"
 #define MSGTR_MENU_AudioLanguages "Lyd sprog"
 #define MSGTR_MENU_SubtitleLanguages "Undertekst sprog"
+// TODO: Why is this different from MSGTR_PlayList?
 #define MSGTR_MENU_PlayList "Afspilningslisten"
 #define MSGTR_MENU_SkinBrowser "Vælg udseende"
-#define MSGTR_MENU_Preferences "Indstillinger"
 #define MSGTR_MENU_Exit "Forlad..."
 #define MSGTR_MENU_Mute "Mute"
 #define MSGTR_MENU_Original "Original"
@@ -471,8 +467,6 @@ static char help_text[]=
 #define MSGTR_PLAYLIST_DirectoryTree "Katalog træ"
 
 // --- preferences
-#define MSGTR_PREFERENCES_Audio "Lyd"
-#define MSGTR_PREFERENCES_Video "Video"
 #define MSGTR_PREFERENCES_SubtitleOSD "undertekster og OSD"
 #define MSGTR_PREFERENCES_Codecs "Codecs & demuxer"
 #define MSGTR_PREFERENCES_Misc "Forskelligt"
@@ -481,7 +475,7 @@ static char help_text[]=
 #define MSGTR_PREFERENCES_AvailableDrivers "Tilgængelige drivere:"
 #define MSGTR_PREFERENCES_DoNotPlaySound "Afspil ikke lyd"
 #define MSGTR_PREFERENCES_NormalizeSound "Normaliser lydstyrke"
-#define MSGTR_PREFERENCES_EnEqualizer "Anvend equalizer"
+#define MSGTR_PREFERENCES_EnableEqualizer "Anvend equalizer"
 #define MSGTR_PREFERENCES_ExtraStereo "Anvend extra stereo"
 #define MSGTR_PREFERENCES_Coefficient "Koefficient:"
 #define MSGTR_PREFERENCES_AudioDelay "Lydforsinkelse"
@@ -517,6 +511,7 @@ static char help_text[]=
 #define MSGTR_PREFERENCES_FRAME_PostProcess "Efterprocesseringsfilter"
 #define MSGTR_PREFERENCES_FRAME_CodecDemuxer "Codec & demuxer"
 #define MSGTR_PREFERENCES_FRAME_Cache "Cache"
+// TODO: Why is this different from MSGTR_PREFERENCES_Misc?
 #define MSGTR_PREFERENCES_FRAME_Misc "Misc"
 #define MSGTR_PREFERENCES_Message "Husk, nogle funktioner kræver at MPlayer bliver genstartet for at de virker."
 #define MSGTR_PREFERENCES_DXR3_VENC "Video enkoder:"
@@ -567,9 +562,6 @@ static char help_text[]=
 #define MSGTR_PREFERENCES_ShowVideoWindow "Vis video vindue når inaktiv"
 
 #define MSGTR_ABOUT_UHU "GUI udvikling sponsereret af UHU Linux\n"
-#define MSGTR_ABOUT_CoreTeam "   MPlayer kernen:\n"
-#define MSGTR_ABOUT_AdditionalCoders "   Yderligere kodere:\n"
-#define MSGTR_ABOUT_MainTesters "   Hovedtestere:\n"
 
 // --- messagebox
 #define MSGTR_MSGBOX_LABEL_FatalError "Fatal fejl!"

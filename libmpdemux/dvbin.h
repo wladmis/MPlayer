@@ -2,7 +2,7 @@
  *
  * Modified for use with MPlayer, for details see the CVS changelog at
  * http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
- * $Id: dvbin.h,v 1.10 2005/04/16 12:51:09 diego Exp $
+ * $Id: dvbin.h 18562 2006-06-04 23:04:42Z nicodvb $
  */
 
 #ifndef DVBIN_H
@@ -99,6 +99,7 @@ typedef struct {
 	stream_t *stream;
 	char new_tuning[256], prev_tuning[256];
 	int retry;
+	int timeout;
 } dvb_priv_t;
 
 
@@ -109,6 +110,6 @@ typedef struct {
 
 extern int dvb_step_channel(dvb_priv_t *, int);
 extern int dvb_set_channel(dvb_priv_t *, int, int);
-extern dvb_config_t *dvb_get_config();
+extern dvb_config_t *dvb_get_config(void);
 
 #endif

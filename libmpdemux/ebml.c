@@ -6,13 +6,17 @@
  */
 
 #include "config.h"
-#ifdef HAVE_MATROSKA
 
 #include <stdlib.h>
 
 #include "stream.h"
 #include "ebml.h"
+#include "bswap.h"
 
+
+#ifndef SIZE_MAX
+#define SIZE_MAX ((size_t)-1)
+#endif
 
 /*
  * Read: the element content data ID.
@@ -175,30 +179,26 @@ ebml_read_float (stream_t *s, uint64_t *length)
     {
     case 4:
       {
-        uint32_t i;
-        float *f;
-        i = stream_read_dword (s);
-        f = (float *) (void *) &i;
-        value = *f;
+        union {uint32_t i; float f;} u;
+        u.i = stream_read_dword (s);
+        value = u.f;
         break;
       }
 
     case 8:
       {
-        uint64_t i;
-        double *d;
-        i = stream_read_qword (s);
-        d = (double *) (void *) &i;
-        value = *d;
+        union {uint64_t i; double d;} u;
+        u.i = stream_read_qword (s);
+        value = u.d;
         break;
       }
 
     case 10:
       {
-        uint8_t data[10];
-        if (stream_read (s, data, 10) != 10)
+        union {uint8_t data[10]; long double ld;} u;
+        if (stream_read (s, u.data, 10) != 10)
           return EBML_FLOAT_INVALID;
-        value = * (long double *) data;
+        value = be2me_ldbl(u.ld);
         break;
       }
 
@@ -224,6 +224,8 @@ ebml_read_ascii (stream_t *s, uint64_t *length)
 
   len = ebml_read_length (s, &l);
   if (len == EBML_UINT_INVALID)
+    return NULL;
+  if (len > SIZE_MAX - 1)
     return NULL;
   if (length)
     *length = len + l;
@@ -366,5 +368,3 @@ ebml_read_header (stream_t *s, int *version)
 
   return str;
 }
-
-#endif /* HAVE_MATROSKA */

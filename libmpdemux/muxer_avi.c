@@ -6,7 +6,7 @@
 #include <limits.h>
 
 #include "config.h"
-#include "../version.h"
+#include "version.h"
 
 #include "stream.h"
 #include "demuxer.h"
@@ -18,6 +18,7 @@
 #include "aviheader.h"
 #include "ms_hdr.h"
 #include "mp_msg.h"
+#include "help_mp.h"
 
 extern char *info_name;
 extern char *info_artist;
@@ -108,9 +109,9 @@ static muxer_stream_t* avifile_new_stream(muxer_t *muxer,int type){
     s->priv=si=malloc(sizeof(struct avi_stream_info));
     memset(si,0,sizeof(struct avi_stream_info));
     si->idxsize=256;
-    si->idx=malloc(sizeof(struct avi_odmlidx_entry)*si->idxsize);
+    si->idx=calloc(si->idxsize, sizeof(struct avi_odmlidx_entry));
     si->riffofssize=16;
-    si->riffofs=malloc(sizeof(off_t)*(si->riffofssize+1));
+    si->riffofs=calloc((si->riffofssize+1), sizeof(off_t));
     memset(si->riffofs, 0, sizeof(off_t)*si->riffofssize);
 
     switch(type){
@@ -173,7 +174,7 @@ static void avifile_odml_new_riff(muxer_t *muxer)
     vsi->riffofspos++;
     if (vsi->riffofspos>=vsi->riffofssize) {
         vsi->riffofssize+=16;
-        vsi->riffofs=realloc(vsi->riffofs,sizeof(off_t)*(vsi->riffofssize+1));
+        vsi->riffofs=realloc_struct(vsi->riffofs,(vsi->riffofssize+1),sizeof(off_t));
     }
     vsi->riffofs[vsi->riffofspos] = ftello(f);
 
@@ -190,7 +191,7 @@ static void avifile_odml_new_riff(muxer_t *muxer)
 
 static void avifile_write_header(muxer_t *muxer);
 
-static void avifile_write_chunk(muxer_stream_t *s,size_t len,unsigned int flags){
+static void avifile_write_chunk(muxer_stream_t *s,size_t len,unsigned int flags, double dts, double pts){
     off_t rifflen;
     muxer_t *muxer=s->muxer;
     struct avi_stream_info *si = s->priv;
@@ -219,7 +220,7 @@ static void avifile_write_chunk(muxer_stream_t *s,size_t len,unsigned int flags)
         // add to the traditional index:
         if(muxer->idx_pos>=muxer->idx_size){
             muxer->idx_size+=256; // 4kB
-            muxer->idx=realloc(muxer->idx,16*muxer->idx_size);
+            muxer->idx=realloc_struct(muxer->idx,muxer->idx_size,16);
         }
         muxer->idx[muxer->idx_pos].ckid=s->ckid;
         muxer->idx[muxer->idx_pos].dwFlags=flags; // keyframe?
@@ -231,7 +232,7 @@ static void avifile_write_chunk(muxer_stream_t *s,size_t len,unsigned int flags)
     // add to odml index
     if(si->idxpos>=si->idxsize){
 	si->idxsize+=256;
-	si->idx=realloc(si->idx,sizeof(*si->idx)*si->idxsize);
+	si->idx=realloc_struct(si->idx,si->idxsize,sizeof(*si->idx));
     }
     si->idx[si->idxpos].flags=(flags&AVIIF_KEYFRAME)?0:ODML_NOTKEYFRAME;
     si->idx[si->idxpos].ofs=muxer->file_end;
@@ -241,20 +242,9 @@ static void avifile_write_chunk(muxer_stream_t *s,size_t len,unsigned int flags)
     // write out the chunk:
     write_avi_chunk(muxer->file,s->ckid,len,s->buffer); /* unsigned char */
 
-    // alter counters:
     if (len > s->h.dwSuggestedBufferSize){
 	s->h.dwSuggestedBufferSize = len;
     }
-    if(s->h.dwSampleSize){
-	// CBR
-	s->h.dwLength+=len/s->h.dwSampleSize;
-	if(len%s->h.dwSampleSize) mp_msg(MSGT_MUXER, MSGL_WARN, "Warning! len isn't divisable by samplesize!\n");
-    } else {
-	// VBR
-	s->h.dwLength++;
-    }
-    s->timer=(double)s->h.dwLength*s->h.dwScale/s->h.dwRate;
-    s->size+=len;
     if((unsigned int)len>s->h.dwSuggestedBufferSize) s->h.dwSuggestedBufferSize=len;
 
     muxer->file_end += 8 + paddedlen;
@@ -288,12 +278,26 @@ static void avifile_write_header(muxer_t *muxer){
   struct avi_stream_info *vsi = muxer->def_v->priv;
   int isodml = vsi->riffofspos > 0;
 
+  mp_msg(MSGT_MUXER, MSGL_INFO, MSGTR_WritingHeader);
   if (aspect == 0) {
     mp_msg(MSGT_MUXER, MSGL_INFO, "ODML: Aspect information not (yet?) available or unspecified, not writing vprp header.\n");
   } else {
     mp_msg(MSGT_MUXER, MSGL_INFO, "ODML: vprp aspect is %d:%d.\n", aspect >> 16, aspect & 0xffff);
   }
 
+  /* deal with stream delays */
+  for (i = 0; muxer->streams[i] && i < MUXER_MAX_STREAMS; ++i) {
+      muxer_stream_t *s = muxer->streams[i];
+      if (s->type == MUXER_TYPE_AUDIO && muxer->audio_delay_fix > 0.0) {
+          s->h.dwStart = muxer->audio_delay_fix * s->h.dwRate/s->h.dwScale;
+          mp_msg(MSGT_MUXER, MSGL_INFO, MSGTR_SettingAudioDelay, (float)s->h.dwStart * s->h.dwScale/s->h.dwRate);
+      }
+      if (s->type == MUXER_TYPE_VIDEO && muxer->audio_delay_fix < 0.0) {
+          s->h.dwStart = -muxer->audio_delay_fix * s->h.dwRate/s->h.dwScale;
+          mp_msg(MSGT_MUXER, MSGL_INFO, MSGTR_SettingVideoDelay, (float)s->h.dwStart * s->h.dwScale/s->h.dwRate);
+      }
+  }
+  
   if (isodml) {
       unsigned int rifflen, movilen;
       int i;
@@ -540,7 +544,7 @@ info[i].id=0;
   } else {
     if (ftello(f) != MOVIALIGN) {
 	mp_msg(MSGT_MUXER, MSGL_ERR, "Opendml superindex is too big for reserved space!\n");
-	mp_msg(MSGT_MUXER, MSGL_ERR, "Expected filepos %d, real filepos %d, missing space %d\n", MOVIALIGN, ftell(muxer->file), ftell(muxer->file)-MOVIALIGN);
+	mp_msg(MSGT_MUXER, MSGL_ERR, "Expected filepos %d, real filepos %ld, missing space %ld\n", MOVIALIGN, ftell(muxer->file), ftell(muxer->file)-MOVIALIGN);
 	mp_msg(MSGT_MUXER, MSGL_ERR, "Try increasing MOVIALIGN in libmpdemux/muxer_avi.c\n");
     }
     write_avi_list(f,listtypeAVIMOVIE,muxer->movi_end-ftello(f)-12);
@@ -595,7 +599,7 @@ static void avifile_odml_write_index(muxer_t *muxer){
 		i, entries_per_subidx, si->superidxpos);
 
     si->superidxsize = si->superidxpos;
-    si->superidx = malloc(sizeof(*si->superidx) * si->superidxsize);
+    si->superidx = calloc(si->superidxsize, sizeof(*si->superidx));
     memset(si->superidx, 0, sizeof(*si->superidx) * si->superidxsize);
 
     idxpos = 0;
@@ -653,6 +657,7 @@ static void avifile_write_standard_index(muxer_t *muxer){
 static void avifile_write_index(muxer_t *muxer){
   struct avi_stream_info *vsi = muxer->def_v->priv;
 
+  mp_msg(MSGT_MUXER, MSGL_INFO, MSGTR_WritingTrailer);
   if (vsi->riffofspos > 0){
     avifile_odml_write_index(muxer);
   } else {
@@ -660,10 +665,19 @@ static void avifile_write_index(muxer_t *muxer){
   }
 }
 
+static void avifile_fix_parameters(muxer_stream_t *s){
+  /* adjust audio_delay_fix according to individual stream delay */
+  if (s->type == MUXER_TYPE_AUDIO)
+    s->muxer->audio_delay_fix -= (float)s->decoder_delay * s->h.dwScale/s->h.dwRate;
+  if (s->type == MUXER_TYPE_VIDEO)
+    s->muxer->audio_delay_fix += (float)s->decoder_delay * s->h.dwScale/s->h.dwRate;
+}
+
 int muxer_init_muxer_avi(muxer_t *muxer){
   muxer->cont_new_stream = &avifile_new_stream;
   muxer->cont_write_chunk = &avifile_write_chunk;
   muxer->cont_write_header = &avifile_write_header;
   muxer->cont_write_index = &avifile_write_index;
+  muxer->fix_stream_parameters = &avifile_fix_parameters;
   return 1;
 }

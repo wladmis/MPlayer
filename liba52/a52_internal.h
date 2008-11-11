@@ -8,7 +8,7 @@
  *
  * Modified for use with MPlayer, changes contained in liba52_changes.diff.
  * detailed CVS changelog at http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
- * $Id: a52_internal.h,v 1.4 2005/03/22 23:27:18 diego Exp $
+ * $Id: a52_internal.h 16174 2005-08-05 13:33:50Z aurel $
  *
  * a52dec is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,6 +40,20 @@
 #define DELTA_BIT_NEW (1)
 #define DELTA_BIT_NONE (2)
 #define DELTA_BIT_RESERVED (3)
+
+#ifdef ARCH_X86_64
+# define REG_a "rax"
+# define REG_d "rdx"
+# define REG_S "rsi"
+# define REG_D "rdi"
+# define REG_BP "rbp"
+#else
+# define REG_a "eax"
+# define REG_d "edx"
+# define REG_S "esi"
+# define REG_D "edi"
+# define REG_BP "ebp"
+#endif
 
 void bit_allocate (a52_state_t * state, a52_ba_t * ba, int bndstart,
 		   int start, int end, int fastleak, int slowleak,

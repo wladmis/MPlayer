@@ -12,8 +12,6 @@
 #include "cpudetect.h"
 #include "mangle.h"
 
-extern int verbose; // defined in mplayer.c
-
 #if defined(ARCH_X86) || defined(ARCH_X86_64)
 #define CAN_COMPILE_X86_ASM
 #endif
@@ -258,7 +256,7 @@ static unsigned short fast_osd_15bpp_table[256];
 static unsigned short fast_osd_16bpp_table[256];
 #endif
 
-void vo_draw_alpha_init(){
+void vo_draw_alpha_init(void){
 #ifdef FAST_OSD_TABLE
     int i;
     for(i=0;i<256;i++){
@@ -267,7 +265,7 @@ void vo_draw_alpha_init(){
     }
 #endif
 //FIXME the optimized stuff is a lie for 15/16bpp as they aren't optimized yet
-	if(verbose)
+	if( mp_msg_test(MSGT_OSD,MSGL_V) )
 	{
 #ifdef RUNTIME_CPUDETECT
 #ifdef CAN_COMPILE_X86_ASM

@@ -47,8 +47,6 @@ static vo_info_t info = {
 
 LIBVO_EXTERN(dfbmga)
 
-extern int verbose;
-
 /******************************
 *	   directfb 	      *
 ******************************/
@@ -83,6 +81,7 @@ static DFBRectangle c2rect;
 static DFBRectangle *subrect;
 
 static IDirectFBInputDevice  *keyboard;
+static IDirectFBInputDevice  *remote;
 static IDirectFBEventBuffer  *buffer;
 
 static int blit_done;
@@ -92,6 +91,7 @@ static int use_bes;
 static int use_crtc2;
 static int use_spic;
 static int use_input;
+static int use_remote;
 static int field_parity;
 static int flipping;
 static DFBDisplayLayerBufferMode buffermode;
@@ -226,7 +226,7 @@ get_layer_by_name( DFBDisplayLayerID id,
 
 static void uninit( void );
 
-static uint32_t
+static int
 preinit( const char *arg )
 {
      DFBResult res;
@@ -268,6 +268,10 @@ preinit( const char *arg )
                } else if (!strncmp(vo_subdevice, "input", 5)) {
                     force_input = !opt_no;
                     vo_subdevice += 5;
+                    opt_no = 0;
+               } else if (!strncmp(vo_subdevice, "remote", 6)) {
+                    use_remote = !opt_no;
+                    vo_subdevice += 6;
                     opt_no = 0;
                } else if (!strncmp(vo_subdevice, "buffermode=", 11)) {
                     if (opt_no) {
@@ -360,6 +364,7 @@ preinit( const char *arg )
                        "  crtc2  Use CRTC2\n"
                        "  spic   Use hardware sub-picture for OSD\n"
                        "  input  Use DirectFB for keyboard input\n"
+                       "  remote Use DirectFB for remote control input\n"
                        "\nOther options:\n"
                        "  buffermode=(single|double|triple)\n"
                        "    single   Use single buffering\n"
@@ -498,15 +503,8 @@ preinit( const char *arg )
           }
      }
 
-     if (use_input) {
-          if ((res = dfb->GetInputDevice( dfb, DIDID_KEYBOARD, &keyboard )) != DFB_OK) {
-               mp_msg( MSGT_VO, MSGL_ERR,
-                       "vo_dfbmga: Can't get keyboard - %s\n",
-                       DirectFBErrorString( res ) );
-               uninit();
-               return -1;
-          }
-          if ((res = keyboard->CreateEventBuffer( keyboard, &buffer )) != DFB_OK) {
+     if (use_input || use_remote) {
+          if ((res = dfb->CreateEventBuffer( dfb, &buffer )) != DFB_OK) {
                mp_msg( MSGT_VO, MSGL_ERR,
                        "vo_dfbmga: Can't create event buffer - %s\n",
                        DirectFBErrorString( res ) );
@@ -515,6 +513,39 @@ preinit( const char *arg )
           }
      }
 
+     if (use_input) {
+          if ((res = dfb->GetInputDevice( dfb, DIDID_KEYBOARD, &keyboard )) != DFB_OK) {
+               mp_msg( MSGT_VO, MSGL_ERR,
+                       "vo_dfbmga: Can't get keyboard - %s\n",
+                       DirectFBErrorString( res ) );
+               uninit();
+               return -1;
+          }
+          if ((res = keyboard->AttachEventBuffer( keyboard, buffer )) != DFB_OK) {
+               mp_msg( MSGT_VO, MSGL_ERR,
+                       "vo_dfbmga: Can't attach event buffer to keyboard - %s\n",
+                       DirectFBErrorString( res ) );
+               uninit();
+               return -1;
+          }
+     }
+     if (use_remote) {
+          if ((res = dfb->GetInputDevice( dfb, DIDID_REMOTE, &remote )) != DFB_OK) {
+               mp_msg( MSGT_VO, MSGL_ERR,
+                       "vo_dfbmga: Can't get remote control - %s\n",
+                       DirectFBErrorString( res ) );
+               uninit();
+               return -1;
+          }
+          if ((res = remote->AttachEventBuffer( remote, buffer )) != DFB_OK) {
+               mp_msg( MSGT_VO, MSGL_ERR,
+                       "vo_dfbmga: Can't attach event buffer to remote control - %s\n",
+                       DirectFBErrorString( res ) );
+               uninit();
+               return -1;
+          }
+     }
+     
      return 0;
 }
 
@@ -544,10 +575,10 @@ static void release_config( void )
      bufs[2] = NULL;
 }
 
-static uint32_t
+static int
 config( uint32_t width, uint32_t height,
         uint32_t d_width, uint32_t d_height,
-        uint32_t fullscreen,
+        uint32_t flags,
         char *title,
 	uint32_t format )
 {
@@ -735,7 +766,7 @@ config( uint32_t width, uint32_t height,
                out_height = screen_height;
 
           aspect_save_screenres( out_width, out_height );
-          aspect( &out_width, &out_height, (fullscreen & 0x01) ? A_ZOOM : A_NOZOOM );
+          aspect( &out_width, &out_height, (flags & VOFLAG_FULLSCREEN) ? A_ZOOM : A_NOZOOM );
 
           if (in_width != out_width ||
               in_height != out_height)
@@ -856,7 +887,7 @@ config( uint32_t width, uint32_t height,
      return 0;
 }
 
-static uint32_t
+static int
 query_format( uint32_t format )
 {
      switch (format) {
@@ -996,13 +1027,13 @@ draw_alpha( int x0, int y0,
      subframe->Unlock( subframe );
 }
 
-static uint32_t
+static int
 draw_frame( uint8_t * src[] )
 {
      return -1;
 }
 
-static uint32_t
+static int
 draw_slice( uint8_t * src[], int stride[], int w, int h, int x, int y )
 {
      void *dst;
@@ -1155,6 +1186,8 @@ uninit( void )
 
      if (buffer)
           buffer->Release( buffer );
+     if (remote)
+          remote->Release( remote );
      if (keyboard)
           keyboard->Release( keyboard );
      if (crtc2)
@@ -1167,6 +1200,7 @@ uninit( void )
           dfb->Release( dfb );
 
      buffer = NULL;
+     remote = NULL;
      keyboard = NULL;
      crtc2 = NULL;
      bes = NULL;
@@ -1343,7 +1377,7 @@ get_equalizer( char *data, int *value )
      return VO_TRUE;
 }
 
-static uint32_t
+static int
 control( uint32_t request, void *data, ... )
 {
      switch (request) {
@@ -1396,14 +1430,14 @@ check_events( void )
 {
      DFBInputEvent event;
 
-     if (!use_input)
+     if (!buffer)
           return;
 
      if (buffer->GetEvent( buffer, DFB_EVENT( &event )) == DFB_OK) {
           if (event.type == DIET_KEYPRESS) {
                switch (event.key_symbol) {
                case DIKS_ESCAPE:
-                    mplayer_put_key( 'q' );
+                    mplayer_put_key( KEY_ESC );
                     break;
                case DIKS_PAGE_UP:
                     mplayer_put_key( KEY_PAGE_UP );
@@ -1435,6 +1469,47 @@ check_events( void )
                case DIKS_END:
                     mplayer_put_key( KEY_END );
                     break;
+
+               case DIKS_POWER:
+                    mplayer_put_key( KEY_POWER );
+                    break;
+               case DIKS_MENU:
+                    mplayer_put_key( KEY_MENU );
+                    break;
+               case DIKS_PLAY:
+                    mplayer_put_key( KEY_PLAY );
+                    break;
+               case DIKS_STOP:
+                    mplayer_put_key( KEY_STOP );
+                    break;
+               case DIKS_PAUSE:
+                    mplayer_put_key( KEY_PAUSE );
+                    break;
+               case DIKS_PLAYPAUSE:
+                    mplayer_put_key( KEY_PLAYPAUSE );
+                    break;
+               case DIKS_FORWARD:
+                    mplayer_put_key( KEY_FORWARD );
+                    break;
+               case DIKS_NEXT:
+                    mplayer_put_key( KEY_NEXT );
+                    break;
+               case DIKS_REWIND:
+                    mplayer_put_key( KEY_REWIND );
+                    break;
+               case DIKS_PREVIOUS:
+                    mplayer_put_key( KEY_PREV );
+                    break;
+               case DIKS_VOLUME_UP:
+                     mplayer_put_key( KEY_VOLUME_UP );
+                    break;
+               case DIKS_VOLUME_DOWN:
+                    mplayer_put_key( KEY_VOLUME_DOWN );
+                    break;
+               case DIKS_MUTE:
+                    mplayer_put_key( KEY_MUTE );
+                    break;
+
                default:
                     mplayer_put_key( event.key_symbol );
                }

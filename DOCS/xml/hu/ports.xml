@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-2"?>
-<!-- synced with 1.62 -->
+<!-- synced with r17707 -->
 <chapter id="ports" xreflabel="Ports">
 <title>Portok</title>
 
@@ -59,7 +59,7 @@ hivatalos RPM csomagjait a Red Hat-hoz és a Fedora Core-hoz. Elérhetőek ezen a
 </para>
 
 <para>
-A Mandrake RPM csomagok a <ulink url="http://plf.zarb.org/">P.L.F.</ulink> oldalán
+A Mandrake/Mandriva RPM csomagok a <ulink url="http://plf.zarb.org/">P.L.F.</ulink> oldalán
 találhatóak.
 A SuSE régen az <application>MPlayer</application> egy csonkított verzióját tartalmazta,
 de az utóbbi kiadásokból már kiszedték. SuSE-val működő csomagok a
@@ -89,10 +89,10 @@ Ha GUI frontend-et is szeretnél, használd az xmms-embedded-et.
 <sect1 id="bsd">
 <title>*BSD</title>
 <para>
-Az <application>MPlayer</application> fut FreeBSD, OpenBSD, NetBSD, BSD/OS és
-Darwin rendszereken. Léteznek ports/pkgsrc/fink/stb. verziók az
+Az <application>MPlayer</application> fut az összes ismert BSD-n.
+Léteznek ports/pkgsrc/fink/stb. verziók az
 <application>MPlayer</application>ből, amelyek nagy valószínűséggel
-egyszerűbben fordíthatóak le, mint a mi gyers forrásaink.
+egyszerűbben fordíthatóak le, mint a mi nyers forrásaink.
 </para>
 
 <para>
@@ -144,8 +144,18 @@ Lásd a <link linkend="macos">Mac OS</link> részt.
 </sect2>
 </sect1>
 
-<sect1 id="solaris">
-<title>Sun Solaris</title>
+<sect1 id="unix">
+<title>Kereskedelmi Unix</title>
+
+<para>
+Az <application>MPlayer</application> számos kereskedelmi Unix variánsra
+portolva lett. Mivel a fejlesztő környezet ezeken a rendszereken másfajta,
+mint a szabad Unix-okon, lehet, hogy némi kézi beállítást igényel a
+fordítás.
+</para>
+
+<sect2 id="solaris">
+<title>Solaris</title>
 <para>
 Az <application>MPlayer</application> Solaris 2.6 vagy újabb rendszereken működik.
 A SUN audió vezérlőjét a <option>-ao sun</option> kapcsolóval használhatod.
@@ -241,10 +251,10 @@ Ez a hiba a 109764-04 (sparc) / 109765-04 (x86) jelzésű patch-ek telepítése
 után megszűnik.
 </para></listitem>
 </itemizedlist>
-</sect1>
+</sect2>
 
-<sect1 id="irix">
-<title>Silicon Graphics Irix</title>
+<sect2 id="irix">
+<title>IRIX</title>
 <para>
 A GNU install programot kell feltelepítened, és (ha nem tetted bele a globális
 path-ba) megadni a helyét:
@@ -270,10 +280,10 @@ Add ki a következő parancsokat (az <application>MPlayer</application> forrás kön
 <screen>cp DOCS/mplayer.1 . ; cp etc/codecs.conf .</screen>
 ezután símán fordíts és telepíts.
 </para>
-</sect1>
+</sect2>
 
 
-<sect1 id="hp-ux">
+<sect2 id="hp-ux">
 <title>HP-UX</title>
 <para>
 Joe Page ad helyet egy részletes HP-UX <application>MPlayer</application>
@@ -390,23 +400,57 @@ használható maximum adatmennyiséghez. Az alkalmazásaidon múlik, hogy az alapérte
 </listitem>
 </itemizedlist>
 
-</sect1>
+</sect2>
 
-
-<sect1 id="qnx">
-<title>QNX</title>
+<sect2 id="aix">
+<title>AIX</title>
 <para>
-Működik. Le kell töltened az SDL-t QNX-re és telepítened kell. Ezután az
-<application>MPlayer</application>t a <option>-vo sdl:photon</option>
-és az <option>-ao sdl:nto</option> kapcsolókkal futtasd, így gyorsnak kell
-lennie.
+Az <application>MPlayer</application> sikeresen fordul AIX 5.1-en,
+5.2-n és 5.3-on, GCC 3.3 vagy újabbal. Az
+<application>MPlayer</application> fordítását AIX 4.3.3 és
+régebbi változaton nem teszteltük. Javasoljuk, hogy az
+<application>MPlayer</application>t GCC 3.4 vagy újabbal fordítsd
+vagy ha POWER5-ön forgatsz, GCC 4.0 szükséges.
 </para>
 
 <para>
-A <option>-vo x11</option> kimenet még lassabb lesz, mint Linuxon, mert a
-QNX csak X <emphasis>emulációt</emphasis> tartalmaz, amely rettenetesen lassú.
-Használj SDL-t.
+Győződj meg róla, hogy a GNU make-et használod
+(<filename>/opt/freeware/bin/gmake</filename>) az
+<application>MPlayer</application> forgatásához, mivel problémákba
+fogsz ütközni, ha a <filename>/usr/ccs/bin/make</filename>
+fájlt használod.
 </para>
+
+<para>
+A CPU detektálás még fejlesztés alatt áll.
+A következő architektúrákat teszteltük:
+</para>
+
+<itemizedlist>
+<listitem><para>604e</para></listitem>
+<listitem><para>POWER4</para></listitem>
+</itemizedlist>
+
+<para>
+A következő architektúrák nem lettek tesztelve, de működhetnek:
+</para>
+<itemizedlist>
+<listitem><para>POWER</para></listitem>
+<listitem><para>POWER2</para></listitem>
+<listitem><para>POWER3</para></listitem>
+<listitem><para>POWER5</para></listitem>
+</itemizedlist>
+
+<para>
+Az Ultimedia Services-en keresztüli hang nem támogatott, mert az Ultimedia-t
+dobták az AIX 5.1-ben; ezért az egyetlen lehetőség az AIX Open
+Sound System (OSS) vezérlők használata a 4Front Technologies-től <ulink
+url="http://www.opensound.com/aix.html">http://www.opensound.com/aix.html</ulink>.
+A 4Front Technologies szabadon biztosítja az OSS vezérlőket személyes és
+nem-üzleti felhasználásra.
+</para>
+
+</sect2>
 </sect1>
 
 <sect1 id="windows">
@@ -415,27 +459,41 @@ Használj SDL-t.
 <para>Igen, az <application>MPlayer</application> fut Windows-on
   <ulink url="http://www.cygwin.com/"><application>Cygwin</application></ulink> és
   <ulink url="http://www.mingw.org/"><application>MinGW</application></ulink> alatt.
-  Még nincs GUI-ja, de a parancssoros verzió majdnem teljesen működik.
-  <ulink url="../../tech/patches.txt">Javításokat</ulink> mindig örömmel fogadunk.
-  Ajánlott szétnézni az
+  Még nincs hivatalos GUI-ja, de a parancssoros verzió
+  teljes mértékben használható. Ajánlott megnézni az
   <ulink url="http://mplayerhq.hu/mailman/listinfo/mplayer-cygwin/">MPlayer-cygwin</ulink>
-  levelezési listán is a legfrissebb információkért.</para>
+  levelezési listát is segítéségért és a legfrissebb információkért.
+  A hivatalos Windows-os binárisok megtalálhatóak a
+  <ulink url="http://www.mplayerhq.hu/design7/dload.html">letöltési oldalon</ulink>.
+  A külső forrásból származó telepítő csomagokat és egyszerű GUI frontend-eket
+  összegyűjtöttük a 
+  <ulink url="http://www.mplayerhq.hu/design7/projects.html#windows">kapcsolódó projektek oldal</ulink>
+  Windows-os részében.
+</para>
+
+<para>Ha el akarod kerülni a parancssor használatát, van egy egyszerű trükk.
+  Tegyél egy parancsikont az asztalodra, ami valami hasonló parancssort
+  tartalmaz:
+  <screen><replaceable>c:\eleresi\ut\</replaceable>mplayer.exe %1</screen>
+  Ezután az <application>MPlayer</application> le fog játszani bármilyen
+  videót, amit erre a parancsikonra ejtesz. Írd hozzá a <option>-fs</option>
+  kapcsolót a teljes képernyős módhoz.
+</para>
 
 <para>A legjobb eredmény a natív DirectX videó kimeneti vezérlővel
-  (<option>-vo directx</option>) és a natív Windows waveout audió vezérlővel
-  (<option>-ao win32</option>) érhető el. Alternatívaként van OpenGL és SDL, de
-  az OpenGL teljesítménye nagyban változik a rendszerek között, az SDL pedig tudvalevőleg
-  torzítja a hangot és a képet vagy összeomlik néhány rendszeren. Ha torz a kép,
+  (<option>-vo directx</option>). Alternatívaként van OpenGL és SDL, de
+  az OpenGL teljesítménye nagyban változik a rendszerek között, az SDL pedig
+  torzítja a képet vagy összeomlik néhány rendszeren. Ha torz a kép,
   próbáld meg kikapcsolni a hardveres gyorsítást a
   <option>-vo directx:noaccel</option> kapcsolóval. Töltsd le a
-  <ulink url="http://www.mplayerhq.hu/MPlayer/releases/win32-beta/contrib/dx7headers.tgz">DirectX 7 fejléc fájlokat</ulink>
+  <ulink url="http://www.mplayerhq.hu/MPlayer/releases/win32/contrib/dx7headers.tgz">DirectX 7 fejléc fájlokat</ulink>
   a DirectX videó kimeneti vezérlő beforgatásához.</para>
 
 <para>A <link linkend="vidix">VIDIX</link> is működik már Windows alatt
   a <option>-vo winvidix</option> kapcsolóval, bár még kisérleti fázisban
   van és egy kis kézi állítgatás kell hozzá. Töltsd le a
-  <ulink url="http://www.mplayerhq.hu/MPlayer/releases/win32-beta/dhahelperwin/dhahelper.sys">dhahelper.sys</ulink>
-  vagy <ulink url="http://www.mplayerhq.hu/MPlayer/releases/win32-beta/dhahelperwin/withmtrr/dhahelper.sys">dhahelper.sys (MTRR támogatással)</ulink>
+  <ulink url="http://www.mplayerhq.hu/MPlayer/releases/win32/dhahelperwin/dhahelper.sys">dhahelper.sys</ulink>
+  vagy <ulink url="http://www.mplayerhq.hu/MPlayer/releases/win32/dhahelperwin/withmtrr/dhahelper.sys">dhahelper.sys (MTRR támogatással)</ulink>
   fájlt és másold be a <filename class="directory">libdha/dhahelperwin</filename> könyvtárba
   az <application>MPlayer</application> forrás fádban. Nyisd meg a konzolt és
   válts át erre a könyvtárra, majd írd be
@@ -467,7 +525,7 @@ Használj SDL-t.
   hogy véglegesen kimaradjon a használatból.</para>
 
 <para>Vannak speciálisan Windowsra készített codec csomagok a
-  <ulink url="http://mplayerhq.hu/homepage/design7/codecs.html">codec oldalunkon</ulink>,
+  <ulink url="http://www.mplayerhq.hu/design7/codecs.html">codec oldalunkon</ulink>,
   melyek segítségével azokat a formátumokat is lejátszhatod, amikhez még
   nincs natív támogatás.
   Tedd be a codec-eket valahova az elérési útvonaladba vagy add meg a
@@ -494,16 +552,24 @@ Használj SDL-t.
   konzol meglehetősen lassú. Kimenet átirányítással vagy a
   <option>-quiet</option> kapcsolóval a jelentések szerint javítható a
   teljesítmény néhány rendszeren. A Direct renderelés (<option>-dr</option>)
-  is segíthet. Az OSD villogását megelőzheted a <option>-double</option> kapcsolóval
-  előírt dupla buffereléssel. Ha a lejátszás szaggatott, próbáld meg a
+  is segíthet. Ha a lejátszás szaggatott, próbáld meg a
   <option>-autosync 100</option> opciót. Ha ezek közül bármelyik segít, írd
   be a konfigurációs fájlodba.</para>
+  
+<note>
 
-<para>Sascha Sommer hivatalos Windows binárisokat ad ki időről időre,
-  Joey Parrish nem hivatalos Windows csomagokat készít telepítővel.
-  Megtalálhatod ezeket a
-  <ulink url="http://www.mplayerhq.hu/homepage/design7/projects.html#windows">projektek oldal</ulink>  
-  Windows-os részében.</para>
+<para>Windows-on a futásidejű CPU-detektálás letiltja az SSE támogatást
+  visszatérő és nehezen követhető SSE-vel kapcsolatos fagyások miatt. Ha
+  szeretnél SSE támogatást, futás idejű CPU-detektálás nélkül kell
+  fordítanod.
+</para>
+
+<para>Ha Pentium 4-ed van és fagyásokat tapasztalsz a RealPlayer codec-ekkel,
+  le kell tiltanod a hyperthread támogatást.
+</para>
+
+</note>
+
 
 <sect2 id="cygwin">
 <title><application>Cygwin</application></title>
@@ -540,8 +606,12 @@ Használj SDL-t.
 <para>A tömörített MOV fejlécek támogatásához
   <ulink url="http://www.gzip.org/zlib/">zlib</ulink> kell, ami
   alaphelyzetben nincs benne a <application>MinGW</application>-ben.
-  ÁLlítsd be a <option>--prefix=/mingw</option> kapcsolóval és
+  Állítsd be a <option>--prefix=/mingw</option> kapcsolóval és
   telepítsd, mielőtt az <application>MPlayer</application>t fordítanád.</para>
+  
+<para>Az <application>MPlayer</application> és a szükséges függvénykönyvtárak
+  elkészítésének módját elolvashatod az
+  <ulink url="http://mplayerhq.hu/MPlayer/releases/win32/contrib/MPlayer-MinGW-Howto.txt">MPlayer MinGW HOGYAN</ulink>-ban.</para>
 
 </sect2>
 
@@ -551,27 +621,147 @@ Használj SDL-t.
 <sect1 id="macos">
 <title>Mac OS</title>
 <para>
-Csak a Mac OS X 10.2-es verzió és utódai támogatottak a hivatalos
-<application>MPlayer</application> forrásban. Régebbi verziók támogatásához
-javításokat szívesen fogadunk!
+Az <application>MPlayer</application> nem működik a 10-esnél régebbi Mac OS-eken,
+de könnyedén lefordítható Mac OS X 10.2 és későbbi verziók alatt.
+A javasolt fordító a GCC 3.x vagy későbbi Apple féle
+változata. Ha Mac OS X 10.3.9 vagy régebbi verziód és QuickTime 7-esed van,
+használhatod a macosx videó kimeneti vezérlőt is.
+</para>
+
+<sect2 id="osx_gui">
+<title>MPlayer OS X GUI</title>
+<para>
+Van egy natív GUI az <application>MPlayer</application>hez egy előfordított
+<application>MPlayer</application> binárissal együtt Mac OS X alá a
+<ulink url="http://mplayerosx.sf.net/">MPlayerOSX</ulink> projektből, de
+emlékezz rá: ez a projekt már nem aktív.
 </para>
 
 <para>
-Az Apple saját GCC 3.x-es fordítója ajánlott, legfőképp, ha 
-<systemitem class="library">libavcodec</systemitem>-et is használunk, mert
-azt az Apple módosított GCC 2.95.x verziója nem támogatja a C99-es
-szintaxist.
+Szerencsére az <application>MPlayerOSX</application> projektet az
+<application>MPlayer</application> csapat egyik tagja átvette.
+Előzetes kiadások elérhetőek a
+<ulink url="http://mplayerhq.hu/dload.html">letöltési oldalunkról</ulink>
+és hamarosan jön a hivatalos kiadás is.
 </para>
 
 <para>
-Mindezek mellett még egy Aqua GUI is elérhető az <application>MPlayer</application>hez,
-melyet egy előre lefordított lejátszó binárissal együtt tölthetünk le az
-<ulink url="http://mplayerosx.sf.net/">MPlayerOSX</ulink> csapat oldaláról.
+Ha saját magad akarod lefordítani forrásból az <application>MPlayerOSX</application>et,
+szükséged lesz az <systemitem>mplayerosx</systemitem>-re, a
+<systemitem>main</systemitem>-re és a
+<systemitem>main</systemitem> CVS modul
+<systemitem>main_noaltivec</systemitem>-re átnevezett másolatára.
+<systemitem>mplayerosx</systemitem> a GUI frontend,
+<systemitem>main</systemitem> az MPlayer és a
+<systemitem>main_noaltivec</systemitem> az MPlayer AltiVec támogatás
+nélkül.
 </para>
+
+<para>
+A CVS modulok letöltéséhez használt az alábbi parancsokat:
+
+<screen>
+cvs -d:pserver:anonymous@mplayerhq.hu:/cvsroot/mplayer login
+cvs -z3 -d:pserver:anonymous@mplayerhq.hu:/cvsroot/mplayer co -P mplayerosx
+cvs -z3 -d:pserver:anonymous@mplayerhq.hu:/cvsroot/mplayer co -P main
+</screen>
+</para>
+
+<para>
+Az <application>MPlayerOSX</application> elkészítéséhez valami ilyesmit kell
+csinálnod:
+
+<screen>
+MPlayer_forras_konyvtar
+   |
+   |--->main           (MPlayer CVS forrás)
+   |
+   |--->main_noaltivec (MPlayer CVS forrás --disable-altivec -kel konfigurálva)
+   |
+   |--->mplayerosx     (MPlayer OS X CVS forrás)
+</screen>
+
+Először a main és main_noaltivec-et kell lefordítanod.
+</para>
+
+<para>
+Ezután állíts be egy globális változót:
+
+<screen>export MACOSX_DEPLOYMENT_TARGET=10.3</screen>
+</para>
+
+<para>
+Majd konfigurálj:
+</para>
+
+<para>
+Ha a G4 vagy későbbi, AltiVec támogatással rendelkező CPU-ra konfigurálsz:
+<screen>
+./configure --with-termcaplib=ncurses.5 --disable-gl --disable-x11
+</screen>
+Ha G3-as, AltiVec nélküli gépre:
+<screen>
+./configure --with-termcaplib=ncurses.5 --disable-gl --disable-x11
+--disable-altivec
+</screen>
+Lehet, hogy szerkesztened kell a <filename>config.mak</filename> fájlt és
+át kell írnod az <systemitem>-mcpu</systemitem>-t és <systemitem>-mtune</systemitem>-t
+<systemitem>74XX</systemitem>-ről <systemitem>G3</systemitem>-ra.
+</para>
+
+<para>
+Folytasd a
+<screen>
+make
+</screen>
+paranccsal, majd menj a mplayerosx könyvtárba és írd be 
+
+<screen>
+make dist
+</screen>
+Ez egy tömörített <systemitem>.dmg</systemitem> archívot hoz létre
+egy használatra kész binárissal.
+</para>
+
+<para>
+Használhatod az <application>Xcode</application> 2.1 projektet is;
+a régi, <application>Xcode</application> 1.x projekt nem működik már.
+</para>
+</sect2>
 </sect1>
 
-<sect1 id="amiga">
+<sect1 id="exotic_platforms">
+<title>Egzotikus platformok</title>
+
+<para>
+Az <application>MPlayer</application> számos egzotikus platformon fut,
+de a platform-specifikus változtatások nagy része nem lett beleolvasztva
+a fő forrás fába.
+A fordítási leíráshoz nézd meg a rendszer-specifikus dokumentációt.
+</para>
+
+<sect2 id="qnx">
+<title>QNX</title>
+<para>
+Le kell töltened és telepítened kell az SDL-t a QNX-re. Majd futtasd az
+<application>MPlayer</application>t a <option>-vo sdl:driver=photon</option>
+és <option>-ao sdl:nto</option> kapcsolókkal, így gyors lesz.
+</para>
+
+<para>
+A <option>-vo x11</option> kimenet még lassabb lesz, mint Linux-on,
+mivel a QNX-nek csak X <emphasis>emulációja</emphasis> van, ami nagyon lassú.
+</para>
+</sect2>
+
+<sect2 id="amiga">
 <title>Amiga/MorphOS (GeekGadgets)</title>
+<para>
+Az emberek a <ulink url="www.amigasoft.net">www.amigasoft.net</ulink>-nél
+készítettek csomagokat az aktuális <application>MPlayer</application>ből
+és <application>MEncoder</application>ből.
+</para>
+
 <para>
 Nicholas Det (Genesi) sikeresen átültette az <application>MPlayer</application>t
 MorphOS alá. Sajnálatos módon csak a 0.90-es széria van kész.
@@ -594,6 +784,7 @@ Letölthető a <ulink url="http://www.morphzone.org/">MorphZone</ulink>-ról:
 </para></listitem>
 </itemizedlist>
 </para>
+</sect2>
 </sect1>
 
 </chapter>

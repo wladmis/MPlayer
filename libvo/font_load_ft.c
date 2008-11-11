@@ -18,7 +18,9 @@
 #include <math.h>
 #include <string.h>
 
+#ifdef USE_ICONV
 #include <iconv.h>
+#endif
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -117,7 +119,7 @@ static int check_font(font_desc_t *desc, float ppem, int padding, int pic_idx,
 		      int unicode) {
     FT_Error	error;
     FT_Face face = desc->faces[pic_idx];
-    int	const	load_flags = FT_LOAD_DEFAULT | FT_LOAD_NO_HINTING;
+    int	const	load_flags = FT_LOAD_DEFAULT;
     int		ymin = INT_MAX, ymax = INT_MIN;
     int		space_advance = 20;
     int         width, height;
@@ -496,7 +498,7 @@ void render_one_glyph(font_desc_t *desc, int c)
     int width, height, stride, maxw, off;
     unsigned char *abuffer, *bbuffer;
     
-    int	const	load_flags = FT_LOAD_DEFAULT | FT_LOAD_NO_HINTING;
+    int	const	load_flags = FT_LOAD_DEFAULT;
     int		pen_xa;
     int font = desc->font[c];
     int error;
@@ -731,7 +733,7 @@ int generate_tables(font_desc_t *desc, double thickness, double radius)
     return 0;
 }
 
-
+#ifdef USE_ICONV
 /* decode from 'encoding' to unicode */
 static FT_ULong decode_char(iconv_t *cd, char c) {
     FT_ULong o;
@@ -830,8 +832,9 @@ static int prepare_charset_unicode(FT_Face face, FT_ULong *charset, FT_ULong *ch
 
     return i;
 }
+#endif
 
-static font_desc_t* init_font_desc()
+static font_desc_t* init_font_desc(void)
 {
     font_desc_t *desc;
     int i;
@@ -1015,6 +1018,7 @@ font_desc_t* read_font_desc_ft(char *fname, int movie_width, int movie_height)
     }
     desc->face_cnt++;
 
+#ifdef USE_ICONV
     if (unicode) {
 	charset_size = prepare_charset_unicode(face, my_charset, my_charcodes);
     } else {
@@ -1030,6 +1034,9 @@ font_desc_t* read_font_desc_ft(char *fname, int movie_width, int movie_height)
 	free_font_desc(desc);
 	return NULL;
     }
+#else
+    return NULL;
+#endif
 
 //    fprintf(stderr, "fg: prepare t = %lf\n", GetTimer()-t);
 
@@ -1089,7 +1096,7 @@ gen_osd:
     return desc;
 }
 
-int init_freetype()
+int init_freetype(void)
 {
     int err;
     
@@ -1104,7 +1111,7 @@ int init_freetype()
     return 0;
 }
 
-int done_freetype()
+int done_freetype(void)
 {
     int err;
 
@@ -1140,7 +1147,7 @@ void load_font_ft(int width, int height)
     if (font_fontconfig)
     {
 	if (!font_name)
-	    font_name = "sans-serif";
+	    font_name = strdup("sans-serif");
 	FcInit();
 	fc_pattern = FcNameParse(font_name);
 	FcConfigSubstitute(0, fc_pattern, FcMatchPattern);

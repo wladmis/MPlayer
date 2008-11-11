@@ -2,15 +2,15 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../config.h"
-#include "../mp_msg.h"
+#include "config.h"
+#include "mp_msg.h"
 
 #include "img_format.h"
 #include "mp_image.h"
 #include "vf.h"
 
-#include "../libvo/fastmemcpy.h"
-#include "../libvo/sub.h"
+#include "libvo/fastmemcpy.h"
+#include "libvo/sub.h"
 
 struct vf_priv_s {
 	int state;
@@ -33,7 +33,7 @@ static inline void *my_memcpy_pic(void * dst, void * src, int bytesPerLine, int 
 	return retval;
 }
 
-static int put_image(struct vf_instance_s* vf, mp_image_t *mpi)
+static int put_image(struct vf_instance_s* vf, mp_image_t *mpi, double pts)
 {
 	mp_image_t *dmpi;
 	int ret = 0;
@@ -59,7 +59,7 @@ static int put_image(struct vf_instance_s* vf, mp_image_t *mpi)
 	}
 
 	if (state == 0) {
-		ret = vf_next_put_image(vf, mpi);
+		ret = vf_next_put_image(vf, mpi, MP_NOPTS_VALUE);
 		vf->priv->out++;
 		if (flags & MP_IMGFIELD_REPEAT_FIRST) {
 			my_memcpy_pic(dmpi->planes[0],
@@ -95,10 +95,10 @@ static int put_image(struct vf_instance_s* vf, mp_image_t *mpi)
 			              mpi->chroma_width, mpi->chroma_height/2,
 			              dmpi->stride[2]*2, mpi->stride[2]*2);
 		}
-		ret = vf_next_put_image(vf, dmpi);
+		ret = vf_next_put_image(vf, dmpi, MP_NOPTS_VALUE);
 		vf->priv->out++;
 		if (flags & MP_IMGFIELD_REPEAT_FIRST) {
-			ret |= vf_next_put_image(vf, mpi);
+			ret |= vf_next_put_image(vf, mpi, MP_NOPTS_VALUE);
 			vf->priv->out++;
 			state=0;
 		} else {
@@ -155,7 +155,7 @@ static int open(vf_instance_t *vf, char* args)
 vf_info_t vf_info_softpulldown = {
     "mpeg2 soft 3:2 pulldown",
     "softpulldown",
-    "Tobias Diedrich",
+    "Tobias Diedrich <ranma+mplayer@tdiedrich.de>",
     "",
     open,
     NULL

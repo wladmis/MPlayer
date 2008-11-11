@@ -15,20 +15,20 @@
 #include "mplayer/mplayer.h"
 #include "mplayer/play.h"
 
-#include "../mplayer.h"
+#include "mplayer.h"
 #include "app.h"
 #include "cfg.h"
-#include "../help_mp.h"
-#include "../subreader.h"
-#include "../libvo/x11_common.h"
-#include "../libvo/video_out.h"
-#include "../libvo/font_load.h"
-#include "../libvo/sub.h"
-#include "../input/input.h"
-#include "../libao2/audio_out.h"
-#include "../mixer.h"
-#include "../libaf/af.h"
-#include "../libaf/equalizer.h"
+#include "help_mp.h"
+#include "subreader.h"
+#include "libvo/x11_common.h"
+#include "libvo/video_out.h"
+#include "libvo/font_load.h"
+#include "libvo/sub.h"
+#include "input/input.h"
+#include "libao2/audio_out.h"
+#include "mixer.h"
+#include "libaf/af.h"
+#include "libaf/equalizer.h"
 
 extern af_cfg_t af_cfg;
 
@@ -36,13 +36,13 @@ extern af_cfg_t af_cfg;
 #include <iconv.h>
 #endif
 
-#include "../libmpdemux/stream.h"
-#include "../libmpdemux/demuxer.h"
-#include "../libmpdemux/stheader.h"
-#include "../libmpcodecs/dec_video.h"
+#include "libmpdemux/stream.h"
+#include "libmpdemux/demuxer.h"
+#include "libmpdemux/stheader.h"
+#include "libmpcodecs/dec_video.h"
 
-#include "../m_config.h"
-#include "../m_option.h"
+#include "m_config.h"
+#include "m_option.h"
 
 extern mixer_t mixer; // mixer from mplayer.c
 
@@ -215,10 +215,14 @@ void guiInit( void )
 // --- initialize X 
  wsXInit( (void *)mDisplay );
 // --- load skin
- skinDirInHome=get_path("Skin");
- skinMPlayerDir=MPLAYER_DATADIR "/Skin";
+ skinDirInHome=get_path("skins");
+ skinDirInHome_obsolete=get_path("Skin");
+ skinMPlayerDir=MPLAYER_DATADIR "/skins";
+ skinMPlayerDir_obsolete=MPLAYER_DATADIR "/Skin";
  mp_msg( MSGT_GPLAYER,MSGL_V,"SKIN dir 1: '%s'\n",skinDirInHome);
+ mp_msg( MSGT_GPLAYER,MSGL_V,"SKIN dir 1 (obsolete): '%s'\n",skinDirInHome_obsolete);
  mp_msg( MSGT_GPLAYER,MSGL_V,"SKIN dir 2: '%s'\n",skinMPlayerDir);
+ mp_msg( MSGT_GPLAYER,MSGL_V,"SKIN dir 2 (obsolete): '%s'\n",skinMPlayerDir_obsolete);
  if ( !skinName ) skinName=strdup( "default" );
  i = skinRead( skinName );
  if ((i == -1) && strcmp(skinName,"default"))
@@ -486,7 +490,7 @@ void guiLoadSubtitle( char * name )
  if ( name )
   {
    mp_msg( MSGT_GPLAYER,MSGL_INFO,MSGTR_LoadingSubtitles,name );
-   subdata=sub_read_file( gstrdup( name ), guiIntfStruct.FPS );
+   subdata=sub_read_file( name, guiIntfStruct.FPS );
    if ( !subdata ) mp_msg( MSGT_GPLAYER,MSGL_ERR,MSGTR_CantLoadSub,name );
    sub_name = (malloc(2 * sizeof(char*))); //when mplayer will be restarted 
    sub_name[0] = strdup(name);             //sub_name[0] will be read 
@@ -734,6 +738,8 @@ int guiGetEvent( int type,char * arg )
 	  dvd_title=0;
 	  force_fps=0;
 	 }				
+	guiIntfStruct.demuxer=NULL;
+	guiIntfStruct.sh_video=NULL;
 	wsPostRedisplay( &appMPlayer.subWindow );
 	break;
    case guiSetParameters:
@@ -1195,7 +1201,7 @@ void * gtkSet( int cmd,float fparam, void * vparam )
 
 #define mp_basename(s) (strrchr(s,'/')==NULL?(char*)s:(strrchr(s,'/')+1))
 
-#include "../playtree.h"
+#include "playtree.h"
 
 //This function adds/inserts one file into the gui playlist
 
@@ -1291,4 +1297,25 @@ int import_playtree_playlist_into_gui(play_tree_t* my_playtree, m_config_t* conf
   filename=NULL;
   
   return result;
+}
+
+// wrapper function for mp_msg to display a message box for errors and warnings.
+
+void guiMessageBox(int level, char * str) {
+	switch(level) {
+		case MSGL_FATAL:
+			gtkMessageBox(GTK_MB_FATAL|GTK_MB_SIMPLE, str);
+			break;
+		case MSGL_ERR:
+			gtkMessageBox(GTK_MB_ERROR|GTK_MB_SIMPLE, str);
+			break;
+#if 0
+// WARNING! Do NOT enable this! There are too many non-critical messages with
+// MSGL_WARN, for example: broken SPU packets, codec's bit error messages,
+// etc etc, they should not raise up a new window every time.
+		case MSGL_WARN:
+			gtkMessageBox(GTK_MB_WARNING|GTK_MB_SIMPLE, str);
+			break;
+#endif
+	}
 }

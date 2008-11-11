@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-2"?>
-<!-- Synced with: 1.10 -->
+<!-- Synced with: 1.15 -->
 <appendix id="bugreports">
 <title>Jak hlásit chyby</title>
 <para>
@@ -13,6 +13,20 @@ pochopte, že musíte poskytnout <emphasis role="bold">veškeré</emphasis>
 informace které požadujeme a postupovat přesně podle instrukcí v tomto
 dokumentu.
 </para>
+<sect1 id="bugreports_security">
+<title>Hlášení bezpečnostních chyb</title>
+<para>
+V případě že jste nalezli exploitovatelnou chybu, chtěli byste udělat správnou
+věc a nechali nás ji opravit než ji odhalíte, budeme rádi, když nám pošlete
+bezpečnostní hlášení na
+<ulink url="mailto:&#115;&#101;&#99;&#117;&#114;&#105;&#116;&#121;&#64;&#109;&#112;&#108;&#97;&#121;&#101;&#114;&#104;&#113;&#46;&#104;&#117;">&#115;&#101;&#99;&#117;&#114;&#105;&#116;&#121;&#64;&#109;&#112;&#108;&#97;&#121;&#101;&#114;&#104;&#113;&#46;&#104;&#117;</ulink>.
+Do hlavičky prosíme přidejte [SECURITY] nebo [ADVISORY].
+Ujistěte se, že vaše hlášení obsahuje úplnou a podrobnou analýzu chyby.
+Zaslání opravy je velice žádoucí.
+Prosíme neodkládejte hlášení do doby než vytvoříte 'dokazovací' exploit, ten nám
+můžete zaslat dalším mailem.
+</para>
+</sect1>
 <sect1 id="bugreports_fix">
 <title>Jak napravovat chyby</title>
 <para>
@@ -21,8 +35,78 @@ opravil(a) chybu samostatně. Nebo jste to již udělal(a)? Přečtěte si prosím
 <ulink url="../../tech/patches.txt">tento krátký dokument</ulink>, abyste se
 dozvěděli jak zahrnout váš kód do <application>MPlayer</application>u.
 Lidé z konference
-<ulink url="http://mplayerhq.hu/mailman/listinfo/mplayer-dev-eng">mplayer-dev-eng</ulink>
+<ulink url="http://mplayerhq.hu/mailman/listinfo/mplayer-dev-eng">MPlayer-dev-eng</ulink>
 vám pomohou, pokud budete mít otázky.
+</para>
+</sect1>
+<sect1 id="bugreports_regression_test">
+<title>Jak provádět regresní testování pomocí CVS</title>
+<para>
+Občas nastane problém typu 'předtím to fungovalo, teď už ne...'.
+Zde přinášíme postup krok za krokem, jak vyhledat, kdy problém
+nastal. Toto <emphasis role="bold">není</emphasis> určeno příležitostným
+uživatelům.
+</para>
+<para>
+Nejprve si musíte opatřit zdrojové kódy MPlayeru z CVS.
+Instrukce lze nalést na konci
+<ulink url="http://www.mplayerhq.hu/dload.html">této stránky</ulink>.
+</para>
+<para>
+Tak dostanete v adresáři main/ obraz CVS stromu na straně klienta.
+Nyní aktualizujte tento obraz k datu, které chcete:
+<screen>
+cd main/
+cvs update -PAd -D "2004-08-23"
+</screen>
+Formát data je YYYY-MM-DD HH:MM:SS.
+Požití tohoto datového formátu zajišťuje, že budete schopni extrahovat
+patche podle data, kdy byly zapsány (commit) stejně, jak jsou v
+<ulink url="http://mplayerhq.hu/pipermail/mplayer-cvslog/">MPlayer-cvslog archivu</ulink>.
+</para>
+<para>
+A teď proveďte sestavení jako při normální aktualizaci:
+<screen>
+./configure
+make
+</screen>
+</para>
+<para>
+Pokud to čte nějaký neprogramátor, nejrychlejší metodou, jak se dostat
+k bodu, kde problém nastal, je použití binárního vyhledávání &ndash; to je
+vyhledávání data poruchy opakovaným dělením vyhledávacího intervalu napůl.
+Například pokud problém nastal v 2003, začneme v polovině roku a ptáme se,
+"Už je tu problém?".
+Pokud ano, vraťte se na prvního dubna; pokud ne, běžte na prvního října
+a tak dále.
+</para>
+<para>
+Pokud máte spoustu místa na disku (plná kompilace obvykle zabírá 100 MB
+a kolem 300&ndash;350 MB, pokud jsou zapnuty debugovací symboly), zkopírujte
+nejstarší známou funkční verzi před jejím updatem; to vám ušetří čas,
+pokud se budete vracet.
+(Obvykla je nutné spustit 'make distclean' před rekompilací starší verze,
+takže pokud si neuděláte záložní kopii originálního zdrojového stromu,
+budete v něm muset rekompilovat vše, až se vrátíte do současnosti.)
+</para>
+<para>
+Pokud jste našli den, kdy k problému došlo, pokračujte v hledání pomocí
+archivu mplayer-cvslog (řazeného podle data) a preciznějším cvs update
+s uvedením hodiny, minuty a sekundy:
+<screen>
+cvs update -PAd -D "2004-08-23 15:17:25"
+</screen>
+To vám umožní lehce najít patch, který problém způsobil.
+</para>
+<para>
+Pokud jste našli patch, který je příčinou problému, máte téměř vyhráno;
+ohlaste to do
+<ulink url="http://bugzilla.mplayerhq.hu/">MPlayer Bugzilly</ulink> nebo
+se přihlaste do
+<ulink url="http://mplayerhq.hu/mailman/listinfo/mplayer-users">MPlayer-users</ulink>
+a pošlete to tam.
+Je šance, že autor navrhne opravu.
+Rovněž si můžete patch rozpitvat, dokud z něj nevytlučete, kde je chyba :-).
 </para>
 </sect1>
 <sect1 id="bugreports_report">
@@ -34,7 +118,7 @@ odstraněna. Vývoj je velmi rychlý, většina chyb v oficiálních balíčcích je
 nahlášena během několika dnů, nebo dokonce hodin, takže prosím používejte
 <emphasis role="bold">pouze CVS</emphasis> pro hlášení chyb. To zahrnuje binární
 balíčky <application>MPlayer</application>u. CVS instrukce naleznete na konci
-<ulink url="http://www.mplayerhq.hu/homepage/dload.html">této stránky</ulink>,
+<ulink url="http://www.mplayerhq.hu/dload.html">této stránky</ulink>,
 nebo v souboru README. Pokud to nepomůže, prostudujte si prosím seznam
 <link linkend="bugs">známých chyb</link> a zbytek dokumentace. Pokud je váš
 problém neznámý nebo jej nelze řešit pomocí našich instrukcí pak jej nahlaste
@@ -79,7 +163,7 @@ dostanete odpověď.
 <sect1 id="bugreports_where">
 <title>Kam hlásit chyby</title>
 <para>
-Přihlaste se do e-mailové konference mplayer-users:
+Přihlaste se do e-mailové konference MPlayer-users:
 <ulink url="http://mplayerhq.hu/mailman/listinfo/mplayer-users"/>
 a pošlete své hlášení o chybách na adresu
 <ulink url="mailto:mplayer-users@mplayerhq.hu"/> kde o tom můžeme diskutovat.
@@ -107,7 +191,7 @@ obdrželi svou odpověď.
 <para>
 Bude potřeba připojit log, konfiguraci nebo vzorky souborů ke svému hlášení chyb.
 Pokud jsou některé z nich opravdu velké, pak je raději nahrajte na náš
-<ulink url="ftp://mplayerhq.hu/MPlayer/incoming/">FTP server</ulink>
+<ulink url="ftp://ftp.mplayerhq.hu/MPlayer/incoming/">FTP server</ulink>
 v komprimovaném formátu (preferujeme gzip a bzip2) a do zprávy zahrňte pouze
 cestu a název souboru. Naše konference mají limit velikosti zprávy 80k, pokud
 máte něco většího, musíte to zkomprimovat a nahrát na FTP.
@@ -224,7 +308,7 @@ jste zapomněli nainstalovat vývojový (devel) balíček (to jsou ty s koncovkou
 </para>
 </sect2>
 
-<sect2 id="bugreports_conpilation">
+<sect2 id="bugreports_compilation">
 <title>Problémy s kompilací</title>
 <para>
 Zahrňte prosím tyto soubory:
@@ -329,7 +413,7 @@ Pokud jste vytvořili příkladné hlášení chyby pomocí výšeuvedených kroků a jste
 si jisti, že chyba je v <application>MPlayer</application>u, nikoli chyba
 kompilátoru nebo poškozený soubor, již jste si přečetli dokumentaci ale nenalezli
 řešení, vaše ovladače zvuku jsou OK, pak byste se měli přihlásit do konference
-mplayer-advusers a poslat hlášení chyb zde, abyste dostali lepší a rychlejší
+MPlayer-advusers a poslat hlášení chyb zde, abyste dostali lepší a rychlejší
 odpověď.
 </para>
 

@@ -4,10 +4,11 @@
 #include <unistd.h>
 #include <inttypes.h>
 
-#include "../config.h"
+#include "config.h"
 #ifdef USE_WIN32DLL
 
-#include "../mp_msg.h"
+#include "mp_msg.h"
+#include "help_mp.h"
 
 #include "codec-cfg.h"
 //#include "stream.h"
@@ -66,34 +67,34 @@ static BITMAPINFOHEADER* vfw_open_encoder(char *dll_name, BITMAPINFOHEADER *inpu
     mp_msg(MSGT_WIN32,MSGL_ERR,"ICOpen failed! unknown codec / wrong parameters?\n");
     return NULL;
   }
-  printf("HIC: %x\n", encoder_hic);
+  mp_msg(MSGT_WIN32,MSGL_INFO,"HIC: %x\n", encoder_hic);
 
 #if 1
 {
   ICINFO icinfo;
 
   ret = ICGetInfo(encoder_hic, &icinfo, sizeof(ICINFO));
-  printf("%ld - %ld - %d\n", ret, icinfo.dwSize, sizeof(ICINFO));
-printf("Compressor type: %.4lx\n", icinfo.fccType);
-printf("Compressor subtype: %.4lx\n", icinfo.fccHandler);
-printf("Compressor flags: %lu, version %lu, ICM version: %lu\n",
+  mp_msg(MSGT_WIN32,MSGL_INFO,"%ld - %ld - %d\n", ret, icinfo.dwSize, sizeof(ICINFO));
+  mp_msg(MSGT_WIN32,MSGL_INFO,MSGTR_MPCODECS_CompressorType, icinfo.fccType);
+  mp_msg(MSGT_WIN32,MSGL_INFO,MSGTR_MPCODECS_CompressorSubtype, icinfo.fccHandler);
+  mp_msg(MSGT_WIN32,MSGL_INFO,MSGTR_MPCODECS_CompressorFlags,
     icinfo.dwFlags, icinfo.dwVersion, icinfo.dwVersionICM);
 //printf("Compressor name: %s\n", icinfo.szName);
 //printf("Compressor description: %s\n", icinfo.szDescription);
 
-printf("Flags:");
+mp_msg(MSGT_WIN32,MSGL_INFO,MSGTR_MPCODECS_Flags);
 if (icinfo.dwFlags & VIDCF_QUALITY)
-    printf(" quality");
+    mp_msg(MSGT_WIN32,MSGL_INFO,MSGTR_MPCODECS_Quality);
 if (icinfo.dwFlags & VIDCF_FASTTEMPORALD)
-    printf(" fast-decompr");
+    mp_msg(MSGT_WIN32,MSGL_INFO," fast-decompr");
 if (icinfo.dwFlags & VIDCF_QUALITYTIME)
-    printf(" temp-quality");
-printf("\n");
+    mp_msg(MSGT_WIN32,MSGL_INFO," temp-quality");
+mp_msg(MSGT_WIN32,MSGL_INFO,"\n");
 }
 #endif
 
   temp_len = ICCompressGetFormatSize(encoder_hic, input_bih);
-  printf("ICCompressGetFormatSize ret: %d\n", temp_len);
+  mp_msg(MSGT_WIN32,MSGL_INFO,"ICCompressGetFormatSize ret: %d\n", temp_len);
 
   if (temp_len < sizeof(BITMAPINFOHEADER)) temp_len=sizeof(BITMAPINFOHEADER);
 
@@ -126,7 +127,7 @@ static int vfw_start_encoder(BITMAPINFOHEADER *input_bih, BITMAPINFOHEADER *outp
     for(i=sizeof(output_bih);i<temp_len;i++) mp_msg(MSGT_WIN32, MSGL_DBG2, "%02X ",temp[i]);
   }
 
-//  if(verbose) {
+//  if( mp_msg_test(MSGT_WIN32,MSGL_V) ) {
     printf("Starting compression:\n");
     printf(" Input format:\n");
 	printf("  biSize %d\n", input_bih->biSize);
@@ -161,16 +162,15 @@ static int vfw_start_encoder(BITMAPINFOHEADER *input_bih, BITMAPINFOHEADER *outp
     mp_msg(MSGT_WIN32,MSGL_ERR,"ICCompressBegin failed: Error %d\n", (int)ret);
 //    return 0;
   } else
-  mp_msg(MSGT_WIN32,MSGL_V,"ICCompressBegin OK\n");
-
-    printf(" Output format after query/begin:\n");
-	printf("  biSize %d\n", output_bih->biSize);
-	printf("  biWidth %d\n", output_bih->biWidth);
-	printf("  biHeight %d\n", output_bih->biHeight);
-	printf("  biPlanes %d\n", output_bih->biPlanes);
-	printf("  biBitCount %d\n", output_bih->biBitCount);
-	printf("  biCompression 0x%x ('%.4s')\n", output_bih->biCompression, (char *)&output_bih->biCompression);
-	printf("  biSizeImage %d\n", output_bih->biSizeImage);
+    mp_msg(MSGT_WIN32,MSGL_V,"ICCompressBegin OK\n");
+    mp_msg(MSGT_WIN32,MSGL_INFO," Output format after query/begin:\n");
+    mp_msg(MSGT_WIN32,MSGL_INFO,"  biSize %d\n", output_bih->biSize);
+    mp_msg(MSGT_WIN32,MSGL_INFO,"  biWidth %d\n", output_bih->biWidth);
+    mp_msg(MSGT_WIN32,MSGL_INFO,"  biHeight %d\n", output_bih->biHeight);
+    mp_msg(MSGT_WIN32,MSGL_INFO,"  biPlanes %d\n", output_bih->biPlanes);
+    mp_msg(MSGT_WIN32,MSGL_INFO,"  biBitCount %d\n", output_bih->biBitCount);
+    mp_msg(MSGT_WIN32,MSGL_INFO,"  biCompression 0x%x ('%.4s')\n", output_bih->biCompression, (char *)&output_bih->biCompression);
+    mp_msg(MSGT_WIN32,MSGL_INFO,"  biSizeImage %d\n", output_bih->biSizeImage);
   
   encoder_buf_size=input_bih->biSizeImage;
   encoder_buf=malloc(encoder_buf_size);
@@ -234,16 +234,16 @@ static int control(struct vf_instance_s* vf, int request, void* data){
 }
 
 static int query_format(struct vf_instance_s* vf, unsigned int fmt){
-    if(fmt==IMGFMT_BGR24) return 3 | VFCAP_FLIPPED;
+    if(fmt==IMGFMT_BGR24) return VFCAP_CSP_SUPPORTED | VFCAP_CSP_SUPPORTED_BY_HW | VFCAP_FLIPPED;
     return 0;
 }
 
-static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
+static int put_image(struct vf_instance_s* vf, mp_image_t *mpi, double pts){
     long flags=0;
     int ret;
 //    flip_upside_down(vo_image_ptr,vo_image_ptr,3*vo_w,vo_h); // dirty hack
     ret=vfw_encode_frame(mux_v->bih, mux_v->buffer, vfw_bih, mpi->planes[0], &flags, 10000);
-    muxer_write_chunk(mux_v,mux_v->bih->biSizeImage,flags);
+    muxer_write_chunk(mux_v,mux_v->bih->biSizeImage,flags, pts, pts);
     return 1;
 }
 
@@ -270,7 +270,7 @@ static int vf_open(vf_instance_t *vf, char* args){
 
     if (!vfw_param_codec)
     {
-	printf("No VfW codec specified! It's required!\n");
+	mp_msg(MSGT_WIN32,MSGL_WARN, MSGTR_MPCODECS_NoVfwCodecSpecified);
 	return 0;
     }
 //    mux_v->bih=vfw_open_encoder("divxc32.dll",vfw_bih,mmioFOURCC('D', 'I', 'V', '3'));

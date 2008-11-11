@@ -16,7 +16,7 @@
  *
  * Modified for use with MPlayer, for details see the CVS changelog at
  * http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
- * $Id: dct36_3dnow.c,v 1.2 2005/04/15 22:21:34 diego Exp $
+ * $Id: dct36_3dnow.c 16990 2005-11-15 18:14:07Z diego $
  *
  * Original disclaimer:
  *  The author of this program disclaim whole expressed or implied
@@ -29,7 +29,7 @@
 
 #define real float /* ugly - but only way */
 
-#include "../mangle.h"
+#include "mangle.h"
 
 #ifdef __DCT36_OPTIMIZE_FOR_K7
 void dct36_3dnowex(real *inbuf, real *o1,

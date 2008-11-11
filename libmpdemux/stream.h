@@ -20,6 +20,7 @@
 #define STREAMTYPE_VCDBINCUE 12      // vcd directly from bin/cue files
 #define STREAMTYPE_DVB 13
 #define STREAMTYPE_VSTREAM 14
+#define STREAMTYPE_SDP 15
 
 #define STREAM_BUFFER_SIZE 2048
 
@@ -47,6 +48,7 @@
 #define MAX_STREAM_PROTOCOLS 10
 
 #define STREAM_CTRL_RESET 0
+#define STREAM_CTRL_GET_TIME_LENGTH 1
 
 #ifdef MPLAYER_NETWORK
 #include "network.h"
@@ -110,6 +112,7 @@ int cache_stream_seek_long(stream_t *s,off_t pos);
 #define cache_stream_seek_long(x,y) stream_seek_long(x,y)
 #define stream_enable_cache(x,y,z,w) 1
 #endif
+void fixup_network_stream_cache(stream_t *stream);
 
 inline static int stream_read_char(stream_t *s){
   return (s->buf_pos<s->buf_len)?s->buffer[s->buf_pos++]:
@@ -205,6 +208,31 @@ inline static int stream_read(stream_t *s,char* mem,int total){
   return total;
 }
 
+inline static unsigned char* stream_read_line(stream_t *s,unsigned char* mem, int max) {
+  int len;
+  unsigned char* end,*ptr = mem;;
+  do {
+    len = s->buf_len-s->buf_pos;
+    // try to fill the buffer
+    if(len <= 0 &&
+       (!cache_stream_fill_buffer(s) || 
+        (len = s->buf_len-s->buf_pos) <= 0)) break;
+    end = (unsigned char*) memchr((void*)(s->buffer+s->buf_pos),'\n',len);
+    if(end) len = end - (s->buffer+s->buf_pos) + 1;
+    if(len > 0 && max > 1) {
+      int l = len > max-1 ? max-1 : len;
+      memcpy(ptr,s->buffer+s->buf_pos,l);
+      max -= l;
+      ptr += l;
+    }
+    s->buf_pos += len;
+  } while(!end);
+  if(s->eof && ptr == mem) return NULL;
+  if(max > 0) ptr[0] = 0;
+  return mem;
+}
+
+
 inline static int stream_eof(stream_t *s){
   return s->eof;
 }
@@ -248,6 +276,7 @@ inline static int stream_skip(stream_t *s,off_t len){
 }
 
 void stream_reset(stream_t *s);
+int stream_control(stream_t *s, int cmd, void *arg);
 stream_t* new_stream(int fd,int type);
 void free_stream(stream_t *s);
 stream_t* new_memory_stream(unsigned char* data,int len);
@@ -261,8 +290,6 @@ extern int dvd_last_chapter;
 extern int dvd_angle;
 //#endif
 
-extern int dvbin_param_on;
-
 extern char * audio_stream;
 
 #ifdef USE_DVDNAV
@@ -272,17 +299,10 @@ extern char * audio_stream;
 #ifdef USE_DVDREAD
 
 #ifdef USE_MPDVDKIT
-#if (USE_MPDVDKIT == 2)
-#include "../libmpdvdkit2/dvd_reader.h"
-#include "../libmpdvdkit2/ifo_types.h"
-#include "../libmpdvdkit2/ifo_read.h"
-#include "../libmpdvdkit2/nav_read.h"
-#else
-#include "../libmpdvdkit/dvd_reader.h"
-#include "../libmpdvdkit/ifo_types.h"
-#include "../libmpdvdkit/ifo_read.h"
-#include "../libmpdvdkit/nav_read.h"
-#endif
+#include "libmpdvdkit2/dvd_reader.h"
+#include "libmpdvdkit2/ifo_types.h"
+#include "libmpdvdkit2/ifo_read.h"
+#include "libmpdvdkit2/nav_read.h"
 #else
 #include <dvdread/dvd_reader.h>
 #include <dvdread/ifo_types.h>
@@ -306,6 +326,7 @@ typedef struct {
   vts_ptt_srpt_t *vts_ptt_srpt;
   pgc_t *cur_pgc;
 //
+  int cur_title;
   int cur_cell;
   int last_cell;
   int cur_pack;

@@ -18,17 +18,17 @@
 #include "widgets.h"
 
 #include "./mplayer.h"
-#include "../app.h"
-#include "../wm/ws.h"
+#include "app.h"
+#include "wm/ws.h"
 
 
 #include "gtk/menu.h"
 #include "play.h"
 #include "gtk/fs.h"
 
-#include "../../config.h"
-#include "../../help_mp.h"
-#include "../../mp_msg.h"
+#include "../config.h"
+#include "../help_mp.h"
+#include "../mp_msg.h"
 
 GtkWidget     * PopUpMenu = NULL;
 
@@ -61,7 +61,6 @@ Pixmap	    guiIconMask;
 void gtkInit( void )
 {
  mp_dbg( MSGT_GPLAYER,MSGL_DBG2,"[widget] init GTK ...\n" );
- gtk_set_locale();
  gtk_init( 0,NULL );
 // gdk_set_use_xshm( TRUE );
 
@@ -168,7 +167,10 @@ void gtkShow( int type,char * param )
    case evSkinBrowser:
 	ShowSkinBrowser();
 //        gtkClearList( SkinList );
-        if ( gtkFillSkinList( sbMPlayerPrefixDir ) && gtkFillSkinList( sbMPlayerDirInHome ) )
+        if ( gtkFillSkinList( sbMPlayerPrefixDir ) &&
+             gtkFillSkinList( sbMPlayerPrefixDir_obsolete ) &&
+             gtkFillSkinList( sbMPlayerDirInHome ) &&
+             gtkFillSkinList( sbMPlayerDirInHome_obsolete )  )
          {
           gtkSetDefaultToCList( SkinList,param );
 	  gtk_clist_sort( GTK_CLIST( SkinList ) );

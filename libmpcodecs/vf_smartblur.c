@@ -13,7 +13,7 @@
 
     You should have received a copy of the GNU General Public License
     along with this program; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 */
 
 #include <stdio.h>
@@ -22,8 +22,8 @@
 #include <inttypes.h>
 #include <assert.h>
 
-#include "../config.h"
-#include "../mp_msg.h"
+#include "config.h"
+#include "mp_msg.h"
 
 #ifdef HAVE_MALLOC_H
 #include <malloc.h>
@@ -32,8 +32,8 @@
 #include "img_format.h"
 #include "mp_image.h"
 #include "vf.h"
-#include "../libvo/fastmemcpy.h"
-#include "../postproc/swscale.h"
+#include "libvo/fastmemcpy.h"
+#include "postproc/swscale.h"
 #include "vf_scale.h"
 
 //===========================================================================//
@@ -184,12 +184,14 @@ static inline void blur(uint8_t *dst, uint8_t *src, int w, int h, int dstStride,
 	}
 }
 
-static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
+static int put_image(struct vf_instance_s* vf, mp_image_t *mpi, double pts){
 	int cw= mpi->w >> mpi->chroma_x_shift;
 	int ch= mpi->h >> mpi->chroma_y_shift;
+	FilterParam *f= &vf->priv;
 
 	mp_image_t *dmpi=vf_get_image(vf->next,mpi->imgfmt,
-		MP_IMGTYPE_TEMP, MP_IMGFLAG_ACCEPT_STRIDE,
+		MP_IMGTYPE_TEMP, MP_IMGFLAG_ACCEPT_STRIDE|
+		(f->threshold) ? MP_IMGFLAG_READABLE : 0,
 		mpi->w,mpi->h);
 
 	assert(mpi->flags&MP_IMGFLAG_PLANAR);
@@ -198,7 +200,7 @@ static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
 	blur(dmpi->planes[1], mpi->planes[1], cw    , ch   , dmpi->stride[1], mpi->stride[1], &vf->priv->chroma);
 	blur(dmpi->planes[2], mpi->planes[2], cw    , ch   , dmpi->stride[2], mpi->stride[2], &vf->priv->chroma);
     
-	return vf_next_put_image(vf,dmpi);
+	return vf_next_put_image(vf,dmpi, pts);
 }
 
 //===========================================================================//

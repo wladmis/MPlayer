@@ -1,58 +1,62 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>6.1. Linux</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - Multimediální p&#345;ehráva&#269;"><link rel="up" href="ports.html" title="Kapitola 6. Ports"><link rel="previous" href="ports.html" title="Kapitola 6. Ports"><link rel="next" href="bsd.html" title="6.2. *BSD"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">6.1. Linux</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="ports.html">P&#345;edcházející</a> </td><th width="60%" align="center">Kapitola 6. Ports</th><td width="20%" align="right"> <a accesskey="n" href="bsd.html">Dal&#353;í</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="linux"></a>6.1. Linux</h2></div></div><p>
-The main development platform is Linux on x86, although
-<span class="application">MPlayer</span> works on many other Linux ports.
-Binary packages of <span class="application">MPlayer</span> are available from several
-sources. However, <span class="bold"><b>none of these packages are supported</b></span>.
-Report problems to the authors, not to us.
-</p><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="debian"></a>6.1.1. Debian packaging</h3></div></div><p>
-To build a Debian package, run the following command in the
-<span class="application">MPlayer</span> source directory:
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>11.1. Linux</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.68.1"><link rel="start" href="index.html" title="MPlayer - Multimediální p&#345;ehráva&#269;"><link rel="up" href="ports.html" title="Kapitola 11. Porty"><link rel="prev" href="ports.html" title="Kapitola 11. Porty"><link rel="next" href="bsd.html" title="11.2. *BSD"><link rel="preface" href="howtoread.html" title="Jak &#269;íst tuto  dokumentaci"><link rel="chapter" href="intro.html" title="Kapitola 1. P&#345;edstavení"><link rel="chapter" href="install.html" title="Kapitola 2. Instalace"><link rel="chapter" href="usage.html" title="Kapitola 3. Pou&#382;ití"><link rel="chapter" href="cd-dvd.html" title="Kapitola 4. Pou&#382;ití CD/DVD"><link rel="chapter" href="faq.html" title="Kapitola 5. &#268;asto Kladené Dotazy (FAQ)"><link rel="chapter" href="containers.html" title="Kapitola 6. Nosné formáty (Containers)"><link rel="chapter" href="codecs.html" title="Kapitola 7. Kodeky"><link rel="chapter" href="video.html" title="Kapitola 8. Výstupní video za&#345;ízení/rozhraní"><link rel="chapter" href="audio.html" title="Kapitola 9. Výstupní zvuková za&#345;ízení"><link rel="chapter" href="tv.html" title="Kapitola 10. TV"><link rel="chapter" href="ports.html" title="Kapitola 11. Porty"><link rel="chapter" href="mencoder.html" title="Kapitola 12. Základní pou&#382;ití MEncoderu"><link rel="chapter" href="encoding-guide.html" title="Kapitola 13. Enkódování s MEncoderem"><link rel="appendix" href="mailinglists.html" title="P&#345;íloha A. E-mailové konference"><link rel="appendix" href="bugreports.html" title="P&#345;íloha B. Jak hlásit chyby"><link rel="appendix" href="bugs.html" title="P&#345;íloha C. Známé chyby"><link rel="appendix" href="skin.html" title="P&#345;íloha D. Formát skin&#367; MPlayeru"><link rel="appendix" href="users-vs-dev.html" title="P&#345;íloha E. Ná&#345;ky vývojá&#345;&#367;"><link rel="subsection" href="linux.html#debian" title="11.1.1. Vytvo&#345;ení balí&#269;ku pro Debian"><link rel="subsection" href="linux.html#rpm" title="11.1.2. Balení RPM"><link rel="subsection" href="linux.html#arm" title="11.1.3. ARM"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">11.1. Linux</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="ports.html">P&#345;edcházející</a> </td><th width="60%" align="center">Kapitola 11. Porty</th><td width="20%" align="right"> <a accesskey="n" href="bsd.html">Dal&#353;í</a></td></tr></table><hr></div><div class="sect1" lang="cs"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="linux"></a>11.1. Linux</h2></div></div></div><p>
+Hlavní vývojovou platformou je Linux na x86, a&#269;koli
+<span class="application">MPlayer</span> pracuje na mnoha jiných portech Linuxu.
+Binární balí&#269;ky <span class="application">MPlayer</span>u jsou dostupné z n&#283;kolika
+zdroj&#367;. Nicmén&#283; <span class="bold"><strong>není &#382;ádný z t&#283;chto balí&#269;k&#367; podporován</strong></span>.
+Hlaste tedy problémy jejich autor&#367;m, nikoli nám.
+</p><div class="sect2" lang="cs"><div class="titlepage"><div><div><h3 class="title"><a name="debian"></a>11.1.1. Vytvo&#345;ení balí&#269;ku pro Debian</h3></div></div></div><p>
+Pro vytvo&#345;ení balí&#269;ku pro Debian spus&#357;te následující p&#345;íkaz v adresá&#345;i se
+zdrojovým kódem <span class="application">MPlayer</span>u:
 
-<pre class="screen">fakeroot debian/rules binary</pre>
+</p><pre class="screen">fakeroot debian/rules binary</pre><p>
 
-If you want to pass custom options to configure, you can set up the
-<tt>DEB_BUILD_OPTIONS</tt> environment variable. For instance,
-if you want GUI and OSD menu support you would use:
+Pokud chcete p&#345;edat n&#283;jaké volby pro configure, m&#367;&#382;ete nastavit prom&#283;nnou
+prost&#345;edí <code class="envar">DEB_BUILD_OPTIONS</code>. Nap&#345;íklad, pokud chcete GUI a
+podporu OSD menu, m&#283;li byste pou&#382;ít:
 
-<pre class="screen">DEB_BUILD_OPTIONS="--enable-gui --enable-menu" fakeroot debian/rules binary</pre>
+</p><pre class="screen">DEB_BUILD_OPTIONS="--enable-gui --enable-menu" fakeroot debian/rules binary</pre><p>
 
-You can also pass some variables to the Makefile. For example, if you want
-to compile with gcc 3.4 even if it's not the default compiler:
+Rovn&#283;&#382; m&#367;&#382;ete p&#345;edat n&#283;které prom&#283;nné do Makefile. Nap&#345;íklad, pokud chcete
+kompilovat pomocí gcc 3.4 i v p&#345;ípad&#283;, &#382;e to není výchozí kompilátor:
 
-<pre class="screen">CC=gcc-3.4 DEB_BUILD_OPTIONS="--enable-gui" fakeroot debian/rules binary</pre>
+</p><pre class="screen">CC=gcc-3.4 DEB_BUILD_OPTIONS="--enable-gui" fakeroot debian/rules binary</pre><p>
 
-To clean up the source tree run the following command:
+K vy&#269;ist&#283;ní zdrojového stromu spus&#357;te následující p&#345;íkaz:
 
-<pre class="screen">fakeroot debian/rules clean</pre>
+</p><pre class="screen">fakeroot debian/rules clean</pre><p>
 
-As root you can then install the <tt class="filename">.deb</tt> package as usual:
+Jako root m&#367;&#382;ete nainstalovat <tt class="filename">.deb</tt> balí&#269;ek obvyklým
+zp&#367;sobem:
 
-<pre class="screen">dpkg -i ../mplayer_<i><tt>version</tt></i>.deb</pre>
+</p><pre class="screen">dpkg -i ../mplayer_<em class="replaceable"><code>version</code></em>.deb</pre><p>
 </p><p>
-Christian Marillat has been making unofficial Debian packages of
-<span class="application">MPlayer</span>, <span class="application">MEncoder</span> and
-our bitmap fonts for a while, you can (apt-)get them from
-<a href="http://hpisi.nerim.net/" target="_top">his homepage</a>.
-</p></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="rpm"></a>6.1.2. RPM packaging</h3></div></div><p>
-Dominik Mierzejewski created and maintains the official RPM packages of
-<span class="application">MPlayer</span> for Red Hat and Fedora Core. They are available
-from his <a href="http://rpm.greysector.net/mplayer/" target="_top">repository</a>.
+Christian Marillat vytvá&#345;el jistou dobu neoficiální Debianí balí&#269;ky
+<span class="application">MPlayer</span>u, <span class="application">MEncoder</span>u a
+na&#353;ich bitmapových font&#367;, m&#367;&#382;ete si je stáhnout (apt-get) z
+<a href="http://hpisi.nerim.net/" target="_top">jeho domácí stránky</a>.
+</p></div><div class="sect2" lang="cs"><div class="titlepage"><div><div><h3 class="title"><a name="rpm"></a>11.1.2. Balení RPM</h3></div></div></div><p>
+Dominik Mierzejewski vytvo&#345;il a udr&#382;uje oficiální RPM balí&#269;ky
+<span class="application">MPlayer</span>u pro Red Hat a Fedora Core. Ty jsou dostupné
+z jeho
+<a href="http://rpm.greysector.net/mplayer/" target="_top">repozitá&#345;e</a>.
 </p><p>
-Mandrake RPM packages are available from the <a href="http://plf.zarb.org/" target="_top">P.L.F.</a>.
-SuSE used to include a crippled version of <span class="application">MPlayer</span>
-in their distribution. They have removed it in their latest releases. You can
-get working RPMs from
+RPM balí&#269;ky pro Mandrake/Mandriva jsou dostupné z
+<a href="http://plf.zarb.org/" target="_top">P.L.F.</a>.
+SuSE za&#345;adilo do své distribuce zmrza&#269;enou verzi
+<span class="application">MPlayer</span>u. V posledních verzích ji odstranili. Funk&#269;ní
+RPM naleznete na
 <a href="http://packman.links2linux.de/?action=128" target="_top">links2linux.de</a>.
-</p></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="arm"></a>6.1.3. ARM</h3></div></div><p>
-<span class="application">MPlayer</span> works on Linux PDAs with ARM CPU e.g. Sharp Zaurus,
-Compaq Ipaq. The easiest way to obtain <span class="application">MPlayer</span> is to get it
-from one of the <a href="http://www.openzaurus.org" target="_top">OpenZaurus</a> package feeds. If
-you want to compile it yourself, you should look at the
+</p></div><div class="sect2" lang="cs"><div class="titlepage"><div><div><h3 class="title"><a name="arm"></a>11.1.3. ARM</h3></div></div></div><p>
+<span class="application">MPlayer</span> pracuje na Linuxových PDA s ARM CPU nap&#345;.
+Sharp Zaurus, Compaq Ipaq. Nejjednodu&#353;&#353;í zp&#367;sob jak si opat&#345;it
+<span class="application">MPlayer</span> je, stáhnout si jej z n&#283;kterého
+<a href="http://www.openzaurus.org" target="_top">OpenZaurus</a> balí&#269;kového kanálu.
+Pokud si jej chcete skompilovat sami, m&#283;li byste nahlédnout do adresá&#345;e
 <a href="http://openzaurus.bkbits.net:8080/buildroot/src/packages/mplayer?nav=index.html%7Csrc/.%7Csrc/packages" target="_top">mplayer</a>
-and the
+a
 <a href="http://openzaurus.bkbits.net:8080/buildroot/src/packages/libavcodec?nav=index.html%7Csrc/.%7Csrc/packages" target="_top">libavcodec</a>
-directory in the OpenZaurus distribution buildroot. These always have the latest
-Makefile and patches used for building a CVS <span class="application">MPlayer</span> with
-<tt>libavcodec</tt>.
-If you need a GUI frontend, you can use xmms-embedded.
-</p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="ports.html">P&#345;edcházející</a> </td><td width="20%" align="center"><a accesskey="u" href="ports.html">Nahoru</a></td><td width="40%" align="right"> <a accesskey="n" href="bsd.html">Dal&#353;í</a></td></tr><tr><td width="40%" align="left" valign="top">Kapitola 6. Ports </td><td width="20%" align="center"><a accesskey="h" href="index.html">Dom&#367;</a></td><td width="40%" align="right" valign="top"> 6.2. *BSD</td></tr></table></div></body></html>
+v buildroot OpenZaurus distribuce. Zde mají v&#382;dy poslední Makefile a patche pou&#382;ívané
+pro sestavení CVS verze <span class="application">MPlayer</span>u s
+<code class="systemitem">libavcodec</code>em.
+Pokud pot&#345;ebujete GUI rozhraní, m&#367;&#382;ete pou&#382;ít xmms-embedded.
+</p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="ports.html">P&#345;edcházející</a> </td><td width="20%" align="center"><a accesskey="u" href="ports.html">Nahoru</a></td><td width="40%" align="right"> <a accesskey="n" href="bsd.html">Dal&#353;í</a></td></tr><tr><td width="40%" align="left" valign="top">Kapitola 11. Porty </td><td width="20%" align="center"><a accesskey="h" href="index.html">Dom&#367;</a></td><td width="40%" align="right" valign="top"> 11.2. *BSD</td></tr></table></div></body></html>

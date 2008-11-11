@@ -23,31 +23,18 @@
 
 #include "mp_msg.h"
 #include "help_mp.h"
-#include "../osdep/shmem.h"
+#include "osdep/shmem.h"
 
 #include "stream.h"
 #include "demuxer.h"
 
-#include "../m_option.h"
-#include "../m_struct.h"
+#include "m_option.h"
+#include "m_struct.h"
 
 
-extern int verbose; // defined in mplayer.c
 void cache_uninit(stream_t *s); // defined in cache2.c
 
-#include "cue_read.h"
-
 //#include "vcd_read_bincue.h"
-
-#ifdef USE_DVDREAD
-int dvd_read_sector(dvd_priv_t *d,unsigned char* data);
-void dvd_seek(dvd_priv_t *d,int pos);
-void dvd_close(dvd_priv_t *d);
-#endif
-
-#ifdef LIBSMBCLIENT
-#include "libsmbclient.h"
-#endif
 
 #ifdef HAVE_VCD
 extern stream_info_t stream_info_vcd;
@@ -57,6 +44,12 @@ extern stream_info_t stream_info_cdda;
 #endif
 #ifdef MPLAYER_NETWORK
 extern stream_info_t stream_info_netstream;
+extern stream_info_t stream_info_pnm;
+extern stream_info_t stream_info_asf;
+extern stream_info_t stream_info_rtsp;
+extern stream_info_t stream_info_rtp_udp;
+extern stream_info_t stream_info_http1;
+extern stream_info_t stream_info_http2;
 #endif
 #ifdef HAS_DVBIN_SUPPORT
 extern stream_info_t stream_info_dvb;
@@ -67,9 +60,23 @@ extern stream_info_t stream_info_ftp;
 #ifdef HAVE_VSTREAM
 extern stream_info_t stream_info_vstream;
 #endif
+#ifdef USE_DVDNAV
+extern stream_info_t stream_info_dvdnav;
+#endif
+#ifdef LIBSMBCLIENT
+extern stream_info_t stream_info_smb;
+#endif
+#ifdef STREAMING_LIVE555
+extern stream_info_t stream_info_sdp;
+extern stream_info_t stream_info_rtsp_sip;
+#endif
 
+extern stream_info_t stream_info_cue;
 extern stream_info_t stream_info_null;
 extern stream_info_t stream_info_file;
+#ifdef HAVE_DVD
+extern stream_info_t stream_info_dvd;
+#endif
 
 stream_info_t* auto_open_streams[] = {
 #ifdef HAVE_VCD
@@ -80,6 +87,16 @@ stream_info_t* auto_open_streams[] = {
 #endif
 #ifdef MPLAYER_NETWORK
   &stream_info_netstream,
+  &stream_info_http1,
+  &stream_info_asf,
+  &stream_info_pnm,
+  &stream_info_rtsp,
+#ifdef STREAMING_LIVE555
+  &stream_info_sdp,
+  &stream_info_rtsp_sip,
+#endif
+  &stream_info_rtp_udp,
+  &stream_info_http2,
 #endif
 #ifdef HAS_DVBIN_SUPPORT
   &stream_info_dvb,
@@ -90,6 +107,17 @@ stream_info_t* auto_open_streams[] = {
 #ifdef HAVE_VSTREAM
   &stream_info_vstream,
 #endif
+#ifdef LIBSMBCLIENT
+  &stream_info_smb,
+#endif
+  &stream_info_cue,
+#ifdef HAVE_DVD
+  &stream_info_dvd,
+#endif
+#ifdef USE_DVDNAV
+  &stream_info_dvdnav;
+#endif
+
   &stream_info_null,
   &stream_info_file,
   NULL
@@ -170,7 +198,7 @@ stream_t* open_stream_full(char* filename,int mode, char** options, int* file_fo
 	s = open_stream_plugin(sinfo,filename,mode,options,file_format,&r);
 	if(s) return s;
 	if(r != STREAM_UNSUPORTED) {
-	  mp_msg(MSGT_OPEN,MSGL_ERR, "Failed to open %s\n",filename);
+	  mp_msg(MSGT_OPEN,MSGL_ERR, MSGTR_FailedToOpen,filename);
 	  return NULL;
 	}
 	break;
@@ -188,11 +216,6 @@ int stream_fill_buffer(stream_t *s){
   int len;
   if (/*s->fd == NULL ||*/ s->eof) { s->buf_pos = s->buf_len = 0; return 0; }
   switch(s->type){
-#ifdef LIBSMBCLIENT
-  case STREAMTYPE_SMB:
-    len=smbc_read(s->fd,s->buffer,STREAM_BUFFER_SIZE);
-    break;
-#endif    
   case STREAMTYPE_STREAM:
 #ifdef MPLAYER_NETWORK
     if( s->streaming_ctrl!=NULL ) {
@@ -202,25 +225,6 @@ int stream_fill_buffer(stream_t *s){
     }
 #else
     len=read(s->fd,s->buffer,STREAM_BUFFER_SIZE);break;
-#endif
-  case STREAMTYPE_VCDBINCUE:
-    len=cue_vcd_read(s->buffer);break;
-#ifdef USE_DVDNAV
-  case STREAMTYPE_DVDNAV: {
-    dvdnav_stream_read((dvdnav_priv_t*)s->priv,s->buffer,&len);
-    if (len==0) return 0; // this was an event, so repeat the read
-    break;
-  }
-#endif
-#ifdef USE_DVDREAD
-  case STREAMTYPE_DVD: {
-    off_t pos=dvd_read_sector(s->priv,s->buffer);
-    if(pos>=0){
-	len=2048; // full sector
-	s->pos=2048*pos-len;
-    } else len=-1; // error
-    break;
-  }
 #endif
   case STREAMTYPE_DS:
     len = demux_read_data((demux_stream_t*)s->priv,s->buffer,STREAM_BUFFER_SIZE);
@@ -241,22 +245,17 @@ int stream_fill_buffer(stream_t *s){
 int stream_seek_long(stream_t *s,off_t pos){
 off_t newpos=0;
 
-//  if(verbose>=3) printf("seek_long to 0x%X\n",(unsigned int)pos);
+//  if( mp_msg_test(MSGT_STREAM,MSGL_DBG3) ) printf("seek_long to 0x%X\n",(unsigned int)pos);
 
   s->buf_pos=s->buf_len=0;
 
   switch(s->type){
-  case STREAMTYPE_SMB:
   case STREAMTYPE_STREAM:
 #ifdef _LARGEFILE_SOURCE
     newpos=pos&(~((long long)STREAM_BUFFER_SIZE-1));break;
 #else
     newpos=pos&(~(STREAM_BUFFER_SIZE-1));break;
 #endif
-  case STREAMTYPE_VCDBINCUE:
-    newpos=(pos/VCD_SECTOR_DATA)*VCD_SECTOR_DATA;break;
-  case STREAMTYPE_DVD:
-    newpos=pos/2048; newpos*=2048; break;
   default:
     // Round on sector size
     if(s->sector_size)
@@ -271,49 +270,14 @@ off_t newpos=0;
     break;
   }
 
-if(verbose>=3){
-#ifdef _LARGEFILE_SOURCE
-  printf("s->pos=%llX  newpos=%llX  new_bufpos=%llX  buflen=%X  \n",
-    (long long)s->pos,(long long)newpos,(long long)pos,s->buf_len);
-#else
-  printf("s->pos=%X  newpos=%X  new_bufpos=%X  buflen=%X  \n",
-    (unsigned int)s->pos,newpos,pos,s->buf_len);
-#endif
+if( mp_msg_test(MSGT_STREAM,MSGL_DBG3) ){
+  mp_msg(MSGT_STREAM,MSGL_DBG3, "s->pos=%"PRIX64"  newpos=%"PRIX64"  new_bufpos=%"PRIX64"  buflen=%X  \n",
+    (int64_t)s->pos,(int64_t)newpos,(int64_t)pos,s->buf_len);
 }
-
   pos-=newpos;
 
 if(newpos==0 || newpos!=s->pos){
   switch(s->type){
-#ifdef LIBSMBCLIENT
-  case STREAMTYPE_SMB:
-    s->pos=newpos; // real seek
-    if(smbc_lseek(s->fd,s->pos,SEEK_SET)<0) s->eof=1;
-    break;
-#endif
-  case STREAMTYPE_VCDBINCUE:
-    s->pos=newpos; // real seek
-    cue_set_msf(s->pos/VCD_SECTOR_DATA);
-    break;
-#ifdef USE_DVDNAV
-  case STREAMTYPE_DVDNAV: {
-    if (newpos==0) {
-      if (dvdnav_stream_reset((dvdnav_priv_t*)s->priv))
-        s->pos=0;
-    }
-    if(newpos!=s->pos){
-      mp_msg(MSGT_STREAM,MSGL_INFO,"Cannot seek in DVDNAV streams yet!\n");
-      return 1;
-    }
-    break;
-  }
-#endif
-#ifdef USE_DVDREAD
-  case STREAMTYPE_DVD:
-    s->pos=newpos; // real seek
-    dvd_seek(s->priv,s->pos/2048);
-    break;
-#endif
   case STREAMTYPE_STREAM:
     //s->pos=newpos; // real seek
     // Some streaming protocol allow to seek backward and forward
@@ -359,19 +323,17 @@ if(newpos==0 || newpos!=s->pos){
 //   putchar('%');fflush(stdout);
 }
 
-  stream_fill_buffer(s);
-  if(pos>=0 && pos<=s->buf_len){
+while(stream_fill_buffer(s) > 0 && pos >= 0) {
+  if(pos<=s->buf_len){
     s->buf_pos=pos; // byte position in sector
     return 1;
   }
+  pos -= s->buf_len;
+}
   
 //  if(pos==s->buf_len) printf("XXX Seek to last byte of file -> EOF\n");
   
-#ifdef _LARGEFILE_SOURCE
-  mp_msg(MSGT_STREAM,MSGL_V,"stream_seek: WARNING! Can't seek to 0x%llX !\n",(long long)(pos+newpos));
-#else
-  mp_msg(MSGT_STREAM,MSGL_V,"stream_seek: WARNING! Can't seek to 0x%X !\n",(pos+newpos));
-#endif
+  mp_msg(MSGT_STREAM,MSGL_V,"stream_seek: WARNING! Can't seek to 0x%"PRIX64" !\n",(int64_t)(pos+newpos));
   return 0;
 }
 
@@ -386,8 +348,17 @@ void stream_reset(stream_t *s){
   //stream_seek(s,0);
 }
 
+int stream_control(stream_t *s, int cmd, void *arg){
+  if(!s->control) return STREAM_UNSUPORTED;
+  return s->control(s, cmd, arg);
+}
+
 stream_t* new_memory_stream(unsigned char* data,int len){
-  stream_t *s=malloc(sizeof(stream_t)+len);
+  stream_t *s;
+
+  if(len < 0)
+    return NULL;
+  s=malloc(sizeof(stream_t)+len);
   memset(s,0,sizeof(stream_t));
   s->fd=-1;
   s->type=STREAMTYPE_MEMORY;
@@ -430,21 +401,15 @@ void free_stream(stream_t *s){
     cache_uninit(s);
   }
 #endif
-  switch(s->type) {
-#ifdef LIBSMBCLIENT
-  case STREAMTYPE_SMB:
-    smbc_close(s->fd);
-    break;    
-#endif
-
-#ifdef USE_DVDREAD
-  case STREAMTYPE_DVD:
-    dvd_close(s->priv);
-#endif
-  default:
-    if(s->close) s->close(s);
+  if(s->close) s->close(s);
+  if(s->fd>0){
+    /* on unix we define closesocket to close
+       on windows however we have to distinguish between
+       network socket and file */
+    if(s->url && strstr(s->url,"://"))
+      closesocket(s->fd);
+    else close(s->fd);
   }
-  if(s->fd>0) closesocket(s->fd);
 #ifdef HAVE_WINSOCK2
   mp_msg(MSGT_STREAM,MSGL_V,"WINSOCK2 uninit\n");
   WSACleanup(); // there might be a better place for this (-> later)

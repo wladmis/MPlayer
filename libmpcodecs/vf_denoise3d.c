@@ -13,7 +13,7 @@
 
     You should have received a copy of the GNU General Public License
     along with this program; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 */
 
 #include <stdio.h>
@@ -22,8 +22,8 @@
 #include <inttypes.h>
 #include <math.h>
 
-#include "../config.h"
-#include "../mp_msg.h"
+#include "config.h"
+#include "mp_msg.h"
 
 #ifdef HAVE_MALLOC_H
 #include <malloc.h>
@@ -32,7 +32,7 @@
 #include "img_format.h"
 #include "mp_image.h"
 #include "vf.h"
-#include "../libvo/fastmemcpy.h"
+#include "libvo/fastmemcpy.h"
 
 #define PARAM1_DEFAULT 4.0
 #define PARAM2_DEFAULT 3.0
@@ -81,11 +81,11 @@ static void deNoise(unsigned char *Frame,        // mpi->planes[x]
     int sLineOffs = 0, pLineOffs = 0, dLineOffs = 0;
     unsigned char PixelAnt;
 
-    /* First pixel has no left nor top neightbour. Only previous frame */
+    /* First pixel has no left nor top neighbor. Only previous frame */
     LineAnt[0] = PixelAnt = Frame[0];
     FrameDest[0] = LowPass(FramePrev[0], LineAnt[0], Temporal);
 
-    /* Fist line has no top neightbour. Only left one for each pixel and
+    /* Fist line has no top neighbor. Only left one for each pixel and
      * last frame */
     for (X = 1; X < W; X++)
     {
@@ -114,13 +114,14 @@ static void deNoise(unsigned char *Frame,        // mpi->planes[x]
 
 
 
-static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
+static int put_image(struct vf_instance_s* vf, mp_image_t *mpi, double pts){
 	int cw= mpi->w >> mpi->chroma_x_shift;
 	int ch= mpi->h >> mpi->chroma_y_shift;
         int W = mpi->w, H = mpi->h;
 
 	mp_image_t *dmpi=vf_get_image(vf->next,mpi->imgfmt,
-		MP_IMGTYPE_IP, MP_IMGFLAG_ACCEPT_STRIDE,
+		MP_IMGTYPE_IP, MP_IMGFLAG_ACCEPT_STRIDE |
+		MP_IMGFLAG_PRESERVE | MP_IMGFLAG_READABLE,
                 mpi->w,mpi->h);
 
 	if(!dmpi) return 0;
@@ -146,7 +147,7 @@ static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
                 vf->priv->Coefs[3] + 256);
 
 	vf->priv->pmpi=dmpi; // save reference image
-	return vf_next_put_image(vf,dmpi);
+	return vf_next_put_image(vf,dmpi, pts);
 }
 
 //===========================================================================//

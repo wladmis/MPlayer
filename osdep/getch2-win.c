@@ -6,7 +6,7 @@
 
 #include <windows.h>
 #include "keycodes.h"
-#include "../input/input.h"
+#include "input/input.h"
 
 int mp_input_win32_slave_cmd_func(int fd,char* dest,int size){
   DWORD retval;
@@ -22,6 +22,7 @@ int mp_input_win32_slave_cmd_func(int fd,char* dest,int size){
 
 int screen_width=80;
 int screen_height=24;
+char * erase_to_end_of_line = NULL;
 
 void get_screen_size(){
 }
@@ -35,6 +36,7 @@ int getch2(int time){
    	int i=0;
     if(!getch2_status)return -1;    
     /*check if there are input events*/
+	WaitForSingleObject(stdin, time);
 	if(!GetNumberOfConsoleInputEvents(stdin,&retval))
 	{
 		printf("getch2: can't get number of input events: %i\n",GetLastError());
@@ -91,7 +93,7 @@ int getch2(int time){
                         continue;              
 					}
 					/*check for function keys*/
-        			if(0x87 >= eventbuffer[i].Event.KeyEvent.wVirtualKeyCode >= 0x70)
+        			if(0x87 >= eventbuffer[i].Event.KeyEvent.wVirtualKeyCode && eventbuffer[i].Event.KeyEvent.wVirtualKeyCode >= 0x70)
 						return (KEY_F + 1 + eventbuffer[i].Event.KeyEvent.wVirtualKeyCode - 0x70);
  						
 					/*only characters should be remaining*/

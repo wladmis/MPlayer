@@ -3,15 +3,16 @@
 #include <string.h>
 #include <inttypes.h>
 
-#include "../config.h"
-#include "../mp_msg.h"
+#include "config.h"
+#include "mp_msg.h"
+#include "help_mp.h"
 
 #include "img_format.h"
 #include "mp_image.h"
 #include "vf.h"
 
-#include "../libvo/fastmemcpy.h"
-#include "../postproc/rgb2rgb.h"
+#include "libvo/fastmemcpy.h"
+#include "postproc/rgb2rgb.h"
 
 struct vf_priv_s {
     int x1,y1,x2,y2;
@@ -55,7 +56,7 @@ static int config(struct vf_instance_s* vf,
     return vf_next_config(vf,width,height,d_width,d_height,flags,outfmt);
 }
 
-static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
+static int put_image(struct vf_instance_s* vf, mp_image_t *mpi, double pts){
     mp_image_t *dmpi;
     int bpp=mpi->bpp/8;
     int w,h,x,y,shrink_by;
@@ -127,7 +128,7 @@ if(++vf->priv->fno>2){	// ignore first 2 frames - they may be empty
     h -= shrink_by;
     y += (shrink_by / 2 + 1) & ~1;
 
-    printf("crop area: X: %d..%d  Y: %d..%d  (-vf crop=%d:%d:%d:%d)\n",
+    mp_msg(MSGT_VFILTER, MSGL_INFO, MSGTR_MPCODECS_CropArea,
 	vf->priv->x1,vf->priv->x2,
 	vf->priv->y1,vf->priv->y2,
 	w,h,x,y);
@@ -135,14 +136,23 @@ if(++vf->priv->fno>2){	// ignore first 2 frames - they may be empty
 
 }
 
-    return vf_next_put_image(vf,dmpi);
+    return vf_next_put_image(vf,dmpi, pts);
 }
 
+static int query_format(struct vf_instance_s* vf, unsigned int fmt) {
+  switch(fmt) {
+    // the default limit value works only right with YV12 right now.
+    case IMGFMT_YV12:
+      return vf_next_query_format(vf, fmt);
+  }
+  return 0;
+}
 //===========================================================================//
 
 static int open(vf_instance_t *vf, char* args){
     vf->config=config;
     vf->put_image=put_image;
+    vf->query_format=query_format;
     vf->priv=malloc(sizeof(struct vf_priv_s));
     vf->priv->limit=24; // should be option
     vf->priv->round = 0;

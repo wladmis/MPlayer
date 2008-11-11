@@ -9,6 +9,7 @@
 #endif
 
 #include "mp_msg.h"
+#include "help_mp.h"
 #include "video_out.h"
 #include "font_load.h"
 #include "sub.h"
@@ -38,18 +39,18 @@ struct osd_text_p {
 //^
 
 char * __sub_osd_names[]={
-    "Seekbar",
-    "Play",
-    "Pause",
-    "Stop",
-    "Rewind",
-    "Forward",
-    "Clock",
-    "Contrast",
-    "Saturation",
-    "Volume",
-    "Brightness",
-    "Hue"
+    MSGTR_VO_SUB_Seekbar,
+    MSGTR_VO_SUB_Play,
+    MSGTR_VO_SUB_Pause,
+    MSGTR_VO_SUB_Stop,
+    MSGTR_VO_SUB_Rewind,
+    MSGTR_VO_SUB_Forward,
+    MSGTR_VO_SUB_Clock,
+    MSGTR_VO_SUB_Contrast,
+    MSGTR_VO_SUB_Saturation,
+    MSGTR_VO_SUB_Volume,
+    MSGTR_VO_SUB_Brightness,
+    MSGTR_VO_SUB_Hue
 };
 char * __sub_osd_names_short[] ={ "", "|>", "||", "[]", "<<" , ">>", "", "", "", "", "", ""};
 
@@ -61,7 +62,7 @@ int sub_unicode=0;
 int sub_utf8=0;
 int sub_pos=100;
 int sub_width_p=100;
-int sub_alignment=0; /* 0=top, 1=center, 2=bottom */
+int sub_alignment=2; /* 0=top, 1=center, 2=bottom */
 int sub_visibility=1;
 int sub_bg_color=0; /* subtitles background color */
 int sub_bg_alpha=0;
@@ -730,7 +731,7 @@ void *vo_vobsub=NULL;
 
 static int draw_alpha_init_flag=0;
 
-extern void vo_draw_alpha_init();
+extern void vo_draw_alpha_init(void);
 
        mp_osd_obj_t* vo_osd_list=NULL;
 
@@ -746,7 +747,7 @@ mp_osd_obj_t* new_osd_obj(int type){
     return osd;
 }
 
-void free_osd_list(){
+void free_osd_list(void){
     mp_osd_obj_t* obj=vo_osd_list;
     while(obj){
 	mp_osd_obj_t* next=obj->next;
@@ -856,7 +857,7 @@ int vo_update_osd(int dxs,int dys){
     return chg;
 }
 
-void vo_init_osd(){
+void vo_init_osd(void){
     if(!draw_alpha_init_flag){
 	draw_alpha_init_flag=1;
 	vo_draw_alpha_init();

@@ -60,7 +60,6 @@ static char help_text[]=
 #define MSGTR_NoHomeDir "無法找到 HOME 目錄\n"
 #define MSGTR_GetpathProblem "get_path(\"config\") 問題\n"
 #define MSGTR_CreatingCfgFile "建立 config 檔: %s\n"
-#define MSGTR_InvalidAOdriver "無效的音效輸出驅動程式名稱: %s\n用 '-ao help' 來取得可用的音效驅動程式列表\n"
 #define MSGTR_CopyCodecsConf "(把 etc/codecs.conf 從 MPlayer 原程式碼中複製/建立連接至 ~/.mplayer/codecs.conf)\n"
 #define MSGTR_BuiltinCodecsConf "使用內建預設的 codecs.conf。\n"
 #define MSGTR_CantLoadFont "無法載入字型: %s\n"
@@ -147,7 +146,7 @@ static char help_text[]=
 
 // mencoder.c:
 
-#define MSGTR_UsingPass3ControllFile "正在使用 pass3 控制檔: %s\n"
+#define MSGTR_UsingPass3ControlFile "正在使用 pass3 控制檔: %s\n"
 #define MSGTR_MissingFilename "\n沒有檔案名稱。\n\n"
 #define MSGTR_CannotOpenFile_Device "無法開啟檔案/裝置。\n"
 #define MSGTR_CannotOpenDemuxer "無法開啟 demuxer。\n"
@@ -156,15 +155,12 @@ static char help_text[]=
 #define MSGTR_CannotOpenOutputFile "無法開啟輸出檔 '%s'。\n"
 #define MSGTR_EncoderOpenFailed "無法開啟編碼器。\n"
 #define MSGTR_ForcingOutputFourcc "強行輸出 fourcc 到 %x [%.4s]\n"
-#define MSGTR_WritingAVIHeader "正在寫下 AVI Writing AVI 標頭...\n"
 #define MSGTR_DuplicateFrames "\n有 %d 格重覆﹗\n"
 #define MSGTR_SkipFrame "\n跳過這一格﹗\n"
 #define MSGTR_ErrorWritingFile "%s: 寫入檔案有錯誤。\n"
-#define MSGTR_WritingAVIIndex "\n正在寫入 AVI 索引...\n"
-#define MSGTR_FixupAVIHeader "正在修補 AVI 標頭...\n"
 #define MSGTR_RecommendedVideoBitrate "%s CD 所建議之視訊 bitrate: %d\n"
-#define MSGTR_VideoStreamResult "\n視訊串流: %8.3f kbit/s  (%d bps)  大少: %d bytes  %5.3f 秒 %d 格\n"
-#define MSGTR_AudioStreamResult "\n音效串流: %8.3f kbit/s  (%d bps)  大少: %d bytes  %5.3f 秒\n"
+#define MSGTR_VideoStreamResult "\n視訊串流: %8.3f kbit/s  (%d B/s)  大少: %"PRIu64" bytes  %5.3f 秒 %d 格\n"
+#define MSGTR_AudioStreamResult "\n音效串流: %8.3f kbit/s  (%d B/s)  大少: %"PRIu64" bytes  %5.3f 秒\n"
 
 // cfg-mencoder.h:
 
@@ -344,7 +340,7 @@ static char help_text[]=
 #define MSGTR_MovieAspectUndefined "電影比例未有說明 — 並無使用 prescaling。\n"
 
 // vd_dshow.c, vd_dmo.c
-#define MSGTR_DownloadCodecPackage "你需要升級/安裝二進制codecs包。\n請訪問http://mplayerhq.hu/homepage/dload.html\n"
+#define MSGTR_DownloadCodecPackage "你需要升級/安裝二進制codecs包。\n請訪問http://www.mplayerhq.hu/dload.html\n"
 #define MSGTR_DShowInitOK "INFO: Win32/DShow影像codec初始OK。\n"
 #define MSGTR_DMOInitOK "INFO: Win32/DMO影像codec初始。\n"
 
@@ -402,7 +398,7 @@ static char help_text[]=
 #define MSGTR_SKIN_BITMAP_PNGReadError "PNG 讀取錯誤 (%s)\n"
 #define MSGTR_SKIN_BITMAP_RLENotSupported "RLE 壓縮的 TGA 並不支援 (%s)\n"
 #define MSGTR_SKIN_BITMAP_UnknownFileType "不明的檔案類別 (%s)\n"
-#define MSGTR_SKIN_BITMAP_ConvertError "24 位元至 32 位元轉換錯誤 (%s)\n"
+#define MSGTR_SKIN_BITMAP_ConversionError "24 位元至 32 位元轉換錯誤 (%s)\n"
 #define MSGTR_SKIN_BITMAP_UnknownMessage "不明的訊息: %s\n"
 #define MSGTR_SKIN_FONT_NotEnoughtMemory "記憶體不足\n"
 #define MSGTR_SKIN_FONT_TooManyFontsDeclared "宣告了太多字型。\n"
@@ -445,9 +441,9 @@ static char help_text[]=
 #define MSGTR_MENU_Chapter "Chapter %2d"
 #define MSGTR_MENU_AudioLanguages "音效語言"
 #define MSGTR_MENU_SubtitleLanguages "字幕語言"
+// TODO: Why is this different from MSGTR_PlayList?
 #define MSGTR_MENU_PlayList "播放列表"
 #define MSGTR_MENU_SkinBrowser "Skin 瀏覽器"
-#define MSGTR_MENU_Preferences "喜好設定"
 #define MSGTR_MENU_Exit "退出..."
 #define MSGTR_MENU_Mute "靜音"
 #define MSGTR_MENU_Original "原來的"
@@ -484,8 +480,6 @@ static char help_text[]=
 #define MSGTR_PLAYLIST_DirectoryTree "目錄樹"
 
 // --- preferences
-#define MSGTR_PREFERENCES_Audio "音效"
-#define MSGTR_PREFERENCES_Video "視訊"
 #define MSGTR_PREFERENCES_SubtitleOSD "字幕及 OSD"
 #define MSGTR_PREFERENCES_Codecs "Codecs & demuxer"
 #define MSGTR_PREFERENCES_Misc "雜項"
@@ -494,7 +488,7 @@ static char help_text[]=
 #define MSGTR_PREFERENCES_AvailableDrivers "可用的驅動程式:"
 #define MSGTR_PREFERENCES_DoNotPlaySound "不播放聲音"
 #define MSGTR_PREFERENCES_NormalizeSound "正常化聲音"
-#define MSGTR_PREFERENCES_EnEqualizer "採用調音器"
+#define MSGTR_PREFERENCES_EnableEqualizer "採用調音器"
 #define MSGTR_PREFERENCES_ExtraStereo "採用額外立體聲"
 #define MSGTR_PREFERENCES_Coefficient "係數:"
 #define MSGTR_PREFERENCES_AudioDelay "音效延遲"
@@ -530,7 +524,6 @@ static char help_text[]=
 #define MSGTR_PREFERENCES_FRAME_PostProcess "後置處理"
 #define MSGTR_PREFERENCES_FRAME_CodecDemuxer "Codec & demuxer"
 #define MSGTR_PREFERENCES_FRAME_Cache "快取記憶"
-#define MSGTR_PREFERENCES_FRAME_Misc "雜項"
 #define MSGTR_PREFERENCES_Message "請記得某些選項要重新播放才會生效﹗"
 #define MSGTR_PREFERENCES_DXR3_VENC "視訊 encoder:"
 #define MSGTR_PREFERENCES_DXR3_LAVC "使用 LAVC (FFmpeg)"
@@ -580,9 +573,6 @@ static char help_text[]=
 #define MSGTR_PREFERENCES_ShowVideoWindow "不活躍時顯示影像視窗"
 
 #define MSGTR_ABOUT_UHU "GUI 開發由 UHU Linux 贊助\n"
-#define MSGTR_ABOUT_CoreTeam "   MPlayer 核心小組:\n"
-#define MSGTR_ABOUT_AdditionalCoders "   其他開發者:\n"
-#define MSGTR_ABOUT_MainTesters "   主要測試者:\n"
 
 // --- messagebox
 #define MSGTR_MSGBOX_LABEL_FatalError "致命錯誤﹗"

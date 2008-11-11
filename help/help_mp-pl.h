@@ -2,7 +2,7 @@
 // MPlayer-pl translation team, mplayer-pl.emdej.com
 // Wszelkie uwagi i poprawki mile widziane :)
 //
-// Synced with help_mp-en.h 1.167
+// Synced with help_mp-en.h 1.173
 
 // ========================= MPlayer help ===========================
 
@@ -62,7 +62,6 @@ static char help_text[]=
 #define MSGTR_NoHomeDir "Nie mogê znale¼æ katalogu domowego\n"
 #define MSGTR_GetpathProblem "Problem z get_path (\"config\")\n"
 #define MSGTR_CreatingCfgFile "Tworzê plik konfiguracyjny: %s\n"
-#define MSGTR_InvalidAOdriver "Nieprawid³owa nazwa wyj¶ciowego sterownika audio -> %s\n(lista: '-ao help').\n"
 #define MSGTR_CopyCodecsConf "(Skopiuj etc/codecs.conf ze ¼róde³ MPlayera do ~/.mplayer/codecs.conf)\n"
 #define MSGTR_BuiltinCodecsConf "U¿ywam wbudowanego (domy¶lnego) pliku codecs.conf.\n"
 #define MSGTR_CantLoadFont "Nie mogê za³adowaæ czcionki: %s\n"
@@ -147,6 +146,7 @@ static char help_text[]=
 
 #define MSGTR_LoadingConfig "£adujê konfiguracjê '%s'\n"
 #define MSGTR_AddedSubtitleFile "SUB: plik z napisami (%d): %s dodany\n"
+#define MSGTR_RemovedSubtitleFile "SUB: plik z napisami (%d): %s usuniêty\n"
 #define MSGTR_ErrorOpeningOutputFile "B³±d przy otwieraniu pliku [%s] do zapisu!\n"
 #define MSGTR_CommandLine "WierszPoleceñ:"
 #define MSGTR_RTCDeviceNotOpenable "B³±d przy otwieraniu %s: %s (u¿ytkownik pownien móc go odczytaæ.)\n"
@@ -163,10 +163,6 @@ static char help_text[]=
 #define MSGTR_AudioFilterChainPreinitError "B³±d w preinicjalizacji ³añcucha filtrów audio!\n"
 #define MSGTR_LinuxRTCReadError "B³±d odczytu RTC Linuksa: %s\n"
 #define MSGTR_SoftsleepUnderflow "Uwaga! Niedomiar softsleep!\n"
-#define MSGTR_AnsSubVisibility "ANS_SUB_VISIBILITY=%ld\n"
-#define MSGTR_AnsLength "ANS_LENGTH=%ld\n"
-#define MSGTR_AnsVoFullscreen "ANS_VO_FULLSCREEN=%ld\n"
-#define MSGTR_AnsPercentPos "ANS_PERCENT_POSITION=%ld\n"
 #define MSGTR_DvdnavNullEvent "zdarzenie DVDNAV NULL?!\n"
 #define MSGTR_DvdnavHighlightEventBroken "zdarzenie DVDNAV: Zdarzenie pod¶wietlenia jest zepsute\n"
 #define MSGTR_DvdnavEvent "zdarzenie DVDNAV: %s\n"
@@ -183,8 +179,6 @@ static char help_text[]=
 #define MSGTR_DvdnavNavSpuClutChange "Zdarzenie DVDNAV: Zmiana Nav SPU CLUT\n"
 #define MSGTR_DvdnavNavSeekDone "Zdarzenie DVDNAV: Przeszukiwanie Nav Zrobione\n"
 #define MSGTR_MenuCall "Wywo³anie menu\n"
-
-#define MSGTR_EdlCantUseBothModes "Nie mo¿na uzywaæ -edl i -edlout w tym samym czasie.\n"
 #define MSGTR_EdlOutOfMem "Nie mogê zaalokowaæ wystarczaj±co du¿o pamiêci dla danych EDL.\n"
 #define MSGTR_EdlRecordsNo "Odczyta³em %d akcji EDL.\n"
 #define MSGTR_EdlQueueEmpty "Nie ma ¿adnych akcji EDL do wykonania.\n"
@@ -199,7 +193,7 @@ static char help_text[]=
  
 // mencoder.c:
 
-#define MSGTR_UsingPass3ControllFile "U¿ywam pliku kontrolnego pass3: %s\n" 
+#define MSGTR_UsingPass3ControlFile "U¿ywam pliku kontrolnego pass3: %s\n" 
 #define MSGTR_MissingFilename "\nBrak nazwy pliku.\n\n"
 #define MSGTR_CannotOpenFile_Device "Nie mogê otworzyæ pliku/urz±dzenia\n"
 #define MSGTR_CannotOpenDemuxer "Nie mogê otworzyæ demuxera.\n"
@@ -208,7 +202,7 @@ static char help_text[]=
 #define MSGTR_CannotOpenOutputFile "Nie mogê otworzyæ pliku wyj¶ciowego '%s'.\n"
 #define MSGTR_EncoderOpenFailed "Nie mogê otworzyæ kodera.\n"
 #define MSGTR_ForcingOutputFourcc "Wymuszam wyj¶ciowe fourcc na %x [%.4s]\n"
-#define MSGTR_WritingAVIHeader "Zapisujê nag³ówek AVI...\n"
+#define MSGTR_ForcingOutputAudiofmtTag "Wymuszam znacznik wyj¶ciowego formatu audio na 0x%x\n"
 #define MSGTR_DuplicateFrames "\n%d powtórzona(e) ramka(i)!\n"
 #define MSGTR_SkipFrame "\nOpuszczam ramkê!\n"
 #define MSGTR_ResolutionDoesntMatch "\nNowy film ma inn± rozdzielczo¶æ lub przestrzeñ kolorów ni¿ poprzedni.\n"
@@ -217,15 +211,13 @@ static char help_text[]=
 #define MSGTR_NoSpeedWithFrameCopy "UWAGA: Nie ma gwarancji ¿e -speed dzia³a prawid³owo przy -oac copy"\
 "Kodowanie mo¿e byæ popsute!\n"
 #define MSGTR_ErrorWritingFile "%s B³±d przy zapisie pliku.\n"
-#define MSGTR_WritingAVIIndex "\nZapisujê indeks AVI...\n"
-#define MSGTR_FixupAVIHeader "Naprawiam nag³ówek AVI...\n"
 #define MSGTR_RecommendedVideoBitrate "Zalecany video bitrate dla tego %s CD: %d\n"
-#define MSGTR_VideoStreamResult "\nStrumieñ video: %8.3f kbit/s (%d bps) rozmiar: %d bajtów %5.3f s %d ramek\n"
-#define MSGTR_AudioStreamResult "\nStrumieñ audio: %8.3f kbit/s (%d bps) rozmiar: %d bajtów %5.3f s\n"
+#define MSGTR_VideoStreamResult "\nStrumieñ video: %8.3f kbit/s (%d B/s) rozmiar: %"PRIu64" bajtów %5.3f s %d ramek\n"
+#define MSGTR_AudioStreamResult "\nStrumieñ audio: %8.3f kbit/s (%d B/s) rozmiar: %"PRIu64" bajtów %5.3f s\n"
 
 #define MSGTR_OpenedStream "sukces: format: %d  dane: 0x%X - 0x%x\n"
 #define MSGTR_VCodecFramecopy "videocodec: framecopy (%dx%d %dbpp fourcc=%x)\n"
-#define MSGTR_ACodecFramecopy "audiocodec: framecopy (format=%x chans=%d rate=%ld bits=%d bps=%ld sample-%ld)\n"
+#define MSGTR_ACodecFramecopy "audiocodec: framecopy (format=%x chans=%d rate=%d bits=%d B/s=%d sample-%d)\n"
 #define MSGTR_CBRPCMAudioSelected "Wybrano d¼wiêk CBR PCM\n"
 #define MSGTR_MP3AudioSelected "Wybrano d¼wiêk MP3\n"
 #define MSGTR_CannotAllocateBytes "Nie mo¿na by³o zaalokowaæ %d bajtów\n"
@@ -235,7 +227,7 @@ static char help_text[]=
 #define MSGTR_LimitingAudioPreload "Ograniczam buforowanie d¼wiêku do 0.4s\n"
 #define MSGTR_IncreasingAudioDensity "Zwiêkszam gêsto¶æ d¼wiêku do 4\n"
 #define MSGTR_ZeroingAudioPreloadAndMaxPtsCorrection "Wymuszam buforowanie d¼wiêku na 0, maksymaln± korekcjê pts na 0\n"
-#define MSGTR_CBRAudioByterate "\n\nCBR audio: %ld bajtów/sek, %d bajtów/blok\n"
+#define MSGTR_CBRAudioByterate "\n\nCBR audio: %d bajtów/sek, %d bajtów/blok\n"
 #define MSGTR_LameVersion "Wersja LAME %s (%s)\n\n"
 #define MSGTR_InvalidBitrateForLamePreset "B³±d: Wybrany bitrate jest poza prawid³owym zasiegiem tego ustawienia\n"\
 "\n"\
@@ -339,7 +331,7 @@ static char help_text[]=
 #define MSGTR_LameCantInit "Nie mo¿na ustawiæ opcji LAME, sprawd¼ bitrate/czêstotliwo¶ci "\
 "próbkowania. Niektóre bardzo niskie bitrate (<32) wymagaj± ni¿szych czêstotliwo¶ci próbkowania "\
 "(n.p. -srate 8000). Je¶li wszysto zawiedzie wypróbuj wbudowane ustawienie."
-#define MSGTR_ConfigfileError "b³±d pliku konfiguracyjnego"
+#define MSGTR_ConfigFileError "b³±d pliku konfiguracyjnego"
 #define MSGTR_ErrorParsingCommandLine "b³±d przy przetwarzaniu wiersza poleceñ"
 #define MSGTR_VideoStreamRequired "Strumieñ video jest wymagany!\n"
 #define MSGTR_ForcingInputFPS "wej¶ciowa warto¶æ fps bêdzie zinterpretowana jako %5.2f\n"
@@ -352,6 +344,7 @@ static char help_text[]=
 #define MSGTR_LavcAudioCodecNotFound "Audio LAVC - nie mogê znale¼æ kodeka dla %s\n"
 #define MSGTR_CouldntAllocateLavcContext "Audio LAVC - nie mogê zaalokowaæ tre¶ci!\n"
 #define MSGTR_CouldntOpenCodec "Nie mogê otworzyæ kodeka %s, br=%d\n"
+#define MSGTR_CantCopyAudioFormat "Format audio 0x%x jest niekompatybilny z '-oac copy', spróbuj zamiast tego '-oac pcm' albo u¿yj '-fafmttag' ¿eby wymusiæ.\n"
 
 // cfg-mencoder.h:
 
@@ -477,6 +470,13 @@ static char help_text[]=
 #define MSGTR_DVDnoVOBs "Nie mogê otworzyæ tytu³u VOBS (VTS_%02d_1.VOB).\n"
 #define MSGTR_DVDopenOk "DVD otwarte prawid³owo.\n"
 
+// muxer_*.c:
+#define MSGTR_TooManyStreams "Za du¿o strumieni!"
+#define MSGTR_RawMuxerOnlyOneStream "Mukser rawaudio obs³uguje tylko jeden strumieñ audio!\n"
+#define MSGTR_IgnoringVideoStream "Ignorujê strumieñ video!\n"
+#define MSGTR_UnknownStreamType "Ostrze¿enie! Nieznany typ strumienia: %d\n"
+#define MSGTR_WarningLenIsntDivisible "Ostrze¿enie! len nie jest podzielne przez samplesize!\n"
+
 // demuxer.c, demux_*.c:
 #define MSGTR_AudioStreamRedefined "UWAGA: Redefiniowano nag³ówek strumienia audio %d!\n"
 #define MSGTR_VideoStreamRedefined "UWAGA: Redefiniowano nag³ówek strumienia video %d!\n"
@@ -582,7 +582,7 @@ static char help_text[]=
 #define MSGTR_MovieAspectUndefined "Proporcje filmu (obrazu) nie s± zdefiniowane - nie skalujê.\n"
 
 // vd_dshow.c, vd_dmo.c
-#define MSGTR_DownloadCodecPackage "Musisz zainstalowaæ/zaktualizowaæ pakiet binarnych kodeków.\nId¼ do http://mplayerhq.hu/homepage/dload.html\n"
+#define MSGTR_DownloadCodecPackage "Musisz zainstalowaæ/zaktualizowaæ pakiet binarnych kodeków.\nId¼ do http://www.mplayerhq.hu/dload.html\n"
 #define MSGTR_DShowInitOK "INFORMACJA: Inicjalizacja kodeka video Win32/DShow przebieg³a pomy¶lnie.\n"
 #define MSGTR_DMOInitOK "INFORMACJA: Inicjalizacja kodeka video Win32/DMO przebieg³a pomy¶lnie.\n"
 
@@ -604,7 +604,7 @@ static char help_text[]=
 #define MSGTR_OtherSelect "Wybierz..."
 #define MSGTR_AudioFileSelect "Wybierz zewnêtrzny kana³ audio..."
 #define MSGTR_FontSelect "Wybierz czcionkê..."
-#define MSGTR_PlayList "Lista Odtwarzania"
+#define MSGTR_PlayList "Lista odtwarzania"
 #define MSGTR_Equalizer "Equalizer (korektor)"
 #define MSGTR_SkinBrowser "Przegl±darka skórek"
 #define MSGTR_Network "Strumieniowanie sieciowe..."
@@ -639,6 +639,7 @@ static char help_text[]=
 #define MSGTR_SKIN_WARNING2 "[skin] ostrze¿enie w pliku konfiguracyjnym w wierszu %d:\nznaleziono znacznik widget (%s) ale nie ma przed nim \"subsection\""
 #define MSGTR_SKIN_WARNING3 "[skin] ostrze¿enie w pliku konfiguracyjnym w wierszu %d::\nta podsekcja nie jest obs³ugiwana przez widget (%s)"
 #define MSGTR_SKIN_SkinFileNotFound "[skin] nie znaleziono pliku ( %s ).\n"
+#define MSGTR_SKIN_SkinFileNotReadable "[skin] pliku nie mo¿na czytaæ ( %s ).\n"
 #define MSGTR_SKIN_BITMAP_16bit  "Bitmapy 16 bitowe lub mniejsze nie s± obs³ugiwane (%s).\n"
 #define MSGTR_SKIN_BITMAP_FileNotFound  "nie znaleziono pliku (%s)\n"
 #define MSGTR_SKIN_BITMAP_BMPReadError "b³±d odczytu bmp (%s)\n"
@@ -646,7 +647,7 @@ static char help_text[]=
 #define MSGTR_SKIN_BITMAP_PNGReadError "b³±d odczytu png (%s)\n"
 #define MSGTR_SKIN_BITMAP_RLENotSupported "tga kompresowane przez RLE nie obs³ugiwane (%s)\n"
 #define MSGTR_SKIN_BITMAP_UnknownFileType "nieznany typ pliku (%s)\n"
-#define MSGTR_SKIN_BITMAP_ConvertError "b³±d przy konwersji 24 bitów na 32 bity (%s)\n"
+#define MSGTR_SKIN_BITMAP_ConversionError "b³±d przy konwersji 24 bitów na 32 bity (%s)\n"
 #define MSGTR_SKIN_BITMAP_UnknownMessage "nieznany komunikat: %s\n"
 #define MSGTR_SKIN_FONT_NotEnoughtMemory "za ma³o pamiêci\n"
 #define MSGTR_SKIN_FONT_TooManyFontsDeclared "za du¿o zadeklarowanych czcionek\n"
@@ -691,9 +692,7 @@ static char help_text[]=
 #define MSGTR_MENU_Chapter "Rozdzia³ %2d"
 #define MSGTR_MENU_AudioLanguages "Jêzyki ¶cie¿ki d¼wiêkowej"
 #define MSGTR_MENU_SubtitleLanguages "Jêzyki napisów"
-#define MSGTR_MENU_PlayList "Lista odtwarzania"
 #define MSGTR_MENU_SkinBrowser "Przegl±darka skórek"
-#define MSGTR_MENU_Preferences "Preferencje"
 #define MSGTR_MENU_Exit "Wyj¶cie..."
 #define MSGTR_MENU_Mute "Wyciszenie"
 #define MSGTR_MENU_Original "Oryginalny"
@@ -730,8 +729,6 @@ static char help_text[]=
 #define MSGTR_PLAYLIST_DirectoryTree "Drzewo katalogu"
 
 // --- preferences
-#define MSGTR_PREFERENCES_Audio "Audio"
-#define MSGTR_PREFERENCES_Video "Video"
 #define MSGTR_PREFERENCES_SubtitleOSD "Napisy i OSD"
 #define MSGTR_PREFERENCES_Codecs "kodeki i demuxer"
 #define MSGTR_PREFERENCES_Misc "Inne"
@@ -741,7 +738,7 @@ static char help_text[]=
 #define MSGTR_PREFERENCES_AvailableDrivers "Dostêpne sterowniki:"
 #define MSGTR_PREFERENCES_DoNotPlaySound "Nie odtwarzaj d¼wiêku"
 #define MSGTR_PREFERENCES_NormalizeSound "Normalizuj d¼wiêk"
-#define MSGTR_PREFERENCES_EnEqualizer "W³±cz equalizer (korektor)"
+#define MSGTR_PREFERENCES_EnableEqualizer "W³±cz equalizer (korektor)"
 #define MSGTR_PREFERENCES_SoftwareMixer "W³±cz Mikser Programowy"
 #define MSGTR_PREFERENCES_ExtraStereo "W³±cz extra stereo"
 #define MSGTR_PREFERENCES_Coefficient "Wspó³czynnik:"
@@ -778,7 +775,6 @@ static char help_text[]=
 #define MSGTR_PREFERENCES_FRAME_PostProcess "Postprocessing"
 #define MSGTR_PREFERENCES_FRAME_CodecDemuxer "Kodeki i demuxer"
 #define MSGTR_PREFERENCES_FRAME_Cache "Cache (pamiêæ podrêczna)"
-#define MSGTR_PREFERENCES_FRAME_Misc "Inne"
 #define MSGTR_PREFERENCES_Audio_Device "Urz±dzenie:"
 #define MSGTR_PREFERENCES_Audio_Mixer "Mikser:"
 #define MSGTR_PREFERENCES_Audio_MixerChannel "Kana³ miksera:"
@@ -831,9 +827,6 @@ static char help_text[]=
 #define MSGTR_PREFERENCES_ShowVideoWindow "Pokazuj okno video gdy nieaktywne"
 
 #define MSGTR_ABOUT_UHU "Rozwój GUI sponsorowany przez UHU Linux\n"
-#define MSGTR_ABOUT_CoreTeam "   G³ówni cz³onkowie zespo³u MPlayera:\n"
-#define MSGTR_ABOUT_AdditionalCoders "   Dodatkowi koderzy (programi¶ci):\n"
-#define MSGTR_ABOUT_MainTesters "   G³owni testerzy:\n"
 
 // --- messagebox
 #define MSGTR_MSGBOX_LABEL_FatalError "B³±d krytyczny!"
@@ -988,7 +981,7 @@ static char help_text[]=
 
 // ao_pcm.c
 #define MSGTR_AO_PCM_FileInfo "[AO PCM] Plik: %s (%s)\nPCM: Czêstotliwo¶æ próbkowamia: %iHz Kana³y: %s Format %s\n"
-#define MSGTR_AO_PCM_HintInfo "[AO PCM] Info: najszybsze zrzucanie jest osi±gane poprzez -vc dummy -vo null\nPCM: Info: aby zapisaæ plik WAVE u¿yj -waveheader (domy¶lny).\n"
+#define MSGTR_AO_PCM_HintInfo "[AO PCM] Info: najszybsze zrzucanie jest osi±gane poprzez -vc dummy -vo null\nPCM: Info: aby zapisaæ plik WAVE u¿yj -ao pcm:waveheader (domy¶lny).\n"
 #define MSGTR_AO_PCM_CantOpenOutputFile "[AO PCM] Nie powiod³o siê otwarcie %s do zapisu!\n"
 
 // ao_sdl.c

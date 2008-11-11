@@ -13,7 +13,7 @@
 
     You should have received a copy of the GNU General Public License
     along with this program; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 */
 
 #include <stdio.h>
@@ -21,14 +21,15 @@
 #include <string.h>
 #include <inttypes.h>
 
-#include "../config.h"
-#include "../mp_msg.h"
+#include "config.h"
+#include "mp_msg.h"
+#include "help_mp.h"
 
 #include "img_format.h"
 #include "mp_image.h"
 #include "vf.h"
 
-#include "../libvo/fastmemcpy.h"
+#include "libvo/fastmemcpy.h"
 
 //===========================================================================//
 
@@ -51,7 +52,7 @@ static int config(struct vf_instance_s* vf,
 	unsigned int flags, unsigned int outfmt){
 
     if(vf_next_query_format(vf,IMGFMT_YV12)<=0){
-	printf("yv12 not supported by next filter/vo :(\n");
+	mp_msg(MSGT_VFILTER, MSGL_WARN, MSGTR_MPCODECS_WarnNextFilterDoesntSupport, "YV12");
 	return 0;
     }
 
@@ -64,7 +65,7 @@ static int config(struct vf_instance_s* vf,
 
 static double c[64];
 
-static void initIdct()
+static void initIdct(void)
 {
 	int i;
 
@@ -268,7 +269,7 @@ static void ring2Test(uint8_t *dst, int stride, int off)
 	}
 }
 
-static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
+static int put_image(struct vf_instance_s* vf, mp_image_t *mpi, double pts){
     mp_image_t *dmpi;
     int frame= vf->priv->frame_num;
 
@@ -301,7 +302,7 @@ static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
 
     frame++;
     vf->priv->frame_num= frame;
-    return vf_next_put_image(vf,dmpi);
+    return vf_next_put_image(vf,dmpi, pts);
 }
 
 //===========================================================================//

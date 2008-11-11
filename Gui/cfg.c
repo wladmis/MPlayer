@@ -3,15 +3,15 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "../config.h"
-#include "../mp_msg.h"
-#include "../help_mp.h"
-#include "../mixer.h"
-#include "../mplayer.h"
-#include "../m_config.h"
-#include "../m_option.h"
+#include "config.h"
+#include "mp_msg.h"
+#include "help_mp.h"
+#include "mixer.h"
+#include "mplayer.h"
+#include "m_config.h"
+#include "m_option.h"
 
-#include "../../libvo/video_out.h"
+#include "libvo/video_out.h"
 
 #include "cfg.h"
 #include "app.h"
@@ -218,7 +218,7 @@ int cfg_read( void )
  m_config_register_options( gui_conf,gui_opts );
  if ( m_config_parse_config_file( gui_conf,cfg ) < 0 ) 
   {
-   mp_msg( MSGT_GPLAYER,MSGL_FATAL,MSGTR_ConfigfileError );
+   mp_msg( MSGT_GPLAYER,MSGL_FATAL,MSGTR_ConfigFileError );
 //   exit( 1 );
   }
  free( cfg );

@@ -60,7 +60,8 @@
 #define evSetAspect         44
 #define evSetAudio	    45
 #define evSetVideo	    46
-// 47 ...
+#define evSetSubtitle       47
+// 48 ...
 
 #define evExit              1000
 
@@ -171,7 +172,9 @@ typedef struct
 extern listItems   appMPlayer;
 
 extern char      * skinDirInHome;
+extern char      * skinDirInHome_obsolete;
 extern char      * skinMPlayerDir;
+extern char      * skinMPlayerDir_obsolete;
 extern char      * skinName;
 
 extern void appInitStruct( listItems * item );

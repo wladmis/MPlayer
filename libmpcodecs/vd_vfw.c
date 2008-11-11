@@ -138,7 +138,7 @@ static int control(sh_video_t *sh,int cmd,void* arg,...){
     return CONTROL_UNKNOWN;
 }
 
-extern void print_video_header(BITMAPINFOHEADER *h);
+extern void print_video_header(BITMAPINFOHEADER *h, int verbose_level);
 
 // init driver
 static int init(sh_video_t *sh){
@@ -147,6 +147,13 @@ static int init(sh_video_t *sh){
     int i, o_bih_len;
     vd_vfw_ctx *priv;
   
+    /* Hack for VSSH codec: new dll can't decode old files
+     * In my samples old files have no extradata, so use that info
+     * to decide what dll should be used (here and in vd_dshow).
+     */
+    if (!strcmp(sh->codec->dll, "vssh264.dll") && (sh->bih->biSize > 40))
+      return 0;
+
     priv = malloc(sizeof(vd_vfw_ctx));
     if (!priv)
 	return 0;
@@ -234,9 +241,9 @@ static int init(sh_video_t *sh){
 	set_csp(priv->o_bih,sh->codec->outfmt[sh->outfmtidx]);
 
     mp_msg(MSGT_WIN32, MSGL_V, "Input format:\n");
-    if(verbose>0) print_video_header(sh->bih);
+    if( mp_msg_test(MSGT_HEADER,MSGL_V) ) print_video_header(sh->bih,MSGL_V);
     mp_msg(MSGT_WIN32, MSGL_V, "Output format:\n");
-    if(verbose>0) print_video_header(priv->o_bih);
+    if( mp_msg_test(MSGT_HEADER,MSGL_V) ) print_video_header(priv->o_bih,MSGL_V);
 
     // set postprocessing level in xvid/divx4 .dll
     ICSendMessage(priv->handle, ICM_USER+80, (long)(&divx_quality), 0);
@@ -268,14 +275,14 @@ static void uninit(sh_video_t *sh){
 #endif
     if (ret)
     {
-	mp_msg(MSGT_WIN32, MSGL_WARN, "ICDecompressEnd failed: %d\n", ret);
+	mp_msg(MSGT_WIN32, MSGL_WARN, "ICDecompressEnd failed: %ld\n", ret);
 	return;
     }
 
     ret = ICClose(priv->handle);
     if (ret)
     {
-	mp_msg(MSGT_WIN32, MSGL_WARN, "ICClose failed: %d\n", ret);
+	mp_msg(MSGT_WIN32, MSGL_WARN, "ICClose failed: %ld\n", ret);
 	return;
     }
     
@@ -296,7 +303,7 @@ static mp_image_t* decode(sh_video_t *sh,void* data,int len,int flags){
 	MP_IMGTYPE_STATIC : MP_IMGTYPE_TEMP, MP_IMGFLAG_ACCEPT_WIDTH, 
 	sh->disp_w, sh->disp_h);
     if(!mpi){	// temporary!
-	printf("couldn't allocate image for cinepak codec\n");
+	mp_msg(MSGT_DECVIDEO,MSGL_WARN,MSGTR_MPCODECS_CouldntAllocateImageForCinepakCodec);
 	return NULL;
     }
 
@@ -316,7 +323,7 @@ static mp_image_t* decode(sh_video_t *sh,void* data,int len,int flags){
 	   sh->bih, data, priv->o_bih, (flags&3) ? 0 : mpi->planes[0]);
 
     if ((int)ret){
-      mp_msg(MSGT_DECVIDEO,MSGL_WARN,"Error decompressing frame, err=%d\n",ret);
+      mp_msg(MSGT_DECVIDEO,MSGL_WARN,"Error decompressing frame, err=%ld\n",ret);
       return NULL;
     }
     

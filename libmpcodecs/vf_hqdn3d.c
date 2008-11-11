@@ -13,7 +13,7 @@
 
     You should have received a copy of the GNU General Public License
     along with this program; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 */
 
 #include <stdio.h>
@@ -22,8 +22,8 @@
 #include <inttypes.h>
 #include <math.h>
 
-#include "../config.h"
-#include "../mp_msg.h"
+#include "config.h"
+#include "mp_msg.h"
 
 #ifdef HAVE_MALLOC_H
 #include <malloc.h>
@@ -32,7 +32,7 @@
 #include "img_format.h"
 #include "mp_image.h"
 #include "vf.h"
-#include "../libvo/fastmemcpy.h"
+#include "libvo/fastmemcpy.h"
 
 #define PARAM1_DEFAULT 4.0
 #define PARAM2_DEFAULT 3.0
@@ -69,8 +69,70 @@ static int config(struct vf_instance_s* vf,
 static inline unsigned int LowPassMul(unsigned int PrevMul, unsigned int CurrMul, int* Coef){
 //    int dMul= (PrevMul&0xFFFFFF)-(CurrMul&0xFFFFFF);
     int dMul= PrevMul-CurrMul;
-    int d=((dMul+0x10007FF)/(65536/16));
+    int d=((dMul+0x10007FF)>>12);
     return CurrMul + Coef[d];
+}
+
+static void deNoiseTemporal(
+                    unsigned char *Frame,        // mpi->planes[x]
+                    unsigned char *FrameDest,    // dmpi->planes[x]
+                    unsigned short *FrameAnt,
+                    int W, int H, int sStride, int dStride,
+                    int *Temporal)
+{
+    int X, Y;
+    unsigned int PixelDst;
+
+    for (Y = 0; Y < H; Y++){
+        for (X = 0; X < W; X++){
+            PixelDst = LowPassMul(FrameAnt[X]<<8, Frame[X]<<16, Temporal);
+            FrameAnt[X] = ((PixelDst+0x1000007F)>>8);
+            FrameDest[X]= ((PixelDst+0x10007FFF)>>16);
+        }
+        Frame += sStride;
+        FrameDest += dStride;
+        FrameAnt += W;
+    }
+}
+
+static void deNoiseSpacial(
+                    unsigned char *Frame,        // mpi->planes[x]
+                    unsigned char *FrameDest,    // dmpi->planes[x]
+                    unsigned int *LineAnt,       // vf->priv->Line (width bytes)
+                    int W, int H, int sStride, int dStride,
+                    int *Horizontal, int *Vertical)
+{
+    int X, Y;
+    int sLineOffs = 0, dLineOffs = 0;
+    unsigned int PixelAnt;
+    unsigned int PixelDst;
+    
+    /* First pixel has no left nor top neighbor. */
+    PixelDst = LineAnt[0] = PixelAnt = Frame[0]<<16;
+    FrameDest[0]= ((PixelDst+0x10007FFF)>>16);
+
+    /* First line has no top neighbor, only left. */
+    for (X = 1; X < W; X++){
+        PixelDst = LineAnt[X] = LowPassMul(PixelAnt, Frame[X]<<16, Horizontal);
+        FrameDest[X]= ((PixelDst+0x10007FFF)>>16);
+    }
+
+    for (Y = 1; Y < H; Y++){
+	unsigned int PixelAnt;
+	sLineOffs += sStride, dLineOffs += dStride;
+        /* First pixel on each line doesn't have previous pixel */
+        PixelAnt = Frame[sLineOffs]<<16;
+        PixelDst = LineAnt[0] = LowPassMul(LineAnt[0], PixelAnt, Vertical);
+        FrameDest[dLineOffs]= ((PixelDst+0x10007FFF)>>16);
+
+        for (X = 1; X < W; X++){
+            unsigned int PixelDst;
+            /* The rest are normal */
+            PixelAnt = LowPassMul(PixelAnt, Frame[sLineOffs+X]<<16, Horizontal);
+            PixelDst = LineAnt[X] = LowPassMul(LineAnt[X], PixelAnt, Vertical);
+            FrameDest[dLineOffs+X]= ((PixelDst+0x10007FFF)>>16);
+        }
+    }
 }
 
 static void deNoise(unsigned char *Frame,        // mpi->planes[x]
@@ -83,7 +145,7 @@ static void deNoise(unsigned char *Frame,        // mpi->planes[x]
     int X, Y;
     int sLineOffs = 0, dLineOffs = 0;
     unsigned int PixelAnt;
-    int PixelDst;
+    unsigned int PixelDst;
     unsigned short* FrameAnt=(*FrameAntPtr);
     
     if(!FrameAnt){
@@ -95,19 +157,30 @@ static void deNoise(unsigned char *Frame,        // mpi->planes[x]
 	}
     }
 
-    /* First pixel has no left nor top neightbour. Only previous frame */
+    if(!Horizontal[0] && !Vertical[0]){
+        deNoiseTemporal(Frame, FrameDest, FrameAnt,
+                        W, H, sStride, dStride, Temporal);
+        return;
+    }
+    if(!Temporal[0]){
+        deNoiseSpacial(Frame, FrameDest, LineAnt,
+                       W, H, sStride, dStride, Horizontal, Vertical);
+        return;
+    }
+
+    /* First pixel has no left nor top neighbor. Only previous frame */
     LineAnt[0] = PixelAnt = Frame[0]<<16;
     PixelDst = LowPassMul(FrameAnt[0]<<8, PixelAnt, Temporal);
-    FrameAnt[0] = ((PixelDst+0x1000007F)/256);
-    FrameDest[0]= ((PixelDst+0x10007FFF)/65536);
+    FrameAnt[0] = ((PixelDst+0x1000007F)>>8);
+    FrameDest[0]= ((PixelDst+0x10007FFF)>>16);
 
-    /* Fist line has no top neightbour. Only left one for each pixel and
+    /* First line has no top neighbor. Only left one for each pixel and
      * last frame */
     for (X = 1; X < W; X++){
         LineAnt[X] = PixelAnt = LowPassMul(PixelAnt, Frame[X]<<16, Horizontal);
         PixelDst = LowPassMul(FrameAnt[X]<<8, PixelAnt, Temporal);
-	FrameAnt[X] = ((PixelDst+0x1000007F)/256);
-	FrameDest[X]= ((PixelDst+0x10007FFF)/65536);
+        FrameAnt[X] = ((PixelDst+0x1000007F)>>8);
+        FrameDest[X]= ((PixelDst+0x10007FFF)>>16);
     }
 
     for (Y = 1; Y < H; Y++){
@@ -118,23 +191,23 @@ static void deNoise(unsigned char *Frame,        // mpi->planes[x]
         PixelAnt = Frame[sLineOffs]<<16;
         LineAnt[0] = LowPassMul(LineAnt[0], PixelAnt, Vertical);
 	PixelDst = LowPassMul(LinePrev[0]<<8, LineAnt[0], Temporal);
-	LinePrev[0] = ((PixelDst+0x1000007F)/256);
-	FrameDest[dLineOffs]= ((PixelDst+0x10007FFF)/65536);
+        LinePrev[0] = ((PixelDst+0x1000007F)>>8);
+        FrameDest[dLineOffs]= ((PixelDst+0x10007FFF)>>16);
 
         for (X = 1; X < W; X++){
-	    int PixelDst;
+            unsigned int PixelDst;
             /* The rest are normal */
             PixelAnt = LowPassMul(PixelAnt, Frame[sLineOffs+X]<<16, Horizontal);
             LineAnt[X] = LowPassMul(LineAnt[X], PixelAnt, Vertical);
 	    PixelDst = LowPassMul(LinePrev[X]<<8, LineAnt[X], Temporal);
-	    LinePrev[X] = ((PixelDst+0x1000007F)/256);
-	    FrameDest[dLineOffs+X]= ((PixelDst+0x10007FFF)/65536);
+            LinePrev[X] = ((PixelDst+0x1000007F)>>8);
+            FrameDest[dLineOffs+X]= ((PixelDst+0x10007FFF)>>16);
         }
     }
 }
 
 
-static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
+static int put_image(struct vf_instance_s* vf, mp_image_t *mpi, double pts){
 	int cw= mpi->w >> mpi->chroma_x_shift;
 	int ch= mpi->h >> mpi->chroma_y_shift;
         int W = mpi->w, H = mpi->h;
@@ -164,7 +237,7 @@ static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
                 vf->priv->Coefs[2],
                 vf->priv->Coefs[3]);
 
-	return vf_next_put_image(vf,dmpi);
+	return vf_next_put_image(vf,dmpi, pts);
 }
 
 //===========================================================================//
@@ -194,12 +267,14 @@ static void PrecalcCoefs(int *Ct, double Dist25)
 
     Gamma = log(0.25) / log(1.0 - Dist25/255.0 - 0.00001);
 
-    for (i = -256*16; i < 256*16; i++)
+    for (i = -255*16; i <= 255*16; i++)
     {
         Simil = 1.0 - ABS(i) / (16*255.0);
         C = pow(Simil, Gamma) * 65536.0 * (double)i / 16.0;
         Ct[16*256+i] = (C<0) ? (C-0.5) : (C+0.5);
     }
+
+    Ct[0] = (Dist25 != 0);
 }
 
 

@@ -59,7 +59,6 @@ static char help_text[]=
 #define MSGTR_NoHomeDir "Kan HOME dir niet vinden\n"
 #define MSGTR_GetpathProblem "get_path(\"config\") probleem\n"
 #define MSGTR_CreatingCfgFile "Bezig met het creëren van configuratie bestand: %s\n"
-#define MSGTR_InvalidAOdriver "Foutieve audio uitvoer driver naam: %s\nGebruik '-ao help' om een lijst met beschikbare audio drivers te verkrijgen.\n"
 #define MSGTR_CopyCodecsConf "(copy/ln etc/codecs.conf (van MPlayer source tree) naar ~/.mplayer/codecs.conf)\n"
 #define MSGTR_BuiltinCodecsConf "De standaard ingebouwde codecs.conf wordt gebruikt\n"
 #define MSGTR_CantLoadFont "Kan font niet laden: %s\n"
@@ -160,10 +159,6 @@ static char help_text[]=
 #define MSGTR_AudioFilterChainPreinitError "Er is een fout opgetreden bijde pre-initialisatie van de audio filter!\n"
 #define MSGTR_LinuxRTCReadError "Linux RTC leesfout: %s\n"
 #define MSGTR_SoftsleepUnderflow "Waarschuwing! Softsleep underflow!\n"
-#define MSGTR_AnsSubVisibility "ANS_SUB_VISIBILITY=%ld\n"
-#define MSGTR_AnsLength "ANS_LENGTH=%ld\n"
-#define MSGTR_AnsVoFullscreen "ANS_VO_FULLSCREEN=%ld\n"
-#define MSGTR_AnsPercentPos "ANS_PERCENT_POSITION=%ld\n"
 #define MSGTR_DvdnavNullEvent "DVDNAV Event NULL?!\n"
 #define MSGTR_DvdnavHighlightEventBroken "DVDNAV Event: Highlight event broken\n"
 #define MSGTR_DvdnavEvent "DVDNAV Event: %s\n"
@@ -179,8 +174,6 @@ static char help_text[]=
 #define MSGTR_DvdnavNavSpuClutChange "DVDNAV Event: Nav SPU CLUT Change\n"
 #define MSGTR_DvdnavNavSeekDone "DVDNAV Event: Nav Seek Done\n"
 #define MSGTR_MenuCall "Menu call\n"
-
-#define MSGTR_EdlCantUseBothModes "Kan -edl en -edlout niet tezelfdertijd gebruiken.\n"
 #define MSGTR_EdlOutOfMem "Kan niet genoeg geheugen toewijzen voor de EDL data.\n"
 #define MSGTR_EdlRecordsNo "Bezig met het lezen van %d EDL acties.\n"
 #define MSGTR_EdlQueueEmpty "Er zijn geen EDL acties meer te verwerken.\n"
@@ -195,7 +188,7 @@ static char help_text[]=
 
 // mencoder.c:
 
-#define MSGTR_UsingPass3ControllFile "Pass3 control bestand gebruikend: %s\n"
+#define MSGTR_UsingPass3ControlFile "Pass3 control bestand gebruikend: %s\n"
 #define MSGTR_MissingFilename "\nOntbrekende bestandsnaam!\n\n"
 #define MSGTR_CannotOpenFile_Device "Kan bestand/aparaat niet openen\n"
 #define MSGTR_CannotOpenDemuxer "Kan demuxer niet openen\n"
@@ -204,18 +197,15 @@ static char help_text[]=
 #define MSGTR_CannotOpenOutputFile "Kan het uitvoer bestand '%s' niet openen\n"
 #define MSGTR_EncoderOpenFailed "Het openen van de encoder is mislukt\n"
 #define MSGTR_ForcingOutputFourcc "Uitvoer fourcc gedwongen naar %x [%.4s]\n"
-#define MSGTR_WritingAVIHeader "Bezig met het schrijven van de AVI header...\n"
 #define MSGTR_DuplicateFrames "\n%d duplicate frame(s)!!!    \n"
 #define MSGTR_SkipFrame "\nframe overgeslagen!!!    \n"
 #define MSGTR_ErrorWritingFile "%s: fout bij het schrijven van het bestand.\n"
-#define MSGTR_WritingAVIIndex "\nBezig met het schrijven van de AVI index...\n"
-#define MSGTR_FixupAVIHeader "Bezig met het herstellen van de AVI header...\n"
 #define MSGTR_RecommendedVideoBitrate "Aangeraden video bitrate voor %s CD: %d\n"
-#define MSGTR_VideoStreamResult "\nVideo stream: %8.3f kbit/s  (%d bps)  grootte: %d bytes  %5.3f secs  %d frames\n"
-#define MSGTR_AudioStreamResult "\nAudio stream: %8.3f kbit/s  (%d bps)  grootte: %d bytes  %5.3f secs\n"
+#define MSGTR_VideoStreamResult "\nVideo stream: %8.3f kbit/s  (%d B/s)  grootte: %"PRIu64" bytes  %5.3f secs  %d frames\n"
+#define MSGTR_AudioStreamResult "\nAudio stream: %8.3f kbit/s  (%d B/s)  grootte: %"PRIu64" bytes  %5.3f secs\n"
 #define MSGTR_OpenedStream "succes: formaat: %d  data: 0x%X - 0x%x\n"
 #define MSGTR_VCodecFramecopy "videocodec: framecopy (%dx%d %dbpp fourcc=%x)\n"
-#define MSGTR_ACodecFramecopy "audiocodec: framecopy (formaat=%x chans=%d rate=%ld bits=%d bps=%ld sample-%ld)\n"
+#define MSGTR_ACodecFramecopy "audiocodec: framecopy (formaat=%x chans=%d rate=%d bits=%d B/s=%d sample-%d)\n"
 #define MSGTR_CBRPCMAudioSelected "CBR PCM audio geselecteerd\n"
 #define MSGTR_MP3AudioSelected "MP3 audio geselecteerd\n"
 #define MSGTR_CannotAllocateBytes "Kon %d bytes niet toewijzen\n"
@@ -225,7 +215,7 @@ static char help_text[]=
 #define MSGTR_LimitingAudioPreload "Audio audio preload wordt beperkt tot 0.4s\n"
 #define MSGTR_IncreasingAudioDensity "Audio densiteit wordt opgevoerd tot 4\n"
 #define MSGTR_ZeroingAudioPreloadAndMaxPtsCorrection "Audio preload wordt ingesteld op 0, max pts correctie is 0\n"
-#define MSGTR_CBRAudioByterate "\n\nCBR audio: %ld bytes/sec, %d bytes/blok\n"
+#define MSGTR_CBRAudioByterate "\n\nCBR audio: %d bytes/sec, %d bytes/blok\n"
 #define MSGTR_LameVersion "LAME versie %s (%s)\n\n"
 #define MSGTR_InvalidBitrateForLamePreset "Fout: De ingestelde bitrate valt buiten het bereik van deze preset\n"\
 "\n"\
@@ -326,7 +316,7 @@ static char help_text[]=
 "mw-us => 40kbps/mono        voice => 56kbps/mono\n"\
 "fm/radio/tape => 112kbps    hifi => 160kbps\n"\
 "cd => 192kbps               studio => 256kbps"
-#define MSGTR_ConfigfileError "Fout in het configuratie bestand of configuratie bestand ontbreekt"
+#define MSGTR_ConfigFileError "Fout in het configuratie bestand of configuratie bestand ontbreekt"
 #define MSGTR_ErrorParsingCommandLine "Fout bij het analyseren van de commandoregel"
 #define MSGTR_VideoStreamRequired "Een Video stream is verplicht!\n"
 #define MSGTR_ForcingInputFPS "input fps zal geinterpreteerd worden als %5.2f \n"
@@ -529,8 +519,8 @@ static char help_text[]=
 #define MSGTR_UsingExternalPP "[PP] Gebruik makend van externe postprocessing filter, max q = %d\n"
 #define MSGTR_UsingCodecPP "[PP] Gebruik makend van de codec's interne postprocessing, max q = %d\n"
 #define MSGTR_VideoAttributeNotSupportedByVO_VD "Video attribuut '%s' wordt niet ondersteund door de gekozen vo & vd! \n"
-#define MSGTR_VideoCodecFamilyNotAvailableStr "Aangevraagde video codec familie [%s] (vfm=%d) niet beschikbaar (activeer het bij het compileren!)\n"
-#define MSGTR_AudioCodecFamilyNotAvailableStr "Aangevraagde audio codec familie [%s] (afm=%d) niet beschikbaar (activeer het bij het compileren!)\n"
+#define MSGTR_VideoCodecFamilyNotAvailableStr "Aangevraagde video codec familie [%s] (vfm=%s) niet beschikbaar (activeer het bij het compileren!)\n"
+#define MSGTR_AudioCodecFamilyNotAvailableStr "Aangevraagde audio codec familie [%s] (afm=%s) niet beschikbaar (activeer het bij het compileren!)\n"
 #define MSGTR_OpeningVideoDecoder "Bezig met het openen van de video decoder: [%s] %s\n"
 #define MSGTR_OpeningAudioDecoder "Bezig met het openen van de audio decoder: [%s] %s\n"
 #define MSGTR_UninitVideoStr "Deinitialisatie video: %s  \n"
@@ -561,7 +551,7 @@ static char help_text[]=
 #define MSGTR_MovieAspectUndefined "Movie-Aspect is niet gedefinieerd - geen voorscalering toegepast.\n"
 
 // vd_dshow.c, vd_dmo.c
-#define MSGTR_DownloadCodecPackage "De binary codecs moeten worden geinstalleerd of bijgewerkt.\nZie http://mplayerhq.hu/homepage/dload.html\n"
+#define MSGTR_DownloadCodecPackage "De binary codecs moeten worden geinstalleerd of bijgewerkt.\nZie http://www.mplayerhq.hu/dload.html\n"
 #define MSGTR_DShowInitOK "INFO: Win32/DShow video codec initialisatie OK.\n"
 #define MSGTR_DMOInitOK "INFO: Win32/DMO video codec initialisatie OK.\n"
 
@@ -622,7 +612,7 @@ static char help_text[]=
 #define MSGTR_SKIN_BITMAP_PNGReadError "PNG lees fout (%s)\n"
 #define MSGTR_SKIN_BITMAP_RLENotSupported "RLE packed TGA niet ondersteund (%s)\n"
 #define MSGTR_SKIN_BITMAP_UnknownFileType "onbekend bestandstype (%s)\n"
-#define MSGTR_SKIN_BITMAP_ConvertError "24 bit naar 32 bit converteerfout (%s)\n"
+#define MSGTR_SKIN_BITMAP_ConversionError "24 bit naar 32 bit converteerfout (%s)\n"
 #define MSGTR_SKIN_BITMAP_UnknownMessage "onbekende boodschap: %s\n"
 #define MSGTR_SKIN_FONT_NotEnoughtMemory "onvoldoende geheugen\n"
 #define MSGTR_SKIN_FONT_TooManyFontsDeclared "te veel fonts gedeclareerd\n"
@@ -665,9 +655,9 @@ static char help_text[]=
 #define MSGTR_MENU_Chapter "Hoofdstuk %2d"
 #define MSGTR_MENU_AudioLanguages "Audio talen"
 #define MSGTR_MENU_SubtitleLanguages "Ondertiteling talen"
+// TODO: Why is this different from MSGTR_PlayList?
 #define MSGTR_MENU_PlayList "Playlist"
 #define MSGTR_MENU_SkinBrowser "Skin browser"
-#define MSGTR_MENU_Preferences "Voorkeuren"
 #define MSGTR_MENU_Exit "Afsluiten..."
 #define MSGTR_MENU_Mute "Mute"
 #define MSGTR_MENU_Original "Origineel"
@@ -704,8 +694,6 @@ static char help_text[]=
 #define MSGTR_PLAYLIST_DirectoryTree "Directory tree"
 
 // --- preferences
-#define MSGTR_PREFERENCES_Audio "Audio"
-#define MSGTR_PREFERENCES_Video "Video"
 #define MSGTR_PREFERENCES_SubtitleOSD "Ondertiteling & OSD"
 #define MSGTR_PREFERENCES_Codecs "Codecs & demuxer"
 #define MSGTR_PREFERENCES_Misc "Misc"
@@ -715,7 +703,7 @@ static char help_text[]=
 #define MSGTR_PREFERENCES_AvailableDrivers "Beschikbare drivers:"
 #define MSGTR_PREFERENCES_DoNotPlaySound "Speel geen geluid af"
 #define MSGTR_PREFERENCES_NormalizeSound "Normalizeer het geluid"
-#define MSGTR_PREFERENCES_EnEqualizer "Gebruik equalizer"
+#define MSGTR_PREFERENCES_EnableEqualizer "Gebruik equalizer"
 #define MSGTR_PREFERENCES_ExtraStereo "Gebruik extra stereo"
 #define MSGTR_PREFERENCES_Coefficient "Coefficient:"
 #define MSGTR_PREFERENCES_AudioDelay "Audio vertraging"
@@ -751,7 +739,6 @@ static char help_text[]=
 #define MSGTR_PREFERENCES_FRAME_PostProcess "Postprocess"
 #define MSGTR_PREFERENCES_FRAME_CodecDemuxer "Codec & demuxer"
 #define MSGTR_PREFERENCES_FRAME_Cache "Cache"
-#define MSGTR_PREFERENCES_FRAME_Misc "Misc"
 #define MSGTR_PREFERENCES_Audio_Device "Apparaat:"
 #define MSGTR_PREFERENCES_Audio_Mixer "Mixer:"
 #define MSGTR_PREFERENCES_Audio_MixerChannel "Mixer kanaal:"
@@ -804,9 +791,6 @@ static char help_text[]=
 #define MSGTR_PREFERENCES_ShowVideoWindow "Toon video venster wanneer inactief"
 
 #define MSGTR_ABOUT_UHU "GUI ontwikkeling gesponsord door UHU Linux\n"
-#define MSGTR_ABOUT_CoreTeam "   MPlayer core team:\n"
-#define MSGTR_ABOUT_AdditionalCoders "   Bijkomende coders:\n"
-#define MSGTR_ABOUT_MainTesters "   Belangrijkste testers:\n"
 
 // --- messagebox
 #define MSGTR_MSGBOX_LABEL_FatalError "Fatale fout!"
@@ -850,7 +834,7 @@ static char help_text[]=
 #define MSGTR_VO_YUV4MPEG_InterlacedInputNotRGB "Input is geen RGB, de chrominantie kan niet opgesplitst worden op basis van de velden!"
 #define MSGTR_VO_YUV4MPEG_WidthDivisibleBy2 "De beeldbreedte moet deelbaar zijn door twee."
 #define MSGTR_VO_YUV4MPEG_NoMemRGBFrameBuf "Niet genoeg geheugen om een RGB framebuffer toe te wijzen."
-#define MSGTR_VO_YUV4MPEG_OutFileOpenError "Kan geen geheugen of \"file handle\" verkrijgen om de \"stream.yuv\" te schrijven!"
+#define MSGTR_VO_YUV4MPEG_OutFileOpenError "Kan geen geheugen of \"file handle\" verkrijgen om de \"%s\" te schrijven!"
 #define MSGTR_VO_YUV4MPEG_OutFileWriteError "Fout bij het schrijven van het beeld naar de output!"
 #define MSGTR_VO_YUV4MPEG_UnknownSubDev "Ongekende subapparaat: %s"
 #define MSGTR_VO_YUV4MPEG_InterlacedTFFMode "De volgende interlaced output mode wordt gebruikt, top-field first."
@@ -873,7 +857,6 @@ static char help_text[]=
 #define MSGTR_AO_OSS_ChanNotFound "[AO OSS] audio_setup: De mixer van de geluidskaart heeft geen kanaal dat de standaard '%s' gebruikt.\n"
 #define MSGTR_AO_OSS_CantOpenDev "[AO OSS] audio_setup: Kan het audio apparaat niet openen %s: %s\n"
 #define MSGTR_AO_OSS_CantMakeFd "[AO OSS] audio_setup: Can't make filedescriptor blocking: %s\n"
-#define MSGTR_AO_OSS_CantSetAC3 "[AO OSS] Kan de geluidskaart  %s niet in AC3 output mode instellen, we proberen S16...\n"
 #define MSGTR_AO_OSS_CantSetChans "[AO OSS] audio_setup: Kon het audio apparaat niet instellen op %d kanalen.\n"
 #define MSGTR_AO_OSS_CantUseGetospace "[AO OSS] audio_setup: het stuurprogramma ondersteunt SNDCTL_DSP_GETOSPACE niet :-(\n"
 #define MSGTR_AO_OSS_CantUseSelect "[AO OSS]\n   ***  Het stuurprogramma van uw geluidskaart ondersteunt select() niet  ***\n Hercompileer MPlayer met #undef HAVE_AUDIO_SELECT in config.h !\n\n"
@@ -904,7 +887,7 @@ static char help_text[]=
 
 // ao_pcm.c
 #define MSGTR_AO_PCM_FileInfo "[AO PCM] File: %s (%s)\nPCM: Samplerate: %iHz Kanalen: %s Formaat %s\n"
-#define MSGTR_AO_PCM_HintInfo "[AO PCM] Info: de snelste uitlezing wordt bereikt met -vc dummy -vo null\nPCM: Info: Om WAVE bestanden te schrijven gebruik -waveheader (standaard).\n"
+#define MSGTR_AO_PCM_HintInfo "[AO PCM] Info: de snelste uitlezing wordt bereikt met -vc dummy -vo null\nPCM: Info: Om WAVE bestanden te schrijven gebruik -ao pcm:waveheader (standaard).\n"
 #define MSGTR_AO_PCM_CantOpenOutputFile "[AO PCM] Kon %s niet openen om te schrijven!\n"
 
 // ao_sdl.c

@@ -1,23 +1,25 @@
 
 // based on libmpeg2/header.c by Aaron Holtzman <aholtzma@ess.engr.uvic.ca>
 
-// #include <inttypes.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 #include "config.h"
 #include "mpeg_hdr.h"
 
-static int frameratecode2framerate[16] = {
+#include "mp_msg.h"
+
+static float frameratecode2framerate[16] = {
   0,
   // Official mpeg1/2 framerates: (1-8)
-  24000*10000/1001, 24*10000,25*10000,
-  30000*10000/1001, 30*10000,50*10000,
-  60000*10000/1001, 60*10000,
+  24000.0/1001, 24,25,
+  30000.0/1001, 30,50,
+  60000.0/1001, 60,
   // Xing's 15fps: (9)
-  15*10000,
+  15,
   // libmpeg3's "Unofficial economy rates": (10-13)
-  5*10000,10*10000,12*10000,15*10000,
+  5,10,12,15,
   // some invalid ones: (14-15)
   0,0
 };
@@ -102,6 +104,37 @@ int mp_header_process_extension (mp_mpeg_header_t * picture, unsigned char * buf
     return 0;
 }
 
+float mpeg12_aspect_info(mp_mpeg_header_t *picture)
+{
+    float aspect = 0.0;
+    
+    switch(picture->aspect_ratio_information) {
+      case 2:  // PAL/NTSC SVCD/DVD 4:3
+      case 8:  // PAL VCD 4:3
+      case 12: // NTSC VCD 4:3
+        aspect=4.0/3.0;
+        break;
+      case 3:  // PAL/NTSC Widescreen SVCD/DVD 16:9
+      case 6:  // (PAL?)/NTSC Widescreen SVCD 16:9
+        aspect=16.0/9.0;
+        break;
+      case 4:  // according to ISO-138182-2 Table 6.3
+        aspect=2.21;
+        break;
+      case 1:  // VGA 1:1 - do not prescale
+      case 9: // Movie Type ??? / 640x480
+        aspect=0.0;
+        break;
+      default:
+        mp_msg(MSGT_DECVIDEO,MSGL_ERR,"Detected unknown aspect_ratio_information in mpeg sequence header.\n"
+               "Please report the aspect value (%i) along with the movie type (VGA,PAL,NTSC,"
+               "SECAM) and the movie resolution (720x576,352x240,480x480,...) to the MPlayer"
+               " developers, so that we can add support for it!\nAssuming 1:1 aspect for now.\n",
+               picture->aspect_ratio_information);
+    }
+    
+    return aspect;
+}
 
 //MPEG4 HEADERS
 unsigned char mp_getbits(unsigned char *buffer, unsigned int from, unsigned char len)
@@ -191,7 +224,7 @@ int mp4_header_process_vol(mp_mpeg_header_t * picture, unsigned char * buffer)
       n = read_timeinc(picture, buffer, n);
       
       if(picture->timeinc_unit)
-        picture->fps = (picture->timeinc_resolution * 10000) / picture->timeinc_unit;
+        picture->fps = (float) picture->timeinc_resolution / (float) picture->timeinc_unit;
     }
     
     //fprintf(stderr, "ASPECT: %d, PARW=%d, PARH=%d, TIMEINCRESOLUTION: %d, FIXED_TIMEINC: %d (number of bits: %d), FPS: %u\n", 
@@ -286,7 +319,9 @@ static int h264_parse_vui(mp_mpeg_header_t * picture, unsigned char * buf, unsig
     fixed_fps = getbits(buf, n, 1);
     
     if(picture->timeinc_unit > 0 && picture->timeinc_resolution > 0)
-      picture->fps = (picture->timeinc_resolution * 10000) / picture->timeinc_unit;
+      picture->fps = (float) picture->timeinc_resolution / (float) picture->timeinc_unit;
+    if(fixed_fps)
+      picture->fps /= 2;
   }
   
   //fprintf(stderr, "H264_PARSE_VUI, OVESCAN=%u, VSP_COLOR=%u, CHROMA=%u, TIMING=%u, DISPW=%u, DISPH=%u, TIMERES=%u, TIMEINC=%u, FIXED_FPS=%u\n", overscan, vsp_color, chroma, timing, picture->display_picture_width, picture->display_picture_height,
@@ -329,6 +364,16 @@ int h264_parse_sps(mp_mpeg_header_t * picture, unsigned char * buf, int len)
   picture->fps = picture->timeinc_unit = picture->timeinc_resolution = 0;
   n = 24;
   read_golomb(buf, &n);
+  if(buf[0] >= 100){
+    if(read_golomb(buf, &n) == 3)
+      n++;
+    read_golomb(buf, &n);
+    read_golomb(buf, &n);
+    n++;
+    if(getbits(buf, n++, 1)){
+      //FIXME scaling matrix
+    }
+  }
   read_golomb(buf, &n);
   v = read_golomb(buf, &n);
   if(v == 0)
