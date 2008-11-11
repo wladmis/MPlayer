@@ -25,6 +25,7 @@ static struct vf_priv_s {
     unsigned int fmt;
     struct SwsContext *ctx;
     unsigned char* palette;
+    int query_format_cache[64];
 } vf_priv_dflt = {
   -1,-1,
   0,
@@ -71,19 +72,30 @@ static unsigned int outfmt_list[]={
     IMGFMT_Y800,
     IMGFMT_Y8,
     IMGFMT_YUY2,
+    IMGFMT_UYVY,
     0
 };
 
 static unsigned int find_best_out(vf_instance_t *vf){
     unsigned int best=0;
-    unsigned int* p=outfmt_list;
+    int i;
+
     // find the best outfmt:
-    while(*p){
-	int ret=vf_next_query_format(vf,*p);
-	mp_msg(MSGT_VFILTER,MSGL_DBG2,"scale: query(%s) -> %d\n",vo_format_name(*p),ret&3);
-	if(ret&VFCAP_CSP_SUPPORTED_BY_HW){ best=*p; break;} // no conversion -> bingo!
-	if(ret&VFCAP_CSP_SUPPORTED && !best) best=*p; // best with conversion
-	++p;
+    for(i=0; i<sizeof(outfmt_list)/sizeof(int)-1; i++){
+        const int format= outfmt_list[i];
+        int ret= vf->priv->query_format_cache[i]-1;
+        if(ret == -1){
+            ret= vf_next_query_format(vf, outfmt_list[i]);
+            vf->priv->query_format_cache[i]= ret+1;
+        }
+        
+	mp_msg(MSGT_VFILTER,MSGL_DBG2,"scale: query(%s) -> %d\n",vo_format_name(format),ret&3);
+	if(ret&VFCAP_CSP_SUPPORTED_BY_HW){
+            best=format; // no conversion -> bingo!
+            break;
+        } 
+	if(ret&VFCAP_CSP_SUPPORTED && !best) 
+            best=format; // best with conversion
     }
     return best;
 }
@@ -128,6 +140,7 @@ static int config(struct vf_instance_s* vf,
     // calculate the missing parameters:
     switch(best) {
     case IMGFMT_YUY2:		/* YUY2 needs w rounded to 2 */
+    case IMGFMT_UYVY:
 	if(vf->priv->w==-3) vf->priv->w=(vf->priv->h*width/height+1)&~1; else
 	if(vf->priv->w==-2) vf->priv->w=(vf->priv->h*d_width/d_height+1)&~1;
 	if(vf->priv->w<0) vf->priv->w=width; else
@@ -136,6 +149,8 @@ static int config(struct vf_instance_s* vf,
 	if(vf->priv->h==-2) vf->priv->h=vf->priv->w*d_height/d_width;
 	break;
     case IMGFMT_YV12:		/* YV12 needs w & h rounded to 2 */
+    case IMGFMT_I420:
+    case IMGFMT_IYUV:
 	if(vf->priv->w==-3) vf->priv->w=(vf->priv->h*width/height+1)&~1; else
 	if(vf->priv->w==-2) vf->priv->w=(vf->priv->h*d_width/d_height+1)&~1;
 	if(vf->priv->w<0) vf->priv->w=width; else
@@ -364,6 +379,12 @@ static int query_format(struct vf_instance_s* vf, unsigned int fmt){
     return 0;	// nomatching in-fmt
 }
 
+static void uninit(struct vf_instance_s *vf){
+    if(vf->priv->ctx) sws_freeContext(vf->priv->ctx);
+    if(vf->priv->palette) free(vf->priv->palette);
+    free(vf->priv);
+}
+
 static int open(vf_instance_t *vf, char* args){
     vf->config=config;
     vf->start_slice=start_slice;
@@ -371,6 +392,7 @@ static int open(vf_instance_t *vf, char* args){
     vf->put_image=put_image;
     vf->query_format=query_format;
     vf->control= control;
+    vf->uninit=uninit;
     if(!vf->priv) {
     vf->priv=malloc(sizeof(struct vf_priv_s));
     // TODO: parse args ->
@@ -433,7 +455,7 @@ void sws_getFlagsAndFilterFromCmdLine(int *flags, SwsFilter **srcFilterParam, Sw
 	src_filter= sws_getDefaultFilter(
 		sws_lum_gblur, sws_chr_gblur,
 		sws_lum_sharpen, sws_chr_sharpen,
-		sws_chr_vshift, sws_chr_hshift, verbose>1);
+		sws_chr_hshift, sws_chr_vshift, verbose>1);
         
 	switch(sws_flags)
 	{

@@ -9,14 +9,16 @@
 
 #define MKV_A_AAC_2MAIN  "A_AAC/MPEG2/MAIN"
 #define MKV_A_AAC_2LC    "A_AAC/MPEG2/LC"
+#define MKV_A_AAC_2SBR   "A_AAC/MPEG2/LC/SBR"
 #define MKV_A_AAC_2SSR   "A_AAC/MPEG2/SSR"
 #define MKV_A_AAC_4MAIN  "A_AAC/MPEG4/MAIN"
 #define MKV_A_AAC_4LC    "A_AAC/MPEG4/LC"
+#define MKV_A_AAC_4SBR   "A_AAC/MPEG4/LC/SBR"
 #define MKV_A_AAC_4SSR   "A_AAC/MPEG4/SSR"
 #define MKV_A_AAC_4LTP   "A_AAC/MPEG4/LTP"
-#define MKV_A_AAC_4SBR   "A_AAC/MPEG4/SBR"
 #define MKV_A_AC3        "A_AC3"
 #define MKV_A_DTS        "A_DTS"
+#define MKV_A_MP2        "A_MPEG/L2"
 #define MKV_A_MP3        "A_MPEG/L3"
 #define MKV_A_PCM        "A_PCM/INT/LIT"
 #define MKV_A_PCM_BE     "A_PCM/INT/BIG"
@@ -29,6 +31,7 @@
 #define MKV_A_REALSIPR   "A_REAL/SIPR"
 #define MKV_A_QDMC       "A_QUICKTIME/QDMC"
 #define MKV_A_QDMC2      "A_QUICKTIME/QDM2"
+#define MKV_A_FLAC       "A_FLAC"
 
 #define MKV_V_MSCOMP     "V_MS/VFW/FOURCC"
 #define MKV_V_REALV10    "V_REAL/RV10"
@@ -44,5 +47,12 @@
 #define MKV_S_TEXTASCII  "S_TEXT/ASCII"
 #define MKV_S_TEXTUTF8   "S_TEXT/UTF8"
 #define MKV_S_TEXTSSA    "S_TEXT/SSA"
+#define MKV_S_VOBSUB     "S_VOBSUB"
+
+typedef struct {
+  char type;                    // t = text, v = VobSub
+  unsigned int palette[16];     // for VobSubs
+  int width, height;            // for VobSubs
+} mkv_sh_sub_t;
 
 #endif /* __MATROSKA_H */

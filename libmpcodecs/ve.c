@@ -13,6 +13,7 @@ extern vf_info_t ve_info_divx4;
 extern vf_info_t ve_info_lavc;
 extern vf_info_t ve_info_vfw;
 extern vf_info_t ve_info_rawrgb;
+extern vf_info_t ve_info_rawyuv;
 extern vf_info_t ve_info_libdv;
 extern vf_info_t ve_info_xvid;
 extern vf_info_t ve_info_qtvideo;
@@ -33,7 +34,8 @@ static vf_info_t* encoder_list[]={
     &ve_info_libdv,
 #endif
     &ve_info_rawrgb,
-#if defined(HAVE_XVID)
+    &ve_info_rawyuv,
+#if defined(HAVE_XVID3) || defined(HAVE_XVID4)
     &ve_info_xvid,
 #endif
     &ve_info_nuv,

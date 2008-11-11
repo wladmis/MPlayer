@@ -52,7 +52,7 @@ extern m_option_t lavcopts_conf[];
 extern m_option_t vfwopts_conf[];
 #endif
 
-#ifdef HAVE_XVID
+#if defined(HAVE_XVID3) || defined(HAVE_XVID4)
 extern m_option_t xvidencopts_conf[];
 #endif
 
@@ -66,6 +66,7 @@ m_option_t ovc_conf[]={
 	{"lavc", &out_video_codec, CONF_TYPE_FLAG, 0, 0, VCODEC_LIBAVCODEC, NULL},
 //	{"null", &out_video_codec, CONF_TYPE_FLAG, 0, 0, VCODEC_NULL, NULL},
 	{"rawrgb", &out_video_codec, CONF_TYPE_FLAG, 0, 0, VCODEC_RAWRGB, NULL},
+	{"rawyuv", &out_video_codec, CONF_TYPE_FLAG, 0, 0, VCODEC_RAWYUV, NULL},
 	{"vfw", &out_video_codec, CONF_TYPE_FLAG, 0, 0, VCODEC_VFW, NULL},
 	{"libdv", &out_video_codec, CONF_TYPE_FLAG, 0, 0, VCODEC_LIBDV, NULL},
 	{"xvid", &out_video_codec, CONF_TYPE_FLAG, 0, 0, VCODEC_XVID, NULL},
@@ -75,6 +76,7 @@ m_option_t ovc_conf[]={
 	"   copy     - frame copy, without re-encoding. doesn't work with filters!\n"
 	"   frameno  - special audio-only file for 3-pass encoding, see DOCS!\n"
 	"   rawrgb   - uncompressed RGB 24bpp video\n"
+	"   rawyuv   - uncompressed 4:2:0 YUV (I420) 12bpp video\n"
 	"   nuv      - nuppel video\n"
 #ifdef HAVE_DIVX4ENCORE
 #ifdef ENCORE_XVID
@@ -93,7 +95,7 @@ m_option_t ovc_conf[]={
 #ifdef HAVE_LIBDV095
 	"   libdv    - DV encoding using libdv v0.9.5\n"
 #endif
-#ifdef HAVE_XVID
+#if defined(HAVE_XVID3) || defined(HAVE_XVID4)
 	"   xvid     - xvid encoding\n"
 #endif
 	"\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
@@ -108,11 +110,19 @@ m_option_t oac_conf[]={
 #else
 	{"mp3lame", "MPlayer was compiled without libmp3lame support!\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
 #endif
+#ifdef USE_LIBAVCODEC
+	{"lavc", &out_audio_codec, CONF_TYPE_FLAG, 0, 0, ACODEC_LAVC, NULL},
+#else
+	{"lavc", "MPlayer was compiled without libavcodec! See README or DOCS!\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
+#endif
 	{"help", "\nAvailable codecs:\n"
 	"   copy     - frame copy, without re-encoding (useful for AC3)\n"
 	"   pcm      - uncompressed PCM audio\n"
 #ifdef HAVE_MP3LAME
 	"   mp3lame  - cbr/abr/vbr MP3 using libmp3lame\n"
+#endif
+#ifdef USE_LIBAVCODEC
+	"   lavc     - ffmpeg audio encoder (mp2, ac3, ...)\n"
 #endif
 	"\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
 	{NULL, NULL, 0, 0, 0, 0, NULL}
@@ -168,8 +178,8 @@ m_option_t mencoder_opts[]={
 	{"audio-preload", &audio_preload, CONF_TYPE_FLOAT, CONF_RANGE, 0, 2, NULL},
 	{"audio-delay",   &audio_delay, CONF_TYPE_FLOAT, CONF_MIN, 0, 0, NULL},
 
-	{"x", "This option is obsolete, use -vop scale=w:h for scaling\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
-	{"xsize", "This option is obsolete, use -vop crop=w:h:x0:y0 for cropping\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
+	{"x", "This option is obsolete, use -vf scale=w:h for scaling.\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
+	{"xsize", "This option is obsolete, use -vf crop=w:h:x0:y0 for cropping.\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
 
 	// output audio/video codec selection
 	{"oac", oac_conf, CONF_TYPE_SUBCONFIG, 0, 0, 0, NULL},
@@ -208,7 +218,7 @@ m_option_t mencoder_opts[]={
 #ifdef USE_WIN32DLL
 	{"vfwopts", vfwopts_conf, CONF_TYPE_SUBCONFIG, 0, 0, 0, NULL},
 #endif
-#ifdef HAVE_XVID
+#if defined(HAVE_XVID3) || defined(HAVE_XVID4)
 	{"xvidencopts", xvidencopts_conf, CONF_TYPE_SUBCONFIG, 0, 0, 0, NULL},
 #endif
 

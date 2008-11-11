@@ -2,8 +2,10 @@
                                     AUTHORS
                    *****************************************
                    
-                   NOTE: Do NOT send bug reports, help and
-                   feature requests directly to the authors!
+NOTE: NEVER send bug reports, help and feature requests directly to the
+authors, but you're free to write mails about donating!
+
+For donation request visit http://www.mplayerhq.hu/homepage/donations.html!
 
 ___________________
 The MPlayer project
@@ -177,7 +179,7 @@ Alban Bedel <albeu@free.fr>
 Artur Zaprzala <zybi@fanthom.irc.pl>
     * Complete font generator prog + OSD font (TOOLS/subfont-c)
 
-lanzz@lanzz.org
+Mihail Milushev <lanzz@lanzz.org>
     * GIMP font generator plugin (TOOLS/subfont-gimp)
 
 Adam Tla/lka <atlka@pg.gda.pl>
@@ -287,6 +289,7 @@ Roberto Togni <rtogni@freemail.it>
     * Open source QT RPZA decoder
     * Open source HuffYUV decoder
     * Open source MSZH/ZLIB decoder
+    * Open source QT 8BPS decoder
     * mp_help-it.h updates
     * Realaudio (ra) demuxer, 14_4 and 28_8 codec support
     * Misc bugfixes and enhancements
@@ -298,7 +301,7 @@ Wojtek Kaniewski <wojtekka@bydg.pdi.net>
 Fredrik Kuivinen <freku045@student.liu.se>
     * OSD/subtitles outside movie - for SDL
     * video filter layer draft, first implementation
-    * virtualdub filter support (not yet finised/commited)
+    * virtualdub filter support (not yet finished/committed)
 
 Florian Schneider <flo-mplayer-dev@gmx.net>
     * RealVideo codec libraries interface, .rm demuxer fixes
@@ -323,6 +326,7 @@ Diego Biurrun <diego@biurrun.de>
     * random trivial fixes
     * testing, bug reports
     * homepage improvements
+    * head of the Ministry for English Composition
 
 Sascha Sommer <saschasommer@freenet.de>
     * directx VO driver
@@ -343,7 +347,7 @@ Kees Cook <mplayer@outflux.net>
     * rawdv demuxer fixes
 
 Hampa Hug <hhug@student.ethz.ch>
-    * LUT-based soft eq video filter (-vop eq2)
+    * LUT-based soft eq video filter (-vf eq2)
     * .ogm demuxer endianess fixes
 
 Uwe Reder <Uwe.Reder@3SOFT.de>
@@ -421,6 +425,7 @@ Nicolas Le Gaillart <n@tourmentine.com>
 Lu Ran <hephooey@fastmail.fm>
     * Chinese documentation translation
     * Various VOBSUB-related patches
+    * improved seeking in realmedia format
 
 András Mohari <mayday@varoshaza.nagyatad.hu>
     * skin documentation
@@ -487,6 +492,7 @@ Attila Kinali <kinali@gmx.net>
     * various small fixes in the x11 code
     * xinerama support
     * documentation
+    * patch application monkey
 
 Andoni Zubimendi <andoni@lpsat.net>.
     * Spanish documentation translation
@@ -495,8 +501,14 @@ Juan Martin <nauj27@teleline.es>
     * Spanish man page translation
     * Spanish documentation translation
 
-Dmitry Baryshkov <lumag@mplayerhq.hu>
+Dmitry Baryshkov <mitya@school.ioffe.ru>
     * Russian documentation translation
+    * FLAC decoding support
+    * XML build system
+
+rgselk <rgselknospam@yahoo.com>
+    * Real rtsp Range support
+
 
 NOTE: If you think you are missing here, feel free to send a patch.
 =====

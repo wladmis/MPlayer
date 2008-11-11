@@ -6,12 +6,14 @@
  * Hampa Hug <hampa@hampa.ch> (original LUT gamma/contrast/brightness filter)
  * Daniel Moreno <comac@comac.darktech.org> (saturation, R/G/B gamma support)
  * Richard Felker (original MMX contrast/brightness code (vf_eq.c))
+ * Michael Niedermayer <michalni@gmx.at> (LUT16)
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <inttypes.h>
 
 #include "config.h"
 #include "mp_msg.h"
@@ -25,10 +27,14 @@
 #include <locale.h>
 #endif
 
+#define LUT16
 
 /* Per channel parameters */
 typedef struct eq2_param_t {
   unsigned char lut[256];
+#ifdef LUT16
+  uint16_t lut16[256*256];
+#endif
   int           lut_clean;
 
   void (*adjust) (struct eq2_param_t *par, unsigned char *dst, unsigned char *src,
@@ -37,6 +43,7 @@ typedef struct eq2_param_t {
   double        c;
   double        b;
   double        g;
+  double        w;
 } eq2_param_t;
 
 typedef struct vf_priv_s {
@@ -47,6 +54,7 @@ typedef struct vf_priv_s {
   double        saturation;
 
   double        gamma;
+  double        gamma_weight;
   double        rgamma;
   double        ggamma;
   double        bgamma;
@@ -62,8 +70,11 @@ void create_lut (eq2_param_t *par)
 {
   unsigned i;
   double   g, v;
+  double   lw, gw;
 
   g = par->g;
+  gw = par->w;
+  lw = 1.0 - gw;
 
   if ((g < 0.001) || (g > 1000.0)) {
     g = 1.0;
@@ -79,7 +90,7 @@ void create_lut (eq2_param_t *par)
       par->lut[i] = 0;
     }
     else {
-      v = pow (v, g);
+      v = v*lw + pow(v, g)*gw;
 
       if (v >= 1.0) {
         par->lut[i] = 255;
@@ -89,6 +100,12 @@ void create_lut (eq2_param_t *par)
       }
     }
   }
+
+#ifdef LUT16
+  for(i=0; i<256*256; i++){
+    par->lut16[i]= par->lut[i&0xFF] + (par->lut[i>>8]<<8);
+  }
+#endif
 
   par->lut_clean = 1;
 }
@@ -165,17 +182,43 @@ static
 void apply_lut (eq2_param_t *par, unsigned char *dst, unsigned char *src,
   unsigned w, unsigned h, unsigned dstride, unsigned sstride)
 {
-  unsigned      i, j;
+  unsigned      i, j, w2;
   unsigned char *lut;
+  uint16_t *lut16;
 
   if (!par->lut_clean) {
     create_lut (par);
   }
 
   lut = par->lut;
-
+#ifdef LUT16
+  lut16 = par->lut16;
+  w2= (w>>3)<<2;
   for (j = 0; j < h; j++) {
-    for (i = 0; i < w; i++) {
+    uint16_t *src16= (uint16_t*)src;
+    uint16_t *dst16= (uint16_t*)dst;
+    for (i = 0; i < w2; i+=4) {
+      dst16[i+0] = lut16[src16[i+0]];
+      dst16[i+1] = lut16[src16[i+1]];
+      dst16[i+2] = lut16[src16[i+2]];
+      dst16[i+3] = lut16[src16[i+3]];
+    }
+    i <<= 1;
+#else
+  w2= (w>>3)<<3;
+  for (j = 0; j < h; j++) {
+    for (i = 0; i < w2; i+=8) {
+      dst[i+0] = lut[src[i+0]];
+      dst[i+1] = lut[src[i+1]];
+      dst[i+2] = lut[src[i+2]];
+      dst[i+3] = lut[src[i+3]];
+      dst[i+4] = lut[src[i+4]];
+      dst[i+5] = lut[src[i+5]];
+      dst[i+6] = lut[src[i+6]];
+      dst[i+7] = lut[src[i+7]];
+    }
+#endif
+    for (; i < w; i++) {
       dst[i] = lut[src[i]];
     }
 
@@ -282,6 +325,7 @@ void set_gamma (vf_eq2_t *eq2, double g)
   eq2->param[0].g = eq2->gamma * eq2->ggamma;
   eq2->param[1].g = sqrt (eq2->bgamma / eq2->ggamma);
   eq2->param[2].g = sqrt (eq2->rgamma / eq2->ggamma);
+  eq2->param[0].w = eq2->param[1].w = eq2->param[2].w = eq2->gamma_weight;
 
   eq2->param[0].lut_clean = 0;
   eq2->param[1].lut_clean = 0;
@@ -396,7 +440,7 @@ int open (vf_instance_t *vf, char *args)
 {
   unsigned i;
   vf_eq2_t *eq2;
-  double   par[7];
+  double   par[8];
 
   vf->control = control;
   vf->query_format = query_format;
@@ -423,6 +467,7 @@ int open (vf_instance_t *vf, char *args)
   eq2->saturation = 1.0;
 
   eq2->gamma = 1.0;
+  eq2->gamma_weight = 1.0;
   eq2->rgamma = 1.0;
   eq2->ggamma = 1.0;
   eq2->bgamma = 1.0;
@@ -435,11 +480,12 @@ int open (vf_instance_t *vf, char *args)
     par[4] = 1.0;
     par[5] = 1.0;
     par[6] = 1.0;
+    par[7] = 1.0;
 #ifdef USE_SETLOCALE
     setlocale (LC_NUMERIC, "C");
 #endif
-    sscanf (args, "%lf:%lf:%lf:%lf:%lf:%lf:%lf",
-      par, par + 1, par + 2, par + 3, par + 4, par + 5, par + 6
+    sscanf (args, "%lf:%lf:%lf:%lf:%lf:%lf:%lf:%lf",
+      par, par + 1, par + 2, par + 3, par + 4, par + 5, par + 6, par + 7
     );
 #ifdef USE_SETLOCALE
     setlocale (LC_NUMERIC, "");
@@ -448,6 +494,7 @@ int open (vf_instance_t *vf, char *args)
     eq2->rgamma = par[4];
     eq2->ggamma = par[5];
     eq2->bgamma = par[6];
+    eq2->gamma_weight = par[7];
 
     set_gamma (eq2, par[0]);
     set_contrast (eq2, par[1]);

@@ -63,6 +63,7 @@ extern int vo_gamma_saturation;
 extern int vo_gamma_contrast;
 extern int vo_gamma_hue;
 extern char *vo_geometry;
+extern int vo_ontop;
 
 extern int opt_screen_size_x;
 extern int opt_screen_size_y;
@@ -181,6 +182,8 @@ m_option_t mplayer_opts[]={
 	{"ao", &audio_driver_list, CONF_TYPE_STRING_LIST, 0, 0, 0, NULL},
 	{"fixed-vo", &fixed_vo, CONF_TYPE_FLAG,CONF_GLOBAL , 0, 1, NULL},
 	{"nofixed-vo", &fixed_vo, CONF_TYPE_FLAG,CONF_GLOBAL, 0, 0, NULL},
+	{"ontop", &vo_ontop, CONF_TYPE_FLAG, 0, 0, 1, NULL},
+	{"noontop", &vo_ontop, CONF_TYPE_FLAG, 0, 1, 0, NULL},
 
 	{"aop", ao_plugin_conf, CONF_TYPE_SUBCONFIG, 0, 0, 0, NULL},
 	{"dsp", "Use -ao oss:dsp_path!\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
@@ -230,9 +233,9 @@ m_option_t mplayer_opts[]={
 #endif
 
 #if defined(HAVE_FBDEV)||defined(HAVE_VESA) 
-       {"monitor_hfreq", &monitor_hfreq_str, CONF_TYPE_STRING, 0, 0, 0, NULL}, 
-       {"monitor_vfreq", &monitor_vfreq_str, CONF_TYPE_STRING, 0, 0, 0, NULL}, 
-       {"monitor_dotclock", &monitor_dotclock_str, CONF_TYPE_STRING, 0, 0, 0, NULL}, 
+       {"monitor-hfreq", &monitor_hfreq_str, CONF_TYPE_STRING, 0, 0, 0, NULL}, 
+       {"monitor-vfreq", &monitor_vfreq_str, CONF_TYPE_STRING, 0, 0, 0, NULL}, 
+       {"monitor-dotclock", &monitor_dotclock_str, CONF_TYPE_STRING, 0, 0, 0, NULL}, 
 #endif 
 
 #ifdef HAVE_FBDEV
@@ -272,6 +275,7 @@ m_option_t mplayer_opts[]={
 	// set bpp (x11+vm, dga, fbdev, vesa, svga?)
         {"bpp", &vo_dbpp, CONF_TYPE_INT, CONF_RANGE, 0, 32, NULL},
 	{"colorkey", &vo_colorkey, CONF_TYPE_INT, 0, 0, 0, NULL},
+	{"nocolorkey", &vo_colorkey, CONF_TYPE_FLAG, 0, 0, 0x1000000, NULL},
 	// double buffering:  (mga/xmga, xv, vidix, vesa, fbdev)
 	{"double", &vo_doublebuffering, CONF_TYPE_FLAG, 0, 0, 1, NULL},
 	{"nodouble", &vo_doublebuffering, CONF_TYPE_FLAG, 0, 1, 0, NULL},
@@ -288,8 +292,9 @@ m_option_t mplayer_opts[]={
 	{"wid", &WinID, CONF_TYPE_INT, 0, 0, 0, NULL},
 	{"rootwin", &WinID, CONF_TYPE_FLAG, 0, -1, 0, NULL},
 	{"icelayer", "Use -fstype layer:<number> instead. -icelayer was obsoleted\n", CONF_TYPE_PRINT, 0, 0, 0, NULL},
-	{"stop_xscreensaver", &stop_xscreensaver, CONF_TYPE_FLAG, 0, 0, 1, NULL},
-	{"nostop_xscreensaver", &stop_xscreensaver, CONF_TYPE_FLAG, 0, 1, 0, NULL},
+	{"stop-xscreensaver", &stop_xscreensaver, CONF_TYPE_FLAG, 0, 0, 1, NULL},
+	{"nostop-xscreensaver", &stop_xscreensaver, CONF_TYPE_FLAG, 0, 1, 0, NULL},
+	{"stop_xscreensaver", "Use -stop-xscreensaver instead, options with _ have been obsoleted.\n", CONF_TYPE_PRINT, 0, 0, 0, NULL},
 	{"keepaspect", &vo_x11_keepaspect, CONF_TYPE_FLAG, 0, 0, 1, NULL},
 	{"nokeepaspect", &vo_x11_keepaspect, CONF_TYPE_FLAG, 0, 1, 0, NULL},
 	{"fstype", &vo_fstype_list, CONF_TYPE_STRING_LIST, 0, 0, 0, NULL},
@@ -348,7 +353,6 @@ m_option_t mplayer_opts[]={
 	// these should be moved to -common, and suppot in mencoder too
 	{"vobsub", &vobsub_name, CONF_TYPE_STRING, 0, 0, 0, NULL},
 	{"vobsubid", &vobsub_id, CONF_TYPE_INT, CONF_RANGE, 0, 31, NULL},
-        {"forcedsubsonly", &forced_subs_only,CONF_TYPE_FLAG, 0, 0, 1, NULL},
 
 	{"sstep", &step_sec, CONF_TYPE_INT, CONF_MIN, 0, 0, NULL},
 

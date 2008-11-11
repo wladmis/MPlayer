@@ -578,10 +578,10 @@ static uint32_t vidix_get_image(mp_image_t *mpi)
 	mpi->width=mpi->stride[0]=dstrides.y;
 	if(mpi->flags&MP_IMGFLAG_PLANAR)
 	{
-	    mpi->planes[2]=vidix_mem+vidix_play.offsets[next_frame]+vidix_play.offset.v;
-	    mpi->stride[2]=dstrides.v;
-	    mpi->planes[1]=vidix_mem+vidix_play.offsets[next_frame]+vidix_play.offset.u;
-	    mpi->stride[1]=dstrides.u;
+	    mpi->planes[1]=vidix_mem+vidix_play.offsets[next_frame]+vidix_play.offset.v;
+	    mpi->stride[1]=dstrides.v >> mpi->chroma_x_shift;
+	    mpi->planes[2]=vidix_mem+vidix_play.offsets[next_frame]+vidix_play.offset.u;
+	    mpi->stride[2]=dstrides.u >> mpi->chroma_x_shift;
 	} else
 	    mpi->width/=mpi->bpp/8;
 	mpi->flags|=MP_IMGFLAG_DIRECT;
@@ -700,10 +700,18 @@ int vidix_preinit(const char *drvname,void *server)
 	  printf("vosub_vidix: You have wrong version of VIDIX library\n");
 	  return -1;
 	}
+#ifndef __MINGW32__
 	vidix_handler = vdlOpen(MPLAYER_LIBDIR "/mplayer/vidix/",
 				drvname ? drvname[0] == ':' ? &drvname[1] : drvname[0] ? drvname : NULL : NULL,
 				TYPE_OUTPUT,
 				verbose);
+#else
+	vidix_handler = vdlOpen(get_path("vidix/"),
+				drvname ? drvname[0] == ':' ? &drvname[1] : drvname[0] ? drvname : NULL : NULL,
+				TYPE_OUTPUT,
+				verbose);
+#endif              
+              
 	if(vidix_handler == NULL)
 	{
 		printf("vosub_vidix: Couldn't find working VIDIX driver\n");

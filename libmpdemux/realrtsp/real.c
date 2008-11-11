@@ -593,9 +593,11 @@ int real_get_rdt_chunk(rtsp_t *rtsp_session, char *buffer) {
   uint8_t header[8];
   rmff_pheader_t ph;
   int size;
-  int flags1;
+  int flags1, flags2;
   int unknown1;
   uint32_t ts;
+  static uint32_t prev_ts = -1;
+  static int prev_stream_number = -1;
 
   n=rtsp_read_data(rtsp_session, header, 8);
   if (n<8) return 0;
@@ -625,13 +627,15 @@ int real_get_rdt_chunk(rtsp_t *rtsp_session, char *buffer) {
     flags1=header[4];
     size-=9;
   }
+  flags2=header[7];
+  // header[5..6] == frame number in stream
   unknown1=(header[5]<<12)+(header[6]<<8)+(header[7]);
   n=rtsp_read_data(rtsp_session, header, 6);
   if (n<6) return 0;
   ts=BE_32(header);
   
 #ifdef LOG
-  printf("ts: %u size: %u, flags: 0x%02x, unknown values: %u 0x%02x 0x%02x\n", 
+  printf("ts: %u, size: %u, flags: 0x%02x, unknown values: 0x%06x 0x%02x 0x%02x\n", 
           ts, size, flags1, unknown1, header[4], header[5]);
 #endif
   size+=2;
@@ -641,12 +645,38 @@ int real_get_rdt_chunk(rtsp_t *rtsp_session, char *buffer) {
   ph.stream_number=(flags1>>1)&1;
   ph.timestamp=ts;
   ph.reserved=0;
-  ph.flags=0;      /* TODO: determine keyframe flag and insert here? */
+  if ((flags2&1) == 0 && (prev_ts != ts || prev_stream_number != ph.stream_number))
+  {
+    prev_ts = ts;
+    prev_stream_number = ph.stream_number;
+    ph.flags=2;
+  }
+  else
+    ph.flags=0;
   rmff_dump_pheader(&ph, buffer);
   size-=12;
   n=rtsp_read_data(rtsp_session, buffer+12, size);
   
   return n+12;
+}
+
+int convert_timestamp(char *str, int *sec, int *msec) {
+  int hh, mm, ss, ms = 0;
+  if (sscanf(str, "%d:%d:%d.%d", &hh, &mm, &ss, &ms) < 3) {
+    hh = 0;
+    if (sscanf(str, "%d:%d.%d", &mm, &ss, &ms) < 2) {
+      mm = 0;
+      if (sscanf(str, "%d.%d", &ss, &ms) < 1) {
+	ss = 0;
+	ms = 0;
+      }
+    }
+  }
+  if (sec)
+    *sec = hh * 3600 + mm * 60 + ss;
+  if (msec)
+    *msec = ms;
+  return 1;
 }
 
 rmff_header_t  *real_setup_and_get_header(rtsp_t *rtsp_session, uint32_t bandwidth) {
@@ -745,10 +775,24 @@ rmff_header_t  *real_setup_and_get_header(rtsp_t *rtsp_session, uint32_t bandwid
   rtsp_schedule_field(rtsp_session, subscribe);
   rtsp_request_setparameter(rtsp_session,NULL);
 
+  {
+    int s_ss = 0, s_ms = 0, e_ss = 0, e_ms = 0;
+    char *str;
+    if ((str = rtsp_get_param(rtsp_session, "start"))) {
+      convert_timestamp(str, &s_ss, &s_ms);
+      free(str);
+    }
+    if ((str = rtsp_get_param(rtsp_session, "end"))) {
+      convert_timestamp(str, &e_ss, &e_ms);
+      free(str);
+    }
+    str = buf + sprintf(buf, s_ms ? "%s%d.%d-" : "%s%d-", "Range: npt=", s_ss, s_ms);
+    if (e_ss || e_ms)
+      sprintf(str, e_ms ? "%d.%d" : "%d", e_ss, e_ms);
+  }
+  rtsp_schedule_field(rtsp_session, buf);
   /* and finally send a play request */
-  rtsp_schedule_field(rtsp_session, "Range: npt=0-");
   rtsp_request_play(rtsp_session,NULL);
 
   return h;
 }
-

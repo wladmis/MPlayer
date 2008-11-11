@@ -1,5 +1,159 @@
 mplayer (1.0)
 
+  pre3: "The Real Counter"
+
+    DOCS:
+    * all MPlayer and MEncoder options documented
+    * all FFmpeg/libavcodec options documented
+    * Support for building incomplete XML documentation
+    * Support for building all-in-one HTML docs
+    * HTML documentation obsoleted
+    * English, Polish and French HTML documentation removed
+    * Spanish documentation translation finished
+    * Macedonian runtime output translation added
+    * small improvements and bug fixes all over the place
+
+    Ports:
+    * fixed compilation of Matroska on MinGW32/Cygwin
+    * support for detecting non-Intel CPUs under Cygwin
+    * sub autoloading under Windows
+    * removed pthread dependency (compiles out of the box on a default NetBSD
+      install)
+    * more 64 bit fixes
+    * a lot of Mac OS X fixes
+    * prefer TOOLS/cpuinfo over linuxemu's /proc/cpuinfo under FreeBSD/x86
+    * Darwin XMMS libs supported
+    * support newer Darwin versions in Altivec detection code
+    * support for newer Apple GCCs
+
+    Codecs and demuxers:
+    * better support for (buggy) MEncoder created streams in libmpeg2
+    * MPEG-TS demuxer updates
+    * fixed the MPEG muxer
+    * fixed tons of bugs in MMS streaming
+    * user settable HTTP user-agent field
+    * improved (now working) seeking with support for growing files in
+      Realmedia format
+    * saveable and loadable index files (workaround for formats not
+      supporting files over 2GB)
+    * Ultimotion VfW decoder
+    * support for MMS streams with UTF urls
+    * big DVB demuxer update
+    * fixed MOV demuxer to always read ImageDesc (fixes ffsvq3 bugs)
+    * fixed an old bug in AVI/Waveformatex size calculation
+    * XviD API-4 (1.0 beta2) support
+    * improved FLAC-in-Ogg support
+    * Matroska: better AC3 detection
+    * Matroska: VobSubs, MP2, FLAC, AAC and HE-AAC support
+    * improved detection of Real RTSP through URL analysis
+    * fixed stereo 16 bit TWOS
+    * fixed MPNG when using BGR24 images
+    * control functions in OGG demuxer
+    * HTTP cookies support
+    * LML-M4 MPEG4 capture card raw stream format support
+    
+    Filters:
+    * some fixes in the delogo filter
+    * optimized eq2 filter
+    * weighted gamma support in the eq2 filter
+    * new filters: hue, spp, fil, yuvcsp
+    * alternative postprocessing filter (spp)
+    * big scale filter updates
+    * zrmjpeg filter, a kick-ass mjpeg encoder using FFmpeg/libavcodec
+    * filmdint: new inverse telecine filter, heavily MMX and 3DNow! optimized
+    
+    FFmpeg/libavcodec:
+    * Lagrange multipliers instead of qscale, encoding quality much improved
+    * fixed an old bug in MPlayer's support code
+    * support wider range of VOLs in H263
+    * direct rendering support in MJPEG
+    * massive MLib optimizations
+    * more VQA files supported
+    * Theora support
+    * Sunplus JPEG (SP5X) support
+    * H.263 GOB fixes
+    * massive cleanups
+    * reduced memory footprint (!)
+    * fixed decoding if aspect ratio changes
+    * MMX2 optimizations in HuffYUV
+    * lots of bugs squashed in HuffYUV
+    * long standing decoding errors after 'first frame is not keyframe' fixed
+    * CRI ADX support
+    * XA ADPCM support
+    * fixed files with odd dimensions on PPC
+    * optimized MPEG2 bitstream parsing
+    * better interlacing framework
+    * support for IBM's XLC compiler
+    * support for SAR (sample aspect ratio)
+    * floating point AAN DCT
+    * dynamically alloc big data fields (lower memory usage in most cases!)
+    * fixed stereo IMA-ADPCM encoding
+    * inline vs always_inline - some speedups
+    * MMX2 optimized FDCT
+    * accurate 2-4-8 DCT
+    * much faster DV encoding (it beats libdv)
+    * support Cinepak files with funky (not divisible by 4) resolutions
+    * Altivec optimized FDCT
+    * XvMC speedups
+    * initial ZyGoVideo decoding
+    * RGB support in FFV1
+    * new Palette API, all codecs updated
+    * Noise reduction of DCT coefficients
+    * "av_log" logging API
+    * support for buffer hints from codecs
+    * BGR24, RGB555 and PAL8 image formats
+    * 8BPS, MS RLE, MS Video1, QT RPZA, QT SMC, FLIC and TrueMotion1 decoders
+    * 16x8 MV visualisation support
+    * H.263 overlapped block motion compensation (OBMC), 4MV support
+    * H.263 alternative inter vlc support
+    * H.263 deblocking filter (MMX optimized)
+    * H.263 modified quantization support
+    * H.263 slice structured mode support
+    * Real RV20 decoder (with B-frame support)
+    
+    Drivers:
+    * VIDIX equalizer support in fbdev, svga and vesa
+    * VIDIX colorkeying support in fbdev, svga and vesa
+    * obsoleted option: -fb
+    * new SiS 650/651/740/etc VIDIX driver
+    * safer vo_directx direct rendering
+    * massive nvidia_vid updates
+    * gl2 updates
+    * ggi now supports non-directbuffer rendering and slices
+    * tdfxfb fixed on gcc 3.x
+    * dfbmga updated, G200 support
+    * colorkeying can be disabled
+    * Radeon 9800 (R350) support in VIDIX
+    * proper fix for buffer size workarounds in vo_zr
+    * new vo_zr2 driver, which uses the advantages of the filter layer
+    * fixed vesa when used together with pthread
+    * runtime stay-on-top functionality (in almost all output drivers)
+    * ALSA 1.x support
+    
+    SWScaler:
+    * updated MLib (Sun VIS) support
+    * more accurate filters (rounding fixes)
+    * MMX optimized UYVY output
+    * eliminated chroma scaling bugs
+
+    Others:
+    * fixed aspect and geometry
+    * fixed compilation when libavcodec is missing (although it's a bad idea)
+    * MTRR detection added to TOOLS/cpuinfo
+    * FAAD detection in configure fixed/improved
+    * improved FLAC configure detection
+    * GUI file selector updated for newer formats
+    * Fontconfig support
+    * proper VobSub seeking support
+    * removed oldskool libcss support (nobody uses it and it has drawbacks)
+
+    MEncoder:
+    * FFmpeg/libavcodec audio encoding support
+    * exit if there's no video stream (avoids unexpected segfaults)
+    * huge bug fixed (missing InitTimer call), screwed up timers in some cases
+    * rawyuv (i420) 'encoder'
+
+
   pre2:
 
     Security:
@@ -144,11 +298,12 @@ mplayer (1.0)
     * MPEG-TS (Transport Stream) and TIVO demuxers
     * DVB (Digital Video Broadcasting) input driver
     * hwac3: DTS passthru support
-    * new filters: down3dright, detc, telecine, tfields, ilpack, ivtc, dsize, tinterlace,
-      pullup (mmx optimized!), framestep, tile
+    * new filters: down3dright, detc, telecine, tfields, ilpack, ivtc, dsize,
+      tinterlace, pullup (MMX optimized!), framestep, tile
     * vf layer: slices support (crop, expand, swscale only)
     * vf scale aspect fixes
-    * swscaler: cleanup & API change, yv12 -> yuy2 in alpha asm, -fPIC compileable
+    * swscaler: cleanup & API change, yv12 -> yuy2 in alpha asm,
+      -fPIC compileable
     * swscaler: brightness/cont/sat. and different YUV matrices support
     * NUV encoding
     * SGI image files decoding (-mf)
@@ -163,7 +318,7 @@ mplayer (1.0)
     * mp3lib: moved the assembly sources into gcc inline assembly (c)
     * mp3lib: sync with mpg123 0.59s-pre
     * mp3lib: final layer-1 support
-    * mp3lib: skip trashed first mp3 frame, fixes lot of buggy/misdetected files
+    * mp3lib: skip trashed first mp3 frame, fixes many buggy/misdetected files
     * imported a working FAAD version
     * 8BPS (Planar RGB) support
     * working DVD (libmpdvdkit) support for Cygwin/MinGW
@@ -708,14 +863,14 @@ mplayer (0.90)
     * lot of other fixes
 
   pre3:
-    * 3DNow optimization of AC3 4ch downmix fixed, optims re-enabled
+    * 3DNow! optimization of AC3 4ch downmix fixed, optims re-enabled
     * DGA error/fail after 1 second of playing fixed
     * big A-V desync for some AVI files fixed
     * image distortions when seeking in some MPEG files fixed
     * libmpdvdkit + gcc 3.x issue solved (our CFLAGS triggered a gcc3 bug...)
     * GUI aspect ratio and fullscreen switch fixes, cleanups
     * low FPS .wmv playback fixed
-    * MACOS-X (Darwin) port?
+    * Mac OS X (Darwin) port?
     * buggy v4l audio grabbing disabled, we cannot fix, but patches are welcomed!
     * various mjpeg improvements in libavcodec
 
@@ -1155,7 +1310,7 @@ mplayer v0.11-pre2: Jan  4  2001
   - demuxer.c: error message printed if A or V chunk buffer is full
     'mplayer test.avi -aid -2' still not works without option '-nosound'
   - adding new config.h option to set default MP3 audio codec (mpg123/l3codeca)
-    ./configure selects mp3lib only if you have 3Dnow    [idea: Gabucino]
+    ./configure selects mp3lib only if you have 3DNow!   [idea: Gabucino]
   - automatic fallback to mp3lib/mpg123 if l3codeca.acm can't be loaded/inited
 
 mplayer v0.11-pre1:

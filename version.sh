@@ -1,2 +1,2 @@
 #!/bin/sh
-echo "#define VERSION \"1.0pre2-$1\"" > version.h
+echo "#define VERSION \"1.0pre3-$1\"" > version.h

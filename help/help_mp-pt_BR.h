@@ -18,10 +18,6 @@ static char help_text[]=
 " vcd://<numtrilha> reproduz trilha de VCD (Video CD) do dispositivo em vez de um\n"
 "                 arquivo\n"
 #endif
-#ifdef HAVE_LIBCSS
-" -dvdauth <dev>  especifica o dispositivo de DVD para autenticação (para discos\n"
-"                 encriptados)\n"
-#endif
 #ifdef USE_DVDREAD
 " dvd://<numtítilo> reproduz título de DVD do dispositivo em vez de um arquivo\n"
 " -alang/-slang   seleciona o idioma/legenda do DVD (pelo código país de duas\n"
@@ -52,7 +48,7 @@ static char help_text[]=
 " o               alterna modo OSD: nenhum / busca / busca+cronômetro\n"
 " * ou /          aumenta ou diminui o volume pcm\n"
 " z ou x          ajusta o atraso da legenda de +/- 0.1 segundo\n"
-" r ou t          posição da legenda para cima/baixo, veja também -vop expand\n"
+" r ou t          posição da legenda para cima/baixo, veja também -vf expand\n"
 "\n"
 "* VEJA A PÁGINA DO MANUAL PARA DETALHES, FUTURAS (AVANÇADAS) OPÇÕES E TECLAS *\n"
 "\n";
@@ -113,8 +109,8 @@ static char help_text[]=
 "  - Tente -cache 8192.\n"\
 "- Você está usando -cache para reproduzir um arquivo AVI não-entrelaçado?\n"\
 "  - Tente -nocache.\n"\
-"Leia DOCS/en/video.html e DOCS/en/sound.html para dicas de ajuste/velocidade.\n"\
-"Se nenhum destes ajudar você, leia DOCS/en/bugreports.html.\n\n"
+"Leia DOCS/HTML/en/devices.html para dicas de ajuste/velocidade.\n"\
+"Se nenhum destes ajudar você, leia DOCS/HTML/en/bugreports.html.\n\n"
 
 #define MSGTR_NoGui "MPlayer foi compilado SEM suporte a GUI (interface gráfica com o usuário)!\n"
 #define MSGTR_GuiNeedsX "MPlayer GUI (interface gráfica com o usuário) requer X11!\n"
@@ -140,13 +136,13 @@ static char help_text[]=
 #define MSGTR_AODescription_AOAuthor "AO: Descrição: %s\nAO: Autor: %s\n"
 #define MSGTR_AOComment "AO: Comentário: %s\n"
 #define MSGTR_Video_NoVideo "Vídeo: sem vídeo\n"
-#define MSGTR_NotInitializeVOPorVO "\nFATAL: Impossível inicializar os filtros de vídeo (-vop) ou a saída de vídeo (-vo)!\n"
+#define MSGTR_NotInitializeVOPorVO "\nFATAL: Impossível inicializar os filtros de vídeo (-vf) ou a saída de vídeo (-vo)!\n"
 #define MSGTR_Paused "\n================= PAUSADO =================\r"
 #define MSGTR_PlaylistLoadUnable "\nIncapaz de carregar a lista de reprodução %s.\n"
 #define MSGTR_Exit_SIGILL_RTCpuSel \
 "- MPlayer falhou por uma 'Instrução Ilegal'.\n"\
 "  Pode ser um erro no nosso novo código de detecção de CPU em tempo real...\n"\
-"  Por favor leia DOCS/en/bugreports.html.\n"
+"  Por favor leia DOCS/HTML/en/bugreports.html.\n"
 #define MSGTR_Exit_SIGILL \
 "- MPlayer falhou por uma 'Instrução Ilegal'.\n"\
 "  Isso frequentemente acontece quando você o exucuta em um CPU diferente do que\n"\
@@ -154,12 +150,12 @@ static char help_text[]=
 #define MSGTR_Exit_SIGSEGV_SIGFPE \
 "- MPlayer falhou por mau uso do CPU/FPU/RAM.\n"\
 "  Recompile o MPlayer com --enable-debug e faça um 'gdb backtrace' e\n"\
-"  'disassembly'. Para detalhes, veja DOCS/en/bugreports.html#crash\n"
+"  'disassembly'. Para detalhes, veja DOCS/HTML/en/bugreports_what.html#bugreports_crash\n"
 #define MSGTR_Exit_SIGCRASH \
 "- MPlayer falhou. Isso não deveria acontecer.\n"\
 "  Pode ser um erro no código do MPlayer _ou_ em seus drivers _ou_ em sua versão\n"\
 "  do gcc. Se você acha que é culpa do MPlayer, por favor leia\n"\
-"  DOCS/en/bugreports.html e siga as instruções. Nós não podemos e não vamos ajudar\n"\
+"  DOCS/HTML/en/bugreports.html e siga as instruções. Nós não podemos e não vamos ajudar\n"\
 "  a não ser que você proveja esta informação quando reportar um possível erro.\n"
 
 // mencoder.c:
@@ -289,9 +285,6 @@ static char help_text[]=
 #define MSGTR_CantSeekRawAVI "Impossível buscar em fluxos de .AVI brutos! (índice requerido, tente com a opção -idx!)  \n"
 #define MSGTR_CantSeekFile "Impossível buscar neste arquivo!  \n"
 
-#define MSGTR_EncryptedVOB "Arquivo VOB encriptado (compilado sem suporte a libcss)! Leia DOCS/en/cd-dvd.html.\n"
-#define MSGTR_EncryptedVOBauth "Fluxo encriptado mas você não requisitou autenticação!!\n"
-
 #define MSGTR_MOVcomprhdr "MOV: Cabeçalhos comprimidos não suportados (ainda)!\n"
 #define MSGTR_MOVvariableFourCC "MOV: Advertência! Variável FOURCC detectada!?\n"
 #define MSGTR_MOVtooManyTrk "MOV: Advertência! Trilhas demais!"
@@ -308,8 +301,6 @@ static char help_text[]=
 #define MSGTR_DemuxerInfoAlreadyPresent "Informação %s do demuxer já presente!\n"
 #define MSGTR_ClipInfo "Informações do clip:\n"
 
-#define MSGTR_LeaveTelecineMode "\ndemux_mpg: Sequência progressiva detectada, deixando modo 3:2 TELECINE\n"
-#define MSGTR_EnterTelecineMode "\ndemux_mpg: modo 3:2 TELECINE detectado, habilitando telecine fx inverso. Quadros por segundo mudado para  %5.3f!  \n"
 
 // dec_video.c & dec_audio.c:
 #define MSGTR_CantOpenCodec "Impossível abrir codec\n"
@@ -360,7 +351,7 @@ static char help_text[]=
 // vd.c
 #define MSGTR_CodecDidNotSet "VDec: codec não configurou sh->disp_w e sh->disp_h, tentando solução alternativa!\n"
 #define MSGTR_VoConfigRequest "VDec: configuração vo pedida - %d x %d (preferido csp: %s)\n"
-#define MSGTR_CouldNotFindColorspace "Impossível encotrar \"colorspace\" similar - retentando com -vop scale...\n"
+#define MSGTR_CouldNotFindColorspace "Impossível encotrar \"colorspace\" similar - retentando com -vf scale...\n"
 #define MSGTR_MovieAspectIsSet "Aspecto do filme é  %.2f:1 - pré-redimensionando para corrigir o aspecto do filme.\n"
 #define MSGTR_MovieAspectUndefined "Aspecto do filme é indefinido - nenhum pré-redimensionamento aplicado.\n"
 
@@ -370,15 +361,15 @@ static char help_text[]=
 
 // --- labels ---
 #define MSGTR_About "Sobre"
-#define MSGTR_FileSelect "Selecionar arquivo ..."
-#define MSGTR_SubtitleSelect "Selecionar legenda ..."
-#define MSGTR_OtherSelect "Selecionar ..."
-#define MSGTR_AudioFileSelect "Selecionar canal de audio externo ..."
-#define MSGTR_FontSelect "Selecionar fonte ..."
+#define MSGTR_FileSelect "Selecionar arquivo..."
+#define MSGTR_SubtitleSelect "Selecionar legenda..."
+#define MSGTR_OtherSelect "Selecionar..."
+#define MSGTR_AudioFileSelect "Selecionar canal de audio externo..."
+#define MSGTR_FontSelect "Selecionar fonte..."
 #define MSGTR_PlayList "Lista de reprodução"
 #define MSGTR_Equalizer "Equalizador"
 #define MSGTR_SkinBrowser "Skins"
-#define MSGTR_Network "Rede ..."
+#define MSGTR_Network "Rede..."
 #define MSGTR_Preferences "Preferências"
 #define MSGTR_OSSPreferences "Configuração do driver OSS"
 #define MSGTR_SDLPreferences "Configuração do driver SDL"
@@ -406,39 +397,39 @@ static char help_text[]=
 
 // --- skin loader error messages
 #define MSGTR_SKIN_ERRORMESSAGE "[skin] erro no arquivo de configuração do skin na linha: %s"
-#define MSGTR_SKIN_WARNING1 "[skin] aviso no arquivo de configuração do skin na linha %d: widget encontrado mas antes de \"section\" não encontrado ( %s )"
+#define MSGTR_SKIN_WARNING1 "[skin] aviso no arquivo de configuração do skin na linha %d: widget encontrado mas antes de \"section\" não encontrado (%s)"
 #define MSGTR_SKIN_WARNING2 "[skin] aviso no arquivo de configuração do skin na linha %d: widget encontrado mas antes de \"subsection\" não encontrtado (%s)"
 #define MSGTR_SKIN_WARNING3 "[skin] aviso no arquivo de configuração do skin na linha %d: esta sub-seção não é suportada por este widget (%s)"
-#define MSGTR_SKIN_BITMAP_16bit  "16 bit ou menor profundidade de cores não suportado ( %s ).\n"
-#define MSGTR_SKIN_BITMAP_FileNotFound  "arquivo não encontrado ( %s )\n"
-#define MSGTR_SKIN_BITMAP_BMPReadError "erro na leitura do bmp ( %s )\n"
-#define MSGTR_SKIN_BITMAP_TGAReadError "erro na leitura do tga ( %s )\n"
-#define MSGTR_SKIN_BITMAP_PNGReadError "erro na leitura do png ( %s )\n"
-#define MSGTR_SKIN_BITMAP_RLENotSupported "tga empacotado RLE não suportado ( %s )\n"
-#define MSGTR_SKIN_BITMAP_UnknownFileType "tipo de arquivo desconhecido ( %s )\n"
-#define MSGTR_SKIN_BITMAP_ConvertError "erro na conversão 24 bit para 32 bit ( %s )\n"
+#define MSGTR_SKIN_BITMAP_16bit  "16 bit ou menor profundidade de cores não suportado (%s).\n"
+#define MSGTR_SKIN_BITMAP_FileNotFound  "arquivo não encontrado (%s)\n"
+#define MSGTR_SKIN_BITMAP_BMPReadError "erro na leitura do BMP (%s)\n"
+#define MSGTR_SKIN_BITMAP_TGAReadError "erro na leitura do TGA (%s)\n"
+#define MSGTR_SKIN_BITMAP_PNGReadError "erro na leitura do PNG (%s)\n"
+#define MSGTR_SKIN_BITMAP_RLENotSupported "TGA empacotado RLE não suportado (%s)\n"
+#define MSGTR_SKIN_BITMAP_UnknownFileType "tipo de arquivo desconhecido (%s)\n"
+#define MSGTR_SKIN_BITMAP_ConvertError "erro na conversão 24 bit para 32 bit (%s)\n"
 #define MSGTR_SKIN_BITMAP_UnknownMessage "mensagem desconhecida: %s\n"
 #define MSGTR_SKIN_FONT_NotEnoughtMemory "memória insuficiente\n"
 #define MSGTR_SKIN_FONT_TooManyFontsDeclared "muitas fontes declaradas\n"
 #define MSGTR_SKIN_FONT_FontFileNotFound "arquivo da fonte não encontrado\n"
 #define MSGTR_SKIN_FONT_FontImageNotFound "arquivo de imagem da fonte não encontrado\n"
-#define MSGTR_SKIN_FONT_NonExistentFontID "indentificador de fonte não existente ( %s )\n"
-#define MSGTR_SKIN_UnknownParameter "parâmetro desconhecido ( %s )\n"
+#define MSGTR_SKIN_FONT_NonExistentFontID "indentificador de fonte não existente (%s)\n"
+#define MSGTR_SKIN_UnknownParameter "parâmetro desconhecido (%s)\n"
 #define MSGTR_SKINBROWSER_NotEnoughMemory "[skinbrowser] memória insuficiente.\n"
-#define MSGTR_SKIN_SKINCFG_SkinNotFound "Skin não encontrado ( %s ).\n"
-#define MSGTR_SKIN_SKINCFG_SkinCfgReadError "Erro na leitura do arquivo de configuração do skin ( %s ).\n"
+#define MSGTR_SKIN_SKINCFG_SkinNotFound "Skin não encontrado (%s).\n"
+#define MSGTR_SKIN_SKINCFG_SkinCfgReadError "Erro na leitura do arquivo de configuração do skin (%s).\n"
 #define MSGTR_SKIN_LABEL "Skins:"
 
 // --- gtk menus
 #define MSGTR_MENU_AboutMPlayer "Sobre o MPlayer"
-#define MSGTR_MENU_Open "Abrir ..."
-#define MSGTR_MENU_PlayFile "Reproduzir arquivo ..."
-#define MSGTR_MENU_PlayVCD "Reproduzir VCD ..."
-#define MSGTR_MENU_PlayDVD "Reproduzir DVD ..."
-#define MSGTR_MENU_PlayURL "Reproduzir URL ..."
-#define MSGTR_MENU_LoadSubtitle "Carregar legenda ..."
-#define MSGTR_MENU_DropSubtitle "Descartar legenda ..."
-#define MSGTR_MENU_LoadExternAudioFile "Carregar arquivo de audio externo ..."
+#define MSGTR_MENU_Open "Abrir..."
+#define MSGTR_MENU_PlayFile "Reproduzir arquivo..."
+#define MSGTR_MENU_PlayVCD "Reproduzir VCD..."
+#define MSGTR_MENU_PlayDVD "Reproduzir DVD..."
+#define MSGTR_MENU_PlayURL "Reproduzir URL..."
+#define MSGTR_MENU_LoadSubtitle "Carregar legenda..."
+#define MSGTR_MENU_DropSubtitle "Descartar legenda..."
+#define MSGTR_MENU_LoadExternAudioFile "Carregar arquivo de audio externo..."
 #define MSGTR_MENU_Playing "Reprodução"
 #define MSGTR_MENU_Play "Reproduzir"
 #define MSGTR_MENU_Pause "Pausar"
@@ -451,7 +442,7 @@ static char help_text[]=
 #define MSGTR_MENU_FullScreen "Tela cheia"
 #define MSGTR_MENU_DVD "DVD"
 #define MSGTR_MENU_VCD "VCD"
-#define MSGTR_MENU_PlayDisc "Abrir disco ..."
+#define MSGTR_MENU_PlayDisc "Abrir disco..."
 #define MSGTR_MENU_ShowDVDMenu "Mostrar menu do DVD"
 #define MSGTR_MENU_Titles "Títulos"
 #define MSGTR_MENU_Title "Título %2d"
@@ -463,7 +454,7 @@ static char help_text[]=
 #define MSGTR_MENU_PlayList "Lista de reprodução"
 #define MSGTR_MENU_SkinBrowser "Skins"
 #define MSGTR_MENU_Preferences "Preferências"
-#define MSGTR_MENU_Exit "Sair ..."
+#define MSGTR_MENU_Exit "Sair..."
 #define MSGTR_MENU_Mute "Mudo"
 #define MSGTR_MENU_Original "Original"
 #define MSGTR_MENU_AspectRatio "Aspecto"
@@ -551,7 +542,7 @@ static char help_text[]=
 #define MSGTR_PREFERENCES_SDL_Driver "Driver:"
 #define MSGTR_PREFERENCES_Message "Por favor lembre que você precisa reiniciar a reprodução para algumas opções fazerem efeito!"
 #define MSGTR_PREFERENCES_DXR3_VENC "Codificador de video:"
-#define MSGTR_PREFERENCES_DXR3_LAVC "Usar LAVC (ffmpeg)"
+#define MSGTR_PREFERENCES_DXR3_LAVC "Usar LAVC (FFmpeg)"
 #define MSGTR_PREFERENCES_DXR3_FAME "Usar FAME"
 #define MSGTR_PREFERENCES_FontEncoding1 "Unicode"
 #define MSGTR_PREFERENCES_FontEncoding2 "Línguas Européias Ocidentais (ISO-8859-1)"

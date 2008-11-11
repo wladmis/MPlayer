@@ -220,7 +220,7 @@ static void needVideoFrameRate(demuxer_t* demuxer,
   // non-zero "pts" timestamps:
   unsigned char* packetData; unsigned packetDataLen;
   float lastPTS = 0.0, curPTS;
-  unsigned const maxNumFramesToWaitFor = 100;
+  unsigned const maxNumFramesToWaitFor = 300;
   for (unsigned i = 0; i < maxNumFramesToWaitFor; ++i) {
     if (!awaitRTPPacket(demuxer, d_video, packetData, packetDataLen, curPTS)) {
       break;

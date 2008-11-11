@@ -134,6 +134,7 @@ extern void demux_close_pva(demuxer_t* demuxer);
 extern void demux_close_smjpeg(demuxer_t* demuxer);
 extern void demux_close_xmms(demuxer_t* demuxer);
 extern void demux_close_gif(demuxer_t* demuxer);
+extern void demux_close_lmlm4(demuxer_t* demuxer);
 extern void demux_close_ts(demuxer_t* demuxer);
 extern void demux_close_mkv(demuxer_t* demuxer);
 extern void demux_close_ra(demuxer_t* demuxer);
@@ -215,6 +216,8 @@ void free_demuxer(demuxer_t *demuxer){
     case DEMUXER_TYPE_GIF:
       demux_close_gif(demuxer); break;
 #endif
+    case DEMUXER_TYPE_LMLM4:
+      demux_close_lmlm4(demuxer); break;
     case DEMUXER_TYPE_MPEG_TS:
     case DEMUXER_TYPE_MPEG4_IN_TS:
       demux_close_ts(demuxer); break;
@@ -308,6 +311,7 @@ extern int demux_ogg_fill_buffer(demuxer_t *d);
 extern int demux_rawaudio_fill_buffer(demuxer_t* demuxer, demux_stream_t *ds);
 extern int demux_rawvideo_fill_buffer(demuxer_t* demuxer, demux_stream_t *ds);
 extern int demux_smjpeg_fill_buffer(demuxer_t* demux);
+extern int demux_lmlm4_fill_buffer(demuxer_t* demux);
 extern int demux_mkv_fill_buffer(demuxer_t *d);
 
 int demux_fill_buffer(demuxer_t *demux,demux_stream_t *ds){
@@ -360,6 +364,7 @@ int demux_fill_buffer(demuxer_t *demux,demux_stream_t *ds){
 #ifdef HAVE_GIF
     case DEMUXER_TYPE_GIF: return demux_gif_fill_buffer(demux);
 #endif
+    case DEMUXER_TYPE_LMLM4: return demux_lmlm4_fill_buffer(demux);
     case DEMUXER_TYPE_MPEG_TS: 
     case DEMUXER_TYPE_MPEG4_IN_TS: 
 	return demux_ts_fill_buffer(demux);
@@ -597,11 +602,16 @@ extern int bmp_check_file(demuxer_t *demuxer);
 extern int demux_xmms_open(demuxer_t* demuxer);
 extern int gif_check_file(demuxer_t *demuxer);
 extern int demux_open_gif(demuxer_t* demuxer);
+extern int lmlm4_check_file(demuxer_t* demuxer);
+extern int demux_open_lmlm4(demuxer_t* demuxer);
 extern int ts_check_file(demuxer_t * demuxer);
 extern int demux_open_ts(demuxer_t *demuxer);
 extern int demux_open_mkv(demuxer_t *demuxer);
 extern int ra_check_file(demuxer_t *demuxer);
 extern int demux_open_ra(demuxer_t* demuxer);
+#ifdef HAVE_MATROSKA
+extern int demux_mkv_open(demuxer_t *demuxer);
+#endif
 
 extern demuxer_t* init_avi_with_ogg(demuxer_t* demuxer);
 
@@ -892,6 +902,17 @@ if(file_format == DEMUXER_TYPE_UNKNOWN || file_format==DEMUXER_TYPE_MPEG_TS){
 		demuxer=NULL;
 	}
 }
+//=============== Try to open as LMLM4 file: =================
+if(file_format==DEMUXER_TYPE_UNKNOWN || file_format==DEMUXER_TYPE_LMLM4){
+  demuxer=new_demuxer(stream,DEMUXER_TYPE_LMLM4,audio_id,video_id,dvdsub_id);
+  if(lmlm4_check_file(demuxer)){
+      mp_msg(MSGT_DEMUXER,MSGL_INFO,MSGTR_Detected_XXX_FileFormat,"RAW LMLM4");
+      file_format=DEMUXER_TYPE_LMLM4;
+  } else {
+      free_demuxer(demuxer);
+      demuxer = NULL;
+  }
+}
 //=============== Try to open as MPEG-PS file: =================
 if(file_format==DEMUXER_TYPE_UNKNOWN || file_format==DEMUXER_TYPE_MPEG_PS){
  int pes=1;
@@ -1164,6 +1185,24 @@ switch(file_format){
   demux_open_y4m(demuxer);
   break;
  }
+ case DEMUXER_TYPE_LMLM4: {
+  demux_open_lmlm4(demuxer);
+  if(!ds_fill_buffer(d_video)){
+    mp_msg(MSGT_DEMUXER,MSGL_INFO,"LMLM4: " MSGTR_MissingVideoStream);
+    sh_video=NULL;
+  } else {
+    sh_video=d_video->sh;sh_video->ds=d_video;
+  }
+  if(audio_id!=-2) {
+   if(!ds_fill_buffer(d_audio)){
+    mp_msg(MSGT_DEMUXER,MSGL_INFO,"LMLM4: " MSGTR_MissingAudioStream);
+    sh_audio=NULL;
+   } else {
+    sh_audio=d_audio->sh;sh_audio->ds=d_audio;
+   }
+  }
+  break;
+ }
  case DEMUXER_TYPE_REAL: {
   demux_open_real(demuxer);
   break;
@@ -1183,7 +1222,7 @@ switch(file_format){
     } else {
       sh_video=d_video->sh;sh_video->ds=d_video;
       sh_video->fps=1000.0f; sh_video->frametime=0.001f; // 1ms
-      mp_msg(MSGT_DEMUXER,MSGL_INFO,"VIDEO:  [%.4s]  %ldx%ld  %dbpp\n",
+      mp_msg(MSGT_DEMUXER,MSGL_INFO,"VIDEO:  [%.4s]  %dx%d  %dbpp\n",
         (char *)&sh_video->bih->biCompression,
         sh_video->bih->biWidth,
         sh_video->bih->biHeight,
@@ -1532,6 +1571,8 @@ extern int demux_avi_control(demuxer_t *demuxer, int cmd, void *arg);
 extern int demux_xmms_control(demuxer_t *demuxer, int cmd, void *arg);
 extern int demux_mkv_control(demuxer_t *demuxer, int cmd, void *arg);
 extern int demux_audio_control(demuxer_t *demuxer, int cmd, void *arg);
+extern int demux_ogg_control(demuxer_t *demuxer, int cmd, void *arg);
+extern int demux_real_control(demuxer_t *demuxer, int cmd, void *arg);
 
 int demux_control(demuxer_t *demuxer, int cmd, void *arg) {
     switch(demuxer->type) {
@@ -1551,6 +1592,10 @@ int demux_control(demuxer_t *demuxer, int cmd, void *arg) {
 	    return demux_avi_control(demuxer,cmd,arg);
 	case DEMUXER_TYPE_AUDIO:
 	    return demux_audio_control(demuxer,cmd,arg);
+#ifdef HAVE_OGGVORBIS
+	case DEMUXER_TYPE_OGG:
+	    return demux_ogg_control(demuxer,cmd,arg);
+#endif
 #ifdef HAVE_XMMS
 	case DEMUXER_TYPE_XMMS:
 	    return demux_xmms_control(demuxer,cmd,arg);
@@ -1559,6 +1604,9 @@ int demux_control(demuxer_t *demuxer, int cmd, void *arg) {
         case DEMUXER_TYPE_MATROSKA:
 	    return demux_mkv_control(demuxer,cmd,arg);
 #endif
+	case DEMUXER_TYPE_REAL:
+	    return demux_real_control(demuxer, cmd, arg);
+
 	default:
 	    return DEMUXER_CTRL_NOTIMPL;
     }

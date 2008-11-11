@@ -1,6 +1,7 @@
-// Sync'ed on 2003-07-26 with help_mp-en.h 1.105
+// Sync'ed on 2003-07-26 with help_mp-en.h 1.110
 // Translated by Kenneth Chan <chantk@ctk.sytes.net>
 // With reference from help_mp-zh.h
+// Synced by Lu Ran <hephooey@fastmail.fm>
 
 // ========================= MPlayer help ===========================
 
@@ -13,9 +14,6 @@ static char help_text[]=
 " -ao <drv[:dev]>  選擇音效輸出驅動程式及裝置 (用 '-ao help' 查看列表)\n"
 #ifdef HAVE_VCD
 " vcd://<trackno>   從裝置而並非一般檔案播放 VCD (Video CD) track\n"
-#endif
-#ifdef HAVE_LIBCSS
-" -dvdauth <dev>   指定要授權的 DVD 裝置 (用於加密光碟)\n"
 #endif
 #ifdef USE_DVDREAD
 " dvd://<titleno>   從裝置而並非一般檔案播放 DVD title\n"
@@ -43,7 +41,7 @@ static char help_text[]=
 " o                循環 OSD 模式:  無顯示 / 搜尋桿 / 搜尋桿+計時器\n"
 " * or /           提高或降低 PCM 音量\n"
 " z or x           調整字幕延遲 +/- 0.1 秒\n"
-" r or t           上/下調整字幕位置, 請見 -vop expand\n"
+" r or t           上/下調整字幕位置, 請見 -vf expand\n"
 "\n"
 " * * * 詳細內容, 進一步(進階)選項及控制鍵請見 MAN PAGE * * *\n"
 "\n";
@@ -64,7 +62,7 @@ static char help_text[]=
 #define MSGTR_InvalidVOdriver "無效的視訊輸出驅動程式名稱: %s\n用 '-vo help' 來取得可用的視訊驅動程式列表\n"
 #define MSGTR_InvalidAOdriver "無效的音效輸出驅動程式名稱: %s\n用 '-ao help' 來取得可用的音效驅動程式列表\n"
 #define MSGTR_CopyCodecsConf "(把 etc/codecs.conf 從 MPlayer 原程式碼中複製/建立連接至 ~/.mplayer/codecs.conf)\n"
-#define MSGTR_BuiltinCodecsConf "使用內建預設的 codecs.conf\n"
+#define MSGTR_BuiltinCodecsConf "使用內建預設的 codecs.conf。\n"
 #define MSGTR_CantLoadFont "無法載入字型: %s\n"
 #define MSGTR_CantLoadSub "無法載入字幕: %s\n"
 #define MSGTR_ErrorDVDkey "DVD key 處理錯誤。\n"
@@ -74,11 +72,12 @@ static char help_text[]=
 #define MSGTR_CantOpenDumpfile "無法開啟 dump 檔。\n"
 #define MSGTR_CoreDumped "Core dumped ;)\n"
 #define MSGTR_FPSnotspecified "FPS 並未在標頭內指定或是無效，請使用 -fps 選項。\n"
-#define MSGTR_TryForceAudioFmtStr "正嘗試強行指定音效解碼驅動程式組群 %s ...\n"
+#define MSGTR_TryForceAudioFmtStr "正嘗試強行指定音效解碼驅動程式組群 %s...\n"
 #define MSGTR_CantFindAfmtFallback "無法找到指定之驅動程式組群的音效解碼器，回復到其他驅動程式。\n"
 #define MSGTR_CantFindAudioCodec "無法為音效格式 0x%X 找到解碼器。\n"
+#define MSGTR_RTFMCodecs "參閱DOCS/zh/codecs.html﹗\n"
 #define MSGTR_CouldntInitAudioCodec "無法為音效解碼器初始化 -> 沒有聲音。\n"
-#define MSGTR_TryForceVideoFmtStr "正嘗試強行指定視訊解碼驅動程式組群 %s ...\n"
+#define MSGTR_TryForceVideoFmtStr "正嘗試強行指定視訊解碼驅動程式組群 %s...\n"
 #define MSGTR_CantFindVideoCodec "無法為所選擇的 -vo 與視訊格式 0x%X 找到適合的解碼器。\n"
 #define MSGTR_VOincompCodec "所選擇的 video_out 裝置與這個解碼器並不兼容。\n"
 #define MSGTR_CannotInitVO "致命錯誤: 無法初始化視訊驅動程式。\n"
@@ -108,10 +107,10 @@ static char help_text[]=
 
 #define MSGTR_NoGui "MPlayer 編譯並無 GUI 支援。\n"
 #define MSGTR_GuiNeedsX "MPlayer GUI 需要 X11。\n"
-#define MSGTR_Playing "正在播放 %s\n"
+#define MSGTR_Playing "正在播放 %s。\n"
 #define MSGTR_NoSound "音效: 沒有聲音\n"
-#define MSGTR_FPSforced "FPS 被指定為 %5.3f  (ftime: %5.3f)\n"
-#define MSGTR_CompiledWithRuntimeDetection "編譯包括了執行時期CPU偵查 - 警告 - 這並非最佳化!\n要獲得最佳表現，加上 --disable-runtime-cpudetection 選項重新編譯 MPlayer\n"
+#define MSGTR_FPSforced "FPS 被指定為 %5.3f  (ftime: %5.3f)。\n"
+#define MSGTR_CompiledWithRuntimeDetection "編譯包括了執行時期CPU偵查 - 警告 - 這並非最佳化!\n要獲得最佳表現，加上 --disable-runtime-cpudetection 選項重新編譯 MPlayer。\n"
 #define MSGTR_CompiledWithCPUExtensions "為 x86 CPU 編譯並有 extensions:\n"
 #define MSGTR_AvailableVideoOutputPlugins "可用的視訊輸出 plugins:\n"
 #define MSGTR_AvailableVideoOutputDrivers "可用的視訊輸出驅動程式:\n"
@@ -131,7 +130,7 @@ static char help_text[]=
 #define MSGTR_AODescription_AOAuthor "AO: 描述: %s\nAO: 作者: %s\n"
 #define MSGTR_AOComment "AO: 說明: %s\n"
 #define MSGTR_Video_NoVideo "視訊: 沒有影像\n"
-#define MSGTR_NotInitializeVOPorVO "\n致命錯誤: 無法初始化影像過濾器 (-vop) 或 影像輸出 (-vo)。\n"
+#define MSGTR_NotInitializeVOPorVO "\n致命錯誤: 無法初始化影像過濾器 (-vf) 或 影像輸出 (-vo)。\n"
 #define MSGTR_Paused "\n  ====== 暫停 ======\r"
 #define MSGTR_PlaylistLoadUnable "\n無法載入播放列 %s。\n"
 #define MSGTR_Exit_SIGILL_RTCpuSel \
@@ -141,11 +140,12 @@ static char help_text[]=
 #define MSGTR_Exit_SIGILL \
 "- '非法指令'導致 MPlayer 當了。\n"\
 "  這通常發生於當你在一個與編譯/最佳化 MPlayer 不同的 CPU 上使用它\n"\
-"  所造成的。\n  檢查一下吧﹗\n"
+"  所造成的。\n"\
+"  檢查一下吧﹗\n"
 #define MSGTR_Exit_SIGSEGV_SIGFPE \
 "- 不良的 CPU/FPU/RAM 應用導致 MPlayer 當了。\n"\
 "  可使用 --enable-debug 來重新編譯 MPlayer 並做 'gdb' backtrace 及\n"\
-"  disassembly。具體細節請參閱 DOCS/zh/bugreports.html#crash.b。\n"
+"  disassembly。具體細節請參閱 DOCS/zh/bugreports.html#crash。\n"
 #define MSGTR_Exit_SIGCRASH \
 "- MPlayer 當了。 這是不應該發生的。\n"\
 "  這可能是在 MPlayer 程式碼 _或_ 你的驅動程式 _或_ 你的 gcc 版本\n"\
@@ -161,8 +161,8 @@ static char help_text[]=
 #define MSGTR_CannotOpenFile_Device "無法開啟檔案/裝置。\n"
 #define MSGTR_ErrorDVDAuth "DVD 授權錯誤。\n"
 #define MSGTR_CannotOpenDemuxer "無法開啟 demuxer。\n"
-#define MSGTR_NoAudioEncoderSelected "\n沒有選擇音效編碼器 (-oac)。請選擇一個或使用 -nosound，可用 -oac help﹗\n"
-#define MSGTR_NoVideoEncoderSelected "\n沒有選擇視訊編碼器 (-ovc)。請選擇一個，用 -ovc help﹗\n"
+#define MSGTR_NoAudioEncoderSelected "\n沒有選擇音效編碼器 (-oac)。請選擇一個 (可用 -oac help) 或使用 -nosound。\n"
+#define MSGTR_NoVideoEncoderSelected "\n沒有選擇視訊編碼器 (-ovc)。請選擇一個 (可用 -oac help)。\n"
 #define MSGTR_InitializingAudioCodec "正初始化音效 codec...\n"
 #define MSGTR_CannotOpenOutputFile "無法開啟輸出檔 '%s'。\n"
 #define MSGTR_EncoderOpenFailed "無法開啟編碼器。\n"
@@ -190,7 +190,7 @@ static char help_text[]=
 " abr           平均 bitrate\n"\
 "\n"\
 " cbr           固定 bitrate\n"\
-"               在往後的 ABR 預校模式中亦強行使用 CBR 編碼模式\n"\
+"               在往後的 ABR 預校模式中亦強行使用 CBR 編碼模式。\n"\
 "\n"\
 " br=<0-1024>   以 kBit 為單位指定 bitrate (僅適用於 CBR 及 ABR)\n"\
 "\n"\
@@ -236,8 +236,8 @@ static char help_text[]=
 #define MSGTR_FileNotFound "找不到檔案: '%s'\n"
 
 #define MSGTR_SMBInitError "無法初始 libsmbclient library: %d\n"
-#define MSGTR_SMBFileNotFound "無法從 lan: '%s' 開啟\n"
-#define MSGTR_SMBNotCompiled "MPlayer 編譯並無讀取 SMB 支援\n"
+#define MSGTR_SMBFileNotFound "無法從 LAN: '%s' 開啟\n"
+#define MSGTR_SMBNotCompiled "MPlayer 編譯並無讀取 SMB 支援。\n"
 
 #define MSGTR_CantOpenDVD "無法開啟 DVD 裝置: %s\n"
 #define MSGTR_DVDwait "正在讀取光碟架構，請稍候...\n"
@@ -276,14 +276,13 @@ static char help_text[]=
 #define MSGTR_NI_Message "%s 非交錯式 AVI 檔案格式。\n"
 
 #define MSGTR_UsingNINI "正使用非交錯式損壞了的 AVI 檔案格式。\n"
-#define MSGTR_CouldntDetFNo "無法 (為準確搜尋) 確定格數\n"
+#define MSGTR_CouldntDetFNo "無法 (為準確搜尋) 確定格數。\n"
 #define MSGTR_CantSeekRawAVI "無法在不完整的 AVI 串流中作搜尋。(需要索引，試用 -idx 選項。)\n"
 #define MSGTR_CantSeekFile "無法在這檔案中作搜尋。\n"
 
-#define MSGTR_EncryptedVOB "已加密的 VOB 檔 (並無 libcss 支援)﹗請參閱 DOCS/zh/cd-dvd.html。\n"
-#define MSGTR_EncryptedVOBauth "已加密的串流，而你並無要求授權﹗\n"
+#define MSGTR_EncryptedVOB "已加密的 VOB 檔﹗請參閱 DOCS/zh/cd-dvd.html。\n"
 
-#define MSGTR_MOVcomprhdr "MOV: (目前) 並不支援壓縮的標頭。\n"
+#define MSGTR_MOVcomprhdr "MOV: 壓縮的標頭的支援需要ZLIB﹗\n"
 #define MSGTR_MOVvariableFourCC "MOV: 警告: 偵測到變動的 FOURCC!?\n"
 #define MSGTR_MOVtooManyTrk "MOV: 警告: 有太多的音軌"
 #define MSGTR_FoundAudioStream "==> 找到音效串流: %d\n"
@@ -299,8 +298,6 @@ static char help_text[]=
 #define MSGTR_DemuxerInfoAlreadyPresent "已經有 demuxer 資訊 %s﹗\n"
 #define MSGTR_ClipInfo "片段資料:\n"
 
-#define MSGTR_LeaveTelecineMode "\ndemux_mpg: 偵測到遞增的 seq，離開 3:2 TELECINE 模式\n"
-#define MSGTR_EnterTelecineMode "\ndemux_mpg: 偵測到 3:2 TELECINE，使用 inverse telecine fx. FPS 改變為 %5.3f﹗ \n"
 
 // dec_video.c & dec_audio.c:
 #define MSGTR_CantOpenCodec "無法開啟 codec。\n"
@@ -316,16 +313,16 @@ static char help_text[]=
 #define MSGTR_BadMpegSequHdr "MPEG: 很差的 sequence header\n"
 #define MSGTR_BadMpegSequHdrEx "MPEG: 很差的 sequence header extension\n"
 
-#define MSGTR_ShMemAllocFail "無法分配共用記憶\n"
-#define MSGTR_CantAllocAudioBuf "無法分配 audio out 緩衝區\n"
+#define MSGTR_ShMemAllocFail "無法分配共用記憶。\n"
+#define MSGTR_CantAllocAudioBuf "無法分配 audio out 緩衝區。\n"
 
 #define MSGTR_UnknownAudio "不知明/找不到的音效格式 -> 沒有聲音\n"
 
 #define MSGTR_UsingExternalPP "[PP] 正使用外置的後期處理過濾器，最大的 q = %d。\n"
 #define MSGTR_UsingCodecPP "[PP] 正使用 codec 之後期處理，最大的 q = %d。\n"
 #define MSGTR_VideoAttributeNotSupportedByVO_VD "影像屬性 '%s' 不被所選擇的 vo 及 vd 支援。\n"
-#define MSGTR_VideoCodecFamilyNotAvailableStr "沒有所要求的 codec 族群 [%s] (vfm=%s) (請在編譯時選定)\n"
-#define MSGTR_AudioCodecFamilyNotAvailableStr "沒有所要求的 codec 族群 [%s] (afm=%s) (請在編譯時選定)\n"
+#define MSGTR_VideoCodecFamilyNotAvailableStr "沒有所要求的 codec 族群 [%s] (vfm=%s)。\n請在編譯時選定。\n"
+#define MSGTR_AudioCodecFamilyNotAvailableStr "沒有所要求的 codec 族群 [%s] (afm=%s)。\n請在編譯時選定。\n"
 #define MSGTR_OpeningVideoDecoder "正在開啟影像解碼器: [%s] %s\n"
 #define MSGTR_OpeningAudioDecoder "正在開啟音效解碼器: [%s] %s\n"
 #define MSGTR_UninitVideoStr "未初始視訊: %s\n"
@@ -351,7 +348,7 @@ static char help_text[]=
 // vd.c
 #define MSGTR_CodecDidNotSet "VDec: Codec 沒有設定 sh->disp_w 及 sh->disp_h，正嘗試解決辦法。\n"
 #define MSGTR_VoConfigRequest "VDec: vo 設定要求 — %d x %d (喜好的 csp: %s)\n"
-#define MSGTR_CouldNotFindColorspace "無法找到配合的 colorspace — 用 -vop scale 再嘗試...\n"
+#define MSGTR_CouldNotFindColorspace "無法找到配合的 colorspace — 用 -vf scale 再嘗試...\n"
 #define MSGTR_MovieAspectIsSet "電影比例是 %.2f:1 — 使用 prescaling 調校至正確比例。\n"
 #define MSGTR_MovieAspectUndefined "電影比例未有說明 — 並無使用 prescaling。\n"
 
@@ -363,13 +360,13 @@ static char help_text[]=
 #define MSGTR_About "關於"
 #define MSGTR_FileSelect "選擇檔案..."
 #define MSGTR_SubtitleSelect "選擇字幕..."
-#define MSGTR_OtherSelect "選擇 ..."
-#define MSGTR_AudioFileSelect "選擇外置音效頻道 ..."
-#define MSGTR_FontSelect "選擇字型 ..."
+#define MSGTR_OtherSelect "選擇..."
+#define MSGTR_AudioFileSelect "選擇外置音效頻道..."
+#define MSGTR_FontSelect "選擇字型..."
 #define MSGTR_PlayList "播放列"
 #define MSGTR_Equalizer "平衡器"
 #define MSGTR_SkinBrowser "佈景瀏覽器"
-#define MSGTR_Network "網路串流 ..."
+#define MSGTR_Network "網路串流..."
 #define MSGTR_Preferences "喜好設定"
 #define MSGTR_OSSPreferences "OSS 驅動程式設定"
 #define MSGTR_SDLPreferences "SDL 驅動程式設定"
@@ -397,39 +394,39 @@ static char help_text[]=
 
 // --- skin loader error messages
 #define MSGTR_SKIN_ERRORMESSAGE "[skin] 於 skin 設定檔 %d: %s 行出錯"
-#define MSGTR_SKIN_WARNING1 "[skin] 警告，於 skin 設定檔 %d 行: 找到 widget 但在這之前找不到 \"section\" ( %s )"
+#define MSGTR_SKIN_WARNING1 "[skin] 警告，於 skin 設定檔 %d 行: 找到 widget 但在這之前找不到 \"section\" (%s)"
 #define MSGTR_SKIN_WARNING2 "[skin] 警告，於 skin 設定檔 %d 行: 找到 widget 但在這之前找不到 \"subsection\" (%s)"
 #define MSGTR_SKIN_WARNING3 "[skin] 警告，於 skin 設定檔 %d 行: 這個 widget 並不支援這個 subsection (%s)"
-#define MSGTR_SKIN_BITMAP_16bit  "不支援 16 位元或以下之色彩點陣 ( %s )。\n"
-#define MSGTR_SKIN_BITMAP_FileNotFound  "找不到檔案 ( %s )\n"
-#define MSGTR_SKIN_BITMAP_BMPReadError "bmp 讀取錯誤 ( %s )\n"
-#define MSGTR_SKIN_BITMAP_TGAReadError "tga 讀取錯誤 ( %s )\n"
-#define MSGTR_SKIN_BITMAP_PNGReadError "png 讀取錯誤 ( %s )\n"
-#define MSGTR_SKIN_BITMAP_RLENotSupported "RLE 壓縮的 tga 並不支援 ( %s )\n"
-#define MSGTR_SKIN_BITMAP_UnknownFileType "不明的檔案類別 ( %s )\n"
-#define MSGTR_SKIN_BITMAP_ConvertError "24 位元至 32 位元轉換錯誤 ( %s )\n"
+#define MSGTR_SKIN_BITMAP_16bit  "不支援 16 位元或以下之色彩點陣 (%s)。\n"
+#define MSGTR_SKIN_BITMAP_FileNotFound  "找不到檔案 (%s)\n"
+#define MSGTR_SKIN_BITMAP_BMPReadError "BMP 讀取錯誤 (%s)\n"
+#define MSGTR_SKIN_BITMAP_TGAReadError "TGA 讀取錯誤 (%s)\n"
+#define MSGTR_SKIN_BITMAP_PNGReadError "PNG 讀取錯誤 (%s)\n"
+#define MSGTR_SKIN_BITMAP_RLENotSupported "RLE 壓縮的 TGA 並不支援 (%s)\n"
+#define MSGTR_SKIN_BITMAP_UnknownFileType "不明的檔案類別 (%s)\n"
+#define MSGTR_SKIN_BITMAP_ConvertError "24 位元至 32 位元轉換錯誤 (%s)\n"
 #define MSGTR_SKIN_BITMAP_UnknownMessage "不明的訊息: %s\n"
 #define MSGTR_SKIN_FONT_NotEnoughtMemory "記憶體不足\n"
-#define MSGTR_SKIN_FONT_TooManyFontsDeclared "宣告了太多字型\n"
-#define MSGTR_SKIN_FONT_FontFileNotFound "找不到字型檔\n"
-#define MSGTR_SKIN_FONT_FontImageNotFound "找不到字型形像檔\n"
-#define MSGTR_SKIN_FONT_NonExistentFontID "並不存在的字型識別器 ( %s )\n"
-#define MSGTR_SKIN_UnknownParameter "不明的參數 ( %s )\n"
-#define MSGTR_SKINBROWSER_NotEnoughMemory "[skinbrowser] 記憶體不足。\n"
-#define MSGTR_SKIN_SKINCFG_SkinNotFound "找不到 skin ( %s )。\n"
-#define MSGTR_SKIN_SKINCFG_SkinCfgReadError "Skin 設定檔讀取錯誤 ( %s )。\n"
+#define MSGTR_SKIN_FONT_TooManyFontsDeclared "宣告了太多字型。\n"
+#define MSGTR_SKIN_FONT_FontFileNotFound "找不到字型檔。\n"
+#define MSGTR_SKIN_FONT_FontImageNotFound "找不到字型形像檔。\n"
+#define MSGTR_SKIN_FONT_NonExistentFontID "並不存在的字型識別器 (%s)\n"
+#define MSGTR_SKIN_UnknownParameter "不明的參數 (%s)\n"
+#define MSGTR_SKINBROWSER_NotEnoughMemory "[skinbrowser] 記憶體不足\n"
+#define MSGTR_SKIN_SKINCFG_SkinNotFound "找不到 skin (%s)。\n"
+#define MSGTR_SKIN_SKINCFG_SkinCfgReadError "Skin 設定檔讀取錯誤 (%s)。\n"
 #define MSGTR_SKIN_LABEL "Skins:"
 
 // --- gtk menus
 #define MSGTR_MENU_AboutMPlayer "關於 MPlayer"
-#define MSGTR_MENU_Open "開啟 ..."
-#define MSGTR_MENU_PlayFile "播放檔案 ..."
-#define MSGTR_MENU_PlayVCD "播放 VCD ..."
-#define MSGTR_MENU_PlayDVD "播放 DVD ..."
-#define MSGTR_MENU_PlayURL "播放 URL ..."
-#define MSGTR_MENU_LoadSubtitle "載入字幕 ..."
-#define MSGTR_MENU_DropSubtitle "撤消字幕 ..."
-#define MSGTR_MENU_LoadExternAudioFile "載入外置音效檔 ..."
+#define MSGTR_MENU_Open "開啟..."
+#define MSGTR_MENU_PlayFile "播放檔案..."
+#define MSGTR_MENU_PlayVCD "播放 VCD..."
+#define MSGTR_MENU_PlayDVD "播放 DVD..."
+#define MSGTR_MENU_PlayURL "播放 URL..."
+#define MSGTR_MENU_LoadSubtitle "載入字幕..."
+#define MSGTR_MENU_DropSubtitle "撤消字幕..."
+#define MSGTR_MENU_LoadExternAudioFile "載入外置音效檔..."
 #define MSGTR_MENU_Playing "正在播放"
 #define MSGTR_MENU_Play "播放"
 #define MSGTR_MENU_Pause "暫停"
@@ -442,7 +439,7 @@ static char help_text[]=
 #define MSGTR_MENU_FullScreen "全螢幕"
 #define MSGTR_MENU_DVD "DVD"
 #define MSGTR_MENU_VCD "VCD"
-#define MSGTR_MENU_PlayDisc "開啟光碟 ..."
+#define MSGTR_MENU_PlayDisc "開啟光碟..."
 #define MSGTR_MENU_ShowDVDMenu "顯示 DVD 目錄"
 #define MSGTR_MENU_Titles "標題"
 #define MSGTR_MENU_Title "標題 %2d"
@@ -454,7 +451,7 @@ static char help_text[]=
 #define MSGTR_MENU_PlayList "播放列表"
 #define MSGTR_MENU_SkinBrowser "Skin 瀏覽器"
 #define MSGTR_MENU_Preferences "喜好設定"
-#define MSGTR_MENU_Exit "退出 ..."
+#define MSGTR_MENU_Exit "退出..."
 #define MSGTR_MENU_Mute "靜音"
 #define MSGTR_MENU_Original "原來的"
 #define MSGTR_MENU_AspectRatio "影像比率"
@@ -542,7 +539,7 @@ static char help_text[]=
 #define MSGTR_PREFERENCES_SDL_Driver "驅動程式:"
 #define MSGTR_PREFERENCES_Message "請記得某些選項要重新播放才會生效﹗"
 #define MSGTR_PREFERENCES_DXR3_VENC "視訊 encoder:"
-#define MSGTR_PREFERENCES_DXR3_LAVC "使用 LAVC (ffmpeg)"
+#define MSGTR_PREFERENCES_DXR3_LAVC "使用 LAVC (FFmpeg)"
 #define MSGTR_PREFERENCES_DXR3_FAME "使用 FAME"
 #define MSGTR_PREFERENCES_FontEncoding1 "統一碼"
 #define MSGTR_PREFERENCES_FontEncoding2 "西歐語系 (ISO-8859-1)"

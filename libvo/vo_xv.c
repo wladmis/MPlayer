@@ -346,6 +346,9 @@ static uint32_t config(uint32_t width, uint32_t height, uint32_t d_width, uint32
      mp_msg(MSGT_VO,MSGL_V, "[xv] dx: %d dy: %d dw: %d dh: %d\n",drwX,drwY,vo_dwidth,vo_dheight );
 
      saver_off(mDisplay);  // turning off screen saver
+
+     if (vo_ontop) vo_x11_setlayer(mDisplay, vo_window, vo_ontop);
+
      return 0;
 }
 
@@ -672,7 +675,7 @@ static uint32_t preinit(const char *arg)
 	    "see 'mplayer -vo help' for other (non-xv) video out drivers.\n");
       else
 	mp_msg(MSGT_VO,MSGL_ERR,"It seems there is no Xvideo support for your video card available.\n"
-	    "Run 'xvinfo' to verify its Xv support and read DOCS/en/video.html#xv!\n"
+	    "Run 'xvinfo' to verify its Xv support and read DOCS/HTML/en/devices.html#xv!\n"
 	    "See 'mplayer -vo help' for other (non-xv) video out drivers. Try -vo x11\n");
 	return -1;
     }
@@ -749,6 +752,9 @@ static uint32_t control(uint32_t request, void *data, ...)
     
     return(vo_xv_get_eq(xv_port, data, value));
   }
+  case VOCTRL_ONTOP:
+    vo_x11_ontop();
+    return VO_TRUE;
   }
   return VO_NOTIMPL;
 }

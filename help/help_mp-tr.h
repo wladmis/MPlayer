@@ -13,9 +13,6 @@ static char help_text[]=
 #ifdef HAVE_VCD
 " vcd://<trackno>  vcd yi Çalmaya baþlar. (Video CD) VCD track numarasýný girebilirsiniz\n"
 #endif
-#ifdef HAVE_LIBCSS
-" -dvdauth <aygit>  Doðrulamak için bir DVD aygýtý seçin (Þifreli dvdler için)\n"
-#endif
 #ifdef USE_DVDREAD
 " dvd://<baþlýkno>  DVD baþlýðý çal. Baþlýk numarasýný gireblirsiniz.\n"
 " -alang/-slang    DVD dublaj/altyazý dili seçin (2-char country codu tarafýndan)\n"
@@ -42,7 +39,7 @@ static char help_text[]=
 " o                  OSD moduna geç:  none / seekbar / seekbar+timer\n"
 " * veya /           Sesi yükselt yada alçat\n"
 " z veya x           Altyazý gecikmesini uygun hale getir  +/- 0.1 saniye\n"
-" r veya t           Altyazi pozisyonunu uygun hale getir ,-vop expand 'ada bakýn\n"
+" r veya t           Altyazi pozisyonunu uygun hale getir ,-vf expand 'ada bakýn\n"
 "\n"
 " * * * DETAYLAR ÝÇÝN MAN SAYFALARINA BAKIN, GELÝÞMÝÞ TUÞLARI VE SEÇENEKLERÝ BULABÝLÝRSÝNÝZ * * *\n"
 "\n";
@@ -72,12 +69,12 @@ static char help_text[]=
 #define MSGTR_DumpSelectedStreamMissing "boþaltým: ÖLÜMCÜL: seçili format hatalý!\n"
 #define MSGTR_CantOpenDumpfile "dump(boþaltým) dosyasý açýlamadý!!!\n"
 #define MSGTR_CoreDumped "Program kapandý :)\n"
-#define MSGTR_FPSnotspecified "Baþlýktaki FPS seçili deðil (veya hatalý) ! -fps komutunu kullanýn!\n"
-#define MSGTR_TryForceAudioFmtStr "Ses codecleri sürücü ailesi çalýþmaya zorlanýyor %s ...\n"
+#define MSGTR_FPSnotspecified "Baþlýktaki FPS seçili deðil (veya hatalý)! -fps komutunu kullanýn!\n"
+#define MSGTR_TryForceAudioFmtStr "Ses codecleri sürücü ailesi çalýþmaya zorlanýyor %s...\n"
 #define MSGTR_CantFindAfmtFallback "Zorlanan sürücü ailesi için ses codeci bulunamadý, diðer sürücülere dönülüyor\n"
 #define MSGTR_CantFindAudioCodec "0x%X! Ses formatý için codec bulunamadý\n"
 #define MSGTR_CouldntInitAudioCodec "Ses codeci yüklenemedi! -> ses yok\n"
-#define MSGTR_TryForceVideoFmtStr "Video codec sürücüsü zorlanmaya çalýþýlýyor %s ...\n"
+#define MSGTR_TryForceVideoFmtStr "Video codec sürücüsü zorlanmaya çalýþýlýyor %s...\n"
 #define MSGTR_CantFindVideoCodec "Seçilmiþ -vo sürücüsü ve video formatý 0x%X için Codec bulunamadý!\n"
 #define MSGTR_VOincompCodec "Üzgünüz, seçili video_çýkýþ sürücüsü bu codec ile çakýþýyor.\n"
 #define MSGTR_CannotInitVO "ÖLÜMCÜL: Video sürücüsü yüklenemedi!\n"
@@ -86,19 +83,19 @@ static char help_text[]=
 
 #define MSGTR_SystemTooSlow "\n\n"\
 "         ************************************************\n"\
-"         ****      Sisteminiz bunu çalmak için çok YAVAÞ !     ****\n"\
+"         ****      Sisteminiz bunu çalmak için çok YAVAÞ!     ****\n"\
 "         ************************************************\n"\
 "!!!  Muhtemel nedenler, problemler,Çözümleri: \n"\
 "- En genel: bozuk/hatalý _ses_ kartý. Çözüm: -ao sdl veya baþka birþey deneyin\n"\
-"  ALSA 0.9 için ALSA 0.5 veya OSS emülasyonu.DOCS/sound.html dosyasýna gözatýn!\n"\
+"  ALSA 0.9 için ALSA 0.5 veya OSS emülasyonu. DOCS/HTML/en/devices.html#audio-dev dosyasýna gözatýn!\n"\
 "  -autosync 30 veya baþka deðerlerle denemeler yapabilirsiniz.\n"\
 "- Yavaþ Video çýkýþý.  -vo komutu ile baþka sürücü seçin(liste için: -vo help) veya\n"\
-"  -framedrop ile deneyin!  DOCS/video.html dosyasýna video hýzlandýrma için gözatýn.\n"\
+"  -framedrop ile deneyin!  DOCS/HTML/en/devices.html#video-dev dosyasýna video hýzlandýrma için gözatýn.\n"\
 "- Yavaþ CPU. Büyük bir DVD/divx i yavaþ bir CPU ile çalýþtýrmayýn! -hardframedrop u\n"\
 "kullanýn. -Bozuk Dosya. Çeþitli seçenekler deneyin: -nobps  -ni  -mc 0  -forceidx gibi.\n"\
 "- Yavaþ sürücüden çalacaksanýz (nfs/smb aglarý, dvd, vcd v.b.) -cache 8192  i deneyin.\n"\
 "-  -cache ile boþluklandýrýlmamiþ AVI dosyasýmý açýyorsunuz? -nocache ile kullanin.\n"\
-"Bunlari yaptýðýnýzda birþey deðiþmiyorsa, DOCS/bugreports.html dosyasýna gözatýn!\n\n"
+"Bunlari yaptýðýnýzda birþey deðiþmiyorsa, DOCS/HTML/en/bugreports.html dosyasýna gözatýn!\n\n"
 
 #define MSGTR_NoGui "MPlayer GRAFÝK ARABÝRÝMSÝZ seçeneðiyle oluþturulmuþ!\n"
 #define MSGTR_GuiNeedsX "MPlayer GRAFÝK ARABÝRÝMÝ X11 i gerektirir!\n"
@@ -123,7 +120,7 @@ static char help_text[]=
 #define MSGTR_AODescription_AOAuthor "AO: Açýklama: %s\nAO: Yapan: %s\n"
 #define MSGTR_AOComment "AO: Yorum: %s\n"
 #define MSGTR_Video_NoVideo "Video: video yok!!!\n"
-#define MSGTR_NotInitializeVOPorVO "\nÖLÜMCÜL: Video Filtreleri (-vop) veya video çýkýþý (-vo) yüklenemedi!\n"
+#define MSGTR_NotInitializeVOPorVO "\nÖLÜMCÜL: Video Filtreleri (-vf) veya video çýkýþý (-vo) yüklenemedi!\n"
 #define MSGTR_Paused "\n------ DURAKLADI -------\r"
 #define MSGTR_PlaylistLoadUnable "\nPlaylist yüklenemedi %s\n"
 
@@ -203,10 +200,7 @@ static char help_text[]=
 #define MSGTR_CantSeekRawAVI "AVI Biçimleri Raw da aranamadý! (Index zorunlu, -idx  komutuyla deneyin!)  \n"
 #define MSGTR_CantSeekFile "Bu dosyada aranamaz!  \n"
 
-#define MSGTR_EncryptedVOB "Þifreli VOB dosyasý (libcss desteði olmadan oluþturulmuþ)! DOCS/cd-dvd.html ye göz atýn.\n"
-#define MSGTR_EncryptedVOBauth "Þifreli biçim ama giriþ isteði gönderilmemiþ!!\n"
-
-#define MSGTR_MOVcomprhdr "MOV: Þýkýþtýrýlmýþ biçimler (þimdilik) deskteklenmiyor !\n"
+#define MSGTR_MOVcomprhdr "MOV: Þýkýþtýrýlmýþ biçimler (þimdilik) deskteklenmiyor!\n"
 #define MSGTR_MOVvariableFourCC "MOV: Dikkat! FOURCC bulundu!?\n"
 #define MSGTR_MOVtooManyTrk "MOV: Dikkat! Çok fazla track!"
 #define MSGTR_FoundAudioStream "==> Bulunan Ses Biçimi: %d\n"
@@ -254,7 +248,7 @@ static char help_text[]=
 #define MSGTR_ADecoderInitFailed "ADecoder açýlýþý baþarýsýz :(\n"
 #define MSGTR_ADecoderPreinitFailed "ADecoder önaçýlýþ baþarýsýz :(\n"
 #define MSGTR_AllocatingBytesForInputBuffer "dec_audio: Tayin ediliyor: %d byte(giriþ için)\n"
-#define MSGTR_AllocatingBytesForOutputBuffer "dec_audio: Tayin ediliyor %d + %d = %d byte  ( çýkýþ buffer i için )\n"
+#define MSGTR_AllocatingBytesForOutputBuffer "dec_audio: Tayin ediliyor %d + %d = %d byte  (çýkýþ buffer i için)\n"
 
 // LIRC:
 #define MSGTR_SettingUpLIRC "lirc desteði ayarlanýyor...\n"
@@ -271,7 +265,7 @@ static char help_text[]=
 // vd.c
 #define MSGTR_CodecDidNotSet "VDec: codec ayarlanamadý: sh->disp_w ve sh->disp_h, çözülmeye çalýþýlýyor!\n"
 #define MSGTR_VoConfigRequest "VDec: vo ayar isteði - %d x %d (preferred csp: %s)\n"
-#define MSGTR_CouldNotFindColorspace "Uyan renkler bulunamadý - -vop cetveli ile deneniyor...\n"
+#define MSGTR_CouldNotFindColorspace "Uyan renkler bulunamadý - -vf cetveli ile deneniyor...\n"
 #define MSGTR_MovieAspectIsSet "Movie-Görünümü: %.2f:1 - doðru movie görünüm için önderecelendirme.\n"
 #define MSGTR_MovieAspectUndefined "Movie-Görünümü atanmamýþ - önderecelerndirme uygulanmadý.\n"
 
@@ -281,15 +275,15 @@ static char help_text[]=
 
 // --- labels ---
 #define MSGTR_About "Hakkýnda"
-#define MSGTR_FileSelect "Dosya Seç ..."
-#define MSGTR_SubtitleSelect "Altyazý Seç ..."
-#define MSGTR_OtherSelect "Seç ..."
-#define MSGTR_AudioFileSelect "Ek ses kanalý seç ..."
-#define MSGTR_FontSelect "Yazýtipi Seç ..."
+#define MSGTR_FileSelect "Dosya Seç..."
+#define MSGTR_SubtitleSelect "Altyazý Seç..."
+#define MSGTR_OtherSelect "Seç..."
+#define MSGTR_AudioFileSelect "Ek ses kanalý seç..."
+#define MSGTR_FontSelect "Yazýtipi Seç..."
 #define MSGTR_PlayList "PlayList"
 #define MSGTR_Equalizer "Equalizer"
 #define MSGTR_SkinBrowser "Skin Tarayýcý"
-#define MSGTR_Network "Að biçimleri ..."
+#define MSGTR_Network "Að biçimleri..."
 #define MSGTR_Preferences "Seçenekler"
 #define MSGTR_OSSPreferences "OSS sürcü ayarlarý"
 #define MSGTR_NoMediaOpened "Medya açýlmadý"
@@ -316,38 +310,38 @@ static char help_text[]=
 
 // --- skin loader error messages
 #define MSGTR_SKIN_ERRORMESSAGE "[skin] Hata : skin ayar dosyasý %d satýrý: %s"
-#define MSGTR_SKIN_WARNING1 "[skin] Dikkat: skin ayar dosyasý  %d satýrý: widget bulundu ama \"section\" bulunamadý ( %s )"
+#define MSGTR_SKIN_WARNING1 "[skin] Dikkat: skin ayar dosyasý  %d satýrý: widget bulundu ama \"section\" bulunamadý (%s)"
 #define MSGTR_SKIN_WARNING2 "[skin] Dikkat: skin ayar dosyasý  %d satýrý: widget bulundu ama \"subsection\" bulunamadý (%s)"
-#define MSGTR_SKIN_BITMAP_16bit  "16 bit veya daha az resim desteklenmiyor ( %s ).\n"
-#define MSGTR_SKIN_BITMAP_FileNotFound  "dosya bulunamadý ( %s )\n"
-#define MSGTR_SKIN_BITMAP_BMPReadError "bmp okuma hatasý ( %s )\n"
-#define MSGTR_SKIN_BITMAP_TGAReadError "tga okuma hatasý ( %s )\n"
-#define MSGTR_SKIN_BITMAP_PNGReadError "png okuma hatasý ( %s )\n"
-#define MSGTR_SKIN_BITMAP_RLENotSupported "RLE paket tga desteklenmiyor ( %s )\n"
-#define MSGTR_SKIN_BITMAP_UnknownFileType "bilinmeyen dosya tipi ( %s )\n"
-#define MSGTR_SKIN_BITMAP_ConvertError "24 bit den 32 bit e çevirme hatasý ( %s )\n"
+#define MSGTR_SKIN_BITMAP_16bit  "16 bit veya daha az resim desteklenmiyor (%s).\n"
+#define MSGTR_SKIN_BITMAP_FileNotFound  "dosya bulunamadý (%s)\n"
+#define MSGTR_SKIN_BITMAP_BMPReadError "BMP okuma hatasý (%s)\n"
+#define MSGTR_SKIN_BITMAP_TGAReadError "TGA okuma hatasý (%s)\n"
+#define MSGTR_SKIN_BITMAP_PNGReadError "PNG okuma hatasý (%s)\n"
+#define MSGTR_SKIN_BITMAP_RLENotSupported "RLE paket TGA desteklenmiyor (%s)\n"
+#define MSGTR_SKIN_BITMAP_UnknownFileType "bilinmeyen dosya tipi (%s)\n"
+#define MSGTR_SKIN_BITMAP_ConvertError "24 bit den 32 bit e çevirme hatasý (%s)\n"
 #define MSGTR_SKIN_BITMAP_UnknownMessage "Bilinmeyen mesaj: %s\n"
 #define MSGTR_SKIN_FONT_NotEnoughtMemory "yetersiz hafýza\n"
 #define MSGTR_SKIN_FONT_TooManyFontsDeclared "Çok fazla yazýtipi tanýtýldý\n"
 #define MSGTR_SKIN_FONT_FontFileNotFound "yazýtipi dosyasý bulunamadý\n"
 #define MSGTR_SKIN_FONT_FontImageNotFound "yazýtipi image dosyasý bulunamadý\n"
-#define MSGTR_SKIN_FONT_NonExistentFontID "Varolmayan yazýtipi tanýtýcýsý ( %s )\n"
-#define MSGTR_SKIN_UnknownParameter "bilinmeyen parametre ( %s )\n"
+#define MSGTR_SKIN_FONT_NonExistentFontID "Varolmayan yazýtipi tanýtýcýsý (%s)\n"
+#define MSGTR_SKIN_UnknownParameter "bilinmeyen parametre (%s)\n"
 #define MSGTR_SKINBROWSER_NotEnoughMemory "[skintarayýcý] hafýza yetersiz.\n"
-#define MSGTR_SKIN_SKINCFG_SkinNotFound "Skin bulunamadý ( %s ).\n"
-#define MSGTR_SKIN_SKINCFG_SkinCfgReadError "Skin ayar dosyasý okuma hatasý ( %s ).\n"
+#define MSGTR_SKIN_SKINCFG_SkinNotFound "Skin bulunamadý (%s).\n"
+#define MSGTR_SKIN_SKINCFG_SkinCfgReadError "Skin ayar dosyasý okuma hatasý (%s).\n"
 #define MSGTR_SKIN_LABEL "Skinler:"
 
 // --- gtk menus
 #define MSGTR_MENU_AboutMPlayer "MPlayer Hakkýnda"
 #define MSGTR_MENU_Open "Aç..."
-#define MSGTR_MENU_PlayFile "Dosya Çal ..."
+#define MSGTR_MENU_PlayFile "Dosya Çal..."
 #define MSGTR_MENU_PlayVCD "VCD  Çal..."
 #define MSGTR_MENU_PlayDVD "DVD Çal..."
-#define MSGTR_MENU_PlayURL "URL Çal ..."
-#define MSGTR_MENU_LoadSubtitle "Altyazý yükle ..."
-#define MSGTR_MENU_DropSubtitle "Altyazý býrak ..."
-#define MSGTR_MENU_LoadExternAudioFile "Ek ses dosyasý yükle ..."
+#define MSGTR_MENU_PlayURL "URL Çal..."
+#define MSGTR_MENU_LoadSubtitle "Altyazý yükle..."
+#define MSGTR_MENU_DropSubtitle "Altyazý býrak..."
+#define MSGTR_MENU_LoadExternAudioFile "Ek ses dosyasý yükle..."
 #define MSGTR_MENU_Playing "Çalýnýyor"
 #define MSGTR_MENU_Play "Çal"
 #define MSGTR_MENU_Pause "Duraklat"
@@ -360,7 +354,7 @@ static char help_text[]=
 #define MSGTR_MENU_FullScreen "Tam Ekran"
 #define MSGTR_MENU_DVD "DVD"
 #define MSGTR_MENU_VCD "VCD"
-#define MSGTR_MENU_PlayDisc "Çal ..."
+#define MSGTR_MENU_PlayDisc "Çal..."
 #define MSGTR_MENU_ShowDVDMenu "DVD menüsünü göster"
 #define MSGTR_MENU_Titles "Baþlýklar"
 #define MSGTR_MENU_Title "Baþlýk %2d"
@@ -450,7 +444,7 @@ static char help_text[]=
 #define MSGTR_PREFERENCES_OSS_Mixer "Karýþtýrýcý:"
 #define MSGTR_PREFERENCES_Message "Yaptýðýnýz deðiþikliklerin çalýþabilmesi için lütfen MPlayerý yeniden baþlatýn!"
 #define MSGTR_PREFERENCES_DXR3_VENC "Video çeviricisi:"
-#define MSGTR_PREFERENCES_DXR3_LAVC "LAVC kullan(ffmpeg)"
+#define MSGTR_PREFERENCES_DXR3_LAVC "LAVC kullan(FFmpeg)"
 #define MSGTR_PREFERENCES_DXR3_FAME "FAME kullan"
 #define MSGTR_PREFERENCES_FontEncoding1 "Unicode"
 #define MSGTR_PREFERENCES_FontEncoding2 "Batý Avrupa Dilleri (ISO-8859-1)"

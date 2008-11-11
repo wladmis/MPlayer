@@ -3,9 +3,9 @@
    Copyrights 2003 Sascha Sommer. This file is based on sources from
    RIVATV (rivatv.sf.net)
    Licence: GPL
-   WARNING: THIS DRIVER IS IN BETTA STAGE
+   WARNING: THIS DRIVER IS IN BETA STAGE
    
-   multi buffer support, TNT2 fixes and experimental yv12 support by Dmitry Baryshkov
+   multi buffer support and TNT2 fixes by Dmitry Baryshkov
 */
 
 
@@ -68,18 +68,51 @@ struct nvidia_cards {
 
 
 static struct nvidia_cards nvidia_card_ids[] = {
-  /*tested && working*/
+  /*NV03*/
   {DEVICE_NVIDIA2_RIVA128, NV_ARCH_03},
-  {DEVICE_NVIDIA_RIVA_TNT2_MODEL,NV_ARCH_04},
-  {DEVICE_NVIDIA2_VTNT2,NV_ARCH_04},
-  {DEVICE_NVIDIA_NV11_GEFORCE2_MX,NV_ARCH_10},
-  /*untested*/
   {DEVICE_NVIDIA2_RIVA128ZX,NV_ARCH_03},
+  /*NV04*/
+  {DEVICE_NVIDIA_NV4_RIVA_TNT,NV_ARCH_04},
+  {DEVICE_NVIDIA_NV5_RIVA_TNT2,NV_ARCH_04},  
+  {DEVICE_NVIDIA_NV5_RIVA_TNT22,NV_ARCH_04},  
+  {DEVICE_NVIDIA_NV5_RIVA_TNT23,NV_ARCH_04},  
+  {DEVICE_NVIDIA_NV5_RIVA_TNT24,NV_ARCH_04},  
+  {DEVICE_NVIDIA_NV6_VANTA,NV_ARCH_04},
+  {DEVICE_NVIDIA_RIVA_TNT2_MODEL,NV_ARCH_04},
+  {DEVICE_NVIDIA_NV6_VANTA2,NV_ARCH_04},
+  {DEVICE_NVIDIA_NV6_VANTA3,NV_ARCH_04},    
+  {DEVICE_NVIDIA_NV5_RIVA_TNT25,NV_ARCH_04}, 
   {DEVICE_NVIDIA2_TNT,NV_ARCH_04},
-  {DEVICE_NVIDIA2_TNT2,NV_ARCH_04},
+  {DEVICE_NVIDIA2_TNT2,NV_ARCH_04},  
+  {DEVICE_NVIDIA2_VTNT2,NV_ARCH_04},  
   {DEVICE_NVIDIA2_UTNT2	,NV_ARCH_04},
   {DEVICE_NVIDIA2_ITNT2,NV_ARCH_04},
-  {DEVICE_NVIDIA_NV5_RIVA_TNT2,NV_ARCH_04},
+  /*NV10*/
+  {DEVICE_NVIDIA_NV10_GEFORCE_256,NV_ARCH_10},
+  {DEVICE_NVIDIA_NV10_GEFORCE_2562,NV_ARCH_10},
+  {DEVICE_NVIDIA_NV11_GEFORCE2_MX,NV_ARCH_10},
+  {DEVICE_NVIDIA_NV11_GEFORCE2_MX2,NV_ARCH_10},   
+  {DEVICE_NVIDIA_NV11_GEFORCE2_GO,NV_ARCH_10},  
+  {DEVICE_NVIDIA_NV11_GEFORCE2_MXR ,NV_ARCH_10},  
+  {DEVICE_NVIDIA_NV15_GEFORCE2_GTS,NV_ARCH_10},
+  {DEVICE_NVIDIA_NV15_GEFORCE2_TI,NV_ARCH_10},
+  {DEVICE_NVIDIA_NV15_GEFORCE2_ULTRA,NV_ARCH_10},
+  {DEVICE_NVIDIA_NV17_GEFORCE4_MX460,NV_ARCH_10}, 
+  {DEVICE_NVIDIA_NV17_GEFORCE4_MX440,NV_ARCH_10},  
+  {DEVICE_NVIDIA_NV17_GEFORCE4_MX420,NV_ARCH_10},  
+  {DEVICE_NVIDIA_NV17_GEFORCE4_440,NV_ARCH_10}, 
+  {DEVICE_NVIDIA_NV17_GEFORCE4_420,NV_ARCH_10}, 
+  {DEVICE_NVIDIA_NV17_GEFORCE4_4202,NV_ARCH_10},
+  {DEVICE_NVIDIA_NV17_GEFORCE4_4402,NV_ARCH_10},
+  {DEVICE_NVIDIA_NV18_GEFORCE4_MX440,NV_ARCH_10}, 
+  {DEVICE_NVIDIA_NV15_GEFORCE2,NV_ARCH_10},
+  /*NV20*/
+  {DEVICE_NVIDIA_NV20_GEFORCE3,NV_ARCH_20},
+  {DEVICE_NVIDIA_NV20_GEFORCE3_TI200,NV_ARCH_20},
+  {DEVICE_NVIDIA_NV20_GEFORCE3_TI500,NV_ARCH_20}, 
+  {DEVICE_NVIDIA_NV25_GEFORCE4_TI4600,NV_ARCH_20},
+  {DEVICE_NVIDIA_NV25_GEFORCE4_TI4400,NV_ARCH_20},
+  {DEVICE_NVIDIA_NV25_GEFORCE4_TI4200,NV_ARCH_20}, 
 };
 
 
@@ -193,7 +226,8 @@ struct rivatv_chip {
 typedef struct rivatv_chip rivatv_chip;
 
 
-struct rivatv_info {    
+struct rivatv_info {
+    unsigned int use_colorkey;    
     unsigned int colorkey; /* saved xv colorkey*/
     unsigned int vidixcolorkey; /*currently used colorkey*/
     unsigned int depth; 
@@ -203,6 +237,7 @@ struct rivatv_info {
     unsigned int d_width,d_height;  /*scaled width && height*/
     unsigned int wx,wy;                /*window x && y*/
     unsigned int screen_x;            /*screen width*/
+    unsigned int screen_y;            /*screen height*/
 	unsigned long buffer_size;		 /* size of the image buffer	       */
 	struct rivatv_chip chip;	 /* NV architecture structure		       */
 	void* video_base;		 /* virtual address of control region	       */
@@ -337,7 +372,7 @@ void rivatv_overlay_stop (struct rivatv_info *info) {
 		/* NV_PVIDEO_BUFFER */
 		VID_AND32 (info->chip.PVIDEO, 0x700, ~0x11);
 		/* NV_PVIDEO_INTR_EN_BUFFER */
-		VID_AND32 (info->chip.PVIDEO, 0x140, ~0x11);
+//		VID_AND32 (info->chip.PVIDEO, 0x140, ~0x11);
 		break;
 	case NV_ARCH_03:
 	case NV_ARCH_04:
@@ -346,7 +381,7 @@ void rivatv_overlay_stop (struct rivatv_info *info) {
 		/* NV_PVIDEO_OVERLAY_VIDEO_OFF */
 		VID_AND32 (info->chip.PVIDEO, 0x244, ~0x01);
 		/* NV_PVIDEO_INTR_EN_0_NOTIFY */
-		VID_AND32 (info->chip.PVIDEO, 0x140, ~0x01);
+//		VID_AND32 (info->chip.PVIDEO, 0x140, ~0x01);
 		/* NV_PVIDEO_OE_STATE */
 		VID_WR32 (info->chip.PVIDEO, 0x224, 0);
 		/* NV_PVIDEO_SU_STATE */
@@ -375,27 +410,34 @@ static uint32_t rivatv_overlay_pan (struct rivatv_info *info){
 /* Compute and set colorkey depending on the colour depth. */
 static void rivatv_overlay_colorkey (rivatv_info* info, unsigned int chromakey){
 	uint32_t r, g, b, key = 0;
+
 	r = (chromakey & 0x00FF0000) >> 16;
 	g = (chromakey & 0x0000FF00) >> 8;
 	b = chromakey & 0x000000FF;
 	switch (info->depth) {
 	case 15:
 		key = ((r >> 3) << 10) | ((g >> 3) << 5) | ((b >> 3));
+#ifndef WIN32
+        key = key | 0x00008000;
+#endif       
 		break;
-	case 16:
+	case 16: // XXX unchecked
 		key = ((r >> 3) << 11) | ((g >> 2) << 5) | ((b >> 3));
+#ifndef WIN32
+        key = key | 0x00008000;
+#endif       
 		break;
-	case 24:
-		key = chromakey & 0x00FFFFFF;
+	case 24: // XXX unchecked, maybe swap order of masking - FIXME Can the card be in 24 bit mode anyway?
+		key = (chromakey & 0x00FFFFFF) | 0x00800000;
 		break;
 	case 32:
 		key = chromakey;
-		break;
-	default:
-		/* THINKME: Possible to pass a colour index for 8 bpp ? */
-		printf ("invalid color depth: %d bpp\n", info->depth);
+#ifndef WIN32
+        key = key | 0x80000000;
+#endif       
 		break;
 	}
+	//printf("[nvidia_vid] depth=%d %08X \n", info->depth, chromakey);
     switch (info->chip.arch) {
 	  case NV_ARCH_10:
 	  case NV_ARCH_20:
@@ -413,11 +455,38 @@ static void nv_waitidle(struct rivatv_info *info ){
      while (info->chip.PGRAPH[0x1C0] & 1) {}
 }
 
+static void nv_getscreenproperties(struct rivatv_info *info){
+  uint32_t bpp=0;
+  info->chip.lock(&info->chip, 0);
+  /*get screen depth*/
+  VID_WR08(info->chip.PCIO, 0x03D4,0x28);
+  bpp = VID_RD08(info->chip.PCIO,0x03D5);
+  if(bpp==3)bpp=4;
+  if((bpp == 2) && (info->chip.PVIDEO[0x00000600/4] & 0x00001000) == 0x0)info->depth=15;           
+  else info->depth = bpp*8;
+  /*get screen width*/
+  VID_WR08(info->chip.PCIO, 0x03D4, 0x1);
+  info->screen_x = (1 + VID_RD08(info->chip.PCIO, 0x3D5)) * 8;
+  /*get screen height*/
+  /* get first 8 bits in VT_DISPLAY_END*/
+  VID_WR08(info->chip.PCIO, 0x03D4, 0x12);
+  info->screen_y = VID_RD08(info->chip.PCIO,0x03D5);
+  VID_WR08(info->chip.PCIO,0x03D4,0x07);
+  /* get 9th bit in CRTC_OVERFLOW*/
+  info->screen_y |= (VID_RD08(info->chip.PCIO,0x03D5) &0x02)<<7;
+  /* and the 10th in CRTC_OVERFLOW*/
+  info->screen_y |=(VID_RD08(info->chip.PCIO,0x03D5) &0x40)<<3;
+  ++info->screen_y;
+}
+
+
+
 
 /* Start overlay video. */
 void rivatv_overlay_start (struct rivatv_info *info,int bufno){
-    uint32_t base, size, offset, xscale, yscale, pan,bpp, pitch0=0;
-	int x=8, y=8;
+    uint32_t base, size, offset, xscale, yscale, pan;
+    uint32_t value;
+	int x=info->wx?info->wx:8, y=info->wy?info->wy:8;
 	int lwidth=info->d_width, lheight=info->d_height;
 	int bps;
 
@@ -425,29 +494,9 @@ void rivatv_overlay_start (struct rivatv_info *info,int bufno){
 	base = info->picture_offset;
 	offset = bufno*size;
     /*update depth & dimensions here because it may change with vo vesa or vo fbdev*/
-    info->chip.lock (&info->chip, 0);
-    nv_waitidle(info);
-    switch (info->chip.arch) {
-	  case NV_ARCH_03:
-        pitch0 = info->chip.PGRAPH[0x00000650/4];
-        break;
-      case NV_ARCH_04:
-	  case NV_ARCH_10:
-	  case NV_ARCH_20:
-      case NV_ARCH_30:
-        pitch0 = info->chip.PGRAPH[0x00000670/4];
-        break;
-    }
-    VID_WR08(info->chip.PCIO, 0x03D4, 0x28);
-    bpp = VID_RD08(info->chip.PCIO,0x03D5);
-    if(bpp==3)bpp = 4; //fixme do nvidia cards support 24bpp?
-    if((bpp == 2) && (info->chip.PVIDEO[0x00000600/4] & 0x00001000) == 0x0)info->depth=15;           //0x00101100 for BGR16 
-    else info->depth = bpp*8;
-    if(!bpp)printf("[nvidia_vid] error invalid bpp\n");
-    else
-    {
-//	    printf("[nvidia_vid] video mode: %ux%u@%u\n",info->screen_x = pitch0/bpp,(pitch0/bpp*3)/4,info->depth);
-	    info->screen_x = pitch0/bpp;
+    nv_getscreenproperties(info);
+
+    if(info->depth){
         bps = info->screen_x * ((info->depth+1)/8);
     	/* get pan offset of the physical screen */
      	pan = rivatv_overlay_pan (info);
@@ -467,16 +516,7 @@ void rivatv_overlay_start (struct rivatv_info *info,int bufno){
 //		offset += (-window->y * port->vld_height / window->height * port->org_width) << 1;
 	      y = 0;
 	    }
-
-
-
-
-
-
     }
-
-
-
 
 	switch (info->chip.arch) {
 	case NV_ARCH_10:
@@ -484,17 +524,17 @@ void rivatv_overlay_start (struct rivatv_info *info,int bufno){
 	case NV_ARCH_30:
 
 		/* NV_PVIDEO_BASE */
-		VID_WR32 (info->chip.PVIDEO, 0x900 + 0, base);
+		VID_WR32 (info->chip.PVIDEO, 0x900 + 0, base + offset);
 		//VID_WR32 (info->chip.PVIDEO, 0x900 + 4, base);
 		/* NV_PVIDEO_LIMIT */
-		VID_WR32 (info->chip.PVIDEO, 0x908 + 0, base + size - 1);
+		VID_WR32 (info->chip.PVIDEO, 0x908 + 0, base + offset + size - 1);
 		//VID_WR32 (info->chip.PVIDEO, 0x908 + 4, base + size - 1);
 
 		/* extra code for NV20 && NV30 architectures */
 		if (info->chip.arch == NV_ARCH_20 || info->chip.arch == NV_ARCH_30) {
-			VID_WR32 (info->chip.PVIDEO, 0x800 + 0, base);
+			VID_WR32 (info->chip.PVIDEO, 0x800 + 0, base + offset);
 			//VID_WR32 (info->chip.PVIDEO, 0x800 + 4, base);
-			VID_WR32 (info->chip.PVIDEO, 0x808 + 0, base + size - 1);
+			VID_WR32 (info->chip.PVIDEO, 0x808 + 0, base + offset + size - 1);
 			//VID_WR32 (info->chip.PVIDEO, 0x808 + 4, base + size - 1);
 		}
 
@@ -506,7 +546,7 @@ void rivatv_overlay_start (struct rivatv_info *info,int bufno){
 		//VID_WR32 (info->chip.PVIDEO, 0x918 + 4, 0x00001000);
 
 		/* NV_PVIDEO_OFFSET */
-		VID_WR32 (info->chip.PVIDEO, 0x920 + 0, offset + 0);
+		VID_WR32 (info->chip.PVIDEO, 0x920 + 0, 0x0);
 		//VID_WR32 (info->chip.PVIDEO, 0x920 + 4, offset + pitch);
 		/* NV_PVIDEO_SIZE_IN */
 		VID_WR32 (info->chip.PVIDEO, 0x928 + 0, ((info->height) << 16) | info->width);
@@ -529,15 +569,18 @@ void rivatv_overlay_start (struct rivatv_info *info,int bufno){
 		//VID_WR32 (info->chip.PVIDEO, 0x950 + 4, (height << 16) | width);
 
 		/* NV_PVIDEO_FORMAT */
-		VID_WR32 (info->chip.PVIDEO, 0x958 + 0, (info->pitch << 0) | 0x00100000|(((info->format==IMGFMT_YV12)?1:0))<<16);
-		//VID_WR32 (info->chip.PVIDEO, 0x958 + 4, (pitch << 1) | 0x00100000);
+        value = info->pitch;       
+	    if(info->use_colorkey)value |= 1 << 20; 
+        if(info->format == IMGFMT_YUY2)value |= 1 << 16;
+        VID_WR32 (info->chip.PVIDEO, 0x958 + 0, value);
+	    //VID_WR32 (info->chip.PVIDEO, 0x958 + 4, (pitch << 1) | 0x00100000);
 
 		/* NV_PVIDEO_INTR_EN_BUFFER */
-		VID_OR32 (info->chip.PVIDEO, 0x140, 0x01/*0x11*/);
+//		VID_OR32 (info->chip.PVIDEO, 0x140, 0x01/*0x11*/);
 		/* NV_PVIDEO_STOP */
-		VID_AND32 (info->chip.PVIDEO, 0x704, 0xFFFFFFEE);
+		VID_WR32 (info->chip.PVIDEO, 0x704,0x0);
 		/* NV_PVIDEO_BUFFER */
-		VID_OR32 (info->chip.PVIDEO, 0x700, 0x01/*0x11*/);
+		VID_WR32 (info->chip.PVIDEO, 0x700, 0x01/*0x11*/);
 		break;
 
 	case NV_ARCH_03:
@@ -579,7 +622,7 @@ void rivatv_overlay_start (struct rivatv_info *info,int bufno){
 		/* NV_PVIDEO_CONTROL_Y (BLUR_ON, LINE_HALF) */
 		VID_WR32 (info->chip.PVIDEO, 0x204, 0x001);
 		/* NV_PVIDEO_CONTROL_X (WEIGHT_HEAVY, SHARPENING_ON, SMOOTHING_ON) */
-		VID_WR32 (info->chip.PVIDEO, 0x208, 0x111);     /*rivatv 0x110 */
+		VID_WR32 (info->chip.PVIDEO, 0x208, 0x111);     /*directx overlay 0x110 */
 
 		/* NV_PVIDEO_FIFO_BURST_LENGTH */
 		VID_WR32 (info->chip.PVIDEO, 0x23C, 0x03);
@@ -590,14 +633,15 @@ void rivatv_overlay_start (struct rivatv_info *info,int bufno){
 		VID_WR32 (info->chip.PVIDEO, 0x21C + 0, 0);
 		VID_WR32 (info->chip.PVIDEO, 0x21C + 4, 0);
 
-
-
-
 		/* NV_PVIDEO_INTR_EN_0_NOTIFY_ENABLED */
 //		VID_OR32 (info->chip.PVIDEO, 0x140, 0x01);                                 
+
 		/* NV_PVIDEO_OVERLAY (KEY_ON, VIDEO_ON, FORMAT_CCIR) */
-                 
-        VID_WR32 (info->chip.PVIDEO, 0x244, (info->format==IMGFMT_YUY2)?0x111:0x011);
+        value = 0x1; /*video on*/
+        if(info->format==IMGFMT_YUY2)value |= 0x100;
+        if(info->use_colorkey)value |=0x10;       
+        VID_WR32 (info->chip.PVIDEO, 0x244, value);
+
 		/* NV_PVIDEO_SU_STATE */
 		VID_XOR32 (info->chip.PVIDEO, 0x228, 1 << 16);
 		break;
@@ -681,37 +725,18 @@ int vixInit(void){
   printf("[nvidia_vid] detected memory size %u MB\n",(uint32_t)(info->chip.fbsize /1024/1024));
 
   if ((mtrr = mtrr_set_type(pci_info.base1, info->chip.fbsize, MTRR_TYPE_WRCOMB))!= 0)
-	  printf("[nvidia_vid]: unable to setup MTRR: %s\n", strerror(mtrr));
+	  printf("[nvidia_vid] unable to setup MTRR: %s\n", strerror(mtrr));
   else
-	  printf("[nvidia_vid]: MTRR set up\n");
+	  printf("[nvidia_vid] MTRR set up\n");
   
-  /*get some info about the screen dimension and depth*/
-  {
-    uint32_t bpp=0,pitch0=0;
-    info->chip.lock (&info->chip, 0);
-    nv_waitidle(info);
-    switch (info->chip.arch) {
-	  case NV_ARCH_03:
-        pitch0 = info->chip.PGRAPH[0x00000650/4];
-        break;
-      case NV_ARCH_04:
-	  case NV_ARCH_10:
-	  case NV_ARCH_20:
-      case NV_ARCH_30:
-        pitch0 = info->chip.PGRAPH[0x00000670/4];
-        break;
-    }
-    VID_WR08(info->chip.PCIO, 0x03D4, 0x28);
-    bpp = VID_RD08(info->chip.PCIO,0x03D5);
-    if(bpp==3)bpp = 4; //fixme do nvidia cards support 24bpp?
-    if((bpp == 2) && (info->chip.PVIDEO[0x00000600/4] & 0x00001000) == 0x0)info->depth=15;           //0x00101100 for BGR16 
-    else info->depth = bpp*8;
-    if(!bpp)printf("[nvidia_vid] error invalid bpp\n");
-    else printf("[nvidia_vid] video mode: %ux%u@%u\n",info->screen_x = pitch0/bpp,(pitch0/bpp*3)/4,info->depth);
-  }
+  nv_getscreenproperties(info);
+  if(!info->depth)printf("[nvidia_vid] text mode: %ux%u\n",info->screen_x,info->screen_y);
+  else printf("[nvidia_vid] video mode: %ux%u@%u\n",info->screen_x,info->screen_y, info->depth);
+ 
    
   rivatv_enable_PMEDIA(info);
   info->next_frame = 0;
+  info->use_colorkey = 0;
   return 0;
 }
 
@@ -728,9 +753,7 @@ int vixGetCapability(vidix_capability_t *to){
 
 inline static int is_supported_fourcc(uint32_t fourcc)
 {
-	if	(fourcc == IMGFMT_UYVY ||
-		(fourcc == IMGFMT_YUY2 && info->chip.arch <=  NV_ARCH_04) ||
-		(fourcc == IMGFMT_YV12 && info->chip.arch >=  NV_ARCH_10))
+	if	(fourcc == IMGFMT_UYVY || fourcc == IMGFMT_YUY2)
 		return 1;
 	else
 		return 0;
@@ -776,7 +799,7 @@ int vixConfigPlayback(vidix_playback_t *vinfo){
 	    case IMGFMT_YUY2:
 	    case IMGFMT_UYVY:
 
-		    vinfo->dest.pitch.y = 2;
+		    vinfo->dest.pitch.y = 16;
 		    vinfo->dest.pitch.u = 0;
 		    vinfo->dest.pitch.v = 0;
 
@@ -820,9 +843,17 @@ int vixPlaybackOff(void){
 }
 
 int vixSetGrKeys( const vidix_grkey_t * grkey){
+  if (grkey->ckey.op == CKEY_FALSE)
+  {
+    info->use_colorkey = 0;
+    printf("[nvidia_vid] colorkeying disabled\n");
+  }
+  else {
+  info->use_colorkey = 1;
   info->vidixcolorkey = ((grkey->ckey.red<<16)|(grkey->ckey.green<<8)|grkey->ckey.blue);
   printf("[nvidia_vid] set colorkey 0x%x\n",info->vidixcolorkey);
-  rivatv_overlay_colorkey(info,info->vidixcolorkey);
+  }
+  if(info->d_width && info->d_height)rivatv_overlay_start(info,0);
   return 0;
 }
 

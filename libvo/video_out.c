@@ -40,6 +40,7 @@ int vo_vsync = 0;
 int vo_fs = 0;
 int vo_fsmode = 0;
 float vo_panscan = 0.0f;
+int vo_ontop = 0;
 
 int vo_pts=0; // for hw decoding
 float vo_fps=0; // for mp1e rte
@@ -48,6 +49,7 @@ char *vo_subdevice = NULL;
 int vo_directrendering=0;
 
 int vo_colorkey = 0x0000ff00; // default colorkey is green
+			      // (0xff000000 means that colorkey has been disabled)
 
 //
 // Externally visible list of all vo drivers
@@ -68,6 +70,7 @@ extern vo_functions_t video_out_tdfxfb;
 extern vo_functions_t video_out_null;
 //extern vo_functions_t video_out_odivx;
 extern vo_functions_t video_out_zr;
+extern vo_functions_t video_out_zr2;
 extern vo_functions_t video_out_bl;
 extern vo_functions_t video_out_pgm;
 extern vo_functions_t video_out_md5;
@@ -181,6 +184,7 @@ vo_functions_t* video_out_drivers[] =
 #endif
 #ifdef HAVE_ZR
 	&video_out_zr,
+	&video_out_zr2,
 #endif
 #ifdef HAVE_BL
 	&video_out_bl,

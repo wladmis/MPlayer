@@ -47,10 +47,11 @@ unsigned long __attribute__((aligned(8))) costab_mmx[] =
 	1060439283,
 };
 
-static int temp;
+static int temp; // buggy gcc 3.x fails if this is moved into the function :(
 void synth_1to1_MMX_s(real *bandPtr, int channel, short *samples,
                       short *buffs, int *bo)
 {
+
 __asm __volatile(
         "movl %1,%%ecx\n\t"
         "movl %2,%%edi\n\t"
@@ -69,7 +70,6 @@ __asm __volatile(
         "leal (%%esi,%%eax,2),%%edx\n\t"
         "movl %%eax,%5\n\t"
         "incl %%eax\n\t"
-        "pushl %0\n\t"
         "andl %%ebx,%%eax\n\t"
         "leal 544(%%esi,%%eax,2),%%ecx\n\t"
 	"incl %%ebx\n\t"
@@ -80,9 +80,11 @@ __asm __volatile(
         "leal 544(%%esi),%%esi\n\t"
 ".L02:\n\t"
 	"emms\n\t"
+        "pushl %0\n\t"
         "pushl %%edx\n\t"
         "pushl %%ecx\n\t"
         "call *"MANGLE(dct64_MMX_func)"\n\t"
+	"addl $12, %%esp\n\t"
 	"leal 1(%%ebx), %%ecx\n\t"
         "subl %5,%%ebx\n\t"
 	"pushl %%ecx\n\t"
@@ -241,5 +243,5 @@ __asm __volatile(
 	"emms\n\t"
         :
 	:"m"(bandPtr),"m"(channel),"m"(samples),"m"(buffs),"m"(bo), "m"(temp)
-	:"memory","%edi","%esi","%ebx");
+	:"memory","%edi","%esi","%ebx","%esp");
 }

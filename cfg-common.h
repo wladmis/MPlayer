@@ -27,24 +27,20 @@
 #endif
 	{"slang", &dvdsub_lang, CONF_TYPE_STRING, 0, 0, 0, NULL},
 
-#ifdef HAVE_LIBCSS
-        {"dvdauth", &dvd_auth_device, CONF_TYPE_STRING, 0, 0, 0, NULL},
-        {"dvdkey", &dvdimportkey, CONF_TYPE_STRING, 0, 0, 0, NULL},
-	{"csslib", &css_so, CONF_TYPE_STRING, 0, 0, 0, NULL},
-#else
-        {"dvdauth", "MPlayer was compiled WITHOUT libcss support!\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
-        {"dvdkey", "MPlayer was compiled WITHOUT libcss support!\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
-	{"csslib", "MPlayer was compiled WITHOUT libcss support!\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
-#endif
+        {"dvdauth", "libcss support is OBSOLETED! RTFM!\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
+        {"dvdkey", "libcss support is OBSOLETED! RTFM!\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
+	{"csslib", "libcss support is OBSOLETED! RTFM!\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
 
 #ifdef MPLAYER_NETWORK
 	{"user", &network_username, CONF_TYPE_STRING, 0, 0, 0, NULL},
 	{"passwd", &network_password, CONF_TYPE_STRING, 0, 0, 0, NULL},
 	{"bandwidth", &network_bandwidth, CONF_TYPE_INT, CONF_MIN, 0, 0, NULL},
-	
+	{"user-agent", &network_useragent, CONF_TYPE_STRING, 0, 0, 0, NULL},
+	{"cookies", &network_cookies_enabled, CONF_TYPE_FLAG, 0, 0, 1, NULL},
+	{"nocookies", &network_cookies_enabled, CONF_TYPE_FLAG, 0, 1, 0, NULL},
+	{"cookies-file", &cookies_file, CONF_TYPE_STRING, 0, 0, 0, NULL},
 	{"prefer-ipv4", &network_prefer_ipv4, CONF_TYPE_FLAG, 0, 0, 1, NULL},	
 	{"ipv4-only-proxy", &network_ipv4_only_proxy, CONF_TYPE_FLAG, 0, 0, 1, NULL},	
-
 #ifdef HAVE_AF_INET6
 	{"prefer-ipv6", &network_prefer_ipv4, CONF_TYPE_FLAG, 0, 1, 0, NULL},
 #else
@@ -53,7 +49,9 @@
 
 #else
 	{"user", "MPlayer was compiled WITHOUT streaming(network) support\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
+	{"passwd", "MPlayer was compiled WITHOUT streaming(network) support\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
 	{"bandwidth", "MPlayer was compiled WITHOUT streaming(network) support\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
+	{"user-agent", "MPlayer was compiled WITHOUT streaming(network) support\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
 #endif
 
 	
@@ -74,11 +72,13 @@
 	{"noidx", &index_mode, CONF_TYPE_FLAG, 0, -1, 0, NULL},
 	{"idx", &index_mode, CONF_TYPE_FLAG, 0, -1, 1, NULL},
 	{"forceidx", &index_mode, CONF_TYPE_FLAG, 0, -1, 2, NULL},
+	{"saveidx", &index_file_save, CONF_TYPE_STRING, 0, 0, 0, NULL},
+	{"loadidx", &index_file_load, CONF_TYPE_STRING, 0, 0, 0, NULL},
 
 	// select audio/videosubtitle stream
-	{"aid", &audio_id, CONF_TYPE_INT, CONF_RANGE, 0, 8192, NULL},
-	{"vid", &video_id, CONF_TYPE_INT, CONF_RANGE, 0, 8192, NULL},
-	{"sid", &dvdsub_id, CONF_TYPE_INT, CONF_RANGE, 0, 31, NULL},
+	{"aid", &audio_id, CONF_TYPE_INT, CONF_RANGE, 0, 8190, NULL},
+	{"vid", &video_id, CONF_TYPE_INT, CONF_RANGE, 0, 8190, NULL},
+	{"sid", &dvdsub_id, CONF_TYPE_INT, CONF_RANGE, 0, 8190, NULL},
 	{"novideo", &video_id, CONF_TYPE_FLAG, 0, -1, -2, NULL},
 
 	{ "hr-mp3-seek", &hr_mp3_seek, CONF_TYPE_FLAG, 0, 0, 1, NULL },
@@ -165,8 +165,8 @@
 #else
         {"oldpp", "MPlayer was compiled without opendivx library\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
 #endif
-	{"npp", "-npp has been removed, use -vop pp and read the fine manual\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
-#ifdef USE_LIBAVCODEC
+	{"npp", "-npp has been removed, use -vf pp and read the fine manual.\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
+#ifdef FF_POSTPROCESS
         {"pphelp", &pp_help, CONF_TYPE_PRINT_INDIRECT, CONF_NOCFG, 0, 0, NULL},
 #endif
 
@@ -184,6 +184,9 @@
 	{"tsfastparse", "-tsfastparse isn't a valid option anymore.\n", CONF_TYPE_PRINT, CONF_NOCFG ,0,0, NULL
 },
 	{"tsprog", &ts_prog, CONF_TYPE_INT, CONF_RANGE, 0, 65534, NULL},
+#define TS_MAX_PROBE_SIZE 2000000 /* dont forget to change this in libmpdemux/demux_ts.c too */
+	{"tsprobe", &ts_probe, CONF_TYPE_POSITION, 0, 0, TS_MAX_PROBE_SIZE, NULL},
+	{"tskeepbroken", &ts_keep_broken, CONF_TYPE_FLAG, 0, 0, 1, NULL},
 
 	// draw by slices or whole frame (useful with libmpeg2/libavcodec)
 	{"slices", &vd_use_slices, CONF_TYPE_FLAG, 0, 0, 1, NULL},
@@ -192,7 +195,7 @@
 #ifdef USE_LIBAVCODEC
 	{"lavdopts", lavc_decode_opts_conf, CONF_TYPE_SUBCONFIG, 0, 0, 0, NULL},
 #endif
-#ifdef HAVE_XVID
+#if defined(HAVE_XVID3) || defined(HAVE_XVID4)
 	{"xvidopts", xvid_dec_opts, CONF_TYPE_SUBCONFIG, 0, 0, 0, NULL},
 #endif
 // ------------------------- subtitles options --------------------
@@ -200,13 +203,13 @@
 #ifdef USE_SUB
 	{"sub", &sub_name, CONF_TYPE_STRING_LIST, 0, 0, 0, NULL},
 #ifdef USE_FRIBIDI
-	{"fribidi_charset", &fribidi_charset, CONF_TYPE_STRING, 0, 0, 0, NULL},
-	{"flip_hebrew", &flip_hebrew, CONF_TYPE_FLAG, 0, 0, 1, NULL},
-	{"noflip_hebrew", &flip_hebrew, CONF_TYPE_FLAG, 0, 1, 0, NULL},
+	{"fribidi-charset", &fribidi_charset, CONF_TYPE_STRING, 0, 0, 0, NULL},
+	{"flip-hebrew", &flip_hebrew, CONF_TYPE_FLAG, 0, 0, 1, NULL},
+	{"noflip-hebrew", &flip_hebrew, CONF_TYPE_FLAG, 0, 1, 0, NULL},
 #else 
-	{"fribidi_charset", "MPlayer wasn't compiled with FriBiDi support\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
-	{"flip_hebrew", "MPlayer wasn't compiled with FriBiDi support\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
-	{"noflip_hebrew", "MPlayer wasn't compiled with FriBiDi support\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
+	{"fribidi-charset", "MPlayer wasn't compiled with FriBiDi support\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
+	{"flip-hebrew", "MPlayer wasn't compiled with FriBiDi support\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
+	{"noflip-hebrew", "MPlayer wasn't compiled with FriBiDi support\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
 #endif
 #ifdef USE_ICONV
 	{"subcp", &sub_cp, CONF_TYPE_STRING, 0, 0, 0, NULL},
@@ -219,6 +222,7 @@
 	{"nounicode", &sub_unicode, CONF_TYPE_FLAG, 0, 1, 0, NULL},
 	{"utf8", &sub_utf8, CONF_TYPE_FLAG, 0, 0, 1, NULL},
 	{"noutf8", &sub_utf8, CONF_TYPE_FLAG, 0, 1, 0, NULL},
+	{"forcedsubsonly", &forced_subs_only, CONF_TYPE_FLAG, 0, 0, 1, NULL},
 	// specify IFO file for VOBSUB subtitle
 	{"ifo", &spudec_ifo, CONF_TYPE_STRING, 0, 0, 0, NULL},
 	// enable Closed Captioning display
@@ -248,6 +252,13 @@
  	{"subfont-outline", &subtitle_font_thickness, CONF_TYPE_FLOAT, CONF_RANGE, 0, 8, NULL},
  	{"subfont-autoscale", &subtitle_autoscale, CONF_TYPE_INT, CONF_RANGE, 0, 3, NULL},
 #endif
+#ifdef HAVE_FONTCONFIG
+	{"fontconfig", &font_fontconfig, CONF_TYPE_FLAG, 0, 0, 1, NULL},
+	{"nofontconfig", &font_fontconfig, CONF_TYPE_FLAG, 0, 1, 0, NULL},
+#else
+	{"fontconfig", "MPlayer wasn't compiled with Fontconfig support\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
+	{"nofontconfig", "MPlayer wasn't compiled with Fontconfig support\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
+#endif
 #endif
 
 #else
@@ -270,6 +281,9 @@ extern int audio_output_channels;
 extern char *network_username;
 extern char *network_password;
 extern int   network_bandwidth;
+extern char *network_useragent;
+extern int   network_cookies_enabled;
+extern char *cookies_file;
 
 extern int network_prefer_ipv4;
 extern int network_ipv4_only_proxy;
@@ -286,6 +300,8 @@ extern char* audio_stream;
 extern char* sub_stream;
 extern int demuxer_type, audio_demuxer_type, sub_demuxer_type;
 extern int ts_prog;
+extern int ts_keep_broken;
+extern off_t ts_probe;
 
 #include "libmpdemux/tv.h"
 
@@ -345,6 +361,12 @@ m_option_t tvopts_conf[]={
 #include "libmpdemux/dvbin.h"
 extern m_config_t dvbin_opts_conf[];
 #endif
+
+#ifdef  USE_FRIBIDI
+extern char *fribidi_charset;
+extern int flip_hebrew;
+#endif
+
 
 extern int audio_stream_cache;
 
@@ -420,7 +442,7 @@ m_option_t audio_filter_conf[]={
 extern m_option_t lavc_decode_opts_conf[];
 #endif
 
-#ifdef HAVE_XVID
+#if defined(HAVE_XVID3) || defined(HAVE_XVID4)
 extern m_option_t xvid_dec_opts[];
 #endif
 

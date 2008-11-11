@@ -41,6 +41,9 @@ void (*rgb32tobgr15)(const uint8_t *src, uint8_t *dst, unsigned src_size);
 void (*yv12toyuy2)(const uint8_t *ysrc, const uint8_t *usrc, const uint8_t *vsrc, uint8_t *dst,
 	unsigned int width, unsigned int height,
 	int lumStride, int chromStride, int dstStride);
+void (*yv12touyvy)(const uint8_t *ysrc, const uint8_t *usrc, const uint8_t *vsrc, uint8_t *dst,
+	unsigned int width, unsigned int height,
+	int lumStride, int chromStride, int dstStride);
 void (*yuv422ptoyuy2)(const uint8_t *ysrc, const uint8_t *usrc, const uint8_t *vsrc, uint8_t *dst,
 	unsigned int width, unsigned int height,
 	int lumStride, int chromStride, int dstStride);
@@ -145,7 +148,6 @@ static uint64_t __attribute__((aligned(8))) dither8[2]={
 #undef HAVE_MMX
 #undef HAVE_MMX2
 #undef HAVE_3DNOW
-#undef ARCH_X86
 #undef HAVE_SSE2
 #define RENAME(a) a ## _C
 #include "rgb2rgb_template.c"
@@ -158,7 +160,6 @@ static uint64_t __attribute__((aligned(8))) dither8[2]={
 #undef HAVE_MMX2
 #undef HAVE_3DNOW
 #undef HAVE_SSE2
-#define ARCH_X86
 #define RENAME(a) a ## _MMX
 #include "rgb2rgb_template.c"
 
@@ -168,7 +169,6 @@ static uint64_t __attribute__((aligned(8))) dither8[2]={
 #define HAVE_MMX2
 #undef HAVE_3DNOW
 #undef HAVE_SSE2
-#define ARCH_X86
 #define RENAME(a) a ## _MMX2
 #include "rgb2rgb_template.c"
 
@@ -178,8 +178,7 @@ static uint64_t __attribute__((aligned(8))) dither8[2]={
 #undef HAVE_MMX2
 #define HAVE_3DNOW
 #undef HAVE_SSE2
-#define ARCH_X86
-#define RENAME(a) a ## _3DNow
+#define RENAME(a) a ## _3DNOW
 #include "rgb2rgb_template.c"
 
 #endif //ARCH_X86
@@ -213,10 +212,11 @@ void sws_rgb2rgb_init(int flags){
 		rgb32tobgr16= rgb32tobgr16_MMX2;
 		rgb32tobgr15= rgb32tobgr15_MMX2;
 		yv12toyuy2= yv12toyuy2_MMX2;
+		yv12touyvy= yv12touyvy_MMX2;
 		yuv422ptoyuy2= yuv422ptoyuy2_MMX2;
 		yuy2toyv12= yuy2toyv12_MMX2;
-		uyvytoyv12= uyvytoyv12_MMX2;
-		yvu9toyv12= yvu9toyv12_MMX2;
+//		uyvytoyv12= uyvytoyv12_MMX2;
+//		yvu9toyv12= yvu9toyv12_MMX2;
 		planar2x= planar2x_MMX2;
 		rgb24toyv12= rgb24toyv12_MMX2;
 		interleaveBytes= interleaveBytes_MMX2;
@@ -242,10 +242,11 @@ void sws_rgb2rgb_init(int flags){
 		rgb32tobgr16= rgb32tobgr16_3DNOW;
 		rgb32tobgr15= rgb32tobgr15_3DNOW;
 		yv12toyuy2= yv12toyuy2_3DNOW;
+		yv12touyvy= yv12touyvy_3DNOW;
 		yuv422ptoyuy2= yuv422ptoyuy2_3DNOW;
 		yuy2toyv12= yuy2toyv12_3DNOW;
-		uyvytoyv12= uyvytoyv12_3DNOW;
-		yvu9toyv12= yvu9toyv12_3DNOW;
+//		uyvytoyv12= uyvytoyv12_3DNOW;
+//		yvu9toyv12= yvu9toyv12_3DNOW;
 		planar2x= planar2x_3DNOW;
 		rgb24toyv12= rgb24toyv12_3DNOW;
 		interleaveBytes= interleaveBytes_3DNOW;
@@ -271,10 +272,11 @@ void sws_rgb2rgb_init(int flags){
 		rgb32tobgr16= rgb32tobgr16_MMX;
 		rgb32tobgr15= rgb32tobgr15_MMX;
 		yv12toyuy2= yv12toyuy2_MMX;
+		yv12touyvy= yv12touyvy_MMX;
 		yuv422ptoyuy2= yuv422ptoyuy2_MMX;
 		yuy2toyv12= yuy2toyv12_MMX;
-		uyvytoyv12= uyvytoyv12_MMX;
-		yvu9toyv12= yvu9toyv12_MMX;
+//		uyvytoyv12= uyvytoyv12_MMX;
+//		yvu9toyv12= yvu9toyv12_MMX;
 		planar2x= planar2x_MMX;
 		rgb24toyv12= rgb24toyv12_MMX;
 		interleaveBytes= interleaveBytes_MMX;
@@ -302,6 +304,7 @@ void sws_rgb2rgb_init(int flags){
 		rgb32tobgr16= rgb32tobgr16_C;
 		rgb32tobgr15= rgb32tobgr15_C;
 		yv12toyuy2= yv12toyuy2_C;
+		yv12touyvy= yv12touyvy_C;
 		yuv422ptoyuy2= yuv422ptoyuy2_C;
 		yuy2toyv12= yuy2toyv12_C;
 //		uyvytoyv12= uyvytoyv12_C;

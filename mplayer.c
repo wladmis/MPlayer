@@ -57,10 +57,6 @@ extern int mp_input_win32_slave_cmd_func(int fd,char* dest,int size);
 
 #include "codec-cfg.h"
 
-#ifdef HAVE_LIBCSS
-#include "libmpdemux/dvdauth.h"
-#endif
-
 #ifdef USE_DVDNAV
 #include <dvdnav.h>
 #endif
@@ -104,6 +100,9 @@ static int quiet=0;
 static int last_dvb_step = 1;
 #endif
 
+#ifdef HAVE_MATROSKA
+#include "libmpdemux/matroska.h"
+#endif
 
 //**************************************************************************//
 //             Playtree
@@ -285,6 +284,9 @@ extern int vo_flags;
 
 // sub:
 char *font_name=NULL;
+#ifdef HAVE_FONTCONFIG
+extern int font_fontconfig;
+#endif
 float font_factor=0.75;
 char **sub_name=NULL;
 float sub_delay=0;
@@ -733,6 +735,7 @@ int osd_show_vobsub_changed = 0;
 int osd_show_sub_changed = 0;
 int osd_show_percentage = 0;
 int osd_show_tv_channel = 25;
+int osd_show_ontop = 0;
 
 int rtc_fd=-1;
 
@@ -1054,8 +1057,15 @@ if(!parse_codec_cfg(get_path("codecs.conf"))){
 
 //------ load global data first ------
 
-#ifdef USE_OSD
 // check font
+#ifdef USE_OSD
+#ifdef HAVE_FREETYPE
+  init_freetype();
+#endif
+#ifdef HAVE_FONTCONFIG
+  if(!font_fontconfig)
+  {
+#endif
   if(font_name){
        vo_font=read_font_desc(font_name,font_factor,verbose>1);
        if(!vo_font) mp_msg(MSGT_CPLAYER,MSGL_ERR,MSGTR_CantLoadFont,font_name);
@@ -1065,9 +1075,8 @@ if(!parse_codec_cfg(get_path("codecs.conf"))){
        if(!vo_font)
        vo_font=read_font_desc(MPLAYER_DATADIR "/font/font.desc",font_factor,verbose>1);
   }
-#ifdef HAVE_FREETYPE
-  if (!vo_font)
-	init_freetype();
+#ifdef HAVE_FONTCONFIG
+  }
 #endif
 #endif
   vo_init_osd();
@@ -1304,24 +1313,6 @@ if(!use_stdin && !slave_mode){
   }
   stream->start_pos+=seek_to_byte;
 
-#ifdef HAVE_LIBCSS
-  current_module="libcss";
-  if (dvdimportkey) {
-    if (dvd_import_key(dvdimportkey)) {
-	mp_msg(MSGT_CPLAYER,MSGL_FATAL,MSGTR_ErrorDVDkey);
-	exit_player(MSGTR_Exit_error);
-    }
-    mp_msg(MSGT_CPLAYER,MSGL_INFO,MSGTR_CmdlineDVDkey);
-  }
-  if (dvd_auth_device) {
-    if (dvd_auth(dvd_auth_device,filename)) {
-	mp_msg(MSGT_CPLAYER,MSGL_FATAL,"Error in DVD auth...\n");
-	exit_player(MSGTR_Exit_error);
-      } 
-    mp_msg(MSGT_CPLAYER,MSGL_INFO,MSGTR_DVDauthOk);
-  }
-#endif
-
 if(stream_dump_type==5){
   unsigned char buf[4096];
   int len;
@@ -1369,6 +1360,9 @@ if(stream->type==STREAMTYPE_DVD){
 #endif
 
 // CACHE2: initial prefill: 20%  later: 5%  (should be set by -cacheopts)
+#ifdef HAS_DVBIN_SUPPORT
+goto_enable_cache:
+#endif
 if(stream_cache_size>0){
   current_module="enable_cache";
   if(!stream_enable_cache(stream,stream_cache_size*1024,stream_cache_size*1024/5,stream_cache_size*1024/20))
@@ -1376,9 +1370,6 @@ if(stream_cache_size>0){
 }
 
 //============ Open DEMUXERS --- DETECT file type =======================
-#ifdef HAS_DVBIN_SUPPORT
-goto_open_demuxer:
-#endif
 current_module="demux_open";
 
 demuxer=demux_open(stream,file_format,audio_id,video_id,dvdsub_id,filename);
@@ -1565,7 +1556,8 @@ if(!sh_video && !sh_audio){
 		if(dvb_step_channel(priv, dir))
 		{
 	  		uninit_player(INITED_ALL-(INITED_STREAM|INITED_INPUT));
-			goto goto_open_demuxer;
+			cache_uninit(stream);
+			goto goto_enable_cache;
 		}
 	  }
 	}
@@ -1599,6 +1591,16 @@ if (vo_spudec==NULL && stream->type==STREAMTYPE_DVD) {
   current_module="spudec_init_dvdread";
   vo_spudec=spudec_new_scaled(((dvd_priv_t *)(stream->priv))->cur_pgc->palette,
 			    sh_video->disp_w, sh_video->disp_h);
+}
+#endif
+
+#ifdef HAVE_MATROSKA
+if ((vo_spudec == NULL) && (demuxer->type == DEMUXER_TYPE_MATROSKA) &&
+    (d_dvdsub->sh != NULL) && (((mkv_sh_sub_t *)d_dvdsub->sh)->type == 'v')) {
+  current_module = "spudec_init_matroska";
+  vo_spudec = spudec_new_scaled(((mkv_sh_sub_t *)d_dvdsub->sh)->palette,
+                                ((mkv_sh_sub_t *)d_dvdsub->sh)->width,
+                                ((mkv_sh_sub_t *)d_dvdsub->sh)->height);
 }
 #endif
 
@@ -2320,7 +2322,7 @@ if(time_frame>0.001 && !(vo_flags&256)){
 	static int drop_message=0;
         float x;
 	AV_delay=(a_pts-delay-audio_delay)-v_pts;
-	if(AV_delay>0.5 && drop_frame_cnt>50+drop_message*250){
+	if(AV_delay>0.5 && drop_frame_cnt>50 && drop_message==0){
 	  ++drop_message;
 	  mp_msg(MSGT_AVSYNC,MSGL_WARN,MSGTR_SystemTooSlow);
 	}
@@ -2495,7 +2497,6 @@ if (stream->type==STREAMTYPE_DVDNAV && dvd_nav_still)
     case MP_CMD_SEEK : {
       int v,abs;
       osd_show_percentage = 25;
-      if ( stream->type == STREAMTYPE_STREAM ) break;
       v = cmd->args[0].v.i;
       abs = (cmd->nargs > 1) ? cmd->args[1].v.i : 0;
       if(abs==2) { /* Absolute seek to a specific timestamp in seconds */
@@ -2921,8 +2922,8 @@ if (stream->type==STREAMTYPE_DVDNAV && dvd_nav_still)
 		if(dvb_step_channel(priv, dir))
 		{
 	  		uninit_player(INITED_ALL-(INITED_STREAM|INITED_INPUT));
-			printf("UNINIT COMPLETE\n");
-			goto goto_open_demuxer;
+			cache_uninit(stream);
+			goto goto_enable_cache;
 		}
 	  }
 	}
@@ -2955,7 +2956,8 @@ if (stream->type==STREAMTYPE_DVDNAV && dvd_nav_still)
   		if(dvb_set_channel(priv, cmd->args[0].v.i))
 		{
 	  	  uninit_player(INITED_ALL-(INITED_STREAM|INITED_INPUT));
-		  goto goto_open_demuxer;
+		  cache_uninit(stream);
+		  goto goto_enable_cache;
 		}
 	  }
 	}
@@ -2988,6 +2990,17 @@ if (stream->type==STREAMTYPE_DVDNAV && dvd_nav_still)
       else
 #endif
 	if(video_out && vo_config_count) video_out->control(VOCTRL_FULLSCREEN, 0);
+    } break;
+    case MP_CMD_VO_ONTOP:
+    {
+     if(video_out && vo_config_count) {
+       video_out->control(VOCTRL_ONTOP, 0);
+#ifdef USE_OSD
+       osd_show_ontop=10;
+       vo_osd_changed(OSDTYPE_SUBTITLE);
+#endif
+     }
+
     } break;
     case MP_CMD_PANSCAN : {
       if ( !video_out ) break;
@@ -3363,7 +3376,8 @@ if(rel_seek_secs || abs_seek_pos){
       /* FIXME there should be real seeking for vobsub */
       if(sh_video) sh_video->pts=d_video->pts;
       if (vo_vobsub)
-	vobsub_reset(vo_vobsub);
+	//vobsub_reset(vo_vobsub);
+	vobsub_seek(vo_vobsub,sh_video->pts);
 #if 0
       if(sh_video && d_video->packs == 0)
 	ds_fill_buffer(d_video);
@@ -3539,6 +3553,9 @@ if(rel_seek_secs || abs_seek_pos){
       if (osd_show_av_delay) {
 	  snprintf(osd_text_tmp, 63, "A-V delay: %d ms", ROUND(audio_delay*1000));
 	  osd_show_av_delay--;
+      } else if (osd_show_ontop) {
+	  snprintf(osd_text_tmp, 63, "Stay on top: %sabled", vo_ontop?"en":"dis");
+	  osd_show_ontop--;
       } else if(osd_level>=2) {
           int len = demuxer_get_time_length(demuxer);
           int percentage = -1;
@@ -3627,7 +3644,7 @@ if(vo_config_count && vo_spudec) {
     }
       if(len<=0 || !packet) break;
       if(timestamp < 0) timestamp = 0;
-      spudec_assemble(vo_spudec,packet,len,timestamp);
+      else spudec_assemble(vo_spudec,packet,len,timestamp);
   }
   
   /* detect wether the sub has changed or not */

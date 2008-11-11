@@ -17,7 +17,7 @@ What belongs in the man page?
 -----------------------------
 
     - option descriptions (all)
-    - usage (options, config files, controls, slave mode)
+    - usage (options, configuration files, controls)
     - basic examples
 
 
@@ -55,18 +55,21 @@ A setting of 4 should look readable. Here's an overview again:
 
     - groff:     Groff is the "official" tool to convert man pages.
                  To get good results you need a recent version (1.18.2).
-                 groff -man -Thtml mplayer.1 > manpage.html
-                 groff -rLL=64n -m man -Tascii mplayer.1 | col -bx > manpage.txt
+                 groff -m man -T html mplayer.1 > man_page.html
+                 groff -m man -T ascii -rLL=78n mplayer.1 | col -bx > man_page.txt
                  The groff man page lists other output formats to use with -T.
+
     - man2html:  You can view it through a CGI script:
                  http://localhost/cgi-bin/man2html?mplayer
                  The output is unusable as the script doesn't seem to support
                  the macro definitions. Maybe manually changing all leads to
                  acceptable results.
-    - rman:      rman -f html mplayer.1 > manpage.rman.html
+
+    - rman:      rman -f html mplayer.1 > man_page.rman.html
                  The output is ugly as rman doesn't understand many of the
                  macros used.
-    - troffcvt:  troff2html -man mplayer.1 > manpage.tcvt.html
+
+    - troffcvt:  troff2html -man mplayer.1 > man_page.tcvt.html
                  The (good) output is similar to groff but simplified...
 
 
@@ -127,6 +130,7 @@ The man page/groff format
 
 Just read this and RTFS:
 
+    man 7 roff
     http://www.tldp.org/HOWTO/mini/Man-Page.html
     man 7 man
     man 7 groff
@@ -145,12 +149,17 @@ General:
     - No line should contain more than 79 characters.
     - Used commands: .TH, .SH, .TP, .IP, .PP, .[R]B, .I, .br, .RS, .RE, .na,
                      .nh, .ad, .hy, macro definitions, comments and some more
-    - Don't forget the quotation marks around expressions, the backslash
-      before a '-' if it's needed, etc...
+    - Don't forget the quotation marks around expressions, etc...
+    - Each new sentence should start on a line of its own.
+    - Put a backslash before a '-' if it denotes a range (1\-10), an option
+      (\-fs), stdin (\-) or a dash (mplayer  \- Movie Player for Linux).
+      Use just '-' if it is a hyphen (A-V) or a minus (-1). Please note that
+      it should be \-dvd-device and not \-dvd\-device.
 
 
 Option descriptions:
 
+    - Options should be in alphabetical order.
     - Option and/or suboption parameters should be short, descriptive and put
       in angular brackets (e.g. \-vo <driver>).
     - If the option has a parameter in a certain range, specify it right after
@@ -166,6 +175,9 @@ Option descriptions:
     - Put examples and notes at the end of the description (before suboptions).
     - The end of the suboptions _always_ has to be followed by a paragraph
       (BUG).
+    - For flag options just document the non-default one of -XXX and -noXXX, if
+      the option is not a flag, describe both, one below the other (this is an
+      exception to the alphabetical order).
 
 
 Macro definitions (see beginning of man page):

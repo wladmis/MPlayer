@@ -1,5 +1,6 @@
 // Translated by:  Panagiotis Issaris <takis@lumumba.luc.ac.be>
 //maintained by:   Philippe De Swert <philippe.deswert@student.denayer.wenk.be>
+//synced with help_mp-en.h revision 1.110
 
 #ifdef HELP_MP_DEFINE_STATIC
 static char help_text[]=
@@ -10,9 +11,6 @@ static char help_text[]=
 " -ao <drv[:dev]>  selecteer audio uitvoer driver & device (zie '-ao help' voor lijst)\n"
 #ifdef HAVE_VCD
 " vcd://<trackno>   speel VCD (Video CD) track van cdrom in plaats van standaard bestand\n"
-#endif
-#ifdef HAVE_LIBCSS
-" -dvdauth <dev>   specificeer DVD device voor authenticatie (voor geencrypteerde schijven)\n"
 #endif
 #ifdef USE_DVDREAD
 " dvd://<titelnr>   speel DVD titel/track van device in plaats van gewoon bestand\n"
@@ -40,9 +38,9 @@ static char help_text[]=
 " o                doorloop OSD modes: geen / enkel zoekbalk / zoekbalk en tijd\n"
 " * of /           verhoog of verlaag volume (druk 'm' om master/pcm te selecteren)\n"
 " z of x           pas ondertiteling vertraging aan met +/- 0.1 seconde\n"
-" r or t           verticale positionering van de ondertiteling, zie ook -vop expand !\n"
+" r or t           verticale positionering van de ondertiteling, zie ook -vf expand!\n"
 "\n"
-" * * * ZIE MANPAGE VOOR DETAILS, OVERIGE (GEAVANCEERDE) OPTIES EN TOETSEN ! * * *\n"
+" * * * ZIE MANPAGE VOOR DETAILS, OVERIGE (GEAVANCEERDE) OPTIES EN TOETSEN! * * *\n"
 "\n";
 #endif
 
@@ -74,6 +72,7 @@ static char help_text[]=
 #define MSGTR_TryForceAudioFmtStr "Probeer audio codec driver familie %s te forceren...\n"
 #define MSGTR_CantFindAfmtFallback "Kan audio codec voor geforceerde driver familie niet vinden, val terug op andere drivers.\n"
 #define MSGTR_CantFindAudioCodec "Kan codec voor audio format 0x%X niet vinden!\n"
+#define MSGTR_RTFMCodecs "Lees DOCS/HTML/en/codecs.html voor meer informatie!\n"
 #define MSGTR_CouldntInitAudioCodec "Kon audio codec niet initialiseren! -> nosound\n"
 #define MSGTR_TryForceVideoFmtStr "Probeer video codec driver familie %s te forceren...\n"
 #define MSGTR_CantFindVideoCodec "Kan codec voor video format 0x%X niet vinden!\n"
@@ -100,8 +99,8 @@ static char help_text[]=
 "  - Probeer met -cache 8192.\n"\
 "- Gebruik je -cache om een niet-interleaved bestand af te spelen?\n"\
 "  - Probeer met -nocache\n"\
-"Lees DOCS/video.html en DOCS/sound.html voor tips aangaande het afstellen en versnellen van MPlayer.\n"\
-"Als geen van deze oorzaken van toepassingen zijn, lees dan DOCS/bugreports.html !\n\n"
+"Lees DOCS/HTML/en/devices.html voor tips aangaande het afstellen en versnellen van MPlayer.\n"\
+"Als geen van deze oorzaken van toepassingen zijn, lees dan DOCS/HTML/en/bugreports.html!\n\n"
 
 #define MSGTR_NoGui "MPlayer werd gecompileerd ZONDER GUI ondersteuning!\n"
 #define MSGTR_GuiNeedsX "MPlayer GUI heeft X11 nodig!\n"
@@ -128,13 +127,13 @@ static char help_text[]=
 #define MSGTR_AODescription_AOAuthor "AO: Beschrijving: %s\nAO: Auteur: %s\n"
 #define MSGTR_AOComment "AO: Commentaar: %s\n"
 #define MSGTR_Video_NoVideo "Video: geen video!!!\n"
-#define MSGTR_NotInitializeVOPorVO "\nFATAAL: Kon de video filters (-vop) of de video uitvoer (-vo) niet initialiseren!\n"
+#define MSGTR_NotInitializeVOPorVO "\nFATAAL: Kon de video filters (-vf) of de video uitvoer (-vo) niet initialiseren!\n"
 #define MSGTR_Paused "\n------ GEPAUZEERD -------\r"
 #define MSGTR_PlaylistLoadUnable "\nKon de playlist %s niet laden\n"
 #define MSGTR_Exit_SIGILL_RTCpuSel \
 "- MPlayer crashte door een 'Illegale Instructie'.\n"\
 "  Het kan een bug zijn in onze nieuwe runtime CPU-detectie code...\n"\
-"  Lees DOCS/bugreports.html.\n"
+"  Lees DOCS/HTML/en/bugreports.html.\n"
 #define MSGTR_Exit_SIGILL \
 "- MPlayer crashte door een 'Illegale Instructie'.\n"\
 "  Dit gebeurt meestal als je het uitvoert op een andere CPU dan diegene waarvoor het werd\n"\
@@ -142,11 +141,11 @@ static char help_text[]=
 #define MSGTR_Exit_SIGSEGV_SIGFPE \
 "- MPlayer crashte door slecht gebruik van CPU/FPU/RAM.\n"\
 "  Hercompileer MPlayer met --enable-debug en genereer een 'gdb' backtrace en\n"\
-"  disassembly. Voor details, zie DOCS/bugreports.html#crash\n"
+"  disassembly. Voor details, zie DOCS/HTML/en/bugreports_what.html#bugreports_crash\n"
 #define MSGTR_Exit_SIGCRASH \
 "- MPlayer crashte. Dit zou niet mogen gebeuren.\n"\
 "  Het kan een bug in de MPlayer code _of_ in uw drivers _of_ in uw gcc\n"\
-"  versie. Als je denkt dat het MPlayer's fout is, lees dan DOCS/bugreports.html\n"\
+"  versie. Als je denkt dat het MPlayer's fout is, lees dan DOCS/HTML/en/bugreports.html\n"\
 "  en volg de instructies. We kunnen en zullen niet helpen tenzij je deze informatie\n"\
 "  meelevert bij het rapporteren van een mogelijke bug.\n"
 
@@ -158,8 +157,8 @@ static char help_text[]=
 #define MSGTR_CannotOpenFile_Device "Kan bestand/aparaat niet openen\n"
 #define MSGTR_ErrorDVDAuth "Fout in DVD auth...\n"
 #define MSGTR_CannotOpenDemuxer "Kan demuxer niet openen\n"
-#define MSGTR_NoAudioEncoderSelected "\nGeen audio encoder (-oac) geselecteerd! Kies er een of gebruik -nosound. Probeer -oac help !\n"
-#define MSGTR_NoVideoEncoderSelected "\nGeen video encoder (-ovc) geselecteerd! Kies er een. Probeer -ovc help !\n"
+#define MSGTR_NoAudioEncoderSelected "\nGeen audio encoder (-oac) geselecteerd! Kies er een of gebruik -nosound. Probeer -oac help!\n"
+#define MSGTR_NoVideoEncoderSelected "\nGeen video encoder (-ovc) geselecteerd! Kies er een. Probeer -ovc help!\n"
 #define MSGTR_InitializingAudioCodec "Bezig met het initializeren van de audio codec...\n"
 #define MSGTR_CannotOpenOutputFile "Kan het uitvoer bestand '%s' niet openen\n"
 #define MSGTR_EncoderOpenFailed "Het openen van de encoder is mislukt\n"
@@ -277,9 +276,6 @@ static char help_text[]=
 #define MSGTR_CantSeekRawAVI "Kan niet in raw .AVI streams verplaatsen! (index nodig, probeer met de -idx optie!)  \n"
 #define MSGTR_CantSeekFile "Kan niet verplaatsen in dit bestand!  \n"
 
-#define MSGTR_EncryptedVOB "Geencrypteerd VOB bestand (niet gecompileerd met libcss ondersteuning)! Lees DOCS/cd-dvd.html bestand\n"
-#define MSGTR_EncryptedVOBauth "Geencrypteerde stream maar authenticatie was niet aangevraagd door u!!\n"
-
 #define MSGTR_MOVcomprhdr "MOV: Gecomprimeerde headers (nog) niet ondersteund!\n"
 #define MSGTR_MOVvariableFourCC "MOV: Waarschuwing! variabele FOURCC gedetecteerd!?\n"
 #define MSGTR_MOVtooManyTrk "MOV: Waarschuwing! te veel tracks!"
@@ -293,11 +289,9 @@ static char help_text[]=
 #define MSGTR_OpeningAudioDemuxerFailed "Kan audio demuxer niet openen: %s\n"
 #define MSGTR_OpeningSubtitlesDemuxerFailed "Openen van de ondertiteling demuxer is mislukt: %s\n"
 #define MSGTR_TVInputNotSeekable "TV invoer is niet doorzoekbaar! (Waarschijnlijk zal zoeken de kanalen veranderen ;)\n"
-#define MSGTR_DemuxerInfoAlreadyPresent "Demuxer info %s reeds aanwezig\n!"
+#define MSGTR_DemuxerInfoAlreadyPresent "Demuxer info %s reeds aanwezig!\n"
 #define MSGTR_ClipInfo "Clip info: \n"
 
-#define MSGTR_LeaveTelecineMode "\ndemux_mpg: Progressieve seq gedetecteerd, 3:2 TELECINE mode afgezet\n"
-#define MSGTR_EnterTelecineMode "\ndemux_mpg: 3:2 TELECINE gedetecteerd, inverse telecine fx aangezet. FPS verandert naar %5.3f!  \n"
 
 // dec_video.c & dec_audio.c:
 #define MSGTR_CantOpenCodec "kon codec niet openen\n"
@@ -337,7 +331,7 @@ static char help_text[]=
 #define MSGTR_SettingUpLIRC "Bezig met configuratie van lirc ondersteuning...\n"
 #define MSGTR_LIRCdisabled "Je zal je afstandsbediening niet kunnen gebruiken\n"
 #define MSGTR_LIRCopenfailed "Laden van lirc ondersteuning mislukt!\n"
-#define MSGTR_LIRCcfgerr "Lezen van LIRC config bestand mislukt %s !\n"
+#define MSGTR_LIRCcfgerr "Lezen van LIRC config bestand mislukt %s!\n"
 
 // vf.c
 #define MSGTR_CouldNotFindVideoFilter "Kon video filter '%s' niet vinden\n"
@@ -348,7 +342,7 @@ static char help_text[]=
 // vd.c
 #define MSGTR_CodecDidNotSet "VDec: codec stelde sh->disp_w en sh->disp_h niet in, ik probeer het probleem te omzeilen!\n"
 #define MSGTR_VoConfigRequest "VDec: vo config aanvraag - %d x %d (csp voorkeur: %s)\n"
-#define MSGTR_CouldNotFindColorspace "Kon geen bijpassende kleurenruimte vinden - ik probeer opnieuw met -vop scale...\n"
+#define MSGTR_CouldNotFindColorspace "Kon geen bijpassende kleurenruimte vinden - ik probeer opnieuw met -vf scale...\n"
 #define MSGTR_MovieAspectIsSet "Film-Aspect is %.2f:1 - voorscalering naar het correcte film-aspect.\n"
 #define MSGTR_MovieAspectUndefined "Movie-Aspect is niet gedefinieerd - geen voorscalering toegepast.\n"
 
@@ -358,15 +352,15 @@ static char help_text[]=
 
 // --- labels ---
 #define MSGTR_About "Info over"
-#define MSGTR_FileSelect "Selecteer bestand ..."
-#define MSGTR_SubtitleSelect "Selecteer ondertiteling ..."
-#define MSGTR_OtherSelect "Selecteer ..."
-#define MSGTR_AudioFileSelect "Selecteer extern audio kanaal ..."
-#define MSGTR_FontSelect "Selecteer lettertype ..."
+#define MSGTR_FileSelect "Selecteer bestand..."
+#define MSGTR_SubtitleSelect "Selecteer ondertiteling..."
+#define MSGTR_OtherSelect "Selecteer..."
+#define MSGTR_AudioFileSelect "Selecteer extern audio kanaal..."
+#define MSGTR_FontSelect "Selecteer lettertype..."
 #define MSGTR_PlayList "AfspeelLijst"
 #define MSGTR_Equalizer "Equalizer"
 #define MSGTR_SkinBrowser "Skin Browser"
-#define MSGTR_Network "Netwerk streaming ..."
+#define MSGTR_Network "Netwerk streaming..."
 #define MSGTR_Preferences "Voorkeuren"
 #define MSGTR_OSSPreferences "OSS driver configuratie"
 #define MSGTR_SDLPreferences "SDL driver configuratie"
@@ -394,39 +388,39 @@ static char help_text[]=
 
 // --- skin loader error messages
 #define MSGTR_SKIN_ERRORMESSAGE "[skin] fout in skin configuratie bestand op regel %d: %s"
-#define MSGTR_SKIN_WARNING1 "[skin] waarschuwing in skin configuratie bestand op regel %d: widget gevonden maar voordien \"section\" niet gevonden ( %s )"
+#define MSGTR_SKIN_WARNING1 "[skin] waarschuwing in skin configuratie bestand op regel %d: widget gevonden maar voordien \"section\" niet gevonden (%s)"
 #define MSGTR_SKIN_WARNING2 "[skin] waarschuwing in skin configuratie bestand op regel %d: widget gevonden maar voordien \"subsection\" niet gevonden (%s)"
 #define MSGTR_SKIN_WARNING3 "[skin] waarschuwing in skin configuratie bestand op regel %d: deze onderverdeling is niet ondersteund door deze widget (%s)"
-#define MSGTR_SKIN_BITMAP_16bit  "16 bits of minder kleurendiepte bitmap niet ondersteund ( %s ).\n"
-#define MSGTR_SKIN_BITMAP_FileNotFound  "bestand niet gevonden ( %s )\n"
-#define MSGTR_SKIN_BITMAP_BMPReadError "bmp lees fout ( %s )\n"
-#define MSGTR_SKIN_BITMAP_TGAReadError "tga lees fout ( %s )\n"
-#define MSGTR_SKIN_BITMAP_PNGReadError "png lees fout ( %s )\n"
-#define MSGTR_SKIN_BITMAP_RLENotSupported "RLE packed tga niet ondersteund ( %s )\n"
-#define MSGTR_SKIN_BITMAP_UnknownFileType "onbekend bestandstype ( %s )\n"
-#define MSGTR_SKIN_BITMAP_ConvertError "24 bit naar 32 bit converteerfout ( %s )\n"
+#define MSGTR_SKIN_BITMAP_16bit  "16 bits of minder kleurendiepte bitmap niet ondersteund (%s).\n"
+#define MSGTR_SKIN_BITMAP_FileNotFound  "bestand niet gevonden (%s)\n"
+#define MSGTR_SKIN_BITMAP_BMPReadError "BMP lees fout (%s)\n"
+#define MSGTR_SKIN_BITMAP_TGAReadError "TGA lees fout (%s)\n"
+#define MSGTR_SKIN_BITMAP_PNGReadError "PNG lees fout (%s)\n"
+#define MSGTR_SKIN_BITMAP_RLENotSupported "RLE packed TGA niet ondersteund (%s)\n"
+#define MSGTR_SKIN_BITMAP_UnknownFileType "onbekend bestandstype (%s)\n"
+#define MSGTR_SKIN_BITMAP_ConvertError "24 bit naar 32 bit converteerfout (%s)\n"
 #define MSGTR_SKIN_BITMAP_UnknownMessage "onbekende boodschap: %s\n"
 #define MSGTR_SKIN_FONT_NotEnoughtMemory "onvoldoende geheugen\n"
 #define MSGTR_SKIN_FONT_TooManyFontsDeclared "te veel fonts gedeclareerd\n"
 #define MSGTR_SKIN_FONT_FontFileNotFound "font bestand niet gevonden\n"
 #define MSGTR_SKIN_FONT_FontImageNotFound "font image bestand niet gevonden\n"
-#define MSGTR_SKIN_FONT_NonExistentFontID "onbestaande font identifier ( %s )\n"
-#define MSGTR_SKIN_UnknownParameter "onbekende parameter ( %s )\n"
+#define MSGTR_SKIN_FONT_NonExistentFontID "onbestaande font identifier (%s)\n"
+#define MSGTR_SKIN_UnknownParameter "onbekende parameter (%s)\n"
 #define MSGTR_SKINBROWSER_NotEnoughMemory "[skinbrowser] onvoldoende geheugen.\n"
-#define MSGTR_SKIN_SKINCFG_SkinNotFound "Skin niet gevonden ( %s ).\n"
-#define MSGTR_SKIN_SKINCFG_SkinCfgReadError "Leesfout in skin-configuratiebestand ( %s ).\n"
+#define MSGTR_SKIN_SKINCFG_SkinNotFound "Skin niet gevonden (%s).\n"
+#define MSGTR_SKIN_SKINCFG_SkinCfgReadError "Leesfout in skin-configuratiebestand (%s).\n"
 #define MSGTR_SKIN_LABEL "Skins:"
 
 // --- gtk menus
 #define MSGTR_MENU_AboutMPlayer "Over MPlayer"
-#define MSGTR_MENU_Open "Open ..."
-#define MSGTR_MENU_PlayFile "Speel bestand ..."
-#define MSGTR_MENU_PlayVCD "Speel VCD ..."
-#define MSGTR_MENU_PlayDVD "Speel DVD ..."
-#define MSGTR_MENU_PlayURL "Speel URL ..."
-#define MSGTR_MENU_LoadSubtitle "Laad ondertitels ..."
-#define MSGTR_MENU_DropSubtitle "Drop ondertitels ..."
-#define MSGTR_MENU_LoadExternAudioFile "Laad extern audio bestand ..."
+#define MSGTR_MENU_Open "Open..."
+#define MSGTR_MENU_PlayFile "Speel bestand..."
+#define MSGTR_MENU_PlayVCD "Speel VCD..."
+#define MSGTR_MENU_PlayDVD "Speel DVD..."
+#define MSGTR_MENU_PlayURL "Speel URL..."
+#define MSGTR_MENU_LoadSubtitle "Laad ondertitels..."
+#define MSGTR_MENU_DropSubtitle "Drop ondertitels..."
+#define MSGTR_MENU_LoadExternAudioFile "Laad extern audio bestand..."
 #define MSGTR_MENU_Playing "Afspelen"
 #define MSGTR_MENU_Play "Speel"
 #define MSGTR_MENU_Pause "Pauzeer"
@@ -439,7 +433,7 @@ static char help_text[]=
 #define MSGTR_MENU_FullScreen "Volledig scherm"
 #define MSGTR_MENU_DVD "DVD"
 #define MSGTR_MENU_VCD "VCD"
-#define MSGTR_MENU_PlayDisc "Speel disc ..."
+#define MSGTR_MENU_PlayDisc "Speel disc..."
 #define MSGTR_MENU_ShowDVDMenu "Toon DVD menu"
 #define MSGTR_MENU_Titles "Titels"
 #define MSGTR_MENU_Title "Titel %2d"
@@ -451,7 +445,7 @@ static char help_text[]=
 #define MSGTR_MENU_PlayList "Playlist"
 #define MSGTR_MENU_SkinBrowser "Skin browser"
 #define MSGTR_MENU_Preferences "Voorkeuren"
-#define MSGTR_MENU_Exit "Afsluiten ..."
+#define MSGTR_MENU_Exit "Afsluiten..."
 #define MSGTR_MENU_Mute "Mute"
 #define MSGTR_MENU_Original "Origineel"
 #define MSGTR_MENU_AspectRatio "Aspect ratio"
@@ -504,7 +498,7 @@ static char help_text[]=
 #define MSGTR_PREFERENCES_DoubleBuffer "Gebruik dubbele buffering"
 #define MSGTR_PREFERENCES_DirectRender "Gebruik directe rendering"
 #define MSGTR_PREFERENCES_FrameDrop "Gebruik frame dropping"
-#define MSGTR_PREFERENCES_HFrameDrop "Gebruik HARD frame drop( gevaarlijk )"
+#define MSGTR_PREFERENCES_HFrameDrop "Gebruik HARD frame drop(gevaarlijk)"
 #define MSGTR_PREFERENCES_Flip "Keer het beeld ondersteboven"
 #define MSGTR_PREFERENCES_Panscan "Panscan: "
 #define MSGTR_PREFERENCES_OSDTimer "Timer en indicatoren"
@@ -517,7 +511,7 @@ static char help_text[]=
 #define MSGTR_PREFERENCES_SUB_AutoLoad "Geen automatisch laden van ondertiteling"
 #define MSGTR_PREFERENCES_SUB_Unicode "Unicode ondertiteling"
 #define MSGTR_PREFERENCES_SUB_MPSUB "Converteer de gegeven ondertiteling naar MPlayer's ondertitelingsformaat"
-#define MSGTR_PREFERENCES_SUB_SRT "Converteer de gegeven ondertiteling naar het tijdsgebaseerde SubViewer( SRT ) formaat"
+#define MSGTR_PREFERENCES_SUB_SRT "Converteer de gegeven ondertiteling naar het tijdsgebaseerde SubViewer(SRT) formaat"
 #define MSGTR_PREFERENCES_SUB_Overlap "Activeer/deactiveer ondertitel overlapping"
 #define MSGTR_PREFERENCES_Font "Lettertype:"
 #define MSGTR_PREFERENCES_FontFactor "Lettertype factor:"
@@ -539,7 +533,7 @@ static char help_text[]=
 #define MSGTR_PREFERENCES_SDL_Driver "Driver:"
 #define MSGTR_PREFERENCES_Message "Denk eraan, dat sommige functies het afspelen herstarten."
 #define MSGTR_PREFERENCES_DXR3_VENC "Video encoder:"
-#define MSGTR_PREFERENCES_DXR3_LAVC "Gebruik LAVC (ffmpeg)"
+#define MSGTR_PREFERENCES_DXR3_LAVC "Gebruik LAVC (FFmpeg)"
 #define MSGTR_PREFERENCES_DXR3_FAME "Gebruik FAME" 
 #define MSGTR_PREFERENCES_FontEncoding1 "Unicode"
 #define MSGTR_PREFERENCES_FontEncoding2 "West Europese talen (ISO-8859-1)"
@@ -574,6 +568,7 @@ static char help_text[]=
 #define MSGTR_PREFERENCES_FontOSDScale "OSD schaal:"
 #define MSGTR_PREFERENCES_Cache "Cache aan/uit"
 #define MSGTR_PREFERENCES_LoadFullscreen "Start op volledige schermgrootte"
+#define MSGTR_PREFERENCES_SaveWinPos "Bewaar de positie van het venster"
 #define MSGTR_PREFERENCES_CacheSize "Cache grootte: "
 #define MSGTR_PREFERENCES_XSCREENSAVER "Stop XScreenSaver"
 #define MSGTR_PREFERENCES_PlayBar "Activeer playbar"

@@ -20,8 +20,13 @@
 
 #include <iconv.h>
 
-#include <freetype/freetype.h>
-#include <freetype/ftglyph.h>
+#include <ft2build.h>
+#include FT_FREETYPE_H
+#include FT_GLYPH_H
+
+#ifdef HAVE_FONTCONFIG
+#include <fontconfig/fontconfig.h>
+#endif
 
 #include "../bswap.h"
 #include "font_load.h"
@@ -51,6 +56,7 @@ int vo_image_height = 0;
 int force_load_font;
 
 int using_freetype = 0;
+int font_fontconfig = 0;
 
 //// constants
 static unsigned int const colors = 256;
@@ -1112,6 +1118,11 @@ int done_freetype()
 
 void load_font_ft(int width, int height) 
 {
+#ifdef HAVE_FONTCONFIG
+    FcPattern *fc_pattern;
+    FcChar8 *s;
+    FcBool scalable;
+#endif
     vo_image_width = width;
     vo_image_height = height;
 
@@ -1121,6 +1132,30 @@ void load_font_ft(int width, int height)
     if (vo_font) free_font_desc(vo_font);
 
 #ifdef USE_OSD
+#ifdef HAVE_FONTCONFIG
+    if (font_fontconfig)
+    {
+	if (!font_name)
+	    font_name = "sans-serif";
+	FcInit();
+	fc_pattern = FcNameParse(font_name);
+	FcConfigSubstitute(0, fc_pattern, FcMatchPattern);
+	FcDefaultSubstitute(fc_pattern);
+	fc_pattern = FcFontMatch(0, fc_pattern, 0);
+	FcPatternGetBool(fc_pattern, FC_SCALABLE, 0, &scalable);
+	if (scalable != FcTrue) {
+    	    fc_pattern = FcNameParse("sans-serif");
+    	    FcConfigSubstitute(0, fc_pattern, FcMatchPattern);
+    	    FcDefaultSubstitute(fc_pattern);
+    	    fc_pattern = FcFontMatch(0, fc_pattern, 0);
+	}
+	// s doesn't need to be freed according to fontconfig docs
+	FcPatternGetString(fc_pattern, FC_FILE, 0, &s);
+	vo_font=read_font_desc_ft(s, width, height);
+	free(fc_pattern);
+    }
+    else
+#endif
     vo_font=read_font_desc_ft(font_name, width, height);
 #endif
 }

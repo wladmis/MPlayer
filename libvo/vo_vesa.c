@@ -120,6 +120,7 @@ static int lvo_opened = 0;
 #ifdef CONFIG_VIDIX
 static const char *vidix_name = NULL;
 static int vidix_opened = 0;
+static vidix_grkey_t gr_key;
 #endif
 
 #define HAS_DGA()  (win.idx == -1)
@@ -958,6 +959,22 @@ config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uin
 		  }
 		  else printf("vo_vesa: Using VIDIX\n");
 		  vidix_start();
+
+		  /* set colorkey */       
+		  if (vidix_grkey_support())
+		  {
+		    vidix_grkey_get(&gr_key);
+		    gr_key.key_op = KEYS_PUT;
+		    if (!(vo_colorkey & 0xFF000000))
+		    {
+			gr_key.ckey.op = CKEY_TRUE;
+			gr_key.ckey.red = (vo_colorkey & 0x00FF0000) >> 16;
+			gr_key.ckey.green = (vo_colorkey & 0x0000FF00) >> 8;
+			gr_key.ckey.blue = vo_colorkey & 0x000000FF;
+		    } else
+			gr_key.ckey.op = CKEY_FALSE;
+		    vidix_grkey_set(&gr_key);
+		  }         
 		  vidix_opened = 1;
 		}
 #endif
@@ -1048,5 +1065,36 @@ static uint32_t control(uint32_t request, void *data, ...)
   case VOCTRL_QUERY_FORMAT:
     return query_format(*((uint32_t*)data));
   }
+
+#ifdef CONFIG_VIDIX
+  if (vidix_name) {
+    switch (request) {
+    case VOCTRL_SET_EQUALIZER:
+    {
+      va_list ap;
+      int value;
+    
+      va_start(ap, data);
+      value = va_arg(ap, int);
+      va_end(ap);
+
+      return vidix_control(request, data, (int *)value);
+    }
+    case VOCTRL_GET_EQUALIZER:
+    {
+      va_list ap;
+      int *value;
+    
+      va_start(ap, data);
+      value = va_arg(ap, int*);
+      va_end(ap);
+
+      return vidix_control(request, data, value);
+    }
+    }
+    return vidix_control(request, data);
+  }
+#endif
+
   return VO_NOTIMPL;
 }

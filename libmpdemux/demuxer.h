@@ -42,12 +42,12 @@
 #define DEMUXER_TYPE_MATROSKA 31
 #define DEMUXER_TYPE_REALAUDIO 32
 #define DEMUXER_TYPE_MPEG_TY 33
-
+#define DEMUXER_TYPE_LMLM4 34
 
 // This should always match the higest demuxer type number.
 // Unless you want to disallow users to force the demuxer to some types
 #define DEMUXER_TYPE_MIN 0
-#define DEMUXER_TYPE_MAX 33
+#define DEMUXER_TYPE_MAX 34
 
 #define DEMUXER_TYPE_DEMUXERS (1<<16)
 // A virtual demuxer type for the network code
@@ -265,6 +265,7 @@ demuxer_t*  new_demuxers_demuxer(demuxer_t* vd, demuxer_t* ad, demuxer_t* sd);
 
 // AVI demuxer params:
 extern int index_mode;  // -1=untouched  0=don't use index  1=use (geneate) index
+extern char *index_file_save, *index_file_load;
 extern int force_ni;
 extern int pts_from_bps;
 

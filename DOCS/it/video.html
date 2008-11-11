@@ -489,7 +489,7 @@ E' un bug di SDL, io non posso cambiarlo (provato con SDL 1.2.1).
 </P>
 
 <P><B>NOTA:</B> secondo la mia esperienza, la migliore qualità di immagine su EGA
- si ottiene riducendo un po' la luminosità: <CODE>-vop eq=-20:0</CODE>. Sulla
+ si ottiene riducendo un po' la luminosità: <CODE>-vf eq=-20:0</CODE>. Sulla
  mia macchina ho dovuto anche ridurre la frequenza di campionamento dell'audio,
  poichè il suono dava problemi a 44kHz: <CODE>-srate 22050</CODE>.</P>
 
@@ -516,9 +516,9 @@ quello che vuoi.  E non dimenticare di registrare il tuo UniVBE ;))</P>
 <FONT face="Verdana, Arial, Helvetica, sans-serif" size=2>specifica il dispositivo framebuffer da usare (/dev/fb0)</TD><TR>
 <TD></TD><TD><FONT face="Verdana, Arial, Helvetica, sans-serif" size=2>-fbmode</TD><TD></TD><TD><FONT face="Verdana, Arial, Helvetica, sans-serif" size=2>nome della modalità da usare (secondo /etc/fb.modes)</TD><TR>
 <TD></TD><TD><FONT face="Verdana, Arial, Helvetica, sans-serif" size=2>-fbmodeconfig</TD><TD></TD><TD><FONT face="Verdana, Arial, Helvetica, sans-serif" size=2>	file di configurazione delle modalità (default /etc/fb.modes)</TD><TR>
-<TD></TD><TD><FONT face="Verdana, Arial, Helvetica, sans-serif" size=2>-monitor_hfreq</TD><TD></TD><TD ROWSPAN=3><FONT face="Verdana, Arial, Helvetica, sans-serif" size=2>valori IMPORTANTI, vedi example.conf</TD><TR>
-<TD></TD><TD><FONT face="Verdana, Arial, Helvetica, sans-serif" size=2>-monitor_vfreq</TD><TD></TD><TR>
-<TD></TD><TD><FONT face="Verdana, Arial, Helvetica, sans-serif" size=2>-monitor_dotclock</TD><TD></TD><TR>
+<TD></TD><TD><FONT face="Verdana, Arial, Helvetica, sans-serif" size=2>-monitor-hfreq</TD><TD></TD><TD ROWSPAN=3><FONT face="Verdana, Arial, Helvetica, sans-serif" size=2>valori IMPORTANTI, vedi example.conf</TD><TR>
+<TD></TD><TD><FONT face="Verdana, Arial, Helvetica, sans-serif" size=2>-monitor-vfreq</TD><TD></TD><TR>
+<TD></TD><TD><FONT face="Verdana, Arial, Helvetica, sans-serif" size=2>-monitor-dotclock</TD><TD></TD><TR>
 </TABLE></P>
 
 <P>Se vuoi cambiare ad una modalità specifica, allora usa</P>
@@ -654,7 +654,7 @@ Eccone alcune importanti:</P></B></TD><TR>
 e ne usa meno su console standard,
 non-framebuffer. Usa SVGATextMode per selezionare una modalità testo grande,
 e divertiti! (le schede Hercules con uscita secondaria vanno forte :)) (anche
- se, secondo me, puoi usare l'ozione <CODE>-vop 1bpp</CODE> per avere un
+ se, secondo me, puoi usare l'ozione <CODE>-vf 1bpp</CODE> per avere un
  immagine grafica su hgafb:)</P>
 
 <P>Usa l'opzione -framedrop se il tuo computer non è abbastanza veloce da renderizzare tutti i frame!</P>
@@ -710,8 +710,8 @@ almeno.)
   <B>reale</B>. (detto meglio -in modalità vm86).</LI>
  <LI>Puoi usarlo insieme a Vidix, ottenendo così l'accelerazione video <B>E</B>
   l'output su TV allo stesso tempo! (raccomandato per le schede ATI)</LI>
-<LI>Se hai VESA VBE 3.0+, e hai specificato <CODE>monitor_hfreq</CODE>,
-    <CODE>monitor_vfreq</CODE>, <CODE>monitor_dotclock</CODE> da qualche parte (file di 
+<LI>Se hai VESA VBE 3.0+, e hai specificato <CODE>monitor-hfreq</CODE>,
+    <CODE>monitor-vfreq</CODE>, <CODE>monitor-dotclock</CODE> da qualche parte (file di 
     configurazione, o linea di comando) otterrai il refresh rate più alto possibile. (Usando
     General Timing Formula). Per abilitalo dovrai specificare
     <B>tutte</B> le opzioni del tuo monitor.</LI>
@@ -1217,7 +1217,7 @@ ed è quindi necessario. Con la speciale modalità <I>cinerama</I>, si possono
  con l'algoritmo bilineare veloce. La linea di comando è
 
 <PRE>
-  mplayer -vo zr -sws 0 -vop scale=384:204 movie.avi
+  mplayer -vo zr -sws 0 -vf scale=384:204 movie.avi
 </PRE>
 
 <P>Il ritaglio (cropping) può essere fatto sia dal filtro <CODE>crop</CODE> che
@@ -1232,7 +1232,7 @@ ed è quindi necessario. Con la speciale modalità <I>cinerama</I>, si possono
  se vuoi invece usare il filtro <CODE>crop</CODE> fai
 
 <PRE>
-  mplayer -vo zr -vop crop=720:320:80:0 benhur.avi
+  mplayer -vo zr -vf crop=720:320:80:0 benhur.avi
 </PRE>
 
 <P>Usando più di un'opzione <CODE>-zrcrop</CODE> si attiva la modalità

@@ -22,6 +22,11 @@
 #include <winsock2.h>
 #endif
 
+#ifdef USE_ICONV
+#include <locale.h>
+#include <iconv.h>
+#endif
+
 #include "url.h"
 #include "asf.h"
 
@@ -76,13 +81,13 @@ static void send_command (int s, int command, uint32_t switches,
   command_t  cmd;
   int        len8;
 
-  len8 = (length + (length%8)) / 8;
+  len8 = (length + 7) / 8;
 
   cmd.num_bytes = 0;
 
   put_32 (&cmd, 0x00000001); /* start sequence */
   put_32 (&cmd, 0xB00BFACE); /* #-)) */
-  put_32 (&cmd, length + 32);
+  put_32 (&cmd, len8*8 + 32);
   put_32 (&cmd, 0x20534d4d); /* protocol type "MMS " */
   put_32 (&cmd, len8 + 4);
   put_32 (&cmd, seq_num);
@@ -95,25 +100,45 @@ static void send_command (int s, int command, uint32_t switches,
   put_32 (&cmd, extra);
 
   memcpy (&cmd.buf[48], data, length);
+  if (length & 7)
+    memset(&cmd.buf[48 + length], 0, 8 - (length & 7));
 
-  if (send (s, cmd.buf, length+48, 0) != (length+48)) {
+  if (send (s, cmd.buf, len8*8+48, 0) != (len8*8+48)) {
     printf ("write error\n");
   }
 }
 
-static void string_utf16(char *dest, char *src, int len) 
-{
-  int i;
+#ifdef USE_ICONV
+static iconv_t url_conv;
+#endif
 
-  memset (dest, 0, 1000);
+static void string_utf16(char *dest, char *src, int len) {
+    int i;
+#ifdef USE_ICONV
+    size_t len1, len2;
+    char *ip, *op;
 
-  for (i=0; i<len; i++) {
-    dest[i*2] = src[i];
-    dest[i*2+1] = 0;
-  }
+    if (url_conv != (iconv_t)(-1))
+    {
+    memset(dest, 0, 1000);
+    len1 = len; len2 = 1000;
+    ip = src; op = dest;
 
-  dest[i*2] = 0;
-  dest[i*2+1] = 0;
+    iconv(url_conv, &ip, &len1, &op, &len2);
+    }
+    else
+    {
+#endif
+	for (i=0; i<len; i++) {
+	    dest[i*2] = src[i];
+	    dest[i*2+1] = 0;
+        }
+	/* trailing zeroes */
+	dest[i*2] = 0;
+	dest[i*2+1] = 0;
+#ifdef USE_ICONV
+    }
+#endif
 }
 
 static void get_answer (int s) 
@@ -461,25 +486,30 @@ int asf_mmst_streaming_start(stream_t *stream)
   * cmd 1 0x01 
   * */
 
+  /* prepare for the url encoding conversion */
+#ifdef USE_ICONV
+  setlocale(LC_CTYPE, "");
+  url_conv = iconv_open("UTF-16LE",setlocale(LC_CTYPE, NULL));
+#endif
+
   snprintf (str, 1023, "\034\003NSPlayer/7.0.0.1956; {33715801-BAB3-9D85-24E9-03B90328270A}; Host: %s", url1->hostname);
-  string_utf16 (data, str, strlen(str)+2);
+  string_utf16 (data, str, strlen(str));
 // send_command(s, commandno ....)
-  send_command (s, 1, 0, 0x0004000b, strlen(str) * 2+8, data);
+  send_command (s, 1, 0, 0x0004000b, strlen(str)*2+2, data);
 
   len = recv (s, data, BUF_SIZE, 0) ;
 
   /*This sends details of the local machine IP address to a Funnel system at the server. 
   * Also, the TCP or UDP transport selection is sent.
   *
-  * here 192.168.0.129 is local ip address TCP/UDP states the tronsport we r using
+  * here 192.168.0.1 is local ip address TCP/UDP states the tronsport we r using
   * and 1037 is the  local TCP or UDP socket number
   * cmd 2 0x02
   *  */
 
-  string_utf16 (&data[8], "\002\000\\\\192.168.0.1\\TCP\\1037\0000", 
-		28);
+  string_utf16 (&data[8], "\002\000\\\\192.168.0.1\\TCP\\1037", 24);
   memset (data, 0, 8);
-  send_command (s, 2, 0, 0, 28*2+8, data);
+  send_command (s, 2, 0, 0, 24*2+10, data);
 
   len = recv (s, data, BUF_SIZE, 0) ;
 
@@ -488,7 +518,7 @@ int asf_mmst_streaming_start(stream_t *stream)
 
   string_utf16 (&data[8], path, strlen(path));
   memset (data, 0, 8);
-  send_command (s, 5, 0, 0, strlen(path)*2+12, data);
+  send_command (s, 5, 0, 0, strlen(path)*2+10, data);
 
   get_answer (s);
 
@@ -556,6 +586,11 @@ int asf_mmst_streaming_start(stream_t *stream)
 
   packet_length1 = packet_length;
   printf("mmst packet_length = %d\n",packet_length);
+
+#ifdef USE_ICONV
+  if (url_conv != (iconv_t)(-1))
+    iconv_close(url_conv);
+#endif
 
   return 0;
 }

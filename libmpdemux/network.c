@@ -29,6 +29,7 @@
 
 #include "network.h"
 #include "http.h"
+#include "cookies.h"
 #include "url.h"
 #include "asf.h"
 #ifndef STREAMING_LIVE_DOT_COM
@@ -47,10 +48,14 @@ extern int mp_input_check_interrupt(int time);
 int asf_streaming_start( stream_t *stream, int *demuxer_type );
 int rtsp_streaming_start( stream_t *stream );
 
-/* Variables for the command line option -user, -passwd & -bandwidth */
+/* Variables for the command line option -user, -passwd, -bandwidth,
+   -user-agent and -nocookies */
+
 char *network_username=NULL;
 char *network_password=NULL;
 int   network_bandwidth=0;
+int   network_cookies_enabled = 0;
+char *network_useragent=NULL;
 
 /* IPv6 options */
 int   network_prefer_ipv4 = 0;
@@ -209,7 +214,7 @@ connect2Server_with_af(char *host, int port, int af,int verb) {
 	
 	
 	if( socket_server_fd==-1 ) {
-		mp_msg(MSGT_NETWORK,MSGL_ERR,"Failed to create %s socket:\n", af2String(af));
+//		mp_msg(MSGT_NETWORK,MSGL_ERR,"Failed to create %s socket:\n", af2String(af));
 		return -2;
 	}
 
@@ -426,7 +431,7 @@ int
 http_send_request( URL_t *url ) {
 	HTTP_header_t *http_hdr;
 	URL_t *server_url;
-	char str[80];
+	char str[256];
 	int fd;
 	int ret;
 	int proxy = 0;		// Boolean
@@ -441,9 +446,18 @@ http_send_request( URL_t *url ) {
 		server_url = url;
 		http_set_uri( http_hdr, server_url->file );
 	}
-	snprintf(str, 80, "Host: %s", server_url->hostname );
+	snprintf(str, 256, "Host: %s", server_url->hostname );
 	http_set_field( http_hdr, str);
-	http_set_field( http_hdr, "User-Agent: MPlayer/"VERSION);
+	if (network_useragent)
+	{
+	    snprintf(str, 256, "User-Agent: %s", network_useragent);
+	    http_set_field(http_hdr, str);
+	}
+	else
+	    http_set_field( http_hdr, "User-Agent: MPlayer/"VERSION);
+	    
+	if (network_cookies_enabled) cookies_set( http_hdr, server_url->hostname, server_url->url );
+	
 	http_set_field( http_hdr, "Connection: closed");
 	http_add_basic_authentication( http_hdr, url->username, url->password );
 	if( http_build_request( http_hdr )==NULL ) {
@@ -563,7 +577,7 @@ http_authenticate(HTTP_header_t *http_hdr, URL_t *url, int *auth_retry) {
 int
 autodetectProtocol(streaming_ctrl_t *streaming_ctrl, int *fd_out, int *file_format) {
 	HTTP_header_t *http_hdr;
-	unsigned int i, j;
+	unsigned int i;
 	int fd=-1;
 	int redirect;
 	int auth_retry=0;
@@ -620,29 +634,15 @@ extension=NULL;
 		if( !strcasecmp(url->protocol, "rtsp") ) {
 			// Checking for Real rtsp://
 			// Extension based detection, should be replaced with something based on server answer
-			extension = NULL;
-			if( url->file!=NULL ) {
-				j = strlen(url->file);
-				for( i=j; i>0 ; i-- ) {
-					if( url->file[i]=='?' )
-						j = i;
-					if( url->file[i]=='.' ) {
-						extension = calloc(j-i, 1);
-						for ( i++; i < j; i++)
-							extension[strlen(extension)]=url->file[i];
-						extension[strlen(extension)]=0;
-						break;
+			if( url->file!= NULL ) {
+				char *p;
+				for( p = url->file; p[0]; p++ ) {
+					if( p[0] == '.' && tolower(p[1]) == 'r' && (tolower(p[2]) == 'm' || tolower(p[2]) == 'a') && (!p[3] || p[3] == '?' || p[3] == '&') ) {
+						*file_format = DEMUXER_TYPE_REAL;
+						return 0;
 					}
 				}
 			}
-			if (extension != NULL && (!strcasecmp(extension, "rm")
-			    || !strcasecmp(extension, "ra"))) {
-				*file_format = DEMUXER_TYPE_REAL;
-				free(extension);
-				return 0;
-			}
-			if (extension != NULL)
-				free(extension);
 			mp_msg(MSGT_NETWORK,MSGL_INFO,"Not a Realmedia rtsp url. Trying standard rtsp protocol.\n");
 #ifdef STREAMING_LIVE_DOT_COM
 			*file_format = DEMUXER_TYPE_RTP;

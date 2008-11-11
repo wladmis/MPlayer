@@ -11,6 +11,10 @@ This software has NO WARRANTY.  Use it at your own risk.
 Original location: http://cvs.debian.org/lrmi/
 */
 
+#include "../config.h"
+#ifdef HAVE_VESA
+
+#include <signal.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/io.h>
@@ -789,10 +793,19 @@ static int
 run_vm86(void)
 	{
 	unsigned int vret;
+	sigset_t allsigs, cursigs;
+	unsigned long oldgs, oldfs;
 
 	while (1)
 		{
+		sigfillset(&allsigs);
+	        sigprocmask(SIG_SETMASK, &allsigs, &cursigs);
+		asm volatile ("movl %%gs, %0" : "=g" (oldgs));
+		asm volatile ("movl %%fs, %0" : "=g" (oldfs));
 		vret = lrmi_vm86(&context.vm);
+		asm volatile ("movl %0, %%fs" :: "g" (oldfs));
+		asm volatile ("movl %0, %%gs" :: "g" (oldgs));
+		sigprocmask(SIG_SETMASK, &cursigs, NULL);
 
 		if (VM86_TYPE(vret) == VM86_INTx)
 			{
@@ -910,3 +923,4 @@ LRMI_int(int i, struct LRMI_regs *r)
 	return vret;
 	}
 
+#endif

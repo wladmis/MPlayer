@@ -13,6 +13,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
+#include <ctype.h>
 
 #include <sys/mman.h>
 #include <sys/ioctl.h>
@@ -42,6 +43,7 @@ LIBVO_EXTERN(fbdev)
 #ifdef CONFIG_VIDIX
 /* Name of VIDIX driver */
 static const char *vidix_name = NULL;
+static vidix_grkey_t gr_key;
 #endif
 static signed int pre_init_err = -2;
 /******************************
@@ -639,14 +641,6 @@ static struct fb_cmap *make_directcolor_cmap(struct fb_var_screeninfo *var)
   return cmap;
 }
 
-#ifdef CONFIG_VIDIX
-static uint32_t parseSubDevice(const char *sd)
-{
-   if(memcmp(sd,"vidix",5) == 0) vidix_name = &sd[5]; /* vidix_name will be valid within init() */
-   else { mp_msg(MSGT_VO, MSGL_WARN, "Unknown subdevice: '%s'\n", sd); return -1; }
-   return 0;
-}
-#endif
 
 static int fb_preinit(int reset)
 {
@@ -984,6 +978,21 @@ static uint32_t config(uint32_t width, uint32_t height, uint32_t d_width,
 		}
 		else mp_msg(MSGT_VO, MSGL_V, "Using VIDIX\n");
 		vidix_start();
+		if (vidix_grkey_support())
+		{
+		    vidix_grkey_get(&gr_key);
+		    gr_key.key_op = KEYS_PUT;
+		    if (!(vo_colorkey & 0xff000000))
+		    {
+			gr_key.ckey.op = CKEY_TRUE;
+			gr_key.ckey.red = (vo_colorkey & 0x00ff0000) >> 16;
+			gr_key.ckey.green = (vo_colorkey & 0x0000ff00) >> 8;
+			gr_key.ckey.blue = vo_colorkey & 0x000000ff;
+		    }
+		    else
+			gr_key.ckey.op = CKEY_FALSE;
+		    vidix_grkey_set(&gr_key);
+		}
 	}
 	else
 #endif
@@ -1114,11 +1123,21 @@ static void uninit(void)
 static uint32_t preinit(const char *vo_subdevice)
 {
     pre_init_err = 0;
+
+    if(vo_subdevice)
+    {
 #ifdef CONFIG_VIDIX
-    if(vo_subdevice) parseSubDevice(vo_subdevice);
-    if(vidix_name) pre_init_err = vidix_preinit(vidix_name,&video_out_fbdev);
-    mp_msg(MSGT_VO, MSGL_DBG3, "vo_subdevice: initialization returns: %i\n",pre_init_err);
+	if (memcmp(vo_subdevice, "vidix", 5) == 0)
+	    vidix_name = &vo_subdevice[5];
+	if(vidix_name)
+	    pre_init_err = vidix_preinit(vidix_name,&video_out_fbdev);
+	else
 #endif
+	{
+	    if (fb_dev_name) free(fb_dev_name);
+	    fb_dev_name = strdup(vo_subdevice);
+	}
+    }
     if(!pre_init_err) return (pre_init_err=(fb_preinit(0)?0:-1));
     return(-1);
 }
@@ -1150,5 +1169,35 @@ static uint32_t control(uint32_t request, void *data, ...)
   case VOCTRL_QUERY_FORMAT:
     return query_format(*((uint32_t*)data));
   }
+
+#ifdef CONFIG_VIDIX
+  if (vidix_name) {
+      switch (request) {
+      case VOCTRL_SET_EQUALIZER:
+	  {
+	      va_list ap;
+	      int value;
+	      
+	      va_start(ap, data);
+	      value = va_arg(ap, int);
+	      va_end(ap);
+	      
+	      return vidix_control(request, data, (int *)value);
+         }
+      case VOCTRL_GET_EQUALIZER:
+	  {
+	      va_list ap;
+	      int *value;
+	      
+	      va_start(ap, data);
+	      value = va_arg(ap, int*);
+	      va_end(ap);
+	      
+	      return vidix_control(request, data, value);
+	  }
+      }
+  }
+#endif
+
   return VO_NOTIMPL;
 }

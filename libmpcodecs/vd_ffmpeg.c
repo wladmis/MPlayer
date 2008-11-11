@@ -128,7 +128,7 @@ static int control(sh_video_t *sh,int cmd,void* arg,...){
         case IMGFMT_I420:
 	    // "converted" using pointer/stride modification
 	    if(avctx->pix_fmt==PIX_FMT_YUV420P) return CONTROL_TRUE;// u/v swap
-	    if(avctx->pix_fmt==PIX_FMT_YUV422P) return CONTROL_TRUE;// half stride
+	    if(avctx->pix_fmt==PIX_FMT_YUV422P && !ctx->do_dr1) return CONTROL_TRUE;// half stride
 	    break;
 #ifdef HAVE_XVMC
         case IMGFMT_XVMC_IDCT_MPEG2:
@@ -170,9 +170,6 @@ static int init(sh_video_t *sh){
  
     if(lavc_codec->capabilities&CODEC_CAP_DR1)
 	ctx->do_dr1=1;
-    //XXX:FIXME:HACK:UGLY 422P with direct rendering is buggy cuz of that chroma stride trick ...
-    if(sh->format == mmioFOURCC('H','F','Y','U'))
-        ctx->do_dr1=0;
     ctx->b_age= ctx->ip_age[0]= ctx->ip_age[1]= 256*256*256*64;
     ctx->ip_count= ctx->b_count= 0;
 
@@ -183,6 +180,11 @@ static int init(sh_video_t *sh){
 #endif
     ctx->avctx = avcodec_alloc_context();
     avctx = ctx->avctx;
+
+#if LIBAVCODEC_BUILD >= 4691 && LIBAVCODEC_BUILD <= 4692
+    if(lavc_codec->capabilities&CODEC_CAP_CR)
+        avctx->cr_available = 1;
+#endif
 
 #ifdef HAVE_XVMC
     if(lavc_codec->id == CODEC_ID_MPEG2VIDEO_XVMC){
@@ -200,6 +202,9 @@ static int init(sh_video_t *sh){
         avctx->flags|= CODEC_FLAG_EMU_EDGE; 
         avctx->get_buffer= get_buffer;
         avctx->release_buffer= release_buffer;
+#if LIBAVCODEC_BUILD >= 4693
+        avctx->reget_buffer= get_buffer;
+#endif
     }
 
 #ifdef CODEC_FLAG_NOT_TRUNCATED
@@ -246,7 +251,9 @@ static int init(sh_video_t *sh){
 #endif
     }
     if(   sh->format == mmioFOURCC('R', 'V', '1', '0')
-       || sh->format == mmioFOURCC('R', 'V', '1', '3')){
+       || sh->format == mmioFOURCC('R', 'V', '1', '3')
+       || sh->format == mmioFOURCC('R', 'V', '2', '0')
+       ){
         avctx->extradata_size= 8;
         avctx->extradata = malloc(avctx->extradata_size);
         if(sh->bih->biSize!=sizeof(*sh->bih)+8){
@@ -279,6 +286,21 @@ static int init(sh_video_t *sh){
 	avctx->extradata = malloc(avctx->extradata_size);
 	memcpy(avctx->extradata, sh->bih+1, avctx->extradata_size);
     }
+    /* Pass palette to codec */
+#if LIBAVCODEC_BUILD >= 4689
+    if (sh->bih && (sh->bih->biBitCount <= 8)) {
+        avctx->palctrl = (AVPaletteControl*)calloc(1,sizeof(AVPaletteControl));
+        avctx->palctrl->palette_changed = 1;
+        if (sh->bih->biSize-sizeof(BITMAPINFOHEADER))
+            /* Palette size in biSize */
+            memcpy(avctx->palctrl->palette, sh->bih+1,
+                   min(sh->bih->biSize-sizeof(BITMAPINFOHEADER), AVPALETTE_SIZE));
+        else
+            /* Palette size in biClrUsed */
+            memcpy(avctx->palctrl->palette, sh->bih+1,
+                   min(sh->bih->biClrUsed * 4, AVPALETTE_SIZE));
+	}
+#endif
     if (sh->ImageDesc &&
 	 sh->format == mmioFOURCC('S','V','Q','3')){
 	avctx->extradata_size = *(int*)sh->ImageDesc;
@@ -321,6 +343,11 @@ static void uninit(sh_video_t *sh){
     if (avctx->extradata_size)
 	free(avctx->extradata);
     avctx->extradata=NULL;
+#if LIBAVCODEC_BUILD >= 4689
+    if (avctx->palctrl)
+	    free(avctx->palctrl);
+    avctx->palctrl=NULL;
+#endif
     if(avctx->slice_offset!=NULL) 
         free(avctx->slice_offset);
     avctx->slice_offset=NULL;
@@ -386,14 +413,21 @@ static void draw_slice(struct AVCodecContext *s,
 static int init_vo(sh_video_t *sh){
     vd_ffmpeg_ctx *ctx = sh->context;
     AVCodecContext *avctx = ctx->avctx;
+#if LIBAVCODEC_BUILD >= 4687
+    float aspect= av_q2d(avctx->sample_aspect_ratio) * avctx->width / avctx->height;
+#else
+    float aspect= avctx->aspect_ratio;
+#endif
 
-    if (avctx->aspect_ratio != ctx->last_aspect ||
+     // it is possible another vo buffers to be used after vo config()
+     // lavc reset its buffers on width/heigh change but not on aspect change!!!
+    if (// aspect != ctx->last_aspect ||
 	avctx->width != sh->disp_w ||
 	avctx->height != sh->disp_h ||
 	!ctx->vo_inited)
     {
-	mp_msg(MSGT_DECVIDEO, MSGL_V, "[ffmpeg] aspect_ratio: %f\n", avctx->aspect_ratio);
-        ctx->last_aspect = avctx->aspect_ratio;
+	mp_msg(MSGT_DECVIDEO, MSGL_V, "[ffmpeg] aspect_ratio: %f\n", aspect);
+        ctx->last_aspect = aspect;
 //	if(ctx->last_aspect>=0.01 && ctx->last_aspect<100)
 	if(sh->aspect==0.0)
 	    sh->aspect = ctx->last_aspect;
@@ -409,6 +443,9 @@ static int init_vo(sh_video_t *sh){
 	case PIX_FMT_YUV422:  ctx->best_csp=IMGFMT_YUY2;break; //huffyuv perhaps in the future
 	case PIX_FMT_RGB24 :  ctx->best_csp=IMGFMT_BGR24;break; //huffyuv
 	case PIX_FMT_RGBA32:  ctx->best_csp=IMGFMT_BGR32;break; //huffyuv / mjpeg
+	case PIX_FMT_BGR24 :  ctx->best_csp=IMGFMT_BGR24;break; //8bps
+	case PIX_FMT_RGB555:  ctx->best_csp=IMGFMT_BGR15;break; //rpza,cram
+	case PIX_FMT_PAL8:    ctx->best_csp=IMGFMT_BGR8;break; //8bps,mrle,cram
 #ifdef HAVE_XVMC
         case PIX_FMT_XVMC_MPEG2_MC:ctx->best_csp=IMGFMT_XVMC_MOCO_MPEG2;break;
         case PIX_FMT_XVMC_MPEG2_IDCT:ctx->best_csp=IMGFMT_XVMC_IDCT_MPEG2;break;
@@ -435,6 +472,25 @@ static int get_buffer(AVCodecContext *avctx, AVFrame *pic){
     if(avctx->pix_fmt == PIX_FMT_YUV410P)
         align=63; //yes seriously, its really needed (16x16 chroma blocks in SVQ1 -> 64x64)
 
+#if LIBAVCODEC_BUILD >= 4691
+  if (pic->buffer_hints) {
+    mp_msg(MSGT_DECVIDEO,MSGL_DBG2, "Buffer hints: %u\n", pic->buffer_hints);
+    type = MP_IMGTYPE_TEMP;
+    if (pic->buffer_hints & FF_BUFFER_HINTS_READABLE)
+        flags |= MP_IMGFLAG_READABLE;
+    if (pic->buffer_hints & FF_BUFFER_HINTS_PRESERVE) {
+        type = MP_IMGTYPE_STATIC;
+        flags |= MP_IMGFLAG_PRESERVE;
+    }
+    if (pic->buffer_hints & FF_BUFFER_HINTS_REUSABLE) {
+        type = MP_IMGTYPE_STATIC;
+        flags |= MP_IMGFLAG_PRESERVE;
+    }
+    flags|=(!avctx->hurry_up && ctx->do_slices) ?
+            MP_IMGFLAG_DRAW_CALLBACK:0;
+    mp_msg(MSGT_DECVIDEO,MSGL_DBG2, type == MP_IMGTYPE_STATIC ? "using STATIC\n" : "using TEMP\n");
+  } else {
+#endif
     if(!pic->reference){
         ctx->b_count++;
         flags|=(!avctx->hurry_up && ctx->do_slices) ?
@@ -444,6 +500,9 @@ static int get_buffer(AVCodecContext *avctx, AVFrame *pic){
         flags|= MP_IMGFLAG_PRESERVE|MP_IMGFLAG_READABLE
                 | (ctx->do_slices ? MP_IMGFLAG_DRAW_CALLBACK : 0);
     }
+#if LIBAVCODEC_BUILD >= 4691
+  }
+#endif
 
     if(init_vo(sh)<0){
         avctx->release_buffer= avcodec_default_release_buffer;
@@ -451,6 +510,9 @@ static int get_buffer(AVCodecContext *avctx, AVFrame *pic){
         return avctx->get_buffer(avctx, pic);
     }
     
+#if LIBAVCODEC_BUILD >= 4691
+  if (!pic->buffer_hints) {
+#endif
     if(ctx->b_count>1 || ctx->ip_count>2){
         printf("DR1 failure\n");
 
@@ -465,6 +527,9 @@ static int get_buffer(AVCodecContext *avctx, AVFrame *pic){
         type= MP_IMGTYPE_IP;
     }
     mp_msg(MSGT_DECVIDEO,MSGL_DBG2, type== MP_IMGTYPE_IPB ? "using IPB\n" : "using IP\n");
+#if LIBAVCODEC_BUILD >= 4691
+  }
+#endif
 
     mpi= mpcodecs_get_image(sh,type, flags,
 			(width+align)&(~align), (height+align)&(~align));
@@ -476,6 +541,13 @@ static int get_buffer(AVCodecContext *avctx, AVFrame *pic){
 	avctx->draw_horiz_band= draw_slice;
     } else
 	avctx->draw_horiz_band= NULL;
+
+#if LIBAVCODEC_BUILD >= 4689
+	// Palette support: libavcodec copies palette to *data[1]
+	if (mpi->bpp == 8)
+		mpi->planes[1] = malloc(AVPALETTE_SIZE);
+#endif
+
     pic->data[0]= mpi->planes[0];
     pic->data[1]= mpi->planes[1];
     pic->data[2]= mpi->planes[2];
@@ -547,6 +619,11 @@ static void release_buffer(struct AVCodecContext *avctx, AVFrame *pic){
     else
         ctx->b_count--;
   }
+
+	// Palette support: free palette buffer allocated in get_buffer
+	if ((mpi->bpp == 8) && (mpi->planes[1] != NULL))
+		free(mpi->planes[1]);
+
 #if LIBAVCODEC_BUILD >= 4644
     if(pic->type!=FF_BUFFER_TYPE_USER){
         avcodec_default_release_buffer(avctx, pic);
@@ -602,7 +679,8 @@ static mp_image_t* decode(sh_video_t *sh,void* data,int len,int flags){
 
 //    if(sh->ds->demuxer->type == DEMUXER_TYPE_REAL){
     if(   sh->format == mmioFOURCC('R', 'V', '1', '0')
-       || sh->format == mmioFOURCC('R', 'V', '1', '3'))
+       || sh->format == mmioFOURCC('R', 'V', '1', '3')
+       || sh->format == mmioFOURCC('R', 'V', '2', '0'))
     if(sh->bih->biSize==sizeof(*sh->bih)+8){
         int i;
         dp_hdr_t *hdr= (dp_hdr_t*)data;
@@ -724,6 +802,9 @@ static mp_image_t* decode(sh_video_t *sh,void* data,int len,int flags){
         mpi->stride[1]=pic->linesize[1];
         mpi->stride[2]=pic->linesize[2];
     }
+    
+    if (!mpi->planes[0])
+	return NULL;
 
     if(avctx->pix_fmt==PIX_FMT_YUV422P && mpi->chroma_y_shift==1){
 	// we have 422p but user wants 420p
@@ -827,6 +908,8 @@ static int mc_get_buffer(AVCodecContext *avctx, AVFrame *pic){
     pic->type= FF_BUFFER_TYPE_USER;
 
     render=(xvmc_render_state_t*)mpi->priv;//same as data[2]
+    if(verbose > 4)
+        printf("vd_ffmpeg::mc_get_buffer (render=%p)\n",render);
     assert(render != 0);
     assert(render->magic == MP_XVMC_RENDER_MAGIC);
     render->state |= MP_XVMC_STATE_PREDICTION;
@@ -852,11 +935,11 @@ static void mc_release_buffer(AVCodecContext *avctx, AVFrame *pic){
 //printf("R%X %X\n", pic->linesize[0], pic->data[0]);
 //mark the surface as not requared for prediction
     render=(xvmc_render_state_t*)pic->data[2];//same as mpi->priv
+    if(verbose > 4)
+        printf("vd_ffmpeg::mc_release_buffer (render=%p)\n",render);
     assert(render!=NULL);
     assert(render->magic==MP_XVMC_RENDER_MAGIC);
     render->state&=~MP_XVMC_STATE_PREDICTION;
-    if(verbose > 4)
-        printf("vd_ffmpeg::mc_release buffer (render=%p)\n",render);
     for(i=0; i<4; i++){
         pic->data[i]= NULL;
     }

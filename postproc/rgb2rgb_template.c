@@ -1568,6 +1568,108 @@ static inline void RENAME(yv12toyuy2)(const uint8_t *ysrc, const uint8_t *usrc, 
 	RENAME(yuvPlanartoyuy2)(ysrc, usrc, vsrc, dst, width, height, lumStride, chromStride, dstStride, 2);
 }
 
+static inline void RENAME(yuvPlanartouyvy)(const uint8_t *ysrc, const uint8_t *usrc, const uint8_t *vsrc, uint8_t *dst,
+	unsigned int width, unsigned int height,
+	int lumStride, int chromStride, int dstStride, int vertLumPerChroma)
+{
+	unsigned y;
+	const unsigned chromWidth= width>>1;
+	for(y=0; y<height; y++)
+	{
+#ifdef HAVE_MMX
+//FIXME handle 2 lines a once (fewer prefetch, reuse some chrom, but very likely limited by mem anyway)
+		asm volatile(
+			"xorl %%eax, %%eax		\n\t"
+			".balign 16			\n\t"
+			"1:				\n\t"
+			PREFETCH" 32(%1, %%eax, 2)	\n\t"
+			PREFETCH" 32(%2, %%eax)		\n\t"
+			PREFETCH" 32(%3, %%eax)		\n\t"
+			"movq (%2, %%eax), %%mm0	\n\t" // U(0)
+			"movq %%mm0, %%mm2		\n\t" // U(0)
+			"movq (%3, %%eax), %%mm1	\n\t" // V(0)
+			"punpcklbw %%mm1, %%mm0		\n\t" // UVUV UVUV(0)
+			"punpckhbw %%mm1, %%mm2		\n\t" // UVUV UVUV(8)
+
+			"movq (%1, %%eax,2), %%mm3	\n\t" // Y(0)
+			"movq 8(%1, %%eax,2), %%mm5	\n\t" // Y(8)
+			"movq %%mm0, %%mm4		\n\t" // Y(0)
+			"movq %%mm2, %%mm6		\n\t" // Y(8)
+			"punpcklbw %%mm3, %%mm0		\n\t" // YUYV YUYV(0)
+			"punpckhbw %%mm3, %%mm4		\n\t" // YUYV YUYV(4)
+			"punpcklbw %%mm5, %%mm2		\n\t" // YUYV YUYV(8)
+			"punpckhbw %%mm5, %%mm6		\n\t" // YUYV YUYV(12)
+
+			MOVNTQ" %%mm0, (%0, %%eax, 4)	\n\t"
+			MOVNTQ" %%mm4, 8(%0, %%eax, 4)	\n\t"
+			MOVNTQ" %%mm2, 16(%0, %%eax, 4)	\n\t"
+			MOVNTQ" %%mm6, 24(%0, %%eax, 4)	\n\t"
+
+			"addl $8, %%eax			\n\t"
+			"cmpl %4, %%eax			\n\t"
+			" jb 1b				\n\t"
+			::"r"(dst), "r"(ysrc), "r"(usrc), "r"(vsrc), "g" (chromWidth)
+			: "%eax"
+		);
+#else
+//FIXME adapt the alpha asm code from yv12->yuy2
+
+#if __WORDSIZE >= 64
+		int i;
+		uint64_t *ldst = (uint64_t *) dst;
+		const uint8_t *yc = ysrc, *uc = usrc, *vc = vsrc;
+		for(i = 0; i < chromWidth; i += 2){
+			uint64_t k, l;
+			k = uc[0] + (yc[0] << 8) +
+			    (vc[0] << 16) + (yc[1] << 24);
+			l = uc[1] + (yc[2] << 8) +
+			    (vc[1] << 16) + (yc[3] << 24);
+			*ldst++ = k + (l << 32);
+			yc += 4;
+			uc += 2;
+			vc += 2;
+		}
+
+#else
+		int i, *idst = (int32_t *) dst;
+		const uint8_t *yc = ysrc, *uc = usrc, *vc = vsrc;
+		for(i = 0; i < chromWidth; i++){
+			*idst++ = uc[0] + (yc[0] << 8) +
+			    (vc[0] << 16) + (yc[1] << 24);
+			yc += 2;
+			uc++;
+			vc++;
+		}
+#endif
+#endif
+		if((y&(vertLumPerChroma-1))==(vertLumPerChroma-1) )
+		{
+			usrc += chromStride;
+			vsrc += chromStride;
+		}
+		ysrc += lumStride;
+		dst += dstStride;
+	}
+#ifdef HAVE_MMX
+asm(    EMMS" \n\t"
+        SFENCE" \n\t"
+        :::"memory");
+#endif
+}
+
+/**
+ *
+ * height should be a multiple of 2 and width should be a multiple of 16 (if this is a
+ * problem for anyone then tell me, and ill fix it)
+ */
+static inline void RENAME(yv12touyvy)(const uint8_t *ysrc, const uint8_t *usrc, const uint8_t *vsrc, uint8_t *dst,
+	unsigned int width, unsigned int height,
+	int lumStride, int chromStride, int dstStride)
+{
+	//FIXME interpolate chroma
+	RENAME(yuvPlanartouyvy)(ysrc, usrc, vsrc, dst, width, height, lumStride, chromStride, dstStride, 2);
+}
+
 /**
  *
  * width should be a multiple of 16

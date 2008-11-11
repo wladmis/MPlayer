@@ -7,7 +7,7 @@ include ../config.mak
 VPATH=$(SRC_PATH)/libavcodec
 
 # NOTE: -I.. is needed to include config.h
-CFLAGS= -Wall $(OPTFLAGS) -DHAVE_AV_CONFIG_H -I.. -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_GNU_SOURCE
+CFLAGS=$(OPTFLAGS) -DHAVE_AV_CONFIG_H -I.. -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_GNU_SOURCE
 
 OBJS= common.o utils.o mem.o allcodecs.o \
       mpegvideo.o jrevdct.o jfdctfst.o jfdctint.o\
@@ -18,7 +18,8 @@ OBJS= common.o utils.o mem.o allcodecs.o \
       fft.o mdct.o mace.o huffyuv.o cyuv.o opts.o raw.o h264.o golomb.o \
       vp3.o asv1.o 4xm.o cabac.o ffv1.o ra144.o ra288.o vcr1.o cljr.o \
       roqvideo.o dpcm.o interplayvideo.o xan.o rpza.o cinepak.o msrle.o \
-      msvideo1.o vqavideo.o idcinvideo.o
+      msvideo1.o vqavideo.o idcinvideo.o adx.o rational.o faandct.o 8bps.o \
+      smc.o parser.o flicvideo.o truemotion1.o
 
 ifeq ($(AMR_NB),yes)
 ifeq ($(AMR_NB_FIXED),yes)
@@ -143,7 +144,7 @@ endif
 
 ifeq ($(TARGET_ALTIVEC),yes)
 OBJS += ppc/dsputil_altivec.o ppc/mpegvideo_altivec.o ppc/idct_altivec.o \
-        ppc/fft_altivec.o ppc/gmc_altivec.o
+        ppc/fft_altivec.o ppc/gmc_altivec.o ppc/fdct_altivec.o
 endif
 
 ifeq ($(TARGET_ARCH_SH4),yes)
@@ -261,7 +262,9 @@ installlib: all install-headers
 
 install-headers:
 	mkdir -p "$(prefix)/include/ffmpeg"
-	install -m 644 $(SRC_PATH)/libavcodec/avcodec.h $(SRC_PATH)/libavcodec/common.h \
+	install -m 644 $(SRC_PATH)/libavcodec/avcodec.h \
+	               $(SRC_PATH)/libavcodec/common.h \
+	               $(SRC_PATH)/libavcodec/rational.h \
                 "$(prefix)/include/ffmpeg"
 
 #

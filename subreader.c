@@ -911,7 +911,7 @@ int sub_autodetect (FILE *fd, int *uses_time) {
 		{*uses_time=1;return SUB_SUBRIP;}
 	if (sscanf (line, "%d:%d:%d%[,.:]%d --> %d:%d:%d%[,.:]%d", &i, &i, &i, (char *)&i, &i, &i, &i, &i, (char *)&i, &i)==10)
 		{*uses_time=1;return SUB_SUBVIEWER;}
-	if (sscanf (line, "{T %d:%d:%d:%d",&i, &i, &i, &i))
+	if (sscanf (line, "{T %d:%d:%d:%d",&i, &i, &i, &i)==4)
 		{*uses_time=1;return SUB_SUBVIEWER2;}
 	if (strstr (line, "<SAMI>"))
 		{*uses_time=1; return SUB_SAMI;}
@@ -1674,6 +1674,9 @@ char** sub_filenames(char* path, char *fname)
     subcnt = 0;
     
     tmp = strrchr(fname,'/');
+#ifdef WIN32
+    if(!tmp)tmp = strrchr(fname,'\\');
+#endif
     
     // extract filename & dirname from fname
     if (tmp) {

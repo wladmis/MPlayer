@@ -55,6 +55,7 @@ extern vd_functions_t mpcodecs_vd_mtga;
 extern vd_functions_t mpcodecs_vd_sgi;
 extern vd_functions_t mpcodecs_vd_libmpeg2;
 extern vd_functions_t mpcodecs_vd_mpegpes;
+extern vd_functions_t mpcodecs_vd_zrmjpeg;
 extern vd_functions_t mpcodecs_vd_realvid;
 extern vd_functions_t mpcodecs_vd_xvid;
 extern vd_functions_t mpcodecs_vd_libdv;
@@ -113,10 +114,13 @@ vd_functions_t* mpcodecs_vd_drivers[] = {
         &mpcodecs_vd_libmpeg2,
 #endif
         &mpcodecs_vd_mpegpes,
+#ifdef HAVE_ZR
+        &mpcodecs_vd_zrmjpeg,
+#endif
 #ifdef USE_REALCODECS
 	&mpcodecs_vd_realvid,
 #endif
-#ifdef HAVE_XVID
+#if defined(HAVE_XVID3) || defined(HAVE_XVID4)
 	&mpcodecs_vd_xvid,
 #endif
 #ifdef HAVE_LIBDV095
@@ -218,7 +222,7 @@ csp_again:
 	    goto csp_again;
 	} else
 	if(palette==1){
-	    mp_msg(MSGT_DECVIDEO,MSGL_V,"vd: Trying -vop palette...\n");
+	    mp_msg(MSGT_DECVIDEO,MSGL_V,"vd: Trying -vf palette...\n");
 	    palette=-1;
 	    vf=vf_open_filter(vf,"palette",NULL);
 	    goto csp_again;

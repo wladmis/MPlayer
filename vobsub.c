@@ -88,11 +88,38 @@ rar_open(const char *const filename, const char *const mode)
 		p++;
 	}
 	rc = urarlib_get(&stream->data, &stream->size, (char*) p, rar_filename, "");
-	free(rar_filename);
 	if (!rc) {
-	    free(stream);
-	    return NULL;
+	    /* There is no matching filename in the archive. However, sometimes
+	     * the files we are looking for have been given arbitrary names in the archive.
+	     * Let's look for a file with an exact match in the extension only. */
+	    int i, num_files, name_len;
+	    ArchiveList_struct *list, *lp;
+	    /* the cast in the next line is a hack to overcome a design flaw (IMHO) in unrarlib */
+	    num_files = urarlib_list (rar_filename, (ArchiveList_struct *)&list);
+	    if (num_files > 0) {
+		char *demanded_ext;
+		demanded_ext = strrchr (p, '.');
+		if (demanded_ext) {
+		    int demanded_ext_len = strlen (demanded_ext);
+	    	    for (i=0, lp=list; i<num_files; i++, lp=lp->next) {
+			name_len = strlen (lp->item.Name);
+			if (name_len >= demanded_ext_len && !strcasecmp (lp->item.Name + name_len - demanded_ext_len, demanded_ext)) {
+		            if ((rc = urarlib_get(&stream->data, &stream->size, lp->item.Name, rar_filename, ""))) {
+				break;
+		   	    }
+			}
+		    }
+		}
+	    	urarlib_freelist (list);
+	    }
+	    if (!rc) {
+		free(rar_filename);
+		free(stream);
+		return NULL;
+	    }
 	}
+
+	free(rar_filename);
 	stream->pos = 0;
     }
     return stream;
@@ -1238,6 +1265,22 @@ vobsub_get_next_packet(void *vobhandle, void** data, int* timestamp)
     }
   }
   return -1;
+}
+
+void vobsub_seek(void * vobhandle, float pts)
+{
+  vobsub_t * vob = (vobsub_t *)vobhandle;
+  packet_queue_t * queue;
+  int seek_pts100 = (int)pts * 90000;
+
+  if (vob->spu_streams && 0 <= vobsub_id && (unsigned) vobsub_id < vob->spu_streams_size) {
+    queue = vob->spu_streams + vobsub_id;
+    queue->current_index = 0;
+    while ((queue->packets + queue->current_index)->pts100 < seek_pts100)
+      ++queue->current_index;
+    if (queue->current_index > 0)
+      --queue->current_index;
+  }
 }
 
 void

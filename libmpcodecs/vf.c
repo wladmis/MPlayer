@@ -26,7 +26,9 @@ extern vf_info_t vf_info_bmovl;
 #endif
 extern vf_info_t vf_info_crop;
 extern vf_info_t vf_info_expand;
+#ifdef FF_POSTPROCESS
 extern vf_info_t vf_info_pp;
+#endif
 extern vf_info_t vf_info_scale;
 #ifdef USE_LIBFAME
 extern vf_info_t vf_info_fame;
@@ -54,6 +56,7 @@ extern vf_info_t vf_info_2xsai;
 extern vf_info_t vf_info_unsharp;
 extern vf_info_t vf_info_swapuv;
 extern vf_info_t vf_info_il;
+extern vf_info_t vf_info_fil;
 extern vf_info_t vf_info_boxblur;
 extern vf_info_t vf_info_sab;
 extern vf_info_t vf_info_smartblur;
@@ -72,9 +75,13 @@ extern vf_info_t vf_info_dsize;
 extern vf_info_t vf_info_decimate;
 extern vf_info_t vf_info_softpulldown;
 extern vf_info_t vf_info_pullup;
+extern vf_info_t vf_info_filmdint;
 extern vf_info_t vf_info_framestep;
 extern vf_info_t vf_info_tile;
 extern vf_info_t vf_info_delogo;
+extern vf_info_t vf_info_hue;
+extern vf_info_t vf_info_spp;
+extern vf_info_t vf_info_yuvcsp;
 
 // list of available filters:
 static vf_info_t* filter_list[]={
@@ -84,7 +91,7 @@ static vf_info_t* filter_list[]={
 #endif
     &vf_info_crop,
     &vf_info_expand,
-#ifdef USE_LIBAVCODEC
+#ifdef FF_POSTPROCESS
     &vf_info_pp,
 #endif
     &vf_info_scale,
@@ -118,6 +125,7 @@ static vf_info_t* filter_list[]={
     &vf_info_unsharp,
     &vf_info_swapuv,
     &vf_info_il,
+    &vf_info_fil,
     &vf_info_boxblur,
     &vf_info_sab,
     &vf_info_smartblur,
@@ -136,9 +144,15 @@ static vf_info_t* filter_list[]={
     &vf_info_decimate,
     &vf_info_softpulldown,
     &vf_info_pullup,
+    &vf_info_filmdint,
     &vf_info_framestep,
     &vf_info_tile,
     &vf_info_delogo,
+    &vf_info_hue,
+#ifdef USE_LIBAVCODEC
+    &vf_info_spp,
+#endif
+    &vf_info_yuvcsp,
     NULL
 };
 

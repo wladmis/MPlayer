@@ -18,7 +18,7 @@
 
 /*
   supported Input formats: YV12, I420/IYUV, YUY2, UYVY, BGR32, BGR24, BGR16, BGR15, RGB32, RGB24, Y8/Y800, YVU9/IF09
-  supported output formats: YV12, I420/IYUV, YUY2, {BGR,RGB}{1,4,8,15,16,24,32}, Y8/Y800, YVU9/IF09
+  supported output formats: YV12, I420/IYUV, YUY2, UYVY, {BGR,RGB}{1,4,8,15,16,24,32}, Y8/Y800, YVU9/IF09
   {BGR,RGB}{1,4,8,15,16} support dithering
   
   unscaled special converters (YV12=I420=IYUV, Y800=Y8)
@@ -107,7 +107,7 @@ untested special converters
 			|| (x)==IMGFMT_RGB32|| (x)==IMGFMT_RGB24\
 			|| (x)==IMGFMT_Y800 || (x)==IMGFMT_YVU9\
 			|| (x)==IMGFMT_444P || (x)==IMGFMT_422P || (x)==IMGFMT_411P)
-#define isSupportedOut(x) ((x)==IMGFMT_YV12 || (x)==IMGFMT_YUY2\
+#define isSupportedOut(x) ((x)==IMGFMT_YV12 || (x)==IMGFMT_YUY2 || (x)==IMGFMT_UYVY\
 			|| (x)==IMGFMT_444P || (x)==IMGFMT_422P || (x)==IMGFMT_411P\
 			|| isRGB(x) || isBGR(x)\
 			|| (x)==IMGFMT_Y800 || (x)==IMGFMT_YVU9)
@@ -222,7 +222,7 @@ static inline void yuv2yuvXinC(int16_t *lumFilter, int16_t **lumSrc, int lumFilt
 	int i;
 	for(i=0; i<dstW; i++)
 	{
-		int val=0;
+		int val=1<<18;
 		int j;
 		for(j=0; j<lumFilterSize; j++)
 			val += lumSrc[j][i] * lumFilter[j];
@@ -233,8 +233,8 @@ static inline void yuv2yuvXinC(int16_t *lumFilter, int16_t **lumSrc, int lumFilt
 	if(uDest != NULL)
 		for(i=0; i<chrDstW; i++)
 		{
-			int u=0;
-			int v=0;
+			int u=1<<18;
+			int v=1<<18;
 			int j;
 			for(j=0; j<chrFilterSize; j++)
 			{
@@ -251,10 +251,10 @@ static inline void yuv2yuvXinC(int16_t *lumFilter, int16_t **lumSrc, int lumFilt
 #define YSCALE_YUV_2_PACKEDX_C(type) \
 		for(i=0; i<(dstW>>1); i++){\
 			int j;\
-			int Y1=0;\
-			int Y2=0;\
-			int U=0;\
-			int V=0;\
+			int Y1=1<<18;\
+			int Y2=1<<18;\
+			int U=1<<18;\
+			int V=1<<18;\
 			type *r, *b, *g;\
 			const int i2= 2*i;\
 			\
@@ -503,6 +503,14 @@ static inline void yuv2yuvXinC(int16_t *lumFilter, int16_t **lumSrc, int lumFilt
 			((uint8_t*)dest)[2*i2+3]= V;\
 		}		\
 		break;\
+	case IMGFMT_UYVY:\
+		func2\
+			((uint8_t*)dest)[2*i2+0]= U;\
+			((uint8_t*)dest)[2*i2+1]= Y1;\
+			((uint8_t*)dest)[2*i2+2]= V;\
+			((uint8_t*)dest)[2*i2+3]= Y2;\
+		}		\
+		break;\
 	}\
 
 
@@ -613,8 +621,8 @@ static inline void yuv2packedXinC(SwsContext *c, int16_t *lumFilter, int16_t **l
 			int acc=0;
 			for(i=0; i<dstW-1; i+=2){
 				int j;
-				int Y1=0;
-				int Y2=0;
+				int Y1=1<<18;
+				int Y2=1<<18;
 
 				for(j=0; j<lumFilterSize; j++)
 				{
@@ -645,6 +653,14 @@ static inline void yuv2packedXinC(SwsContext *c, int16_t *lumFilter, int16_t **l
 			((uint8_t*)dest)[2*i2+1]= U;
 			((uint8_t*)dest)[2*i2+2]= Y2;
 			((uint8_t*)dest)[2*i2+3]= V;
+		}
+                break;
+	case IMGFMT_UYVY:
+		YSCALE_YUV_2_PACKEDX_C(void)
+			((uint8_t*)dest)[2*i2+0]= U;
+			((uint8_t*)dest)[2*i2+1]= Y1;
+			((uint8_t*)dest)[2*i2+2]= V;
+			((uint8_t*)dest)[2*i2+3]= Y2;
 		}
                 break;
 	}
@@ -1068,8 +1084,10 @@ static inline void initFilter(int16_t **outFilter, int16_t **filterPos, int *out
 	for(i=0; i<dstW; i++)
 	{
 		int j;
+		double error=0;
 		double sum=0;
 		double scale= one;
+
 		for(j=0; j<filterSize; j++)
 		{
 			sum+= filter[i*filterSize + j];
@@ -1077,7 +1095,10 @@ static inline void initFilter(int16_t **outFilter, int16_t **filterPos, int *out
 		scale/= sum;
 		for(j=0; j<*outFilterSize; j++)
 		{
-			(*outFilter)[i*(*outFilterSize) + j]= (int)(filter[i*filterSize + j]*scale);
+			double v= filter[i*filterSize + j]*scale + error;
+			int intV= floor(v + 0.5);
+			(*outFilter)[i*(*outFilterSize) + j]= intV;
+			error = v - intV;
 		}
 	}
 	
@@ -1332,6 +1353,15 @@ static int PlanarToYuy2Wrapper(SwsContext *c, uint8_t* src[], int srcStride[], i
 	uint8_t *dst=dstParam[0] + dstStride[0]*srcSliceY;
 
 	yv12toyuy2( src[0],src[1],src[2],dst,c->srcW,srcSliceH,srcStride[0],srcStride[1],dstStride[0] );
+
+	return srcSliceH;
+}
+
+static int PlanarToUyvyWrapper(SwsContext *c, uint8_t* src[], int srcStride[], int srcSliceY,
+             int srcSliceH, uint8_t* dstParam[], int dstStride[]){
+	uint8_t *dst=dstParam[0] + dstStride[0]*srcSliceY;
+
+	yv12touyvy( src[0],src[1],src[2],dst,c->srcW,srcSliceH,srcStride[0],srcStride[1],dstStride[0] );
 
 	return srcSliceH;
 }
@@ -1680,7 +1710,7 @@ SwsContext *sws_getContext(int srcW, int srcH, int origSrcFormat, int dstW, int 
 
 	SwsContext *c;
 	int i;
-	int usesFilter;
+	int usesVFilter, usesHFilter;
 	int unscaled, needsDither;
 	int srcFormat, dstFormat;
 	SwsFilter dummyFilter= {NULL, NULL, NULL, NULL};
@@ -1747,16 +1777,17 @@ SwsContext *sws_getContext(int srcW, int srcH, int origSrcFormat, int dstW, int 
 	c->srcFormat= srcFormat;
 	c->origDstFormat= origDstFormat;
 	c->origSrcFormat= origSrcFormat;
+        c->vRounder= 4* 0x0001000100010001ULL;
 
-	usesFilter=0;
-	if(dstFilter->lumV!=NULL && dstFilter->lumV->length>1) usesFilter=1;
-	if(dstFilter->lumH!=NULL && dstFilter->lumH->length>1) usesFilter=1;
-	if(dstFilter->chrV!=NULL && dstFilter->chrV->length>1) usesFilter=1;
-	if(dstFilter->chrH!=NULL && dstFilter->chrH->length>1) usesFilter=1;
-	if(srcFilter->lumV!=NULL && srcFilter->lumV->length>1) usesFilter=1;
-	if(srcFilter->lumH!=NULL && srcFilter->lumH->length>1) usesFilter=1;
-	if(srcFilter->chrV!=NULL && srcFilter->chrV->length>1) usesFilter=1;
-	if(srcFilter->chrH!=NULL && srcFilter->chrH->length>1) usesFilter=1;
+	usesHFilter= usesVFilter= 0;
+	if(dstFilter->lumV!=NULL && dstFilter->lumV->length>1) usesVFilter=1;
+	if(dstFilter->lumH!=NULL && dstFilter->lumH->length>1) usesHFilter=1;
+	if(dstFilter->chrV!=NULL && dstFilter->chrV->length>1) usesVFilter=1;
+	if(dstFilter->chrH!=NULL && dstFilter->chrH->length>1) usesHFilter=1;
+	if(srcFilter->lumV!=NULL && srcFilter->lumV->length>1) usesVFilter=1;
+	if(srcFilter->lumH!=NULL && srcFilter->lumH->length>1) usesHFilter=1;
+	if(srcFilter->chrV!=NULL && srcFilter->chrV->length>1) usesVFilter=1;
+	if(srcFilter->chrH!=NULL && srcFilter->chrH->length>1) usesHFilter=1;
 
 	getSubSampleFactors(&c->chrSrcHSubSample, &c->chrSrcVSubSample, srcFormat);
 	getSubSampleFactors(&c->chrDstHSubSample, &c->chrDstVSubSample, dstFormat);
@@ -1784,7 +1815,7 @@ SwsContext *sws_getContext(int srcW, int srcH, int origSrcFormat, int dstW, int 
 	sws_setColorspaceDetails(c, Inverse_Table_6_9[SWS_CS_DEFAULT], 0, Inverse_Table_6_9[SWS_CS_DEFAULT] /* FIXME*/, 0, 0, 1<<16, 1<<16); 
 
 	/* unscaled special Cases */
-	if(unscaled && !usesFilter)
+	if(unscaled && !usesHFilter && !usesVFilter)
 	{
 		/* yv12_to_nv12 */
 		if(srcFormat == IMGFMT_YV12 && dstFormat == IMGFMT_NV12)
@@ -1821,9 +1852,13 @@ SwsContext *sws_getContext(int srcW, int srcH, int origSrcFormat, int dstW, int 
 				c->swScale= rgb2rgbWrapper;
 
 			/* yv12_to_yuy2 */
-			if(srcFormat == IMGFMT_YV12 && dstFormat == IMGFMT_YUY2)
+			if(srcFormat == IMGFMT_YV12 && 
+			    (dstFormat == IMGFMT_YUY2 || dstFormat == IMGFMT_UYVY))
 			{
-				c->swScale= PlanarToYuy2Wrapper;
+				if (dstFormat == IMGFMT_YUY2)
+				    c->swScale= PlanarToYuy2Wrapper;
+				else
+				    c->swScale= PlanarToUyvyWrapper;
 			}
 		}
 
@@ -1852,6 +1887,7 @@ SwsContext *sws_getContext(int srcW, int srcH, int origSrcFormat, int dstW, int 
 			if(flags&SWS_PRINT_INFO)
 				MSG_INFO("SwScaler: output Width is not a multiple of 32 -> no MMX2 scaler\n");
 		}
+		if(usesHFilter) c->canMMX2BeUsed=0;
 	}
 	else
 		c->canMMX2BeUsed=0;
@@ -1928,10 +1964,9 @@ SwsContext *sws_getContext(int srcW, int srcH, int origSrcFormat, int dstW, int 
 		int chrI= i*c->chrDstH / dstH;
 		int nextSlice= MAX(c->vLumFilterPos[i   ] + c->vLumFilterSize - 1,
 				 ((c->vChrFilterPos[chrI] + c->vChrFilterSize - 1)<<c->chrSrcVSubSample));
-		if(c->chrSrcVSubSample > 1) 
-		    nextSlice&= ~3; // Slices start at boundaries which are divisable through 4
-		else
-		    nextSlice&= ~1; // Slices start at boundaries which are divisable through 2
+
+		nextSlice>>= c->chrSrcVSubSample;
+		nextSlice<<= c->chrSrcVSubSample;
 		if(c->vLumFilterPos[i   ] + c->vLumBufSize < nextSlice)
 			c->vLumBufSize= nextSlice - c->vLumFilterPos[i   ];
 		if(c->vChrFilterPos[chrI] + c->vChrBufSize < (nextSlice>>c->chrSrcVSubSample))
@@ -2084,7 +2119,10 @@ SwsContext *sws_getContext(int srcW, int srcH, int origSrcFormat, int dstW, int 
  */
 int sws_scale_ordered(SwsContext *c, uint8_t* src[], int srcStride[], int srcSliceY,
                            int srcSliceH, uint8_t* dst[], int dstStride[]){
-	return c->swScale(c, src, srcStride, srcSliceY, srcSliceH, dst, dstStride);
+	//copy strides, so they can safely be modified
+	int srcStride2[3]= {srcStride[0], srcStride[1], srcStride[2]};
+	int dstStride2[3]= {dstStride[0], dstStride[1], dstStride[2]};
+	return c->swScale(c, src, srcStride2, srcSliceY, srcSliceH, dst, dstStride2);
 }
 
 /**

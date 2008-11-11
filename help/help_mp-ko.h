@@ -13,9 +13,6 @@ static char help_text[]=
 #ifdef HAVE_VCD
 " vcd://<trackno>  파일이 아닌 장치로부터 VCD (비디오 CD) 트랙 재생\n"
 #endif
-#ifdef HAVE_LIBCSS
-" -dvdauth <dev>   인증을 위해 DVD 장치 지정 (암호화된 디스크용)\n"
-#endif
 #ifdef USE_DVDREAD
 " dvd://<titleno>  파일이 아닌 장치로부터 DVD 타이틀/트랙 재생\n"
 " -alang/-slang    DVD 오디오/자막 언어 선택 (두 글자의 국가 코드)\n"
@@ -42,7 +39,7 @@ static char help_text[]=
 " o                OSD모드 변경:  없음/탐색줄/탐색줄+타이머\n"
 " * 또는 /         PCM 볼륨을 높임/낮춤\n"
 " z 또는 x         +/- 0.1초씩 자막 지연 조정\n"
-" r 또는 t         자막 위치를 위로/아래로 조정, -vop expand도 참고할 것\n"
+" r 또는 t         자막 위치를 위로/아래로 조정, -vf expand도 참고할 것\n"
 "\n"
 " * * * 더 자세한 (고급) 선택사항 및 조정키는 MAN 페이지를 참조하세요. * * *\n"
 "\n";
@@ -102,8 +99,8 @@ static char help_text[]=
 "  - -cache 8192를 시도해보세요.\n"\
 "- non-interleaved AVI 파일을 -cache 옵션으로 재생하고 있나요?\n"\
 "  - -nocache를 시도해보세요.\n"\
-"미세조정/속도향상 팁은 DOCS/en/video.html과 DOCS/en/sound.html을 참조하세요.\n"\
-"위의 어떤 사항도 도움이 되지 않는다면, DOCS/en/bugreports.html을 참조하세요.\n\n"
+"미세조정/속도향상 팁은 DOCS/HTML/en/devices.html#video-dev과 DOCS/HTML/en/devices.html#audio-dev을 참조하세요.\n"\
+"위의 어떤 사항도 도움이 되지 않는다면, DOCS/HTML/en/bugreports.html을 참조하세요.\n\n"
 
 #define MSGTR_NoGui "MPlayer가 GUI를 사용할 수 있도록 컴파일되지 않았습니다.\n"
 #define MSGTR_GuiNeedsX "MPlayer GUI는 X11을 필요로합니다!\n"
@@ -130,13 +127,13 @@ static char help_text[]=
 #define MSGTR_AODescription_AOAuthor "AO: 설명: %s\nAO: 만든이: %s\n"
 #define MSGTR_AOComment "AO: 덧말: %s\n"
 #define MSGTR_Video_NoVideo "비디오: 비디오 없음\n"
-#define MSGTR_NotInitializeVOPorVO "\n치명적 오류: 비디오 필터(-vop) 또는 비디오 출력(-vo)을 초기화할 수 없습니다.\n"
+#define MSGTR_NotInitializeVOPorVO "\n치명적 오류: 비디오 필터(-vf) 또는 비디오 출력(-vo)을 초기화할 수 없습니다.\n"
 #define MSGTR_Paused "\n  =====  잠시멈춤  =====\r"
 #define MSGTR_PlaylistLoadUnable "\n재생목록 %s을(를) 열 수 없습니다.\n"
 #define MSGTR_Exit_SIGILL_RTCpuSel \
 "- MPlayer가 '잘못된 연산'으로 종료되었습니다.\n"\
 "  런타임 CPU 감지 코드에 버그가 있을 지도 모릅니다...\n"\
-"  DOCS/en/bugreports.html을 참조하세요.\n"
+"  DOCS/HTML/en/bugreports.html을 참조하세요.\n"
 #define MSGTR_Exit_SIGILL \
 "- MPlayer가 '잘못된 연산'으로 종료되었습니다.\n"\
 "  컴파일/최적화된 CPU와 다른 모델의 CPU에서 실행될 때\n"\
@@ -144,11 +141,11 @@ static char help_text[]=
 #define MSGTR_Exit_SIGSEGV_SIGFPE \
 "- MPlayer가 잘못된 CPU/FPU/RAM의 사용으로 종료되었습니다.\n"\
 "  MPlayer를 --enable-debug 옵션으로 다시 컴파일하고, 'gdb' 백트레이스 및\n"\
-"  디스어셈블해보세요. 자세한 사항은 DOCS/en/bugreports.html#crash를 참조하세요.\n"
+"  디스어셈블해보세요. 자세한 사항은 DOCS/HTML/en/bugreports_what.html#bugreports_crash를 참조하세요.\n"
 #define MSGTR_Exit_SIGCRASH \
 "- MPlayer가 알 수 없는 이유로 종료되었습니다.\n"\
 "  MPlayer 코드나 드라이버의 버그, 혹은 gcc버전의 문제일 수도 있습니다.\n"\
-"  MPlayer의 문제라고 생각한다면, DOCS/en/bugreports.html을 읽고 거기있는\n"\
+"  MPlayer의 문제라고 생각한다면, DOCS/HTML/en/bugreports.html을 읽고 거기있는\n"\
 "  설명대로 하시기 바랍니다. 가능한 버그를 보고할 땐, 이 정보를 포함하세요.\n"\
 "  그렇지 않으면, 도와줄 방법이 없습니다.\n"
 
@@ -279,9 +276,6 @@ static char help_text[]=
 #define MSGTR_CantSeekRawAVI "raw AVI 스트림에서는 탐색할 수 없습니다. (인덱스가 필요합니다. -idx 스위치로 시도해보세요.)  \n"
 #define MSGTR_CantSeekFile "이 파일에서는 탐색할 수 없습니다.\n"
 
-#define MSGTR_EncryptedVOB "암호화된 VOB 파일입니다 (libcss 지원없이 컴파일되었음)! DOCS/en/cd-dvd.html을 참조하세요\n"
-#define MSGTR_EncryptedVOBauth "암호화된 스트림이나, 인증 요청을 하지않았습니다!!\n"
-
 #define MSGTR_MOVcomprhdr "MOV: 압축된 헤더는 (아직) 지원되지않습니다.\n"
 #define MSGTR_MOVvariableFourCC "MOV: 경고: 가변적인 FOURCC 발견!?\n"
 #define MSGTR_MOVtooManyTrk "MOV: 경고: 트랙이 너무 많습니다."
@@ -298,8 +292,6 @@ static char help_text[]=
 #define MSGTR_DemuxerInfoAlreadyPresent "해석기 정보 %s(이)가 이미 존재합니다!\n"
 #define MSGTR_ClipInfo "클립 정보: \n"
 
-#define MSGTR_LeaveTelecineMode "\ndemux_mpg: Progressive 시퀀스 감지, 3:2 TELECINE 모드를 종료합니다.\n"
-#define MSGTR_EnterTelecineMode "\ndemux_mpg: 3:2 TELECINE 감지. 역전된 telecine fx를 사용합니다. FPS가 %5.3f로 변경되었습니다!  \n"
 
 // dec_video.c & dec_audio.c:
 #define MSGTR_CantOpenCodec "코덱을 열 수 없습니다.\n"
@@ -350,7 +342,7 @@ static char help_text[]=
 // vd.c
 #define MSGTR_CodecDidNotSet "VDec: 코덱이 sh->disp_w와 sh->disp_h로 설정되지 않아서, 다시 시도합니다.\n"
 #define MSGTR_VoConfigRequest "VDec: vo 설정 요청 - %d x %d (선호하는 csp: %s)\n"
-#define MSGTR_CouldNotFindColorspace "어울리는 컬러공간을 찾을 수 없습니다. -vop 크기조절로 다시 시도합니다...\n"
+#define MSGTR_CouldNotFindColorspace "어울리는 컬러공간을 찾을 수 없습니다. -vf 크기조절로 다시 시도합니다...\n"
 #define MSGTR_MovieAspectIsSet "화면비율이 %.2f:1 입니다. - 화면비율을 조정하기위해 사전 크기조절을 합니다.\n"
 #define MSGTR_MovieAspectUndefined "화면비율이 정의되지 않았습니다. - 사전 크기조절이 적용되지 않았습니다.\n"
 
@@ -360,15 +352,15 @@ static char help_text[]=
 
 // --- labels ---
 #define MSGTR_About "정보"
-#define MSGTR_FileSelect "파일 선택 ..."
-#define MSGTR_SubtitleSelect "자막 선택 ..."
-#define MSGTR_OtherSelect "선택 ..."
-#define MSGTR_AudioFileSelect "음악 파일 선택 ..."
-#define MSGTR_FontSelect "글꼴 선택 ..."
+#define MSGTR_FileSelect "파일 선택..."
+#define MSGTR_SubtitleSelect "자막 선택..."
+#define MSGTR_OtherSelect "선택..."
+#define MSGTR_AudioFileSelect "음악 파일 선택..."
+#define MSGTR_FontSelect "글꼴 선택..."
 #define MSGTR_PlayList "재생목록"
 #define MSGTR_Equalizer "이퀄라이저"
 #define MSGTR_SkinBrowser "스킨 찾기"
-#define MSGTR_Network "네트워크 스트리밍 ..."
+#define MSGTR_Network "네트워크 스트리밍..."
 #define MSGTR_Preferences "선택사항"
 #define MSGTR_OSSPreferences "OSS 드라이버 설정"
 #define MSGTR_SDLPreferences "SDL 드라이버 설정"
@@ -396,39 +388,39 @@ static char help_text[]=
 
 // --- skin loader error messages
 #define MSGTR_SKIN_ERRORMESSAGE "[스킨] 스킨 설정파일의 %d번째 줄에 오류가 있습니다.: %s" 
-#define MSGTR_SKIN_WARNING1 "[스킨] 스킨 설정파일의 %d번째 줄 경고: 위젯을 찾았지만 \"section\"앞에 ( %s )를 찾을 수 없습니다."
-#define MSGTR_SKIN_WARNING2 "[스킨] 스킨 설정파일의 %d번째 줄 경고: 위젯을 찾았지만 \"subsection\"앞에 ( %s )를 찾을 수 없습니다."
+#define MSGTR_SKIN_WARNING1 "[스킨] 스킨 설정파일의 %d번째 줄 경고: 위젯을 찾았지만 \"section\"앞에 (%s)를 찾을 수 없습니다."
+#define MSGTR_SKIN_WARNING2 "[스킨] 스킨 설정파일의 %d번째 줄 경고: 위젯을 찾았지만 \"subsection\"앞에 (%s)를 찾을 수 없습니다."
 #define MSGTR_SKIN_WARNING3 "[스킨] 스킨 설정파일의 %d번째 줄 경고: 이 subsection은 현재 위젯에서 지원되지 않습니다. (%s)"
-#define MSGTR_SKIN_BITMAP_16bit  "16 비트 혹은 더 낮은 품질의 비트맵은 지원되지 않습니다. ( %s )\n"
-#define MSGTR_SKIN_BITMAP_FileNotFound  "파일을 찾을 수 없습니다. ( %s )\n"
-#define MSGTR_SKIN_BITMAP_BMPReadError "bmp 읽기 오류입니다. ( %s )\n"
-#define MSGTR_SKIN_BITMAP_TGAReadError "tga 읽기 오류입니다. ( %s )\n"
-#define MSGTR_SKIN_BITMAP_PNGReadError "png 읽기 오류입니다. ( %s )\n"
-#define MSGTR_SKIN_BITMAP_RLENotSupported "RLE로 압축된 tga는 지원되지 않습니다. ( %s )\n"
-#define MSGTR_SKIN_BITMAP_UnknownFileType "알 수 없는 파일 형식입니다. ( %s )\n"
-#define MSGTR_SKIN_BITMAP_ConvertError "24 비트에서 32 비트로 전환 오류 ( %s )\n"
+#define MSGTR_SKIN_BITMAP_16bit  "16 비트 혹은 더 낮은 품질의 비트맵은 지원되지 않습니다. (%s)\n"
+#define MSGTR_SKIN_BITMAP_FileNotFound  "파일을 찾을 수 없습니다. (%s)\n"
+#define MSGTR_SKIN_BITMAP_BMPReadError "BMP 읽기 오류입니다. (%s)\n"
+#define MSGTR_SKIN_BITMAP_TGAReadError "TGA 읽기 오류입니다. (%s)\n"
+#define MSGTR_SKIN_BITMAP_PNGReadError "PNG 읽기 오류입니다. (%s)\n"
+#define MSGTR_SKIN_BITMAP_RLENotSupported "RLE로 압축된 TGA는 지원되지 않습니다. (%s)\n"
+#define MSGTR_SKIN_BITMAP_UnknownFileType "알 수 없는 파일 형식입니다. (%s)\n"
+#define MSGTR_SKIN_BITMAP_ConvertError "24 비트에서 32 비트로 전환 오류 (%s)\n"
 #define MSGTR_SKIN_BITMAP_UnknownMessage "알 수 없는 메세지입니다.: %s\n"
 #define MSGTR_SKIN_FONT_NotEnoughtMemory "메모리가 부족합니다.\n"
 #define MSGTR_SKIN_FONT_TooManyFontsDeclared "폰트가 너무 많이 선언되어 있습니다.\n"
 #define MSGTR_SKIN_FONT_FontFileNotFound "폰트파일을 찾을 수 없습니다.\n"
 #define MSGTR_SKIN_FONT_FontImageNotFound "폰트 이미지파일을 찾을 수 없습니다.\n"
-#define MSGTR_SKIN_FONT_NonExistentFontID "폰트 지정자가 존재하지 않습니다. ( %s )\n"
-#define MSGTR_SKIN_UnknownParameter "알 수 없는 매개변수입니다. ( %s )\n"
+#define MSGTR_SKIN_FONT_NonExistentFontID "폰트 지정자가 존재하지 않습니다. (%s)\n"
+#define MSGTR_SKIN_UnknownParameter "알 수 없는 매개변수입니다. (%s)\n"
 #define MSGTR_SKINBROWSER_NotEnoughMemory "[스킨선택] 메모리가 부족합니다.\n"
-#define MSGTR_SKIN_SKINCFG_SkinNotFound "스킨을 찾을 수 없습니다. ( %s )\n"
-#define MSGTR_SKIN_SKINCFG_SkinCfgReadError "스킨 설정파일 읽기 오류입니다. ( %s )\n"
+#define MSGTR_SKIN_SKINCFG_SkinNotFound "스킨을 찾을 수 없습니다. (%s)\n"
+#define MSGTR_SKIN_SKINCFG_SkinCfgReadError "스킨 설정파일 읽기 오류입니다. (%s)\n"
 #define MSGTR_SKIN_LABEL "스킨:"
 
 // --- gtk menus
 #define MSGTR_MENU_AboutMPlayer "MPlayer 정보"
-#define MSGTR_MENU_Open "열기 ..."
-#define MSGTR_MENU_PlayFile "파일 재생 ..."
-#define MSGTR_MENU_PlayVCD "VCD 재생 ..."
-#define MSGTR_MENU_PlayDVD "DVD 재생 ..."
-#define MSGTR_MENU_PlayURL "URL 재생 ..."
-#define MSGTR_MENU_LoadSubtitle "자막 선택 ..."
-#define MSGTR_MENU_DropSubtitle "자막 없앰 ..."
-#define MSGTR_MENU_LoadExternAudioFile "음악 파일 ..."
+#define MSGTR_MENU_Open "열기..."
+#define MSGTR_MENU_PlayFile "파일 재생..."
+#define MSGTR_MENU_PlayVCD "VCD 재생..."
+#define MSGTR_MENU_PlayDVD "DVD 재생..."
+#define MSGTR_MENU_PlayURL "URL 재생..."
+#define MSGTR_MENU_LoadSubtitle "자막 선택..."
+#define MSGTR_MENU_DropSubtitle "자막 없앰..."
+#define MSGTR_MENU_LoadExternAudioFile "음악 파일..."
 #define MSGTR_MENU_Playing "작동"
 #define MSGTR_MENU_Play "재생"
 #define MSGTR_MENU_Pause "멈춤"
@@ -441,7 +433,7 @@ static char help_text[]=
 #define MSGTR_MENU_FullScreen "전체 화면"
 #define MSGTR_MENU_DVD "DVD"
 #define MSGTR_MENU_VCD "VCD"
-#define MSGTR_MENU_PlayDisc "디스크 열기 ..."
+#define MSGTR_MENU_PlayDisc "디스크 열기..."
 #define MSGTR_MENU_ShowDVDMenu "DVD 메뉴보기"
 #define MSGTR_MENU_Titles "타이틀"
 #define MSGTR_MENU_Title "타이틀 %2d"
@@ -453,7 +445,7 @@ static char help_text[]=
 #define MSGTR_MENU_PlayList "재생목록"
 #define MSGTR_MENU_SkinBrowser "스킨선택"
 #define MSGTR_MENU_Preferences "선택사항"
-#define MSGTR_MENU_Exit "종료 ..."
+#define MSGTR_MENU_Exit "종료..."
 #define MSGTR_MENU_Mute "음소거"
 #define MSGTR_MENU_Original "원래대로"
 #define MSGTR_MENU_AspectRatio "화면비율"
@@ -541,7 +533,7 @@ static char help_text[]=
 #define MSGTR_PREFERENCES_SDL_Driver "드라이버:"
 #define MSGTR_PREFERENCES_Message "선택사항들을 적용하려면 재생기를 다시 시작해야 합니다!"
 #define MSGTR_PREFERENCES_DXR3_VENC "비디오 인코더:"
-#define MSGTR_PREFERENCES_DXR3_LAVC "LAVC 사용 (ffmpeg)"
+#define MSGTR_PREFERENCES_DXR3_LAVC "LAVC 사용 (FFmpeg)"
 #define MSGTR_PREFERENCES_DXR3_FAME "FAME 사용"
 #define MSGTR_PREFERENCES_FontEncoding1 "유니코드"
 #define MSGTR_PREFERENCES_FontEncoding2 "서유럽어 (ISO-8859-1)"

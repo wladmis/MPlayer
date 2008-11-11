@@ -4,6 +4,7 @@
  * (C) 2003
  */
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
@@ -18,6 +19,7 @@
 #include "video_out.h"
 #include "video_out_internal.h"
 #include "fastmemcpy.h"
+#include "sub.h"
 #include "mp_msg.h"
 
 static vo_info_t info = {
@@ -191,8 +193,13 @@ err_out:
 	return -1;
 }
 
-static uint32_t preinit(const char *ignore)
+static uint32_t preinit(const char *subdevice)
 {
+	if (subdevice)
+	{
+	    if (fb_dev_name) free(fb_dev_name);
+	    fb_dev_name = strdup(subdevice);
+	}
 	return fb_preinit(0);
 }
 
