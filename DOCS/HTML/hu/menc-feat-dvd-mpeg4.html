@@ -1,15 +1,15 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>7.11. Making a high quality MPEG4 ("DivX") rip of a DVD movie</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - The Movie Player"><link rel="up" href="mencoder.html" title="7. fejezet - Encoding with MEncoder"><link rel="previous" href="custommatrices.html" title="7.10. Custom inter/intra matrices"><link rel="next" href="menc-feat-telecine.html" title="7.12. How to deal with telecine and interlacing within NTSC DVDs"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">7.11. Making a high quality MPEG4 ("DivX") rip of a DVD movie</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="custommatrices.html">El&#337;z&#337;</a> </td><th width="60%" align="center">7. fejezet - Encoding with MEncoder</th><td width="20%" align="right"> <a accesskey="n" href="menc-feat-telecine.html">Következ&#337;</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="menc-feat-dvd-mpeg4"></a>7.11. Making a high quality MPEG4 ("DivX") rip of a DVD movie</h2></div></div><p>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>7.11. Making a high quality MPEG-4 ("DivX") rip of a DVD movie</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - The Movie Player"><link rel="up" href="mencoder.html" title="7. fejezet - Encoding with MEncoder"><link rel="previous" href="custommatrices.html" title="7.10. Custom inter/intra matrices"><link rel="next" href="menc-feat-telecine.html" title="7.12. How to deal with telecine and interlacing within NTSC DVDs"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">7.11. Making a high quality MPEG-4 ("DivX") rip of a DVD movie</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="custommatrices.html">El&#337;z&#337;</a> </td><th width="60%" align="center">7. fejezet - Encoding with MEncoder</th><td width="20%" align="right"> <a accesskey="n" href="menc-feat-telecine.html">Következ&#337;</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="menc-feat-dvd-mpeg4"></a>7.11. Making a high quality MPEG-4 ("DivX") rip of a DVD movie</h2></div></div><p>
   One frequently asked question is "How do I make the highest quality DVD
   rip possible?  I don't care about file size, I just want the best
   quality."
 </p><p>
   This question is perhaps at least somewhat wrongly posed. After all, if
-  you don't care about file size, why not simply copy the MPEG2 video
+  you don't care about file size, why not simply copy the MPEG-2 video
   stream from the DVD whole? Sure, your AVI will end up being 5GB, give
   or take, but if you want the best quality and don't care about size,
   this is certainly your best option.
 </p><p>
-  In fact, the reason you want to transcode a DVD into MPEG4 is
+  In fact, the reason you want to transcode a DVD into MPEG-4 is
   specifically because you <span class="bold"><b>do</b></span> care about
   file size.
 </p><p>
@@ -66,7 +66,7 @@
   to use a higher quantizer on a macroblock without sacrificing visual
   quality. Why waste the bits on an unnecessarily low quantizer? Your
   CPU has as many cycles as there is time, but there's only so many bits
-  on your harddisk.
+  on your hard disk.
 </p><p>
   With a two-pass encode, the first pass will rip the movie as though it
   were CBR, but it will keep a log of properties for each frame. This
@@ -102,7 +102,7 @@
 </p><p>
   <span class="application">MPlayer</span> provides a crop detection filter that
   will determine the crop rectangle (<tt class="option">-vf cropdetect</tt>).
-  Because MPEG4 uses 16x16 macroblocks, you'll want to make sure that each
+  Because MPEG-4 uses 16x16 macroblocks, you'll want to make sure that each
   dimension of the video you're encoding is a multiple of 16 or else you
   will be degrading quality, especially at lower bitrates. You can do this
   by rounding the width and height of the crop rectangle down to the nearest
@@ -124,7 +124,7 @@
   could calculate the new aspect ratio manually, but
   <span class="application">MEncoder</span> offers an option for <tt>libavcodec</tt> called <tt class="option">autoaspect</tt>
   that will do this for you. Absolutely do not scale this video in order to
-  square the pixels unless you like to waste your harddisk space. Scaling
+  square the pixels unless you like to waste your hard disk space. Scaling
   should be done on playback, and the player will use the aspect stored in
   the AVI to determine the correct resolution.
 </p></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="menc-feat-dvd-mpeg4-audio"></a>7.11.3. Audio</h3></div></div><p>

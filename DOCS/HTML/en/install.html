@@ -33,7 +33,7 @@ You need a fairly recent system. On Linux, 2.4.x kernels are recommended.
   </p></li><li><p>
   <span class="bold"><b>XFree86</b></span> - suggested version is <span class="bold"><b>always the
   newest</b></span> (4.3). Normally, everyone wants this, as starting
-  with XFree86 4.0.2, it contains the <a href="devices.html#xv" title="2.3.1.2.1. Xv">XVideo</a>
+  with XFree86 4.0.2, it contains the <a href="video.html#xv" title="2.3.2.1. Xv">XVideo</a>
   extension (somewhere referred to as <span class="bold"><b>Xv</b></span>)
   which is needed to enable the hardware YUV acceleration (fast image display)
   on cards that support it.
@@ -73,7 +73,7 @@ You need a fairly recent system. On Linux, 2.4.x kernels are recommended.
   - optional, needed for playing RTSP/RTP streams.
   </p></li><li><p>
   <span class="bold"><b>directfb</b></span> - optional, from
-  <a href="http://www.directfb.org" target="_top">http://www.directfb.org</a>
+  <a href="http://www.directfb.org" target="_top">http://www.directfb.org</a>. At least 0.9.13 is required.
   </p></li><li><p>
   <span class="bold"><b>cdparanoia</b></span> - optional, for CDDA support
   </p></li><li><p>
@@ -93,10 +93,10 @@ You need a fairly recent system. On Linux, 2.4.x kernels are recommended.
   (e.g. <tt class="filename">/usr/local/lib</tt>) or use the
   <tt class="option">--with-bio2jack=DIR</tt> switch to tell
   <tt class="filename">./configure</tt> where that file is.
-  </p></li></ul></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="id2835162"></a>1.2.2. Codecs</h3></div></div><div class="itemizedlist"><ul type="disc"><li><p>
+  </p></li></ul></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="id2835166"></a>1.2.2. Codecs</h3></div></div><div class="itemizedlist"><ul type="disc"><li><p>
   <span class="bold"><b><tt>libavcodec</tt></b></span>:
   This codec package is capable
-  of decoding H263/MJPEG/RV10/DivX3/DivX4/DivX5/MP41/MP42/WMV1/WMV2/SVQ1/SVQ3 encoded video
+  of decoding H.263/MJPEG/RV10/DivX3/DivX4/DivX5/MP41/MP42/WMV1/WMV2/SVQ1/SVQ3 encoded video
   streams and WMA (Windows Media Audio) v1/v2 audio streams, on multiple
   platforms. It is also known to be the fastest for this task. See
   <a href="codecs.html#ffmpeg" title="2.2.1.2. FFmpeg/libavcodec">FFmpeg</a> section for details. Features:
@@ -106,7 +106,7 @@ You need a fairly recent system. On Linux, 2.4.x kernels are recommended.
     encoding with most of the mentioned codecs
     </li><li>
     this codec is the <span class="bold"><b>fastest codec available</b></span> for
-    DivX/3/4/5 and other MPEG4 types. Recommended!
+    DivX/3/4/5 and other MPEG-4 types. Recommended!
     </li></ul></div><p>
   </p></li><li><p>
   <span class="bold"><b>Win32 codecs</b></span>: If you plan to use
@@ -176,10 +176,9 @@ You need a fairly recent system. On Linux, 2.4.x kernels are recommended.
   are best played with <span class="application">MPlayer</span>'s own Cinepak decoder!
   </p></li><li><p>
   For <span class="bold"><b>Ogg Vorbis</b></span> audio decoding you need to
-  install <tt>libvorbis</tt> properly. Use
-  deb/rpm packages if available, or compile from
-  <a href="http://ogg.org/ogg/vorbis/download/vorbis_nightly_cvs.tgz" target="_top">source</a>
-  (this is a nightly updated tarball of Vorbis CVS).
+  install <tt>libvorbis</tt> properly.
+  You can get binary packages and source code from the
+  <a href="http://www.vorbis.com/download.psp" target="_top">Ogg Vorbis site</a>.
   </p></li><li><p>
   <span class="application">MPlayer</span> can use the libraries of RealPlayer 8
   or RealONE to play files with
@@ -198,33 +197,33 @@ zooming), thus fullscreen is nice and very fast.
 
 </p><div class="itemizedlist"><ul type="disc"><li><p>
   <span class="bold"><b>Matrox G200/G400/G450/G550 cards</b></span>: although a
-  <a href="devices.html#vidix" title="2.3.1.2.13. VIDIX">Vidix driver</a> is provided, it is recommended to
+  <a href="video.html#vidix" title="2.3.2.13. VIDIX">Vidix driver</a> is provided, it is recommended to
   use the mga_vid module instead, for it works much better.
-  Please see the <a href="devices.html#mga_vid" title="2.3.1.2.6. Matrox framebuffer (mga_vid)">mga_vid</a> section about its
+  Please see the <a href="video.html#mga_vid" title="2.3.2.6. Matrox framebuffer (mga_vid)">mga_vid</a> section about its
   installation and usage. It is important to do these steps
   <span class="emphasis"><i>before</i></span> compiling <span class="application">MPlayer</span>,
   otherwise no mga_vid support will be built. Also check out the
-  <a href="devices.html#tvout-mga-g400" title="2.3.1.5.1. Matrox G400 cards">Matrox TV-out</a> section.
+  <a href="video.html#tvout-mga-g400" title="2.3.5.1. Matrox G400 cards">Matrox TV-out</a> section.
   <span class="bold"><b> If you don't use Linux</b></span>, your only
-  possibility is the VIDIX driver: read the <a href="devices.html#vidix" title="2.3.1.2.13. VIDIX">VIDIX</a> section.
+  possibility is the VIDIX driver: read the <a href="video.html#vidix" title="2.3.2.13. VIDIX">VIDIX</a> section.
   </p></li><li><p>
   <span class="bold"><b>3Dfx Voodoo3/Banshee cards</b></span>: please see
-  <a href="devices.html#tdfxfb" title="2.3.1.2.7. 3Dfx YUV support">tdfxfb</a> section in order to gain big speedup.
+  <a href="video.html#tdfxfb" title="2.3.2.7. 3Dfx YUV support">tdfxfb</a> section in order to gain big speedup.
   It is important to do these steps <span class="bold"><b>before</b></span>
   compiling <span class="application">MPlayer</span>, otherwise no 3Dfx support will be
-  built. Also see the <a href="devices.html#tvout-voodoo" title="2.3.1.5.4. Voodoo 3">3dfx TV-out</a> section.
+  built. Also see the <a href="video.html#tvout-voodoo" title="2.3.5.4. Voodoo 3">3dfx TV-out</a> section.
   If you use X, use at least <span class="bold"><b>4.2.0</b></span>, as 3dfx Xv
   driver was broken in 4.1.0, and earlier releases.
   </p></li><li><p>
-  <span class="bold"><b>ATI cards</b></span>: <a href="devices.html#vidix" title="2.3.1.2.13. VIDIX">VIDIX</a>
+  <span class="bold"><b>ATI cards</b></span>: <a href="video.html#vidix" title="2.3.2.13. VIDIX">VIDIX</a>
   driver is provided for the following cards:
   <span class="bold"><b>Radeon, Rage128, Mach64</b></span> (Rage XL/Mobility, Xpert98).
-  Also see the <a href="devices.html#tvout-ati" title="2.3.1.5.3. ATI cards">ATI cards</a> section of the TV-out documentation,
+  Also see the <a href="video.html#tvout-ati" title="2.3.5.3. ATI cards">ATI cards</a> section of the TV-out documentation,
   to know if you card's TV-out is supported under Linux/<span class="application">MPlayer</span>.
   </p></li><li><p>
   <span class="bold"><b>S3 cards</b></span>: the Savage and Virge/DX chips have
   hardware acceleration. Use as new XFree86 version as possible, older drivers are
-  buggy. Savage chips have problems with YV12 display, see <a href="devices.html#s3" title="2.3.1.2.1.2. S3 cards">S3 Xv</a>
+  buggy. Savage chips have problems with YV12 display, see <a href="video.html#s3" title="2.3.2.1.2. S3 cards">S3 Xv</a>
   section for details. Older, Trio cards have no, or slow hardware support.
   </p></li><li><p>
   <span class="bold"><b>nVidia cards</b></span>: may or may not be good choice for video playing.
@@ -232,18 +231,18 @@ zooming), thus fullscreen is nice and very fast.
   <span class="bold"><b>the built-in nVidia driver in XFree86 does not support
   hardware YUV acceleration on all nVidia cards.</b></span> You have
   to download nVidia's closed-source drivers from <a href="http://nvidia.com" target="_top">nVidia.com</a>.
-  See the <a href="devices.html#nvidia" title="2.3.1.2.1.3. nVidia cards">nVidia Xv driver</a> section for details. Please also check
-  the <a href="devices.html#tvout-nvidia" title="2.3.1.5.5. nVidia">nVidia TV-out</a> section if you wish to
+  See the <a href="video.html#nvidia" title="2.3.2.1.3. nVidia cards">nVidia Xv driver</a> section for details. Please also check
+  the <a href="video.html#tvout-nvidia" title="2.3.5.5. nVidia">nVidia TV-out</a> section if you wish to
   use a TV.
   </p></li><li><p>
   <span class="bold"><b>3DLabs GLINT R3 and Permedia3</b></span>: a VIDIX driver
-  is provided (pm3_vid). Please see the <a href="devices.html#vidix" title="2.3.1.2.13. VIDIX">VIDIX</a> section
+  is provided (pm3_vid). Please see the <a href="video.html#vidix" title="2.3.2.13. VIDIX">VIDIX</a> section
   for details.
   </p></li><li><p>
   <span class="bold"><b>Other cards</b></span>: none of the above?
   </p><div class="itemizedlist"><ul type="round"><li>
     Try if the XFree86 driver (and your card) supports hardware
-    acceleration. See the <a href="devices.html#xv" title="2.3.1.2.1. Xv">Xv</a> section for details.
+    acceleration. See the <a href="video.html#xv" title="2.3.2.1. Xv">Xv</a> section for details.
     </li><li>
     If it doesn't, then your card's video features aren't supported under
     your operating system :( If hardware scaling works under Windows, it
@@ -261,16 +260,16 @@ but I warn you: this is slow), or switching to a smaller video mode, for example
 Video mode switching can be enabled by using the <tt class="option">-vm</tt> option and
 it works with the following drivers:
 </p><div class="itemizedlist"><ul type="disc"><li>
-  <span class="bold"><b>using</b></span> XFree86: see details in <a href="devices.html#dga" title="2.3.1.2.2. DGA">DGA driver</a> and
-  <a href="devices.html#x11" title="2.3.1.2.12. X11">X11 driver</a> sections. DGA is recommended! Also
+  <span class="bold"><b>using</b></span> XFree86: see details in <a href="video.html#dga" title="2.3.2.2. DGA">DGA driver</a> and
+  <a href="video.html#x11" title="2.3.2.12. X11">X11 driver</a> sections. DGA is recommended! Also
   try DGA via SDL, sometimes it's better.
   </li><li>
   <span class="bold"><b>not using</b></span> XFree86: try the drivers in the
   following order:
-  <a href="devices.html#vesa" title="2.3.1.2.11. VESA - output to VESA BIOS">vesa</a>,
-  <a href="devices.html#fbdev" title="2.3.1.2.5. Framebuffer output (FBdev)">fbdev</a>,
-  <a href="devices.html#svgalib" title="2.3.1.2.4. SVGAlib">svgalib</a>,
-  <a href="devices.html#aalib" title="2.3.1.2.9. AAlib - text mode displaying">aalib</a>.
+  <a href="video.html#vesa" title="2.3.2.11. VESA - output to VESA BIOS">vesa</a>,
+  <a href="video.html#fbdev" title="2.3.2.5. Framebuffer output (FBdev)">fbdev</a>,
+  <a href="video.html#svgalib" title="2.3.2.4. SVGAlib">svgalib</a>,
+  <a href="video.html#aalib" title="2.3.2.9. AAlib - text mode displaying">aalib</a>.
   </li></ul></div><p>
 </p></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="cirrus-logic-cards"></a>1.2.3.3. Cirrus-Logic cards</h4></div></div><div class="itemizedlist"><ul type="disc"><li><p>
   GD 7548: present on-board and tested in Compaq Armada 41xx notebook series.
@@ -303,8 +302,8 @@ it works with the following drivers:
   </li><li>
   Features of <span class="bold"><b>other cards</b></span> aren't supported by
   <span class="application">MPlayer</span>. <span class="bold"><b>It's very recommended
-  to read the <a href="devices.html#audio-dev" title="2.3.2. Audio output devices">sound card</a> section!</b></span>
-  </li></ul></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="id2836720"></a>1.2.5. Features</h3></div></div><div class="itemizedlist"><ul type="disc"><li><p>
+  to read the <a href="audio.html" title="2.4. Audio output devices">sound card</a> section!</b></span>
+  </li></ul></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="id2836723"></a>1.2.5. Features</h3></div></div><div class="itemizedlist"><ul type="disc"><li><p>
   Decide if you need GUI. If you do, see the <a href="gui.html" title="1.3. What about the GUI?">GUI</a>
   section before compiling.
   </p></li><li><p>
@@ -314,7 +313,7 @@ it works with the following drivers:
   </p></li><li><p>
   If you have a V4L compatible <span class="bold"><b>TV tuner</b></span> card,
   and wish to watch/grab and encode movies with <span class="application">MPlayer</span>,
-  read the <a href="tv-input.html" title="2.4. TV input">TV input</a> section.
+  read the <a href="tv-input.html" title="2.5. TV input">TV input</a> section.
   </p></li><li><p>
   There is a neat <span class="bold"><b>OSD Menu</b></span> support ready to be
   used. Check the <a href="subosd.html" title="1.4. Subtitles and OSD">OSD menu</a> section.

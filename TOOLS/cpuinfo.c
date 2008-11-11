@@ -1,3 +1,6 @@
+/* small utility to extract CPU information
+ Used by configure to set CPU optimization levels on some operating
+ systems where /proc/cpuinfo is non-existent or unreliable. */
 
 #include <stdio.h>
 #include <sys/time.h>
@@ -12,6 +15,10 @@ void gettimeofday(struct timeval* t,void* timezone)
 }
 #define MISSING_USLEEP
 #define sleep(t) _sleep(1000*t);
+#endif
+
+#ifdef __BEOS__
+#define usleep(t) snooze(t)
 #endif
 
 #ifdef M_UNIX
@@ -33,11 +40,13 @@ static cpuid_regs_t
 cpuid(int func) {
 	cpuid_regs_t regs;
 #define	CPUID	".byte 0x0f, 0xa2; "
-	asm("movl %4,%%eax; " CPUID
-	    "movl %%eax,%0; movl %%ebx,%1; movl %%ecx,%2; movl %%edx,%3"
+	asm("push %%ebx; "
+	    "movl %4,%%eax; " CPUID
+	    "movl %%eax,%0; movl %%ebx,%1; movl %%ecx,%2; movl %%edx,%3; "
+	    "pop %%ebx"
 		: "=m" (regs.eax), "=m" (regs.ebx), "=m" (regs.ecx), "=m" (regs.edx)
 		: "g" (func)
-		: "%eax", "%ebx", "%ecx", "%edx");
+		: "%eax", "%ecx", "%edx");
 	return regs;
 }
 

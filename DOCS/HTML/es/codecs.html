@@ -449,7 +449,7 @@ necesita obtenerlo por separado.
 Si usa gcc 3.2 y falla al compilar nuestro FAAD interno o desea usar la
 biblioteca externa por alguna otra razón, descargue la biblioteca desde la
 <a href="http://www.audiocoding.com/download.php" target="_top">página de descargas</a>
-y pase la opción <tt class="option">--with-externalfaad</tt> a <tt class="filename">configure</tt>.
+y pase la opción <tt class="option">--enable-external-faad</tt> a <tt class="filename">configure</tt>.
 No necesita todo el faad2 para decodificar archivos AAC, libfaad es suficiente.
 Constrúyalo como sigue:
 <pre class="screen">cd faad2/
@@ -463,8 +463,7 @@ make install
 No hay binarios disponibles en audiocoding.com, pero puede apetegetear paquetes Debian
 desde <a href="http://marillat.free.fr" target="_top">la página personal de Christian Marillat</a>,
 paquetes RPM para Mandrake desde la <a href="http://plf.zarb.org" target="_top">P.L.F.</a> y RPMs
-para Red Hat en <a href="http://www.piorunek.pl/~dominik/" target="_top">la página personal
-de Dominik Mierzejewski</a>.
+para Red Hat en <a href="http://greysector.rangers.eu.org/" target="_top">Grey Sector</a>.
 </p></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="win32-codecs"></a>2.2.3. COMO importar codecs Win32</h3></div></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="vfw-codecs"></a>2.2.3.1. Codecs VFW</h4></div></div><p>
 VFW (Video for Windows) es una API antigua para Windows. Sus codecs tienen
 la extensión <tt class="filename">.DLL</tt> o (rara vez) <tt class="filename">.DRV</tt>.
@@ -505,7 +504,7 @@ Las cosas son más difíciles con DirectShow, ya que
 Usando <span class="application">Microsoft GraphEdit</span> (rápido)
 </p><ol type="1"><li><p>
   Obtenga <span class="application">GraphEdit</span> desde el SDK DirectX SDK o
-  <a href="http://doom9.org" target="_top">doom9</a>
+  <a href="http://doom9.net" target="_top">doom9</a>
   </p></li><li><p>
   Inicie <b>graphedit.exe</b>.
   </p></li><li><p>

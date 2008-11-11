@@ -1,9 +1,9 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>B.4. Que rapporter</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - Le lecteur vidéo pour LINUX"><link rel="up" href="bugreports.html" title="Annexe B. Comment rapporter les bogues"><link rel="previous" href="bugreports_where.html" title="B.3. Où rapporter les bogues"><link rel="next" href="bugreports_advusers.html" title="B.5. Je sais ce que je fait..."></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">B.4. Que rapporter</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="bugreports_where.html">Précédent</a> </td><th width="60%" align="center">Annexe B. Comment rapporter les bogues</th><td width="20%" align="right"> <a accesskey="n" href="bugreports_advusers.html">Suivant</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="bugreports_what"></a>B.4. Que rapporter</h2></div></div><p>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>B.4. Que rapporter</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - Le Lecteur Vidéo"><link rel="up" href="bugreports.html" title="Annexe B. Comment rapporter les bogues"><link rel="previous" href="bugreports_where.html" title="B.3. Où rapporter les bogues"><link rel="next" href="bugreports_advusers.html" title="B.5. Je sais ce que je fait..."></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">B.4. Que rapporter</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="bugreports_where.html">Précédent</a> </td><th width="60%" align="center">Annexe B. Comment rapporter les bogues</th><td width="20%" align="right"> <a accesskey="n" href="bugreports_advusers.html">Suivant</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="bugreports_what"></a>B.4. Que rapporter</h2></div></div><p>
 Vous pouvez avoir besoin d'inclure des fichiers de log, de configuration ou
 d'échantillon. Si certains sont très gros alors il vaut mieux les uploader sur notre
 <a href="ftp://mplayerhq.hu/MPlayer/incoming/" target="_top">serveur FTP</a> en format
 compressé (gzip et bzip2 préférés) et indiquer uniquement leur chemin et nom dans le
-rapport de bug. Nos listes de diffusion ont une taille de message limite de 80k, si
+rapport de bogue. Nos listes de diffusion ont une taille de message limite de 80k, si
 vous avez quelque chose de plus gros vous devrez le compresser ou l'uploader.
 </p><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="bugreports_system"></a>B.4.1. Information Système</h3></div></div><p>
 </p><div class="itemizedlist"><ul type="disc"><li><p>
@@ -47,15 +47,15 @@ Fabricant et modèle de votre carte vidéo, ex.:
 Type et version des drivers vidéo, ex.:
   </p><div class="itemizedlist"><ul type="round"><li><p>Pilote X intégré</p></li><li><p>nVidia 0.9.623</p></li><li><p>Utah-GLX CVS 2001-02-17</p></li><li><p>DRI de X 4.0.3</p></li></ul></div><p>
 </p></li><li><p>
-Type et version des drivers son, ex.:
+Type de carte son et pilote, ex.:
   </p><div class="itemizedlist"><ul type="round"><li><p>Creative SBLive! Gold avec pilote OSS de oss.creative.com</p></li><li><p>Creative SB16 avec pilotes noyau OSS</p></li><li><p>GUS PnP avec émulation OSS ALSA</p></li></ul></div><p>
 </p></li><li><p>
-En cas de doute, joignez y le résultat de <b>lspci -vv</b> sur les systèmes Linux.
+En cas de doute, joignez-y le résultat de <b>lspci -vv</b> sur les systèmes Linux.
 </p></li></ul></div><p>
 </p></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="bugreports_configure"></a>B.4.3. Problèmes de configuration</h3></div></div><p>
 Si vous rencontrez des erreurs pendant l'éxecution de <b>./configure</b>,
-ou si l'autodetection ou autre chose échoue, lisez <tt class="filename">configure.log</tt>.
-Vous pouvez y trouver la réponse, par exemple des versions multiples de la même
+ou si l'auto-détection ou autre chose échoue, lisez <tt class="filename">configure.log</tt>.
+Vous pourriez y trouver la réponse, par exemple des versions multiples de la même
 librairie mélangés dans votre système, ou vous avez oublié d'installer les paquets de
 développement (ceux avec le suffixe -dev). Si vous pensez que c'est un bogue, incluez
 <tt class="filename">configure.log</tt> dans votre rapport de bogue.
@@ -79,7 +79,7 @@ le(s) fautif(s) sur:
 Uploadez aussi un petit fichier texte ayant le même nom que votre fichier mais avec une
 extension .txt. Décrivez le problème que vous avez avec ce fichier et incluez votre
 adresse e-mail ainsi que la sortie de MPlayer en verbosité niveau 1. Généralement les
-premiers 1-5 MB sont suffisants pour reproduire le problème, mais pour être sûrs nous
+premiers 1-5 Mo sont suffisants pour reproduire le problème, mais pour être sûrs nous
 vous demandons de faire:
 <pre class="screen">dd if=<i><tt>votrefichier</tt></i> of=<i><tt>petitfichier</tt></i> bs=1024k count=5</pre>
 Cela coupera les 5 premiers Mo de '<span class="bold"><b>votrefichier</b></span>'
@@ -92,8 +92,8 @@ accessible en téléchargement, envoyez seulement son adresse <span class="bold"><
 Vous devez lancer <span class="application">MPlayer</span> à l'intérieur de <b>gdb</b>
 et nous envoyer le résultat complet ou si vous avez un core dump du plantage vous
 pouvez extraire des informations utiles du fichier <tt class="filename">core</tt>. Voici comment:
-</p><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="bugreports_debug"></a>B.4.6.1. Comment conserver les informations avec un plantage reproduisible</h4></div></div><p>
-Recompilez MPlayer avec les instructions de déboguage:
+</p><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="bugreports_debug"></a>B.4.6.1. Comment conserver les informations avec un plantage reproductible</h4></div></div><p>
+Recompilez <span class="application">MPlayer</span> avec les instructions de déboguage:
 <pre class="screen">
 ./configure --enable-debug=3
 make

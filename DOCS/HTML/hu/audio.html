@@ -1,0 +1,562 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>2.4. Audió kimeneti eszközök</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - The Movie Player"><link rel="up" href="features.html" title="2. fejezet - Funkciók"><link rel="previous" href="video.html" title="2.3. Video output devices"><link rel="next" href="tv-input.html" title="2.5. TV input"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">2.4. Audió kimeneti eszközök</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="video.html">El&#337;z&#337;</a> </td><th width="60%" align="center">2. fejezet - Funkciók</th><td width="20%" align="right"> <a accesskey="n" href="tv-input.html">Következ&#337;</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="audio"></a>2.4. Audió kimeneti eszközök</h2></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="sync"></a>2.4.1. Audió/Videó szinkronizáció</h3></div></div><p>
+Az <span class="application">MPlayer</span> audió interfészét
+<span class="emphasis"><i>libao2</i></span>-nek hívják. Jelenleg a következ&#337; vezérl&#337;ket
+tartalmazza:
+</p><div class="informaltable"><table border="1"><colgroup><col><col></colgroup><thead><tr><th>Vezérl&#337;</th><th>Megjegyzés</th></tr></thead><tbody><tr><td>oss</td><td>
+  OSS (ioctl) vezérl&#337; (támogatja a hardveres AC3 áteresztést)
+  </td></tr><tr><td>sdl</td><td>
+  SDL vezérl&#337; (támogatja a hang démonokat, mint pl. az <span class="bold"><b>ESD</b></span>
+  és az <span class="bold"><b>ARTS</b></span>)
+  </td></tr><tr><td>nas</td><td>
+  NAS (Network Audio System) vezérl&#337;
+  </td></tr><tr><td>alsa5</td><td>
+  natív ALSA 0.5 vezérl&#337;
+  </td></tr><tr><td>alsa</td><td>
+  natív ALSA 0.9/1.0 vezérl&#337; (támogatja a hardveres AC3 áteresztést)
+  </td></tr><tr><td>sun</td><td>
+  SUN audió vezérl&#337; (<tt class="filename">/dev/audio</tt>) BSD és Solaris8 használóknak
+  </td></tr><tr><td>macosx</td><td>
+  natív Mac OS X vezérl&#337;
+  </td></tr><tr><td>win32</td><td>
+  natív Win32 vezérl&#337;
+  </td></tr><tr><td>arts</td><td>
+  natív ARTS vezérl&#337; (leginkább KDE-t használóknak)
+  </td></tr><tr><td>esd</td><td>
+  natív ESD vezérl&#337; (leginkább GNOME-ot használóknak)
+  </td></tr><tr><td>jack</td><td>
+  JACK (Jack Audio Connection Kit) vezérl&#337;
+  </td></tr><tr><td>polyp</td><td>
+  polypaudio vezérl&#337;
+  </td></tr></tbody></table></div><p>
+A Linux hangkártya vezérl&#337;i kompatibilítási problémákkal küzdenek. Ez azért van,
+mert az <span class="application">MPlayer</span> a <span class="emphasis"><i>megfelel&#337;en</i></span>
+kódolt hang vezérl&#337;k egy beépített tulajdonságát használja, ami engedélyezi nekik
+az audió/videó szinkron javítását. Sajnálatos módon néhány vezérl&#337; szerz&#337;i
+nem gondoskodnak ezen tulajdonság kódolásáról, mivel nem szükséges az MP3-ak
+és a hangeffektek lejátszásához.
+</p><p>
+Más média lejátszók, mint pl. az <a href="http://avifile.sf.net" target="_top">aviplay</a>
+vagy a <a href="http://xinehq.de" target="_top">xine</a> valószín&#369;leg
+kapásból m&#369;ködnek ezekkel a vezérl&#337;kkel, mert egy "egyszer&#369;" módszert
+használnak bels&#337; id&#337;zítéssel. A mérések azt mutatják, hogy az &#337;
+módszereik nem olyan hatékonyak, mint az <span class="application">MPlayer</span>é.
+</p><p>
+Az <span class="application">MPlayer</span>t egy megfelel&#337;en megírt audió vezérl&#337;vel
+használva soha nem fog A/V deszinkronizáció bekövetkezni az audióban, csak
+nagyon rosszul elkészített fájlok esetén (lásd a man oldalt a megkerüléshez).
+</p><p>
+Ha neked rossz audió vezérl&#337;d van, próbáld ki a <tt class="option">-autosync</tt>
+kapcsolót, megszünteti a problémáidat. Lásd a man oldalt a b&#337;vebb információkért.
+</p><div class="itemizedlist"><p><b>Néhány megjegyzés:</b></p><ul type="disc"><li><p>
+  Ha OSS vezérl&#337;d van, el&#337;ször próbáld meg a <tt class="option">-ao oss</tt>-t (ez az
+  alapértelmezett). Ha hibát tapasztalsz, megállást vagy bármit, ami a megszokottól
+  eltér, próbáld ki a <tt class="option">-ao sdl</tt> kapcsolót (MEGJEGYZÉS: szükséged
+  lesz telepített SDL függvénykönyvtárakra és fejléc fájlokra). Az SDL audió vezérl&#337;
+  sok esetben segít és az ESD-t (GNOME) és az ARTS-ot (KDE) is támogatja.
+  </p></li><li><p>
+  Ha 0.5-ös ALSA-d van, akkor majdnem mindig a <tt class="option">-ao alsa5</tt>-öt kell
+  használnod, mivel az ALSA 0.5-nek hibás az OSS emulációs kódja,
+  és <span class="bold"><b>össze fogja omlasztani az <span class="application">MPlayer</span>t</b></span>
+  egy ehhez hasonló üzenettel:
+  <pre class="screen">
+DEMUXER: Too many (945 in 8390980 bytes) video packets in the buffer!</pre>
+  </p></li><li><p>
+  Solaris-on használd a SUN audió verziót a <tt class="option">-ao sun</tt> kapcsolóval,
+  különben sem a videó sem az audió nem fog m&#369;ködni.
+  </p></li><li><p>
+  Ha a hang kattog CD-ROM lejátszása közben, kapcsold be az IRQ unmasking-ot, pl.
+  <b>hdparm -u1 /dev/cdrom</b> (<b>man hdparm</b>).
+  Ez általában jótékony hatású, b&#337;vebben a <a href="drives.html" title="5.1. CD/DVD vezérl&#337;k">CD-ROM</a>
+  részben van leírva.
+ </p></li></ul></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="experiences"></a>2.4.2. Hangkártya tapasztalatok, javaslatok</h3></div></div><p>
+Linuxon egy 2.4.x kernel nagyon javasolt. A 2.2-es kernelt nem teszteltük.
+</p><p>
+A Linux hang vezérl&#337;it els&#337; sorban az OSS szabad verziója biztosítja.
+Ezeket a vezérl&#337;ket az <a href="http://www.alsa-project.org" target="_top">ALSA</a>
+(Advanced Linux Sound Architecture) váltotta fel a 2.5-ös fejleszt&#337;i sorozatban.
+Ha a disztribúciód még nem használja az ALSA-t, próbáld ki, ha hanggal
+kapcsolatos problémákat tapasztalsz. Az ALSA vezérl&#337;k általában
+jobbak az OSS-nél kompatibilításban, teljesítményben és tulajdonságokban
+egyaránt. De néhány hangkártyát csak a <a href="http://www.opensound.com/" target="_top">4Front Technologies</a>
+által kiadott kereskedelmi OSS vezérl&#337;k támogatnak.
+Ráadásul elérhet&#337;ek számos nem-Linux rendszeren is.
+</p><div class="informaltable"><table border="1"><colgroup><col><col><col><col><col><col><col><col></colgroup><thead><tr><th rowspan="3" valign="middle">HANG KÁRTYA</th><th colspan="4">VEZÉRL&#336;</th><th rowspan="3" valign="middle">Max kHz</th><th rowspan="3" valign="middle">Max Csatornák</th><th rowspan="3" valign="middle">Max Nyitások
+      <sup>[<a name="maxopens" href="#ftn.maxopens">a</a>]</sup></th></tr><tr><th>OSS/Szabad</th><th>ALSA</th><th>OSS/Pro</th><th>egyéb</th></tr></thead><tbody><tr><td>VIA alaplapi (686/A/B, 8233, 8235)</td><td><a href="http://sf.net/project/showfiles.php?group_id=3242&amp;release_id=59602" target="_top">via82cxxx_audio</a></td><td>snd-via82xx</td><td> </td><td> </td><td>4-48 kHz vagy csak 48 kHz, chipset-en múlik</td><td> </td><td> </td></tr><tr><td>Aureal Vortex 2</td><td>nincs</td><td>nincs</td><td>OK</td><td><a href="http://aureal.sf.net" target="_top">Linux Aureal vezérl&#337;k</a><a href="http://makacs.poliod.hu/~pontscho/aureal/au88xx-1.1.3.tar.bz2" target="_top">32k-ra növelt buffer méret</a></td><td>48</td><td>4.1</td><td>5+</td></tr><tr><td>SB Live!</td><td>Analóg OK, S/PDIF nem m&#369;ködik</td><td>Mindkett&#337; OK</td><td>Mindkett&#337; OK</td><td><a href="http://opensource.creative.com" target="_top">Creative OSS vezérl&#337;je (S/PDIF támogatás)</a></td><td>192</td><td>4.0/5.1</td><td>32</td></tr><tr><td>SB 128 PCI (es1371)</td><td>OK</td><td>?</td><td> </td><td> </td><td>48</td><td>stereo</td><td>2</td></tr><tr><td>SB AWE 64</td><td>max 44kHz</td><td>48kHz rossz hangzású</td><td> </td><td> </td><td>48</td><td> </td><td> </td></tr><tr><td>GUS PnP</td><td>nincs</td><td>OK</td><td>OK</td><td> </td><td>48</td><td> </td><td> </td></tr><tr><td>Gravis UltraSound ACE</td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr><tr><td>Gravis UltraSound MAX</td><td>OK</td><td>OK (?)</td><td> </td><td> </td><td>48</td><td> </td><td> </td></tr><tr><td>ESS 688</td><td>OK</td><td>OK (?)</td><td> </td><td> </td><td>48</td><td> </td><td> </td></tr><tr><td>C-Media kártyák (CMI8338/8738)</td><td>OK</td><td>OK S/PDIF támogatott ALSA 0.9.x-szel</td><td>?</td><td> </td><td>44</td><td>sztereo</td><td>1</td></tr><tr><td>Yamaha kártyák (*ymf*)</td><td>nem OK (?) (talán <tt class="option">-ao sdl</tt>)</td><td>OK csak OSS emulációs ALSA 0.5-tel
+      <span class="bold"><b>ÉS</b></span><tt class="option">-ao sdl</tt>-vel (!) (?)</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr><tr><td>envy24 chip-&#369; kártyák (mint a Terratec EWS88MT)</td><td>?</td><td>?</td><td>OK</td><td> </td><td>?</td><td> </td><td> </td></tr><tr><td>PC Speaker vagy DAC</td><td>OK</td><td>nincs</td><td> </td><td><a href="http://www.geocities.com/stssppnn/pcsp.html" target="_top">Linux PC speaker OSS vezérl&#337;</a></td><td>A vezérl&#337; 44.1-et emulál, talán többet.</td><td>mono</td><td>1</td></tr></tbody><tbody class="footnotes"><tr><td colspan="8"><div class="footnote"><p><sup>[<a name="ftn.maxopens" href="#maxopens">a</a>] </sup><sup>[<a name="ftn.maxopens" href="#maxopens">a</a>] </sup>az eszközt <span class="emphasis"><i>egyidej&#369;leg</i></span> használni
+			  képes alkalmazások száma.</p></div></td></tr></tbody></table></div><p>
+Örömmel fogadjuk az ezen dokumentummal kapcsolatos visszajelzéseket. Kérjük írd meg,
+hogy hogyan m&#369;ködött együtt az <span class="application">MPlayer</span> és a hang kártyá(i)d.
+</p></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="af"></a>2.4.3. Audio sz&#369;r&#337;k</h3></div></div><p>
+  A régi audió plugin-eket az új audió sz&#369;r&#337; réteg váltotta fel. Az audió sz&#369;r&#337;k
+  a hang adatok megváltoztatására használhatóak, még miel&#337;tt a hang ki lenne küldve
+  a hangkártyára. A sz&#369;r&#337;k be és kikapcsolása alapértelmezésben automatikus, de ez
+  felülbírálható. A sz&#369;r&#337;k akkor aktiválódnak, ha az audió adat tulajdonságai
+  különböznek attól, amit a hangkártya igényel és ha nem szükségesek, deaktiválhatóak.
+  A <tt class="option">-af szuro1,szuro2,...</tt> kapcsolót használhatod a sz&#369;r&#337;k automatikus
+  bekapcsolásának felülbírálásához vagy az automatikusan nem elindított sz&#369;r&#337;k
+  aktiválásához. A sz&#369;r&#337;k olyan sorrendben lesznek lefuttatva, ahogy a vessz&#337;vel
+  elválasztott sorban szerepelnek.
+</p><p>
+Például:
+<pre class="screen">mplayer -af resample,pan <i><tt>movie.avi</tt></i></pre>
+átereszti a hangot a resampling sz&#369;r&#337;n majd a pan sz&#369;r&#337;n. Figyelj rá, hogy
+a lista ne tartalmazzon szóközt, különben nem fog m&#369;ködni.
+</p><p>
+A sz&#369;r&#337;k viselkedése gyakran megváltoztatható kapcsolókkal. Ezek a kapcsolók az
+alábbi részben b&#337;vebben le lesznek írva. Egy sz&#369;r&#337; az alapértelmezett beállításokkal
+fog futni, ha nincs megadva hozzá kapcsoló. Itt egy példa, hogy hogyan használhatod
+a sz&#369;r&#337;ket a sz&#369;r&#337; specifikus kapcsolókkal együtt:
+<pre class="screen">mplayer -af resample=11025,pan=1:0.5:0.5 -channels 1 -srate 11025 <i><tt>media.avi</tt></i></pre>
+Ez a parancs beállítja a resample sz&#369;r&#337; kimeneti frekvenciáját 11025Hz-re és
+lebutítja az audiót 1 csatornára a pan sz&#369;r&#337;vel.
+</p><p>
+A sz&#369;r&#337; réteg teljes futtatását a <tt class="option">-af-adv</tt> kapcsoló
+szabályozza. Ennek a kapcsolónak két alopciója van:
+</p><p>
+A <tt class="option">force</tt> egy bitmez&#337;, ami beállítja, hogy a sz&#369;r&#337;ket
+hogyan kell beilleszteni és milyen sebesség/precizítás optimalizációt
+használjanak:
+</p><div class="variablelist"><dl><dt><span class="term"><tt class="option">0</tt></span></dt><dd><p>
+A sz&#369;r&#337;k automatikus beillesztése és optimalizálása a CPU sebességéhez.
+</p></dd><dt><span class="term"><tt class="option">1</tt></span></dt><dd><p>
+A sz&#369;r&#337;k automatikus beillesztése és optimalizálása a legnagyobb sebességhez.
+<span class="emphasis"><i>Figyelmeztetés:</i></span> Néhány tulajdonság az audió sz&#369;r&#337;kben
+elromolhat csendben, rontva így a hang min&#337;séget.
+</p></dd><dt><span class="term"><tt class="option">2</tt></span></dt><dd><p>
+A sz&#369;r&#337;k automatikus beillesztése és optimalizálása min&#337;séghez.
+</p></dd><dt><span class="term"><tt class="option">3</tt></span></dt><dd><p>
+A sz&#369;r&#337;k nem illeszt&#337;dnek be automatikusan és nincs optimalizálás.
+<span class="emphasis"><i>Figyelmeztetés:</i></span> Lehet, hogy az <span class="application">MPlayer</span>
+összeomlik ezzel a beállítással.
+</p></dd><dt><span class="term"><tt class="option">4</tt></span></dt><dd><p>
+A sz&#369;r&#337;k automatikus beillesztése a fenti 0-nak megfelel&#337;en,
+de amennyiben lehetséges, lebeg&#337;pontos feldolgozást használ.
+</p></dd><dt><span class="term"><tt class="option">5</tt></span></dt><dd><p>
+A sz&#369;r&#337;k automatikus beillesztése a fenti 1-nek megfelel&#337;en,
+de amennyiben lehetséges, lebeg&#337;pontos feldolgozást használ.
+</p></dd><dt><span class="term"><tt class="option">6</tt></span></dt><dd><p>
+A sz&#369;r&#337;k automatikus beillesztése a fenti 2-nek megfelel&#337;en,
+de amennyiben lehetséges, lebeg&#337;pontos feldolgozást használ.
+</p></dd><dt><span class="term"><tt class="option">7</tt></span></dt><dd><p>
+A sz&#369;r&#337;k nem illeszt&#337;dnek be automatikusan a fenti 3-nak megfelel&#337;en,
+és amennyiben lehetséges, lebeg&#337;pontos feldolgozást használ.
+</p></dd></dl></div><p>
+A <tt class="option">list</tt> a -af kapcsoló álneve.
+</p><p>
+A sz&#369;r&#337; réteget a következ&#337; általános kapcsolók is érintik:
+</p><div class="variablelist"><dl><dt><span class="term"><tt class="option">-v</tt></span></dt><dd><p>
+Növeli a beszédesség szintjét és ezáltal sok sz&#369;r&#337; extra státusz üzenetet ír ki.
+</p></dd><dt><span class="term"><tt class="option">-channels</tt></span></dt><dd><p>
+Ez a kapcsoló beállítja a hangkártyán használni kívánt kimeneti csatornák
+számát. A médiából dekódolt csatornák számát is érinti ez. Ha a médiában
+kevesebb csatorna van, mint amennyit megadsz, a csatorna sz&#369;r&#337; (lásd lejebb)
+automatikusan beilleszt&#337;dik. Az forgalom irányítás a csatorna sz&#369;r&#337; alapértelmezett
+forgalom irányítása alapján zajlik.
+</p></dd><dt><span class="term"><tt class="option">-srate</tt></span></dt><dd><p>
+Ez a kapcsoló beállítja a hangkártyán használni kívánt mintavételezési rátát
+(természetesen a kártyák korlátozzák ezt). Ha a hangkártyád mintavételi
+frekvenciája különbözik az aktuális médiáétól, a resample sz&#369;r&#337; (lásd lejebb)
+beilleszt&#337;dik az audió sz&#369;r&#337; rétegbe, hogy kompenzálja a különbséget.
+</p></dd><dt><span class="term"><tt class="option">-format</tt></span></dt><dd><p>
+Ez a kapcsoló a minta formátumát állítja be az audió sz&#369;r&#337; réteg és a hangkártya
+között. Ha a hangkártyád által elvárt minta formátum különbözik az aktuális médiáétól,
+egy formátum sz&#369;r&#337; (lásd lejebb) beilleszt&#337;dik, hogy kiigazítsa a különbséget.
+</p></dd></dl></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="af_resample"></a>2.4.3.1. Up/Downsampling</h4></div></div><p>
+Az <span class="application">MPlayer</span> teljes mértékben támogatja a hang up/down-sampling-et
+a <tt class="option">resample</tt> sz&#369;r&#337; segítségével. Akkor használható, ha fix
+frekvenciával dolgozó hangkártyád van vagy leragadtál egy régi kártyánál, ami csak
+maximum 44.1 kHz-et tud. Ez a sz&#369;r&#337; automatikusan engedélyezve lesz szükség esetén,
+de explicit módon is engedélyezheted a parancssorban. Három kapcsolója van:
+</p><div class="variablelist"><dl><dt><span class="term"><tt class="option">srate &lt;8000-192000&gt;</tt></span></dt><dd><p>
+    egy egész szám, amit a kimeneti mintavételi frekvenciát adja meg Hz-ben. Az
+    elfogadható tartomány 8kHz-t&#337;l 192kHz-ig terjed. Ha a bemenet és a kimenet
+    mintavételi frekvenciája ugyan annyi vagy ez a paraméter el van hagyva, a
+	sz&#369;r&#337; automatikusan kikapcsol. A magas mintavételi frekvencia normális esetben
+	javítja az audió min&#337;séget, különösen ha más sz&#369;r&#337;kkel együtt használod.
+</p></dd><dt><span class="term"><tt class="option">sloppy</tt></span></dt><dd><p>
+    egy opcionális bináris paraméter, ami engedélyezi, hogy a kimeneti frekvencia
+    eltérjen az <tt class="option">srate</tt>-tel megadott frekvenciától. Ez a kapcsoló
+    akkor használható, ha a lejátszás elindulása nagyon lassú. Alapértelmezésben
+    engedélyezett.
+</p></dd><dt><span class="term"><tt class="option">type &lt;0-2&gt;</tt></span></dt><dd><p>
+    egy opcionális egész szám <tt>0</tt> és <tt>2</tt> között,
+    ami kiválasztja, hogy melyik resampling módszert használja a program. Itt a
+    <tt>0</tt> a lineáris interpolációt jelenti, az <tt>1</tt>
+    a poly-phase filter-bank és egész feldolgozás segítségével történ&#337; resampling-ot
+    és a <tt>2</tt> a poly-phase filter-bank és lebeg&#337;pontos feldolgozást.
+    A lineáris interpoláció rettent&#337;en gyors, de rossz a hang min&#337;sége, különösen
+    ha up-sampling-hez használják. A legjobb min&#337;séget a <tt>2</tt>-es adja,
+    de ez a módszer okozza a legnagyobb CPU terhelést is.
+</p></dd></dl></div><p>Például:
+<pre class="screen">mplayer -af resample=44100:0:0</pre>
+resample sz&#369;r&#337; kimeneti mintavételezési frekvenciáját 44100Hz-re állítja, exakt kimeneti
+frekvenciát használ és lineáris interpolációt.
+</p></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="af_channels"></a>2.4.3.2. Csatornák számának megváltoztatása</h4></div></div><p>
+A <tt class="option">channels</tt> sz&#369;r&#337; csatornák hozzáadásához vagy elvételéhez használható,
+valamint csatornák útvonalának irányításához és másolásához. Automatikusan engedélyezve
+lesz, ha az audió sz&#369;r&#337; réteg kimenete különbözik a bemeneti rétegt&#337;l vagy ha más
+sz&#369;r&#337; igényli. A sz&#369;r&#337; eltávolítja magát, ha nincs rá szükség. A kapcsolók száma
+dinamikus:
+</p><div class="variablelist"><dl><dt><span class="term"><tt class="option">nch &lt;1-6&gt;</tt></span></dt><dd><p>
+  egy egész szám <tt>1</tt> és <tt>6</tt> között, amit a
+  kimeneti csatornák számának beállításához használhatsz. Ezen kapcsoló megadása
+  kötelez&#337;, ha elhagyod, futási hibát kapsz.
+</p></dd><dt><span class="term"><tt class="option">nr &lt;1-6&gt;</tt></span></dt><dd><p>
+  egy egész szám <tt>1</tt> és <tt>6</tt> között, ami az
+  útvonalak számának meghatározásához kell. Ez a paraméter opcionális. Ha nem
+  adod meg, az alapértelmezett útvonal irányítás lesz használva.
+</p></dd><dt><span class="term"><tt class="option">honnan1:hova1:honnan2:hova2:honnan3:hova3...</tt></span></dt><dd><p>
+  <tt>0</tt> és <tt>5</tt> közötti számpárok, amik leírják
+  a csatornák az egyes csatornák útvonalát.
+</p></dd></dl></div><p>
+  Ha csak az <tt class="option">nch</tt> van megadva, az alapértelmezett útvonal irányítás
+  lesz használva, ami a következ&#337; képpen m&#369;ködik: Ha a kimeneti csatornák száma nagyobb,
+  mint a bemeneti csatornáké, az üres csatornák be lesznek illesztve (kivéve a monoról
+  sztereóra keverést, akkor a mono csatorna ismétl&#337;dik minden kimeneti csatornán).
+  Ha a kimeneti csatornák száma kisebb, mint a bemeneti csatornáké, akkor a többlet
+  csatornák le lesznek vágva.
+</p><p>
+1. példa:
+<pre class="screen">mplayer -af channels=4:4:0:1:1:0:2:2:3:3 <i><tt>media.avi</tt></i></pre>
+ez a csatornák számát 4-re állítja és 4 útvonalat is beállít, ami felcseréli a
+0-ás és az 1-es csatornád, de békén hagyja a 2-es és 3-as csatornákat. Figyelj rá,
+hogy ha csak két csatornát tartalmazó médiát játszol le, a 2-es és 3-as csatorna
+elnémul, de a 0-ás és az 1-es marad felcserélve.
+</p><p>
+2. példa:
+<pre class="screen">mplayer -af channels=6:4:0:0:0:1:0:2:0:3 <i><tt>media.avi</tt></i></pre>
+beállítja a csatornák számát 6-ra és 4 útvonalat ad meg, ami a 0. csatornát
+átmásolja a 0. és 3. csatornára. A 4-es és 5-ös csatorna el lesz némítva.
+</p></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="af_format"></a>2.4.3.3. Minta formátum konvertáló</h4></div></div><p>
+A <tt class="option">format</tt> sz&#369;r&#337; különböz&#337; minta formátumok között konvertál.
+Automatikusan engedélyezve lesz ha a hangkártya vagy egy másik sz&#369;r&#337; igényli.
+</p><div class="variablelist"><dl><dt><span class="term"><tt class="option">bps &lt;number&gt;</tt></span></dt><dd><p>
+    lehet <tt>1</tt>, <tt>2</tt> vagy <tt>4</tt>, az
+    egy mintában lév&#337; bájtok számát adja meg. Ezen kapcsoló megadása kötelez&#337;, ha
+    elhagyod, futási hibát kapsz.
+</p></dd><dt><span class="term"><tt class="option">f &lt;format&gt;</tt></span></dt><dd><p>
+    egy karakterlánc, ami leírja a minta formátumát. A karakterlánc az alábbiak
+    összef&#369;zésével keletkezik: <tt class="option">alaw</tt>, <tt class="option">mulaw</tt> vagy
+    <tt class="option">imaadpcm</tt>, <tt class="option">float</tt> vagy <tt class="option">int</tt>,
+    <tt class="option">unsigned</tt> vagy <tt class="option">signed</tt>, <tt class="option">le</tt> vagy
+    <tt class="option">be</tt> (little- vagy big-endian). Ezen kapcsoló megadása kötelez&#337;,
+    ha elhagyod, futási hibát kapsz.
+</p></dd></dl></div><p>
+Példa:
+<pre class="screen">mplayer -af format=4:float <i><tt>media.avi</tt></i></pre>
+beállítja a kimeneti formátumot mintánkénti 4 bájtos lebeg&#337;pontos adatra.
+</p></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="af_delay"></a>2.4.3.4. Késleltetés</h4></div></div><p>
+A <tt class="option">delay</tt> sz&#369;r&#337; késlelteti a hangot a hangszóróknál, így különböz&#337;
+csatornákon érkez&#337; hang egyid&#337;ben ér a hallgató pozíciójába.
+Ez akkor jó, ha több, mint 2 hangszóród van. Ez a sz&#369;r&#337; az alábbi paraméterekkel
+rendelkezik:
+</p><div class="variablelist"><dl><dt><span class="term"><tt class="option">d1:d2:d3...</tt></span></dt><dd><p>
+    lebeg&#337;pontos számok, amik a késleltetési id&#337;ket reprezentálják ms-ben, külön az
+    egyes csatornákhoz. A minimum késleltetés 0ms, a maximum 1000ms.
+</p></dd></dl></div><p>
+A különböz&#337; csatornákhoz szükséges késleltetés kiszámításához kövesd ez a leírást:
+</p><div class="orderedlist"><ol type="1"><li><p>
+    Mérd meg a hangszórók távolságát méterben, a hallgatási helyedhez viszonyítva, így
+    megkapod az s1-s5 távolságokat (egy 5.1-es rendszernél).
+    A mélynyomót nincs értelme kompenzálni (egyébként sem fogod hallani a különbséget).
+</p></li><li><p>
+Vond ki a s1-s5 távolságokat a maximum távolságból, pl.
+    s[i] = max(s) - s[i]; i = 1...5
+</p></li><li><p>
+Számítsd ki a szükséges késleltetéseket ms-ben:
+    d[i] = 1000*s[i]/342; i = 1...5
+</p></li></ol></div><p>
+Például:
+<pre class="screen">mplayer -af delay=10.5:10.5:0:0:7:0 <i><tt>media.avi</tt></i></pre>
+a bal és jobb els&#337; hangszórót 10.5ms-sel, a két hátsó és a mély csatornát 0ms-sel, a
+középs&#337; csatornát pedig 7ms-sel késlelteti.
+</p></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="af_volume"></a>2.4.3.5. Szoftveres hanger&#337; szabályozás</h4></div></div><p>A szoftveres hanger&#337; szabályozást a <tt class="option">volume</tt> audió sz&#369;r&#337;
+valósítja meg. Óvatosan használd ezt a sz&#369;r&#337;t, mivel lecsökkentheti a jel er&#337;sségét
+a hang zaj szintjére. A legtöbb esetben az a legjobb, ha a PCM hanger&#337;t maximumra
+állítod, ezt a sz&#369;r&#337;t kihagyod és a hangszórók kimeneti hangerejét a kever&#337;d mester
+hanger&#337; állítójával állítod. Abban az esetben, ha a hangkártyádnak digitális PCM
+kever&#337;je van, nem analóg, és torzulást hallasz, használd inkább a MESTER kever&#337;t.
+Ha küls&#337; er&#337;sít&#337; van kötve a számítógéphez (legtöbbször ez az eset áll fenn), a
+zajszint minimalizálható a mester hanger&#337; és az er&#337;sít&#337;n lév&#337; hanger&#337; gomb
+segítségével egészen amíg a sziszeg&#337; háttérzaj meg nem sz&#369;nik. Ennek a sz&#369;r&#337;nek
+két kapcsolója van:
+</p><div class="variablelist"><dl><dt><span class="term"><tt class="option">v &lt;-200 - +60&gt;</tt></span></dt><dd><p>
+    egy lebeg&#337;pontos szám <tt>-200</tt> és <tt>+60</tt>
+    között, ami a hanger&#337;t jelenti dB-ben. Az alapértelmezett szint 0dB.
+</p></dd><dt><span class="term"><tt class="option">c</tt></span></dt><dd><p>
+    ez egy bináris vezérl&#337;, ami a soft clipping-et kapcsolja ki vagy be. A soft-clipping
+    a hangot még jobbá teheti, ha nagy hanger&#337;t használsz. Engedélyezd ezt a kapcsolót,
+    ha a hangszóróid dinamikus intervalluma nagyon kicsi. Vigyázz, ez a tulajdonság
+    torzulást okozhat, csak végs&#337; megoldásként használd.
+</p></dd></dl></div><p>
+Példa:
+<pre class="screen">mplayer -af volume=10.1:0 <i><tt>media.avi</tt></i></pre>
+er&#337;síti a hangot 10.1dB-re és hard-clip-et használ ha a hanger&#337; túl nagy.
+</p><p>
+Ennek a sz&#369;r&#337;nek van egy második tulajdonsága is: Megméri az összesített maximum
+hangszintet és kiírja ezt a szintet, amikor az <span class="application">MPlayer</span>
+kilép. Ez a hanger&#337; becslés használható a hanger&#337; szint beállítására az
+<span class="application">MEncoder</span>ben úgy, hogy a maximum dinamikus intervallumot
+használd.
+</p></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="af_equalizer"></a>2.4.3.6. Equalizer</h4></div></div><p>
+Az <tt class="option">equalizer</tt> sz&#369;r&#337; egy 10 oktáv széles grafikus equalizert
+jelképez, a 10 IIR széles pass sz&#369;r&#337;k felhasználásával. Ez azt jelenti, hogy
+mindig m&#369;ködik, a lejátszott audió típusától függetlenül. A 10 sáv frekvencia
+középértékei:
+</p><div class="informaltable"><table border="1"><colgroup><col><col></colgroup><thead><tr><th>Sáv szám</th><th>Frekvencia középérték</th></tr></thead><tbody><tr><td>0</td><td>31.25 Hz</td></tr><tr><td>1</td><td>62.50 Hz</td></tr><tr><td>2</td><td>125.0 Hz</td></tr><tr><td>3</td><td>250.0 Hz</td></tr><tr><td>4</td><td>500.0 Hz</td></tr><tr><td>5</td><td>1.000 kHz</td></tr><tr><td>6</td><td>2.000 kHz</td></tr><tr><td>7</td><td>4.000 kHz</td></tr><tr><td>8</td><td>8.000 kHz</td></tr><tr><td>9</td><td>16.00 kHz</td></tr></tbody></table></div><p>
+Ha a lejátszott hang mintvételi rátája kisebb, mint a frekvencia sávhoz
+tartozó frekvencia középérték, akkor a sáv le lesz tiltva. Ezen sz&#369;r&#337; ismert
+hibája, hogy legfels&#337; sáv karakterisztikája nem teljesen szimmetrikus, ha a
+mintavételi ráta közel van a sáv frekvencia középértékéhez. Ez a probléma
+megkerülhet&#337; a hang resample sz&#369;r&#337;vel történ&#337; up-sampling-elésével, még
+miel&#337;tt ez a sz&#369;r&#337; megkapná a hangot.
+</p><p>
+Ennek a sz&#369;r&#337;nek 10 paramétere van:
+</p><div class="variablelist"><dl><dt><span class="term"><tt class="option">g1:g2:g3...g10</tt></span></dt><dd><p>
+lebeg&#337;pontos számok <tt>-12</tt> és <tt>+12</tt> között,
+melyek az egyes frekvencia sávokhoz tartozó er&#337;sítés mértékét adják meg dB-ben.
+</p></dd></dl></div><p>
+Például:
+<pre class="screen">mplayer -af equalizer=11:11:10:5:0:-12:0:5:12:12 <i><tt>media.avi</tt></i></pre>
+er&#337;síteni fogja a hangot a fels&#337; és az als&#337; frekvencia tartományokban, míg
+majdnem teljesen kikapcsolja azt 1 kHz környékén.
+</p></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="af_panning"></a>2.4.3.7. Pan sz&#369;r&#337;</h4></div></div><p>
+A <tt class="option">pan</tt> sz&#369;r&#337;t csatornák önkényes összekeverésére használhatod.
+Alapjaiban a hanger&#337; vezérl&#337; és a channel sz&#369;r&#337; keveréke.
+Két f&#337; felhasználási módja van ennek a sz&#369;r&#337;nek:
+</p><div class="orderedlist"><ol type="1"><li><p>
+Sok csatorna lekeverése kevésre, sztereo lemixelése mono-ra például.
+</p></li><li><p>
+A középs&#337; hangszóró "szélességének" átállítása egy térhatású hang rendszernél.
+</p></li></ol></div><p>
+Ezt a sz&#369;r&#337;t nehéz használni, és némi buherálás kell hozzá, hogy meglegyen
+a kívánt eredmény. Ezen sz&#369;r&#337; kapcsolóinak száma a kimeneti csatornák
+számától függ:
+</p><div class="variablelist"><dl><dt><span class="term"><tt class="option">nch &lt;1-6&gt;</tt></span></dt><dd><p>
+egy egész szám <tt>1</tt> és <tt>6</tt> között, a bemeneti
+csatornák száma adható meg vele. Ezen kapcsoló megadása kötelez&#337;, ha elhagyod,
+futási hibát kapsz.
+</p></dd><dt><span class="term"><tt class="option">l00:l01:l02:..l10:l11:l12:...ln0:ln1:ln2:...</tt></span></dt><dd><p>
+lebeg&#337;pontos számok <tt>0</tt> és <tt>1</tt> között.
+<tt class="option">l[i][j]</tt> meghatározza, hogy a j. bemeneti csatorna hányad része
+lesz bemixelve az i. kimeneti csatornába.
+</p></dd></dl></div><p>
+1. példa:
+<pre class="screen">mplayer -af pan=1:0.5:0.5 -channels 1 <i><tt>media.avi</tt></i></pre>
+Lemixel sztereóból mono-ba.
+</p><p>
+2. példa:
+<pre class="screen">mplayer -af pan=3:1:0:1:0.5:0.5 -channels 3 <i><tt>media.avi</tt></i></pre>
+3 csatornás kimenetet ad, a 0. és 1. csatornát érintetlenül hagyja, és belemixeli
+a 2. kimeneti csatornába (amit például a mélynyomóra küld ki).
+</p></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="af_sub"></a>2.4.3.8. Sub-woofer</h4></div></div><p>
+A <tt class="option">sub</tt> sz&#369;r&#337; egy mélynyomó csatornát ad az audió folyamhoz.
+A mélynyomó csatorna létrehozásához szükséges adatokat a 0. és az 1. csatorna
+hangjának átlagolásával nyeri. Az eredményként kapott hangot még low-pass
+módon megsz&#369;ri egy 4. utas Butterworth sz&#369;r&#337; segítségével, az alapértelmezett
+60 Hz-es vágási frekvenciával majd egy külön csatornát ad a hang folyamhoz.
+Figyelem: Kapcsold ki ezt a sz&#369;r&#337;t, ha Dolby Digital 5.1-es hanggal rendelkez&#337;
+DVD-t játszol le, különben ez a sz&#369;r&#337; összezavarja a mélynyomó hangját.
+Két kapcsolója van a sz&#369;r&#337;nek:
+</p><div class="variablelist"><dl><dt><span class="term"><tt class="option">fc &lt;20-300&gt;</tt></span></dt><dd><p>
+    egy opcionális lebeg&#337;pontos szám, ami a sz&#369;r&#337; vágási frekvenciájának Hz-ben
+    történ&#337; megadásához használható. A helyes érték 20 Hz és 300 Hz között van.
+    A legjobb eredményhez próbáld meg a vágási frekvenciát a lehet&#337; legkisebbre
+    állítani. Ezáltal n&#337;ni fog a sztereo és a térhatás min&#337;sége. Az alapértelmezett
+    vágási frekvencia 60 Hz.
+</p></dd><dt><span class="term"><tt class="option">ch &lt;0-5&gt;</tt></span></dt><dd><p>
+    egy opcionális egész szám <tt>0</tt> és <tt>5</tt> között,
+    ami meghatározza annak a csatornának a számát, ahova a mélynyomó audió beillesztésre
+    kerül. Az alapértelmezett csatorna szám <tt>5</tt>. Figyelj rá, hogy a
+    csatornák száma automatikusan meg lesz növelve <i><tt>ch</tt></i>
+    értékre, ha szükséges.
+</p></dd></dl></div><p>
+Példa:
+<pre class="screen">mplayer -af sub=100:4 -channels 5 <i><tt>media.avi</tt></i></pre>
+létrehoz egy mélynyomó csatornát 100 Hz-es vágási frekvenciával a 4. kimeneti csatornán.
+</p></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="af_surround"></a>2.4.3.9. Surround-sound dekódoló</h4></div></div><p>
+A mátrix kódolású térhatású hang dekódolható a <tt class="option">surround</tt>
+sz&#369;r&#337;vel. A Dolby Surround például mátrix kódolású formátum. Sok 2 csatornás
+audiót tartalmazó fájl tulajdonképpen mátrixolt térhatású hangot tartalmaz.
+Ezen tulajdonság kihasználásához olyan hangkártyára van szükség, ami legalább
+4 csatornát támogat. Ennek a sz&#369;r&#337;nek egy paramétere van csak:
+</p><div class="variablelist"><dl><dt><span class="term"><tt class="option">d &lt;0-1000&gt;</tt></span></dt><dd><p>
+egy opcionális lebeg&#337;pontos szám <tt>0</tt> és <tt>1000</tt>
+között, amivel a hátsó hangszórók késleltetési ideje állítható be ms-ben.
+Ez a késleltetést az alábbi módon tanácsos beállítani: ha a d1 a hallgatási pozíció
+és az elüls&#337; hangszórók közötti távolság és d2 a hallgatási pozíció és a hátsó
+hangszórók közötti távolság, akkor a d késleltetést 15 ms-re célszer&#369; állítani,
+ha d1 &lt;= d2 és 15 + 5*(d1-d2) értékre, ha d1 &gt; d2. d alapértelmezett
+értéke 20 ms.
+</p></dd></dl></div><p>
+Példa:
+<pre class="screen">mplayer -af surround=15 -channels 4 <i><tt>media.avi</tt></i></pre>
+bekapcsolja a térhatású hang dekódolását a hátsó hangszórók hangjához képest 15
+ms-os késleltetéssel.
+</p></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="af_export"></a>2.4.3.10. Audio Exporter</h4></div></div><p>
+Az audió sz&#369;r&#337;k exportálják a bejöv&#337; jeleket más processzeknek a memória map-olás segítségével
+(<tt>mmap()</tt>). A memória map-olt területein egy fejléc található:
+
+<pre class="programlisting">
+int nch                      /*csatornák száma*/
+int size		     /*buffer méret*/
+unsigned long long counter   /*a szinkronizáció fenntartásához kell,
+                               új adat exportálásakor frissítve lesz*/
+</pre>
+
+A többi csak payload (nem átlapolt), 16 bitnyi adat.
+</p><div class="variablelist"><dl><dt><span class="term"><tt class="option">mmapped_file</tt></span></dt><dd><p>
+A fájl, amibe exportáltatni szeretnél a sz&#369;r&#337;vel. Az alapértelmezett a
+<tt class="filename">~/.mplayer/mplayer-af_export</tt> fájlba map-olás.
+</p></dd><dt><span class="term"><tt class="option">nsamples</tt></span></dt><dd><p>
+Csatornánkénti minták száma. Az alapértelmezett <tt>512</tt> minta.
+</p></dd></dl></div><p>
+példa:
+<pre class="screen">mplayer -af export=/tmp/mplayer-af_export:1024 <i><tt>media.avi</tt></i></pre>
+exportál 1024 mintát csatornánként a <tt class="filename">/tmp/mplayer-af_export</tt> fájlba.
+</p></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="af_extrastereo"></a>2.4.3.11. Extrastereo</h4></div></div><p>
+Ez az audió sz&#369;r&#337; (lineárisan) növeli a különbséget a bal és a jobb csatornák
+között (mint az <span class="application">XMMS</span> extrastereo plugin-je), ami egy
+kis "él&#337;" hatást ad a lejátszáshoz.
+Ennek a sz&#369;r&#337;nek egy paramétere van:</p><div class="variablelist"><dl><dt><span class="term"><tt class="option">mul</tt></span></dt><dd><p>
+a differencia együttható, egy opcionális lebeg&#337;pontos szám, ami alapértelmezésként
+<tt>2.5</tt>. Ha <tt>0.0</tt>-ra állítod, mono hangot kapsz
+(az összes csatorna átlaga). Ha <tt>1.0</tt>-ra állítod, a hang
+változatlan marad, ha <tt>-1.0</tt>-re, akkor a bal és a jobb
+csatorna felcserél&#337;dik.
+</p></dd></dl></div><p>
+Használat:
+<pre class="screen">
+mplayer -af extrastereo <i><tt>media.avi</tt></i>
+mplayer -af extrastereo=3.45 <i><tt>media.avi</tt></i></pre>
+</p></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="af_volnorm"></a>2.4.3.12. Hanger&#337; normalizáló</h4></div></div><p>
+Ez az audió sz&#369;r&#337; maximalizálja a hanger&#337;t a hang torzítása nélkül.
+</p><p>
+Használat:
+<pre class="screen">mplayer -af volnorm <i><tt>media.avi</tt></i></pre>
+</p></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="audio-plugins"></a>2.4.4. Audió plugin-ek (elhanyagolt)</h3></div></div><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Megjegyzés</h3><p><span class="bold"><b>Az audió plugin-eket már nem fejlesztjük,
+az audió sz&#369;r&#337;k felváltották &#337;ket, és hamarosan el is lesznek távolítva.
+</b></span></p></div><p>
+Az <span class="application">MPlayer</span> támogat audio plugin-eket. Az audió
+plugin-ek meg tudják változtatni az audió adat tulajdonságait, miel&#337;tt az
+eljutnának a hangkártyához. Az <tt class="option">-aop</tt> kapcsolóval tudod
+engedélyezni &#337;ket, aminek egy <tt class="option">list=plugin1,plugin2,...</tt>
+argumentuma van. A <tt class="option">list</tt> argumentum szükséges, és
+meghatározza, hogy mely plugin-eket kell használni és azokat milyen
+sorrendben kell futtatni. Például:
+
+<pre class="screen">mplayer <i><tt>media.avi</tt></i> -aop list=resample,format</pre>
+
+átfuttatja a hangot a resampling majd a format plugin-en.
+</p><p>
+A plugin-eknek szintén lehetnek kapcsolóik, amikkel megváltoztatható a
+m&#369;ködésük. Ezek a kapcsolók b&#337;vebben a következ&#337; részben lesznek leírva.
+Ha egy plugin-nek nem adsz meg kapcsolókat, akkor az alapértelmezett
+kapcsolókkal fog lefutni. Itt egy példa, hogy hogyan használhatóak a
+plugin-ek plugin specifikus kapcsolókkal együtt:
+
+<pre class="screen">mplayer <i><tt>media.avi</tt></i> -aop list=resample,format:fout=44100:format=0x8</pre>
+
+beállítja a resample plugin kimeneti frekvenciáját 44100 Hz-re és a
+formátum plugin kimeneti formátumát AFMT_U8-ra.
+</p><p>
+Jelenleg az audió plugin-ek nem használhatóak a
+<span class="application">MEncoder</span>ben.
+</p><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="updn-sampling"></a>2.4.4.1. Up/Downsampling</h4></div></div><p>
+Az <span class="application">MPlayer</span> teljes mértékben támogatja a hang
+up/downsampling-elését. Ezt a plugint akkor használhatod, ha fix frekvenciájú
+hangkártyád van vagy régi, ami csak maximum 44.1 kHz-et tud. A hardverek
+korlátai nem lesznek automatikusan detektálva, így a mintavételezési
+frekvenciát pontosan meg kell adnod. Ez a plugin egy kapcsolóval rendelkezik:
+<tt class="option">fout</tt>, amivel a kívánt kimeneti mintavételezési frekvencia
+állítható be. Az alapértelmezett értéke 48 kHz, Hz-ben kell megadni.
+</p><p>
+Használat:
+
+<pre class="screen">
+mplayer <i><tt>media.avi</tt></i> -aop list=resample:fout=<i><tt>freq</tt></i></pre>
+
+ahol a <tt><i><tt>freq</tt></i></tt> a frekvencia
+Hz-ben, mint pl. <tt>44100</tt>.
+</p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Megjegyzés</h3><p>
+A kimeneti frekvenciát nem tanácsos az alapértelmezett érték fölé
+vinni. Túl nagy értéknél az audió és a videó folyamok lassan lesznek
+lejátszva, ráadásul a hang is torzulni fog.
+</p></div></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="surround-decode"></a>2.4.4.2. Térhatású hang dekódolás</h4></div></div><p>
+Az <span class="application">MPlayer</span> rendelkezik egy audió plugin-nel, ami
+a mátrix kódolású térhatású hangot tudja dekódolni. A Dolby Surround például
+egy mátrix kódolású formátum. Sok két csatornás hanggal rendelkez&#337; fájl
+tulajdonképpen mátrix kódolású térhatású hangot tartalmaz. Ezen képesség
+kihasználásához legalább 4 csatornát támogató hangkártya szükséges.
+</p><p>
+Használat:
+<pre class="screen">mplayer <i><tt>media.avi</tt></i> -aop list=surround</pre>
+</p></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="sample-format-conv"></a>2.4.4.3. Minta formátum konvertáló</h4></div></div><p>
+Ha a hangkártya vezérl&#337;d nem támogatja az el&#337;jeles 16 bites egész adattípust,
+ennek a plugin-nek a segítségével megváltoztathatod a formátumot egy olyanra,
+amit a hangkártyád megért. Egy kapcsolója van, a <tt class="option">format</tt>, aminek
+az értéke a <tt class="filename">libao2/afmt.h</tt> fájlban található számok valamelyike
+lehet. Ez a plugin csak ritkán kell, és haladó felhasználóknak lett tervezve.
+Figyelj rá, hogy ez a plugin csak a minta formátumát változtatja meg, nem a
+minta frekvenciáját vagy a csatornák számát.
+</p><p>
+Használat:
+
+<pre class="screen">
+mplayer <i><tt>media.avi</tt></i> -aop list=format:format=<i><tt>outfmt</tt></i></pre>
+
+ahol az <tt><i><tt>outfmt</tt></i></tt> a kért
+kimeneti formátum.
+</p></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="audio-delay"></a>2.4.4.4. Késleltetés</h4></div></div><p>
+Ez a plugin késlelteti a hangot és egyben példa arra, hogy hogyan fejlessz
+új plugin-eket. Semmi hasznos dolgot nem tud a felhasználó szemszögéb&#337;l, és
+csak a teljesség miatt kerül megemlítésre. Ne használd ezt a plugint, hacsak
+nem vagy fejleszt&#337;.
+</p></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="sw-volume"></a>2.4.4.5. Szoftveres hanger&#337; vezérlés</h4></div></div><p>
+Ez a plugin egy szoftveres megvalósítása a hanger&#337; szabályozásnak,
+olyan gépeken haszos, ahol a kever&#337; eszköz sérült. Akkor is jól jön, ha
+valaki az <span class="application">MPlayer</span> kimeneti hangerejét akarja
+megváltoztatni a PCM hanger&#337; kever&#337;n történ&#337; állítása nélkül. Egy kapcsolója
+van, a <tt class="option">volume</tt>, amivel a kezdeti hanger&#337; értéke adható meg.
+A kezdeti hanger&#337; szintje 0 és 255 között lehet, alapértelmezésként 101, ami
+0 dB-s er&#337;sítésnek felel meg. Óvatosan használd ezt a plugin-t, mert a jelet
+le tudja csökkenteni a hang zajszintjére. Legtöbb esetben a legjobb, ha a
+PCM hanger&#337;t maximumra állítod, kihagyod ezt a plugin-t, és a hangszóróid
+hangerejét a kever&#337; mester hanger&#337; vezérl&#337;jével állítod be. Ha van küls&#337;
+er&#337;sít&#337; kötve a számítógéphez (ez van a legtöbb esetben), akkor a zajszint
+minimalizálható a mester hanger&#337; és az er&#337;sít&#337;n lév&#337; hanger&#337; állító gomb
+állítgatásával, amíg a sisterg&#337; zaj el nem t&#369;nik a háttérb&#337;l.
+</p><p>
+Használat:
+<pre class="screen">
+mplayer <i><tt>media.avi</tt></i> -aop list=volume:volume=<i><tt>0-255</tt></i></pre>
+</p><p>
+Ez a plugin tartalmaz egy tömörít&#337;t vagy "soft-clipping" képességet is.
+A tömörítést akkor használhatod, ha a hang dinamikus tartománya nagyon
+nagy vagy hangszórók dinamikus tartománya nagyon kicsi. Vigyázz, ez a
+képesség torzulást okoz és csak végs&#337; esetben használandó.
+</p><p>
+Használat:
+<pre class="screen">
+mplayer <i><tt>media.avi</tt></i> -aop list=volume:softclip</pre>
+</p></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="extrastereo"></a>2.4.4.6. Extrastereo</h4></div></div><p>
+Ez a plugin (lineárisan) növeli a különbséget a bal és a jobb csatorna között
+(mint az <span class="application">XMMS</span> extrastereo plugin-je), ami egy kis
+"él&#337;" hatást ad a lejátszáshoz.
+</p><p>
+Használat:
+<pre class="screen">
+mplayer <i><tt>media.avi</tt></i> -aop list=extrastereo
+mplayer <i><tt>media.avi</tt></i> -aop list=extrastereo:mul=3.45</pre>
+
+Az együttható (<tt class="option">mul</tt>) egy lebeg&#337;pontos szám, aminek az 
+alapértelmezett értéke 2.5. Ha <tt>0.0</tt>-ra állítod, mono hangot
+kapsz (az összes csatorna átlaga). Ha <tt>1.0</tt>-ra, akkor a hang
+változatlan marad, ha <tt>-1.0</tt>-re, akkor a bal és a jobb
+csatorna felcserél&#337;dik.
+</p></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="volnorm"></a>2.4.4.7. Hanger&#337; normalizáló</h4></div></div><p>
+Ez a plugin maximalizálja a hanger&#337;t a hang torzítása nélkül.
+</p><p>
+Használat:
+<pre class="screen">mplayer <i><tt>media.avi</tt></i> -aop list=volnorm</pre>
+</p></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="video.html">El&#337;z&#337;</a> </td><td width="20%" align="center"><a accesskey="u" href="features.html">Fel</a></td><td width="40%" align="right"> <a accesskey="n" href="tv-input.html">Következ&#337;</a></td></tr><tr><td width="40%" align="left" valign="top">2.3. Video output devices </td><td width="20%" align="center"><a accesskey="h" href="index.html">Tartalom</a></td><td width="40%" align="right" valign="top"> 2.5. TV input</td></tr></table></div></body></html>

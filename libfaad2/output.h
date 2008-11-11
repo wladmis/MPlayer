@@ -23,7 +23,7 @@
 ** For more info contact Ahead Software through Mpeg4AAClicense@nero.com.
 **
 ** Initially modified for use with MPlayer by Arpad Gereöffy on 2003/08/30
-** $Id: output.h,v 1.4 2004/06/23 13:50:51 diego Exp $
+** $Id: output.h,v 1.5 2004/09/24 17:31:34 diego Exp $
 ** detailed CVS changelog at http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
 **/
 
@@ -34,7 +34,7 @@
 extern "C" {
 #endif
 
-void* output_to_PCM(faacDecHandle hDecoder,
+void* output_to_PCM(NeAACDecHandle hDecoder,
                     real_t **input,
                     void *samplebuffer,
                     uint8_t channels,

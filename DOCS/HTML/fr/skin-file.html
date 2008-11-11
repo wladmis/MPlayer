@@ -1,4 +1,4 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>D.2. Le fichier skin</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - Le lecteur vidéo pour LINUX"><link rel="up" href="skin.html" title="Annexe D. Format de skins MPlayer"><link rel="previous" href="skin-overview.html" title="D.1. Aperçu"><link rel="next" href="skin-fonts.html" title="D.3. Polices"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">D.2. Le fichier skin</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="skin-overview.html">Précédent</a> </td><th width="60%" align="center">Annexe D. Format de skins MPlayer</th><td width="20%" align="right"> <a accesskey="n" href="skin-fonts.html">Suivant</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="skin-file"></a>D.2. Le fichier skin</h2></div></div><p>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>D.2. Le fichier skin</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - Le Lecteur Vidéo"><link rel="up" href="skin.html" title="Annexe D. Format de skins MPlayer"><link rel="previous" href="skin-overview.html" title="D.1. Aperçu"><link rel="next" href="skin-fonts.html" title="D.3. Polices"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">D.2. Le fichier skin</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="skin-overview.html">Précédent</a> </td><th width="60%" align="center">Annexe D. Format de skins MPlayer</th><td width="20%" align="right"> <a accesskey="n" href="skin-fonts.html">Suivant</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="skin-file"></a>D.2. Le fichier skin</h2></div></div><p>
 Comme mentionné plus haut, c'est le fichier de configuration de la skin. Il est
 lu ligne par ligne; les lignes de commentaire démarrent par le caractère
 '<tt>;</tt>' en début de ligne (seuls les espaces et tabulations sont
@@ -62,7 +62,7 @@ end
 Le nom d'un fichier image doit être donné sans distinction de répertoire - les
 images seront cherchées dans le répertoire <tt class="filename">Skin</tt>.
 Vous pouvez (mais ce n'est pas obligatoire) spécifier l'extension du fichier. Si
-le fichier n'existe pas, MPlayer essaie de charger le fichier
+le fichier n'existe pas, <span class="application">MPlayer</span> essaie de charger le fichier
 <tt class="filename">&lt;nomfichier&gt;.&lt;ext&gt;</tt>, où <tt>png</tt>
 et <tt>PNG</tt> sera respectivement <tt class="filename">&lt;ext&gt;</tt>
 (dans cet ordre). La première correspondance trouvée sera utilisée.
@@ -167,7 +167,7 @@ horizontalement.
     </p></li></ul></div></dd><dt><span class="term"><tt>
   <a name="skin-potmeter"></a>potmeter = phases, numphases, default, X, Y, largeur, hauteur, message
   </tt></span></dt><dd><p>
-Un <tt>hpotmeter</tt> sans boutons. (je suppose qu'il est censé tourner
+Un <tt>hpotmeter</tt> sans bouton. (je suppose qu'il est censé tourner
 en rond, mais il réagit uniquement aux tractions horizontales.) Pour une
 description de ses paramètres lisez <a href="skin-file.html#skin-hpotmeter">hpotmeter</a>.
 Ses <tt>phases</tt> peuvent être fixés à <tt>NULL</tt>, mais ce n'est
@@ -212,7 +212,7 @@ a le caractère <span class="keycap"><b>s</b></span>)</td></tr><tr><td>$e</td><td
 a le caractère <span class="keycap"><b>e</b></span>)</td></tr><tr><td>$x</td><td>largeur du film</td></tr><tr><td>$y</td><td>hauteur du film</td></tr><tr><td>$C</td><td>nom du codec utilisé</td></tr></tbody></table></div></dd></dl></div><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
 Les variables <tt>$a, $T, $p, $s</tt> et <tt>$e</tt>
 <span class="keycap"><b>e</b></span> retournent toutes des caractères pouvant s'afficher comme des
-symboles spéciaux (par exemple, "e" est le symbole de pause qui
+symboles spéciaux (par exemple, <span class="keycap"><b>e</b></span> est le symbole de pause qui
 ressemble généralement à ||). Vous pouvez avoir une police pour les caractères
 normaux et une autre pour les symboles. Lisez la section sur les
 <a href="skin-fonts.html#skin-fonts-symbols" title="D.3.1. Symboles">symboles</a> pour plus d'informations.

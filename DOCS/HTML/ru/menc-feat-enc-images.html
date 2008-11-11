@@ -14,16 +14,16 @@ or more JPEG, PNG or TGA files. With simple framecopy it can create MJPEG
 The explanation of the <tt class="option">-mf</tt> option is in the man page.
 
 <div class="informalexample"><p>
-Creating an MPEG4 file from all the JPEG files in the current directory:
+Creating an MPEG-4 file from all the JPEG files in the current directory:
 <pre class="screen">
-mencoder mf://*.jpg -mf type=jpg:w=800:h=600:fps=25 -ovc lavc -lavcopts vcodec=mpeg4 -oac copy -o <i><tt>output.avi</tt></i>
+mencoder mf://*.jpg -mf w=800:h=600:fps=25:type=jpg -ovc lavc -lavcopts vcodec=mpeg4 -oac copy -o <i><tt>output.avi</tt></i>
 </pre>
 </p></div>
 
 <div class="informalexample"><p>
-Creating an MPEG4 file from some JPEG files in the current directory:
+Creating an MPEG-4 file from some JPEG files in the current directory:
 <pre class="screen">
-mencoder mf://<i><tt>frame001.jpg,frame002.jpg</tt></i> -mf type=jpg:w=800:h=600:fps=25 -ovc lavc -lavcopts vcodec=mpeg4 -oac copy -o <i><tt>output.avi</tt></i>
+mencoder mf://<i><tt>frame001.jpg,frame002.jpg</tt></i> -mf w=800:h=600:fps=25:type=jpg -ovc lavc -lavcopts vcodec=mpeg4 -oac copy -o <i><tt>output.avi</tt></i>
 </pre>
 </p></div>
 
@@ -31,7 +31,7 @@ mencoder mf://<i><tt>frame001.jpg,frame002.jpg</tt></i> -mf type=jpg:w=800:h=600
 Creating a Motion JPEG (MJPEG) file from all the JPEG files in the current
 directory:
 <pre class="screen">
-mencoder mf://*.jpg -mf type=jpg:w=800:h=600:fps=25 -ovc copy -oac copy -o <i><tt>output.avi</tt></i>
+mencoder mf://*.jpg -mf w=800:h=600:fps=25:type=jpg -ovc copy -oac copy -o <i><tt>output.avi</tt></i>
 </pre>
 </p></div>
 
@@ -50,7 +50,7 @@ Width must be integer multiple of 4, it's a limitation of the RAW RGB AVI format
 Creating a Motion PNG (MPNG) file from all the PNG files in the current
 directory:
 <pre class="screen">
-mencoder mf://*.jpg -mf w=800:h=600:fps=25:type=png -ovc copy -oac copy -o <i><tt>output.avi</tt></i> </pre>
+mencoder mf://*.png -mf w=800:h=600:fps=25:type=png -ovc copy -oac copy -o <i><tt>output.avi</tt></i> </pre>
 </p></div>
 
 <div class="informalexample"><p>

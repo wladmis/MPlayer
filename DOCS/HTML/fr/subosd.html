@@ -1,18 +1,18 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>1.4. Sous-titres et OSD</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - Le lecteur vidéo pour LINUX"><link rel="up" href="intro.html" title="Chapitre 1. Introduction"><link rel="previous" href="gui.html" title="1.3. À propos de l'interface graphique ?"><link rel="next" href="rtc.html" title="1.5. RTC"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">1.4. Sous-titres et OSD</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="gui.html">Précédent</a> </td><th width="60%" align="center">Chapitre 1. Introduction</th><td width="20%" align="right"> <a accesskey="n" href="rtc.html">Suivant</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="subosd"></a>1.4. Sous-titres et OSD</h2></div></div><p>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>1.4. Sous-titres et OSD</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - Le Lecteur Vidéo"><link rel="up" href="intro.html" title="Chapitre 1. Introduction"><link rel="previous" href="gui.html" title="1.3. À propos de l'interface graphique ?"><link rel="next" href="rtc.html" title="1.5. RTC"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">1.4. Sous-titres et OSD</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="gui.html">Précédent</a> </td><th width="60%" align="center">Chapitre 1. Introduction</th><td width="20%" align="right"> <a accesskey="n" href="rtc.html">Suivant</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="subosd"></a>1.4. Sous-titres et OSD</h2></div></div><p>
  <span class="application">MPlayer</span> peut afficher des sous-titres durant le film. 
  Les formats suivants sont supportés:
 </p><div class="itemizedlist"><ul type="disc"><li><p>VobSub</p></li><li><p>OGM</p></li><li><p>CC (closed caption)</p></li><li><p>MicroDVD</p></li><li><p>SubRip</p></li><li><p>SubViewer</p></li><li><p>Sami</p></li><li><p>VPlayer</p></li><li><p>RT</p></li><li><p>SSA</p></li><li><p>PJS (Phoenix Japanimation Society)</p></li><li><p><a href="subosd.html#mpsub" title="1.4.1. Format de sous-titres propre à MPlayer (MPsub)">MPsub</a></p></li><li><p>AQTitle</p></li><li><p><a href="http://unicorn.us.com/jacosub/" target="_top">JACOsub</a></p></li></ul></div><p>
 </p><p>
-MPlayer peut convertir les formats précédemment listés
+<span class="application">MPlayer</span> peut convertir les formats précédemment listés
 (<span class="bold"><b>excepté les trois premiers</b></span>)
 dans dans les formats de destination suivants, en utilisant ces options:
 </p><div class="itemizedlist"><ul type="disc"><li><p>MPsub: <tt class="option">-dumpmpsub</tt></p></li><li><p>SubRip: <tt class="option">-dumpsrtsub</tt></p></li><li><p>MicroDVD: <tt class="option">-dumpmicrodvdsub</tt></p></li><li><p>JACOsub: <tt class="option">-dumpjacosub</tt></p></li><li><p>Sami: <tt class="option">-dumpsami</tt></p></li></ul></div><p>
 </p><p>
-MEncoder peut convertir les sous-titres DVD au format <a href="menc-feat-extractsub.html" title="7.8. Extraction des sous-titres DVD dans un fichier Vobsub">VobSub</a>.
+<span class="application">MEncoder</span> peut convertir les sous-titres DVD au format <a href="menc-feat-extractsub.html" title="7.8. Extraction des sous-titres DVD dans un fichier Vobsub">VOBSub</a>.
 </p><p>
 Les options en ligne de commande diffèrent légèrement suivant les différents formats:
-</p><p><b>Sous-titres VobSub. </b>
-Les sous-titres VobSub consistent en un gros (plusieurs méga-octets) fichier <tt class="filename">.SUB</tt>,
+</p><p><b>Sous-titres VOBSub. </b>
+Les sous-titres VOBSub consistent en un gros (plusieurs méga-octets) fichier <tt class="filename">.SUB</tt>,
 et d'éventuels fichiers <tt class="filename">.IDX</tt> et/ou <tt class="filename">.IFO</tt>.
 Si vous avez des fichiers tels que
 <tt class="filename"><i><tt>sample.sub</tt></i></tt>,
@@ -46,8 +46,8 @@ de sous-titres MicroDVD utilise des numéros de trames absolus pour sa synchronis
 et de plus l'option <tt class="option">-subfps</tt> ne peut pas être utilisée avec ce format. 
 <span class="application">MPlayer</span> n'a pas la possibilité de deviner la vitesse du fichier de sous-titres, vous devrez
 donc convertir manuellement la vitesse. Il y a un petit script perl dans le répertoire 
-<tt class="filename">contrib</tt> du serveur FTP de MPlayer qui fera la 
-conversion pour vous.
+<tt class="filename">contrib</tt> du serveur FTP de <span class="application">MPlayer</span> 
+qui fera la conversion pour vous.
 </p><p>
 A propos des sous-titres DVD, voir la section <a href="dvd.html" title="5.2. Lecture de DVDs">DVD</a>.
 </p><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="mpsub"></a>1.4.1. Format de sous-titres propre à MPlayer (MPsub)</h3></div></div><p>
@@ -82,14 +82,14 @@ On Screen Display</b></span> (Affichage sur l'écran). L'OSD est utilisé pour aff
 le temps de lecture, la barre de volume, d'avance/retour rapide, le contraste, etc.
 </p></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="mpsub-install"></a>1.4.2. Installer l'OSD et les sous-titres</h3></div></div><p>
 Vous aurez besoin d'un paquet de polices <span class="application">MPlayer</span> afin d'utiliser
-les fonctions d'OSD/SUB. Il y a plusieurs manières de les obtenir :
+les fonctions d'OSD/SUB. Il y a plusieurs manières de les obtenir:
 </p><div class="itemizedlist"><ul type="disc"><li><p>
   Utiliser le générateur de polices de <tt class="filename">TOOLS/subfont-c</tt>. C'est un outil complet pour
   convertir les polices TTF/Type1/etc en paquets de polices mplayer (voir
   <tt class="filename">TOOLS/subfont-c/README</tt> pour les détails).
   </p></li><li><p>
   Utiliser le plugin générateur de polices de <span class="application">GIMP</span> dans <tt class="filename">TOOLS/subfont-GIMP</tt> (note: vous devez avoir le
-  plugin brut HSI également, voir <a href="http://realtime.ssu.ac.kr/~lethean/mplayer/" target="_top">http://realtime.ssu.ac.kr/~lethean/mplayer/</a>).
+  plugin HSI RAW également, voir <a href="http://realtime.ssu.ac.kr/~lethean/mplayer/" target="_top">http://realtime.ssu.ac.kr/~lethean/mplayer/</a>).
  </p></li><li><p>
   Utiliser une fonte TrueType (TTF), par l'intermédiaire de la librairie
   <tt>freetype</tt>. La Version 2.0.9 ou supérieur est obligatoire!
@@ -109,7 +109,7 @@ les fonctions d'OSD/SUB. Il y a plusieurs manières de les obtenir :
   utilisez <b>fc-list</b>.
   Exemple: <tt class="option">-font <i><tt>'Bitstream Vera Sans'</tt></i></tt>
   </p></li><li><p>
-  Télécharger des paquetages de polices prêtes à l'emploi depuis le site de MPlayer.
+  Télécharger des paquetages de polices prêtes à l'emploi depuis le site de <span class="application">MPlayer</span>.
   Note: Les polices actuellement disponibles sont limitées a l'iso 8859-1/2, mais
   il y en a quelques autres (coréen, russe, 8859-8, etc) dans la section contrib/font
   du FTP, créées par les utilisateurs.
@@ -120,11 +120,11 @@ les fonctions d'OSD/SUB. Il y a plusieurs manières de les obtenir :
   sous-titré. Une autre solution est d'avoir des sous-titres encodés en UTF8 
   et d'utiliser l'option <tt class="option">-utf8</tt> ou de renommer le fichier 
   des sous-titres en <tt class="filename">&lt;nom_video&gt;.utf</tt>. Enregistrer
-  de codepages différents en UTF8 peut se faire en utilisant les programmes
+  de codepages différents en UTF-8 peut se faire en utilisant les programmes
   <b>konwert</b> ou <b>iconv</b>.
   </p><p>
   
-  </p><div class="table"><p><b>Tableau 1.1. Quelques liens:</b></p><table summary="Quelques liens:" border="1"><colgroup><col><col></colgroup><thead><tr><th>URL</th><th>Commentaire</th></tr></thead><tbody><tr><td><a href="ftp://ftp.mplayerhq.hu/MPlayer/releases/" target="_top">ftp://ftp.mplayerhq.hu/MPlayer/releases/</a></td><td>
+  </p><div class="table"><p><b>Tableau 1.1. Quelques liens:</b></p><table summary="Quelques liens:" border="1"><colgroup><col><col></colgroup><thead><tr><th>URL</th><th>Commentaire</th></tr></thead><tbody><tr><td><a href="ftp://ftp.mplayerhq.hu/MPlayer/releases/fonts/" target="_top">ftp://ftp.mplayerhq.hu/MPlayer/releases/fonts/</a></td><td>
     polices ISO
     </td></tr><tr><td><a href="ftp://ftp.mplayerhq.hu/MPlayer/contrib/fonts/" target="_top">ftp://ftp.mplayerhq.hu/MPlayer/contrib/fonts/</a></td><td>
     contributions d'utilisateurs
@@ -145,6 +145,7 @@ avec la touche <span class="keycap"><b>o</b></span>).
 (les sous-titres sont <span class="emphasis"><i>toujours activés</i></span>, pour les désactiver merci de lire la page de man)
 </p><p>
 L'OSD possède 4 états (interchangeable avec <span class="keycap"><b>o</b></span>):
+
 </p><div class="orderedlist"><ol type="1"><li>
   barre de volume + barre d'avancement (par défaut)
   </li><li>
@@ -159,7 +160,7 @@ Vous pouvez en modifier le comportement par défaut en spécifiant la variable <tt
 dans le fichier config, ou en précisant l'option <tt class="option">-osdlevel</tt> en ligne de commande.
 
 </p></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="osdmenu"></a>1.4.3. Menu OSD</h3></div></div><p>
-MPlayer possède une interface de menu OSD complètement modulable.
+<span class="application">MPlayer</span> possède une interface de menu OSD complètement modulable.
 </p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
 Le menu des préférences n'est PAS IMPLÉMENTÉ pour l'instant !
 </p></div><div class="orderedlist"><p><b>Installation</b></p><ol type="1"><li>

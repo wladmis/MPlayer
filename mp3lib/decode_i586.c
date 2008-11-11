@@ -21,15 +21,15 @@
 *
 * Stefan Bieschewski <stb@acm.org>
 *
-* $Id: decode_i586.c,v 1.5 2004/04/26 10:09:31 alex Exp $
+* $Id: decode_i586.c,v 1.7 2004/08/03 18:54:26 faust3 Exp $
 */
 #include "../config.h"
 #include "../mangle.h"
 #define real float /* ugly - but only way */
 
-static long buffs[1088];
+static long attribute_used buffs[1088]={0};
 static long attribute_used bo=1;
-static long saved_ebp;
+static long attribute_used saved_ebp=0;
 
 int synth_1to1_pent(real *bandPtr, int channel, short *samples)
 {

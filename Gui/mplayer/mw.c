@@ -26,6 +26,7 @@
 #include "../../libmpdemux/stheader.h"
 #include "../../codec-cfg.h"
 
+#define GUI_REDRAW_WAIT 375
 
 #include "play.h"
 #include "widgets.h"
@@ -76,6 +77,7 @@ void mplMainDraw( void )
 extern void exit_player(char* how);
 extern int vcd_track;
 extern int osd_visible;
+static unsigned last_redraw_time = 0;
 
 void mplEventHandling( int msg,float param )
 {
@@ -283,24 +285,28 @@ set_volume:
     	btnSet( evFullScreen,btnReleased );
         if ( guiIntfStruct.Playing )
          {
-          appMPlayer.subWindow.isFullScreen=True;
-          appMPlayer.subWindow.OldX=( wsMaxX - guiIntfStruct.MovieWidth * 2 ) / 2 + wsOrgX;
-          appMPlayer.subWindow.OldY=( wsMaxY - guiIntfStruct.MovieHeight * 2 ) / 2 + wsOrgY;
-          appMPlayer.subWindow.OldWidth=guiIntfStruct.MovieWidth * 2; appMPlayer.subWindow.OldHeight=guiIntfStruct.MovieHeight * 2;
-          wsFullScreen( &appMPlayer.subWindow );
-	  vo_fs=0;
+          if ( appMPlayer.subWindow.isFullScreen )
+           {
+            mplFullScreen();
+           }
+          wsResizeWindow( &appMPlayer.subWindow, guiIntfStruct.MovieWidth * 2, guiIntfStruct.MovieHeight * 2 );
+          wsMoveWindow( &appMPlayer.subWindow, 0,
+                        ( wsMaxX - guiIntfStruct.MovieWidth*2  )/2 + wsOrgX,
+                        ( wsMaxY - guiIntfStruct.MovieHeight*2 )/2 + wsOrgY  );
          }
         break;
    case evNormalSize:
 	btnSet( evFullScreen,btnReleased );
         if ( guiIntfStruct.Playing )
          {
-          appMPlayer.subWindow.isFullScreen=True;
-          appMPlayer.subWindow.OldX=( wsMaxX - guiIntfStruct.MovieWidth ) / 2 + wsOrgX;
-          appMPlayer.subWindow.OldY=( wsMaxY - guiIntfStruct.MovieHeight ) / 2 + wsOrgY;
-          appMPlayer.subWindow.OldWidth=guiIntfStruct.MovieWidth; appMPlayer.subWindow.OldHeight=guiIntfStruct.MovieHeight;
-          wsFullScreen( &appMPlayer.subWindow );
-	  vo_fs=0;
+          if ( appMPlayer.subWindow.isFullScreen )
+           {
+            mplFullScreen();
+           }
+          wsResizeWindow( &appMPlayer.subWindow, guiIntfStruct.MovieWidth, guiIntfStruct.MovieHeight );
+          wsMoveWindow( &appMPlayer.subWindow, 0,
+                        ( wsMaxX - guiIntfStruct.MovieWidth  )/2 + wsOrgX,
+                        ( wsMaxY - guiIntfStruct.MovieHeight )/2 + wsOrgY  );
 	  break;
          } else if ( !appMPlayer.subWindow.isFullScreen ) break;
    case evFullScreen:
@@ -329,6 +335,15 @@ set_volume:
 
 // --- timer events
    case evRedraw:
+        {
+          unsigned now = GetTimerMS();
+          extern int mplPBFade;
+          if ((now > last_redraw_time) &&
+              (now < last_redraw_time + GUI_REDRAW_WAIT) &&
+              !mplPBFade)
+            break;
+          last_redraw_time = now;
+        }
         mplMainRender=1;
         wsPostRedisplay( &appMPlayer.mainWindow );
 	wsPostRedisplay( &appMPlayer.barWindow );
@@ -536,7 +551,7 @@ void mplDandDHandler(int num,char** files)
 
     if(stat(str,&buf) == 0 && S_ISDIR(buf.st_mode) == 0) {
       /* this is not a directory so try to play it */
-      printf("Received D&D %s\n",str);
+      mp_msg( MSGT_GPLAYER,MSGL_V,"Received D&D %s\n",str );
       
       /* check if it is a subtitle file */
       {
@@ -575,7 +590,7 @@ void mplDandDHandler(int num,char** files)
       }
       gtkSet(gtkAddPlItem,0,(void*)item);
     } else {
-      printf("Received not a file: %s !\n",str);
+      mp_msg( MSGT_GPLAYER,MSGL_WARN,MSGTR_NotAFile,str );
     }
     free( str );
   }

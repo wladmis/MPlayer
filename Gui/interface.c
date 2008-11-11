@@ -116,7 +116,7 @@ void gaddlist( char *** list,char * entry )
    free( (*list) );
   }
 
- (*list)=malloc( 8 );
+ (*list)=malloc( 2 * sizeof(char **) );
  (*list)[0]=gstrdup( entry );
  (*list)[1]=NULL;
 }
@@ -173,14 +173,11 @@ void guiInit( void )
  guiIntfStruct.StreamType=-1;
 
  memset( &gtkEquChannels,0,sizeof( gtkEquChannels ) );
-#ifdef USE_OSS_AUDIO
- if ( !gtkAOOSSMixer ) gtkAOOSSMixer=strdup( PATH_DEV_MIXER );
- if ( !gtkAOOSSDevice ) gtkAOOSSDevice=strdup( PATH_DEV_DSP );
-#endif
 #ifdef HAVE_DXR3
  if ( !gtkDXR3Device ) gtkDXR3Device=strdup( "/dev/em8300-0" );
 #endif
- if ( stream_cache_size != -1 ) { gtkCacheOn=1; gtkCacheSize=stream_cache_size; }
+ if ( stream_cache_size > 0 ) { gtkCacheOn=1; gtkCacheSize=stream_cache_size; }
+ else gtkCacheOn = 0;
  if ( autosync && autosync != gtkAutoSync ) { gtkAutoSyncOn=1; gtkAutoSync=autosync; }
    
  gtkInit();
@@ -189,13 +186,13 @@ void guiInit( void )
 // --- load skin
  skinDirInHome=get_path("Skin");
  skinMPlayerDir=MPLAYER_DATADIR "/Skin";
- printf("SKIN dir 1: '%s'\n",skinDirInHome);
- printf("SKIN dir 2: '%s'\n",skinMPlayerDir);
+ mp_msg( MSGT_GPLAYER,MSGL_V,"SKIN dir 1: '%s'\n",skinDirInHome);
+ mp_msg( MSGT_GPLAYER,MSGL_V,"SKIN dir 2: '%s'\n",skinMPlayerDir);
  if ( !skinName ) skinName=strdup( "default" );
  i = skinRead( skinName );
  if ((i == -1) && strcmp(skinName,"default"))
  {
-    mp_msg( MSGT_GPLAYER,MSGL_INFO,"Selected skin ( %s ) not found, trying 'default'...\n", skinName);
+    mp_msg( MSGT_GPLAYER,MSGL_WARN,MSGTR_SKIN_SKINCFG_SelectedSkinNotFound, skinName);
     skinName=strdup( "default" );
     i = skinRead( skinName );
  }
@@ -250,7 +247,7 @@ void guiInit( void )
  wsXDNDMakeAwareness(&appMPlayer.mainWindow);
 
  #ifdef DEBUG
-  mp_msg( MSGT_GPLAYER,MSGL_DBG2,"[main] Depth on screen: %d\n",wsDepthOnScreen );
+  mp_msg( MSGT_GPLAYER,MSGL_DBG2,"[main] depth on screen: %d\n",wsDepthOnScreen );
   mp_msg( MSGT_GPLAYER,MSGL_DBG2,"[main] parent: 0x%x\n",(int)appMPlayer.mainWindow.WindowID );
   mp_msg( MSGT_GPLAYER,MSGL_DBG2,"[main] sub: 0x%x\n",(int)appMPlayer.subWindow.WindowID );
  #endif
@@ -344,7 +341,7 @@ void guiInit( void )
 void guiDone( void )
 {
  mplMainRender=0;
- mp_msg( MSGT_GPLAYER,MSGL_V,"[gui] done.\n" );
+ mp_msg( MSGT_GPLAYER,MSGL_V,"[GUI] done.\n" );
 
  if ( gui_save_pos )
   {
@@ -434,7 +431,7 @@ void guiLoadSubtitle( char * name )
   }
  if ( subdata )
   {
-   mp_msg( MSGT_GPLAYER,MSGL_INFO,"[gui] Delete subtitles.\n" );
+   mp_msg( MSGT_GPLAYER,MSGL_INFO,MSGTR_DeletingSubtitles );
    sub_free( subdata );
    subdata=NULL;
    vo_sub=NULL;
@@ -457,7 +454,7 @@ void guiLoadSubtitle( char * name )
   }
  if ( name )
   {
-   mp_msg( MSGT_GPLAYER,MSGL_INFO,"[gui] Load subtitle: %s\n",name );
+   mp_msg( MSGT_GPLAYER,MSGL_INFO,MSGTR_LoadingSubtitles,name );
    subdata=sub_read_file( gstrdup( name ), guiIntfStruct.FPS );
    if ( !subdata ) mp_msg( MSGT_GPLAYER,MSGL_ERR,MSGTR_CantLoadSub,name );
    sub_name = (malloc(2 * sizeof(char*))); //when mplayer will be restarted 
@@ -471,7 +468,7 @@ void guiLoadSubtitle( char * name )
 
 static void add_vop( char * str )
 {
- mp_msg( MSGT_GPLAYER,MSGL_STATUS,"[gui] add video filter: %s\n",str );
+ mp_msg( MSGT_GPLAYER,MSGL_STATUS,MSGTR_AddingVideoFilter,str );
  if ( vo_plugin_args )
   {
    int i = 0;
@@ -487,7 +484,7 @@ static void remove_vop( char * str )
 
  if ( !vo_plugin_args ) return;
 
- mp_msg( MSGT_GPLAYER,MSGL_STATUS,"[gui] remove video filter: %s\n",str );
+ mp_msg( MSGT_GPLAYER,MSGL_STATUS,MSGTR_RemovingVideoFilter,str );
 
  while ( vo_plugin_args[n++].name ); n--;
  if ( n > -1 )
@@ -604,7 +601,7 @@ int guiGetEvent( int type,char * arg )
 	 }
 	break;
    case guiIEvent:
-        printf( "cmd: %d\n",(int)arg );
+        mp_msg( MSGT_GPLAYER,MSGL_V,"cmd: %d\n",(int)arg );
 	switch( (int)arg )
 	 {
           case MP_CMD_QUIT:
@@ -797,19 +794,42 @@ int guiGetEvent( int type,char * arg )
 	  ao_plugin_cfg.pl_extrastereo_mul=gtkAOExtraStereoMul;
 	 }
 #ifdef USE_OSS_AUDIO
-	mixer_device=gstrdup( gtkAOOSSMixer );
-	if ( audio_driver_list && !gstrncmp( audio_driver_list[0],"oss",3 ) && gtkAOOSSDevice )
+	if ( audio_driver_list && !gstrncmp( audio_driver_list[0],"oss",3 ) )
 	 {
-	  char * tmp = calloc( 1,strlen( gtkAOOSSDevice ) + 7 );
+	  char *tmp;
+	  mixer_device = gtkAOOSSMixer;
+	  mixer_channel = gtkAOOSSMixerChannel;
+	  if (gtkAOOSSDevice) {
+	  tmp = calloc( 1,strlen( gtkAOOSSDevice ) + 7 );
 	  sprintf( tmp,"oss:%s",gtkAOOSSDevice );
+	  } else
+	    tmp = "oss";
+	  gaddlist( &audio_driver_list,tmp );
+	 }
+#endif
+#if defined(HAVE_ALSA9) || defined (HAVE_ALSA1X)
+	if ( audio_driver_list && !gstrncmp( audio_driver_list[0],"alsa",4 ) )
+	 {
+	  char *tmp;
+	  mixer_device = gtkAOALSAMixer;
+	  mixer_channel = gtkAOALSAMixerChannel;
+	  if (gtkAOALSADevice) {
+	    tmp = calloc( 1,strlen( gtkAOALSADevice ) + 14 );
+	    sprintf( tmp,"alsa:device=%s",gtkAOALSADevice );
+	  } else
+	    tmp = "alsa";
 	  gaddlist( &audio_driver_list,tmp );
 	 }
 #endif
 #ifdef HAVE_SDL
-	if ( audio_driver_list && !gstrncmp( audio_driver_list[0],"sdl",3 ) && gtkAOSDLDriver )
+	if ( audio_driver_list && !gstrncmp( audio_driver_list[0],"sdl",3 ) )
 	 {
-	  char * tmp = calloc( 1,strlen( gtkAOSDLDriver ) + 10 );
+	  char *tmp;
+	  if (gtkAOSDLDriver) {
+	  tmp = calloc( 1,strlen( gtkAOSDLDriver ) + 10 );
 	  sprintf( tmp,"sdl:%s",gtkAOSDLDriver );
+	  } else
+	    tmp = "sdl";
 	  gaddlist( &audio_driver_list,tmp );
 	 }
 #endif

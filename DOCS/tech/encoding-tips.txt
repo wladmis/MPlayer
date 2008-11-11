@@ -5,6 +5,7 @@ http://www.mplayerhq.hu/~michael/codec-features.html <- lavc vs. divx5 vs. xvid
 http://rguyom.chez.tiscali.fr/libavcodec_tests.html  <- lavc benchmarks, options
 http://cutka.szm.sk/ffdshow/index.html               <- lavc for win32 :)
 http://www.bunkus.org/dvdripping4linux/index.html    <- a nice tutorial
+http://forum.zhentarim.net/viewtopic.php?p=237       <- lavc option comparison
 
 
 ================================================================================
@@ -41,7 +42,7 @@ negative, use a command like this:
 
 Don't include the minus (-) sign in delay. Also, keep in mind you'll
 have to change the 1764 number and provide additional options to lame
-if your audio stream isn't 44100/16bit/littleendian/stereo.
+if your audio stream isn't 44100/16bit/little-endian/stereo.
 
 Step 3: Use mencoder to remux your new mp3 file with the movie:
 
@@ -499,8 +500,8 @@ typically very "noisy", which doesn't help at all. Anyway :
 > -ss 2:00 -endpos 0:30 -vf scale -zoom -xy 640 -o movie.avi                   
 
 1) keyint=48 is way too low. The  default value is 250, this is in *frames*
-not seconds. Key frames are significantly larger than P or B frames, so the
-less key frames you have, better the overall movie will be. (huh, like Yoda
+not seconds. Keyframes are significantly larger than P or B frames, so the
+less keyframes you have, better the overall movie will be. (huh, like Yoda
 I  speak ;).  Try keyint=300  or  350. Don't  go  beyond that  if you  want
 relatively precise seeking.
 

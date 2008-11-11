@@ -9,27 +9,44 @@ differs, make a symlink or specify the correct device on the command line
 with the <tt class="option">-cdrom-device</tt> option.
 </p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
 At least Plextor and some Toshiba SCSI CD-ROM drives have horrible performance
-reading VCDs. This is because the the CDROMREADRAW <tt>ioctl</tt>
+reading VCDs. This is because the CDROMREADRAW <tt>ioctl</tt>
 is not fully implemented for these drives. If you have some knowledge of SCSI
 programming, please <a href="../../tech/patches.txt" target="_top">help us</a>
 implement generic SCSI support for VCDs.
 </p></div><p>
 In the meantime you can extract data from VCDs with
-<a href="http://140.132.1.204/OS/Linux/packages/X/viewers/readvcd/" target="_top">readvcd</a>
+<a href="http://miketeo.net/links/readvcd-0.3.tgz" target="_top">readvcd</a>
 and play the resulting file with <span class="application">MPlayer</span>.
-</p><p><b>VCD structure. </b>VCD disks consist of one or more tracks:</p><div class="itemizedlist"><ul type="disc"><li><p>
-The first track is a small 2048 bytes/sector data track with an iso9660
-filesystem, usually containing Windows VCD player programs and maybe other
-information (images, text, etc).
+</p><p><b>VCD structure. </b>
+A Video CD (VCD) is made up of CD-ROM XA sectors, i.e. CD-ROM mode 2
+form 1 and 2 tracks:</p><div class="itemizedlist"><ul type="disc"><li><p>
+The first track is in mode 2 form 2 format which means it uses L2
+error correction. The track contains an ISO-9660 filesystem with 2048
+bytes/sector. This filesystem contains VCD metadata information, as
+well as still frames often used in menus. MPEG segments for menus can
+also be stored in this first track, but the MPEGs have to be broken up
+into a series of 150-sector chunks. The ISO-9660 filesystem may
+contain other files or programs that are not essential for VCD
+operation.
 </p></li><li><p>
-The second and other tracks are raw 2324 bytes/sector MPEG (movie)
-tracks, containing one MPEG PS data packet per sector instead of a
-filesystem. Similar to audio CD tracks, these tracks <span class="bold"><b>cannot
-be mounted</b></span> (Did you ever mount an audio CD to play it?).
-As most movies are inside this track, you should try <tt class="option">vcd://2</tt> first.
-</p></li><li><p>
+The second and remaining tracks are generally raw 2324 bytes/sector
+MPEG (movie) tracks, containing one MPEG PS data packet per
+sector. These are in mode 2 form 1 format, so they store more data per
+sector at the loss of some error correction. It is also legal to have
+CD-DA tracks in a VCD after the first track as well.
+On some operating systems there is some trickery that goes on to make
+these non-ISO-9660 tracks appear in a filesystem. On other operating
+systems like GNU/Linux this is not the case (yet). Here the MPEG data
+<span class="bold"><b>cannot be mounted</b></span>. As most movies are
+inside this kind of track, you should try <tt class="option">vcd://2</tt>
+first.</p></li><li><p>
 There exist VCD disks without the first track (single track and no filesystem
 at all). They are still playable, but cannot be mounted.
+</p></li><li><p> The definition of the Video CD standard is called the
+Philips "White Book" and it is not generally available online as it
+must be purchased from Philips. More detailed information about Video
+CDs can be found in the
+<a href="http://www.vcdimager.org/pub/vcdimager/manuals/0.7/vcdimager.html#SEC4" target="_top">vcdimager documentation</a>.
 </p></li></ul></div><p><b>About .DAT files. </b>
 The ~600 MB file visible on the first track of the mounted VCD is not a real
 file! It is a so called ISO gateway, created to allow Windows to handle such
@@ -45,6 +62,6 @@ work with the standard iso9660 driver of the Linux kernel! Use
 <tt class="option">vcd://</tt> instead. Alternatives for VCD copying are the
 new <a href="http://www.elis.rug.ac.be/~ronsse/cdfs/" target="_top">cdfs</a> kernel
 driver (not part of the official kernel) that shows CD sessions as image files and
-<a href="http://cdrdao.sourceforge.net/" target="_top">cdrdao</a>, a bit-by-bit
+<a href="http://cdrdao.sf.net/" target="_top">cdrdao</a>, a bit-by-bit
 CD grabbing/copying application.
 </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="dvd.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="cd-dvd.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="ports.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">5.2. DVD playback </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Chapter 6. Ports</td></tr></table></div></body></html>

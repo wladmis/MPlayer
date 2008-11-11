@@ -5,7 +5,7 @@
  *          Håkan Hjort <d95hjort@dtek.chalmers.se>
  *
  * Copyright (C) 1998-2002 VideoLAN
- * $Id: libdvdcss.c,v 1.12 2003/08/30 13:38:15 arpi Exp $
+ * $Id: libdvdcss.c,v 1.13 2004/08/23 00:25:19 attila Exp $
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  */
 
-/**
+/*
  * \mainpage libdvdcss developer documentation
  *
  * \section intro Introduction

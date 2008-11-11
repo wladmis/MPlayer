@@ -31,8 +31,9 @@ char *sub_cp=NULL;
 #endif
 #ifdef USE_FRIBIDI
 #include <fribidi/fribidi.h>
-char *fribidi_charset = NULL;
-int flip_hebrew = 1;
+char *fribidi_charset = NULL;   ///character set that will be passed to FriBiDi
+int flip_hebrew = 1;            ///flip subtitles using fribidi
+int fribidi_flip_commas = 0;    ///flip comma when fribidi is used
 #endif
 
 extern char* dvdsub_lang;
@@ -100,6 +101,7 @@ subtitle *sub_read_line_sami(FILE *fd, subtitle *current) {
     int state;
 
     current->lines = current->start = current->end = 0;
+    current->alignment = SUB_ALIGNMENT_BOTTOMCENTER;
     state = 0;
 
     /* read the first line */
@@ -173,7 +175,38 @@ subtitle *sub_read_line_sami(FILE *fd, subtitle *current) {
 	    s = strchr (s, '>');
 	    if (s) { s++; state = 3; continue; }
 	    break;
-	case 5: /* get rid of {...} text */
+       case 5: /* get rid of {...} text, but read the alignment code */
+	    if ((*s == '\\') && (*(s + 1) == 'a') && !sub_no_text_pp) {
+               if (stristr(s, "\\a1") != NULL) {
+                   current->alignment = SUB_ALIGNMENT_BOTTOMLEFT;
+                   s = s + 3;
+               }
+               if (stristr(s, "\\a2") != NULL) {
+                   current->alignment = SUB_ALIGNMENT_BOTTOMCENTER;
+                   s = s + 3;
+               } else if (stristr(s, "\\a3") != NULL) {
+                   current->alignment = SUB_ALIGNMENT_BOTTOMRIGHT;
+                   s = s + 3;
+               } else if ((stristr(s, "\\a4") != NULL) || (stristr(s, "\\a5") != NULL) || (stristr(s, "\\a8") != NULL)) {
+                   current->alignment = SUB_ALIGNMENT_TOPLEFT;
+                   s = s + 3;
+               } else if (stristr(s, "\\a6") != NULL) {
+                   current->alignment = SUB_ALIGNMENT_TOPCENTER;
+                   s = s + 3;
+               } else if (stristr(s, "\\a7") != NULL) {
+                   current->alignment = SUB_ALIGNMENT_TOPRIGHT;
+                   s = s + 3;
+               } else if (stristr(s, "\\a9") != NULL) {
+                   current->alignment = SUB_ALIGNMENT_MIDDLELEFT;
+                   s = s + 3;
+               } else if (stristr(s, "\\a10") != NULL) {
+                   current->alignment = SUB_ALIGNMENT_MIDDLECENTER;
+                   s = s + 4;
+               } else if (stristr(s, "\\a11") != NULL) {
+                   current->alignment = SUB_ALIGNMENT_MIDDLERIGHT;
+                   s = s + 4;
+               }
+	    }
 	    if (*s == '}') state = 3;
 	    ++s;
 	    continue;
@@ -889,11 +922,11 @@ subtitle *sub_read_line_jacosub(FILE * fd, subtitle * current)
 		continue;
 	    }
 	    if (strstr(directive, "JL") != NULL) {
-		current->alignment = SUB_ALIGNMENT_HLEFT;
+		current->alignment = SUB_ALIGNMENT_BOTTOMLEFT;
 	    } else if (strstr(directive, "JR") != NULL) {
-		current->alignment = SUB_ALIGNMENT_HRIGHT;
+		current->alignment = SUB_ALIGNMENT_BOTTOMRIGHT;
 	    } else {
-		current->alignment = SUB_ALIGNMENT_HCENTER;
+		current->alignment = SUB_ALIGNMENT_BOTTOMCENTER;
 	    }
 	    strcpy(line2, line1);
 	    p = line2;
@@ -1041,36 +1074,33 @@ extern float sub_fps;
 #ifdef USE_ICONV
 static iconv_t icdsc = (iconv_t)(-1);
 
-#ifdef HAVE_ENCA
-void	subcp_open_noenca ()
-{
-    char enca_lang[100], enca_fallback[100];
-    if (sub_cp) {
-	if (sscanf(sub_cp, "enca:%2s:%s", enca_lang, enca_fallback) == 2
-	    || sscanf(sub_cp, "ENCA:%2s:%s", enca_lang, enca_fallback) == 2) {
-	    subcp_open(enca_fallback);
-	} else {
-	    subcp_open(sub_cp);
-	}
-    }
-}
-#else
-void	subcp_open_noenca ()
-{
-    subcp_open(sub_cp);
-}
-#endif
-
-void	subcp_open (char *current_sub_cp)
+void	subcp_open (FILE *enca_fd)
 {
 	char *tocp = "UTF-8";
 
-	if (current_sub_cp){
-		if ((icdsc = iconv_open (tocp, current_sub_cp)) != (iconv_t)(-1)){
+	if (sub_cp){
+		char *cp_tmp = sub_cp;
+#ifdef HAVE_ENCA
+		char enca_lang[3], enca_fallback[100];
+		int free_cp_tmp = 0;
+		if (sscanf(sub_cp, "enca:%2s:%99s", enca_lang, enca_fallback) == 2
+		     || sscanf(sub_cp, "ENCA:%2s:%99s", enca_lang, enca_fallback) == 2) {
+		  if (enca_fd) {
+		    cp_tmp = guess_cp(enca_fd, enca_lang, enca_fallback);
+		    free_cp_tmp = 1;
+		  } else {
+		    cp_tmp = enca_fallback;
+		  }
+		}
+#endif
+		if ((icdsc = iconv_open (tocp, cp_tmp)) != (iconv_t)(-1)){
 			mp_msg(MSGT_SUBREADER,MSGL_V,"SUB: opened iconv descriptor.\n");
 			sub_utf8 = 2;
 		} else
 			mp_msg(MSGT_SUBREADER,MSGL_ERR,"SUB: error opening iconv descriptor.\n");
+#ifdef HAVE_ENCA
+		if (free_cp_tmp && cp_tmp) free(cp_tmp);
+#endif
 	}
 }
 
@@ -1179,7 +1209,7 @@ subtitle* sub_fribidi (subtitle *sub, int sub_utf8)
       break;
     }
     len = fribidi_charset_to_unicode (char_set_num, ip, len, logical);
-    base = FRIBIDI_TYPE_ON;
+    base = fribidi_flip_commas?FRIBIDI_TYPE_ON:FRIBIDI_TYPE_L;
     log2vis = fribidi_log2vis (logical, len, &base,
 			       /* output */
 			       visual, NULL, NULL, NULL);
@@ -1317,9 +1347,7 @@ sub_data* sub_read_file (char *filename, float fps) {
     int n_max, n_first, i, j, sub_first, sub_orig;
     subtitle *first, *second, *sub, *return_sub;
     sub_data *subt_data;
-    char enca_lang[100], enca_fallback[100];
     int uses_time = 0, sub_num = 0, sub_errs = 0;
-    char *current_sub_cp=NULL;
     struct subreader sr[]=
     {
 	    { sub_read_line_microdvd, NULL, "microdvd" },
@@ -1351,17 +1379,6 @@ sub_data* sub_read_file (char *filename, float fps) {
     rewind (fd);
 
 #ifdef USE_ICONV
-#ifdef HAVE_ENCA
-    if (sscanf(sub_cp, "enca:%2s:%s", enca_lang, enca_fallback) == 2
-	|| sscanf(sub_cp, "ENCA:%2s:%s", enca_lang, enca_fallback) == 2) {
-	current_sub_cp = guess_cp(fd, enca_lang, enca_fallback);
-    } else {
-	current_sub_cp = sub_cp ? strdup(sub_cp) : NULL;
-    }
-#else
-    current_sub_cp = sub_cp ? strdup(sub_cp) : NULL;
-#endif
-
     sub_utf8_prev=sub_utf8;
     {
 	    int l,k;
@@ -1374,10 +1391,9 @@ sub_data* sub_read_file (char *filename, float fps) {
 			    break;
 			}
 	    }
-	    if (k<0) subcp_open(current_sub_cp);
+	    if (k<0) subcp_open(fd);
     }
 #endif
-    if (current_sub_cp) free(current_sub_cp);
 
     sub_num=0;n_max=32;
     first=(subtitle *)malloc(n_max*sizeof(subtitle));
@@ -1652,7 +1668,7 @@ if ((suboverlap_enabled == 2) ||
 	    memset(&second[sub_num], '\0', sizeof(subtitle));
 	    second[sub_num].start = local_start;
 	    second[sub_num].end   = local_end;
-	    second[sub_num].alignment = SUB_ALIGNMENT_HCENTER;
+	    second[sub_num].alignment = first[sub_first].alignment;
 	    n_max = (lines_to_add < SUB_MAX_TEXT) ? lines_to_add : SUB_MAX_TEXT;
 	    for (i = 0, j = 0; j < n_max; ++j) {
 		if (placeholder[counter][j] != -1) {
@@ -1877,7 +1893,7 @@ char** sub_filenames(char* path, char *fname)
 #else
 		for (i = 0; sub_exts[i]; i++) {
 #endif
-		    if (strcmp(sub_exts[i], tmp_fname_ext) == 0) {
+		    if (strcasecmp(sub_exts[i], tmp_fname_ext) == 0) {
 			found = 1;
 			break;
 		    }

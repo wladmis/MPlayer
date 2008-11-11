@@ -1,37 +1,37 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>C.2. Various A-V sync and other audio problems</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - The Movie Player"><link rel="up" href="bugs.html" title="C. függelék - Known bugs"><link rel="previous" href="bugs-special.html" title="C.1. Special system/CPU-specific bugs/problems"><link rel="next" href="skin.html" title="D. függelék - MPlayer skin format"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">C.2. Various A-V sync and other audio problems</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="bugs-special.html">El&#337;z&#337;</a> </td><th width="60%" align="center">C. függelék - Known bugs</th><td width="20%" align="right"> <a accesskey="n" href="skin.html">Következ&#337;</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="bugs-audio"></a>C.2. Various A-V sync and other audio problems</h2></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="bugs-delay-all"></a>C.2.1. General audio delay or jerky sound (exists with all or many files)</h3></div></div><div class="itemizedlist"><ul type="disc"><li><p>
-most common: buggy audio driver! - try to use different drivers, try ALSA 0.9 OSS
-emulation with <tt class="option">-ao oss</tt>, also try <tt class="option">-ao sdl</tt>,
-sometimes it helps. If your file plays fine with <tt class="option">-nosound</tt>, then you can be sure
-it's sound card (driver) problem.
-</p></li></ul></div><div class="itemizedlist"><ul type="disc"><li><p>audio buffer problems (buffer size badly detected)</p><p>Workaround: <span class="application">MPlayer</span>'s <tt class="option">-abs</tt> option</p></li></ul></div><div class="itemizedlist"><ul type="disc"><li><p>
-samplerate problems - maybe your card doesn't support the samplerate used in your
-files - try the resampling plugin (<tt class="option">-af resample=...</tt>)
-</p></li></ul></div><div class="itemizedlist"><ul type="disc"><li><p>slow machine (CPU or VGA)</p><p>try with <tt class="option">-vo null</tt>, if it plays well, then you have slow
-VGA card/driver</p><p>Workaround: buy a faster card or read this documentation about how to
-speed up</p><p>Also try <tt class="option">-framedrop</tt></p></li></ul></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="bugs-delay-specific"></a>C.2.2. Audio delay/de-sync specific to one or a few files</h3></div></div><div class="itemizedlist"><ul type="disc"><li><p>bad file</p><p>
-Workaround:
-  </p><div class="itemizedlist"><ul type="round"><li><p><tt class="option">-ni</tt> or <tt class="option">-nobps</tt> option (for
-    non-interleaved or bad files)</p><p>and/or</p></li><li><p><tt class="option">-mc 0</tt>(required for files with badly
-    interleaved VBR audio)</p><p>and/or</p></li><li><p><tt class="option">-delay</tt> or <span class="keycap"><b>+</b></span>/<span class="keycap"><b>-</b></span>
-    keys at runtime to adjust delay</p></li></ul></div><p>
-If none of these help, please upload the file, we'll check (and fix).
-</p></li><li><p>your sound card doesn't support 48kHz playback</p><p>Workaround: buy a better sound card... or try to decrease fps by 10% (use
-<tt class="option">-fps 27</tt> for a 30fps movie) or use the resample plugin</p></li><li><p>slow machine(if A-V is not around 0, and the last number in the status
-line increasing)</p><p>Workaround: <tt class="option">-framedrop</tt></p></li></ul></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="bugs-nosound"></a>C.2.3. No sound at all</h3></div></div><div class="itemizedlist"><ul type="disc"><li><p>your file uses an unsupported audio codec</p><p>read the documentation and help us adding support for it</p></li></ul></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="bugs-nopicture"></a>C.2.4. No picture at all (just plain grey/green window)</h3></div></div><div class="itemizedlist"><ul type="disc"><li><p>your file uses an unsupported video codec</p><p>Workaround: read the documentation and help us adding support for it</p></li><li><p>
-auto-selected codec can't decode the file, try to select another using
-<tt class="option">-vc</tt> or <tt class="option">-vfm</tt> options
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>C.2. Különböz&#337; A-V szinkron és egyéb audió problémán</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - The Movie Player"><link rel="up" href="bugs.html" title="C. függelék - Ismert hibák"><link rel="previous" href="bugs-special.html" title="C.1. Speciális rendszer/CPU-specifikus hibák/problémák"><link rel="next" href="skin.html" title="D. függelék - MPlayer skin format"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">C.2. Különböz&#337; A-V szinkron és egyéb audió problémán</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="bugs-special.html">El&#337;z&#337;</a> </td><th width="60%" align="center">C. függelék - Ismert hibák</th><td width="20%" align="right"> <a accesskey="n" href="skin.html">Következ&#337;</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="bugs-audio"></a>C.2. Különböz&#337; A-V szinkron és egyéb audió problémán</h2></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="bugs-delay-all"></a>C.2.1. Általánosan el&#337;forduló audió késés vagy szaggatott hang (kilép az összes, vagy legalábbis sok fájlnál)</h3></div></div><div class="itemizedlist"><ul type="disc"><li><p>
+Leggyakrabban: hibás audió vezérl&#337;! - próbálj meg más vezérl&#337;t használni, nézd meg az ALSA 0.9-et
+OSS emulációval a <tt class="option">-ao oss</tt> kapcsolóval, próbáld ki a <tt class="option">-ao sdl</tt>-t is,
+néha segít. Ha a fájl lejátszása jó a <tt class="option">-nosound</tt> kapcsolóval, akkor biztos lehetsz
+benne, hogy a hangkártya (vezérl&#337;) a hibás.
+</p></li></ul></div><div class="itemizedlist"><ul type="disc"><li><p>audió buffer problémák (a buffer méretét rosszul detektálja)</p><p>Tüneti kezelés: az <span class="application">MPlayer</span> <tt class="option">-abs</tt> kapcsolója</p></li></ul></div><div class="itemizedlist"><ul type="disc"><li><p>
+mintaráta problémák - talán a kártyád nem támogatja a fájlban használt mintarátát -
+próbáld ki a resampling sz&#369;r&#337;t (<tt class="option">-af resample=...</tt>)
+</p></li></ul></div><div class="itemizedlist"><ul type="disc"><li><p>lassú gép (CPU vagy VGA)</p><p>próbáld ki a <tt class="option">-vo null</tt> kapcsolót, ha úgy jól m&#369;ködik, akkor lassú
+a VGA kártyád/vezérl&#337;d</p><p>Tüneti kezelés: vegyél egy gyorsabb kártyát vagy olvasd el a tuningolási dokumentációt</p><p>Megpróbálhatod még a <tt class="option">-framedrop</tt>-ot is</p></li></ul></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="bugs-delay-specific"></a>C.2.2. Audió késés/szinkronizáció elvesztése egy vagy néhány fájl esetén</h3></div></div><div class="itemizedlist"><ul type="disc"><li><p>hibás fájl</p><p>
+Tüneti kezelés:
+  </p><div class="itemizedlist"><ul type="round"><li><p><tt class="option">-ni</tt> vagy <tt class="option">-nobps</tt> kapcsoló (a
+    nem-átlapolt vagy hibás fájlokhoz)</p><p>and/or</p></li><li><p><tt class="option">-mc 0</tt>(szükséges a rosszul átlapolt VBS audiós
+    fájlokhoz)</p><p>és/vagy</p></li><li><p><tt class="option">-delay</tt> vagy a <span class="keycap"><b>+</b></span>/<span class="keycap"><b>-</b></span>
+    gombok futás közbeni beállításhoz</p></li></ul></div><p>
+Ha egyik sem segít, légy szíves töltsd fel a fájlt, és megnézzük (és javítjuk).
+</p></li><li><p>a hangkártyád nem támogatja a 48kHz-es lejátszást</p><p>Tüneti kezelés: vegyél egy jobb hangkártyát... vagy próbáld meg csökkenteni az
+fps-t 10%-kal (<tt class="option">-fps 27</tt> kapcsoló egy 30fps-es filmnél) vagy használd a
+resample sz&#369;r&#337;t</p></li><li><p>lassú gép (ha az A-V nem 0 körüli és a státusz sorban lév&#337; utolsó szám
+emelkedik)</p><p>Tüneti kezelés: <tt class="option">-framedrop</tt></p></li></ul></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="bugs-nosound"></a>C.2.3. Egyáltalán nincs hang</h3></div></div><div class="itemizedlist"><ul type="disc"><li><p>a fájlod nem támogatott audió codec-et használ</p><p>olvasd el a dokumentációt és segíts a támogatás elkészítésében</p></li></ul></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="bugs-nopicture"></a>C.2.4. Egyáltalán nincs kép (csak üres szürke/zöld ablak)</h3></div></div><div class="itemizedlist"><ul type="disc"><li><p>a fájlod egy nem támogatott videó codec-et használ</p><p>olvasd el a dokumentációt és segíts nekünk a támogatás elkészítésében</p></li><li><p>
+az automatikusan kiválasztott codec nem tudja dekódolni a fájlt, próbálj meg másik
+codec-et kiválasztani a <tt class="option">-vc</tt> vagy <tt class="option">-vfm</tt> kapcsolókkal
 </p></li><li><p>
-you try to play DivX 3.x file with OpenDivX decoder or XviD
-(<tt class="option">-vc odivx</tt>) - install DivX4Linux and recompile player
-</p></li></ul></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="bugs-video"></a>C.2.5. Video-out problems</h3></div></div><p>
-First note: options <tt class="option">-fs -vm</tt> and <tt class="option">-zoom</tt> are just
-recommendations, not (yet) supported by all drivers. So it isn't a bug if it
-doesn't work. Only a few driver supports scaling/zooming, don't expect this from
-x11 or dga.
-</p><p><b>OSD/sub flickering. </b>
-<div class="itemizedlist"><ul type="disc"><li><p>x11 driver: sorry, it can't be fixed now</p></li><li><p>xv driver: use <tt class="option">-double</tt> option</p></li></ul></div>
-</p><p><b>Green image using mga_vid (<tt class="option">-vo mga</tt> / <tt class="option">-vo xmga</tt>). </b>
-<div class="itemizedlist"><ul type="disc"><li><p>mga_vid misdetected your card's RAM amount, reload it using
-<tt class="option">mga_ram_size</tt> option
+DivX 3.x fájlt akarsz lejátszani az OpenDivX dekódolóval vagy az XviD-del
+(<tt class="option">-vc odivx</tt>) - telepítsd fel a DivX4Linux-ot és fordítsd újra a lejátszót
+</p></li></ul></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="bugs-video"></a>C.2.5. Videó-kimeneti problémák</h3></div></div><p>
+Els&#337; megjegyzés: a <tt class="option">-fs -vm</tt> és <tt class="option">-zoom</tt> kapcsolók
+csak ajánlások, (még) nem támogatja &#337;ket minden vezérl&#337;. Tehát az nem hiba, ha
+ezek nem m&#369;ködnek. Csak egy pár vezérl&#337; támogatja a scaling-et/nagyítást, ne várd
+ezt el az x11-t&#337;l vagy a dga-tól.
+</p><p><b>OSD/felirat vibrálás. </b>
+<div class="itemizedlist"><ul type="disc"><li><p>x11 vezérl&#337;: bocs, ez jelenleg nem javítható</p></li><li><p>xv vezérl&#337;: használd a <tt class="option">-double</tt> kapcsolót</p></li></ul></div>
+</p><p><b>Zöld kép mga_vid használatakor (<tt class="option">-vo mga</tt> / <tt class="option">-vo xmga</tt>). </b>
+<div class="itemizedlist"><ul type="disc"><li><p>az mga_vid rosszul detektálja a kártyád RAM-jának méretét, töltsd be újra
+a <tt class="option">mga_ram_size</tt> kapcsolóval
 </p></li></ul></div>
-</p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="bugs-special.html">El&#337;z&#337;</a> </td><td width="20%" align="center"><a accesskey="u" href="bugs.html">Fel</a></td><td width="40%" align="right"> <a accesskey="n" href="skin.html">Következ&#337;</a></td></tr><tr><td width="40%" align="left" valign="top">C.1. Special system/CPU-specific bugs/problems </td><td width="20%" align="center"><a accesskey="h" href="index.html">Tartalom</a></td><td width="40%" align="right" valign="top"> D. függelék - MPlayer skin format</td></tr></table></div></body></html>
+</p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="bugs-special.html">El&#337;z&#337;</a> </td><td width="20%" align="center"><a accesskey="u" href="bugs.html">Fel</a></td><td width="40%" align="right"> <a accesskey="n" href="skin.html">Következ&#337;</a></td></tr><tr><td width="40%" align="left" valign="top">C.1. Speciális rendszer/CPU-specifikus hibák/problémák </td><td width="20%" align="center"><a accesskey="h" href="index.html">Tartalom</a></td><td width="40%" align="right" valign="top"> D. függelék - MPlayer skin format</td></tr></table></div></body></html>

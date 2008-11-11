@@ -1,29 +1,30 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>2.1. Formats supportés</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - Le lecteur vidéo pour LINUX"><link rel="up" href="features.html" title="Chapitre 2. Fonctionnalités"><link rel="previous" href="features.html" title="Chapitre 2. Fonctionnalités"><link rel="next" href="codecs.html" title="2.2. Codecs Supportés"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">2.1. Formats supportés</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="features.html">Précédent</a> </td><th width="60%" align="center">Chapitre 2. Fonctionnalités</th><td width="20%" align="right"> <a accesskey="n" href="codecs.html">Suivant</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="formats"></a>2.1. Formats supportés</h2></div></div><p>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>2.1. Formats supportés</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - Le Lecteur Vidéo"><link rel="up" href="features.html" title="Chapitre 2. Fonctionnalités"><link rel="previous" href="features.html" title="Chapitre 2. Fonctionnalités"><link rel="next" href="codecs.html" title="2.2. Codecs Supportés"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">2.1. Formats supportés</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="features.html">Précédent</a> </td><th width="60%" align="center">Chapitre 2. Fonctionnalités</th><td width="20%" align="right"> <a accesskey="n" href="codecs.html">Suivant</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="formats"></a>2.1. Formats supportés</h2></div></div><p>
 Il est important de clarifier une erreur commune. Quand les gens voient
 un fichier avec une extension <tt class="filename">.AVI</tt>, ils en concluent
 immédiatement qu'il ne s'agit pas d'un fichier MPEG. Ce n'est pas vrai.
 Du moins pas entièrement. Contrairement aux suppositions populaires, un
-tel fichier <span class="emphasis"><i>peut</i></span> contenir de la vidéo MPEG1.
+tel fichier <span class="emphasis"><i>peut</i></span> contenir de la vidéo MPEG-1.
 </p><p>
 Vous voyez, un <span class="bold"><b>codec</b></span> n'est pas la même chose qu'un
 <span class="bold"><b>format de fichier</b></span>.
-Exemples de <span class="bold"><b>codecs</b></span> vidéo: MPEG1, MPEG2, DivX, Indeo5, 3ivx.
+Exemples de <span class="bold"><b>codecs</b></span> vidéo: MPEG-1, MPEG-2, 
+MPEG-4 (DivX), Indeo5, 3ivx.
 Exemples de <span class="bold"><b>formats</b></span> de fichier: MPG, AVI, ASF.
 </p><p>
 En théorie, vous pouvez placer une vidéo OpenDivX et de l'audio MP3 dans un format
 de fichier <span class="bold"><b>MPG</b></span>. Par contre, la plupart des lecteurs
-ne pourrons pas lire ce fichier car ils attendent de la vidéo MPEG1 et de l'audio
+ne pourrons pas lire ce fichier car ils attendent de la vidéo MPEG-1 et de l'audio
 MP2 (contrairement à l'<span class="bold"><b>AVI</b></span>, le
 <span class="bold"><b>MPG</b></span> ne contient pas les champs nécessaires pour
-décrire ses flux vidéo et audio). Ou vous pouvez placer de la vidéo MPEG1 dans
+décrire ses flux vidéo et audio). Ou vous pouvez placer de la vidéo MPEG-1 dans
 un fichier AVI.
-<a href="http://ffmpeg.sourceforge.net/" target="_top">FFmpeg</a> et
-<a href="mencoder.html" title="Chapitre 7. Encodage avec MEncoder">MEncoder</a> peuvent créer ces fichiers.
+<a href="http://ffmpeg.org/" target="_top">FFmpeg</a> et
+<a href="mencoder.html" title="Chapitre 7. Encodage avec MEncoder"><span class="application">MEncoder</span></a> peuvent créer ces fichiers.
 </p><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="video-formats"></a>2.1.1. Formats vidéo</h3></div></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="mpg-vob-dat"></a>2.1.1.1. Fichiers MPEG</h4></div></div><p>
 Les fichiers MPEG peuvent avoir des apparences différentes:
 </p><div class="itemizedlist"><ul type="disc"><li>
   MPG: C'est la forme la plus <span class="bold"><b>basique</b></span> des formats
-  de fichier MPEG. Il contient de la vidéo MPEG1, et de l'audio MP2 (MPEG-1 layer 2)
+  de fichier MPEG. Il contient de la vidéo MPEG-1, et de l'audio MP2 (MPEG-1 layer 2)
   ou plus rarement MP1.
   </li><li>
   DAT: C'est très exactement le même format que MPG mais avec une extension différente.
@@ -44,16 +45,17 @@ fichier standards (comme <b>dd</b>, <b>cut</b>), et il
 restera parfaitement lisible.
 </p><p>
 Une fonction importante des MPGs est qu'ils ont un champ décrivant le rapport
-d'aspect du flux vidéo, et dans l'entête ce champs est fixé à 4:3, il est donc
-lu en 640x480. Les fichiers AVI n'ont pas ce champs, donc ils doivent être
-redimensionné durant l'encodage ou joués avec l'option <tt class="option">-aspect</tt>.
+d'aspect du flux vidéo à l'interieur du flux. Par exemple les SVCDs ont une résolution
+de 480x480, et dans l'entête ce champ est fixé à 4:3, il est donc
+lu en 640x480. Les fichiers AVI n'ont pas ce champ, ils doivent donc être
+redimensionnés durant l'encodage ou joués avec l'option <tt class="option">-aspect</tt>.
 </p></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="avi"></a>2.1.1.2. Fichiers AVI</h4></div></div><p>
 Conçu par Microsoft, <span class="bold"><b>AVI (Audio Video Interleaved)</b></span>
 est un format répandu et multi-usages actuellement utilisé par la plupart des vidéos
-DivX et DivX4. Il a de nombreux inconvénients et défauts (par exemple en streaming).
+MPEG-4 (DivX et DivX4). Il a de nombreux inconvénients et défauts (par exemple en streaming).
 Il supporte un flux vidéo et de 0 à 99 flux audio. La taille du fichier est limité
 à 2Go, mais il existe une extension permettant des fichiers plus gros appelée
-OpenDML. Actuellement Microsoft Décourage fortement son utilisation au profit
+<span class="bold"><b>OpenDML</b></span>. Actuellement Microsoft décourage fortement son utilisation au profit
 d' ASF/WMV.
 </p><p>
 Il y a un hack qui permet aux fichiers AVI de contenir un flux audio Ogg Vorbis,
@@ -75,7 +77,7 @@ Il y a deux types de fichiers AVI:
   Certains outils créent des AVIs entrelacés avec une mauvaise synchro.
   <span class="application">MPlayer</span> les détecte comme entrelacés, ce qui va
   enduire une perte de synchro A/V, probablement pendant un déplacement. Ces
-  fichiers devraient être lu en temps que non-entrelacés (avec l'option <tt class="option">-ni</tt>).
+  fichiers devraient être lu en tant que non-entrelacés (avec l'option <tt class="option">-ni</tt>).
   </li><li>
   <span class="bold"><b>Non-entrelacé:</b></span> D'abord vient le flux vidéo
   entier, puis le flux audio entier. Il a donc besoin de beaucoup de déplacements,
@@ -85,8 +87,8 @@ Il y a deux types de fichiers AVI:
 <span class="application">MPlayer</span> supporte deux types de synchro pour les fichiers AVI:
 </p><div class="itemizedlist"><ul type="disc"><li>
   <span class="bold"><b>basé sur bps</b></span>: Basé sur le bitrate/samplerate du flux
-  video/audio stream. Cette méthode est utilisé dans la plupart des lecteurs,
-  incluant<a href="http://avifile.sourceforge.net" target="_top">avifile</a>
+  video/audio. Cette méthode est utilisé dans la plupart des lecteurs,
+  incluant <a href="http://avifile.sf.net" target="_top">avifile</a>
   et <span class="application">Windows Media Player</span>. Les fichiers avec des entêtes endommagées,
   et les fichiers créés avec de l'audio VBR mais pas avec un encodeur VBR-compliant
   auront une désynchro A/V avec cette méthode (la plupart du temps en se déplaçant).
@@ -108,15 +110,16 @@ Il n'y a que deux exceptions:
 ASF (Active Streaming Format) provient de Microsoft. Ils ont développé deux
 variantes de l'ASF, v1.0 et v2.0. v1.0 est utilisé par leurs outils multimédia
 (<span class="application">Windows Media Player</span> et <span class="application">Windows Media Encoder</span>)
+et sont très secrètes. v2.0 est publié et breveté :).
 Bien sûr elles diffèrent, il n'y a pas de compatibilité du tout (ce n'est juste
 qu'un autre nom légal).
 <span class="application">MPlayer</span> ne supporte que la v1.0, car personne n'a vu de fichiers v2.0 :).
-Notez que les fichiers ASF viennent de nos jours avec l'extension
+Notez que les fichiers ASF portent maintenant l'extension
 <tt class="filename">.WMA</tt> ou <tt class="filename">.WMV</tt>.
-</p></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="qt-mov"></a>2.1.1.4. Fichiers QuickTime/MOV</h4></div></div><p>
+</p></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="mov"></a>2.1.1.4. Fichiers QuickTime/MOV</h4></div></div><p>
 Ces formats ont été conçus par Apple et peuvent contenir n'importe quel codec, CBR ou VBR.
 Ils ont généralement une extension <tt class="filename">.QT</tt> ou <tt class="filename">.MOV</tt>.
-extension. Notez que depuis que le group MPEG4 a choisi QuickTime en temps que
+Notez que depuis que le groupe MPEG4 a choisi QuickTime en tant que
 format recommandé pour le MPEG4, leur fichiers MOV sont diffusés avec une
 extension <tt class="filename">.MPG</tt> ou <tt class="filename">.MP4</tt> (Au passage les
 flux vidéo et audio de ces fichiers sont de véritables fichiers MPG et AAC. Vous
@@ -125,12 +128,12 @@ pouvez même les extraire avec les options <tt class="option">-dumpvideo</tt> et
 </p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
 La plupart des nouveaux fichiers QuickTime utilise de la vidéo
 <span class="bold"><b>Sorenson</b></span> et de l'audio QDesign Music. Voir
-notre section sur le codec <a href="codecs.html#sorenson" title="2.2.1.10. Sorenson">Sorenson</a>.
+notre section sur le codec <a href="codecs.html#sorenson" title="2.2.1.9. Sorenson">Sorenson</a>.
 </p></div></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="vivo"></a>2.1.1.5. Fichiers VIVO</h4></div></div><p>
 <span class="application">MPlayer</span> démuxe les fichiers VIVO avec plaisir.
 Le plus gros désavantage de ce format est qu'il n'a pas de bloc d'index, ni
 de taille de paquets fixe ou d'octet de synchro et la plupart des fichiers
-manquent même de trames clés, donc oubliez le déplacement!
+manquent même de trames clés, donc oubliez le déplacement !
 </p><p>
 Le codec vidéo des fichiers VIVO/1.0 est le <span class="bold"><b>h.263</b></span>
 standard. Le codec vidéo des fichiers VIVO/2.0 est un
@@ -152,9 +155,8 @@ capable de ce déplacer à l'intérieur (utile en utilisant l'option
 sera brouillée pendant un court instant après le déplacement.
 </p></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="realmedia"></a>2.1.1.7. Fichiers RealMedia (RM)</h4></div></div><p>
 Oui, <span class="application">MPlayer</span> peut lire (démuxer) les fichiers RealMedia
-(<tt class="filename">.rm</tt>). Le déplacement fonctionne mais vous devrez spécifier
-explicitement l'option <tt class="option">-forceidx</tt> (le format supporte les trames cl).
-Voici une liste des codecs <a href="codecs.html#realvideo" title="2.2.1.8. RealVideo">RealVideo</a> et <a href="codecs.html#realaudio" title="2.2.2.5. RealAudio">RealAudio</a> supportés.
+(<tt class="filename">.rm</tt>). 
+Voici une liste des codecs <a href="codecs.html#realvideo" title="2.2.1.7. RealVideo">RealVideo</a> et <a href="codecs.html#realaudio" title="2.2.2.5. RealAudio">RealAudio</a> supportés.
 </p></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="nuppelvideo"></a>2.1.1.8. Fichiers NuppelVideo</h4></div></div><p>
 <a href="http://mars.tuwien.ac.at/~roman/nuppelvideo" target="_top">NuppelVideo</a>
 est un outil de capture TV (d'après ce que j'en sais:). <span class="application">MPlayer</span>
@@ -162,9 +164,10 @@ peut lire ses fichiers <tt class="filename">.NUV</tt> (NuppelVideo 5.0 uniquemen
 Ces fichiers peuvent contenir des trames YV12 non-compressées, YV12+RTJpeg compressées,
 YV12 RTJpeg+lzo compressées, et YV12+lzo compressées.
 <span class="application">MPlayer</span> les décode tous (et les <span class="bold"><b>encode</b></span>
-également avec <span class="application">MEncoder</span> en DivX/etc!). Le déplacement fonctionne.
+également avec <span class="application">MEncoder</span> en MPEG-4 (DivX)/etc!). 
+Le déplacement fonctionne.
 </p></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="yuv4mpeg"></a>2.1.1.9. Fichiers yuv4mpeg</h4></div></div><p>
-<a href="http://mjpeg.sourceforge.net" target="_top">yuv4mpeg / yuv4mpeg2</a>
+<a href="http://mjpeg.sf.net" target="_top">yuv4mpeg / yuv4mpeg2</a>
 est un format de fichier utilisé par les
 <a href="http://mjpeg.sf.net" target="_top">programmes mjpegtools</a>.
 Vous pouvez grabber, produire, filtrer ou encoder de la vidéo dans ce format
@@ -193,13 +196,24 @@ sous Windows.)
 </p><p>
 Les spécifications PVA peuvent être téléchargées à l'adresse suivante:
 <a href="http://www.technotrend.de/download/av_format_v1.pdf" target="_top">http://www.technotrend.de/download/av_format_v1.pdf</a>
-</p></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="gif"></a>2.1.1.15. Fichiers GIF</h4></div></div><p>
+</p></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="nsv"></a>2.1.1.15. Fichiers NSV</h4></div></div><p>
+NSV (NullSoft Video) est un format utilisé par le lecteur 
+<span class="application">Winamp</span> pour faire du stream audio et vidéo.
+La vidéo est en VP3, VP5 ou VP6, l'audio en MP3, AAC ou VLB.
+La version audio uniquement de NSV a une extension <tt class="filename">.nsa</tt>.
+<span class="application">MPlayer</span> peut lire les deux types de flux et fichiers NSV.
+Veuillez noter que la plupart des fichiers du 
+<a href="http://www.winamp.com" target="_top">site de Winamp</a> utilisent de l'audio VLB,
+qui ne peut être décodé pour l'instant. De plus les flux de ce site nécessitent
+une couche suplémentaire de dépaquetage qui doit encore être implémentée (ces 
+fichiers sont de toute façon illisibles car ils utilisent de l'audio VLB).
+</p></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="gif"></a>2.1.1.16. Fichiers GIF</h4></div></div><p>
 Le format <span class="bold"><b>GIF</b></span>est un format courant pour les
 graphismes web. Il y a deux versions des specs GIF, GIF87a et GIF89a. La
-principale différence est que le GIF89a autorise l'animation. MPlayer supporte
+principale différence est que le GIF89a autorise l'animation. <span class="application">MPlayer</span> supporte
 les deux formats en utilisant <tt>libungif</tt>
 ou une autre librairie compatible libgif. Les GIFs non-animées seront affichées
-comme des vidéos à simple trame. (Utilisez les options  <tt class="option">-loop</tt>
+comme des vidéos à simple trame. (Utilisez les options <tt class="option">-loop</tt>
 et <tt class="option">-fixed-vo</tt> pour les afficher plus longtemps).
 </p><p>
 <span class="application">MPlayer</span> ne supporte actuellement pas le déplacement
@@ -251,7 +265,7 @@ via <tt class="option">-cdda</tt>.
 Il y a des plugins pour les thèmes de jeux SNES, les thèmes SID (du Commodore
 64), de nombreux formats Amiga, .xm, .it, VQF, musepack, Bonk, shorten et bien
 d'autres. Vous pouvez les trouver sur la
-<a href="http://www.xmms.org/plugins_input.html" target="_top">page des plugins d'entrée XMMS</a>.
+<a href="http://www.xmms.org/plugins.php?category=input" target="_top">page des plugins d'entrée XMMS</a>.
 </p><p>
 Pour cette fonctionnalité vous devez avoir <span class="application">XMMS</span>
 et compiler MPlayer avec <span class="application">MPlayer</span> avec

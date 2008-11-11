@@ -5,7 +5,7 @@ sometimes it helps. If your file plays fine with <tt class="option">-nosound</tt
 it's sound card (driver) problem.
 </p></li></ul></div><div class="itemizedlist"><ul type="disc"><li><p>audio buffer problems (buffer size badly detected)</p><p>Workaround: <span class="application">MPlayer</span>'s <tt class="option">-abs</tt> option</p></li></ul></div><div class="itemizedlist"><ul type="disc"><li><p>
 samplerate problems - maybe your card doesn't support the samplerate used in your
-files - try the resampling plugin (<tt class="option">-af resample=...</tt>)
+files - try the resampling filter (<tt class="option">-af resample=...</tt>)
 </p></li></ul></div><div class="itemizedlist"><ul type="disc"><li><p>slow machine (CPU or VGA)</p><p>try with <tt class="option">-vo null</tt>, if it plays well, then you have slow
 VGA card/driver</p><p>Workaround: buy a faster card or read this documentation about how to
 speed up</p><p>Also try <tt class="option">-framedrop</tt></p></li></ul></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="bugs-delay-specific"></a>C.2.2. Audio delay/de-sync specific to one or a few files</h3></div></div><div class="itemizedlist"><ul type="disc"><li><p>bad file</p><p>
@@ -16,7 +16,7 @@ Workaround:
     keys at runtime to adjust delay</p></li></ul></div><p>
 If none of these help, please upload the file, we'll check (and fix).
 </p></li><li><p>your sound card doesn't support 48kHz playback</p><p>Workaround: buy a better sound card... or try to decrease fps by 10% (use
-<tt class="option">-fps 27</tt> for a 30fps movie) or use the resample plugin</p></li><li><p>slow machine(if A-V is not around 0, and the last number in the status
+<tt class="option">-fps 27</tt> for a 30fps movie) or use the resample filter</p></li><li><p>slow machine(if A-V is not around 0, and the last number in the status
 line increasing)</p><p>Workaround: <tt class="option">-framedrop</tt></p></li></ul></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="bugs-nosound"></a>C.2.3. No sound at all</h3></div></div><div class="itemizedlist"><ul type="disc"><li><p>your file uses an unsupported audio codec</p><p>read the documentation and help us adding support for it</p></li></ul></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="bugs-nopicture"></a>C.2.4. No picture at all (just plain grey/green window)</h3></div></div><div class="itemizedlist"><ul type="disc"><li><p>your file uses an unsupported video codec</p><p>Workaround: read the documentation and help us adding support for it</p></li><li><p>
 auto-selected codec can't decode the file, try to select another using
 <tt class="option">-vc</tt> or <tt class="option">-vfm</tt> options

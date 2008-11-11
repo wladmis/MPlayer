@@ -288,7 +288,7 @@ képkockák eldobásának ki/bekapcsolása
 feliratok megjelenítésének ki/bekapcsolása
 .IPs j\ \ \ \ 
 feliratok nyelvének kiválasztása
-.IP F\ \ \ \
+.IPs F\ \ \ \
 toggle display of "forced subtitles" (UNTRANS)
 .IPs a\ \ \ \ 
 feliratok elrendezése: fent / közép / lent
@@ -846,7 +846,7 @@ képszabvány tipusa
 kép szélessége pixelben
 .IPs h=<érték>
 kép magassága pixelben
-.IPs y420|yv12|yuy2|y8
+.IPs i420|yv12|yuy2|y8
 colorspace beállítása
 .IPs format=<érték>
 colorspace (fourcc) hexában
@@ -857,7 +857,7 @@ képkockák mérete byte-ban
 .
 .TP
 .B \-rtsp-stream-over-tcp
-'rtsp://' URL-ekkel használandó, azt adja meg hogy a bejövõ RTP és RTCP
+rtsp:// URL-ekkel használandó, azt adja meg hogy a bejövõ RTP és RTCP
 csomagok TCP-n keresztül jöjjenek. Olyan internet kapcsolat esetében
 hasznos, amely nem engedi be az UDP csomagokat.
 (lásd http://www.live.com/mplayer/).
@@ -1602,7 +1602,7 @@ XVideo használatának kényszerítése.
 .TP
 .B \-fs \ \ \ 
 Teljesképernyõs lejátszás (filmet középre, köré fekete keret).
-'f' billentyûvel ki/bekapcsolható (nem minden video kimenet támogatja).
+"f" billentyûvel ki/bekapcsolható (nem minden video kimenet támogatja).
 Lásd még \-zoom.
 .TP
 .B \-fsmode-dontuse <0-31> (RÉGI) (használd az \-fs opciót)
@@ -1750,7 +1750,7 @@ A megadott tartomány határozza meg a vágás mértékét.
 .B \-rootwin
 A film root ablakban (asztal hátterében) történõ lejátszása, új ablak
 nyitása helyett.
-Csak az x11, xv, xmga és xvidix meghajtókkal.
+Csak az x11, xv, xmga, xvidix, quartz és directx meghajtókkal.
 .TP
 .B \-saturation <\-100\-100>
 Video kimenet szaturációjának beállítása (alap: 0).

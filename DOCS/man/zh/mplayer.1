@@ -569,7 +569,7 @@ Full 5.1
 以像素为单位的图像宽
 .IPs h=<参数>
 以像素为单位的图像高
-.IPs y420|yv12|yuy2|y8
+.IPs i420|yv12|yuy2|y8
 设置色彩空间
 .IPs format=<参数>
 16进制的色彩空间(fourcc)
@@ -726,7 +726,7 @@ tv_set_channel和tv_last_channel等命令将可以被遥控器(参见lirc)使用.
 .B \-user <用户名> (参见\-passwd选项)
 设定http认证的用户名.
 .TP
-.B \vcd://<音轨>
+.B vcd://<音轨>
 从设备或镜像文件中播放video CD音轨(参见\-cuefile).
 .TP
 .B \-vid <标识>
@@ -1900,7 +1900,7 @@ fourcc: 类似rgb15, bgr24, yv12等等的格式(默认值: yuy2)
 .br
 所有滤镜默认作用于'c'(色度).
 .br
-'\-'前缀表示禁用该选项.
+\-前缀表示禁用该选项.
 .br
 在选项后面可以加上一个':'和一个字母表示它的作用范围:
 .RSss

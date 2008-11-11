@@ -986,6 +986,10 @@ static struct {
   {"rgb4", IMGFMT_RGB4},
   {"rg4b", IMGFMT_RG4B},
   {"rgb1", IMGFMT_RGB1},
+  {"rgba", IMGFMT_RGBA},
+  {"argb", IMGFMT_ARGB},
+  {"bgra", IMGFMT_BGRA},
+  {"abgr", IMGFMT_ABGR},
   { NULL, 0 }
 };
 
@@ -1435,6 +1439,7 @@ static int parse_obj_settings_list(m_option_t* opt,char *name,
 
   if(!strcmp(param,"help")) {
     m_obj_list_t* ol = opt->priv;
+    mp_msg(MSGT_VFILTER,MSGL_INFO,"Available video filters:\n");
     for(n = 0 ; ol->list[n] ; n++)
       mp_msg(MSGT_VFILTER,MSGL_INFO,"  %-15s: %s\n",
 	     M_ST_MB(char*,ol->list[n],ol->name_off),

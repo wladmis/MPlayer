@@ -1,88 +1,89 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>6.6. Windows</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - The Movie Player"><link rel="up" href="ports.html" title="6. fejezet - Portok"><link rel="previous" href="qnx.html" title="6.5. QNX"><link rel="next" href="macos.html" title="6.7. Mac OS"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">6.6. Windows</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="qnx.html">El&#337;z&#337;</a> </td><th width="60%" align="center">6. fejezet - Portok</th><td width="20%" align="right"> <a accesskey="n" href="macos.html">Következ&#337;</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="windows"></a>6.6. Windows</h2></div></div><p>Yes, <span class="application">MPlayer</span> runs on Windows under
-  <a href="http://www.cygwin.com/" target="_top"><span class="application">Cygwin</span></a> and
-  <a href="http://www.mingw.org/" target="_top"><span class="application">MinGW</span></a>.
-  It does not have a GUI yet, but the command line version is almost completely
-  functional. <a href="../../tech/patches.txt" target="_top">Patches</a> are always welcome.
-  You should check out the
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>6.7. Windows</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - The Movie Player"><link rel="up" href="ports.html" title="6. fejezet - Portok"><link rel="previous" href="qnx.html" title="6.6. QNX"><link rel="next" href="macos.html" title="6.8. Mac OS"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">6.7. Windows</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="qnx.html">El&#337;z&#337;</a> </td><th width="60%" align="center">6. fejezet - Portok</th><td width="20%" align="right"> <a accesskey="n" href="macos.html">Következ&#337;</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="windows"></a>6.7. Windows</h2></div></div><p>Igen, az <span class="application">MPlayer</span> fut Windows-on
+  <a href="http://www.cygwin.com/" target="_top"><span class="application">Cygwin</span></a> és
+  <a href="http://www.mingw.org/" target="_top"><span class="application">MinGW</span></a> alatt.
+  Még nincs GUI-ja, de a parancssoros verzió majdnem teljesen m&#369;ködik.
+  <a href="../../tech/patches.txt" target="_top">Javításokat</a> mindig örömmel fogadunk.
+  Ajánlott szétnézni az
   <a href="http://mplayerhq.hu/mailman/listinfo/mplayer-cygwin/" target="_top">mplayer-cygwin</a>
-  mailing list for help and latest information.</p><p>Best results are achieved with the native DirectX video output driver
-  (<tt class="option">-vo directx</tt>) and the native Windows waveout audio driver
-  (<tt class="option">-ao win32</tt>). Alternatives are OpenGL and SDL, but OpenGL
-  performance varies greatly between systems and SDL is known to
-  distort sound and video or crash on some systems. If the image is
-  distorted, try turning off hardware acceleration with
-  <tt class="option">-vo directx:noaccel</tt>. Download
-  <a href="http://www.videolan.org/vlc/dx7headers.tgz" target="_top">DirectX 7 header files</a>
-  to compile the DirectX video output driver.</p><p><a href="devices.html#vidix" title="2.3.1.2.13. VIDIX">VIDIX</a> now works under Windows as
-  <tt class="option">-vo winvidix</tt>, although it is still experimental
-	and needs a bit of manual setup. Download
-  <a href="http://www.mplayerhq.hu/MPlayer/releases/win32-beta/dhahelper.sys" target="_top">dhahelper.sys</a>
-  and copy it to the
-  <tt class="filename">libdha/dhahelperwin</tt> directory in your
-	<span class="application">MPlayer</span> source tree.
-	Open a console and change to that directory. Then type
+  levelezési listán is a legfrissebb információkért.</p><p>A legjobb eredmény a natív DirectX videó kimeneti vezérl&#337;vel
+  (<tt class="option">-vo directx</tt>) és a natív Windows waveout audió vezérl&#337;vel
+  (<tt class="option">-ao win32</tt>) érhet&#337; el. Alternatívaként van OpenGL és SDL, de
+  az OpenGL teljesítménye nagyban változik a rendszerek között, az SDL pedig tudvalev&#337;leg
+  torzítja a hangot és a képet vagy összeomlik néhány rendszeren. Ha torz a kép,
+  próbáld meg kikapcsolni a hardveres gyorsítást a
+  <tt class="option">-vo directx:noaccel</tt> kapcsolóval. Töltsd le a
+  <a href="http://www.mplayerhq.hu/MPlayer/releases/win32-beta/contrib/dx7headers.tgz" target="_top">DirectX 7 fejléc fájlokat</a>
+  a DirectX videó kimeneti vezérl&#337; beforgatásához.</p><p>A <a href="video.html#vidix" title="2.3.2.13. VIDIX">VIDIX</a> is m&#369;ködik már Windows alatt
+  a <tt class="option">-vo winvidix</tt> kapcsolóval, bár még kisérleti fázisban
+  van és egy kis kézi állítgatás kell hozzá. Töltsd le a
+  <a href="http://www.mplayerhq.hu/MPlayer/releases/win32-beta/dhahelperwin/dhahelper.sys" target="_top">dhahelper.sys</a>
+  vagy <a href="http://www.mplayerhq.hu/MPlayer/releases/win32-beta/dhahelperwin/withmtrr/dhahelper.sys" target="_top">dhahelper.sys (MTRR támogatással)</a>
+  fájlt és másold be a <tt class="filename">libdha/dhahelperwin</tt> könyvtárba
+  az <span class="application">MPlayer</span> forrás fádban. Nyisd meg a konzolt és
+  válts át erre a könyvtárra, majd írd be
 
   <pre class="screen">gcc -o dhasetup.exe dhasetup.c</pre>
 
-  and execute
+  és futtasd
 
   <pre class="screen">dhasetup.exe install</pre>
 
-  as Administrator.  After that you will have to reboot.  When you are
-  done, copy the <tt>.so</tt> files from
-	<tt class="filename">vidix/drivers</tt> to the
-	<tt class="filename">mplayer/vidix</tt> directory
-  relative to your <tt class="filename">mplayer.exe</tt>.</p><p>For best results <span class="application">MPlayer</span> should use a
-  colorspace that your video card supports in hardware.  Unfortunately many
-  Windows graphics drivers wrongly report some colorspaces as supported in
-  hardware. To find out which, try
+  mint Adminisztrátor. Ezután újra kell indítanod a gépet. Ha készen vagy
+  másold a <tt>.so</tt> fájlokat a
+  <tt class="filename">vidix/drivers</tt> könyvtárból az
+  <tt class="filename">mplayer/vidix</tt> könyvtárba,
+  az <tt class="filename">mplayer.exe</tt>-hez relatíven.</p><p>A legjobb eredményhez az <span class="application">MPlayer</span>nek egy olyan
+  színteret kell használnia, amit a videó kártyád támogat. Sajnos sok Windows-os
+  grafikus vezérl&#337; hibásan támogatottnak jelent pár színteret. Hogy megtudd,
+  melyiket, próbáld ki az
 
-  <pre class="screen">mplayer -benchmark -nosound -frames 100 -vf format=<i><tt>colorspace</tt></i> <i><tt>movie</tt></i></pre>
+  <pre class="screen">mplayer -benchmark -nosound -frames 100 -vf format=<i><tt>szinter</tt></i> <i><tt>film</tt></i></pre>
 
-  where <i><tt>colorspace</tt></i> can be any colorspace
-  printed by the <tt class="option">-vf format=fmt=help</tt> option.  If you
-  find a colorspace your card handles particularly bad
-  <tt class="option">-vf noformat=<i><tt>colorspace</tt></i></tt>
-  will keep it from being used. Add this to your config file to permanently
-	keep it from being used.</p><p>You can use Win32 codecs and Real Win32 codecs (not Real Linux codecs)
-  if you want to. Put the codecs somewhere in your path or pass
-  <tt class="option">--with-codecsdir=<i><tt>c:/path/to/your/codecs</tt></i></tt> (alternatively
-  <tt class="option">--with-codecsdir=<i><tt>/path/to/your/codecs</tt></i></tt> only on
-  <span class="application">Cygwin</span>) to <tt class="filename">configure</tt>. We
-  have had some reports that Real DLLs need to be writable by the user running
-  <span class="application">MPlayer</span>, but only on some systems. Try making
-  them writable if you have problems. QuickTime DLLs also work, but you will
-  have to put them in your Windows system directory
+  parancsot, ahol a <i><tt>szinter</tt></i> bármelyik színtér lehet,
+  amit a <tt class="option">-vf format=fmt=help</tt> kapcsoló kiír. Ha találsz
+  olyan színteret, amit a kártyád részben hibásan kezel,
+  <tt class="option">-vf noformat=<i><tt>szinter</tt></i></tt>
+  kapcsolóval megakadályozhatod a használatát. Írd be ezt a konfigurációs fájlodba,
+  hogy véglegesen kimaradjon a használatból.</p><p>Használhatod a Win32 codec-eket és a Real Win32 codec-eket (nem a Real Linux codec-eket)
+  ha akarod. Tedd a codec-eket valahova a path-ba vagy add meg a
+  <tt class="option">--with-codecsdir=<i><tt>c:/eleresi/ut/a/codecekhez</tt></i></tt> (alternatívaként
+  <tt class="option">--with-codecsdir=<i><tt>/eleresi/ut/a/codecekhez</tt></i></tt> csak
+  <span class="application">Cygwin</span> alatt) kapcsolót a <tt class="filename">configure</tt>-nak.
+  Kaptunk pár jelentést, hogy a Real DLL-eknek írhatóaknak kell lenniük az
+  <span class="application">MPlayer</span>t futtató felhasználó által, de csak néhány
+  rendszeren. Próbáld meg írhatóvá tenni &#337;ket, ha probléma adódna. A QuickTime
+  DLL-ek szintén m&#369;ködnek, de be kell másolnod &#337;ket a Windows system könyvtárába
   (<tt class="filename"><i><tt>C:\Windows\system\</tt></i></tt>
-  or similar). As a last resort, try putting them in the same directory as
-  <span class="application">MPlayer</span>.</p><p>You can play VCDs by playing the <tt class="filename">.DAT</tt> or <tt class="filename">.MPG</tt> files
-  that Windows exposes on VCDs.  It works like this (adjust for the drive letter
-  of your CD-ROM):</p><pre class="screen">mplayer <i><tt>d:/mpegav/avseq01.dat</tt></i></pre><p>DVDs also work, adjust <tt class="option">-dvd-device</tt> for the drive letter
-  of your DVD-ROM:</p><pre class="screen">mplayer dvd://<i><tt>&lt;title&gt;</tt></i> -dvd-device <i><tt>d</tt></i>:</pre><p>The <span class="application">Cygwin</span>/<span class="application">MinGW</span>
-  console is rather slow. Redirecting output or using the
-  <tt class="option">-quiet</tt> option has been reported to improve performance on
-  some systems. Direct rendering (<tt class="option">-dr</tt>) may also help.
-  You can prevent OSD flicker through double buffering with the
-  <tt class="option">-double</tt> option. If playback is jerky, try
-  <tt class="option">-autosync 100</tt>. If some of these options help you, you
-  may want to put them in your config file.</p><p>Sascha Sommer releases official Windows binaries from time to time,
-  Joey Parrish makes unofficial Windows packages complete with installer.
-  Look for these in the Windows section of
-  <a href="http://www.mplayerhq.hu/homepage/projects.html#windows" target="_top">our projects page</a>.</p><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="cygwin"></a>6.6.1. <span class="application">Cygwin</span></h3></div></div><p><span class="application">Cygwin</span> versions prior to 1.5.0 do
-  not include <tt class="filename">inttypes.h</tt>. Put this
-  <a href="http://www.mplayerhq.hu/MPlayer/releases/win32-beta/contrib/inttypes.h" target="_top">inttypes.h</a>
-  in <tt class="filename">/usr/include/</tt> in order to
-  make <span class="application">MPlayer</span> compile.</p><p>DirectX header files need to be extracted to <tt class="filename">/usr/include/</tt> or
-  <tt class="filename">/usr/local/include/</tt>.</p><p>Instructions and files for making SDL run under
-  <span class="application">Cygwin</span> can be found on the
-  <a href="http://www.libsdl.org/extras/win32/cygwin/" target="_top">libsdl site</a>.</p></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="mingw"></a>6.6.2. <span class="application">MinGW</span></h3></div></div><p>Installing a version of <span class="application">MinGW</span> that could
-  compile <span class="application">MPlayer</span> used to be quite tricky, but it
-  works out of the box now. Just install <span class="application">MinGW</span>
-  3.1.0 or later and MSYS 1.0.9 or later and tell the MSYS postinstall that
-  <span class="application">MinGW</span> is installed.</p><p>If you use a version of <span class="application">MinGW</span> before 3.1.0,
-  you need to replace <tt class="filename">/mingw/include/sys/types.h</tt> with this
-  <a href="http://www.mplayerhq.hu/MPlayer/releases/win32-beta/contrib/types.h" target="_top"><tt class="filename">types.h</tt></a>.</p><p>Extract DirectX header files to <tt class="filename">/mingw/include/</tt>.</p><p>MOV compressed header support requires
-  <a href="http://www.gzip.org/zlib/" target="_top">zlib</a>, which
-  <span class="application">MinGW</span> does not provide by default.
-  Configure it with <tt class="option">--prefix=/mingw</tt> and install
-  it before compiling <span class="application">MPlayer</span>.</p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="qnx.html">El&#337;z&#337;</a> </td><td width="20%" align="center"><a accesskey="u" href="ports.html">Fel</a></td><td width="40%" align="right"> <a accesskey="n" href="macos.html">Következ&#337;</a></td></tr><tr><td width="40%" align="left" valign="top">6.5. QNX </td><td width="20%" align="center"><a accesskey="h" href="index.html">Tartalom</a></td><td width="40%" align="right" valign="top"> 6.7. Mac OS</td></tr></table></div></body></html>
+  vagy hasonló). Utolsó reményként próbáld meg az <span class="application">MPlayer</span>rel
+  azonos könyvtárba tenni &#337;ket.</p><p>VCD-ket is lejátszhatsz a <tt class="filename">.DAT</tt> vagy <tt class="filename">.MPG</tt> fájlok
+  lejátszásával, amit a Windows meglát a VCD-n. Így nagyszer&#369;en m&#369;ködik (javítsd ki a CD-ROM-od
+  bet&#369;jelét):</p><pre class="screen">mplayer <i><tt>d:/mpegav/avseq01.dat</tt></i></pre><p>A DVD-k is m&#369;ködnek, add meg a <tt class="option">-dvd-device</tt> kapcsolócal a DVD-ROM-od
+  bet&#369;jelét:</p><pre class="screen">mplayer dvd://<i><tt>&lt;title&gt;</tt></i> -dvd-device <i><tt>d</tt></i>:</pre><p>A <span class="application">Cygwin</span>/<span class="application">MinGW</span>
+  konzol meglehet&#337;sen lassú. Kimenet átirányítással vagy a
+  <tt class="option">-quiet</tt> kapcsolóval a jelentések szerint javítható a
+  teljesítmény néhány rendszeren. A Direct renderelés (<tt class="option">-dr</tt>)
+  is segíthet. Az OSD villogását megel&#337;zheted a <tt class="option">-double</tt> kapcsolóval
+  el&#337;írt dupla buffereléssel. Ha a lejátszás szaggatott, próbáld meg a
+  <tt class="option">-autosync 100</tt> opciót. Ha ezek közül bármelyik segít, írd
+  be a konfigurációs fájlodba.</p><p>Sascha Sommer hivatalos Windows binárisokat ad ki id&#337;r&#337;l id&#337;re,
+  Joey Parrish nem hivatalos Windows csomagokat készít telepít&#337;vel.
+  Megtalálhatod ezeket a
+  <a href="http://www.mplayerhq.hu/homepage/design7/projects.html#windows" target="_top">projektek oldal</a>  
+  Windows-os részében.</p><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="cygwin"></a>6.7.1. <span class="application">Cygwin</span></h3></div></div><p>A <span class="application">Cygwin</span> 1.5.0 vagy kés&#337;bbi
+  verziójára lesz szükséged az <span class="application">MPlayer</span>
+  lefordításához.</p><p>A DirectX fejléc fájlokat a <tt class="filename">/usr/include/</tt> vagy
+  <tt class="filename">/usr/local/include/</tt> könyvtárba
+  kell kicsomagolni.</p><p>Az SDL el&#337;állításával és <span class="application">Cygwin</span>
+  alatti használatával kapcsolatos utasításokat és fájlokat a
+  <a href="http://www.libsdl.org/extras/win32/cygwin/" target="_top">libsdl oldalon</a>
+  találod meg.</p></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="mingw"></a>6.7.2. <span class="application">MinGW</span></h3></div></div><p>A <span class="application">MinGW</span> egy olyan verziójának telepítése,
+  ami le tudja fordítani az <span class="application">MPlayer</span>t, régebben eléggé
+  trükkös volt, de most már simán megy. Csak telepítsd a <span class="application">MinGW</span>
+  3.1.0 vagy kés&#337;bbi és az MSYS 1.0.9 vagy kés&#337;bbi verzóját és az MSYS telepítés utáni
+  beállító programjának mondd meg, hogy telepítve van a <span class="application">MinGW</span>.
+</p><p>A DirectX fejléc fájlokat a <tt class="filename">/mingw/include/</tt>
+  könyvtárba kell kicsomagolni.</p><p>A tömörített MOV fejlécek támogatásához
+  <a href="http://www.gzip.org/zlib/" target="_top">zlib</a> kell, ami
+  alaphelyzetben nincs benne a <span class="application">MinGW</span>-ben.
+  ÁLlítsd be a <tt class="option">--prefix=/mingw</tt> kapcsolóval és
+  telepítsd, miel&#337;tt az <span class="application">MPlayer</span>t fordítanád.</p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="qnx.html">El&#337;z&#337;</a> </td><td width="20%" align="center"><a accesskey="u" href="ports.html">Fel</a></td><td width="40%" align="right"> <a accesskey="n" href="macos.html">Következ&#337;</a></td></tr><tr><td width="40%" align="left" valign="top">6.6. QNX </td><td width="20%" align="center"><a accesskey="h" href="index.html">Tartalom</a></td><td width="40%" align="right" valign="top"> 6.8. Mac OS</td></tr></table></div></body></html>

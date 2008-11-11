@@ -1,8 +1,8 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>2.4. TV input</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - The Movie Player"><link rel="up" href="features.html" title="Chapter 2. Features"><link rel="previous" href="devices.html" title="2.3. Output devices"><link rel="next" href="usage.html" title="Chapter 3. Usage"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">2.4. TV input</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="devices.html">Prev</a> </td><th width="60%" align="center">Chapter 2. Features</th><td width="20%" align="right"> <a accesskey="n" href="usage.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="tv-input"></a>2.4. TV input</h2></div></div><p>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>2.5. TV input</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - The Movie Player"><link rel="up" href="features.html" title="Chapter 2. Features"><link rel="previous" href="audio.html" title="2.4. Audio output devices"><link rel="next" href="usage.html" title="Chapter 3. Usage"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">2.5. TV input</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="audio.html">Prev</a> </td><th width="60%" align="center">Chapter 2. Features</th><td width="20%" align="right"> <a accesskey="n" href="usage.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="tv-input"></a>2.5. TV input</h2></div></div><p>
 This section is about how to enable <span class="bold"><b>watching/grabbing
 from V4L compatible TV tuner</b></span>. See the man page for a description
 of TV options and keyboard controls.
-</p><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="tv-compilation"></a>2.4.1. Compilation</h3></div></div><div class="procedure"><ol type="1"><li><p>
+</p><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="tv-compilation"></a>2.5.1. Compilation</h3></div></div><div class="procedure"><ol type="1"><li><p>
   First, you have to recompile. <tt class="filename">./configure</tt> will
   autodetect kernel headers of v4l stuff and the existence of
   <tt class="filename">/dev/video*</tt> entries. If they exist, TV support will
@@ -10,7 +10,7 @@ of TV options and keyboard controls.
   </p></li><li><p>
   Make sure your tuner works with another TV software in Linux, for
   example <span class="application">XawTV</span>.
-  </p></li></ol></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="tv-tips"></a>2.4.2. Usage tips</h3></div></div><p>
+  </p></li></ol></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="tv-tips"></a>2.5.2. Usage tips</h3></div></div><p>
 The full listing of the options is available on the manual page.
 Here are just a few tips:
 </p><div class="itemizedlist"><ul type="disc"><li><p>
@@ -72,7 +72,7 @@ option <tt class="option">-vc rawi420</tt> due to a fourcc conflict with an Inte
 video codec.
 </p></li><li><p>
 There are several ways of capturing audio. You can grab the sound either using
-your soundcard via an external cable connection between video card and line-in,
+your sound card via an external cable connection between video card and line-in,
 or using the built-in ADC in the bt878 chip. In the latter case, you have to
 load the <span class="bold"><b>btaudio</b></span> driver. Read the
 <tt class="filename">linux/Documentation/sound/btaudio</tt> file (in the kernel
@@ -81,10 +81,10 @@ this driver.
 </p></li><li><p>
 If <span class="application">MEncoder</span> cannot open the audio device, make
 sure that it is really available. There can be some trouble with the sound
-servers like arts (KDE) or esd (GNOME). If you have a full duplex soundcard
+servers like arts (KDE) or esd (GNOME). If you have a full duplex sound card
 (almost any decent card supports it today), and you are using KDE, try to
 check the "full duplex" option in the sound server preference menu.
-</p></li></ul></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="tv-examples"></a>2.4.3. Examples</h3></div></div><div class="informalexample"><p>
+</p></li></ul></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="tv-examples"></a>2.5.3. Examples</h3></div></div><div class="informalexample"><p>
 Dummy output, to AAlib :)
 <pre class="screen">
 mplayer -tv driver=dummy:width=640:height=480 -vo aa tv://</pre>
@@ -119,4 +119,4 @@ It's also possible to specify smaller image dimensions in the <tt class="option"
 option and omit the software scaling but this approach uses the maximum available
 information and is a little more resistant to noise. The bt8x8 chips can do the
 pixel averaging only in the horizontal direction due to a hardware limitation.
-</p></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="devices.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="features.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="usage.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">2.3. Output devices </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Chapter 3. Usage</td></tr></table></div></body></html>
+</p></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="audio.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="features.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="usage.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">2.4. Audio output devices </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Chapter 3. Usage</td></tr></table></div></body></html>

@@ -7,18 +7,36 @@ Report problems to the authors, not to us.
 </p><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="debian"></a>6.1.1. Debian packaging</h3></div></div><p>
 To build a Debian package, run the following command in the
 <span class="application">MPlayer</span> source directory:
+
 <pre class="screen">fakeroot debian/rules binary</pre>
+
+If you want to pass custom options to configure, you can set up the
+<tt>DEB_BUILD_OPTIONS</tt> environment variable. For instance,
+if you want GUI and OSD menu support you would use:
+
+<pre class="screen">DEB_BUILD_OPTIONS="--enable-gui --enable-menu" fakeroot debian/rules binary</pre>
+
+You can also pass some variables to the Makefile. For example, if you want
+to compile with gcc 3.4 even if it's not the default compiler:
+
+<pre class="screen">CC=gcc-3.4 DEB_BUILD_OPTIONS="--enable-gui" fakeroot debian/rules binary</pre>
+
+To clean up the source tree run the following command:
+
+<pre class="screen">fakeroot debian/rules clean</pre>
+
 As root you can then install the <tt class="filename">.deb</tt> package as usual:
+
 <pre class="screen">dpkg -i ../mplayer_<i><tt>version</tt></i>.deb</pre>
 </p><p>
-Christian Marillat has been making unofficial Debian
+Christian Marillat has been making unofficial Debian packages of
 <span class="application">MPlayer</span>, <span class="application">MEncoder</span> and
-font packages for a while, you can (apt-)get them from his
-<a href="http://marillat.free.fr/" target="_top">homepage</a>.
+our bitmap fonts for a while, you can (apt-)get them from
+<a href="http://hpisi.nerim.net/" target="_top">his homepage</a>.
 </p></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="rpm"></a>6.1.2. RPM packaging</h3></div></div><p>
 Dominik Mierzejewski created and maintains official Red Hat RPM packages of
 <span class="application">MPlayer</span>. They are available from his
-<a href="http://www.piorunek.pl/~dominik/linux/pkgs/mplayer/" target="_top">homepage</a>.
+<a href="http://greysector.rangers.eu.org/mplayer.html" target="_top">homepage</a>.
 </p><p>
 Mandrake RPM packages are available from the <a href="http://plf.zarb.org/" target="_top">P.L.F.</a>.
 SuSE used to include a crippled version of <span class="application">MPlayer</span>

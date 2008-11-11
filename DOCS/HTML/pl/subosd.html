@@ -11,9 +11,9 @@ je&#347;li podasz odpowiedni&#261; opcj&#281;:
 <span class="application">MEncoder</span> mo&#380;e zrzuci&#263; napisy DVD do formatu
 <a href="menc-feat-extractsub.html" title="7.8. Wyci&#261;ganie napisów z DVD do pliku Vobsub">VOBsub</a>.
 </p><p>
-Opcje dla wiersza polece&#324; ró&#380;ni&#261; si&#281; delikatnie dla ró&#380;nych formatów:
+Opcje dla wiersza polece&#324; ró&#380;ni&#261; si&#281; nieco dla poszczególnych formatów:
 </p><p><b>Format VOBsub. </b>
-Napisy VOBsub sk&#322;adaj&#261; si&#281; z du&#380;ego (kilku megabajtowego) pliku <tt class="filename">.SUB</tt>
+Napisy VOBsub sk&#322;adaj&#261; si&#281; z du&#380;ego (kilkumegabajtowego) pliku <tt class="filename">.SUB</tt>
 i opcjonalnych plików <tt class="filename">.IDX</tt> i/lub <tt class="filename">.IFO</tt>.
 Je&#380;eli masz takie pliki, jak
 <tt class="filename"><i><tt>przyk&#322;ad.sub</tt></i></tt>,
@@ -75,8 +75,8 @@ w odleg&#322;ej galaktyce...
 planeta Naboo by&#322;a atakowana.</pre>
 </p><p>
 Widzisz wi&#281;c, &#380;e g&#322;ównym celem by&#322;o <span class="bold"><b>umo&#380;liwienie &#322;atwej
-edycji/synchronizacji/&#322;&#261;czenia/obcinania napisów</b></span>. Wi&#281;c, je&#347;li - powiedzmy -
-pobierzesz napisy SSA, które s&#261; &#378;le umieszczone w czasie/opó&#378;nione w stosunku do Twojej wersji
+edycji/synchronizacji/&#322;&#261;czenia/obcinania napisów</b></span>. Wi&#281;c je&#347;li - powiedzmy -
+pobierzesz napisy SSA, które s&#261; &#378;le rozmieszczone w czasie/opó&#378;nione w stosunku do Twojej wersji
 filmu, wykonujesz wtedy
 
 <pre class="screen">mplayer <i><tt>film.avi</tt></i> -sub &#378;ród&#322;o.ssa -dumpmpsub</pre>
@@ -101,7 +101,7 @@ B&#281;dziesz potrzebowa&#322; paczki zwieraj&#261;cej czcionk&#281; dla <span c
  Skorzystaj z wtyczki generator czcionki dla <span class="application">GIMPa</span>,
  któr&#261; znajdziesz w katalogu <tt class="filename">TOOLS/subfont-GIMP</tt>
  (notka: musisz mie&#263; równie&#380; wtyczk&#281; HSI RAW, sprawd&#378; ten adres:
- <a href="http://realtime.ssu.ac.kr/~lethean/mplayer/" target="_top">http://realtime.ssu.ac.kr/~lethean/mplayer/</a>).
+ <a href="http://realtime.ssu.ac.kr/~lethean/mplayer/index.php?pagename=MplayerKoreanFonts" target="_top">http://realtime.ssu.ac.kr/~lethean/mplayer/index.php?pagename=MplayerKoreanFonts</a>).
  </p></li><li><p>
  u&#380;ywanie czcionki TrueType (TTF) przy pomocy biblioteki
  <tt>freetype</tt>. Konieczna do tego jest wersja
@@ -118,7 +118,7 @@ B&#281;dziesz potrzebowa&#322; paczki zwieraj&#261;cej czcionk&#281; dla <span c
   dzia&#322;a&#322;y, poniewa&#380; opcja <tt class="option">-font</tt> b&#281;dzie oczekiwa&#322;a nazwy czcionki,
   a domy&#347;ln&#261; jest sans-serif. Aby otrzyma&#263; list&#281; czcionek znanych
   <tt>fontconfig</tt>,
-  u&#380;yj komendy <b>fc-list</b>. Przyk&#322;ad: 
+  u&#380;yj komendy <b>fc-list</b>. Przyk&#322;ad:
   <tt class="option">-font <i><tt>'Bitstream Vera Sans'</tt></i></tt>
   </p></li><li><p>
   Pobierz gotowe do u&#380;ycia pakiety z czcionkami ze strony
@@ -130,19 +130,19 @@ B&#281;dziesz potrzebowa&#322; paczki zwieraj&#261;cej czcionk&#281; dla <span c
   
   Czcionki powinny mie&#263; odpowiedni plik <tt class="filename">font.desc</tt>, który
   mapuje pozycj&#281; czcionek unicode do aktualnie u&#380;ywanej przez napisy strony kodowej
-  Innym wyj&#347;ciem jest posiadanie napisów zakodowanych w UTF8 i u&#380;ycie opcji
+  Innym wyj&#347;ciem jest posiadanie napisów zakodowanych w UTF-8 i u&#380;ycie opcji
   <tt class="option">-utf8</tt> albo po prostu zmienienie ich nazwy na
   <tt class="filename">&lt;nazwa_filmu&gt;.utf</tt> i wgranie ich do tego samego
-  katalogu co plik z filmem. Konwersja z ró&#380;nych stron kodowych do UTF8 
+  katalogu co plik z filmem. Konwersja z ró&#380;nych stron kodowych do UTF-8
   mo&#380;e by&#263; realizowana poprzez programy <b>konwert</b> lub
   <b>iconv</b>.
   </p><p>
-  
+
   </p><div class="table"><p><b>Tabela 1.1. Kilka adresów URL</b></p><table summary="Kilka adresów URL" border="1"><colgroup><col><col></colgroup><thead><tr><th>URL</th><th>Komentarz</th></tr></thead><tbody><tr><td><a href="ftp://ftp.mplayerhq.hu/MPlayer/releases/fonts/" target="_top">ftp://ftp.mplayerhq.hu/MPlayer/releases/fonts/</a></td><td>
     czcionki ISO
     </td></tr><tr><td><a href="ftp://ftp.mplayerhq.hu/MPlayer/contrib/fonts/" target="_top">ftp://ftp.mplayerhq.hu/MPlayer/contrib/fonts/</a></td><td>
     ró&#380;ne czcionki u&#380;ytkowników
-    </td></tr><tr><td><a href="http://realtime.ssu.ac.kr/~lethean/mplayer/" target="_top">http://realtime.ssu.ac.kr/~lethean/mplayer/</a></td><td>
+    </td></tr><tr><td><a href="http://realtime.ssu.ac.kr/~lethean/mplayer/index.php?pagename=MplayerKoreanFonts" target="_top">http://realtime.ssu.ac.kr/~lethean/mplayer/index.php?pagename=MplayerKoreanFonts</a></td><td>
     czcionki korea&#324;skie i wtyczka RAW
     </td></tr></tbody></table></div><p>
 

@@ -5,20 +5,38 @@ tego systemu. Pakiety binarne s&#261; dost&#281;pne z kilku &#378;róde&#322;, je
 <span class="bold"><b>&#380;aden z nich nie jest przez nas obs&#322;ugiwany</b></span>.
 Zg&#322;aszaj problemy do ich opiekunów, a nie do nas.
 </p><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="debian"></a>6.1.1. Pakiety Debiana</h3></div></div><p>
-Aby zbudowa&#263; pakiet dla Debiana, wywo&#322;aj poni&#380;sz&#261; komend&#281; w katalogu ze &#378;ród&#322;ami 
+Aby zbudowa&#263; pakiet dla Debiana, wywo&#322;aj poni&#380;sze polecenie w katalogu ze &#378;ród&#322;ami
 <span class="application">MPlayera</span>:
+
 <pre class="screen">fakeroot debian/rules binary</pre>
+
+Je&#347;li chcesz przekaza&#263; w&#322;asne opcje do skryptu configure, mo&#380;esz ustawi&#263; zmienn&#261;
+&#347;rodowiskow&#261; <tt>DEB_BUILD_OPTIONS</tt>. Na przyk&#322;ad, je&#347;li chcesz
+obs&#322;ugi menu i GUI, wygl&#261;da&#322;o by to tak:
+
+<pre class="screen">DEB_BUILD_OPTIONS="--enable-gui --enable-menu" fakeroot debian/rules binary</pre>
+
+Mo&#380;esz przekaza&#263; równie&#380; niektóre zmienne do Makefile. Na przyk&#322;ad, je&#347;li chcesz
+kompilowa&#263; przy pomocy gcc 3.4, nawet je&#347;li nie jest to domy&#347;lny kompilator:
+
+<pre class="screen">CC=gcc-3.4 DEB_BUILD_OPTIONS="--enable-gui" fakeroot debian/rules binary</pre>
+
+Aby wyczy&#347;ci&#347; katalog ze &#378;ród&#322;ami wykonaj poni&#380;sza komend&#281;:
+
+<pre class="screen">fakeroot debian/rules clean</pre>
+
 Jako superu&#380;ytkownik mo&#380;esz zainstalowa&#263; pakiet <tt class="filename">.deb</tt> tak, jak zwykle:
+
 <pre class="screen">dpkg -i ../mplayer_<i><tt>wersja</tt></i>.deb</pre>
 </p><p>
 Christian Marillat buduje dla Debiana nieoficjalne paczki
 <span class="application">MPlayera</span>, <span class="application">MEncodera</span>
-i czcionek ju&#380; przez jaki&#347; czas, mo&#380;esz je pobra&#263; (apt-get) z jego
-<a href="http://marillat.free.fr/" target="_top">strony domowej</a>.
+i naszych czcionek bitmapowych ju&#380; przez jaki&#347; czas, mo&#380;esz je pobra&#263; (apt-get)
+z <a href="http://hpisi.nerim.net/" target="_top">jego strony domowej</a>.
 </p></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="rpm"></a>6.1.2. Pakiety RPM</h3></div></div><p>
-Dominik Mierzejewski tworzy i opiekuje si&#281; oficjalnymi pakietami 
+Dominik Mierzejewski tworzy i opiekuje si&#281; oficjalnymi pakietami
 <span class="application">MPlayera</span> dla Red Hata. S&#261; one dost&#281;pne na jego
-<a href="http://www.piorunek.pl/~dominik/linux/pkgs/mplayer/" target="_top">stronie domowej</a>.
+<a href="http://greysector.rangers.eu.org/mplayer/" target="_top">stronie domowej</a>.
 </p><p>
 RPMy dla Mandrake s&#261; dost&#281;pne na <a href="http://plf.zarb.org/" target="_top">P.L.F.</a>.
 SuSE zawiera&#322; okrojon&#261; wersj&#281; <span class="application">MPlayera</span> w dystrybucji.
@@ -31,7 +49,7 @@ dzia&#322;aj&#261;cych pod kontrol&#261; Linuksa, np. Sharp Zaurus, Compaq iPAQ.
 Najprostszym sposobem, &#380;eby uzyska&#263; <span class="application">MPlayera</span>,
 jest pobranie go z odpowiedniego &#378;ród&#322;a pakietów (stable, testing, unstable)
 z witryny <a href="http://www.openzaurus.org" target="_top">OpenZaurus</a>. Je&#380;eli chcesz
-go skompilowa&#263; samodzielnie, powiniene&#347; przyjrze&#263; si&#281; katalogom 
+go skompilowa&#263; samodzielnie, powiniene&#347; przyjrze&#263; si&#281; katalogom
 <a href="http://openzaurus.bkbits.net:8080/buildroot/src/packages/mplayer?nav=index.html%7Csrc/.%7Csrc/packages" target="_top">mplayera</a>
 i biblioteki
 <a href="http://openzaurus.bkbits.net:8080/buildroot/src/packages/libavcodec?nav=index.html%7Csrc/.%7Csrc/packages" target="_top">libavcodec</a>

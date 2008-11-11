@@ -15,13 +15,13 @@ is.
 </p><p>
 A fordításhoz GNU <span class="application">make</span>-re lesz szükséged
 (<tt class="filename">gmake</tt>, <tt class="filename">/opt/sfw/gmake</tt>), natív
-Solaris make nem jo. Egy tipikus hiba, ha mégis azzal probálkozol:
+Solaris make nem jó. Egy tipikus hiba, ha mégis azzal probálkozol:
 <pre class="screen">
    % /usr/ccs/bin/make
    make: Fatal error in reader: Makefile, line 25: Unexpected end of line seen
 </pre>
 </p><p>
-Solaris SPARC-on GNU C/C++ fordító is kell; az nem számít, ha assemblerrel
+Solaris SPARC-on GNU C/C++ fordító is kell; az nem számít, hogy assemblerrel
 vagy nélküle van.
 </p><p>
 Solaris x86-on kell a GNU assembler és a GNU C/C++ fordító is, aminek támogatnia
@@ -29,10 +29,10 @@ kell a GNU assemblert! Az <span class="application">MPlayer</span> igencsak
 támaszkodik az MMX, SSE és 3DNOW! utasításokra, amiket a Sun standard
 assemblere (<tt class="filename">/usr/ccs/bin/as</tt>) nem támogat.
 </p><p>
-A <tt class="filename">configure</tt> script megpróbálja megkerseni, hogy a
+A <tt class="filename">configure</tt> script megpróbálja megkereseni, hogy a
 "gcc" parancsod melyik assemblert indítja (ha nem sikerül neki,
-használd a "<tt class="option">--as=<i><tt>/ahova/installáltad/gnu-as</tt></i></tt>"
-parancsot).
+használd a "<tt class="option">--as=<i><tt>/ahova/installalva/lett/a/gnu-as</tt></i></tt>"
+kapcsolót, hogy megadd a <tt class="filename">configure</tt>nak az "as" helyét a rendszeredben).
 </p><p>
 Hibaüzenet GNU assembler nélküli GCC használata esetén:
 <pre class="screen">
@@ -52,22 +52,21 @@ Tipikus hiba, ha a GNU C fordító nem GNU assemblert (GNU as) használ:
    Assembler: mplayer.c
    "(stdin)", line 3567 : Illegal mnemonic
    "(stdin)", line 3567 : Syntax error
-   ... more "Illegal mnemonic" and "Syntax error" errors ...
+   ... további "Illegal mnemonic" és "Syntax error" hibák ...
 </pre>
 </p><p>
-2 hiba miatt nem tudsz megbízhatóan DVD-t lejátszani Solaris 8 x86-on,
-ha annak kapacitása nagyobb mint 4 GB:
+Pár hiba miatt nem tudsz megbízhatóan 4 GB-nál nagyobb DVD-t lejátszani Solaris 8-on:
 </p><div class="itemizedlist"><ul type="disc"><li><p>
-The sd(7D) driver on Solaris 8 x86 has a bug when accessing a disk block &gt;4GB
-on a device using a logical blocksize != DEV_BSIZE (i.e. CD-ROM and DVD media).
-Due to a 32Bit int overflow, a disk address modulo 4GB is accessed
+Az sd(7D) vezérl&#337;nek a Solaris 8 x86-ban van egy hibája a &gt;4GB lemez blokkok elérésénél
+egy eszközön, melyen a logikai blokkméret != DEV_BSIZE-zel (pl. CD-ROM és DVD média).
+A 32 bites egész túlcsordulása miatt a lemez cím modulo 4GB kerül megcímzésre
 (<a href="http://groups.yahoo.com/group/solarisonintel/message/22516" target="_top">http://groups.yahoo.com/group/solarisonintel/message/22516</a>).
-Ez a probláma a SPARC gépeket nem érinti.
+Ez a probléma a SPARC alapú Solaris 8-on nincs.
 </p></li><li><p>
-A similar bug is present in the hsfs(7FS) filesystem code (aka ISO9660),
-hsfs may not not support partitions/disks larger than 4GB, all data is
-accessed modulo 4GB
+Egy hasonló hiba van a hsfs(7FS) fájlrendszer kódjában is (alias ISO9660),
+a hsfs nem támogatja a 4 GB-nál nagyobb partíciókat/lemezeket, minden adat
+modulo 4GB-vel lesz elérve
 (<a href="http://groups.yahoo.com/group/solarisonintel/message/22592" target="_top">http://groups.yahoo.com/group/solarisonintel/message/22592</a>).
-Ez a hiba a 109764-04 (sparc) illetve 109765-04 (x86) jelzés&#369; patch-ek installálása
+Ez a hiba a 109764-04 (sparc) / 109765-04 (x86) jelzés&#369; patch-ek telepítése
 után megsz&#369;nik.
 </p></li></ul></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="bsd.html">El&#337;z&#337;</a> </td><td width="20%" align="center"><a accesskey="u" href="ports.html">Fel</a></td><td width="40%" align="right"> <a accesskey="n" href="irix.html">Következ&#337;</a></td></tr><tr><td width="40%" align="left" valign="top">6.2. *BSD </td><td width="20%" align="center"><a accesskey="h" href="index.html">Tartalom</a></td><td width="40%" align="right" valign="top"> 6.4. Silicon Graphics Irix</td></tr></table></div></body></html>

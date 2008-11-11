@@ -23,7 +23,7 @@
 ** For more info contact Ahead Software through Mpeg4AAClicense@nero.com.
 **
 ** Initially modified for use with MPlayer by Arpad Gereöffy on 2003/08/30
-** $Id: mp4.h,v 1.4 2004/06/23 13:50:51 diego Exp $
+** $Id: mp4.h,v 1.5 2004/09/24 17:31:34 diego Exp $
 ** detailed CVS changelog at http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
 **/
 
@@ -36,14 +36,14 @@ extern "C" {
 
 #include "decoder.h"
 
-int8_t FAADAPI AudioSpecificConfig(uint8_t *pBuffer,
-                                   uint32_t buffer_size,
-                                   mp4AudioSpecificConfig *mp4ASC);
+int8_t NEAACDECAPI NeAACDecAudioSpecificConfig(uint8_t *pBuffer,
+                                               uint32_t buffer_size,
+                                               mp4AudioSpecificConfig *mp4ASC);
 
-int8_t FAADAPI AudioSpecificConfig2(uint8_t *pBuffer,
-                                    uint32_t buffer_size,
-                                    mp4AudioSpecificConfig *mp4ASC,
-                                    program_config *pce);
+int8_t AudioSpecificConfig2(uint8_t *pBuffer,
+                            uint32_t buffer_size,
+                            mp4AudioSpecificConfig *mp4ASC,
+                            program_config *pce);
 
 #ifdef __cplusplus
 }

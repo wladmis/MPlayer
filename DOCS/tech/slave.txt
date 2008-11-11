@@ -1,6 +1,11 @@
 SLAVE MODE PROTOCOL
 -------------------
 
+FIXME: Some of these options are still not documented, patches welcome.
+
+Most slave mode commands are equivalent to command line options.
+Have a look at the man page for more detailed descriptions.
+
 If the -slave option is given, playback is controlled by a line-based protocol.
 Each line must contain one of the following commands:
 
@@ -10,39 +15,58 @@ seek <value> [<type>]
         1 is a seek to <value> % in the movie.
         2 is a seek to an absolute position of <value> seconds.
 
+speed_set <value>
+    Set the speed to <value>.
+
+speed_incr <value>
+    Add <value> to the current playback speed.
+
+speed_mult <value>
+    Multiply the current speed by <value>.
+
 edl_mark
     ???
 
 audio_delay <value>
-    Adjust the audio delay of value seconds.
+    Adjust the audio delay by <value> seconds.
 
-quit
-    Quit MPlayer.
+quit [<value>]
+    Quit MPlayer. The optional integer value is used as the return code
+    for the mplayer process (default: 0).
 
 pause
     Pause/unpause the playback.
+
+frame_step
+    Play one frame, then pause again.
 
 grab_frames
     ???
 
 pt_step <value> [<force>]
-    Go to next/previous entry in the playtree.
+    Go to the next/previous entry in the playtree. The sign of <value> tells
+    the direction.  If no entry is available in the given direction it will do
+    nothing unless force is non-zero.
 
 pt_up_step <value> [<force>]
-    Like pt_step but it jumps to next/previous in the parent list.
+    Similar to pt_step but jumps to the next/previous entry in the parent list.
+    Useful to break out of the inner loop in the playtree.
 
-alt_src_step <value>
-    When more than one source is available it selects the next/previous one
-    (only supported by ASX playlist).
+alt_src_step <value> (ASX playlist only)
+    When more than one source is available it selects the next/previous one.
 
 sub_delay <value> [<abs>]
-    Adjust the subtitles delay of +/- <value> seconds or set it to <value>
-    seconds when abs is nonzero.
+    Adjust the subtitle delay by +/- <value> seconds or set it to <value>
+    seconds when <abs> is nonzero.
+
+sub_step
+    ???
 
 osd [<level>]
-    Toggle OSD mode or set it to level when level >= 0.
+    Toggle OSD mode or set it to level when <level> >= 0.
 
 osd_show_text <value>
+    ???
 
 volume <value>
     Increase/decrease volume.
@@ -54,13 +78,13 @@ mute
     Mute/unmute sound output.
 
 [contrast|gamma|brightness|hue|saturation] <-100 - 100> [<abs>]
-    Set/Adjust video parameters.
+    Set/adjust video parameters.
 
 frame_drop [<value>]
-    Toggle/Set frame dropping mode.
+    Toggle/set frame dropping mode.
 
 sub_pos <value>
-    Adjust subtitles position.
+    Adjust subtitle position.
 
 sub_alignment <value>
     Set subtitle alignment.
@@ -71,11 +95,16 @@ sub_visibility
 get_sub_visibility
     Print out subtitle visibility (1 == on, 0 == off).
 
+sub_select
+    Cycle through the available subtitles. Supported subtitle sources are
+    -sub options on the command line, VOBsubs, DVD subtitles, and Ogg text
+    streams.
+
 vobsub_lang
-    Switch the subtitle language when using VOBSub subtitles.
+    This is a stub linked to sub_select for backwards compatibility.
 
 get_percent_pos
-    Print out the current position in the file, in integer percentage [0-100).
+    Print out the current position in the file, as integer percentage [0-100).
 
 get_time_length
     Print out the length of the current file in seconds.
@@ -87,50 +116,61 @@ get_vo_fullscreen
     Print out fullscreen status (1 == fullscreened, 0 == windowed).
 
 vo_ontop
-	Toggle stay-on-top. Supported by drivers which use X11, except SDL,
-	as well as directx and gl2 under Windows.
+    Toggle stay-on-top.
+
+vo_rootwin
+    Toggle playback on the root window.
+
+switch_vsync [<value>]
+    Toggle vsync (1 == on, 0 == off). If no value is provided,
+    vsync status is inverted.
+
+switch_ratio [<value>]
+    Change aspect ratio at runtime. Value is the new aspect ratio expressed
+    as a float (e.g. 1.77778 for 16/9).
+    There might be problems with some video filters.
 
 panscan <value> [value2]
     ???
 
 loadfile <file|url>
-    Load the given file/url.
+    Load the given file/URL.
 
 loadlist <file>
     Load the given playlist file.
 
 change_rectangle <val1> <val2>
     Change the position of the rectangle filter rectangle.
-       <val1>
-           Must be one of the following:
-               0 = width
-               1 = height
-               2 = x position
-               3 = y position
-       <val2>
-           For values of 0 or 1 for <val1>:
-               Integer amount to add/subtract from the width/height.
-               Positive values add to width/height and negative values
-               subtract from it.
-           For values of 2 or 3 for <val1>:
-               Relative integer amount by which to move the upper left corner
-               of the rectangle. Positive values move the rectangle right/down
-               and negative values move the rectangle left/up.
+        <val1>
+            Must be one of the following:
+                0 = width
+                1 = height
+                2 = x position
+                3 = y position
+        <val2>
+            If <val1> is 0 or 1:
+                Integer amount to add/subtract from the width/height.
+                Positive values add to width/height and negative values
+                subtract from it.
+            If <val1> is 2 or 3:
+                Relative integer amount by which to move the upper left
+                rectangle corner. Positive values move the rectangle
+                right/down and negative values move the rectangle left/up.
 
 dvdnav <button>
     Press the given dvdnav button.
         1 up
-	2 down
-	3 left
-	4 right
-	5 menu
-	6 select
+        2 down
+        3 left
+        4 right
+        5 menu
+        6 select
 
 dvdnav_event <value>
     ???
 
 tv_step_channel <channel>
-    Select next/previous tv channel.
+    Select next/previous TV channel.
 
 tv_step_norm
     Change TV norm.
@@ -145,22 +185,22 @@ tv_last_channel
     Set the current TV channel to the last one.
 
 tv_set_freq <frequency in MHz>
-    Set the tv tuner frequency.
+    Set the TV tuner frequency.
 
 tv_set_norm <norm>
-    Set the tv tuner norm. PAL, SECAM, NTSC and so on..
+    Set the TV tuner norm (PAL, SECAM, NTSC, ...).
 
 tv_set_brightness <-100 - 100>
-    Set tv tuner brightness.
+    Set TV tuner brightness.
 
 tv_set_contrast <-100 -100>
-    Set tv tuner contrast.
+    Set TV tuner contrast.
 
 tv_set_hue <-100 - 100>
-    Set tv tuner hue.
+    Set TV tuner hue.
 
 tv_set_saturation <-100 - 100>
-    Set tv tuner saturation.
+    Set TV tuner saturation.
 
 gui_[loadfile|loadsubtitle|about|play|stop|gui_playlist|gui_preferences|skinbrowser]
     GUI actions
@@ -173,7 +213,6 @@ dvb_set_channel <channel_number> <card_number>
 
 screenshot
     Take a screenshot.
-
 
 menu <value>
     ???
@@ -192,3 +231,8 @@ hide
 
 run <value>
     ???
+
+All commands can be prefixed with "pausing ", causing MPlayer to get into
+paused mode as soon as possible after processing the command.
+Please note that this can be before the command is fully executed.
+

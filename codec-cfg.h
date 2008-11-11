@@ -28,7 +28,8 @@
 
 
 #if !defined(GUID_TYPE) && !defined(GUID_DEFINED)
-#define GUID_TYPE
+#define GUID_TYPE 1
+#define GUID_DEFINED 1
 typedef struct {
 	unsigned long f1;
 	unsigned short f2;
@@ -64,5 +65,6 @@ codecs_t* find_codec(unsigned int fourcc,unsigned int *fourccmap,codecs_t *start
 void select_codec(char* codecname,int audioflag);
 void list_codecs(int audioflag);
 void codecs_reset_selection(int audioflag);
+void codecs_uninit_free();
 
 #endif

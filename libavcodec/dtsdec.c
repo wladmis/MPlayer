@@ -28,7 +28,10 @@
 
 #include <stdlib.h>
 #include <string.h>
+
+#ifdef HAVE_MALLOC_H
 #include <malloc.h>
+#endif
 
 #define INBUF_SIZE 4096
 #define BUFFER_SIZE 4096
@@ -205,8 +208,6 @@ dts_decode_frame (AVCodecContext *avctx, void *data, int *data_size,
 {
   uint8_t * start = buff;
   uint8_t * end = buff + buff_size;
-  *data_size = 0;
-
   static uint8_t buf[BUFFER_SIZE];
   static uint8_t * bufptr = buf;
   static uint8_t * bufpos = buf + HEADER_SIZE;
@@ -217,6 +218,8 @@ dts_decode_frame (AVCodecContext *avctx, void *data, int *data_size,
   int bit_rate;
   int len;
   dts_state_t *state = avctx->priv_data;
+
+  *data_size = 0;
 
   while (1)
     {
@@ -258,6 +261,9 @@ dts_decode_frame (AVCodecContext *avctx, void *data, int *data_size,
               flags |= DTS_ADJUST_LEVEL;
               if (dts_frame (state, buf, &flags, &level, bias))
                 goto error;
+              avctx->sample_rate = sample_rate;
+              avctx->channels = channels_multi (flags);
+              avctx->bit_rate = bit_rate;
               for (i = 0; i < dts_blocks_num (state); i++)
                 {
                   if (dts_block (state))
