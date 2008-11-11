@@ -1,0 +1,300 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+
+<HEAD>
+<TITLE>Suono - MPlayer - Movie Player per Linux</TITLE>
+<LINK REL="stylesheet" TYPE="text/css" HREF="default.css">
+  <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+</HEAD>
+
+<BODY>
+
+
+<H3><A NAME="audio">2.3.2. Dispositivi di output audio</A></H3>
+
+<H4><A NAME="sync">2.3.2.1 Descrizione del metodo di sincronia A/V di MPlayer</A></H4>
+
+<P>L'interfaccia audio di MPlayer è chiamata <I>libao2</I>. Attualmente contiene
+questi driver :</P>
+
+<TABLE BORDER=0>
+
+<TR><TD COLSPAN=4><P><B>Generale:</B></P></TD></TR>
+
+<TR><TD>&nbsp;&nbsp;</TD><TD VALIGN=top>oss</TD><TD>&nbsp;&nbsp;</TD><TD>driver OSS (ioctl)(supporta il passaggio hardware AC3)</TD></TR>
+<TR><TD></TD><TD VALIGN=top>sdl</TD><TD></TD><TD>driver SDL (supporta <B>ESD</B>, <B>ARTS</B> ecc)</TD></TR>
+<TR><TD></TD><TD VALIGN=top>nas</TD><TD></TD><TD>driver NAS (Network Audio System, sistema audio per la rete, ndt)</TD></TR>
+<TR><TD></TD><TD VALIGN=top>alsa5</TD><TD></TD><TD>driver nativo ALSA 0.5</TD></TR>
+<TR><TD></TD><TD VALIGN=top>alsa9</TD><TD></TD><TD>driver nativo ALSA 0.9 (supporta il passaggio hardware AC3)</TD></TR>
+<TR><TD></TD><TD VALIGN=top>sun</TD><TD></TD><TD>driver audio SUN (/dev/audio) per utenti BSD e Solaris8</TD></TR>
+<TR><TD></TD><TD VALIGN=top>arts</TD><TD></TD><TD>driver ARTS nativo (principalmente per utenti KDE)</TD></TR>
+
+</TABLE>
+
+<P>Il fatto è che i driver per le schede sonore di Linux hanno problemi di compatibilità.
+  La causa è che MPlayer usa una caratteristica dei driver audio scritti in modo corretto
+  per mantenere la sincronia audio/video. Purtroppo, alcuni autori di driver tralasciano
+  questa funzione: è necessaria per leggere MP3 e per effetti sonori.</P>
+
+<P>Può essere che altri lettori come aviplay o xine funzionino anche con questi driver
+  perchè usano dei metodi "semplici" con un timer interno. Una nota:
+  il tempo ha dimostrato che i loro metodi non sono efficienti come quello di MPlayer.</P>
+
+<P>Usare MPlayer con un driver audio scritto correttamente non ti darà mai una desincronizzazione
+  A/V relativa all'audio, solo con file fatti davvero male (controlla
+  la documentazione per aggirare questi problemi!).</P>
+
+<P>Se per caso hai un cattivo driver audio, prova l'opzione <CODE>-autosync</CODE>,
+  dovrebbe risolvere i tuoi problemi. Vedi la pagina di man per informazioni più
+  dettagliate.</P>
+
+<P>Alcune note:</P>
+
+
+<P><UL>
+<LI>Se hai OSS come driver, prima prova con <I>-ao oss</I> (questo è il default).
+Se riscontri interruzioni, o qualunque cosa fuori dall'ordinario, prova
+<I>-ao sdl</I> (NOTA: naturalmente devi avere una nuova libreria SDL e le sue parti
+di sviluppo installate). Aiuta in molti casi (supporta anche  ESD, ARTS.
+ESD è il demone del suono di GNOME, ARTS è quello di KDE).</LI>
+<LI>Se hai ALSA versione 0.5, allora dovrai usare QUASI sempre <I>-ao alsa5</I> ,
+dato che la 0.5 ha un codice di emulazione OSS con dei bug, e manderà in <B>crash MPlayer</B> con
+un messaggio come questo:<BR>
+  <UL>
+  <CODE>DEMUXER: Too many (945 in 8390980 bytes) video packets in the buffer!</CODE></UL>
+</LI>
+</UL></P>
+
+<P>Su sistemi <B>Solaris</B>, usa il driver audio SUN con l'opzione
+<I>-ao sun</I>, altrimenti non avrai ne riproduzione video, ne audio.</P>
+
+<H4><A NAME="experiences">2.3.2.2. Esperienze con le schede sonore, raccomandazioni</A></H4>
+
+<P><TABLE BORDER=0 WIDTH=100%>
+<TD COLSPAN=3><B>Chipset VIA integrato (via82cxxx) solo 48Khz</B></TD><TR>
+<TD></TD><TD>Driver:</TD><TD> prelevabile da <A HREF="http://sourceforge.net/project/showfiles.php?group_id=3242&release_id=59602">qui</A></TD><TR>
+
+<TD COLSPAN=3><B>Aureal Vortex 2</B></TD><TR>
+<TD>&nbsp;&nbsp;&nbsp;&nbsp;</TD><TD>OSS:</TD><TD>nessun driver</TD><TR>
+<TD></TD><TD>OSS/Pro:</TD><TD>OK</TD><TR>
+<TD></TD><TD>ALSA:</TD><TD>nessun driver</TD><TR>
+<TD></TD><TD>KHz massimi:</TD><TD>48</TD><TR>
+<TD></TD><TD>Driver:</TD><TD><A HREF="http://aureal.sourceforge.net">aureal.sourceforge.net</A></TD><TR>
+<TD></TD><TD>Driver2:</TD><TD> prelevabile da <A HREF="http://makacs.poliod.hu/~pontscho/aureal/au88xx-1.1.3.tar.bz2">qui</A><BR>
+(<I>grandezza del buffer aumentata a 32k</I>)</TD><TR>
+
+<TD COLSPAN=3><B>GUS PnP</B></TD><TR>
+<TD></TD><TD>OSS:</TD><TD>nessun driver</TD><TR>
+<TD></TD><TD>OSS/Pro:</TD><TD>OK</TD><TR>
+<TD></TD><TD>ALSA:</TD><TD>OK</TD><TR>
+<TD></TD><TD>KHz massimi:</TD><TD>48</TD><TR>
+
+<TD COLSPAN=3><B>SB Live!</B></TD><TR>
+<TD></TD><TD>OSS:</TD><TD>L'analogico è OK, SP/DIF non funziona</TD><TR>
+<TD></TD><TD>ALSA:</TD><TD>Entrambi OK</TD><TR>
+<TD></TD><TD>KHz massimi:</TD><TD>192</TD><TR>
+
+<TD COLSPAN=3><B>SB AWE 64</B></TD><TR>
+<TD></TD><TD>OSS:</TD><TD>massimo 44kHz</TD><TR>
+<TD></TD><TD>ALSA:</TD><TD>a 48kHz suona male</TD><TR>
+<TD></TD><TD>KHz massimi:</TD><TD>48</TD><TR>
+
+<TD COLSPAN=3><B>Gravis UltraSound ACE</B></TD><TR>
+<TD></TD><TD>OSS:</TD><TD>non OK</TD><TR>
+<TD></TD><TD>ALSA:</TD><TD>OK</TD><TR>
+<TD></TD><TD>KHz massimi:</TD><TD>44</TD><TR>
+
+<TD COLSPAN=3><B>Gravis UltraSound MAX</B></TD><TR>
+<TD></TD><TD>OSS:</TD><TD>OK</TD><TR>
+<TD></TD><TD>ALSA:</TD><TD>OK (?)</TD><TR>
+<TD></TD><TD>KHz massimi:</TD><TD>48</TD><TR>
+
+<TD COLSPAN=3><B>ESS 688</B></TD><TR>
+<TD></TD><TD>OSS:</TD><TD>OK</TD><TR>
+<TD></TD><TD>ALSA:</TD><TD>OK (?)</TD><TR>
+<TD></TD><TD>KHz massimi:</TD><TD>48</TD><TR>
+
+<TD COLSPAN=3><B>Schede C-Media (quali?)</B></TD><TR>
+<TD></TD><TD>OSS:</TD><TD>non OK (sibila) (?)</TD><TR>
+<TD></TD><TD>ALSA:</TD><TD>OK (?)</TD><TR>
+<TD></TD><TD>KHz massimi:</TD><TD>?</TD><TR>
+
+<TD COLSPAN=3><B>Schede Yamaha (*ymf*)</B></TD><TR>
+<TD></TD><TD>OSS:</TD><TD>non OK (?) (forse -ao sdl)</TD><TR>
+<TD></TD><TD>ALSA:</TD><TD>OK solo con ALSA 0.5 con emulazione OSS <B>E</B> <I>-ao sdl</I> (!) (?)</TD><TR>
+<TD></TD><TD>KHz massimi:</TD><TD>?</TD><TR>
+
+<TD COLSPAN=3><B>Schede con chip envy24 (come Terratec EWS88MT)</B></TD><TR>
+<TD></TD><TD>OSS:</TD><TD>?</TD><TR>
+<TD></TD><TD>OSS/Pro:</TD><TD>OK</TD><TR>
+<TD></TD><TD>ALSA:</TD><TD>?</TD><TR>
+<TD></TD><TD>KHz massimi:</TD><TD>?</TD><TR>
+
+<TD COLSPAN=3><B>PC Speaker o DAC</B></TD><TR>
+<TD></TD><TD>OSS:</TD><TD>OK (<I>usa il driver SDL : -ao sdl</I>)</TD><TR>
+<TD></TD><TD>ALSA:</TD><TD>nessun driver</TD><TR>
+<TD></TD><TD>KHz massimi:</TD><TD>il driver emula 44.1 forse più</TD><TR>
+<TD></TD><TD>Driver:</TD><TD><A HREF="ftp://ftp.infradead.org/pub/pcsp">ftp://ftp.infradead.org/pub/pcsp</A></TD><TR>
+</TABLE></P>
+
+<P><UL>
+<LI>su Linux, usa almeno il kernel 2.4 se possibile, il 2.2 non è stato testato
+<LI>se emette dei click leggendo da CD-ROM, abilita l' IRQ unmasking !
+     per esempio "hdparm -u1 /dev/cdrom" (vedi "man hdparm" !!!)
+     Questo è consigliato comunque... (per XMMS, ecc...)
+     Leggi la <A HREF="cd-dvd.html#drives">sezione CD-ROM</A>.
+<LI>non usare la scheda sonora con altre applicazioni ( es. XMMS ) !
+     se usi ESD, esegui MPlayer con l'opzione '-vo sdl:esd' !
+<LI>Per favore dicci come MPlayer e la tua scheda sonora hanno lavorato insieme!
+</UL></P>
+
+
+<H4><A NAME="plugins">2.3.2.3. Plugin Audio</A></H4>
+
+<P>MPlayer supporta plugin audio. Possono essere usati per
+  cambiare le proprietà dei dati audio prima che raggiungano la scheda
+  sonora. Sono abilitati con l'opzione <CODE>-aop</CODE> seguita da
+  <CODE>list=plugin1,plugin2,...</CODE>. L'opzione <CODE>list</CODE> è
+  necessaria e determina quali plugin devono essere usate e in quale ordine
+  devono essere eseguite, esempio:
+</P>
+
+<P>&nbsp;&nbsp;<CODE>mplayer media.avi -aop list=resample,format</CODE></P>
+
+<P>farà passare il suono attraverso il plugin di ricampionamento seguito da quello di
+  formattazione.
+</P>
+
+<P>I plugin possono anche avere opzioni che ne modificano il comportamento. Queste
+  sono spiegate in dettaglio nelle sezioni sotto. Un plugin sarà eseguito
+  con la configurazione di default se non vengono date opzioni.  Esempi di come usare
+  plugin in combinazione con loro opzioni specifiche:
+</P>
+
+<P>&nbsp;&nbsp;<CODE>mplayer media.avi -aop
+  list=resample,format:fout=44100:format=0x8</CODE>
+</P>
+
+<P>cambierà la frequenza di uscita del plugin di ricampionamento a 44100Hz e il formato
+  output del plugin di formattazione a AFMT_U8.
+</P>                         
+
+<P>Attualmente i plugin audio non possono essere usati in MEncoder.</P>
+
+
+<H5><A NAME="resample">2.3.2.3.1. Sopra/Sotto campionamento</A></H5>
+
+<P>MPlayer supporta pienamente il sopra/sotto campionamento del suono. Questo plugin può
+  per esempio essere usato se hai una scheda sonora a frequenza fissa o se sei
+  bloccato con una vecchia scheda sonora in grado di dare al massimo 44.1kHz.
+  Viene riconosciuto <B>automaticamente</B> se questo plugin è necessario o meno.
+  Ha una sola opzione:
+  <CODE>fout</CODE> che è usata per specificare la frequenza di output desiderata,
+  di default 48kHz, ed è data in
+  &lt;Hz&gt;.
+</P>
+
+<P>Utilizzo :<BR>
+&nbsp;&nbsp;<CODE>mplayer media.avi -aop list=resample:fout=&lt;necessaria
+  frequenza in Hz, come 44100&gt;</CODE></P>
+
+
+<H5><A NAME="surround_decoding">2.3.2.3.2. Decodifica Suono Surround</A></H5>
+
+<P>MPlayer ha un plugin audio che puo decodificare una matrice di suono
+surround.  Dolby Surround è un esempio di un formato di matrice.</p>
+
+<P>Molti file con 2 canali in realtà contengono una matrice di suono
+surround.</p>
+
+<P>Per usare questa caratteristica, devi avere una scheda sonora che supporta almeno 4 canali.</P>
+
+<P>Utilizzo :<BR>
+&nbsp;&nbsp;<CODE>mplayer media.avi -aop list=surround</CODE></P>
+
+
+<H5><A NAME="format">2.3.2.3.3. Convertitore del formato di campionamento</A></H5>
+                                                                               
+<P>Se il driver della tua scheda sonora non supporta gli <CODE>int</CODE> signed a 16bit, questo plugin può
+  essere usato per cambiare il formato ad uno compreso dalla tua scheda sonora. Ha
+  una opzione <CODE>format</CODE> che può avere come valori uno dei numeri
+  che si trovano in libao2/afmt.h. Questo plugin è difficilmente necessario ed è da intendersi per
+  utenti avanzati. Nota che questo plugin cambia solo il formato di campionamento e
+  non la frequenza o il numero di canali.
+</P>
+
+<P>Utilizzo :<BR>
+  &nbsp;&nbsp;<CODE>mplayer media.avi -aop
+  list=format:format=&lt;necessario formato di output&gt;</CODE>
+</P>
+
+
+<H5><A NAME="delay">2.3.2.3.4. Ritardo</A></H5>
+
+<P>Questo plugin ritarda il suono ed è da intendersi come un esempio di come sviluppare
+  nuovi plugin. Non può essere usato per niente di utile dalla prospettiva degli utenti
+  ed è menzionato qui solo per dovere di completezza. Non usare questo plugin
+  se non sei uno sviluppatore.</P>
+
+<H5><A NAME="volume">2.3.2.3.5. Controllo volume via software</A></H5>
+
+<P>Questo plugin è un sostituto software per il controllo volume, e
+  può essere usato in macchine con dispositivo mixer non funzionante. Può
+  anche essere usato se si vuole modificare il volume di output da MPlayer
+  senza cambiare le impostazioni del volume PCM del mixer. Ha una sola opzione
+  <CODE>volume</CODE> che serve a impostare il volume
+  iniziale. Può essere impostato a valori tra 0
+  e 255 e il default è 101, uguale ad una amplificazione di 0dB. Usa questo plugin con attenzione in quanto
+  può aumentare il rumore nel segnale. Nella maggior parte dei casi
+  è meglio impostare il livello del suono PCM al massimo, lasciare perdere questo plugin
+  e controllare il livello in output col controllo volume principale
+  del mixer. Se è connesso al computer un aplificatore esterno
+  (questo è quasi sempre il caso), il livello del rumore
+  può essere minimizzato regolando le manopole del livello principale e del volume
+  dell'amplificatore finchè il rumore sibilante sullo sfondo non sparisce.
+</P>
+
+<P>Utilizzo :<BR>
+  &nbsp;&nbsp;<CODE>mplayer media.avi -aop
+  list=volume:volume=&lt;0-255&gt;</CODE>
+</P>
+
+<P>Questo plugin ha anche un compressore o capacita di "ritaglio software".
+  Si può usare la compressione se l'estensione dinamica del suono è molto
+  grande o se l'estensione dinamica degli altoparlanti è molto bassa.
+  Nota che questa caratteristica crea distorsioni e dovrebbe essere considerata
+  come l'ultima risorsa.
+</P>
+
+<P>Utilizzo :<BR>
+  &nbsp;&nbsp;<CODE>mplayer media.avi -aop
+  list=volume:softclip</CODE>
+</P>
+
+<H5><A NAME="extrastereo">2.3.2.3.6. Extrastereo</A></H5>
+
+<P>Questo plugin aumenta (linearmente) la differenza tra i canali destro e sinistro
+  (come il plugin extrastereo di XMMS) che da un certo effetto "live" alla
+  riproduzione.
+</P>
+
+<P>Utilizzo :<BR>
+  &nbsp;&nbsp;<CODE>mplayer media.avi -aop list=extrastereo</CODE><BR>
+  &nbsp;&nbsp;<CODE>mplayer media.avi -aop list=extrastereo:mul=3.45</CODE></P>
+
+<P>Il coefficiente di default (<CODE>mul</CODE>) è un numero razionale preimpostato
+  a 2.5.  Se lo si imposta a 0.0, si ottiene un suono mono (media di entrambi i canali),
+  se lo si imposta a 1.0, il suono non risulterà cambiato, se lo si imposta a -1.0, i canali
+  destro e sinistro risulteranno scambiati.</P>
+
+
+<H5><A NAME="normalizer">2.3.2.3.7. Normalizzatore volume</A></H5>
+
+<P>Questo plugin massimizza il volume mantenendo il suono senza
+  distorsioni.
+</P>
+
+<P>Utilizzo :<BR>
+  &nbsp;&nbsp;<CODE>mplayer media.avi -aop list=volnorm</CODE><BR>
+</BODY>
+</HTML>
