@@ -1,5 +1,12 @@
 mplayer (1.0)
 
+  pre3try2:
+
+    Security:
+    * remotely exploitable buffer overflow in the HTTP streaming code fixed
+
+mplayer (1.0)
+
   pre3: "The Real Counter"
 
     DOCS:
