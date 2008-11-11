@@ -2,18 +2,20 @@
  * H.264 encoding using the x264 library
  * Copyright (C) 2005  Mans Rullgard <mru@inprovide.com>
  *
- * This library is free software; you can redistribute it and/or
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * FFmpeg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
@@ -142,19 +144,25 @@ X264_init(AVCodecContext *avctx)
     x4->params.rc.b_stat_write = (avctx->flags & CODEC_FLAG_PASS1);
     if(avctx->flags & CODEC_FLAG_PASS2) x4->params.rc.b_stat_read = 1;
     else{
-        if(avctx->crf) x4->params.rc.i_rf_constant = avctx->crf;
-        else if(avctx->cqp > -1) x4->params.rc.i_qp_constant = avctx->cqp;
+        if(avctx->crf){
+            x4->params.rc.i_rc_method = X264_RC_CRF;
+            x4->params.rc.f_rf_constant = avctx->crf;
+        }else if(avctx->cqp > -1){
+            x4->params.rc.i_rc_method = X264_RC_CQP;
+            x4->params.rc.i_qp_constant = avctx->cqp;
+        }
     }
 
     // if neither crf nor cqp modes are selected we have to enable the RC
     // we do it this way because we cannot check if the bitrate has been set
-    if(!(avctx->crf || (avctx->cqp > -1))) x4->params.rc.b_cbr = 1;
+    if(!(avctx->crf || (avctx->cqp > -1))) x4->params.rc.i_rc_method = X264_RC_ABR;
 
     x4->params.i_bframe = avctx->max_b_frames;
     x4->params.b_cabac = avctx->coder_type == FF_CODER_TYPE_AC;
     x4->params.b_bframe_adaptive = avctx->b_frame_strategy;
     x4->params.i_bframe_bias = avctx->bframebias;
     x4->params.b_bframe_pyramid = (avctx->flags2 & CODEC_FLAG2_BPYRAMID);
+    avctx->has_b_frames= (avctx->flags2 & CODEC_FLAG2_BPYRAMID) ? 2 : !!avctx->max_b_frames;
 
     x4->params.i_keyint_min = avctx->keyint_min;
     if(x4->params.i_keyint_min > x4->params.i_keyint_max)

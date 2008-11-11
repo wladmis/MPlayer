@@ -2,18 +2,20 @@
  * Linux audio play and grab interface
  * Copyright (c) 2000, 2001 Fabrice Bellard.
  *
- * This library is free software; you can redistribute it and/or
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * FFmpeg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 #include "avformat.h"
@@ -313,7 +315,8 @@ static int audio_read_close(AVFormatContext *s1)
     return 0;
 }
 
-static AVInputFormat audio_in_format = {
+#ifdef CONFIG_AUDIO_DEMUXER
+AVInputFormat audio_demuxer = {
     "audio_device",
     "audio grab and output",
     sizeof(AudioData),
@@ -323,8 +326,10 @@ static AVInputFormat audio_in_format = {
     audio_read_close,
     .flags = AVFMT_NOFILE,
 };
+#endif
 
-static AVOutputFormat audio_out_format = {
+#ifdef CONFIG_AUDIO_MUXER
+AVOutputFormat audio_muxer = {
     "audio_device",
     "audio grab and output",
     "",
@@ -344,10 +349,4 @@ static AVOutputFormat audio_out_format = {
     audio_write_trailer,
     .flags = AVFMT_NOFILE,
 };
-
-int audio_init(void)
-{
-    av_register_input_format(&audio_in_format);
-    av_register_output_format(&audio_out_format);
-    return 0;
-}
+#endif

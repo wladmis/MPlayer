@@ -2,18 +2,20 @@
  * HTTP protocol for ffmpeg client
  * Copyright (c) 2000, 2001 Fabrice Bellard.
  *
- * This library is free software; you can redistribute it and/or
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * FFmpeg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 #include "avformat.h"
@@ -181,11 +183,13 @@ static int http_connect(URLContext *h, const char *path, const char *hoststr,
     HTTPContext *s = h->priv_data;
     int post, err, ch;
     char line[1024], *q;
+    char *auth_b64;
 
 
     /* send http header */
     post = h->flags & URL_WRONLY;
 
+    auth_b64 = b64_encode(auth);
     snprintf(s->buffer, sizeof(s->buffer),
              "%s %s HTTP/1.0\r\n"
              "User-Agent: %s\r\n"
@@ -197,8 +201,9 @@ static int http_connect(URLContext *h, const char *path, const char *hoststr,
              path,
              LIBAVFORMAT_IDENT,
              hoststr,
-             b64_encode(auth));
+             auth_b64);
 
+    av_freep(&auth_b64);
     if (http_write(h, s->buffer, strlen(s->buffer)) < 0)
         return AVERROR_IO;
 
@@ -285,6 +290,7 @@ URLProtocol http_protocol = {
 
 /*****************************************************************************
  * b64_encode: stolen from VLC's http.c
+ * simplified by michael
  *****************************************************************************/
 
 static char *b64_encode( const unsigned char *src )
@@ -300,32 +306,17 @@ static char *b64_encode( const unsigned char *src )
     }else
         return NULL;
 
-    for( ;; )
-    {
-        if( *src )
-        {
-            i_bits = ( i_bits << 8 )|( *src++ );
-            i_shift += 8;
-        }
-        else if( i_shift > 0 )
-        {
-           i_bits <<= 6 - i_shift;
-           i_shift = 6;
-        }
-        else
-        {
-            *dst++ = '=';
-            break;
-        }
+    while(*src){
+        i_bits = (i_bits << 8) + *src++;
+        i_shift += 8;
 
-        while( i_shift >= 6 )
-        {
+        do{
+            *dst++ = b64[(i_bits << 6 >> i_shift) & 0x3f];
             i_shift -= 6;
-            *dst++ = b64[(i_bits >> i_shift)&0x3f];
-        }
+        }while( i_shift > 6 || (*src == 0 && i_shift>0));
     }
-
-    *dst++ = '\0';
+    *dst++ = '=';
+    *dst   = '\0';
 
     return ret;
 }

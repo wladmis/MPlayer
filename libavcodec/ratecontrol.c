@@ -3,18 +3,20 @@
  *
  * Copyright (c) 2002-2004 Michael Niedermayer <michaelni@gmx.at>
  *
- * This library is free software; you can redistribute it and/or
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * FFmpeg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
@@ -25,7 +27,9 @@
 
 #include "avcodec.h"
 #include "dsputil.h"
+#include "ratecontrol.h"
 #include "mpegvideo.h"
+#include "eval.h"
 
 #undef NDEBUG // allways check asserts, the speed effect is far too small to disable them
 #include <assert.h>
@@ -259,6 +263,7 @@ static double get_qscale(MpegEncContext *s, RateControlEntry *rce, double rate_f
     const int pict_type= rce->new_pict_type;
     const double mb_num= s->mb_num;
     int i;
+    char *error = NULL;
 
     double const_values[]={
         M_PI,
@@ -325,7 +330,11 @@ static double get_qscale(MpegEncContext *s, RateControlEntry *rce, double rate_f
         NULL
     };
 
-    bits= ff_eval(s->avctx->rc_eq, const_values, const_names, func1, func1_names, NULL, NULL, rce);
+    bits= ff_eval2(s->avctx->rc_eq, const_values, const_names, func1, func1_names, NULL, NULL, rce, &error);
+    if (isnan(bits)) {
+        av_log(s->avctx, AV_LOG_ERROR, "Error evaluating rc_eq \"%s\": %s\n", s->avctx->rc_eq, error? error : "");
+        return -1;
+    }
 
     rcc->pass1_rc_eq_output_sum+= bits;
     bits*=rate_factor;
@@ -363,7 +372,7 @@ static double get_diff_limited_q(MpegEncContext *s, RateControlEntry *rce, doubl
     const double last_non_b_q= rcc->last_qscale_for[rcc->last_non_b_pict_type];
 
     if     (pict_type==I_TYPE && (a->i_quant_factor>0.0 || rcc->last_non_b_pict_type==P_TYPE))
-        q= last_p_q    *ABS(a->i_quant_factor) + a->i_quant_offset;
+        q= last_p_q    *FFABS(a->i_quant_factor) + a->i_quant_offset;
     else if(pict_type==B_TYPE && a->b_quant_factor>0.0)
         q= last_non_b_q*    a->b_quant_factor  + a->b_quant_offset;
 
@@ -394,11 +403,11 @@ static void get_qminmax(int *qmin_ret, int *qmax_ret, MpegEncContext *s, int pic
     assert(qmin <= qmax);
 
     if(pict_type==B_TYPE){
-        qmin= (int)(qmin*ABS(s->avctx->b_quant_factor)+s->avctx->b_quant_offset + 0.5);
-        qmax= (int)(qmax*ABS(s->avctx->b_quant_factor)+s->avctx->b_quant_offset + 0.5);
+        qmin= (int)(qmin*FFABS(s->avctx->b_quant_factor)+s->avctx->b_quant_offset + 0.5);
+        qmax= (int)(qmax*FFABS(s->avctx->b_quant_factor)+s->avctx->b_quant_offset + 0.5);
     }else if(pict_type==I_TYPE){
-        qmin= (int)(qmin*ABS(s->avctx->i_quant_factor)+s->avctx->i_quant_offset + 0.5);
-        qmax= (int)(qmax*ABS(s->avctx->i_quant_factor)+s->avctx->i_quant_offset + 0.5);
+        qmin= (int)(qmin*FFABS(s->avctx->i_quant_factor)+s->avctx->i_quant_offset + 0.5);
+        qmax= (int)(qmax*FFABS(s->avctx->i_quant_factor)+s->avctx->i_quant_offset + 0.5);
     }
 
     qmin= clip(qmin, 1, FF_LAMBDA_MAX);
@@ -726,6 +735,8 @@ float ff_rate_estimate_qscale(MpegEncContext *s, int dry_run)
         rate_factor= rcc->pass1_wanted_bits/rcc->pass1_rc_eq_output_sum * br_compensation;
 
         q= get_qscale(s, rce, rate_factor, picture_number);
+        if (q < 0)
+            return -1;
 
         assert(q>0.0);
 //printf("%f ", q);
@@ -790,12 +801,10 @@ static int init_pass2(MpegEncContext *s)
 {
     RateControlContext *rcc= &s->rc_context;
     AVCodecContext *a= s->avctx;
-    int i;
+    int i, toobig;
     double fps= 1/av_q2d(s->avctx->time_base);
     double complexity[5]={0,0,0,0,0};   // aproximate bits at quant=1
-    double avg_quantizer[5];
     uint64_t const_bits[5]={0,0,0,0,0}; // quantizer idependant bits
-    uint64_t available_bits[5];
     uint64_t all_const_bits;
     uint64_t all_available_bits= (uint64_t)(s->bit_rate*(double)rcc->num_entries/fps);
     double rate_factor=0;
@@ -803,7 +812,7 @@ static int init_pass2(MpegEncContext *s)
     //int last_i_frame=-10000000;
     const int filter_size= (int)(a->qblur*4) | 1;
     double expected_bits;
-    double *qscale, *blured_qscale;
+    double *qscale, *blured_qscale, qscale_sum;
 
     /* find complexity & const_bits & decide the pict_types */
     for(i=0; i<rcc->num_entries; i++){
@@ -821,37 +830,13 @@ static int init_pass2(MpegEncContext *s)
     all_const_bits= const_bits[I_TYPE] + const_bits[P_TYPE] + const_bits[B_TYPE];
 
     if(all_available_bits < all_const_bits){
-        av_log(s->avctx, AV_LOG_ERROR, "requested bitrate is to low\n");
+        av_log(s->avctx, AV_LOG_ERROR, "requested bitrate is too low\n");
         return -1;
     }
 
-    /* find average quantizers */
-    avg_quantizer[P_TYPE]=0;
-    for(step=256*256; step>0.0000001; step*=0.5){
-        double expected_bits=0;
-        avg_quantizer[P_TYPE]+= step;
-
-        avg_quantizer[I_TYPE]= avg_quantizer[P_TYPE]*ABS(s->avctx->i_quant_factor) + s->avctx->i_quant_offset;
-        avg_quantizer[B_TYPE]= avg_quantizer[P_TYPE]*ABS(s->avctx->b_quant_factor) + s->avctx->b_quant_offset;
-
-        expected_bits=
-            + all_const_bits
-            + complexity[I_TYPE]/avg_quantizer[I_TYPE]
-            + complexity[P_TYPE]/avg_quantizer[P_TYPE]
-            + complexity[B_TYPE]/avg_quantizer[B_TYPE];
-
-        if(expected_bits < all_available_bits) avg_quantizer[P_TYPE]-= step;
-//printf("%f %lld %f\n", expected_bits, all_available_bits, avg_quantizer[P_TYPE]);
-    }
-//printf("qp_i:%f, qp_p:%f, qp_b:%f\n", avg_quantizer[I_TYPE],avg_quantizer[P_TYPE],avg_quantizer[B_TYPE]);
-
-    for(i=0; i<5; i++){
-        available_bits[i]= const_bits[i] + complexity[i]/avg_quantizer[i];
-    }
-//printf("%lld %lld %lld %lld\n", available_bits[I_TYPE], available_bits[P_TYPE], available_bits[B_TYPE], all_available_bits);
-
     qscale= av_malloc(sizeof(double)*rcc->num_entries);
     blured_qscale= av_malloc(sizeof(double)*rcc->num_entries);
+    toobig = 0;
 
     for(step=256*256; step>0.0000001; step*=0.5){
         expected_bits=0;
@@ -905,14 +890,46 @@ static int init_pass2(MpegEncContext *s)
             expected_bits += bits;
         }
 
-//        printf("%f %d %f\n", expected_bits, (int)all_available_bits, rate_factor);
-        if(expected_bits > all_available_bits) rate_factor-= step;
+        /*
+        av_log(s->avctx, AV_LOG_INFO,
+            "expected_bits: %f all_available_bits: %d rate_factor: %f\n",
+            expected_bits, (int)all_available_bits, rate_factor);
+        */
+        if(expected_bits > all_available_bits) {
+            rate_factor-= step;
+            ++toobig;
+        }
     }
     av_free(qscale);
     av_free(blured_qscale);
 
-    if(fabs(expected_bits/all_available_bits - 1.0) > 0.01 ){
-        av_log(s->avctx, AV_LOG_ERROR, "Error: 2pass curve failed to converge\n");
+    /* check bitrate calculations and print info */
+    qscale_sum = 0.0;
+    for(i=0; i<rcc->num_entries; i++){
+        /* av_log(s->avctx, AV_LOG_DEBUG, "[lavc rc] entry[%d].new_qscale = %.3f  qp = %.3f\n",
+            i, rcc->entry[i].new_qscale, rcc->entry[i].new_qscale / FF_QP2LAMBDA); */
+        qscale_sum += clip(rcc->entry[i].new_qscale / FF_QP2LAMBDA, s->avctx->qmin, s->avctx->qmax);
+    }
+    assert(toobig <= 40);
+    av_log(s->avctx, AV_LOG_DEBUG,
+        "[lavc rc] requested bitrate: %d bps  expected bitrate: %d bps\n",
+        s->bit_rate,
+        (int)(expected_bits / ((double)all_available_bits/s->bit_rate)));
+    av_log(s->avctx, AV_LOG_DEBUG,
+        "[lavc rc] estimated target average qp: %.3f\n",
+        (float)qscale_sum / rcc->num_entries);
+    if (toobig == 0) {
+        av_log(s->avctx, AV_LOG_INFO,
+            "[lavc rc] Using all of requested bitrate is not "
+            "necessary for this video with these parameters.\n");
+    } else if (toobig == 40) {
+        av_log(s->avctx, AV_LOG_ERROR,
+            "[lavc rc] Error: bitrate too low for this video "
+            "with these parameters.\n");
+        return -1;
+    } else if (fabs(expected_bits/all_available_bits - 1.0) > 0.01) {
+        av_log(s->avctx, AV_LOG_ERROR,
+            "[lavc rc] Error: 2pass curve failed to converge\n");
         return -1;
     }
 

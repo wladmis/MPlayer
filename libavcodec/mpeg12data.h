@@ -1,9 +1,31 @@
+/*
+ * MPEG1 codec / MPEG2 decoder
+ * copyright (c) 2000,2001 Fabrice Bellard
+ * copyright (c) 2002-2004 Michael Niedermayer <michaelni@gmx.at>
+ *
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * FFmpeg is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with FFmpeg; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ */
+
 /**
  * @file mpeg12data.h
  * MPEG1/2 tables.
  */
 
-const int16_t ff_mpeg1_default_intra_matrix[64] = {
+const uint16_t ff_mpeg1_default_intra_matrix[64] = {
         8, 16, 19, 22, 26, 27, 29, 34,
         16, 16, 22, 24, 27, 29, 34, 37,
         19, 22, 26, 27, 29, 34, 34, 38,
@@ -14,7 +36,7 @@ const int16_t ff_mpeg1_default_intra_matrix[64] = {
         27, 29, 35, 38, 46, 56, 69, 83
 };
 
-const int16_t ff_mpeg1_default_non_intra_matrix[64] = {
+const uint16_t ff_mpeg1_default_non_intra_matrix[64] = {
     16, 16, 16, 16, 16, 16, 16, 16,
     16, 16, 16, 16, 16, 16, 16, 16,
     16, 16, 16, 16, 16, 16, 16, 16,
@@ -332,7 +354,7 @@ static const uint8_t mbMotionVectorTable[17][2] = {
 { 0xc, 10 },
 };
 
-static const AVRational frame_rate_tab[] = {
+const AVRational ff_frame_rate_tab[] = {
     {    0,    0},
     {24000, 1001},
     {   24,    1},
@@ -367,7 +389,7 @@ const uint8_t ff_mpeg1_dc_scale_table[128]={
     8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
 };
 
-const static uint8_t mpeg2_dc_scale_table1[128]={
+static const uint8_t mpeg2_dc_scale_table1[128]={
 //  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31
     4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
     4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,

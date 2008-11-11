@@ -5,8 +5,8 @@
  * Copyright (C) 2000, 2001, 2002 Håkan Hjort <d95hjort@dtek.chalmers.se>.
  *
  * Modified for use with MPlayer, changes contained in libdvdread_changes.diff.
- * detailed CVS changelog at http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
- * $Id: nav_read.h 15875 2005-06-30 22:48:26Z aurel $
+ * detailed changelog at http://svn.mplayerhq.hu/mplayer/trunk/
+ * $Id: nav_read.h 18786 2006-06-22 13:34:00Z diego $
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

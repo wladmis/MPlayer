@@ -2,22 +2,24 @@
  * ASF compatible decoder.
  * Copyright (c) 2000, 2001 Fabrice Bellard.
  *
- * This library is free software; you can redistribute it and/or
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * FFmpeg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 #include "avformat.h"
-#include "avi.h"
+#include "riff.h"
 #include "mpegaudio.h"
 #include "asf.h"
 
@@ -187,7 +189,8 @@ static int asf_read_header(AVFormatContext *s, AVFormatParameters *ap)
             asf->packet_size = asf->hdr.max_pktsize;
             asf->nb_packets = asf->hdr.packets_count;
         } else if (!memcmp(&g, &stream_header, sizeof(GUID))) {
-            int type, total_size, type_specific_size, sizeX;
+            int type, type_specific_size, sizeX;
+            uint64_t total_size;
             unsigned int tag1;
             int64_t pos1, pos2;
             int test_for_ext_stream_audio;
@@ -327,6 +330,12 @@ static int asf_read_header(AVFormatContext *s, AVFormatParameters *ap)
             pos2 = url_ftell(pb);
             url_fskip(pb, gsize - (pos2 - pos1 + 24));
         } else if (!memcmp(&g, &data_header, sizeof(GUID))) {
+            asf->data_object_offset = url_ftell(pb);
+            if (gsize != (uint64_t)-1 && gsize >= 24) {
+                asf->data_object_size = gsize - 24;
+            } else {
+                asf->data_object_size = (uint64_t)-1;
+            }
             break;
         } else if (!memcmp(&g, &comment_header, sizeof(GUID))) {
             int len1, len2, len3, len4, len5;
@@ -347,7 +356,8 @@ static int asf_read_header(AVFormatContext *s, AVFormatParameters *ap)
                 desc_count = get_le16(pb);
                 for(i=0;i<desc_count;i++)
                 {
-                        int name_len,value_type,value_len,value_num = 0;
+                        int name_len,value_type,value_len;
+                        uint64_t value_num = 0;
                         char *name, *value;
 
                         name_len = get_le16(pb);
@@ -513,6 +523,16 @@ static int asf_get_packet(AVFormatContext *s)
     DO_2BITS(asf->packet_flags >> 1, padsize, 0); // sequence ignored
     DO_2BITS(asf->packet_flags >> 3, padsize, 0); // padding length
 
+    //the following checks prevent overflows and infinite loops
+    if(packet_length >= (1U<<29)){
+        av_log(s, AV_LOG_ERROR, "invalid packet_length %d at:%"PRId64"\n", packet_length, url_ftell(pb));
+        return 0; // FIXME this should be -1
+    }
+    if(padsize >= (1U<<29)){
+        av_log(s, AV_LOG_ERROR, "invalid padsize %d at:%"PRId64"\n", padsize, url_ftell(pb));
+        return 0; // FIXME this should be -1
+    }
+
     asf->packet_timestamp = get_le32(pb);
     get_le16(pb); /* duration */
     // rsize has at least 11 bytes which have to be present
@@ -549,9 +569,13 @@ static int asf_read_packet(AVFormatContext *s, AVPacket *pkt)
             //printf("PacketLeftSize:%d  Pad:%d Pos:%Ld\n", asf->packet_size_left, asf->packet_padsize, url_ftell(pb));
             if((url_ftell(&s->pb) + ret - s->data_offset) % asf->packet_size)
                 ret += asf->packet_size - ((url_ftell(&s->pb) + ret - s->data_offset) % asf->packet_size);
+            assert(ret>=0);
             /* fail safe */
             url_fskip(pb, ret);
             asf->packet_pos= url_ftell(&s->pb);
+            if (asf->data_object_size != (uint64_t)-1 &&
+                (asf->packet_pos - asf->data_object_offset >= asf->data_object_size))
+                return AVERROR_IO; /* Do not exceed the size of the data object */
             ret = asf_get_packet(s);
             //printf("READ ASF PACKET  %d   r:%d   c:%d\n", ret, asf->packet_size_left, pc++);
             if (ret < 0 || url_feof(pb))
@@ -694,7 +718,7 @@ static int asf_read_packet(AVFormatContext *s, AVPacket *pkt)
             /* return packet */
             if (asf_st->ds_span > 1) {
                 /* packet descrambling */
-                char* newdata = av_malloc(asf_st->pkt.size);
+                uint8_t *newdata = av_malloc(asf_st->pkt.size);
                 if (newdata) {
                     int offset = 0;
                     while (offset < asf_st->pkt.size) {
@@ -730,7 +754,6 @@ static int asf_read_close(AVFormatContext *s)
     for(i=0;i<s->nb_streams;i++) {
         AVStream *st = s->streams[i];
         av_free(st->priv_data);
-        av_free(st->codec->extradata);
     av_free(st->codec->palctrl);
     }
     return 0;
@@ -813,7 +836,7 @@ static int64_t asf_read_pts(AVFormatContext *s, int stream_index, int64_t *ppos,
             assert((asf_st->packet_pos - s->data_offset) % asf->packet_size == 0);
             pos= asf_st->packet_pos;
 
-            av_add_index_entry(s->streams[i], pos, pkt->size, pts, pos - start_pos[i] + 1, AVINDEX_KEYFRAME);
+            av_add_index_entry(s->streams[i], pos, pts, pkt->size, pos - start_pos[i] + 1, AVINDEX_KEYFRAME);
             start_pos[i]= asf_st->packet_pos + 1;
 
             if(pkt->stream_index == stream_index)
@@ -827,21 +850,97 @@ static int64_t asf_read_pts(AVFormatContext *s, int stream_index, int64_t *ppos,
     return pts;
 }
 
+static void asf_build_simple_index(AVFormatContext *s, int stream_index)
+{
+    GUID g;
+    ASFContext *asf = s->priv_data;
+    int64_t gsize, itime;
+    int64_t pos, current_pos, index_pts;
+    int i;
+    int pct,ict;
+
+    current_pos = url_ftell(&s->pb);
+
+    url_fseek(&s->pb, asf->data_object_offset + asf->data_object_size, SEEK_SET);
+    get_guid(&s->pb, &g);
+    if (!memcmp(&g, &index_guid, sizeof(GUID))) {
+        gsize = get_le64(&s->pb);
+        get_guid(&s->pb, &g);
+        itime=get_le64(&s->pb);
+        pct=get_le32(&s->pb);
+        ict=get_le32(&s->pb);
+        av_log(NULL, AV_LOG_DEBUG, "itime:0x%"PRIx64", pct:%d, ict:%d\n",itime,pct,ict);
+
+        for (i=0;i<ict;i++){
+            int pktnum=get_le32(&s->pb);
+            int pktct =get_le16(&s->pb);
+            av_log(NULL, AV_LOG_DEBUG, "pktnum:%d, pktct:%d\n", pktnum, pktct);
+
+            pos=s->data_offset + asf->packet_size*(int64_t)pktnum;
+            index_pts=av_rescale(itime, i, 10000);
+
+            av_add_index_entry(s->streams[stream_index], pos, index_pts, asf->packet_size, 0, AVINDEX_KEYFRAME);
+        }
+        asf->index_read= 1;
+    }
+    url_fseek(&s->pb, current_pos, SEEK_SET);
+}
+
 static int asf_read_seek(AVFormatContext *s, int stream_index, int64_t pts, int flags)
 {
     ASFContext *asf = s->priv_data;
+    AVStream *st = s->streams[stream_index];
+    int64_t pos;
+    int index;
 
     if (asf->packet_size <= 0)
         return -1;
 
-    if(av_seek_frame_binary(s, stream_index, pts, flags)<0)
-        return -1;
+    if (!asf->index_read)
+        asf_build_simple_index(s, stream_index);
 
+    if(!(asf->index_read && st->index_entries)){
+        if(av_seek_frame_binary(s, stream_index, pts, flags)<0)
+            return -1;
+    }else{
+        index= av_index_search_timestamp(st, pts, flags);
+        if(index<0)
+            return -1;
+
+        /* find the position */
+        pos = st->index_entries[index].pos;
+        pts = st->index_entries[index].timestamp;
+
+    // various attempts to find key frame have failed so far
+    //    asf_reset_header(s);
+    //    url_fseek(&s->pb, pos, SEEK_SET);
+    //    key_pos = pos;
+    //     for(i=0;i<16;i++){
+    //         pos = url_ftell(&s->pb);
+    //         if (av_read_frame(s, &pkt) < 0){
+    //             av_log(s, AV_LOG_INFO, "seek failed\n");
+    //             return -1;
+    //         }
+    //         asf_st = s->streams[stream_index]->priv_data;
+    //         pos += st->parser->frame_offset;
+    //
+    //         if (pkt.size > b) {
+    //             b = pkt.size;
+    //             key_pos = pos;
+    //         }
+    //
+    //         av_free_packet(&pkt);
+    //     }
+
+        /* do the seek */
+        av_log(NULL, AV_LOG_DEBUG, "SEEKTO: %"PRId64"\n", pos);
+        url_fseek(&s->pb, pos, SEEK_SET);
+    }
     asf_reset_header(s);
     return 0;
 }
 
-static AVInputFormat asf_iformat = {
+AVInputFormat asf_demuxer = {
     "asf",
     "asf format",
     sizeof(ASFContext),
@@ -852,18 +951,3 @@ static AVInputFormat asf_iformat = {
     asf_read_seek,
     asf_read_pts,
 };
-
-#ifdef CONFIG_MUXERS
-    extern AVOutputFormat asf_oformat;
-    extern AVOutputFormat asf_stream_oformat;
-#endif //CONFIG_MUXERS
-
-int asf_init(void)
-{
-    av_register_input_format(&asf_iformat);
-#ifdef CONFIG_MUXERS
-    av_register_output_format(&asf_oformat);
-    av_register_output_format(&asf_stream_oformat);
-#endif //CONFIG_MUXERS
-    return 0;
-}

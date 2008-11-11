@@ -2,18 +2,20 @@
  * FLI/FLC Animation Video Decoder
  * Copyright (C) 2003, 2004 the ffmpeg project
  *
- * This library is free software; you can redistribute it and/or
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * FFmpeg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  *
  */
@@ -188,7 +190,6 @@ static int flic_decode_frame_8BPP(AVCodecContext *avctx,
         case FLI_256_COLOR:
         case FLI_COLOR:
             stream_ptr_after_color_chunk = stream_ptr + chunk_size - 6;
-            s->new_palette = 1;
 
             /* check special case: If this file is from the Magic Carpet
              * game and uses 6-bit colors even though it reports 256-color
@@ -214,6 +215,7 @@ static int flic_decode_frame_8BPP(AVCodecContext *avctx,
                     color_changes = 256;
 
                 for (j = 0; j < color_changes; j++) {
+                    unsigned int entry;
 
                     /* wrap around, for good measure */
                     if ((unsigned)palette_ptr >= 256)
@@ -222,7 +224,10 @@ static int flic_decode_frame_8BPP(AVCodecContext *avctx,
                     r = buf[stream_ptr++] << color_shift;
                     g = buf[stream_ptr++] << color_shift;
                     b = buf[stream_ptr++] << color_shift;
-                    s->palette[palette_ptr++] = (r << 16) | (g << 8) | b;
+                    entry = (r << 16) | (g << 8) | b;
+                    if (s->palette[palette_ptr] != entry)
+                        s->new_palette = 1;
+                    s->palette[palette_ptr++] = entry;
                 }
             }
 
@@ -402,9 +407,8 @@ static int flic_decode_frame_8BPP(AVCodecContext *avctx,
                "and final chunk ptr = %d\n", buf_size, stream_ptr);
 
     /* make the palette available on the way out */
-//    if (s->new_palette) {
-    if (1) {
-        memcpy(s->frame.data[1], s->palette, AVPALETTE_SIZE);
+    memcpy(s->frame.data[1], s->palette, AVPALETTE_SIZE);
+    if (s->new_palette) {
         s->frame.palette_has_changed = 1;
         s->new_palette = 0;
     }

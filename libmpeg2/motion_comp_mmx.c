@@ -21,8 +21,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  * Modified for use with MPlayer, see libmpeg-0.4.0.diff for the exact changes.
- * detailed CVS changelog at http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
- * $Id: motion_comp_mmx.c 17567 2006-02-09 14:08:03Z rathann $
+ * detailed changelog at http://svn.mplayerhq.hu/mplayer/trunk/
+ * $Id: motion_comp_mmx.c 18786 2006-06-22 13:34:00Z diego $
  */
 
 #include "config.h"

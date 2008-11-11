@@ -2,18 +2,20 @@
  * DSP Group TrueSpeech compatible decoder
  * Copyright (c) 2005 Konstantin Shishkov
  *
- * This library is free software; you can redistribute it and/or
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * FFmpeg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 #include "avcodec.h"
@@ -188,7 +190,8 @@ static void truespeech_filters_merge(TSContext *dec)
 
 static void truespeech_apply_twopoint_filter(TSContext *dec, int quart)
 {
-    int16_t tmp[146 + 60], *ptr0, *ptr1, *filter;
+    int16_t tmp[146 + 60], *ptr0, *ptr1;
+    const int16_t *filter;
     int i, t, off;
 
     t = dec->offset2[quart];
@@ -201,7 +204,7 @@ static void truespeech_apply_twopoint_filter(TSContext *dec, int quart)
     off = (t / 25) + dec->offset1[quart >> 1] + 18;
     ptr0 = tmp + 145 - off;
     ptr1 = tmp + 146;
-    filter = (int16_t*)ts_240 + (t % 25) * 2;
+    filter = (const int16_t*)ts_240 + (t % 25) * 2;
     for(i = 0; i < 60; i++){
         t = (ptr0[0] * filter[0] + ptr0[1] * filter[1] + 0x2000) >> 14;
         ptr0++;
@@ -214,7 +217,8 @@ static void truespeech_place_pulses(TSContext *dec, int16_t *out, int quart)
 {
     int16_t tmp[7];
     int i, j, t;
-    int16_t *ptr1, *ptr2;
+    const int16_t *ptr1;
+    int16_t *ptr2;
     int coef;
 
     memset(out, 0, 60 * 2);
@@ -225,7 +229,7 @@ static void truespeech_place_pulses(TSContext *dec, int16_t *out, int quart)
     }
 
     coef = dec->pulsepos[quart] >> 15;
-    ptr1 = (int16_t*)ts_140 + 30;
+    ptr1 = (const int16_t*)ts_140 + 30;
     ptr2 = tmp;
     for(i = 0, j = 3; (i < 30) && (j > 0); i++){
         t = *ptr1++;
@@ -238,7 +242,7 @@ static void truespeech_place_pulses(TSContext *dec, int16_t *out, int quart)
         }
     }
     coef = dec->pulsepos[quart] & 0x7FFF;
-    ptr1 = (int16_t*)ts_140;
+    ptr1 = (const int16_t*)ts_140;
     for(i = 30, j = 4; (i < 60) && (j > 0); i++){
         t = *ptr1++;
         if(coef >= t)

@@ -9,9 +9,9 @@
  * make that:
  *	ftp.microsoft.com:/developr/MSDN/OctCD/PEFILE.ZIP
  *
- * Modified for use with MPlayer, detailed CVS changelog at
- * http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
- * $Id: pe_image.c 18487 2006-05-13 18:38:57Z rathann $
+ * Modified for use with MPlayer, detailed changelog at
+ * http://svn.mplayerhq.hu/mplayer/trunk/
+ * $Id: pe_image.c 18786 2006-06-22 13:34:00Z diego $
  *
  */
 /* Notes:

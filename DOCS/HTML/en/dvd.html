@@ -1,28 +1,24 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>4.2. DVD playback</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.68.1"><link rel="start" href="index.html" title="MPlayer - The Movie Player"><link rel="up" href="cd-dvd.html" title="Chapter 4. CD/DVD usage"><link rel="prev" href="drives.html" title="4.1. CD/DVD drives"><link rel="next" href="vcd.html" title="4.3. VCD playback"><link rel="preface" href="howtoread.html" title="How to read this documentation"><link rel="chapter" href="intro.html" title="Chapter 1. Introduction"><link rel="chapter" href="install.html" title="Chapter 2. Installation"><link rel="chapter" href="usage.html" title="Chapter 3. Usage"><link rel="chapter" href="cd-dvd.html" title="Chapter 4. CD/DVD usage"><link rel="chapter" href="faq.html" title="Chapter 5. Frequently Asked Questions"><link rel="chapter" href="containers.html" title="Chapter 6. Containers"><link rel="chapter" href="codecs.html" title="Chapter 7. Codecs"><link rel="chapter" href="video.html" title="Chapter 8. Video output devices"><link rel="chapter" href="audio.html" title="Chapter 9. Audio output devices"><link rel="chapter" href="tv.html" title="Chapter 10. TV"><link rel="chapter" href="ports.html" title="Chapter 11. Ports"><link rel="chapter" href="mencoder.html" title="Chapter 12. Basic usage of MEncoder"><link rel="chapter" href="encoding-guide.html" title="Chapter 13. Encoding with MEncoder"><link rel="appendix" href="mailinglists.html" title="Appendix A. Mailing lists"><link rel="appendix" href="bugreports.html" title="Appendix B. How to report bugs"><link rel="appendix" href="bugs.html" title="Appendix C. Known bugs"><link rel="appendix" href="skin.html" title="Appendix D. MPlayer skin format"><link rel="appendix" href="users-vs-dev.html" title="Appendix E. Developer cries"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">4.2. DVD playback</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="drives.html">Prev</a> </td><th width="60%" align="center">Chapter 4. CD/DVD usage</th><td width="20%" align="right"> <a accesskey="n" href="vcd.html">Next</a></td></tr></table><hr></div><div class="sect1" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="dvd"></a>4.2. DVD playback</h2></div></div></div><p>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>4.2. DVD playback</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.68.1"><link rel="start" href="index.html" title="MPlayer - The Movie Player"><link rel="up" href="cd-dvd.html" title="Chapter 4. CD/DVD usage"><link rel="prev" href="drives.html" title="4.1. CD/DVD drives"><link rel="next" href="vcd.html" title="4.3. VCD playback"><link rel="preface" href="howtoread.html" title="How to read this documentation"><link rel="chapter" href="intro.html" title="Chapter 1. Introduction"><link rel="chapter" href="install.html" title="Chapter 2. Installation"><link rel="chapter" href="usage.html" title="Chapter 3. Usage"><link rel="chapter" href="cd-dvd.html" title="Chapter 4. CD/DVD usage"><link rel="chapter" href="faq.html" title="Chapter 5. Frequently Asked Questions"><link rel="chapter" href="containers.html" title="Chapter 6. Containers"><link rel="chapter" href="codecs.html" title="Chapter 7. Codecs"><link rel="chapter" href="video.html" title="Chapter 8. Video output devices"><link rel="chapter" href="audio.html" title="Chapter 9. Audio output devices"><link rel="chapter" href="tv.html" title="Chapter 10. TV"><link rel="chapter" href="radio.html" title="Chapter 11. Radio"><link rel="chapter" href="ports.html" title="Chapter 12. Ports"><link rel="chapter" href="mencoder.html" title="Chapter 13. Basic usage of MEncoder"><link rel="chapter" href="encoding-guide.html" title="Chapter 14. Encoding with MEncoder"><link rel="appendix" href="bugreports.html" title="Appendix A. How to report bugs"><link rel="appendix" href="bugs.html" title="Appendix B. Known bugs"><link rel="appendix" href="skin.html" title="Appendix C. MPlayer skin format"><link rel="appendix" href="history.html" title="Appendix D. History"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">4.2. DVD playback</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="drives.html">Prev</a> </td><th width="60%" align="center">Chapter 4. CD/DVD usage</th><td width="20%" align="right"> <a accesskey="n" href="vcd.html">Next</a></td></tr></table><hr></div><div class="sect1" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="dvd"></a>4.2. DVD playback</h2></div></div></div><p>
 For the complete list of available options, please read the man page.
-The Syntax for a standard Digital Versatile Disc (DVD) is as follows:
+The syntax to play a standard DVD is as follows:
 </p><pre class="screen">mplayer dvd://<em class="replaceable"><code>&lt;track&gt;</code></em> [-dvd-device <em class="replaceable"><code>&lt;device&gt;</code></em>]</pre><p>
 </p><p>
 Example:
-</p><pre class="screen">mplayer dvd://<em class="replaceable"><code>1</code></em> -dvd-device <em class="replaceable"><code>/dev/hdc</code></em></pre><p>
+</p><pre class="screen">mplayer dvd://1 -dvd-device /dev/hdc</pre><p>
+</p><p>
+If you have compiled <span class="application">MPlayer</span> with dvdnav support, the
+syntax is the same, except that you need to use dvdnav:// instead of dvd://.
 </p><p>
 The default DVD device is <tt class="filename">/dev/dvd</tt>. If your setup
 differs, make a symlink or specify the correct device on the command
 line with the <tt class="option">-dvd-device</tt> option.
-</p><p><b>New-style DVD support (mpdvdkit2). </b>
-<span class="application">MPlayer</span> uses <code class="systemitem">libdvdread</code> and
-<code class="systemitem">libdvdcss</code> for DVD decryption and playback. These two
-libraries are contained in the <tt class="filename">libmpdvdkit2/</tt>
-subdirectory of the <span class="application">MPlayer</span> source tree, you do not have
-to install them separately. We opted for this solution because we had to fix a
-<code class="systemitem">libdvdread</code> bug and apply a patch which adds
-<span class="bold"><strong>cracked CSS keys caching support</strong></span> to
-<code class="systemitem">libdvdcss</code>. This results in a large speed increase because the
-keys do not have to be cracked every time before playing.
 </p><p>
-<span class="application">MPlayer</span> can also use system-wide <code class="systemitem">libdvdread</code>
-and <code class="systemitem">libdvdcss</code> libraries, but this solution is
-<span class="bold"><strong>not</strong></span> recommended, as it can result in bugs,
+<span class="application">MPlayer</span> uses <code class="systemitem">libdvdread</code> and
+<code class="systemitem">libdvdcss</code> for DVD playback and decryption. These two
+libraries are contained in the <tt class="filename">libmpdvdkit2</tt>
+subdirectory of the <span class="application">MPlayer</span> source tree, you do not have
+to install them separately. You can also use system-wide versions of the two
+libraries, but this solution is not recommended, as it can result in bugs,
 library incompatibilities and slower speed.
 </p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
 In case of DVD decoding problems, try disabling supermount, or any other such
@@ -62,11 +58,10 @@ are dynamically allocated.
 The default DVD device is <tt class="filename">/dev/dvd</tt>. If your setup differs,
 make a symlink, or specify the correct device on the command line with the
 <tt class="option">-dvd-device</tt> option.
-</p><p><b>DVD authentication. </b>
-The authentication and decryption method of the new-style DVD support is done
-using a patched <code class="systemitem">libdvdcss</code> (see above). The method can
-be specified through the environment variable <code class="envar">DVDCSS_METHOD</code>,
-which can be set to key, disk or title.
+</p><p><b>DVD decryption. </b>
+DVD decryption is done by <code class="systemitem">libdvdcss</code>. The method
+can be specified through the <code class="envar">DVDCSS_METHOD</code> environment
+variable, which can be set to key, disk or title.
 </p><p>
 If nothing is specified it tries the following methods (default: key,
 title request):
@@ -79,7 +74,7 @@ to get and predecrypt the crypted disk key.
 </p></li><li><p>
 <span class="bold"><strong>cached key</strong></span>: <span class="application">MPlayer</span>
 looks for already cracked title keys which are stored in the
-<tt class="filename">~/.mplayer/DVDKeys</tt> directory (fast ;).
+<tt class="filename">~/.dvdcss</tt> directory (fast).
 </p></li><li><p>
 <span class="bold"><strong>key</strong></span>: If no cached key is available,
 <span class="application">MPlayer</span> tries to decrypt the disk key with a set

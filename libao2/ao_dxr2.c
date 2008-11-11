@@ -12,6 +12,7 @@
 #include "audio_out.h"
 #include "audio_out_internal.h"
 #include "libaf/af_format.h"
+#include "libmpdemux/mpeg_packetizer.h"
 
 
 static ao_info_t info =
@@ -25,6 +26,7 @@ static ao_info_t info =
 LIBAO_EXTERN(dxr2)
 
 static int volume=19;
+static int last_freq_id = -1;
 extern int dxr2_fd;
 
 // to set/get/query special features/parameters
@@ -71,6 +73,8 @@ static int init(int rate,int channels,int format,int flags){
 	if(dxr2_fd <= 0)
 	  return 0;
 
+        last_freq_id = -1;
+        
 	ao_data.outburst=2048;
 	ao_data.samplerate=rate;
 	ao_data.channels=channels;
@@ -123,27 +127,25 @@ static void uninit(int immed){
 }
 
 // stop playing and empty buffers (for seeking/pause)
-static void reset(){
+static void reset(void){
 
 }
 
 // stop playing, keep buffers (for pause)
-static void audio_pause()
+static void audio_pause(void)
 {
     // for now, just call reset();
     reset();
 }
 
 // resume playing, after audio_pause()
-static void audio_resume()
+static void audio_resume(void)
 {
 }
 
-extern void dxr2_send_packet(unsigned char* data,int len,int id,int timestamp);
-extern void dxr2_send_lpcm_packet(unsigned char* data,int len,int id,int timestamp,int freq_id);
 extern int vo_pts;
 // return: how many bytes can be played without blocking
-static int get_space(){
+static int get_space(void){
     float x=(float)(vo_pts-ao_data.pts)/90000.0;
     int y;
     if(x<=0) return 0;
@@ -152,15 +154,34 @@ static int get_space(){
     return y;
 }
 
+static void dxr2_send_lpcm_packet(unsigned char* data,int len,int id,unsigned int timestamp,int freq_id)
+{
+  extern int write_dxr2(unsigned char *data, int len);
+  
+  if(dxr2_fd < 0) {
+    mp_msg(MSGT_AO,MSGL_ERR,"DXR2 fd is not valid\n");
+    return;
+  }    
+
+  if(last_freq_id != freq_id) {
+    ioctl(dxr2_fd, DXR2_IOC_SET_AUDIO_SAMPLE_FREQUENCY, &freq_id);
+    last_freq_id = freq_id;
+  }
+
+  send_mpeg_lpcm_packet (data, len, id, timestamp, freq_id, write_dxr2);
+}
+
 // plays 'len' bytes of 'data'
 // it should round it down to outburst*n
 // return: number of bytes played
 static int play(void* data,int len,int flags){
+  extern int write_dxr2(unsigned char *data, int len);
+
   // MPEG and AC3 don't work :-(
     if(ao_data.format==AF_FORMAT_MPEG2)
-	dxr2_send_packet(data,len,0xC0,ao_data.pts);
+      send_mpeg_ps_packet (data, len, 0xC0, ao_data.pts, 2, write_dxr2);
     else if(ao_data.format==AF_FORMAT_AC3)
-      	dxr2_send_packet(data,len,0x80,ao_data.pts);
+      send_mpeg_ps_packet (data, len, 0x80, ao_data.pts, 2, write_dxr2);
     else {
 	int i;
 	//unsigned short *s=data;
@@ -174,7 +195,7 @@ static int play(void* data,int len,int flags){
 }
 
 // return: delay in seconds between first and last sample in buffer
-static float get_delay(){
+static float get_delay(void){
 
     return 0.0;
 }

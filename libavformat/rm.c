@@ -2,18 +2,20 @@
  * "Real" compatible mux and demux.
  * Copyright (c) 2000, 2001 Fabrice Bellard.
  *
- * This library is free software; you can redistribute it and/or
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * FFmpeg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 #include "avformat.h"
@@ -645,7 +647,7 @@ static int rm_read_header(AVFormatContext *s, AVFormatParameters *ap)
     unsigned int tag, v;
     int tag_size, size, codec_data_size, i;
     int64_t codec_pos;
-    unsigned int h263_hack_version, start_time, duration;
+    unsigned int start_time, duration;
     char buf[128];
     int flags = 0;
 
@@ -761,14 +763,7 @@ static int rm_read_header(AVFormatContext *s, AVFormatParameters *ap)
 
 //                av_log(NULL, AV_LOG_DEBUG, "fps= %d fps2= %d\n", fps, fps2);
                 st->codec->time_base.den = fps * st->codec->time_base.num;
-                /* modification of h263 codec version (!) */
-#ifdef WORDS_BIGENDIAN
-                h263_hack_version = ((uint32_t*)st->codec->extradata)[1];
-#else
-                h263_hack_version = bswap_32(((uint32_t*)st->codec->extradata)[1]);
-#endif
-                st->codec->sub_id = h263_hack_version;
-                switch((h263_hack_version>>28)){
+                switch(((uint8_t*)st->codec->extradata)[4]>>4){
                 case 1: st->codec->codec_id = CODEC_ID_RV10; break;
                 case 2: st->codec->codec_id = CODEC_ID_RV20; break;
                 case 3: st->codec->codec_id = CODEC_ID_RV30; break;
@@ -1122,7 +1117,8 @@ static int64_t rm_read_dts(AVFormatContext *s, int stream_index,
     return dts;
 }
 
-static AVInputFormat rm_iformat = {
+#ifdef CONFIG_RM_DEMUXER
+AVInputFormat rm_demuxer = {
     "rm",
     "rm format",
     sizeof(RMContext),
@@ -1133,9 +1129,9 @@ static AVInputFormat rm_iformat = {
     NULL,
     rm_read_dts,
 };
-
-#ifdef CONFIG_MUXERS
-static AVOutputFormat rm_oformat = {
+#endif
+#ifdef CONFIG_RM_MUXER
+AVOutputFormat rm_muxer = {
     "rm",
     "rm format",
     "application/vnd.rn-realmedia",
@@ -1147,13 +1143,4 @@ static AVOutputFormat rm_oformat = {
     rm_write_packet,
     rm_write_trailer,
 };
-#endif //CONFIG_MUXERS
-
-int rm_init(void)
-{
-    av_register_input_format(&rm_iformat);
-#ifdef CONFIG_MUXERS
-    av_register_output_format(&rm_oformat);
-#endif //CONFIG_MUXERS
-    return 0;
-}
+#endif

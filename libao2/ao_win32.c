@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  *
  *****************************************************************************/
 
@@ -159,6 +159,11 @@ static int init(int rate,int channels,int format,int flags)
 			mp_msg(MSGT_AO, MSGL_V,"ao_win32: format %s not supported defaulting to Signed 16-bit Little-Endian\n",af_fmt2str_short(format));
 			format=AF_FORMAT_S16_LE;
 	}   
+
+	// FIXME multichannel mode is buggy
+	if(channels > 2)
+		channels = 2;
+   
 	//fill global ao_data 
 	ao_data.channels=channels;
 	ao_data.samplerate=rate;
@@ -254,7 +259,7 @@ static void uninit(int immed)
 }
 
 // stop playing and empty buffers (for seeking/pause)
-static void reset()
+static void reset(void)
 {
    	waveOutReset(hWaveOut);
 	buf_write=0;
@@ -264,19 +269,19 @@ static void reset()
 }
 
 // stop playing, keep buffers (for pause)
-static void audio_pause()
+static void audio_pause(void)
 {
     waveOutPause(hWaveOut);
 }
 
 // resume playing, after audio_pause()
-static void audio_resume()
+static void audio_resume(void)
 {
 	waveOutRestart(hWaveOut);
 }
 
 // return: how many bytes can be played without blocking
-static int get_space()
+static int get_space(void)
 {
     return BUFFER_COUNT*BUFFER_SIZE - buffered_bytes;
 }
@@ -317,12 +322,13 @@ static int write_waveOutBuffer(unsigned char* data,int len){
 // return: number of bytes played
 static int play(void* data,int len,int flags)
 {
+	if (!(flags & AOPLAY_FINAL_CHUNK))
 	len = (len/ao_data.outburst)*ao_data.outburst;
 	return write_waveOutBuffer(data,len);
 }
 
 // return: delay in seconds between first and last sample in buffer
-static float get_delay()
+static float get_delay(void)
 {
 	return (float)(buffered_bytes + ao_data.buffersize)/(float)ao_data.bps;
 }

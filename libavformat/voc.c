@@ -2,23 +2,25 @@
  * Creative Voice File demuxer.
  * Copyright (c) 2006  Aurelien Jacobs <aurel@gnuage.org>
  *
- * This library is free software; you can redistribute it and/or
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * FFmpeg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include "avformat.h"
-#include "avi.h"    /* for CodecTag */
+#include "riff.h"    /* for CodecTag */
 #include "voc.h"
 
 
@@ -93,18 +95,6 @@ static int voc_read_header(AVFormatContext *s, AVFormatParameters *ap)
     return 0;
 }
 
-static int voc_get_bps(int codec_id)
-{
-    switch (codec_id) {
-    case CODEC_ID_PCM_S16LE:
-        return 16;
-    case CODEC_ID_ADPCM_CT:
-        return 4;
-    default:
-        return 8;
-    }
-}
-
 int
 voc_get_packet(AVFormatContext *s, AVPacket *pkt, AVStream *st, int max_size)
 {
@@ -130,7 +120,7 @@ voc_get_packet(AVFormatContext *s, AVPacket *pkt, AVStream *st, int max_size)
                 dec->sample_rate = sample_rate;
             dec->channels = channels;
             dec->codec_id = codec_get_id(voc_codec_tags, get_byte(pb));
-            dec->bits_per_sample = voc_get_bps(dec->codec_id);
+            dec->bits_per_sample = av_get_bits_per_sample(dec->codec_id);
             voc->remaining_size -= 2;
             max_size -= 2;
             channels = 1;
@@ -185,7 +175,7 @@ static int voc_read_close(AVFormatContext *s)
     return 0;
 }
 
-static AVInputFormat voc_iformat = {
+AVInputFormat voc_demuxer = {
     "voc",
     "Creative Voice File format",
     sizeof(voc_dec_context_t),
@@ -268,7 +258,7 @@ static int voc_write_trailer(AVFormatContext *s)
     return 0;
 }
 
-static AVOutputFormat voc_oformat = {
+AVOutputFormat voc_muxer = {
     "voc",
     "Creative Voice File format",
     "audio/x-voc",
@@ -282,15 +272,3 @@ static AVOutputFormat voc_oformat = {
 };
 
 #endif /* CONFIG_MUXERS */
-
-
-int voc_init(void)
-{
-#ifdef CONFIG_DEMUXERS
-    av_register_input_format(&voc_iformat);
-#endif /* CONFIG_DEMUXERS */
-#ifdef CONFIG_MUXERS
-    av_register_output_format(&voc_oformat);
-#endif /* CONFIG_MUXERS */
-    return 0;
-}

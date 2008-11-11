@@ -3,18 +3,20 @@
  * Copyright (c) 2001 Fabrice Bellard.
  * Copyright (c) 2002-2004 Michael Niedermayer <michaelni@gmx.at>
  *
- * This library is free software; you can redistribute it and/or
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * FFmpeg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
@@ -85,6 +87,7 @@ int ff_h263_decode_init(AVCodecContext *avctx)
         s->h263_pred = 1;
         s->msmpeg4_version=5;
         break;
+    case CODEC_ID_VC1:
     case CODEC_ID_WMV3:
         s->h263_msmpeg4 = 1;
         s->h263_pred = 1;
@@ -390,6 +393,7 @@ static int h263_find_frame_end(ParseContext *pc, const uint8_t *buf, int buf_siz
     return END_NOT_FOUND;
 }
 
+#ifdef CONFIG_H263_PARSER
 static int h263_parse(AVCodecParserContext *s,
                            AVCodecContext *avctx,
                            uint8_t **poutbuf, int *poutbuf_size,
@@ -410,6 +414,7 @@ static int h263_parse(AVCodecParserContext *s,
     *poutbuf_size = buf_size;
     return next;
 }
+#endif
 
 int ff_h263_decode_frame(AVCodecContext *avctx,
                              void *data, int *data_size,
@@ -423,8 +428,8 @@ int ff_h263_decode_frame(AVCodecContext *avctx,
 uint64_t time= rdtsc();
 #endif
 #ifdef DEBUG
-    printf("*****frame %d size=%d\n", avctx->frame_number, buf_size);
-    printf("bytes=%x %x %x %x\n", buf[0], buf[1], buf[2], buf[3]);
+    av_log(avctx, AV_LOG_DEBUG, "*****frame %d size=%d\n", avctx->frame_number, buf_size);
+    av_log(avctx, AV_LOG_DEBUG, "bytes=%x %x %x %x\n", buf[0], buf[1], buf[2], buf[3]);
 #endif
     s->flags= avctx->flags;
     s->flags2= avctx->flags2;
@@ -690,6 +695,17 @@ retry:
             s->next_p_frame_damaged=0;
     }
 
+    if((s->avctx->flags2 & CODEC_FLAG2_FAST) && s->pict_type==B_TYPE){
+        s->me.qpel_put= s->dsp.put_2tap_qpel_pixels_tab;
+        s->me.qpel_avg= s->dsp.avg_2tap_qpel_pixels_tab;
+    }else if((!s->no_rounding) || s->pict_type==B_TYPE){
+        s->me.qpel_put= s->dsp.put_qpel_pixels_tab;
+        s->me.qpel_avg= s->dsp.avg_qpel_pixels_tab;
+    }else{
+        s->me.qpel_put= s->dsp.put_no_rnd_qpel_pixels_tab;
+        s->me.qpel_avg= s->dsp.avg_qpel_pixels_tab;
+    }
+
     if(MPV_frame_start(s, avctx) < 0)
         return -1;
 
@@ -886,6 +902,7 @@ AVCodec flv_decoder = {
     CODEC_CAP_DRAW_HORIZ_BAND | CODEC_CAP_DR1
 };
 
+#ifdef CONFIG_H263_PARSER
 AVCodecParser h263_parser = {
     { CODEC_ID_H263 },
     sizeof(ParseContext),
@@ -893,3 +910,4 @@ AVCodecParser h263_parser = {
     h263_parse,
     ff_parse_close,
 };
+#endif

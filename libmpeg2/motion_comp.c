@@ -21,8 +21,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  * Modified for use with MPlayer, see libmpeg-0.4.0.diff for the exact changes.
- * detailed CVS changelog at http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
- * $Id: motion_comp.c 14733 2005-02-19 02:32:12Z diego $
+ * detailed changelog at http://svn.mplayerhq.hu/mplayer/trunk/
+ * $Id: motion_comp.c 19139 2006-07-19 05:47:21Z rfelker $
  */
 
 #include "config.h"
@@ -37,12 +37,18 @@ mpeg2_mc_t mpeg2_mc;
 
 void mpeg2_mc_init (uint32_t accel)
 {
-#if defined(ARCH_X86) || defined(ARCH_X86_64)
+#ifdef HAVE_MMX2
     if (accel & MPEG2_ACCEL_X86_MMXEXT)
 	mpeg2_mc = mpeg2_mc_mmxext;
-    else if (accel & MPEG2_ACCEL_X86_3DNOW)
+    else
+#endif
+#ifdef HAVE_3DNOW
+    if (accel & MPEG2_ACCEL_X86_3DNOW)
 	mpeg2_mc = mpeg2_mc_3dnow;
-    else if (accel & MPEG2_ACCEL_X86_MMX)
+    else
+#endif
+#ifdef HAVE_MMX
+    if (accel & MPEG2_ACCEL_X86_MMX)
 	mpeg2_mc = mpeg2_mc_mmx;
     else
 #endif

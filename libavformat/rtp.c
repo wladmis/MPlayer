@@ -2,18 +2,20 @@
  * RTP input/output format
  * Copyright (c) 2002 Fabrice Bellard.
  *
- * This library is free software; you can redistribute it and/or
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * FFmpeg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 #include "avformat.h"
@@ -58,7 +60,7 @@ AVRtpPayloadType_t AVRtpPayloadTypes[]=
   {9, "G722",        CODEC_TYPE_AUDIO,   CODEC_ID_NONE, 8000, 1},
   {10, "L16",        CODEC_TYPE_AUDIO,   CODEC_ID_PCM_S16BE, 44100, 2},
   {11, "L16",        CODEC_TYPE_AUDIO,   CODEC_ID_PCM_S16BE, 44100, 1},
-  {12, "QCELP",      CODEC_TYPE_AUDIO,   CODEC_ID_NONE, 8000, 1},
+  {12, "QCELP",      CODEC_TYPE_AUDIO,   CODEC_ID_QCELP, 8000, 1},
   {13, "CN",         CODEC_TYPE_AUDIO,   CODEC_ID_NONE, 8000, 1},
   {14, "MPA",        CODEC_TYPE_AUDIO,   CODEC_ID_MP2, 90000, -1},
   {15, "G728",       CODEC_TYPE_AUDIO,   CODEC_ID_NONE, 8000, 1},
@@ -218,7 +220,7 @@ int rtp_get_codec_info(AVCodecContext *codec, int payload_type)
 {
     if (AVRtpPayloadTypes[payload_type].codec_id != CODEC_ID_NONE) {
         codec->codec_type = AVRtpPayloadTypes[payload_type].codec_type;
-        codec->codec_id = AVRtpPayloadTypes[payload_type].codec_type;
+        codec->codec_id = AVRtpPayloadTypes[payload_type].codec_id;
         if (AVRtpPayloadTypes[payload_type].audio_channels > 0)
             codec->channels = AVRtpPayloadTypes[payload_type].audio_channels;
         if (AVRtpPayloadTypes[payload_type].clock_rate > 0)
@@ -495,7 +497,7 @@ int rtp_parse_packet(RTPDemuxContext *s, AVPacket *pkt,
             len -= infos->au_headers[0].size;
             }
             s->read_buf_size = len;
-            s->buf_ptr = (char *)buf;
+            s->buf_ptr = buf;
             pkt->stream_index = s->st->index;
             return 0;
         default:
@@ -860,7 +862,7 @@ static int rtp_write_trailer(AVFormatContext *s1)
     return 0;
 }
 
-AVOutputFormat rtp_mux = {
+AVOutputFormat rtp_muxer = {
     "rtp",
     "RTP output format",
     NULL,
@@ -872,9 +874,3 @@ AVOutputFormat rtp_mux = {
     rtp_write_packet,
     rtp_write_trailer,
 };
-
-int rtp_init(void)
-{
-    av_register_output_format(&rtp_mux);
-    return 0;
-}

@@ -2,24 +2,26 @@
  * NSV decoder.
  * Copyright (c) 2004 The FFmpeg Project.
  *
- * This library is free software; you can redistribute it and/or
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * FFmpeg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 #include "avformat.h"
-#include "avi.h"
+#include "riff.h"
 
-#define DEBUG
+//#define DEBUG
 //#define DEBUG_DUMP_INDEX // XXX dumbdriving-271.nsv breaks with it commented!!
 //#define DEBUG_SEEK
 #define CHECK_SUBSEQUENT_NSVS
@@ -182,15 +184,15 @@ static const CodecTag nsv_codec_video_tags[] = {
     { CODEC_ID_VP3, MKTAG('V', 'P', '3', ' ') },
     { CODEC_ID_VP3, MKTAG('V', 'P', '3', '0') },
     { CODEC_ID_VP3, MKTAG('V', 'P', '3', '1') },
+    { CODEC_ID_VP5, MKTAG('V', 'P', '5', ' ') },
+    { CODEC_ID_VP5, MKTAG('V', 'P', '5', '0') },
+    { CODEC_ID_VP6, MKTAG('V', 'P', '6', '2') },
 /*
     { CODEC_ID_VP4, MKTAG('V', 'P', '4', ' ') },
     { CODEC_ID_VP4, MKTAG('V', 'P', '4', '0') },
-    { CODEC_ID_VP5, MKTAG('V', 'P', '5', ' ') },
-    { CODEC_ID_VP5, MKTAG('V', 'P', '5', '0') },
     { CODEC_ID_VP6, MKTAG('V', 'P', '6', ' ') },
     { CODEC_ID_VP6, MKTAG('V', 'P', '6', '0') },
     { CODEC_ID_VP6, MKTAG('V', 'P', '6', '1') },
-    { CODEC_ID_VP6, MKTAG('V', 'P', '6', '2') },
 */
     { CODEC_ID_XVID, MKTAG('X', 'V', 'I', 'D') }, /* cf sample xvid decoder from nsv_codec_sdk.zip */
     { CODEC_ID_RAWVIDEO, MKTAG('R', 'G', 'B', '3') },
@@ -705,7 +707,6 @@ static int nsv_read_close(AVFormatContext *s)
             av_free(ast->index_entries);
             av_free(ast);
         }
-        av_free(st->codec->extradata);
         av_free(st->codec->palctrl);
     }
 
@@ -743,7 +744,7 @@ static int nsv_probe(AVProbeData *p)
     return 0;
 }
 
-static AVInputFormat nsv_iformat = {
+AVInputFormat nsv_demuxer = {
     "nsv",
     "NullSoft Video format",
     sizeof(NSVContext),
@@ -753,9 +754,3 @@ static AVInputFormat nsv_iformat = {
     nsv_read_close,
     nsv_read_seek,
 };
-
-int nsvdec_init(void)
-{
-    av_register_input_format(&nsv_iformat);
-    return 0;
-}

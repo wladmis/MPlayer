@@ -2,22 +2,25 @@
  * Yamaha SMAF format
  * Copyright (c) 2005 Vidar Madsen
  *
- * This library is free software; you can redistribute it and/or
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * FFmpeg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 #include "avformat.h"
-#include "avi.h"
+#include "allformats.h"
+#include "riff.h"
 
 typedef struct {
     offset_t atrpos, atsqpos, awapos;
@@ -300,8 +303,8 @@ static int mmf_read_seek(AVFormatContext *s,
     return pcm_read_seek(s, stream_index, timestamp, flags);
 }
 
-
-static AVInputFormat mmf_iformat = {
+#ifdef CONFIG_MMF_DEMUXER
+AVInputFormat mmf_demuxer = {
     "mmf",
     "mmf format",
     sizeof(MMFContext),
@@ -311,9 +314,9 @@ static AVInputFormat mmf_iformat = {
     mmf_read_close,
     mmf_read_seek,
 };
-
-#ifdef CONFIG_MUXERS
-static AVOutputFormat mmf_oformat = {
+#endif
+#ifdef CONFIG_MMF_MUXER
+AVOutputFormat mmf_muxer = {
     "mmf",
     "mmf format",
     "application/vnd.smaf",
@@ -325,14 +328,4 @@ static AVOutputFormat mmf_oformat = {
     mmf_write_packet,
     mmf_write_trailer,
 };
-#endif //CONFIG_MUXERS
-
-int ff_mmf_init(void)
-{
-    av_register_input_format(&mmf_iformat);
-#ifdef CONFIG_MUXERS
-    av_register_output_format(&mmf_oformat);
-#endif //CONFIG_MUXERS
-    return 0;
-}
-
+#endif

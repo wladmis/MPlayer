@@ -7,8 +7,8 @@
  * Copyright (C) 1998-2002 VideoLAN
  *
  * Modified for use with MPlayer, changes contained in libdvdcss_changes.diff.
- * detailed CVS changelog at http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
- * $Id: libdvdcss.c 18110 2006-04-15 21:45:29Z reimar $
+ * detailed changelog at http://svn.mplayerhq.hu/mplayer/trunk/
+ * $Id: libdvdcss.c 19826 2006-09-13 13:36:49Z diego $
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -127,7 +127,7 @@
 #   include <direct.h>
 #endif
 
-#include "dvdcss.h"
+#include "dvdcss/dvdcss.h"
 
 #include "common.h"
 #include "css.h"

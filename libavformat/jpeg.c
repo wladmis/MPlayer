@@ -2,18 +2,20 @@
  * JPEG image format
  * Copyright (c) 2003 Fabrice Bellard.
  *
- * This library is free software; you can redistribute it and/or
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * FFmpeg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 #include "avformat.h"
@@ -160,7 +162,7 @@ static int jpeg_read(ByteIOContext *f,
     return jctx.ret_code;
 }
 
-#ifdef CONFIG_MUXERS
+#if defined(CONFIG_MUXERS) && defined(CONFIG_MJPEG_ENCODER)
 static int jpeg_write(ByteIOContext *pb, AVImageInfo *info)
 {
     AVCodecContext *c;
@@ -230,7 +232,7 @@ AVImageFormat jpeg_image_format = {
     jpeg_probe,
     jpeg_read,
     (1 << PIX_FMT_YUVJ420P) | (1 << PIX_FMT_YUVJ422P) | (1 << PIX_FMT_YUVJ444P),
-#ifdef CONFIG_MUXERS
+#if defined(CONFIG_MUXERS) && defined(CONFIG_MJPEG_ENCODER)
     jpeg_write,
 #else
     NULL,

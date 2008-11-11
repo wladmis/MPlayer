@@ -13,9 +13,9 @@
 /* applied some modification to make make our xine friend more happy */
 
 /*
- * Modified for use with MPlayer, detailed CVS changelog at
- * http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
- * $Id: ldt_keeper.c 18363 2006-04-30 21:17:30Z diego $
+ * Modified for use with MPlayer, detailed changelog at
+ * http://svn.mplayerhq.hu/mplayer/trunk/
+ * $Id: ldt_keeper.c 18883 2006-07-02 03:59:36Z reynaldo $
  */
 
 #include "ldt_keeper.h"
@@ -272,7 +272,7 @@ ldt_fs_t* Setup_LDT_Keeper(void)
 
     Setup_FS_Segment();
 
-    ldt_fs->prev_struct = (char*)malloc(sizeof(char) * 8);
+    ldt_fs->prev_struct = malloc(8);
     *(void**)array.base_addr = ldt_fs->prev_struct;
 
     return ldt_fs;

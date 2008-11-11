@@ -2,18 +2,20 @@
  * Linux DV1394 interface
  * Copyright (c) 2003 Max Krasnyansky <maxk@qualcomm.com>
  *
- * This library is free software; you can redistribute it and/or
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * FFmpeg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
@@ -227,7 +229,7 @@ static int dv1394_close(AVFormatContext * context)
     return 0;
 }
 
-static AVInputFormat dv1394_format = {
+AVInputFormat dv1394_demuxer = {
     .name           = "dv1394",
     .long_name      = "dv1394 A/V grab",
     .priv_data_size = sizeof(struct dv1394_data),
@@ -236,9 +238,3 @@ static AVInputFormat dv1394_format = {
     .read_close     = dv1394_close,
     .flags          = AVFMT_NOFILE
 };
-
-int dv1394_init(void)
-{
-    av_register_input_format(&dv1394_format);
-    return 0;
-}

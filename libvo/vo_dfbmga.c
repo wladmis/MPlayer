@@ -18,12 +18,14 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with this library; if not, write to the
-   Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-   Boston, MA 02111-1307, USA.
+   Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+   Boston, MA 02110-1301 USA.
 */
 
 /* directfb includes */
 #include <directfb.h>
+
+#define DFB_VERSION(a,b,c) (((a)<<16)|((b)<<8)|(c))
 
 /* other things */
 #include <stdio.h>
@@ -108,18 +110,19 @@ static int is_g200;
 *	    vo_dfbmga         *
 ******************************/
 
-#if DIRECTFBVERSION < 918
+#if DIRECTFBVERSION < DFB_VERSION(0,9,18)
  #define DSPF_ALUT44 DSPF_LUT8
  #define DLBM_TRIPLE ~0
  #define DSFLIP_ONSYNC 0
 #endif
 
-#if DIRECTFBVERSION < 916
+#if DIRECTFBVERSION < DFB_VERSION(0,9,16)
  #define DSPF_ARGB1555 DSPF_RGB15
 #endif
 
 static uint32_t in_width;
 static uint32_t in_height;
+static uint32_t buf_height;
 static uint32_t screen_width;
 static uint32_t screen_height;
 static uint32_t sub_width;
@@ -149,7 +152,7 @@ pixelformat_name( DFBSurfacePixelFormat format )
 	  return "I420";
      case DSPF_ALUT44:
 	  return "ALUT44";
-#if DIRECTFBVERSION > 921
+#if DIRECTFBVERSION > DFB_VERSION(0,9,21)
      case DSPF_NV12:
           return "NV12";
      case DSPF_NV21:
@@ -181,7 +184,7 @@ imgfmt_to_pixelformat( uint32_t format )
      case IMGFMT_I420:
      case IMGFMT_IYUV:
           return DSPF_I420;
-#if DIRECTFBVERSION > 921
+#if DIRECTFBVERSION > DFB_VERSION(0,9,21)
      case IMGFMT_NV12:
           return DSPF_NV12;
      case IMGFMT_NV21:
@@ -206,7 +209,7 @@ get_layer_by_name( DFBDisplayLayerID id,
 {
      struct layer_enum *l = (struct layer_enum *) data;
 
-#if DIRECTFBVERSION > 915
+#if DIRECTFBVERSION > DFB_VERSION(0,9,15)
      /* We have desc.name so use it */
      if (!strcmp( l->name, desc.name ))
           if ((l->res = dfb->GetDisplayLayer( dfb, id, l->layer )) == DFB_OK)
@@ -237,7 +240,7 @@ preinit( const char *arg )
      use_crtc2 = 1;
      use_spic = 1;
      field_parity = -1;
-#if DIRECTFBVERSION > 917
+#if DIRECTFBVERSION > DFB_VERSION(0,9,17)
      buffermode = DLBM_TRIPLE;
      osd_max = 4;
 #else
@@ -479,7 +482,7 @@ preinit( const char *arg )
 
      if (use_crtc2) {
           struct layer_enum l = {
-#if DIRECTFBVERSION > 920
+#if DIRECTFBVERSION > DFB_VERSION(0,9,20)
                "Matrox CRTC2 Layer",
 #else
                "Matrox CRTC2",
@@ -606,8 +609,8 @@ config( uint32_t width, uint32_t height,
 
           dsc.flags       = DSDESC_WIDTH | DSDESC_HEIGHT |
                             DSDESC_PIXELFORMAT;
-          dsc.width       = in_width;
-          dsc.height      = in_height;
+          dsc.width       = (in_width + 15) & ~15;
+          dsc.height      = (in_height + 15) & ~15;
           dsc.pixelformat = dlc.pixelformat;
 
           /* Don't waste video memory since we don't need direct stretchblit */
@@ -630,6 +633,7 @@ config( uint32_t width, uint32_t height,
           frame = bufs[0];
           current_buf = 0;
           current_ip_buf = 0;
+          buf_height = dsc.height;
      }
      frame->GetPixelFormat( frame, &frame_format );
      mp_msg( MSGT_VO, MSGL_INFO, "vo_dfbmga: Video surface %dx%d %s\n",
@@ -694,7 +698,7 @@ config( uint32_t width, uint32_t height,
           dlc.buffermode = buffermode;
           dlc.options    = DLOP_NONE;
 
-#if DIRECTFBVERSION > 916
+#if DIRECTFBVERSION > DFB_VERSION(0,9,16)
           if (field_parity != -1) {
                dlc.options |= DLOP_FIELD_PARITY;
           }
@@ -742,7 +746,7 @@ config( uint32_t width, uint32_t height,
                return -1;
           }
 
-#if DIRECTFBVERSION > 916
+#if DIRECTFBVERSION > DFB_VERSION(0,9,16)
           if (field_parity != -1)
                crtc2->SetFieldParity( crtc2, field_parity );
 #endif
@@ -822,7 +826,7 @@ config( uint32_t width, uint32_t height,
           dlc.pixelformat = DSPF_ALUT44;
           dlc.buffermode  = buffermode;
 
-#if DIRECTFBVERSION > 916
+#if DIRECTFBVERSION > DFB_VERSION(0,9,16)
           dlc.flags      |= DLCONF_OPTIONS;
           dlc.options     = DLOP_ALPHACHANNEL;
 #endif
@@ -903,7 +907,7 @@ query_format( uint32_t format )
                     return 0;
           case IMGFMT_YUY2:
                break;
-#if DIRECTFBVERSION > 921
+#if DIRECTFBVERSION > DFB_VERSION(0,9,21)
           case IMGFMT_NV12:
           case IMGFMT_NV21:
                if (!use_bes || use_crtc2)
@@ -946,7 +950,7 @@ static void
 clear_alpha( int x0, int y0,
              int w, int h )
 {
-     if (use_spic && !flipping && vo_osd_changed)
+     if (use_spic && !flipping && vo_osd_changed_flag)
           subframe->FillRectangle( subframe, x0, y0, w, h );
 }
 
@@ -961,7 +965,7 @@ draw_alpha( int x0, int y0,
      int pitch;
 
      if (use_spic) {
-          if (!osd_changed || (!flipping && !vo_osd_changed))
+          if (!osd_changed || (!flipping && !vo_osd_changed_flag))
                return;
           osd_dirty |= osd_current;
      } else {
@@ -1012,7 +1016,7 @@ draw_alpha( int x0, int y0,
 			      ((uint8_t *) dst) + pitch * y0 + 2 * x0 + 1,
                               pitch );
 	  break;
-#if DIRECTFBVERSION > 921
+#if DIRECTFBVERSION > DFB_VERSION(0,9,21)
      case DSPF_NV12:
      case DSPF_NV21:
 #endif
@@ -1045,12 +1049,12 @@ draw_slice( uint8_t * src[], int stride[], int w, int h, int x, int y )
      memcpy_pic( dst + pitch * y + x, src[0],
                  w, h, pitch, stride[0] );
 
-     dst += pitch * in_height;
+     dst += pitch * buf_height;
 
      y /= 2;
      h /= 2;
 
-#if DIRECTFBVERSION > 921
+#if DIRECTFBVERSION > DFB_VERSION(0,9,21)
      if (frame_format == DSPF_NV12 || frame_format == DSPF_NV21) {
           memcpy_pic( dst + pitch * y + x, src[1],
                       w, h, pitch, stride[1] );
@@ -1068,7 +1072,7 @@ draw_slice( uint8_t * src[], int stride[], int w, int h, int x, int y )
           memcpy_pic( dst + pitch * y + x, src[2],
                       w, h, pitch, stride[2] );
 
-     dst += pitch * in_height / 2;
+     dst += pitch * buf_height / 2;
 
      if (frame_format == DSPF_I420 )
           memcpy_pic( dst + pitch * y + x, src[2],
@@ -1090,7 +1094,7 @@ blit_to_screen( void )
      DFBRectangle *srect = NULL;
 
      if (use_bes) {
-#if DIRECTFBVERSION > 915
+#if DIRECTFBVERSION > DFB_VERSION(0,9,15)
           if (vo_vsync && !flipping && !use_crtc2)
                bes->WaitForSync( bes );
 #endif
@@ -1101,7 +1105,7 @@ blit_to_screen( void )
      }
 
      if (use_crtc2) {
-#if DIRECTFBVERSION > 915
+#if DIRECTFBVERSION > DFB_VERSION(0,9,15)
           if (vo_vsync && !flipping)
                crtc2->WaitForSync( crtc2 );
 #endif
@@ -1251,17 +1255,17 @@ get_image( mp_image_t *mpi )
 
                if (mpi->flags & MP_IMGFLAG_SWAPPED) {
                     /* I420 */
-                    mpi->planes[1] = dst + in_height * pitch;
-                    mpi->planes[2] = mpi->planes[1] + in_height * pitch / 4;
+                    mpi->planes[1] = dst + buf_height * pitch;
+                    mpi->planes[2] = mpi->planes[1] + buf_height * pitch / 4;
                } else {
                     /* YV12 */
-                    mpi->planes[2] = dst + in_height * pitch;
-                    mpi->planes[1] = mpi->planes[2] + in_height * pitch / 4;
+                    mpi->planes[2] = dst + buf_height * pitch;
+                    mpi->planes[1] = mpi->planes[2] + buf_height * pitch / 4;
                }
                } else {
                     /* NV12/NV21 */
                     mpi->stride[1] = pitch;
-                    mpi->planes[1] = dst + in_height * pitch;
+                    mpi->planes[1] = dst + buf_height * pitch;
                }
           }
 

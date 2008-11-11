@@ -2,18 +2,20 @@
  * AMR Audio decoder stub
  * Copyright (c) 2003 the ffmpeg project
  *
- * This library is free software; you can redistribute it and/or
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * FFmpeg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
  /*
@@ -55,7 +57,7 @@
 
 #include "avcodec.h"
 
-#ifdef AMR_NB_FIXED
+#ifdef CONFIG_AMR_NB_FIXED
 
 #define MMS_IO
 
@@ -107,7 +109,7 @@ static enum Mode getBitrateMode(int bitrate)
     return(MR122);
 }
 
-#ifdef AMR_NB_FIXED
+#ifdef CONFIG_AMR_NB_FIXED
 /* fixed point version*/
 /* frame size in serial bitstream file (frame type + serial stream + flags) */
 #define SERIAL_FRAMESIZE (1+MAX_SERIAL_SIZE+5)
@@ -326,7 +328,7 @@ static int amr_nb_encode_frame(AVCodecContext *avctx,
 }
 
 
-#elif defined(AMR_NB) /* Float point version*/
+#elif defined(CONFIG_AMR_NB) /* Float point version*/
 
 typedef struct AMRContext {
     int frameCount;
@@ -457,7 +459,7 @@ static int amr_nb_encode_frame(AVCodecContext *avctx,
 
 #endif
 
-#if defined(AMR_NB) || defined(AMR_NB_FIXED)
+#if defined(CONFIG_AMR_NB) || defined(CONFIG_AMR_NB_FIXED)
 
 AVCodec amr_nb_decoder =
 {
@@ -486,7 +488,7 @@ AVCodec amr_nb_encoder =
 #endif
 
 /* -----------AMR wideband ------------*/
-#ifdef AMR_WB
+#ifdef CONFIG_AMR_WB
 
 #ifdef _TYPEDEF_H
 //To avoid duplicate typedefs from typdef in amr-nb
@@ -661,4 +663,4 @@ AVCodec amr_wb_encoder =
     NULL,
 };
 
-#endif //AMR_WB
+#endif //CONFIG_AMR_WB

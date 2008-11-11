@@ -3,22 +3,25 @@
  *
  * Copyright (c) 2002 Michael Niedermayer <michaelni@gmx.at>
  *
- * This library is free software; you can redistribute it and/or
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * FFmpeg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 #undef SPREADW
 #undef PMAXW
+#undef PMAX
 #ifdef HAVE_MMX2
 #define SPREADW(a) "pshufw $0, " #a ", " #a " \n\t"
 #define PMAXW(a,b) "pmaxsw " #a ", " #b "     \n\t"
@@ -111,7 +114,7 @@ static int RENAME(dct_quantize)(MpegEncContext *s,
             "pxor %%mm6, %%mm6                  \n\t"
             "psubw (%3), %%mm6                  \n\t" // -bias[0]
             "mov $-128, %%"REG_a"               \n\t"
-            ".balign 16                         \n\t"
+            ASMALIGN(4)
             "1:                                 \n\t"
             "pxor %%mm1, %%mm1                  \n\t" // 0
             "movq (%1, %%"REG_a"), %%mm0        \n\t" // block[i]
@@ -155,7 +158,7 @@ static int RENAME(dct_quantize)(MpegEncContext *s,
             "pxor %%mm7, %%mm7                  \n\t" // 0
             "pxor %%mm4, %%mm4                  \n\t" // 0
             "mov $-128, %%"REG_a"               \n\t"
-            ".balign 16                         \n\t"
+            ASMALIGN(4)
             "1:                                 \n\t"
             "pxor %%mm1, %%mm1                  \n\t" // 0
             "movq (%1, %%"REG_a"), %%mm0        \n\t" // block[i]

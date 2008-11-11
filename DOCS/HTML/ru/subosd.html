@@ -1,13 +1,13 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=KOI8-R"><title>1.4. Субтитры и OSD</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.68.1"><link rel="start" href="index.html" title="MPlayer - The Movie Player"><link rel="up" href="intro.html" title="Глава 1. Введение"><link rel="prev" href="gui.html" title="1.3. Как насчёт GUI?"><link rel="next" href="rtc.html" title="1.5. RTC"><link rel="preface" href="howtoread.html" title="Как читать эту документацию"><link rel="chapter" href="intro.html" title="Глава 1. Введение"><link rel="chapter" href="usage.html" title="Глава 2. Использование"><link rel="chapter" href="cd-dvd.html" title="Глава 3. Использование CD/DVD"><link rel="chapter" href="faq.html" title="Глава 4. Frequently Asked Questions"><link rel="chapter" href="features.html" title="Глава 5. Возможности"><link rel="chapter" href="video.html" title="Глава 6. Video output devices"><link rel="chapter" href="audio.html" title="Глава 7. Audio output devices"><link rel="chapter" href="ports.html" title="Глава 8. Портинг"><link rel="chapter" href="mencoder.html" title="Глава 9. Basic usage of MEncoder"><link rel="chapter" href="encoding-guide.html" title="Глава 10. Encoding with MEncoder"><link rel="appendix" href="mailinglists.html" title="Приложение A. Почтовые рассылки"><link rel="appendix" href="bugreports.html" title="Приложение B. Как сообщать об ошибках"><link rel="appendix" href="bugs.html" title="Приложение C. Известные проблемы"><link rel="appendix" href="skin.html" title="Приложение D. MPlayer skin format"><link rel="appendix" href="users-vs-dev.html" title="Приложение E. Плач разработчиков"><link rel="subsection" href="subosd.html#mpsub" title="1.4.1. Собственный формат субтитров MPlayer'а (MPsub)"><link rel="subsection" href="subosd.html#mpsub-install" title="1.4.2. Установка OSD и субтитров"><link rel="subsection" href="subosd.html#osdmenu" title="1.4.3. OSD меню"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">1.4. Субтитры и OSD</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="gui.html">Пред.</a> </td><th width="60%" align="center">Глава 1. Введение</th><td width="20%" align="right"> <a accesskey="n" href="rtc.html">След.</a></td></tr></table><hr></div><div class="sect1" lang="ru"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="subosd"></a>1.4. Субтитры и OSD</h2></div></div></div><p>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=KOI8-R"><title>3.2. Субтитры и OSD</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.68.1"><link rel="start" href="index.html" title="MPlayer - The Movie Player"><link rel="up" href="usage.html" title="Глава 3. Использование"><link rel="prev" href="commandline.html" title="3.1. Командная строка"><link rel="next" href="control.html" title="3.3. Управление"><link rel="preface" href="howtoread.html" title="Как читать эту документацию"><link rel="chapter" href="intro.html" title="Глава 1. Введение"><link rel="chapter" href="install.html" title="Глава 2. Установка"><link rel="chapter" href="usage.html" title="Глава 3. Использование"><link rel="chapter" href="cd-dvd.html" title="Глава 4. Использование CD/DVD"><link rel="chapter" href="faq.html" title="Глава 5. Часто Задаваемые вопросы"><link rel="chapter" href="containers.html" title="Глава 6. Поддерживаемые форматы"><link rel="chapter" href="codecs.html" title="Глава 7. Поддерживаемые кодеки"><link rel="chapter" href="tv.html" title="Глава 8. TV"><link rel="chapter" href="radio.html" title="Глава 9. Радио"><link rel="chapter" href="video.html" title="Глава 10. Устройства вывода видео"><link rel="chapter" href="audio.html" title="Глава 11. Устройства вывода звука"><link rel="chapter" href="ports.html" title="Глава 12. Портинг"><link rel="chapter" href="mencoder.html" title="Глава 13. Основы использования MEncoder"><link rel="chapter" href="encoding-guide.html" title="Глава 14. Encoding with MEncoder"><link rel="appendix" href="bugreports.html" title="Приложение A. Как сообщать об ошибках"><link rel="appendix" href="bugs.html" title="Приложение B. Известные проблемы"><link rel="appendix" href="skin.html" title="Приложение C. Формат скинов MPlayer"><link rel="appendix" href="history.html" title="Приложение D. История"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">3.2. Субтитры и OSD</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="commandline.html">Пред.</a> </td><th width="60%" align="center">Глава 3. Использование</th><td width="20%" align="right"> <a accesskey="n" href="control.html">След.</a></td></tr></table><hr></div><div class="sect1" lang="ru"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="subosd"></a>3.2. Субтитры и OSD</h2></div></div></div><p>
 Вместе с фильмом <span class="application">MPlayer</span> может показывать и субтитры. В настоящий момент
 поддерживаются следующие форматы:
-</p><div class="itemizedlist"><ul type="disc"><li><p>VOBsub</p></li><li><p>OGM</p></li><li><p>CC (closed caption[скрытые титры])</p></li><li><p>MicroDVD</p></li><li><p>SubRip</p></li><li><p>SubViewer</p></li><li><p>Sami</p></li><li><p>VPlayer</p></li><li><p>RT</p></li><li><p>SSA</p></li><li><p>PJS (Phoenix Japanimation Society)</p></li><li><p><a href="subosd.html#mpsub" title="1.4.1. Собственный формат субтитров MPlayer'а (MPsub)">MPsub</a></p></li><li><p>AQTitle</p></li><li><p><a href="http://unicorn.us.com/jacosub/" target="_top">JACOsub</a></p></li></ul></div><p>
+</p><div class="itemizedlist"><ul type="disc"><li><p>VOBsub</p></li><li><p>OGM</p></li><li><p>CC (closed caption[скрытые титры])</p></li><li><p>MicroDVD</p></li><li><p>SubRip</p></li><li><p>SubViewer</p></li><li><p>Sami</p></li><li><p>VPlayer</p></li><li><p>RT</p></li><li><p>SSA</p></li><li><p>PJS (Phoenix Japanimation Society)</p></li><li><p>&gt;MPsub</p></li><li><p>AQTitle</p></li><li><p><a href="http://unicorn.us.com/jacosub/" target="_top">JACOsub</a></p></li></ul></div><p>
 </p><p>
 <span class="application">MPlayer</span> может конвертировать вышеперечисленные форматы субтитров (<span class="bold"><strong>кроме первых
 трёх</strong></span>) в следующие форматы с помощью соответствующих опций:
 </p><div class="itemizedlist"><ul type="disc"><li><p>MPsub: <tt class="option">-dumpmpsub</tt></p></li><li><p>SubRip: <tt class="option">-dumpsrtsub</tt></p></li><li><p>MicroDVD: <tt class="option">-dumpmicrodvdsub</tt></p></li><li><p>JACOsub: <tt class="option">-dumpjacosub</tt></p></li><li><p>Sami: <tt class="option">-dumpsami</tt></p></li></ul></div><p>
 </p><p>
-<span class="application">MEncoder</span> может выдавать DVD субтитры в <a href="menc-feat-extractsub.html" title="9.8. Extracting DVD subtitles to VOBsub file">VOBsub</a> формате.
+<span class="application">MEncoder</span> может выдавать DVD субтитры в <a href="menc-feat-extractsub.html" title="13.9. Извлечение DVD субтитров в файл VOBsub">VOBsub</a> формате.
 </p><p>
 Опции значительно различаются для различных форматов:
 </p><p><b>VOBsub субтитры. </b>
@@ -42,154 +42,13 @@ VOBsub субтитры состоят из большого (несколько мегабайт) <tt class="filename">.S
 Если Вы наблюдаете увеличивающуюся задержку между фильмом и субтитрами, используя
 файл субтитров в формате MicroDVD, наиболее вероятно, что частота кадров у фильма и файла
 субтитров не совпадают. Пожалуйста, обратите внимание, что формат MicroDVD
-использует абсолютные номера кадров для синхронизации, и поэтому опция
-<tt class="option">-subfps</tt> не может использоваться с этим форматом. Поскольку
-<span class="application">MPlayer</span>
-не может угадать частоту кадров для субтитров, Вы должны вручную конвертировать
-частоту кадров. В каталоге <tt class="filename">contrib</tt> <span class="application">MPlayer</span>'овского FTP сайта есть
-специальный Perl'овый скрипт для такой конверсии.
+использует абсолютные номера кадров для синхронизации, но в нем нет информациио частоте кадров 
+и поэтому опция
+<tt class="option">-subfps</tt> не может использоваться с этим форматом. 
+Вы должны, если хотите навсегда решить эту проблему, вручную конвертировать
+частоту кадров файла субтитров.
+<span class="application">MPlayer</span> может сделать для вас это преобразование: 
+</p><pre class="screen">mplayer -dumpmicrodvdsub -fps <em class="replaceable"><code>subtitles_fps</code></em> -subfps <em class="replaceable"><code>avi_fps</code></em> -sub <em class="replaceable"><code>subtitle_filename</code></em> <em class="replaceable"><code>dummy.avi</code></em></pre><p>
 </p><p>
-О DVD субтитрах, читайте в секции <a href="dvd.html" title="3.2. Воспроизведение DVD">DVD</a>.
-</p><div class="sect2" lang="ru"><div class="titlepage"><div><div><h3 class="title"><a name="mpsub"></a>1.4.1. Собственный формат субтитров <span class="application">MPlayer</span>'а (MPsub)</h3></div></div></div><p>
-<span class="application">MPlayer</span> ввёл в употребление новый формат субтитров,
-называемый <span class="bold"><strong>MPsub</strong></span>. Он был
-разработан Gabucino. По существу, его основная особенность - это
-использование <span class="emphasis"><em>динамической</em></span> временной привязки (хотя существует и режим
-покадровой привязки). Пример (из 
-<a href="../../tech/mpsub.sub" target="_top">DOCS/tech/mpsub.sub</a>):
-</p><pre class="programlisting">
-FORMAT=TIME
-# первый номер : столько  прождать после того, как исчез предыдущий субтитр
-# второй номер : столько секунд показывать текущий субтитр
-
-15 3
-A long long, time ago...
-
-0 3
-in a galaxy far away...
-
-0 3
-Naboo was under an attack.</pre><p>
-</p><p>
-Как видите, основной целью было <span class="bold"><strong>сделать простым редактирование/синхронизацию/
-объединение/разрезание простым</strong></span>. И, если Вы, например, получили SSA
-субтитры но они плохо синхронизированы с Вашей версией фильма,
-Вы просто запускаете
-</p><pre class="screen">mplayer <em class="replaceable"><code>dummy.avi</code></em> -sub source.ssa -dumpmpsub</pre><p>.
-В текущем каталоге будет создан файл <tt class="filename">dump.mpsub</tt>, содержащий
-исходный текст субтитров, но в <span class="bold"><strong>MPsub</strong></span> формате. После этого, Вы можете
-свободно добавлять/вычитать секунды к/от субтитра.
-</p><p>
-Субтитры выводятся, используя технику <span class="bold"><strong>'OSD', On Screen
-Display</strong></span>.  OSD используется для вывода текущего времени, полос громкости и
-перемещения, и т. п.
-</p></div><div class="sect2" lang="ru"><div class="titlepage"><div><div><h3 class="title"><a name="mpsub-install"></a>1.4.2. Установка OSD и субтитров</h3></div></div></div><p>
-Чтобы использовать возможности OSD/SUB, Вам нужен пакет шрифтов <span class="application">MPlayer</span>'а.
-Есть много способов их получить:
-</p><div class="itemizedlist"><ul type="disc"><li><p>
-  Использовать средство генерации шрифтов в <tt class="filename">
-  TOOLS/subfont-c</tt>. Это законченное средство для преобразования
-  из TTF/Type1/и т. п. шрифтов в mplayer'овские шрифтовые пакеты. 
-  (подробности читайте в <tt class="filename">TOOLS/subfont-c/README</tt>)
-  </p></li><li><p>
-    используйте <span class="application">GIMP</span>'овый плагин генерации шрифтов из <tt class="filename">TOOLS/subfont-GIMP</tt> (замечание: также, у Вас
-	должен быть установлен HSI RAW плагин, см. <a href="http://realtime.ssu.ac.kr/~lethean/mplayer/" target="_top">http://realtime.ssu.ac.kr/~lethean/mplayer/</a> ).
-  </p></li><li><p>
-    используйте TrueType (TTF) шрифт, через библиотеку <span class="bold"><strong>freetype</strong></span>.
-    Обязательна версия 2.0.9 или выше! Тогда у Вас есть два метода:
-  </p><div class="itemizedlist"><ul type="circle"><li><p>
-	  используйте опцию <tt class="option">-font <em class="replaceable"><code>/path/to/sample_font.ttf</code></em></tt>,
-	  чтобы указывать каждый раз путь к TrueType шрифту
-      </p></li><li><p>
-	  создайте ссылку:
-      </p><pre class="screen">ln -s <em class="replaceable"><code>/path/to/sample_font.ttf</code></em> ~/.mplayer/subfont.ttf</pre><p>
-      </p></li></ul></div><p>
-  Если <span class="application">MPlayer</span> был скомпилирован с поддержкой 
-  <code class="systemitem">fontconfig</code>, эти методы не будут работать,
-  вместо этого, опция <tt class="option">-font</tt> ожидает
-  <code class="systemitem">fontconfig</code>'овское название
-  шрифта, и по умолчанию это фонт без засечек (sans-serif). Чтобы получить список
-  шрифтов известных <code class="systemitem">fontconfig</code>'у,
-  используйте <span><strong class="command">fc-list</strong></span>.
-  Пример: <tt class="option">-font <em class="replaceable"><code>'Bitstream Vera Sans'</code></em></tt>
-  </p></li><li><p>
-  Скачать готовый к употреблению пакет шрифтов с сайта MPlayer'а.
-  Замечание: Доступные в настоящий момент шрифты ограничены до поддержки
-  ISO 8859-1/2, но существуют другие (включая корейские, русские, ISO 8859-8
-  и др.) сделанные пользователями шрифты в contrib/font секции FTP.
-  </p><p>
-  
-  Шрифт должен содержать соответствующий <tt class="filename">font.desc</tt> файл,
-  который создаёт соответствия между Unicode позицией в шрифте и кодовой
-  страницей субтитра. Другим решением является наличие субтитра в UTF-8 кодировке
-  и использование опции <tt class="option">-utf8</tt>, или просто обозвать файл
-  субтитра <tt class="filename">&lt;video_name&gt;.utf</tt> и разместить его
-  в каталоге с фильмом. Перекодировка из различных кодировок в UTF-8 может быть
-  осуществлена с помощью программ <span><strong class="command">konwert</strong></span> или <span><strong class="command">iconv</strong></span>.
-  </p><p>
-  
-  </p><div class="table"><a name="id2537399"></a><p class="title"><b>Таблица 1.1. Некоторые URL'ы</b></p><table summary="Некоторые URL'ы" border="1"><colgroup><col><col></colgroup><thead><tr><th>URL</th><th>Comment</th></tr></thead><tbody><tr><td>
-    <a href="ftp://ftp.mplayerhq.hu/MPlayer/releases/fonts/" target="_top">ftp://ftp.mplayerhq.hu/MPlayer/releases/fonts/</a>
-    </td><td>
-    ISO шрифты
-    </td></tr><tr><td>
-    <a href="ftp://ftp.mplayerhq.hu/MPlayer/contrib/fonts/" target="_top">ftp://ftp.mplayerhq.hu/MPlayer/contrib/fonts/</a>
-    </td><td>
-    различные шрифты, сделанные пользователями
-    </td></tr><tr><td>
-    <a href="http://realtime.ssu.ac.kr/~lethean/mplayer/" target="_top">http://realtime.ssu.ac.kr/~lethean/mplayer/</a>
-    </td><td>
-    корейские шрифты и RAW плагин
-    </td></tr></tbody></table></div><p>
-  </p></li></ul></div><p>
-Если Вы решите использовать не-TTF шрифты, UNZIP'ните скаченный файл в
-<tt class="filename">~/.mplayer</tt> или <tt class="filename">$PREFIX/share/mplayer</tt>. Затем переименуйте,
-или слинкуйте (создайте ссылку) один из каталогов в
-<tt class="filename">font</tt> (напр.:
-
-</p><pre class="screen">ln -s <em class="replaceable"><code>~/.mplayer/arial-24</code></em> ~/.mplayer/font</pre><p>).
-Теперь Вы должны увидеть таймер в левом верхнем углу фильма (выключите его кнопкой <span class="keycap"><b>o</b></span>).
-</p><p>
-(субтитры <span class="emphasis"><em>всегда включены</em></span>, чтобы узнать, как их отключить,
-читайте страницу man)
-</p><p>
-У OSD 4 состояния: (переключаются кнопкой <span class="keycap"><b>o</b></span>):
-
-</p><div class="orderedlist"><ol type="1"><li>
-  полосы громкости + перемещения (по умолчанию)
-  </li><li>
-  полосы громкости + перемещения + таймер + позиция в файле в процентах при перемещении
-  </li><li>
-  полосы громкости + перемещения + таймер + длина всего фильма
-  </li><li>
-  только субтитры
-  </li></ol></div><p>
-
-Вы можете изменить действия по умолчанию, установив в нужное значение переменную
-<tt class="option">osdlevel</tt> в конфигурационном файле, или используя опцию
-<tt class="option">-osdlevel</tt> командной строки.
-
-</p></div><div class="sect2" lang="ru"><div class="titlepage"><div><div><h3 class="title"><a name="osdmenu"></a>1.4.3. OSD меню</h3></div></div></div><p>
-У <span class="application">MPlayer</span>'а существует целиком определяемый пользователем интерфейс OSD меню.
-</p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Замечание</h3><p>
-меню Preferences[Настройки] в настоящий момент НЕ НАПИСАНО!
-</p></div><div class="orderedlist"><p class="title"><b>Установка</b></p><ol type="1"><li>
-  скомпилируйте <span class="application">MPlayer</span>, указав <tt class="filename">
-  ./configure</tt> параметр <tt class="option">--enable-menu</tt>
-  </li><li>
-  убедитесь, что у Вас установлен OSD шрифт
-  </li><li>
-  скопируйте <tt class="filename">etc/menu.conf</tt> в Ваш каталог <tt class="filename">.mplayer</tt>
-  </li><li>
-  скопируйте <tt class="filename">etc/input.conf</tt> в Ваш каталог <tt class="filename">.mplayer</tt>, или в системный конфигурационный
-  каталог <span class="application">MPlayer</span>'а (по умолчанию: <tt class="filename">
-  /usr/local/etc/mplayer</tt>)
-   </li><li>
-  проверьте и отредактируйте <tt class="filename">input.conf</tt>, чтобы включить
-  кнопки перемещения по меню (это здесь описано).
-  </li><li><p>
-  запустите <span class="application">MPlayer</span> как в следующем примере:
-  </p><pre class="screen">$ mplayer -menu <em class="replaceable"><code>file.avi</code></em></pre><p>
-  </p></li><li>
-  нажмите любую меню-кнопку, которую Вы определили
-  </li></ol></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="gui.html">Пред.</a> </td><td width="20%" align="center"><a accesskey="u" href="intro.html">Уровень выше</a></td><td width="40%" align="right"> <a accesskey="n" href="rtc.html">След.</a></td></tr><tr><td width="40%" align="left" valign="top">1.3. Как насчёт GUI? </td><td width="20%" align="center"><a accesskey="h" href="index.html">Начало</a></td><td width="40%" align="right" valign="top"> 1.5. RTC</td></tr></table></div></body></html>
+О DVD субтитрах, читайте в секции <a href="dvd.html" title="4.2. Воспроизведение DVD">DVD</a>.
+</p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="commandline.html">Пред.</a> </td><td width="20%" align="center"><a accesskey="u" href="usage.html">Уровень выше</a></td><td width="40%" align="right"> <a accesskey="n" href="control.html">След.</a></td></tr><tr><td width="40%" align="left" valign="top">3.1. Командная строка </td><td width="20%" align="center"><a accesskey="h" href="index.html">Начало</a></td><td width="40%" align="right" valign="top"> 3.3. Управление</td></tr></table></div></body></html>

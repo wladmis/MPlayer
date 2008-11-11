@@ -5,9 +5,9 @@
  **  Copyright (C) 2000-2002 by Christian Scheurer (www.ChristianScheurer.ch)
  **  UNIX port copyright (c) 2000-2002 by Johannes Winkelmann (jw@tks6.net)
  **
- ** Modified for use with MPlayer, detailed CVS changelog at
- ** http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
- ** $Id: unrarlib.h 15166 2005-04-15 18:48:03Z diego $
+ ** Modified for use with MPlayer, detailed changelog at
+ ** http://svn.mplayerhq.hu/mplayer/trunk/
+ ** $Id: unrarlib.h 18786 2006-06-22 13:34:00Z diego $
  **
  **  The contents of this file are subject to the UniquE RAR File Library
  **  License (the "unrarlib-license.txt"). You may not use this file except

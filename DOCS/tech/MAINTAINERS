@@ -23,38 +23,40 @@ Administration:
 
 Homepage:
     * Design: Diego Biurrun
-    * Content: Diego Biurrun, Alex Beregszaszi
+    * Content: Diego Biurrun
     * Codec packages: Roberto Togni
 
-English documentation:
-    * MPlayer docs: Diego Biurrun
-    * MEncoder docs: Guillaume Poirier
+Documentation:
+    * MPlayer: Diego Biurrun
+    * MEncoder: Guillaume Poirier
     * man page: Diego Biurrun
     * console messages: Reynaldo H. Verdejo Pinochet
+    * translation coordination: Sebastian Krämer
     * input layer, LIRC, slave mode docs: Alban Bedel
-    * tech/* docs: Alex Beregszaszi
+    * tech/* docs: None
     * tech/* documentation docs: Diego Biurrun
 
-man pages:
+Man page translations:
     * Czech: Jiri Heryan
     * French: Guillaume Poirier
     * German: Sebastian Krämer
     * Hungarian: Gabor Mizda
     * Italian: Daniele Forghieri
     * Polish: Waclaw Schiller
-    * Spanish: Juan Martin, Reynaldo H. Verdejo Pinochet (outdated)
-    * Swedish: Carl Fürstenberg (incomplete)
+    * Spanish: Reynaldo H. Verdejo Pinochet (outdated)
+    * Chinese: unmaintained, outdated
+    * Swedish: unmaintained, outdated, incomplete
 
 Documentation translations:
-    * Chinese (simplified): Lu Ran (outdated)
     * Czech: Jiri Heryan
-    * French: Nicolas Le Gaillart, Guillaume Poirier
-    * German: outdated
-    * Hungarian: Gabor Mizdad
-    * Italian: outdated
+    * French: Guillaume Poirier
+    * German: Sebastian Krämer
+    * Hungarian: Gabor Mizda
     * Polish: Waclaw Schiller
-    * Russian: Dmitry Baryshkov (incomplete)
-    * Spanish: Juan Martin, Reynaldo H. Verdejo Pinochet (outdated)
+    * Spanish: Reynaldo H. Verdejo Pinochet (outdated)
+    * Chinese (simplified): unmaintained, outdated, still HTML
+    * Italian: unmaintained, outdated, still HTML
+    * Russian: Vladimir Voroshilov (outdated,incomplete)
 
 Platforms/ports:
     * Debian packaging: None
@@ -70,14 +72,15 @@ Platforms/ports:
 
 MPlayer code:
     * build system: Diego Biurrun
-    * A-V sync code, MPlayer/MEncoder core: Alex Beregszaszi
-    * libmpdemux, libmpcodecs: Alex Beregszaszi
+    * A-V sync code, MPlayer/MEncoder core: None
+    * libmpdemux: Roberto Togni, Nico Sabbi
+    * libmpcodecs: Roberto Togni
     * TV input/capture: Jindrich Makovicka
-    * network streaming: None
+    * network streaming: Roberto Togni, Nico Sabbi, Benjamin Zores
     * DVD/VOB subtitles: None
-    * config files & commandline parser: Alban Bedel, Alex Beregszaszi
+    * config files & commandline parser: Alban Bedel
     * playtree, input layer: Alban Bedel
-    * postproc, colorspace converters: Michael Niedermayer
+    * libswscale: Michael Niedermayer, Luca Abeni
     * DVB support: Nico Sabbi
     * GUI: None
     * GUI skins: Diego Biurrun
@@ -86,13 +89,16 @@ MPlayer code:
 Imported libs/projects:
     * libavcodec, libavformat: Michael Niedermayer
     * VIDIX core, libdha: Sascha Sommer
-    * mp3lib: Alex Beregszaszi
-    * loader, dshow: Alex Beregszaszi
-    * liba52: Alex Beregszaszi
+    * mp3lib: None
+    * loader: Alex Beregszaszi
+    * liba52: None
     * libmpeg2: None
     * libmpdvdkit2: None
-    * libfaad2: Alex Beregszaszi
+    * libfaad2: None
     * realrtsp: Roberto Togni
+    * librtsp: Benjamin Zores
+    * freesdp: Benjamin Zores
+    * libass: Evgeniy Stepanov
 
 demuxers:
     * demux_fli.c - Roberto Togni
@@ -109,6 +115,12 @@ demuxers:
 muxers:
     * muxer_lavf.c - Michael Niedermayer
 
+streams:
+    * stream_pvr.c - Benjamin Zores
+    * stream_udp.c - Benjamin Zores
+    * stream_rtp.c - Benjamin Zores
+    * stream_rtsp.c - Benjamin Zores
+
 codec support:
     * FFmpeg: Michael Niedermayer
     * XviD: Ivan Kalvachev
@@ -118,6 +130,8 @@ codec support:
 video filters:
     * general: Richard Felker, Michael Niedermayer
     * vf_filmdint.c - Zoltan Hidvegi
+    * vf_blackframe.c - Ivo van Poorten
+    * vf_zrmjpeg.c - Rik Snel
 
 audio filters:
     * general: Alex Beregszaszi
@@ -143,6 +157,7 @@ libvo drivers:
     * vo_gif89a.c - Joey Parrish
     * vo_gl.c - Reimar Döffinger
     * vo_gl2.c - Reimar Döffinger
+    * vo_ivtv.c - Benjamin Zores
     * vo_jpeg.c - Ivo van Poorten
     * vo_macosx.m - Nicolas Plourde
     * vo_md5sum.c - Ivo van Poorten
@@ -162,10 +177,11 @@ libvo drivers:
     * vo_xmga.c - Attila Kinali
     * vo_xover.c - Alban Bedel
     * vo_xv.c - Alexander Strasser
-    * vo_xvidix.c - Attila Kinali
+    * vo_xvidix.c - None
     * vo_xvmc.c - Ivan Kalvachev
     * vo_yuv4mpeg.c - Robert Kesterson
     * vo_zr.c - Rik Snel
+    * vo_zr2.c - Rik Snel
 
     * x11_common.c - Alexander Strasser
     * w32_common.c - Reimar Döffinger
@@ -185,6 +201,7 @@ libao2 drivers:
     * ao_dsound.c - None
     * ao_dxr2.c - None
     * ao_esd.c - None
+    * ao_ivtv.c - Benjamin Zores
     * ao_jack.c - Reimar Döffinger
     * ao_mpegpes.c - None
     * ao_nas.c - Tobias Diedrich

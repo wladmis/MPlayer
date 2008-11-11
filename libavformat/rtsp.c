@@ -2,18 +2,20 @@
  * RTSP/SDP client
  * Copyright (c) 2002 Fabrice Bellard.
  *
- * This library is free software; you can redistribute it and/or
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * FFmpeg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 #include "avformat.h"
@@ -145,7 +147,7 @@ static int sdp_parse_rtpmap(AVCodecContext *codec, int payload_type, const char 
     char buf[256];
     int i;
     AVCodec *c;
-    char *c_name;
+    const char *c_name;
 
     /* Loop into AVRtpDynamicPayloadTypes[] and AVRtpPayloadTypes[] and
        see if we can handle this kind of payload */
@@ -169,7 +171,7 @@ static int sdp_parse_rtpmap(AVCodecContext *codec, int payload_type, const char 
 
     c = avcodec_find_decoder(codec->codec_id);
     if (c && c->name)
-        c_name = (char *)c->name;
+        c_name = c->name;
     else
         c_name = (char *)NULL;
 
@@ -255,7 +257,7 @@ static void sdp_parse_fmtp_config(AVCodecContext *codec, char *attr, char *value
 
 typedef struct attrname_map
 {
-    char *str;
+    const char *str;
     uint16_t type;
     uint32_t offset;
 } attrname_map_t;
@@ -1245,7 +1247,7 @@ static int rtsp_read_close(AVFormatContext *s)
     return 0;
 }
 
-AVInputFormat rtsp_demux = {
+AVInputFormat rtsp_demuxer = {
     "rtsp",
     "RTSP input format",
     sizeof(RTSPState),
@@ -1345,8 +1347,8 @@ static int sdp_read_close(AVFormatContext *s)
     return 0;
 }
 
-
-static AVInputFormat sdp_demux = {
+#ifdef CONFIG_SDP_DEMUXER
+AVInputFormat sdp_demuxer = {
     "sdp",
     "SDP",
     sizeof(RTSPState),
@@ -1355,7 +1357,7 @@ static AVInputFormat sdp_demux = {
     sdp_read_packet,
     sdp_read_close,
 };
-
+#endif
 
 /* dummy redirector format (used directly in av_open_input_file now) */
 static int redir_probe(AVProbeData *pd)
@@ -1410,7 +1412,7 @@ int redir_open(AVFormatContext **ic_ptr, ByteIOContext *f)
         return 0;
 }
 
-AVInputFormat redir_demux = {
+AVInputFormat redir_demuxer = {
     "redir",
     "Redirector format",
     0,
@@ -1419,11 +1421,3 @@ AVInputFormat redir_demux = {
     NULL,
     NULL,
 };
-
-int rtsp_init(void)
-{
-    av_register_input_format(&rtsp_demux);
-    av_register_input_format(&redir_demux);
-    av_register_input_format(&sdp_demux);
-    return 0;
-}

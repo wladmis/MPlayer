@@ -2,18 +2,20 @@
  * FLAC (Free Lossless Audio Codec) decoder
  * Copyright (c) 2003 Alex Beregszaszi
  *
- * This library is free software; you can redistribute it and/or
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * FFmpeg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
@@ -33,6 +35,7 @@
 
 #include <limits.h>
 
+#define ALT_BITSTREAM_READER
 #include "avcodec.h"
 #include "bitstream.h"
 #include "golomb.h"
@@ -85,52 +88,11 @@ static int blocksize_table[] = {
 256<<0, 256<<1, 256<<2, 256<<3, 256<<4, 256<<5, 256<<6, 256<<7
 };
 
-static int64_t get_utf8(GetBitContext *gb)
-{
-    uint64_t val;
-    int ones=0, bytes;
-
-    while(get_bits1(gb))
-        ones++;
-
-    if     (ones==0) bytes=0;
-    else if(ones==1) return -1;
-    else             bytes= ones - 1;
-
-    val= get_bits(gb, 7-ones);
-    while(bytes--){
-        const int tmp = get_bits(gb, 8);
-
-        if((tmp>>6) != 2)
-            return -1;
-        val<<=6;
-        val|= tmp&0x3F;
-    }
+static int64_t get_utf8(GetBitContext *gb){
+    int64_t val;
+    GET_UTF8(val, get_bits(gb, 8), return -1;)
     return val;
 }
-
-#if 0
-static int skip_utf8(GetBitContext *gb)
-{
-    int ones=0, bytes;
-
-    while(get_bits1(gb))
-        ones++;
-
-    if     (ones==0) bytes=0;
-    else if(ones==1) return -1;
-    else             bytes= ones - 1;
-
-    skip_bits(gb, 7-ones);
-    while(bytes--){
-        const int tmp = get_bits(gb, 8);
-
-        if((tmp>>6) != 2)
-            return -1;
-    }
-    return 0;
-}
-#endif
 
 static void metadata_streaminfo(FLACContext *s);
 static void dump_headers(FLACContext *s);
@@ -296,7 +258,7 @@ static int decode_subframe_fixed(FLACContext *s, int channel, int pred_order)
 
 static int decode_subframe_lpc(FLACContext *s, int channel, int pred_order)
 {
-    int sum, i, j;
+    int i, j;
     int coeff_prec, qlevel;
     int coeffs[pred_order];
 
@@ -334,12 +296,24 @@ static int decode_subframe_lpc(FLACContext *s, int channel, int pred_order)
     if (decode_residuals(s, channel, pred_order) < 0)
         return -1;
 
-    for (i = pred_order; i < s->blocksize; i++)
-    {
-        sum = 0;
-        for (j = 0; j < pred_order; j++)
-            sum += coeffs[j] * s->decoded[channel][i-j-1];
-        s->decoded[channel][i] += sum >> qlevel;
+    if (s->bps > 16) {
+        int64_t sum;
+        for (i = pred_order; i < s->blocksize; i++)
+        {
+            sum = 0;
+            for (j = 0; j < pred_order; j++)
+                sum += (int64_t)coeffs[j] * s->decoded[channel][i-j-1];
+            s->decoded[channel][i] += sum >> qlevel;
+        }
+    } else {
+        int sum;
+        for (i = pred_order; i < s->blocksize; i++)
+        {
+            sum = 0;
+            for (j = 0; j < pred_order; j++)
+                sum += coeffs[j] * s->decoded[channel][i-j-1];
+            s->decoded[channel][i] += sum >> qlevel;
+        }
     }
 
     return 0;
@@ -538,6 +512,17 @@ static int decode_frame(FLACContext *s)
     return 0;
 }
 
+static inline int16_t shift_to_16_bits(int32_t data, int bps)
+{
+    if (bps == 24) {
+        return (data >> 8);
+    } else if (bps == 20) {
+        return (data >> 4);
+    } else {
+        return data;
+    }
+}
+
 static int flac_decode_frame(AVCodecContext *avctx,
                             void *data, int *data_size,
                             uint8_t *buf, int buf_size)
@@ -674,53 +659,32 @@ static int flac_decode_frame(AVCodecContext *avctx,
     }
     }
 #else
+#define DECORRELATE(left, right)\
+            assert(s->channels == 2);\
+            for (i = 0; i < s->blocksize; i++)\
+            {\
+                int a= s->decoded[0][i];\
+                int b= s->decoded[1][i];\
+                *(samples++) = (left ) >> (16 - s->bps);\
+                *(samples++) = (right) >> (16 - s->bps);\
+            }\
+            break;
+
     switch(s->decorrelation)
     {
         case INDEPENDENT:
             for (j = 0; j < s->blocksize; j++)
             {
                 for (i = 0; i < s->channels; i++)
-                    *(samples++) = s->decoded[i][j];
+                    *(samples++) = shift_to_16_bits(s->decoded[i][j], s->bps);
             }
             break;
         case LEFT_SIDE:
-            assert(s->channels == 2);
-            for (i = 0; i < s->blocksize; i++)
-            {
-                *(samples++) = s->decoded[0][i];
-                *(samples++) = s->decoded[0][i] - s->decoded[1][i];
-            }
-            break;
+            DECORRELATE(a,a-b)
         case RIGHT_SIDE:
-            assert(s->channels == 2);
-            for (i = 0; i < s->blocksize; i++)
-            {
-                *(samples++) = s->decoded[0][i] + s->decoded[1][i];
-                *(samples++) = s->decoded[1][i];
-            }
-            break;
+            DECORRELATE(a+b,b)
         case MID_SIDE:
-            assert(s->channels == 2);
-            for (i = 0; i < s->blocksize; i++)
-            {
-                int mid, side;
-                mid = s->decoded[0][i];
-                side = s->decoded[1][i];
-
-#if 1 //needs to be checked but IMHO it should be binary identical
-                mid -= side>>1;
-                *(samples++) = mid + side;
-                *(samples++) = mid;
-#else
-
-                mid <<= 1;
-                if (side & 1)
-                    mid++;
-                *(samples++) = (mid + side) >> 1;
-                *(samples++) = (mid - side) >> 1;
-#endif
-            }
-            break;
+            DECORRELATE( (a-=b>>1) + b, a)
     }
 #endif
 

@@ -3,18 +3,20 @@
  * Copyright (c) 2003 Alex Beregszaszi
  * Copyright (c) 2004 Michael Niedermayer
  *
- * This library is free software; you can redistribute it and/or
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * FFmpeg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public
- * License along with this library; if not, write to the Free Software
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  *
  *
@@ -33,7 +35,8 @@
 #include <limits.h>
 #include "avformat.h"
 #include "mpegaudio.h"
-#include "avi.h"
+#include "riff.h"
+#include "adler32.h"
 
 #undef NDEBUG
 #include <assert.h>
@@ -110,8 +113,6 @@ static char *info_table[][2]={
         {"Cover"                , "JPEG"},
         {"Cover"                , "PNG"},
 };
-
-void ff_parse_specific_params(AVCodecContext *stream, int *au_rate, int *au_ssize, int *au_scale);
 
 static void update(NUTContext *nut, int stream_index, int64_t frame_start, int frame_type, int frame_code, int key_frame, int size, int64_t pts){
     StreamContext *stream= &nut->stream[stream_index];
@@ -330,7 +331,7 @@ static int get_packetheader(NUTContext *nut, ByteIOContext *bc, int calculate_ch
 
     size= get_v(bc);
 
-    init_checksum(bc, calculate_checksum ? update_adler32 : NULL, 0);
+    init_checksum(bc, calculate_checksum ? av_adler32_update : NULL, 1);
 
     nut->packet_start[2] = start;
     nut->written_packet_size= size;
@@ -475,7 +476,7 @@ static int put_packetheader(NUTContext *nut, ByteIOContext *bc, int max_size, in
     put_v(bc, nut->written_packet_size); /* forward ptr */
 
     if(calculate_checksum)
-        init_checksum(bc, update_adler32, 0);
+        init_checksum(bc, av_adler32_update, 1);
 
     return 0;
 }
@@ -1413,17 +1414,14 @@ static int nut_read_seek(AVFormatContext *s, int stream_index, int64_t target_ts
 static int nut_read_close(AVFormatContext *s)
 {
     NUTContext *nut = s->priv_data;
-    int i;
 
-    for(i=0;i<s->nb_streams;i++) {
-        av_freep(&s->streams[i]->codec->extradata);
-    }
     av_freep(&nut->stream);
 
     return 0;
 }
 
-static AVInputFormat nut_iformat = {
+#ifdef CONFIG_NUT_DEMUXER
+AVInputFormat nut_demuxer = {
     "nut",
     "nut format",
     sizeof(NUTContext),
@@ -1435,9 +1433,9 @@ static AVInputFormat nut_iformat = {
     nut_read_timestamp,
     .extensions = "nut",
 };
-
-#ifdef CONFIG_MUXERS
-static AVOutputFormat nut_oformat = {
+#endif
+#ifdef CONFIG_NUT_MUXER
+AVOutputFormat nut_muxer = {
     "nut",
     "nut format",
     "video/x-nut",
@@ -1456,13 +1454,4 @@ static AVOutputFormat nut_oformat = {
     nut_write_trailer,
     .flags = AVFMT_GLOBALHEADER,
 };
-#endif //CONFIG_MUXERS
-
-int nut_init(void)
-{
-    av_register_input_format(&nut_iformat);
-#ifdef CONFIG_MUXERS
-    av_register_output_format(&nut_oformat);
-#endif //CONFIG_MUXERS
-    return 0;
-}
+#endif

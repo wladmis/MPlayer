@@ -284,11 +284,9 @@ static short get_driver(char *s,int audioflag)
 		"null",
 		"libmpeg2",
 		"vfw",
-		"odivx",
 		"dshow",
 		"ffmpeg",
 		"vfwex",
-		"divx4",
 		"raw",
 		"msrle",
 		"xanim",
@@ -486,7 +484,7 @@ static codecs_t *audio_codecs=NULL;
 static int nr_vcodecs = 0;
 static int nr_acodecs = 0;
 
-int parse_codec_cfg(char *cfgfile)
+int parse_codec_cfg(const char *cfgfile)
 {
 	codecs_t *codec = NULL; // current codec
 	codecs_t **codecsp = NULL;// points to audio_codecs or to video_codecs

@@ -5,8 +5,8 @@
  * Copyright (C) 1998, 1999, 2000 VideoLAN
  *
  * Modified for use with MPlayer, changes contained in libdvdread_changes.diff.
- * detailed CVS changelog at http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
- * $Id: common.h 16727 2005-10-11 12:17:09Z reimar $
+ * detailed changelog at http://svn.mplayerhq.hu/mplayer/trunk/
+ * $Id: common.h 18786 2006-06-22 13:34:00Z diego $
  *
  * Authors: Samuel Hocevar <sam@via.ecp.fr>
  *          Vincent Seguin <seguin@via.ecp.fr>

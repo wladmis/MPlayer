@@ -1,7 +1,7 @@
 /*
- * Modified for use with MPlayer, for details see the CVS changelog at
- * http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
- * $Id: l2tables.h 15168 2005-04-15 22:21:35Z diego $
+ * Modified for use with MPlayer, for details see the changelog at
+ * http://svn.mplayerhq.hu/mplayer/trunk/
+ * $Id: l2tables.h 18786 2006-06-22 13:34:00Z diego $
  */
 
 /*

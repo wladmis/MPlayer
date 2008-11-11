@@ -29,7 +29,7 @@ Atom _XA_XdndTypeList;
 
 Atom atom_support;
 
-void wsXDNDInitialize()
+void wsXDNDInitialize(void)
 {
 
     _XA_XdndAware = XInternAtom(wsDisplay, "XdndAware", False);
@@ -124,7 +124,7 @@ wsXDNDProcessSelection(wsTWindow* wnd, XEvent *event)
 	
       /* Handle the files */
       if(wnd->DandDHandler){
-	wnd->DandDHandler(num-1,files);
+	wnd->DandDHandler(num,files);
       }
     }
 

@@ -2,18 +2,20 @@
  * Rational numbers
  * Copyright (c) 2003 Michael Niedermayer <michaelni@gmx.at>
  *
- * This library is free software; you can redistribute it and/or
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * FFmpeg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  *
  */
@@ -34,10 +36,10 @@
 int av_reduce(int *dst_nom, int *dst_den, int64_t nom, int64_t den, int64_t max){
     AVRational a0={0,1}, a1={1,0};
     int sign= (nom<0) ^ (den<0);
-    int64_t gcd= ff_gcd(ABS(nom), ABS(den));
+    int64_t gcd= ff_gcd(FFABS(nom), FFABS(den));
 
-    nom = ABS(nom)/gcd;
-    den = ABS(den)/gcd;
+    nom = FFABS(nom)/gcd;
+    den = FFABS(den)/gcd;
     if(nom<=max && den<=max){
         a1= (AVRational){nom, den};
         den=0;
@@ -76,8 +78,7 @@ AVRational av_mul_q(AVRational b, AVRational c){
  * returns b/c.
  */
 AVRational av_div_q(AVRational b, AVRational c){
-    av_reduce(&b.num, &b.den, b.num * (int64_t)c.den, b.den * (int64_t)c.num, INT_MAX);
-    return b;
+    return av_mul_q(b, (AVRational){c.den, c.num});
 }
 
 /**
@@ -92,8 +93,7 @@ AVRational av_add_q(AVRational b, AVRational c){
  * returns b-c.
  */
 AVRational av_sub_q(AVRational b, AVRational c){
-    av_reduce(&b.num, &b.den, b.num * (int64_t)c.den - c.num * (int64_t)b.den, b.den * (int64_t)c.den, INT_MAX);
-    return b;
+    return av_add_q(b, (AVRational){-c.num, c.den});
 }
 
 /**
@@ -102,7 +102,8 @@ AVRational av_sub_q(AVRational b, AVRational c){
  */
 AVRational av_d2q(double d, int max){
     AVRational a;
-    int exponent= FFMAX( (int)(log(ABS(d) + 1e-20)/log(2)), 0);
+#define LOG2  0.69314718055994530941723212145817656807550013436025
+    int exponent= FFMAX( (int)(log(fabs(d) + 1e-20)/LOG2), 0);
     int64_t den= 1LL << (61 - exponent);
     av_reduce(&a.num, &a.den, (int64_t)(d * den + 0.5), den, max);
 

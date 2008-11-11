@@ -2,18 +2,20 @@
  * Westwood Studios Multimedia Formats Demuxer (VQA, AUD)
  * Copyright (c) 2003 The ffmpeg Project
  *
- * This library is free software; you can redistribute it and/or
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * FFmpeg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
@@ -357,7 +359,8 @@ static int wsvqa_read_close(AVFormatContext *s)
     return 0;
 }
 
-static AVInputFormat wsaud_iformat = {
+#ifdef CONFIG_WSAUD_DEMUXER
+AVInputFormat wsaud_demuxer = {
     "wsaud",
     "Westwood Studios audio format",
     sizeof(WsAudDemuxContext),
@@ -366,8 +369,9 @@ static AVInputFormat wsaud_iformat = {
     wsaud_read_packet,
     wsaud_read_close,
 };
-
-static AVInputFormat wsvqa_iformat = {
+#endif
+#ifdef CONFIG_WSVQA_DEMUXER
+AVInputFormat wsvqa_demuxer = {
     "wsvqa",
     "Westwood Studios VQA format",
     sizeof(WsVqaDemuxContext),
@@ -376,10 +380,4 @@ static AVInputFormat wsvqa_iformat = {
     wsvqa_read_packet,
     wsvqa_read_close,
 };
-
-int westwood_init(void)
-{
-    av_register_input_format(&wsaud_iformat);
-    av_register_input_format(&wsvqa_iformat);
-    return 0;
-}
+#endif

@@ -2,10 +2,7 @@
  * error.c: error management functions
  *****************************************************************************
  * Copyright (C) 1998-2002 VideoLAN
- *
- * Modified for use with MPlayer, changes contained in libdvdcss_changes.diff.
- * detailed CVS changelog at http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
- * $Id: error.c 16715 2005-10-09 10:18:24Z diego $
+ * $Id: error.c 20290 2006-10-17 23:02:17Z diego $
  *
  * Author: Samuel Hocevar <sam@zoy.org>
  *
@@ -37,7 +34,7 @@
 #   include <limits.h>
 #endif
 
-#include "dvdcss.h"
+#include "dvdcss/dvdcss.h"
 
 #include "common.h"
 #include "css.h"

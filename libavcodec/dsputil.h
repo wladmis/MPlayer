@@ -3,18 +3,20 @@
  * Copyright (c) 2000, 2001, 2002 Fabrice Bellard.
  * Copyright (c) 2002-2004 Michael Niedermayer <michaelni@gmx.at>
  *
- * This library is free software; you can redistribute it and/or
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * FFmpeg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
@@ -57,6 +59,10 @@ void ff_h264_idct8_dc_add_c(uint8_t *dst, DCTELEM *block, int stride);
 void ff_h264_idct_dc_add_c(uint8_t *dst, DCTELEM *block, int stride);
 void ff_h264_lowres_idct_add_c(uint8_t *dst, int stride, DCTELEM *block);
 void ff_h264_lowres_idct_put_c(uint8_t *dst, int stride, DCTELEM *block);
+
+void ff_vector_fmul_add_add_c(float *dst, const float *src0, const float *src1,
+                              const float *src2, int src3, int blocksize, int step);
+void ff_float_to_int16_c(int16_t *dst, const float *src, int len);
 
 /* encoding scans */
 extern const uint8_t ff_alternate_horizontal_scan[64];
@@ -266,13 +272,27 @@ typedef struct DSPContext {
      * h264 Chram MC
      */
     h264_chroma_mc_func put_h264_chroma_pixels_tab[3];
+    /* This is really one func used in VC-1 decoding */
+    h264_chroma_mc_func put_no_rnd_h264_chroma_pixels_tab[3];
     h264_chroma_mc_func avg_h264_chroma_pixels_tab[3];
 
     qpel_mc_func put_h264_qpel_pixels_tab[4][16];
     qpel_mc_func avg_h264_qpel_pixels_tab[4][16];
 
+    qpel_mc_func put_2tap_qpel_pixels_tab[4][16];
+    qpel_mc_func avg_2tap_qpel_pixels_tab[4][16];
+
     h264_weight_func weight_h264_pixels_tab[10];
     h264_biweight_func biweight_h264_pixels_tab[10];
+
+    /* AVS specific */
+    qpel_mc_func put_cavs_qpel_pixels_tab[2][16];
+    qpel_mc_func avg_cavs_qpel_pixels_tab[2][16];
+    void (*cavs_filter_lv)(uint8_t *pix, int stride, int alpha, int beta, int tc, int bs1, int bs2);
+    void (*cavs_filter_lh)(uint8_t *pix, int stride, int alpha, int beta, int tc, int bs1, int bs2);
+    void (*cavs_filter_cv)(uint8_t *pix, int stride, int alpha, int beta, int tc, int bs1, int bs2);
+    void (*cavs_filter_ch)(uint8_t *pix, int stride, int alpha, int beta, int tc, int bs1, int bs2);
+    void (*cavs_idct8_add)(uint8_t *dst, DCTELEM *block, int stride);
 
     me_cmp_func pix_abs[2][4];
 
@@ -292,11 +312,26 @@ typedef struct DSPContext {
     void (*h264_h_loop_filter_chroma)(uint8_t *pix, int stride, int alpha, int beta, int8_t *tc0);
     void (*h264_v_loop_filter_chroma_intra)(uint8_t *pix, int stride, int alpha, int beta);
     void (*h264_h_loop_filter_chroma_intra)(uint8_t *pix, int stride, int alpha, int beta);
+    // h264_loop_filter_strength: simd only. the C version is inlined in h264.c
+    void (*h264_loop_filter_strength)(int16_t bS[2][4][4], uint8_t nnz[40], int8_t ref[2][40], int16_t mv[2][40][2],
+                                      int bidir, int edges, int step, int mask_mv0, int mask_mv1);
 
     void (*h263_v_loop_filter)(uint8_t *src, int stride, int qscale);
     void (*h263_h_loop_filter)(uint8_t *src, int stride, int qscale);
 
     void (*h261_loop_filter)(uint8_t *src, int stride);
+
+    /* assume len is a multiple of 4, and arrays are 16-byte aligned */
+    void (*vorbis_inverse_coupling)(float *mag, float *ang, int blocksize);
+    /* assume len is a multiple of 8, and arrays are 16-byte aligned */
+    void (*vector_fmul)(float *dst, const float *src, int len);
+    void (*vector_fmul_reverse)(float *dst, const float *src0, const float *src1, int len);
+    /* assume len is a multiple of 8, and src arrays are 16-byte aligned */
+    void (*vector_fmul_add_add)(float *dst, const float *src0, const float *src1, const float *src2, int src3, int len, int step);
+
+    /* C version: convert floats from the range [384.0,386.0] to ints in [-32768,32767]
+     * simd versions: convert floats from [-32768.0,32767.0] without rescaling and arrays are 16byte aligned */
+    void (*float_to_int16)(int16_t *dst, const float *src, int len);
 
     /* (I)DCT */
     void (*fdct)(DCTELEM *block/* align 16*/);
@@ -356,6 +391,18 @@ typedef struct DSPContext {
     void (*prefetch)(void *mem, int stride, int h);
 
     void (*shrink[4])(uint8_t *dst, int dst_wrap, const uint8_t *src, int src_wrap, int width, int height);
+
+    /* vc1 functions */
+    void (*vc1_inv_trans_8x8)(DCTELEM *b);
+    void (*vc1_inv_trans_8x4)(DCTELEM *b, int n);
+    void (*vc1_inv_trans_4x8)(DCTELEM *b, int n);
+    void (*vc1_inv_trans_4x4)(DCTELEM *b, int n);
+    void (*vc1_v_overlap)(uint8_t* src, int stride, int rnd);
+    void (*vc1_h_overlap)(uint8_t* src, int stride, int rnd);
+    /* put 8x8 block with bicubic interpolation and quarterpel precision
+     * last argument is actually round value instead of height
+     */
+    op_pixels_func put_vc1_mspel_pixels_tab[16];
 } DSPContext;
 
 void dsputil_static_init(void);
@@ -529,6 +576,13 @@ void dsputil_init_mmi(DSPContext* c, AVCodecContext *avctx);
 
 void dsputil_init_sh4(DSPContext* c, AVCodecContext *avctx);
 
+#elif defined(ARCH_BFIN)
+
+#define DECLARE_ALIGNED_8(t,v)    t v __attribute__ ((aligned (8)))
+#define STRIDE_ALIGN 8
+
+void dsputil_init_bfin(DSPContext* c, AVCodecContext *avctx);
+
 #else
 
 #define DECLARE_ALIGNED_8(t,v)    t v __attribute__ ((aligned (8)))
@@ -571,6 +625,8 @@ void get_psnr(uint8_t *orig_image[3], uint8_t *coded_image[3],
    FFTSample type */
 typedef float FFTSample;
 
+struct MDCTContext;
+
 typedef struct FFTComplex {
     FFTSample re, im;
 } FFTComplex;
@@ -582,6 +638,8 @@ typedef struct FFTContext {
     FFTComplex *exptab;
     FFTComplex *exptab1; /* only used by SSE code */
     void (*fft_calc)(struct FFTContext *s, FFTComplex *z);
+    void (*imdct_calc)(struct MDCTContext *s, FFTSample *output,
+                       const FFTSample *input, FFTSample *tmp);
 } FFTContext;
 
 int ff_fft_init(FFTContext *s, int nbits, int inverse);
@@ -612,6 +670,10 @@ typedef struct MDCTContext {
 int ff_mdct_init(MDCTContext *s, int nbits, int inverse);
 void ff_imdct_calc(MDCTContext *s, FFTSample *output,
                 const FFTSample *input, FFTSample *tmp);
+void ff_imdct_calc_3dn2(MDCTContext *s, FFTSample *output,
+                        const FFTSample *input, FFTSample *tmp);
+void ff_imdct_calc_sse(MDCTContext *s, FFTSample *output,
+                       const FFTSample *input, FFTSample *tmp);
 void ff_mdct_calc(MDCTContext *s, FFTSample *out,
                const FFTSample *input, FFTSample *tmp);
 void ff_mdct_end(MDCTContext *s);

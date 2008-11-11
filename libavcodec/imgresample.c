@@ -2,18 +2,20 @@
  * High quality image resampling with polyphase filters
  * Copyright (c) 2001 Fabrice Bellard.
  *
- * This library is free software; you can redistribute it and/or
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * FFmpeg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
@@ -27,7 +29,7 @@
 #include "dsputil.h"
 
 #ifdef USE_FASTMEMCPY
-#include "fastmemcpy.h"
+#include "libvo/fastmemcpy.h"
 #endif
 
 #define NB_COMPONENTS 3
@@ -674,6 +676,42 @@ void sws_freeContext(struct SwsContext *ctx)
     av_free(ctx);
 }
 
+
+/**
+ * Checks if context is valid or reallocs a new one instead.
+ * If context is NULL, just calls sws_getContext() to get a new one.
+ * Otherwise, checks if the parameters are the same already saved in context.
+ * If that is the case, returns the current context.
+ * Otherwise, frees context and gets a new one.
+ *
+ * Be warned that srcFilter, dstFilter are not checked, they are
+ * asumed to remain valid.
+ */
+struct SwsContext *sws_getCachedContext(struct SwsContext *ctx,
+                        int srcW, int srcH, int srcFormat,
+                        int dstW, int dstH, int dstFormat, int flags,
+                        SwsFilter *srcFilter, SwsFilter *dstFilter, double *param)
+{
+    if (ctx != NULL) {
+        if ((ctx->resampling_ctx->iwidth != srcW) ||
+                        (ctx->resampling_ctx->iheight != srcH) ||
+                        (ctx->src_pix_fmt != srcFormat) ||
+                        (ctx->resampling_ctx->owidth != dstW) ||
+                        (ctx->resampling_ctx->oheight != dstH) ||
+                        (ctx->dst_pix_fmt != dstFormat))
+        {
+            sws_freeContext(ctx);
+            ctx = NULL;
+        }
+    }
+    if (ctx == NULL) {
+        return sws_getContext(srcW, srcH, srcFormat,
+                        dstW, dstH, dstFormat, flags,
+                        srcFilter, dstFilter, param);
+    }
+    return ctx;
+}
+
 int sws_scale(struct SwsContext *ctx, uint8_t* src[], int srcStride[],
               int srcSliceY, int srcSliceH, uint8_t* dst[], int dstStride[])
 {
@@ -756,6 +794,9 @@ int sws_scale(struct SwsContext *ctx, uint8_t* src[], int srcStride[],
             res = -1;
             goto the_end;
         }
+    } else if (resampled_picture != &dst_pict) {
+        img_copy(&dst_pict, resampled_picture, current_pix_fmt,
+                        ctx->resampling_ctx->owidth, ctx->resampling_ctx->oheight);
     }
 
 the_end:

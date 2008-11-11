@@ -17,9 +17,9 @@
   In future I'll also add functions for format enumeration, 
   but not right now.
 
-  Modified for use with MPlayer, detailed CVS changelog at
-  http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
-  $Id: afl.c 15167 2005-04-15 20:17:14Z diego $
+  Modified for use with MPlayer, detailed changelog at
+  http://svn.mplayerhq.hu/mplayer/trunk/
+  $Id: afl.c 18883 2006-07-02 03:59:36Z reynaldo $
   
 ***************************************************************************/
 #include "config.h"
@@ -282,7 +282,7 @@ PWINE_ACMDRIVERID MSACM_RegisterDriver(const char* pszFileName,
 	MSACM_hHeap = GetProcessHeap();
 #endif
     padid = (PWINE_ACMDRIVERID) HeapAlloc(MSACM_hHeap, 0, sizeof(WINE_ACMDRIVERID));
-    padid->pszFileName = (char*)malloc(strlen(pszFileName)+1);
+    padid->pszFileName = malloc(strlen(pszFileName)+1);
     strcpy(padid->pszFileName, pszFileName);
 //    1~strdup(pszDriverAlias);
     padid->wFormatTag = wFormatTag;

@@ -2,18 +2,20 @@
  * FFM (ffserver live feed) encoder and decoder
  * Copyright (c) 2001 Fabrice Bellard.
  *
- * This library is free software; you can redistribute it and/or
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * FFmpeg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 #include "avformat.h"
@@ -761,7 +763,8 @@ static int ffm_probe(AVProbeData *p)
     return 0;
 }
 
-static AVInputFormat ffm_iformat = {
+#ifdef CONFIG_FFM_DEMUXER
+AVInputFormat ffm_demuxer = {
     "ffm",
     "ffm format",
     sizeof(FFMContext),
@@ -771,9 +774,9 @@ static AVInputFormat ffm_iformat = {
     ffm_read_close,
     ffm_seek,
 };
-
-#ifdef CONFIG_MUXERS
-static AVOutputFormat ffm_oformat = {
+#endif
+#ifdef CONFIG_FFM_MUXER
+AVOutputFormat ffm_muxer = {
     "ffm",
     "ffm format",
     "",
@@ -786,13 +789,4 @@ static AVOutputFormat ffm_oformat = {
     ffm_write_packet,
     ffm_write_trailer,
 };
-#endif //CONFIG_MUXERS
-
-int ffm_init(void)
-{
-    av_register_input_format(&ffm_iformat);
-#ifdef CONFIG_MUXERS
-    av_register_output_format(&ffm_oformat);
-#endif //CONFIG_MUXERS
-    return 0;
-}
+#endif //CONFIG_FFM_MUXER

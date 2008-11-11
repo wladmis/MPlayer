@@ -1,4 +1,4 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>8.2. Video outputs for traditional video cards</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.68.1"><link rel="start" href="index.html" title="MPlayer - The Movie Player"><link rel="up" href="video.html" title="Chapter 8. Video output devices"><link rel="prev" href="mtrr.html" title="8.1. Setting up MTRR"><link rel="next" href="mpeg_decoders.html" title="8.3. MPEG decoders"><link rel="preface" href="howtoread.html" title="How to read this documentation"><link rel="chapter" href="intro.html" title="Chapter 1. Introduction"><link rel="chapter" href="install.html" title="Chapter 2. Installation"><link rel="chapter" href="usage.html" title="Chapter 3. Usage"><link rel="chapter" href="cd-dvd.html" title="Chapter 4. CD/DVD usage"><link rel="chapter" href="faq.html" title="Chapter 5. Frequently Asked Questions"><link rel="chapter" href="containers.html" title="Chapter 6. Containers"><link rel="chapter" href="codecs.html" title="Chapter 7. Codecs"><link rel="chapter" href="video.html" title="Chapter 8. Video output devices"><link rel="chapter" href="audio.html" title="Chapter 9. Audio output devices"><link rel="chapter" href="tv.html" title="Chapter 10. TV"><link rel="chapter" href="ports.html" title="Chapter 11. Ports"><link rel="chapter" href="mencoder.html" title="Chapter 12. Basic usage of MEncoder"><link rel="chapter" href="encoding-guide.html" title="Chapter 13. Encoding with MEncoder"><link rel="appendix" href="mailinglists.html" title="Appendix A. Mailing lists"><link rel="appendix" href="bugreports.html" title="Appendix B. How to report bugs"><link rel="appendix" href="bugs.html" title="Appendix C. Known bugs"><link rel="appendix" href="skin.html" title="Appendix D. MPlayer skin format"><link rel="appendix" href="users-vs-dev.html" title="Appendix E. Developer cries"><link rel="subsection" href="output-trad.html#xv" title="8.2.1. Xv"><link rel="subsection" href="output-trad.html#dga" title="8.2.2. DGA"><link rel="subsection" href="output-trad.html#sdl" title="8.2.3. SDL"><link rel="subsection" href="output-trad.html#svgalib" title="8.2.4. SVGAlib"><link rel="subsection" href="output-trad.html#fbdev" title="8.2.5. Framebuffer output (FBdev)"><link rel="subsection" href="output-trad.html#mga_vid" title="8.2.6. Matrox framebuffer (mga_vid)"><link rel="subsection" href="output-trad.html#tdfxfb" title="8.2.7. 3Dfx YUV support"><link rel="subsection" href="output-trad.html#opengl" title="8.2.8. OpenGL output"><link rel="subsection" href="output-trad.html#aalib" title="8.2.9. AAlib - text mode displaying"><link rel="subsection" href="output-trad.html#caca" title="8.2.10. libcaca - Color ASCII Art library"><link rel="subsection" href="output-trad.html#vesa" title="8.2.11. VESA - output to VESA BIOS"><link rel="subsection" href="output-trad.html#x11" title="8.2.12. X11"><link rel="subsection" href="output-trad.html#vidix" title="8.2.13. VIDIX"><link rel="subsection" href="output-trad.html#directfb" title="8.2.14. DirectFB"><link rel="subsection" href="output-trad.html#dfbmga" title="8.2.15. DirectFB/Matrox (dfbmga)"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">8.2. Video outputs for traditional video cards</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="mtrr.html">Prev</a> </td><th width="60%" align="center">Chapter 8. Video output devices</th><td width="20%" align="right"> <a accesskey="n" href="mpeg_decoders.html">Next</a></td></tr></table><hr></div><div class="sect1" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="output-trad"></a>8.2. Video outputs for traditional video cards</h2></div></div></div><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="xv"></a>8.2.1. Xv</h3></div></div></div><p>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>8.2. Video outputs for traditional video cards</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.68.1"><link rel="start" href="index.html" title="MPlayer - The Movie Player"><link rel="up" href="video.html" title="Chapter 8. Video output devices"><link rel="prev" href="mtrr.html" title="8.1. Setting up MTRR"><link rel="next" href="mpeg_decoders.html" title="8.3. MPEG decoders"><link rel="preface" href="howtoread.html" title="How to read this documentation"><link rel="chapter" href="intro.html" title="Chapter 1. Introduction"><link rel="chapter" href="install.html" title="Chapter 2. Installation"><link rel="chapter" href="usage.html" title="Chapter 3. Usage"><link rel="chapter" href="cd-dvd.html" title="Chapter 4. CD/DVD usage"><link rel="chapter" href="faq.html" title="Chapter 5. Frequently Asked Questions"><link rel="chapter" href="containers.html" title="Chapter 6. Containers"><link rel="chapter" href="codecs.html" title="Chapter 7. Codecs"><link rel="chapter" href="video.html" title="Chapter 8. Video output devices"><link rel="chapter" href="audio.html" title="Chapter 9. Audio output devices"><link rel="chapter" href="tv.html" title="Chapter 10. TV"><link rel="chapter" href="radio.html" title="Chapter 11. Radio"><link rel="chapter" href="ports.html" title="Chapter 12. Ports"><link rel="chapter" href="mencoder.html" title="Chapter 13. Basic usage of MEncoder"><link rel="chapter" href="encoding-guide.html" title="Chapter 14. Encoding with MEncoder"><link rel="appendix" href="bugreports.html" title="Appendix A. How to report bugs"><link rel="appendix" href="bugs.html" title="Appendix B. Known bugs"><link rel="appendix" href="skin.html" title="Appendix C. MPlayer skin format"><link rel="appendix" href="history.html" title="Appendix D. History"><link rel="subsection" href="output-trad.html#xv" title="8.2.1. Xv"><link rel="subsection" href="output-trad.html#dga" title="8.2.2. DGA"><link rel="subsection" href="output-trad.html#sdl" title="8.2.3. SDL"><link rel="subsection" href="output-trad.html#svgalib" title="8.2.4. SVGAlib"><link rel="subsection" href="output-trad.html#fbdev" title="8.2.5. Framebuffer output (FBdev)"><link rel="subsection" href="output-trad.html#mga_vid" title="8.2.6. Matrox framebuffer (mga_vid)"><link rel="subsection" href="output-trad.html#tdfxfb" title="8.2.7. 3Dfx YUV support"><link rel="subsection" href="output-trad.html#opengl" title="8.2.8. OpenGL output"><link rel="subsection" href="output-trad.html#aalib" title="8.2.9. AAlib - text mode displaying"><link rel="subsection" href="output-trad.html#caca" title="8.2.10. libcaca - Color ASCII Art library"><link rel="subsection" href="output-trad.html#vesa" title="8.2.11. VESA - output to VESA BIOS"><link rel="subsection" href="output-trad.html#x11" title="8.2.12. X11"><link rel="subsection" href="output-trad.html#vidix" title="8.2.13. VIDIX"><link rel="subsection" href="output-trad.html#directfb" title="8.2.14. DirectFB"><link rel="subsection" href="output-trad.html#dfbmga" title="8.2.15. DirectFB/Matrox (dfbmga)"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">8.2. Video outputs for traditional video cards</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="mtrr.html">Prev</a> </td><th width="60%" align="center">Chapter 8. Video output devices</th><td width="20%" align="right"> <a accesskey="n" href="mpeg_decoders.html">Next</a></td></tr></table><hr></div><div class="sect1" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="output-trad"></a>8.2. Video outputs for traditional video cards</h2></div></div></div><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="xv"></a>8.2.1. Xv</h3></div></div></div><p>
 Under XFree86 4.0.2 or newer, you can use your card's hardware YUV routines
 using the XVideo extension. This is what the option
 '<tt class="option">-vo xv</tt>' uses. Also, this driver supports adjusting
@@ -84,8 +84,7 @@ It's currently unclear which Savage models lack YV12 support, and convert by
 driver (slow). If you suspect your card, get a newer driver, or ask politely
 on the MPlayer-users mailing list for an MMX/3DNow! enabled driver.
 </p></div></div><div class="sect3" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="nvidia"></a>8.2.1.3. nVidia cards</h4></div></div></div><p>
-nVidia isn't always a very good choice under Linux (according to nVidia, this
-is <a href="nvidia-opinions.html" title="E.3. nVidia">not true</a>)... XFree86's
+nVidia isn't always a very good choice under Linux ... XFree86's
 open-source driver supports most of these cards, but for some cases, you'll
 have to use the binary closed-source nVidia driver, available at
 <a href="http://www.nvidia.com/object/linux.html" target="_top">nVidia's web site</a>.
@@ -343,27 +342,7 @@ system problem), or audio is lagging.
 </p><p>
 SDL video output supports displaying subtitles under the movie, on the (if
 present) black bar.
-</p><div class="variablelist"><p class="title"><b>There are several command line switches for SDL:</b></p><dl><dt><span class="term"><tt class="option">-vo sdl:driver=<em class="replaceable"><code>name</code></em></tt></span></dt><dd>
-    specifies SDL video driver to use (i.e. <code class="literal">aalib</code>,
-    <code class="literal">dga</code>, <code class="literal">x11</code>)
-  </dd><dt><span class="term"><tt class="option">-ao sdl:<em class="replaceable"><code>name</code></em></tt></span></dt><dd>
-    specifies SDL audio driver to use (i.e. <code class="literal">dsp</code>,
-    <code class="literal">esd</code>, <code class="literal">artsc</code>)
-  </dd><dt><span class="term"><tt class="option">-noxv</tt></span></dt><dd>
-    disables XVideo hardware acceleration
-  </dd><dt><span class="term"><tt class="option">-forcexv</tt></span></dt><dd>
-    tries to force XVideo acceleration
-  </dd></dl></div><div class="table"><a name="id2558693"></a><p class="title"><b>Table 8.1. SDL only keys</b></p><table summary="SDL only keys" border="1"><colgroup><col><col></colgroup><thead><tr><th>Key</th><th>Action</th></tr></thead><tbody><tr><td><span class="keycap"><b>c</b></span></td><td>
-    cycles available fullscreen modes
-    </td></tr><tr><td><span class="keycap"><b>n</b></span></td><td>
-    changes back to normal mode
-    </td></tr></tbody></table></div><div class="itemizedlist"><p class="title"><b>Known bugs:</b></p><ul type="disc"><li>
-  Keys pressed under sdl:driver=aalib console driver repeat forever. (use
-  <tt class="option">-vo aa</tt>!) It's bug in SDL, I can't change it (tested with
-  SDL 1.2.1).
-  </li><li>
-  DO NOT USE SDL with GUI! It won't work as it should.
-  </li></ul></div></div><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="svgalib"></a>8.2.4. SVGAlib</h3></div></div></div><p><b>INSTALLATION. </b>
+</p></div><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="svgalib"></a>8.2.4. SVGAlib</h3></div></div></div><p><b>INSTALLATION. </b>
 You'll have to install svgalib and its development package in order for
 <span class="application">MPlayer</span> build its SVGAlib driver (autodetected,
 but can be forced), and don't forget to edit
@@ -459,13 +438,13 @@ framebuffer, and don't ask for it, since it's not an
 <span class="application">MPlayer</span> limitation.
 </p></div></div><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="mga_vid"></a>8.2.6. Matrox framebuffer (mga_vid)</h3></div></div></div><p>
 This section is about the Matrox G200/G400/G450/G550 BES (Back-End Scaler)
-support, the mga_vid kernel driver. It's actively developed by A'rpi, and
-it has hardware VSYNC support with triple buffering. It works on both
+support, the <code class="systemitem">mga_vid</code> kernel driver.
+It has hardware VSYNC support with triple buffering. It works on both
 framebuffer console and under X.
 </p><div class="warning" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Warning</h3><p>
 This is Linux only! On non-Linux (tested on FreeBSD) systems, you can use
 <a href="output-trad.html#vidix" title="8.2.13. VIDIX">VIDIX</a> instead!
-</p></div><div class="procedure"><a name="id2559202"></a><p class="title"><b>Installation:</b></p><ol type="1"><li><p>
+</p></div><div class="procedure"><a name="id2555278"></a><p class="title"><b>Installation:</b></p><ol type="1"><li><p>
   To use it, you first have to compile <tt class="filename">mga_vid.o</tt>:
   </p><pre class="screen">
 cd drivers
@@ -829,11 +808,6 @@ ONLY if you are absolutely sure it will work, and
 about it to the developers. The right way is to use VIDIX without arguments
 to enable driver autodetection.
 </p><p>
-VIDIX is new technology and it's extremely possible that on your
-system it won't work. In this case only solution for you
-it's port it (mainly libdha). But there is hope that it will work on those
-systems where X11 does.
-</p><p>
 Since VIDIX requires direct hardware access you can either run it as root
 or set the SUID bit on the <span class="application">MPlayer</span> binary
 (<span class="bold"><strong>Warning: This is a security risk!</strong></span>).
@@ -883,31 +857,11 @@ The driver was written and is maintained by
 Although there is a driver for the 3DLabs GLINT R3 and Permedia3 chips, no one
 has tested it, so reports are welcome.
 </p></div><div class="sect3" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="vidix-nvidia"></a>8.2.13.5. nVidia cards</h4></div></div></div><p>
-There's a relatively new nVidia driver out there, it's known to work on Riva
-128, TNT and GeForce2 chipsets, also others have been reported working.
-</p><div class="itemizedlist"><p class="title"><b>LIMITATIONS</b></p><ul type="disc" compact><li><p>
-  It's recommended to use the binary nVidia drivers for X before using this
-  VIDIX driver, because some of the registers which need to be initialized
-  haven't been discovered yet, so it will probably fail with the Open Source
-  XFree86 <tt class="filename">nv.o</tt> driver.
-  </p></li><li><p>
-  Currently only codecs capable of UYVY colorspace output
-  can work in conjunction with this driver. Unfortunately, this excludes
-  every single decoder from the
-  <code class="systemitem">libavcodec</code> family. This leaves
-  us with the following usable popular codecs:
-  <code class="systemitem">cvid, divxds, xvid, divx4, wmv7, wmv8</code> and some
-  others. Please note that this is only
-  a temporal inconvenience. The usage syntax is as follows:
-  </p><pre class="screen">mplayer -vf format=uyvy -vc divxds <em class="replaceable"><code>divx3file.avi</code></em> </pre><p>
-  </p></li></ul></div><p>
   An unique feature of the nvidia_vid driver is its ability to display video on
   <span class="bold"><strong>plain, pure, text-only console</strong></span> - with no
   framebuffer or X magic whatsoever. For this purpose, we'll have to use the
   <tt class="option">cvidix</tt> video output, as the following example shows:
-  </p><pre class="screen">mplayer -vf format=uyvy -vc divxds -vo cvidix <em class="replaceable"><code>example.avi</code></em> </pre><p>
-</p><p>
-Reports awaited!
+  </p><pre class="screen">mplayer -vo cvidix <em class="replaceable"><code>example.avi</code></em></pre><p>
 </p></div><div class="sect3" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="vidix-sis"></a>8.2.13.6. SiS cards</h4></div></div></div><p>
 This is very experimental code, just like nvidia_vid.
 </p><p>

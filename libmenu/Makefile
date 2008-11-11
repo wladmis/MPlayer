@@ -15,17 +15,16 @@ SRCS= menu.c \
 
 ifeq ($(DVBIN),yes)
 SRCS += menu_dvbin.c
-EXTRA_INC += $(DVB_INC)
 endif
 OBJS=$(SRCS:.c=.o)
 
-CFLAGS  = $(OPTFLAGS) -I. -I.. -I../libmpcodecs $(EXTRA_INC)
+CFLAGS  = -I. -I.. $(OPTFLAGS)
 
 .SUFFIXES: .c .o
 
 
 .c.o:
-	$(CC) -c $(CFLAGS) $(FREETYPE_INC) -o $@ $<
+	$(CC) -c $(CFLAGS) -o $@ $<
 
 $(LIBNAME):     $(OBJS)
 	$(AR) r $(LIBNAME) $(OBJS)
@@ -42,7 +41,7 @@ distclean: clean
 dep:    depend
 
 depend:
-	$(CC) -MM $(CFLAGS) $(FREETYPE_INC) $(SRCS) 1>.depend
+	$(CC) -MM $(CFLAGS) $(SRCS) 1>.depend
 
 #
 # include dependency files if they exist

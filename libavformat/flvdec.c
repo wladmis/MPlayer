@@ -2,18 +2,20 @@
  * FLV encoder.
  * Copyright (c) 2003 The FFmpeg Project.
  *
- * This library is free software; you can redistribute it and/or
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * FFmpeg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 #include "avformat.h"
@@ -55,15 +57,18 @@ static int flv_read_header(AVFormatContext *s,
 
     url_fseek(&s->pb, offset, SEEK_SET);
 
+    s->start_time = 0;
+
     return 0;
 }
 
 static int flv_read_packet(AVFormatContext *s, AVPacket *pkt)
 {
-    int ret, i, type, size, pts, flags, is_audio, next;
+    int ret, i, type, size, pts, flags, is_audio, next, pos;
     AVStream *st = NULL;
 
  for(;;){
+    pos = url_ftell(&s->pb);
     url_fskip(&s->pb, 4); /* size of previous packet */
     type = get_byte(&s->pb);
     size = get_be24(&s->pb);
@@ -154,6 +159,8 @@ static int flv_read_packet(AVFormatContext *s, AVPacket *pkt)
         url_fseek(&s->pb, next, SEEK_SET);
         continue;
     }
+    if ((flags >> 4)==1)
+        av_add_index_entry(st, pos, pts, size, 0, AVINDEX_KEYFRAME);
     break;
  }
 
@@ -169,7 +176,7 @@ static int flv_read_packet(AVFormatContext *s, AVPacket *pkt)
             case 0: if (flags&2) st->codec->codec_id = CODEC_ID_PCM_S16BE;
                     else st->codec->codec_id = CODEC_ID_PCM_S8; break;
             case 1: st->codec->codec_id = CODEC_ID_ADPCM_SWF; break;
-            case 2: st->codec->codec_id = CODEC_ID_MP3; break;
+            case 2: st->codec->codec_id = CODEC_ID_MP3; st->need_parsing = 1; break;
             // this is not listed at FLV but at SWF, strange...
             case 3: if (flags&2) st->codec->codec_id = CODEC_ID_PCM_S16LE;
                     else st->codec->codec_id = CODEC_ID_PCM_S8; break;
@@ -184,6 +191,11 @@ static int flv_read_packet(AVFormatContext *s, AVPacket *pkt)
             switch(flags & 0xF){
             case 2: st->codec->codec_id = CODEC_ID_FLV1; break;
             case 3: st->codec->codec_id = CODEC_ID_FLASHSV; break;
+            case 4:
+                st->codec->codec_id = CODEC_ID_VP6F;
+                get_byte(&s->pb); /* width and height adjustment */
+                size--;
+                break;
             default:
                     av_log(s, AV_LOG_INFO, "Unsupported video codec (%x)\n", flags & 0xf);
                 st->codec->codec_tag= flags & 0xF;
@@ -211,7 +223,18 @@ static int flv_read_close(AVFormatContext *s)
     return 0;
 }
 
-AVInputFormat flv_iformat = {
+static int flv_read_seek(AVFormatContext *s, int stream_index, int64_t timestamp, int flags)
+{
+    AVStream *st = s->streams[stream_index];
+    int index = av_index_search_timestamp(st, timestamp, flags);
+    if (index < 0)
+        return -1;
+    url_fseek(&s->pb, st->index_entries[index].pos, SEEK_SET);
+
+    return 0;
+}
+
+AVInputFormat flv_demuxer = {
     "flv",
     "flv format",
     0,
@@ -219,12 +242,7 @@ AVInputFormat flv_iformat = {
     flv_read_header,
     flv_read_packet,
     flv_read_close,
+    flv_read_seek,
     .extensions = "flv",
     .value = CODEC_ID_FLV1,
 };
-
-int flvdec_init(void)
-{
-    av_register_input_format(&flv_iformat);
-    return 0;
-}

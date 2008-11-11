@@ -9,9 +9,9 @@
  * Copyright 1995 Alexandre Julliard
  * Copyright 1997 Marcus Meissner
  *
- * Modified for use with MPlayer, detailed CVS changelog at
- * http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
- * $Id: pe_resource.c 15167 2005-04-15 20:17:14Z diego $
+ * Modified for use with MPlayer, detailed changelog at
+ * http://svn.mplayerhq.hu/mplayer/trunk/
+ * $Id: pe_resource.c 18786 2006-06-22 13:34:00Z diego $
  *
  */
 #include "config.h"

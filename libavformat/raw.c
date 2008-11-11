@@ -3,18 +3,20 @@
  * Copyright (c) 2001 Fabrice Bellard.
  * Copyright (c) 2005 Alex Beregszaszi
  *
- * This library is free software; you can redistribute it and/or
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * FFmpeg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 #include "avformat.h"
@@ -181,26 +183,11 @@ int pcm_read_seek(AVFormatContext *s,
     int64_t pos;
 
     st = s->streams[0];
-    switch(st->codec->codec_id) {
-    case CODEC_ID_PCM_S16LE:
-    case CODEC_ID_PCM_S16BE:
-    case CODEC_ID_PCM_U16LE:
-    case CODEC_ID_PCM_U16BE:
-        block_align = 2 * st->codec->channels;
-        byte_rate = block_align * st->codec->sample_rate;
-        break;
-    case CODEC_ID_PCM_S8:
-    case CODEC_ID_PCM_U8:
-    case CODEC_ID_PCM_MULAW:
-    case CODEC_ID_PCM_ALAW:
-        block_align = st->codec->channels;
-        byte_rate = block_align * st->codec->sample_rate;
-        break;
-    default:
-        block_align = st->codec->block_align;
-        byte_rate = st->codec->bit_rate / 8;
-        break;
-    }
+
+    block_align = st->codec->block_align ? st->codec->block_align :
+        (av_get_bits_per_sample(st->codec->codec_id) * st->codec->channels) >> 3;
+    byte_rate = st->codec->bit_rate ? st->codec->bit_rate >> 3 :
+        block_align * st->codec->sample_rate;
 
     if (block_align <= 0 || byte_rate <= 0)
         return -1;
@@ -389,7 +376,7 @@ static int h261_probe(AVProbeData *p)
     return 0;
 }
 
-AVInputFormat shorten_iformat = {
+AVInputFormat shorten_demuxer = {
     "shn",
     "raw shorten",
     0,
@@ -400,7 +387,7 @@ AVInputFormat shorten_iformat = {
     .extensions = "shn",
 };
 
-AVInputFormat flac_iformat = {
+AVInputFormat flac_demuxer = {
     "flac",
     "raw flac",
     0,
@@ -412,7 +399,7 @@ AVInputFormat flac_iformat = {
 };
 
 #ifdef CONFIG_MUXERS
-AVOutputFormat flac_oformat = {
+AVOutputFormat flac_muxer = {
     "flac",
     "raw flac",
     "audio/x-flac",
@@ -423,10 +410,11 @@ AVOutputFormat flac_oformat = {
     flac_write_header,
     raw_write_packet,
     raw_write_trailer,
+    .flags= AVFMT_NOTIMESTAMPS,
 };
 #endif //CONFIG_MUXERS
 
-AVInputFormat ac3_iformat = {
+AVInputFormat ac3_demuxer = {
     "ac3",
     "raw ac3",
     0,
@@ -438,7 +426,7 @@ AVInputFormat ac3_iformat = {
 };
 
 #ifdef CONFIG_MUXERS
-AVOutputFormat ac3_oformat = {
+AVOutputFormat ac3_muxer = {
     "ac3",
     "raw ac3",
     "audio/x-ac3",
@@ -449,10 +437,11 @@ AVOutputFormat ac3_oformat = {
     raw_write_header,
     raw_write_packet,
     raw_write_trailer,
+    .flags= AVFMT_NOTIMESTAMPS,
 };
 #endif //CONFIG_MUXERS
 
-AVInputFormat dts_iformat = {
+AVInputFormat dts_demuxer = {
     "dts",
     "raw dts",
     0,
@@ -463,7 +452,7 @@ AVInputFormat dts_iformat = {
     .extensions = "dts",
 };
 
-AVInputFormat aac_iformat = {
+AVInputFormat aac_demuxer = {
     "aac",
     "ADTS AAC",
     0,
@@ -474,7 +463,7 @@ AVInputFormat aac_iformat = {
     .extensions = "aac",
 };
 
-AVInputFormat h261_iformat = {
+AVInputFormat h261_demuxer = {
     "h261",
     "raw h261",
     0,
@@ -487,7 +476,7 @@ AVInputFormat h261_iformat = {
 };
 
 #ifdef CONFIG_MUXERS
-AVOutputFormat h261_oformat = {
+AVOutputFormat h261_muxer = {
     "h261",
     "raw h261",
     "video/x-h261",
@@ -498,10 +487,11 @@ AVOutputFormat h261_oformat = {
     raw_write_header,
     raw_write_packet,
     raw_write_trailer,
+    .flags= AVFMT_NOTIMESTAMPS,
 };
 #endif //CONFIG_MUXERS
 
-AVInputFormat h263_iformat = {
+AVInputFormat h263_demuxer = {
     "h263",
     "raw h263",
     0,
@@ -514,7 +504,7 @@ AVInputFormat h263_iformat = {
 };
 
 #ifdef CONFIG_MUXERS
-AVOutputFormat h263_oformat = {
+AVOutputFormat h263_muxer = {
     "h263",
     "raw h263",
     "video/x-h263",
@@ -525,10 +515,11 @@ AVOutputFormat h263_oformat = {
     raw_write_header,
     raw_write_packet,
     raw_write_trailer,
+    .flags= AVFMT_NOTIMESTAMPS,
 };
 #endif //CONFIG_MUXERS
 
-AVInputFormat m4v_iformat = {
+AVInputFormat m4v_demuxer = {
     "m4v",
     "raw MPEG4 video format",
     0,
@@ -541,7 +532,7 @@ AVInputFormat m4v_iformat = {
 };
 
 #ifdef CONFIG_MUXERS
-AVOutputFormat m4v_oformat = {
+AVOutputFormat m4v_muxer = {
     "m4v",
     "raw MPEG4 video format",
     NULL,
@@ -552,10 +543,11 @@ AVOutputFormat m4v_oformat = {
     raw_write_header,
     raw_write_packet,
     raw_write_trailer,
+    .flags= AVFMT_NOTIMESTAMPS,
 };
 #endif //CONFIG_MUXERS
 
-AVInputFormat h264_iformat = {
+AVInputFormat h264_demuxer = {
     "h264",
     "raw H264 video format",
     0,
@@ -568,7 +560,7 @@ AVInputFormat h264_iformat = {
 };
 
 #ifdef CONFIG_MUXERS
-AVOutputFormat h264_oformat = {
+AVOutputFormat h264_muxer = {
     "h264",
     "raw H264 video format",
     NULL,
@@ -579,10 +571,11 @@ AVOutputFormat h264_oformat = {
     raw_write_header,
     raw_write_packet,
     raw_write_trailer,
+    .flags= AVFMT_NOTIMESTAMPS,
 };
 #endif //CONFIG_MUXERS
 
-AVInputFormat mpegvideo_iformat = {
+AVInputFormat mpegvideo_demuxer = {
     "mpegvideo",
     "MPEG video",
     0,
@@ -594,7 +587,7 @@ AVInputFormat mpegvideo_iformat = {
 };
 
 #ifdef CONFIG_MUXERS
-AVOutputFormat mpeg1video_oformat = {
+AVOutputFormat mpeg1video_muxer = {
     "mpeg1video",
     "MPEG video",
     "video/x-mpeg",
@@ -605,11 +598,12 @@ AVOutputFormat mpeg1video_oformat = {
     raw_write_header,
     raw_write_packet,
     raw_write_trailer,
+    .flags= AVFMT_NOTIMESTAMPS,
 };
 #endif //CONFIG_MUXERS
 
 #ifdef CONFIG_MUXERS
-AVOutputFormat mpeg2video_oformat = {
+AVOutputFormat mpeg2video_muxer = {
     "mpeg2video",
     "MPEG2 video",
     NULL,
@@ -620,10 +614,11 @@ AVOutputFormat mpeg2video_oformat = {
     raw_write_header,
     raw_write_packet,
     raw_write_trailer,
+    .flags= AVFMT_NOTIMESTAMPS,
 };
 #endif //CONFIG_MUXERS
 
-AVInputFormat mjpeg_iformat = {
+AVInputFormat mjpeg_demuxer = {
     "mjpeg",
     "MJPEG video",
     0,
@@ -635,7 +630,7 @@ AVInputFormat mjpeg_iformat = {
     .value = CODEC_ID_MJPEG,
 };
 
-AVInputFormat ingenient_iformat = {
+AVInputFormat ingenient_demuxer = {
     "ingenient",
     "Ingenient MJPEG",
     0,
@@ -648,7 +643,7 @@ AVInputFormat ingenient_iformat = {
 };
 
 #ifdef CONFIG_MUXERS
-AVOutputFormat mjpeg_oformat = {
+AVOutputFormat mjpeg_muxer = {
     "mjpeg",
     "MJPEG video",
     "video/x-mjpeg",
@@ -659,13 +654,14 @@ AVOutputFormat mjpeg_oformat = {
     raw_write_header,
     raw_write_packet,
     raw_write_trailer,
+    .flags= AVFMT_NOTIMESTAMPS,
 };
 #endif //CONFIG_MUXERS
 
 /* pcm formats */
 
 #define PCMINPUTDEF(name, long_name, ext, codec) \
-AVInputFormat pcm_ ## name ## _iformat = {\
+AVInputFormat pcm_ ## name ## _demuxer = {\
     #name,\
     long_name,\
     0,\
@@ -678,17 +674,8 @@ AVInputFormat pcm_ ## name ## _iformat = {\
     .value = codec,\
 };
 
-#if !defined(CONFIG_MUXERS) && defined(CONFIG_DEMUXERS)
-
-#define PCMDEF(name, long_name, ext, codec) \
-    PCMINPUTDEF(name, long_name, ext, codec)
-
-#else
-
-#define PCMDEF(name, long_name, ext, codec) \
-    PCMINPUTDEF(name, long_name, ext, codec)\
-\
-AVOutputFormat pcm_ ## name ## _oformat = {\
+#define PCMOUTPUTDEF(name, long_name, ext, codec) \
+AVOutputFormat pcm_ ## name ## _muxer = {\
     #name,\
     long_name,\
     NULL,\
@@ -699,8 +686,23 @@ AVOutputFormat pcm_ ## name ## _oformat = {\
     raw_write_header,\
     raw_write_packet,\
     raw_write_trailer,\
+    .flags= AVFMT_NOTIMESTAMPS,\
 };
-#endif //CONFIG_MUXERS
+
+
+#if !defined(CONFIG_MUXERS) && defined(CONFIG_DEMUXERS)
+#define PCMDEF(name, long_name, ext, codec) \
+        PCMINPUTDEF(name, long_name, ext, codec)
+#elif defined(CONFIG_MUXERS) && !defined(CONFIG_DEMUXERS)
+#define PCMDEF(name, long_name, ext, codec) \
+        PCMOUTPUTDEF(name, long_name, ext, codec)
+#elif defined(CONFIG_MUXERS) && defined(CONFIG_DEMUXERS)
+#define PCMDEF(name, long_name, ext, codec) \
+        PCMINPUTDEF(name, long_name, ext, codec)\
+        PCMOUTPUTDEF(name, long_name, ext, codec)
+#else
+#define PCMDEF(name, long_name, ext, codec)
+#endif
 
 #ifdef WORDS_BIGENDIAN
 #define BE_DEF(s) s
@@ -757,7 +759,7 @@ static int rawvideo_read_packet(AVFormatContext *s, AVPacket *pkt)
     }
 }
 
-AVInputFormat rawvideo_iformat = {
+AVInputFormat rawvideo_demuxer = {
     "rawvideo",
     "raw video format",
     0,
@@ -770,7 +772,7 @@ AVInputFormat rawvideo_iformat = {
 };
 
 #ifdef CONFIG_MUXERS
-AVOutputFormat rawvideo_oformat = {
+AVOutputFormat rawvideo_muxer = {
     "rawvideo",
     "raw video format",
     NULL,
@@ -781,6 +783,7 @@ AVOutputFormat rawvideo_oformat = {
     raw_write_header,
     raw_write_packet,
     raw_write_trailer,
+    .flags= AVFMT_NOTIMESTAMPS,
 };
 #endif //CONFIG_MUXERS
 
@@ -790,7 +793,7 @@ static int null_write_packet(struct AVFormatContext *s, AVPacket *pkt)
     return 0;
 }
 
-AVOutputFormat null_oformat = {
+AVOutputFormat null_muxer = {
     "null",
     "null video format",
     NULL,
@@ -805,73 +808,6 @@ AVOutputFormat null_oformat = {
     raw_write_header,
     null_write_packet,
     raw_write_trailer,
-    .flags = AVFMT_NOFILE | AVFMT_RAWPICTURE,
+    .flags = AVFMT_NOFILE | AVFMT_RAWPICTURE | AVFMT_NOTIMESTAMPS,
 };
 #endif //CONFIG_MUXERS
-
-#ifndef CONFIG_MUXERS
-#define av_register_output_format(format)
-#endif
-#ifndef CONFIG_DEMUXERS
-#define av_register_input_format(format)
-#endif
-
-int raw_init(void)
-{
-
-    av_register_input_format(&shorten_iformat);
-    av_register_input_format(&flac_iformat);
-    av_register_output_format(&flac_oformat);
-
-    av_register_input_format(&ac3_iformat);
-    av_register_output_format(&ac3_oformat);
-
-    av_register_input_format(&aac_iformat);
-
-    av_register_input_format(&dts_iformat);
-
-    av_register_input_format(&h261_iformat);
-    av_register_output_format(&h261_oformat);
-
-    av_register_input_format(&h263_iformat);
-    av_register_output_format(&h263_oformat);
-
-    av_register_input_format(&m4v_iformat);
-    av_register_output_format(&m4v_oformat);
-
-    av_register_input_format(&h264_iformat);
-    av_register_output_format(&h264_oformat);
-
-    av_register_input_format(&mpegvideo_iformat);
-    av_register_output_format(&mpeg1video_oformat);
-
-    av_register_output_format(&mpeg2video_oformat);
-
-    av_register_input_format(&mjpeg_iformat);
-    av_register_output_format(&mjpeg_oformat);
-
-    av_register_input_format(&ingenient_iformat);
-
-    av_register_input_format(&pcm_s16le_iformat);
-    av_register_output_format(&pcm_s16le_oformat);
-    av_register_input_format(&pcm_s16be_iformat);
-    av_register_output_format(&pcm_s16be_oformat);
-    av_register_input_format(&pcm_u16le_iformat);
-    av_register_output_format(&pcm_u16le_oformat);
-    av_register_input_format(&pcm_u16be_iformat);
-    av_register_output_format(&pcm_u16be_oformat);
-    av_register_input_format(&pcm_s8_iformat);
-    av_register_output_format(&pcm_s8_oformat);
-    av_register_input_format(&pcm_u8_iformat);
-    av_register_output_format(&pcm_u8_oformat);
-    av_register_input_format(&pcm_mulaw_iformat);
-    av_register_output_format(&pcm_mulaw_oformat);
-    av_register_input_format(&pcm_alaw_iformat);
-    av_register_output_format(&pcm_alaw_oformat);
-
-    av_register_input_format(&rawvideo_iformat);
-    av_register_output_format(&rawvideo_oformat);
-
-    av_register_output_format(&null_oformat);
-    return 0;
-}

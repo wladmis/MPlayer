@@ -2,23 +2,26 @@
  * AVI decoder.
  * Copyright (c) 2001 Fabrice Bellard.
  *
- * This library is free software; you can redistribute it and/or
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * FFmpeg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 #include "avformat.h"
 #include "avi.h"
 #include "dv.h"
+#include "riff.h"
 
 #undef NDEBUG
 #include <assert.h>
@@ -99,9 +102,12 @@ static int read_braindead_odml_indx(AVFormatContext *s, int frame_num){
     AVIStream *ast;
     int i;
     int64_t last_pos= -1;
+    int64_t filesize= url_fsize(&s->pb);
 
-//    av_log(s, AV_LOG_ERROR, "longs_pre_entry:%d index_type:%d entries_in_use:%d chunk_id:%X base:%Ld\n",
-//        longs_pre_entry,index_type, entries_in_use, chunk_id, base);
+#ifdef DEBUG_SEEK
+    av_log(s, AV_LOG_ERROR, "longs_pre_entry:%d index_type:%d entries_in_use:%d chunk_id:%X base:%16LX\n",
+        longs_pre_entry,index_type, entries_in_use, chunk_id, base);
+#endif
 
     if(stream_id > s->nb_streams || stream_id < 0)
         return -1;
@@ -118,6 +124,14 @@ static int read_braindead_odml_indx(AVFormatContext *s, int frame_num){
     if(index_type>1)
         return -1;
 
+    if(filesize > 0 && base >= filesize){
+        av_log(s, AV_LOG_ERROR, "ODML index invalid\n");
+        if(base>>32 == (base & 0xFFFFFFFF) && (base & 0xFFFFFFFF) < filesize && filesize <= 0xFFFFFFFF)
+            base &= 0xFFFFFFFF;
+        else
+            return -1;
+    }
+
     for(i=0; i<entries_in_use; i++){
         if(index_type){
             int64_t pos= get_le32(pb) + base - 8;
@@ -125,7 +139,9 @@ static int read_braindead_odml_indx(AVFormatContext *s, int frame_num){
             int key= len >= 0;
             len &= 0x7FFFFFFF;
 
-//av_log(s, AV_LOG_ERROR, "pos:%Ld, len:%X\n", pos, len);
+#ifdef DEBUG_SEEK
+            av_log(s, AV_LOG_ERROR, "pos:%Ld, len:%X\n", pos, len);
+#endif
             if(last_pos == pos || pos == base - 8)
                 avi->non_interleaved= 1;
             else
@@ -137,10 +153,12 @@ static int read_braindead_odml_indx(AVFormatContext *s, int frame_num){
                 ast->cum_len ++;
             last_pos= pos;
         }else{
-            int64_t offset= get_le64(pb);
-            int size      = get_le32(pb);
-            int duration  = get_le32(pb);
-            int64_t pos= url_ftell(pb);
+            int64_t offset, pos;
+            int duration;
+            offset = get_le64(pb);
+            get_le32(pb);       /* size */
+            duration = get_le32(pb);
+            pos = url_ftell(pb);
 
             url_fseek(pb, offset+8, SEEK_SET);
             read_braindead_odml_indx(s, frame_num);
@@ -149,11 +167,13 @@ static int read_braindead_odml_indx(AVFormatContext *s, int frame_num){
             url_fseek(pb, pos, SEEK_SET);
         }
     }
+    avi->index_loaded=1;
     return 0;
 }
 
 static void clean_index(AVFormatContext *s){
-    int i, j;
+    int i;
+    int64_t j;
 
     for(i=0; i<s->nb_streams; i++){
         AVStream *st = s->streams[i];
@@ -177,6 +197,15 @@ static void clean_index(AVFormatContext *s){
     }
 }
 
+static int avi_read_tag(ByteIOContext *pb, char *buf, int maxlen,  unsigned int size)
+{
+    offset_t i = url_ftell(pb);
+    size += (size & 1);
+    get_strz(pb, buf, maxlen);
+    url_fseek(pb, i+size, SEEK_SET);
+    return 0;
+}
+
 static int avi_read_header(AVFormatContext *s, AVFormatParameters *ap)
 {
     AVIContext *avi = s->priv_data;
@@ -186,8 +215,9 @@ static int avi_read_header(AVFormatContext *s, AVFormatParameters *ap)
     unsigned int size, nb_frames;
     int i, n;
     AVStream *st;
-    AVIStream *ast;
+    AVIStream *ast = NULL;
     int xan_video = 0;  /* hack to support Xan A/V */
+    char str_track[4];
 
     avi->stream_index= -1;
 
@@ -216,7 +246,7 @@ static int avi_read_header(AVFormatContext *s, AVFormatParameters *ap)
 #endif
             if (tag1 == MKTAG('m', 'o', 'v', 'i')) {
                 avi->movi_list = url_ftell(pb) - 4;
-                if(size) avi->movi_end = avi->movi_list + size;
+                if(size) avi->movi_end = avi->movi_list + size + (size & 1);
                 else     avi->movi_end = url_fsize(pb);
 #ifdef DEBUG
                 printf("movi end=%Lx\n", avi->movi_end);
@@ -429,9 +459,32 @@ static int avi_read_header(AVFormatContext *s, AVFormatParameters *ap)
             break;
         case MKTAG('i', 'n', 'd', 'x'):
             i= url_ftell(pb);
-            read_braindead_odml_indx(s, 0);
-            avi->index_loaded=1;
+            if(!url_is_streamed(pb) && !(s->flags & AVFMT_FLAG_IGNIDX)){
+                read_braindead_odml_indx(s, 0);
+            }
             url_fseek(pb, i+size, SEEK_SET);
+            break;
+        case MKTAG('I', 'N', 'A', 'M'):
+            avi_read_tag(pb, s->title, sizeof(s->title), size);
+            break;
+        case MKTAG('I', 'A', 'R', 'T'):
+            avi_read_tag(pb, s->author, sizeof(s->author), size);
+            break;
+        case MKTAG('I', 'C', 'O', 'P'):
+            avi_read_tag(pb, s->copyright, sizeof(s->copyright), size);
+            break;
+        case MKTAG('I', 'C', 'M', 'T'):
+            avi_read_tag(pb, s->comment, sizeof(s->comment), size);
+            break;
+        case MKTAG('I', 'G', 'N', 'R'):
+            avi_read_tag(pb, s->genre, sizeof(s->genre), size);
+            break;
+        case MKTAG('I', 'P', 'R', 'D'):
+            avi_read_tag(pb, s->album, sizeof(s->album), size);
+            break;
+        case MKTAG('I', 'P', 'R', 'T'):
+            avi_read_tag(pb, str_track, sizeof(str_track), size);
+            sscanf(str_track, "%d", &s->track);
             break;
         default:
             /* skip tag */
@@ -451,7 +504,7 @@ static int avi_read_header(AVFormatContext *s, AVFormatParameters *ap)
         return -1;
     }
 
-    if(!avi->index_loaded)
+    if(!avi->index_loaded && !url_is_streamed(pb))
         avi_load_index(s);
     avi->index_loaded = 1;
     avi->non_interleaved |= guess_ni_flag(s);
@@ -742,7 +795,7 @@ static int avi_read_idx1(AVFormatContext *s, int size)
         ast = st->priv_data;
 
 #if defined(DEBUG_SEEK)
-        av_log(NULL, AV_LOG_DEBUG, "%d cum_len=%d\n", len, ast->cum_len);
+        av_log(NULL, AV_LOG_DEBUG, "%d cum_len=%Ld\n", len, ast->cum_len);
 #endif
         if(last_pos == pos)
             avi->non_interleaved= 1;
@@ -896,7 +949,6 @@ static int avi_read_close(AVFormatContext *s)
         AVStream *st = s->streams[i];
         AVIStream *ast = st->priv_data;
         av_free(ast);
-        av_free(st->codec->extradata);
         av_free(st->codec->palctrl);
     }
 
@@ -920,7 +972,7 @@ static int avi_probe(AVProbeData *p)
         return 0;
 }
 
-static AVInputFormat avi_iformat = {
+AVInputFormat avi_demuxer = {
     "avi",
     "avi format",
     sizeof(AVIContext),
@@ -930,9 +982,3 @@ static AVInputFormat avi_iformat = {
     avi_read_close,
     avi_read_seek,
 };
-
-int avidec_init(void)
-{
-    av_register_input_format(&avi_iformat);
-    return 0;
-}

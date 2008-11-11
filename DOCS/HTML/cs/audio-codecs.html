@@ -1,10 +1,10 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>7.2. Audio kodeky</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.68.1"><link rel="start" href="index.html" title="MPlayer - Multimediální p&#345;ehráva&#269;"><link rel="up" href="codecs.html" title="Kapitola 7. Kodeky"><link rel="prev" href="video-codecs.html" title="7.1. Video kodeky"><link rel="next" href="codec-importing.html" title="7.3. HOWTO: Import Win32 kodek&#367;"><link rel="preface" href="howtoread.html" title="Jak &#269;íst tuto  dokumentaci"><link rel="chapter" href="intro.html" title="Kapitola 1. P&#345;edstavení"><link rel="chapter" href="install.html" title="Kapitola 2. Instalace"><link rel="chapter" href="usage.html" title="Kapitola 3. Pou&#382;ití"><link rel="chapter" href="cd-dvd.html" title="Kapitola 4. Pou&#382;ití CD/DVD"><link rel="chapter" href="faq.html" title="Kapitola 5. &#268;asto Kladené Dotazy (FAQ)"><link rel="chapter" href="containers.html" title="Kapitola 6. Nosné formáty (Containers)"><link rel="chapter" href="codecs.html" title="Kapitola 7. Kodeky"><link rel="chapter" href="video.html" title="Kapitola 8. Výstupní video za&#345;ízení/rozhraní"><link rel="chapter" href="audio.html" title="Kapitola 9. Výstupní zvuková za&#345;ízení"><link rel="chapter" href="tv.html" title="Kapitola 10. TV"><link rel="chapter" href="ports.html" title="Kapitola 11. Porty"><link rel="chapter" href="mencoder.html" title="Kapitola 12. Základní pou&#382;ití MEncoderu"><link rel="chapter" href="encoding-guide.html" title="Kapitola 13. Enkódování s MEncoderem"><link rel="appendix" href="mailinglists.html" title="P&#345;íloha A. E-mailové konference"><link rel="appendix" href="bugreports.html" title="P&#345;íloha B. Jak hlásit chyby"><link rel="appendix" href="bugs.html" title="P&#345;íloha C. Známé chyby"><link rel="appendix" href="skin.html" title="P&#345;íloha D. Formát skin&#367; MPlayeru"><link rel="appendix" href="users-vs-dev.html" title="P&#345;íloha E. Ná&#345;ky vývojá&#345;&#367;"><link rel="subsection" href="audio-codecs.html#swac3" title="7.2.1. Softwarové dekódování AC3"><link rel="subsection" href="audio-codecs.html#hwac3" title="7.2.2. Hardwarové dekódování AC3"><link rel="subsection" href="audio-codecs.html#libmad" title="7.2.3. podpora libmad"><link rel="subsection" href="audio-codecs.html#hwmpa" title="7.2.4. Hardwarový MPEG audio kodek"><link rel="subsection" href="audio-codecs.html#vivo-audio" title="7.2.5. VIVO audio"><link rel="subsection" href="audio-codecs.html#realaudio" title="7.2.6. RealAudio"><link rel="subsection" href="audio-codecs.html#qdesign" title="7.2.7. Kodeky QDesign"><link rel="subsection" href="audio-codecs.html#qualcomm" title="7.2.8. Kodeky Qualcomm"><link rel="subsection" href="audio-codecs.html#aac" title="7.2.9. Kodek AAC"><link rel="subsection" href="audio-codecs.html#amr" title="7.2.10. AMR kodeky"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">7.2. Audio kodeky</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="video-codecs.html">P&#345;edcházející</a> </td><th width="60%" align="center">Kapitola 7. Kodeky</th><td width="20%" align="right"> <a accesskey="n" href="codec-importing.html">Dal&#353;í</a></td></tr></table><hr></div><div class="sect1" lang="cs"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="audio-codecs"></a>7.2. Audio kodeky</h2></div></div></div><div class="itemizedlist"><p class="title"><b>Nejd&#367;le&#382;it&#283;j&#353;í ze v&#353;ech jsou audio kodeky:</b></p><ul type="disc"><li>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>7.2. Audio kodeky</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.68.1"><link rel="start" href="index.html" title="MPlayer - Multimediální p&#345;ehráva&#269;"><link rel="up" href="codecs.html" title="Kapitola 7. Kodeky"><link rel="prev" href="video-codecs.html" title="7.1. Video kodeky"><link rel="next" href="codec-importing.html" title="7.3. HOWTO: Import Win32 kodek&#367;"><link rel="preface" href="howtoread.html" title="Jak &#269;íst tuto  dokumentaci"><link rel="chapter" href="intro.html" title="Kapitola 1. P&#345;edstavení"><link rel="chapter" href="install.html" title="Kapitola 2. Instalace"><link rel="chapter" href="usage.html" title="Kapitola 3. Pou&#382;ití"><link rel="chapter" href="cd-dvd.html" title="Kapitola 4. Pou&#382;ití CD/DVD"><link rel="chapter" href="faq.html" title="Kapitola 5. &#268;asto Kladené Dotazy (FAQ)"><link rel="chapter" href="containers.html" title="Kapitola 6. Nosné formáty (Containers)"><link rel="chapter" href="codecs.html" title="Kapitola 7. Kodeky"><link rel="chapter" href="video.html" title="Kapitola 8. Výstupní video za&#345;ízení/rozhraní"><link rel="chapter" href="audio.html" title="Kapitola 9. Výstupní zvuková za&#345;ízení"><link rel="chapter" href="tv.html" title="Kapitola 10. TV"><link rel="chapter" href="radio.html" title="Kapitola 11. Rádio"><link rel="chapter" href="ports.html" title="Kapitola 12. Porty"><link rel="chapter" href="mencoder.html" title="Kapitola 13. Základní pou&#382;ití MEncoderu"><link rel="chapter" href="encoding-guide.html" title="Kapitola 14. Enkódování s MEncoderem"><link rel="appendix" href="bugreports.html" title="P&#345;íloha A. Jak hlásit chyby"><link rel="appendix" href="bugs.html" title="P&#345;íloha B. Známé chyby"><link rel="appendix" href="skin.html" title="P&#345;íloha C. Formát skin&#367; MPlayeru"><link rel="subsection" href="audio-codecs.html#swac3" title="7.2.1. Softwarové dekódování AC3"><link rel="subsection" href="audio-codecs.html#hwac3" title="7.2.2. Hardwarové dekódování AC3"><link rel="subsection" href="audio-codecs.html#libmad" title="7.2.3. podpora libmad"><link rel="subsection" href="audio-codecs.html#hwmpa" title="7.2.4. Hardwarový MPEG audio kodek"><link rel="subsection" href="audio-codecs.html#vivo-audio" title="7.2.5. VIVO audio"><link rel="subsection" href="audio-codecs.html#realaudio" title="7.2.6. RealAudio"><link rel="subsection" href="audio-codecs.html#qdesign" title="7.2.7. Kodeky QDesign"><link rel="subsection" href="audio-codecs.html#qualcomm" title="7.2.8. Kodeky Qualcomm"><link rel="subsection" href="audio-codecs.html#aac" title="7.2.9. Kodek AAC"><link rel="subsection" href="audio-codecs.html#amr" title="7.2.10. AMR kodeky"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">7.2. Audio kodeky</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="video-codecs.html">P&#345;edcházející</a> </td><th width="60%" align="center">Kapitola 7. Kodeky</th><td width="20%" align="right"> <a accesskey="n" href="codec-importing.html">Dal&#353;í</a></td></tr></table><hr></div><div class="sect1" lang="cs"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="audio-codecs"></a>7.2. Audio kodeky</h2></div></div></div><div class="itemizedlist"><p class="title"><b>Nejd&#367;le&#382;it&#283;j&#353;í ze v&#353;ech jsou audio kodeky:</b></p><ul type="disc"><li>
   MPEG layer 1/2/3 (MP1/2/3) audio (<span class="bold"><strong>nativní</strong></span>
   kód, s MMX/SSE/3DNow! optimalizací)
   </li><li>
   Windows Media Audio 7 a 8 (ALIAS WMAv1 a WMAv2)
   (<span class="bold"><strong>nativní</strong></span> kód, podpora v
-  <a href="video-codecs.html#ffmpeg" title="7.1.2. FFmpeg/libavcodec"><code class="systemitem">libavcodec</code></a>)
+  <a href="video-codecs.html#ffmpeg" title="7.1.1. FFmpeg/libavcodec"><code class="systemitem">libavcodec</code></a>)
   </li><li>
   Windows Media Audio 9 (WMAv3) (pou&#382;ívá DMO DLL)
   </li><li>
@@ -66,7 +66,7 @@ DXR3/Hollywood+ MPEG.
 multiplatformní, pouze celo&#269;íselná (intern&#283; 24bitový PCM)
 MPEG audio dekódovací knihovna. Neumí si dob&#345;e poradit s po&#353;kozenými soubory a
 ob&#269;as má problémy s p&#345;evíjením, ale m&#367;&#382;e být výkonn&#283;j&#353;í na platformách bez
-FPU (jako je <a href="linux.html#arm" title="11.1.3. ARM">ARM</a>) ne&#382; mp3lib.
+FPU (jako je <a href="linux.html#arm" title="12.1.3. ARM">ARM</a>) ne&#382; mp3lib.
 </p><p>
 Pokud pro ni chcete podporu, p&#345;edejte p&#345;ed kompilací skriptu configure volbu
 <tt class="option">--enable-mad</tt>.
@@ -92,17 +92,17 @@ RealAudio:
   <span class="bold"><strong>RealPlayer knihoven</strong></span>
   </li></ul></div><p>
 Návod k instalaci knihoven RealPlayeru naleznete v sekci
-<a href="video-codecs.html#realvideo" title="7.1.7. RealVideo">RealVideo</a>.
+<a href="video-codecs.html#realvideo" title="7.1.6. RealVideo">RealVideo</a>.
 </p></div><div class="sect2" lang="cs"><div class="titlepage"><div><div><h3 class="title"><a name="qdesign"></a>7.2.7. Kodeky QDesign</h3></div></div></div><p>
 Audio proudy QDesign (fourcc:<span class="emphasis"><em>QDMC, QDM2</em></span>) lze nalézt
 v MOV/QT souborech. Ob&#283; verze tohoto kodeku mohou být dekódovány pomocí
 QuickTime knihoven. Návod k instalaci naleznete v sekci
-<a href="video-codecs.html#sorenson" title="7.1.9. Sorenson">Sorenson video kodek</a>.
+<a href="video-codecs.html#sorenson" title="7.1.8. Sorenson">Sorenson video kodek</a>.
 </p></div><div class="sect2" lang="cs"><div class="titlepage"><div><div><h3 class="title"><a name="qualcomm"></a>7.2.8. Kodeky Qualcomm</h3></div></div></div><p>
 Audio proudy Qualcomm (fourcc:<span class="emphasis"><em>Qclp</em></span>) lze nalézt
 v MOV/QT souborech. Mohou být dekódovány pomocí QuickTime knihoven.
 Návod k instalaci naleznete v sekci
-<a href="video-codecs.html#sorenson" title="7.1.9. Sorenson">Sorenson video kodek</a>.
+<a href="video-codecs.html#sorenson" title="7.1.8. Sorenson">Sorenson video kodek</a>.
 </p></div><div class="sect2" lang="cs"><div class="titlepage"><div><div><h3 class="title"><a name="aac"></a>7.2.9. Kodek AAC</h3></div></div></div><p>
 AAC (Advanced Audio Coding) je audio kodek, který lze ob&#269;as nalézt v MOV a
 MP4 souborech. Open source dekodér jménem FAAD je k dispozici na
@@ -126,7 +126,7 @@ make
 make install
 </pre><p>
 Binárky na audiocoding.com nenajdete, ale m&#367;&#382;ete si je opat&#345;it v balí&#269;cích pro
-Debian z <a href="http://hpisi.nerim.net" target="_top">domácí stránky Christiana
+Debian z <a href="http://www.debian-multimedia.org/" target="_top">domácí stránky Christiana
 Marillata</a>, Mandrake/Mandriva RPM z
 <a href="http://plf.zarb.org" target="_top">P.L.F</a> a RedHat RPM
 ze stránek <a href="http://greysector.rangers.eu.org/" target="_top">Grey Sector</a>.
@@ -151,6 +151,6 @@ unzip 26204-600.zip
 unzip 26204-600_ANSI-C_source_code.zip
 mv c-code libavcodec/amrwb_float
 </pre><p>
-Pak prove&#271;te obvyklou <a href="features.html" title="2.5. Vlastnosti">kompila&#269;ní proceduru</a>
+Pak prove&#271;te obvyklou <a href="features.html" title="2.4. Vlastnosti">kompila&#269;ní proceduru</a>
 <span class="application">MPlayer</span>u.
 </p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="video-codecs.html">P&#345;edcházející</a> </td><td width="20%" align="center"><a accesskey="u" href="codecs.html">Nahoru</a></td><td width="40%" align="right"> <a accesskey="n" href="codec-importing.html">Dal&#353;í</a></td></tr><tr><td width="40%" align="left" valign="top">7.1. Video kodeky </td><td width="20%" align="center"><a accesskey="h" href="index.html">Dom&#367;</a></td><td width="40%" align="right" valign="top"> 7.3. HOWTO: Import Win32 kodek&#367;</td></tr></table></div></body></html>

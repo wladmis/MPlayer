@@ -1,4 +1,4 @@
-include config.mak
+include ../config.mak
 
 LIBNAME = libao2.a
 
@@ -6,21 +6,11 @@ SRCS=audio_out.c \
      ao_mpegpes.c \
      ao_null.c \
      ao_pcm.c \
-     $(OPTIONAL_SRCS) \
+     $(AO_SRCS) \
 
 OBJS=$(SRCS:.c=.o)
 
-CFLAGS  = $(OPTFLAGS) -I. -I.. \
-          $(ARTS_INC) \
-          $(DVB_INC) \
-          $(DXR2_INC) \
-          $(ESD_INC) \
-          $(EXTRA_INC) \
-          $(JACK_INC) \
-          $(OPENAL_INC) \
-          $(POLYP_INC) \
-          $(SDL_INC) \
-          $(X11_INC) \
+CFLAGS  = -I. -I.. $(OPTFLAGS)
 
 .SUFFIXES: .c .o
 

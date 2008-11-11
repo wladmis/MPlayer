@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- synced with 1.85 -->
+<!-- synced with r20054 -->
 <chapter id="video">
 <title>Sorties vidéo</title>
 
@@ -142,15 +142,15 @@ screen #0
 (...)
     Number of image formats: 7
       id: 0x32595559 (YUY2)
-        guid: 59555932-0000-0010-8000-00aa00389b71
-        bits per pixel: 16
-        number of planes: 1
-        type: YUV (packed)
+	guid: 59555932-0000-0010-8000-00aa00389b71
+	bits per pixel: 16
+	number of planes: 1
+	type: YUV (packed)
       id: 0x32315659 (YV12)
-        guid: 59563132-0000-0010-8000-00aa00389b71
-        bits per pixel: 12
-        number of planes: 3
-        type: YUV (planar)
+	guid: 59563132-0000-0010-8000-00aa00389b71
+	bits per pixel: 12
+	number of planes: 3
+	type: YUV (planar)
 (...etc...)<!--
 --></screen>
   Cela doit supporter les formats de pixels YUY2 packed et YV12 planar pour
@@ -200,6 +200,13 @@ utilisez XFree86 version 4.0.3 ou plus (en cas de problèmes d'image, essayez 16b
 Comme pour les S3 Virge: il y a un support xv, mais la carte elle-même est très lente,
 donc vous feriez mieux de la vendre.
 </para>
+<para>
+Il y a maintenant un pilote framebuffer natif pour les cartes S3 Virge 
+ou similaires à tdfxfb. Activez votre framebuffer (c-à-d ajoutez
+"<option>vga=792 video=vesa:mtrr</option>" en paramètre à votre noyau) et utilisez
+<option>-vo s3fb</option> (<option>-vf yuy2</option> et <option>-dr</option>
+peuvent aider aussi).
+</para>
 
 <note>
 <para>
@@ -216,8 +223,7 @@ poliment un pilote qui gère MMX/3DNow sur la liste de diffusion MPlayer-users.
 <title>Cartes nVidia</title>
 
 <para>
-nVidia n'est pas un très bon choix sous Linux (d'après nVidia, ce n'est
-<link linkend="nvidia-opinions">pas vrai</link>)... Les pilotes open-source de
+nVidia n'est pas un très bon choix sous Linux ... Les pilotes open-source de
 XFree86 supportent la plupart de ces cartes, mais dans certains cas, vous devrez
 utiliser les pilotes binaires closed-source de nVidia, disponibles sur le
 <ulink url="http://www.nvidia.com/object/linux.html">site web de nVidia</ulink>.
@@ -639,64 +645,6 @@ La sortie vidéo de SDL supporte l'affichage des sous-titres sous le film, dans l
 bandes noires (si elles sont présentes).
 </para>
 
-<variablelist>
-<title>Il existe plusieurs options en ligne de commande pour SDL:</title>
-<varlistentry>
-  <term><option>-vo sdl:driver=<replaceable>nom</replaceable></option></term>
-  <listitem><simpara>
-    spécifie le driver vidéo SDL a utiliser (par ex. <literal>aalib</literal>,
-    <literal>dga</literal>, <literal>x11</literal>)
-  </simpara></listitem>
-</varlistentry>
-<varlistentry>
-  <term><option>-ao sdl:<replaceable>nom</replaceable></option></term>
-  <listitem><simpara>
-    spécifie le driver audio SDL a utiliser (par ex. <literal>dsp</literal>,
-    <literal>esd</literal>, <literal>arts</literal>)
-  </simpara></listitem>
-</varlistentry>
-<varlistentry>
-  <term><option>-noxv</option></term>
-  <listitem><simpara>
-    désactive l'accélération Xvideo matérielle
-  </simpara></listitem>
-</varlistentry>
-<varlistentry>
-  <term><option>-forcexv</option></term>
-  <listitem><simpara>
-    tente de forcer l'accélération Xvideo
-  </simpara></listitem>
-</varlistentry>
-</variablelist>
-
-<table>
-<title>Touches SDL</title>
-<tgroup cols="2">
-<thead>
-<row><entry>Touche</entry><entry>Action</entry></row>
-</thead>
-<tbody>
-<row><entry><keycap>c</keycap></entry><entry>
-    passe par tous les modes plein écran valides
-    </entry></row>
-<row><entry><keycap>n</keycap></entry><entry>
-    revient en mode normal
-    </entry></row>
-</tbody>
-</tgroup>
-</table>
-
-<itemizedlist>
-<title>Bogues connus:</title>
-<listitem><simpara>
-  Les touches pressées avec le driver sdl:driver=aalib se répètent en continu (utiliser
-  <option>-vo aa</option> !). C'est un bogue dans la SDL, je ne peux pas le changer
-  (testé avec SDL 1.2.1).
-  </simpara></listitem>
-<listitem><simpara>
-  NE PAS UTILISER SDL avec la GUI! Cela ne fonctionnera pas comme il devrait.
-  </simpara></listitem>
-</itemizedlist>
 </sect2>
 
 
@@ -802,7 +750,7 @@ La sortie FBdev accepte certains paramètres additionnels:
 <varlistentry>
   <term><option>-fb</option></term>
   <listitem><simpara>
-    spécifie le device framebuffer a utiliser (<filename>/dev/fb0</filename>)
+    spécifie le device framebuffer a utiliser (par défaut : <filename>/dev/fb0</filename>)
     </simpara></listitem>
 </varlistentry>
 <varlistentry>
@@ -814,7 +762,7 @@ La sortie FBdev accepte certains paramètres additionnels:
 <varlistentry>
   <term><option>-fbmodeconfig</option></term>
   <listitem><simpara>
-    fichier de configuration des modes (<filename>/etc/fb.modes</filename> par défaut)
+    fichier de configuration des modes (par défaut : <filename>/etc/fb.modes</filename>)
     </simpara></listitem>
 </varlistentry>
 <varlistentry>
@@ -876,8 +824,8 @@ limitation de <application>MPlayer</application>.
 
 <para>
 Cette section concerne le support BES (Back-End Scaler) sur les cartes Matrox
-G200/G400/G450/G550, le driver noyau de mga_vid. Il est activement développé
-par A'rpi, et supporte le VSYNC matériel avec triple buffering.
+G200/G400/G450/G550, le driver noyau de <systemitem>mga_vid</systemitem>.
+Il supporte le VSYNC matériel avec triple buffering.
 Cela fonctionne aussi bien en console framebuffer que sous X.
 </para>
 
@@ -1057,7 +1005,7 @@ options de rendu:
 <varlistentry>
   <term><option>-aasubcolor=<replaceable>V</replaceable></option></term>
   <listitem><para>
-    change la couleur des sous-titres
+    Change la couleur des sous-titres
     </para><para>
     where <replaceable>V</replaceable> peut être:
     <literal>0</literal> (normal),
@@ -1075,25 +1023,25 @@ options de rendu:
 <varlistentry>
   <term><option>-aadriver</option></term>
   <listitem><simpara>
-    choisit le pilote aa (X11, curses, Linux)
+    Choisit le pilote aa (X11, curses, Linux)
     </simpara></listitem>
 </varlistentry>
 <varlistentry>
   <term><option>-aaextended</option></term>
   <listitem><simpara>
-    utilise les 256 caractères
+    Utilise les 256 caractères
     </simpara></listitem>
 </varlistentry>
 <varlistentry>
   <term><option>-aaeight</option></term>
   <listitem><simpara>
-   utilise l'ASCII 8 bits
+   Utilise l'ASCII 8 bits
     </simpara></listitem>
 </varlistentry>
 <varlistentry>
   <term><option>-aahelp</option></term>
   <listitem><simpara>
-    affiche toutes les options de AAlib
+    Affiche toutes les options de AAlib
     </simpara></listitem>
 </varlistentry>
 </variablelist>
@@ -1133,7 +1081,7 @@ donc fonctionner sur des cartes graphiques anciennes ou sur des terminaux texte.
 n'est pas très différente de la célèbre librairie
 <systemitem class="library">AAlib</systemitem>.
 <systemitem class="library">libcaca</systemitem> nécessite un terminal pour
-fonctionner, et devrait ainsi fonctionner sur tous les systèmes Unix (dont Mac OS X) 
+fonctionner, et devrait ainsi fonctionner sur tous les systèmes Unix (dont Mac OS X)
 en utilisant soit la librairie
 <systemitem class="library">slang</systemitem> soit la librairie
 <systemitem class="library">ncurses</systemitem>, sous DOS en utilisant la librairie
@@ -1142,7 +1090,7 @@ en utilisant soit <systemitem class="library">slang</systemitem>, soit
 <systemitem class="library">ncurses</systemitem> (via émulation Cygwin), ou soit
 <systemitem class="library">conio.h</systemitem>. Si
 <filename>./configure</filename>
-détecte <systemitem class="library">libcaca</systemitem>, le pilote libvo caca 
+détecte <systemitem class="library">libcaca</systemitem>, le pilote libvo caca
 sera compilé.
 </para>
 
@@ -1190,7 +1138,7 @@ options de rendu:
 </informaltable>
 
 <variablelist>
-<title><systemitem class="library">libcaca</systemitem> regarde également la 
+<title><systemitem class="library">libcaca</systemitem> regarde également la
 présence de certaines variables d'environnement:</title>
 <varlistentry>
   <term><option>CACA_DRIVER</option></term>
@@ -1201,7 +1149,7 @@ présence de certaines variables d'environnement:</title>
 <varlistentry>
   <term><option>CACA_GEOMETRY (X11 uniquement)</option></term>
   <listitem><simpara>
-    Spécifie le nombre de lignes de collones. par ex. 128x50. 
+    Spécifie le nombre de lignes de collones. par ex. 128x50.
     </simpara></listitem>
 </varlistentry>
 <varlistentry>
@@ -1514,13 +1462,6 @@ sans argument pour activer l'autodétection du pilote.
 </para>
 
 <para>
-VIDIX est une nouvelle technologie et il est fortement possible que sur votre
-système elle ne fonctionne pas. Dans ce cas votre seule solution est
-de le porter (principalement libdha). Mais il y a de bons espoirs qu'il fonctionne sur
-les systèmes où X11 fonctionne.
-</para>
-
-<para>
 Comme VIDIX requiert l'accès direct au matériel, vous avez le choix entre le lançer
 en tant que root ou définir le bit SUID du binaire <application>MPlayer</application>
 (<emphasis role="bold">Attention: c'est une faille de sécurité !</emphasis>). Sinon,
@@ -1610,32 +1551,6 @@ personne ne l'a testé, donc les rapports sont les bienvenus.
 
 <sect3 id="vidix-nvidia">
 <title>Cartes nVidia</title>
-<para>
-Il y a un relativement nouveau pilote nVidia, il fonctionne avec les chipsets Riva
-128, TNT et GeForce2, d'autres doivent normalement fonctionner.
-</para>
-
-<itemizedlist spacing="compact">
-<title>LIMITATIONS</title>
-<listitem><para>
-  Il est recommandé d'utiliser les pilotes nVidia binaires pour X avant d'utiliser
-  ce pilote VIDIX, car certains registres qui doivent être initialisés n'ont pas
-  encore été découverts, donc cela échouera avec le pilote Open Source
-  <filename>nv.o</filename> de XFree86.
-  </para></listitem>
-<listitem><para>
-  Actuellement seuls les codecs capables d'afficher une palette UYVY peuvent
-  fonctionner en conjonction avec ce pilote. Malheureusement, cela exclu tous
-  les décodeurs de la famille <systemitem class="library">libavcodec</systemitem>.
-  Cela nous laisse les codecs utilisables suivants :
-  <systemitem>cvid, divxds, xvid, divx4, wmv7, wmv8</systemitem>
-  et quelques autres. Veuillez noter que ce n'est qu'un inconfort provisoire.
-  La syntaxe est la suivante:
-  <screen>
-    mplayer -vf format=uyvy -vc divxds <replaceable>fichierdivx3.avi</replaceable>
-  </screen>
-  </para></listitem>
-</itemizedlist>
 
 <para>
   Une fonction unique du pilote nvidia_vid est la capacité d'afficher de la
@@ -1643,13 +1558,10 @@ Il y a un relativement nouveau pilote nVidia, il fonctionne avec les chipsets Ri
   - avec aucun framebuffer ou X. Pour ce faire, nous aurons besoin d'utiliser
   la sortie <option>cvidix</option>, comme le montre l'exemple suivant:
   <screen>
-    mplayer -vf format=uyvy -vc divxds -vo cvidix <replaceable>exemple.avi</replaceable>
+    mplayer -vo cvidix <replaceable>exemple.avi</replaceable>
   </screen>
 </para>
 
-<para>
-Rapports attendus !
-</para>
 </sect3>
 
 <sect3 id="vidix-sis">
@@ -1720,7 +1632,7 @@ avec les cartes Matrox.
 <note><para>
 La première version de DirectFB que nous avons pu faire fonctionner était la
 0.9.17. (elle est boguée, nécessite le patch <systemitem>surfacemanager</systemitem>
-disponible sur l'URL ci-dessus). Le portage du code CRTC2 dans 
+disponible sur l'URL ci-dessus). Le portage du code CRTC2 dans
 <emphasis role="bold">mga_vid</emphasis> est prévu depuis des années, les
  <ulink url="../../tech/patches.txt">patches</ulink> sont les bienvenus.
 </para></note>
@@ -1892,6 +1804,15 @@ pour une TV 16:9: -vf dvbscale=1024,scale=-1:0,expand=-1:576:-1:-1:1
 </para>
 
 <para>
+  Si <application>MPlayer</application> se plain souvent avec le message suivant:
+  <screen>Too many video/audio packets in the buffer</screen> ou si vous remarquez
+  une désynchronisation grandissante entre le son et la vidéo, essayez d'utiliser
+  le démultiplexeur MPEG-TS de libavformat en ajoutant à votre ligne de commande:
+  <option>-demuxer lavf -lavfdopts probesize=128</option> .
+</para>
+
+
+<para>
   Pour afficher le premier des canaux présents dans votre liste, tapez
 </para>
 
@@ -1918,8 +1839,8 @@ pour une TV 16:9: -vf dvbscale=1024,scale=-1:0,expand=-1:576:-1:-1:1
 
 <para>
   Pour changer de canal tapez sur les touches <keycap>h</keycap> (suivant) et
-  <keycap>k</keycap> (précédent), ou utilisez le menu OSD (requiert un
-  <link linkend="subosd">sous-système OSD</link> fonctionnel).
+  <keycap>k</keycap> (précédent), ou utilisez le
+  <link linkend="subosd">menu OSD</link>.
 </para>
 
 <para>
@@ -1959,7 +1880,7 @@ pour une TV 16:9: -vf dvbscale=1024,scale=-1:0,expand=-1:576:-1:-1:1
 <para>
 Si vous avez des questions ou voulez entendre les annonces de fonctionnalités et
 participer aux discussions sur ce sujet, rejoignez notre liste de diffusion
-<ulink url="http://mplayerhq.hu/mailman/listinfo/mplayer-dvb">MPlayer-DVB</ulink>.
+<ulink url="http://lists.mplayerhq.hu/mailman/listinfo/mplayer-dvb">MPlayer-DVB</ulink>.
 SVP, rappelez-vous que la langue de la liste est l'anglais.
 </para>
 </formalpara>
@@ -1985,12 +1906,12 @@ les pilotes et les instructions d'installation sur le site
 <title>UTILISATION</title>
 <varlistentry>
 <term><option>-vo dxr2</option></term>
-<listitem><para>active la sortie TV</para></listitem>
+<listitem><para>Active la sortie TV</para></listitem>
 </varlistentry>
 
 <varlistentry>
 <term><option>-vo dxr2:x11</option> ou <option>-vo dxr2:xv</option></term>
-<listitem><para>active la sortie Overlay sous X11</para></listitem>
+<listitem><para>Active la sortie Overlay sous X11</para></listitem>
 </varlistentry>
 
 <varlistentry>
@@ -2108,7 +2029,7 @@ ainsi de suite. Cela ne fonctionne pas avec la sortie audio numérique
 <term><option>-vf lavc/fame</option></term>
 <listitem><para>
 Pour voir du contenu non-MPEG sur l'em8300 (c-a-d. MPEG-4 (DivX) ou RealVideo),
-vous devrez spécifier un filtre vidéo MPEG-1 tel que <systemitem class="library">libavcodec</systemitem> 
+vous devrez spécifier un filtre vidéo MPEG-1 tel que <systemitem class="library">libavcodec</systemitem>
 (lavc) ou <systemitem class="library">libfame</systemitem> (fame).
 Pour le moment lavc est à la fois plus rapide et donne une meilleur qualité, il est
 recommandé de l'utiliser à moins que vous ayez des problèmes avec. Voir la page de man
@@ -2218,7 +2139,7 @@ de droite en noir et blanc et que le moniteur de gauche ait des trames jpeg de q
 10, alors vous taperez la commande suivante
 <screen>
 mplayer -vo zr -zrdev /dev/video0 -zrcrop 352x288+352+0 -zrxdoff 0 -zrbw \
-        -zrcrop 352x288+0+0 -zrdev /dev/video1 -zrquality 10 <replaceable>film.avi</replaceable>
+	-zrcrop 352x288+0+0 -zrdev /dev/video1 -zrquality 10 <replaceable>film.avi</replaceable>
 </screen>
 </para>
 
@@ -2355,7 +2276,7 @@ setterm -blank 0<!--
       <screen>
 mplayer -vo mga -fs -screenw 640 -screenh 512 <replaceable>nomfichier</replaceable><!--
    --></screen>
-   
+
        (si vous utilisez X, maintenant changez pour matroxfb avec par exemple
       <keycap>Ctrl</keycap>+<keycap>Alt</keycap>+<keycap>F1</keycap>.)
       Changez <literal>640</literal> et <literal>512</literal> si vous voulez
@@ -2470,13 +2391,6 @@ uniquement durant cette phase.
 </sect2>
 
 
-<sect2 id="tvout-voodoo">
-<title>Voodoo 3</title>
-<para>
-Reportez-vous à <ulink url="http://www.iki.fi/too/tvout-voodoo3-3000-xfree">cette URL</ulink>.
-</para>
-</sect2>
-
 <sect2 id="tvout-nvidia">
 <title>nVidia</title>
 <para>
@@ -2492,20 +2406,20 @@ l'exemple suivant (adaptez à votre carte/TV):
 
 <programlisting>
 Section "Device"
-        Identifier      "GeForce"
-        VendorName      "ASUS"
-        BoardName       "nVidia GeForce2/MX 400"
-        Driver          "nvidia"
-        #Option         "NvAGP" "1"
-        Option          "NoLogo"
-        Option          "CursorShadow"  "on"
+	Identifier      "GeForce"
+	VendorName      "ASUS"
+	BoardName       "nVidia GeForce2/MX 400"
+	Driver          "nvidia"
+	#Option         "NvAGP" "1"
+	Option          "NoLogo"
+	Option          "CursorShadow"  "on"
 
-        Option          "TwinView"
-        Option          "TwinViewOrientation" "Clone"
-        Option          "MetaModes" "1024x768,640x480"
-        Option          "ConnectedMonitor" "CRT, TV"
-        Option          "TVStandard" "PAL-B"
-        Option          "TVOutFormat" "Composite"
+	Option          "TwinView"
+	Option          "TwinViewOrientation" "Clone"
+	Option          "MetaModes" "1024x768,640x480"
+	Option          "ConnectedMonitor" "CRT, TV"
+	Option          "TVStandard" "PAL-B"
+	Option          "TVOutFormat" "Composite"
 
 EndSection
 </programlisting>
@@ -2526,12 +2440,12 @@ d'un encodeur TV analogique simple, certains en ont un plus avancé.
   <emphasis role="bold">Analog encoder chip</emphasis>:
   Il a été reporté qu'une sortie TV fiable pouvait être obtenue en utilisant
   <option>-vo fbdev</option> ou <option>-vo fbdev2</option>.
-  Vous avez besoin d'avoir vesafb compilé dans votre noyau et de passer les 
+  Vous avez besoin d'avoir vesafb compilé dans votre noyau et de passer les
   paramètres suivants sur la ligne de commande du noyau:
   <option>append="video=vesafb:ywrap,mtrr" vga=791</option>.
-  Vous devriez lancer <application>X</application>, puis passer en mode 
+  Vous devriez lancer <application>X</application>, puis passer en mode
   console avec e.g. <keycap>CTRL</keycap>+<keycap>ALT</keycap>+<keycap>F1</keycap>.
-  Si vous échouez en lancant <application>X</application> depuis la console, la vidéo 
+  Si vous échouez en lancant <application>X</application> depuis la console, la vidéo
   devient lente et saccadé (toute explication de ce phénomène est bienvenue).
   Identifiez-vous dans votre console, puis initiez la commande suivante:
   <screen>clear; mplayer -vo fbdev -zoom -cache 8192 dvd://</screen>

@@ -3,18 +3,20 @@
  * Copyright (c) 2000, 2001 Fabrice Bellard.
  * Copyright (c) 2002-2004 Michael Niedermayer <michaelni@gmx.at>
  *
- * This library is free software; you can redistribute it and/or
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * FFmpeg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  *
  * gmc & q-pel & 32/64 bit based MC by Michael Niedermayer <michaelni@gmx.at>
@@ -34,6 +36,9 @@
 
 /* snow.c */
 void ff_spatial_dwt(int *buffer, int width, int height, int stride, int type, int decomposition_count);
+
+/* vorbis.c */
+void vorbis_inverse_coupling(float *mag, float *ang, int blocksize);
 
 uint8_t cropTbl[256 + 2 * MAX_NEG_CROP] = {0, };
 uint32_t squareTbl[512] = {0, };
@@ -292,8 +297,8 @@ static int sse16_c(void *v, uint8_t *pix1, uint8_t *pix2, int line_size, int h)
 }
 
 
-static inline int w_c(void *v, uint8_t * pix1, uint8_t * pix2, int line_size, int w, int h, int type){
 #ifdef CONFIG_SNOW_ENCODER //dwt is in snow.c
+static inline int w_c(void *v, uint8_t * pix1, uint8_t * pix2, int line_size, int w, int h, int type){
     int s, i, j;
     const int dec_count= w==8 ? 3 : 4;
     int tmp[32*32];
@@ -353,14 +358,13 @@ static inline int w_c(void *v, uint8_t * pix1, uint8_t * pix2, int line_size, in
             for(i=0; i<size; i++){
                 for(j=0; j<size; j++){
                     int v= tmp[sx + sy + i*stride + j] * scale[type][dec_count-3][level][ori];
-                    s += ABS(v);
+                    s += FFABS(v);
                 }
             }
         }
     }
     assert(s>=0);
     return s>>9;
-#endif
 }
 
 static int w53_8_c(void *v, uint8_t * pix1, uint8_t * pix2, int line_size, int h){
@@ -386,6 +390,7 @@ int w53_32_c(void *v, uint8_t * pix1, uint8_t * pix2, int line_size, int h){
 int w97_32_c(void *v, uint8_t * pix1, uint8_t * pix2, int line_size, int h){
     return w_c(v, pix1, pix2, line_size, 32, h, 0);
 }
+#endif
 
 static void get_pixels_c(DCTELEM *restrict block, const uint8_t *pixels, int line_size)
 {
@@ -1484,6 +1489,30 @@ H264_CHROMA_MC(avg_       , op_avg)
 #undef op_avg
 #undef op_put
 
+static void put_no_rnd_h264_chroma_mc8_c(uint8_t *dst/*align 8*/, uint8_t *src/*align 1*/, int stride, int h, int x, int y){
+    const int A=(8-x)*(8-y);
+    const int B=(  x)*(8-y);
+    const int C=(8-x)*(  y);
+    const int D=(  x)*(  y);
+    int i;
+
+    assert(x<8 && y<8 && x>=0 && y>=0);
+
+    for(i=0; i<h; i++)
+    {
+        dst[0] = (A*src[0] + B*src[1] + C*src[stride+0] + D*src[stride+1] + 32 - 4) >> 6;
+        dst[1] = (A*src[1] + B*src[2] + C*src[stride+1] + D*src[stride+2] + 32 - 4) >> 6;
+        dst[2] = (A*src[2] + B*src[3] + C*src[stride+2] + D*src[stride+3] + 32 - 4) >> 6;
+        dst[3] = (A*src[3] + B*src[4] + C*src[stride+3] + D*src[stride+4] + 32 - 4) >> 6;
+        dst[4] = (A*src[4] + B*src[5] + C*src[stride+4] + D*src[stride+5] + 32 - 4) >> 6;
+        dst[5] = (A*src[5] + B*src[6] + C*src[stride+5] + D*src[stride+6] + 32 - 4) >> 6;
+        dst[6] = (A*src[6] + B*src[7] + C*src[stride+6] + D*src[stride+7] + 32 - 4) >> 6;
+        dst[7] = (A*src[7] + B*src[8] + C*src[stride+7] + D*src[stride+8] + 32 - 4) >> 6;
+        dst+= stride;
+        src+= stride;
+    }
+}
+
 static inline void copy_block2(uint8_t *dst, uint8_t *src, int dstStride, int srcStride, int h)
 {
     int i;
@@ -2570,6 +2599,33 @@ static void wmv2_mspel8_h_lowpass(uint8_t *dst, uint8_t *src, int dstStride, int
     }
 }
 
+#ifdef CONFIG_CAVS_DECODER
+/* AVS specific */
+void ff_cavsdsp_init(DSPContext* c, AVCodecContext *avctx);
+
+void ff_put_cavs_qpel8_mc00_c(uint8_t *dst, uint8_t *src, int stride) {
+    put_pixels8_c(dst, src, stride, 8);
+}
+void ff_avg_cavs_qpel8_mc00_c(uint8_t *dst, uint8_t *src, int stride) {
+    avg_pixels8_c(dst, src, stride, 8);
+}
+void ff_put_cavs_qpel16_mc00_c(uint8_t *dst, uint8_t *src, int stride) {
+    put_pixels16_c(dst, src, stride, 16);
+}
+void ff_avg_cavs_qpel16_mc00_c(uint8_t *dst, uint8_t *src, int stride) {
+    avg_pixels16_c(dst, src, stride, 16);
+}
+#endif /* CONFIG_CAVS_DECODER */
+
+#if defined(CONFIG_VC1_DECODER) || defined(CONFIG_WMV3_DECODER)
+/* VC-1 specific */
+void ff_vc1dsp_init(DSPContext* c, AVCodecContext *avctx);
+
+void ff_put_vc1_mspel_mc00_c(uint8_t *dst, uint8_t *src, int stride, int rnd) {
+    put_pixels8_c(dst, src, stride, 8);
+}
+#endif /* CONFIG_VC1_DECODER||CONFIG_WMV3_DECODER */
+
 static void wmv2_mspel8_v_lowpass(uint8_t *dst, uint8_t *src, int dstStride, int srcStride, int w){
     uint8_t *cm = cropTbl + MAX_NEG_CROP;
     int i;
@@ -2673,7 +2729,7 @@ static void h263_v_loop_filter_c(uint8_t *src, int stride, int qscale){
         src[x-1*stride] = p1;
         src[x+0*stride] = p2;
 
-        ad1= ABS(d1)>>1;
+        ad1= FFABS(d1)>>1;
 
         d2= clip((p0-p3)/4, -ad1, ad1);
 
@@ -2708,7 +2764,7 @@ static void h263_h_loop_filter_c(uint8_t *src, int stride, int qscale){
         src[y*stride-1] = p1;
         src[y*stride+0] = p2;
 
-        ad1= ABS(d1)>>1;
+        ad1= FFABS(d1)>>1;
 
         d2= clip((p0-p3)/4, -ad1, ad1);
 
@@ -2760,18 +2816,18 @@ static inline void h264_loop_filter_luma_c(uint8_t *pix, int xstride, int ystrid
             const int q1 = pix[1*xstride];
             const int q2 = pix[2*xstride];
 
-            if( ABS( p0 - q0 ) < alpha &&
-                ABS( p1 - p0 ) < beta &&
-                ABS( q1 - q0 ) < beta ) {
+            if( FFABS( p0 - q0 ) < alpha &&
+                FFABS( p1 - p0 ) < beta &&
+                FFABS( q1 - q0 ) < beta ) {
 
                 int tc = tc0[i];
                 int i_delta;
 
-                if( ABS( p2 - p0 ) < beta ) {
+                if( FFABS( p2 - p0 ) < beta ) {
                     pix[-2*xstride] = p1 + clip( (( p2 + ( ( p0 + q0 + 1 ) >> 1 ) ) >> 1) - p1, -tc0[i], tc0[i] );
                     tc++;
                 }
-                if( ABS( q2 - q0 ) < beta ) {
+                if( FFABS( q2 - q0 ) < beta ) {
                     pix[   xstride] = q1 + clip( (( q2 + ( ( p0 + q0 + 1 ) >> 1 ) ) >> 1) - q1, -tc0[i], tc0[i] );
                     tc++;
                 }
@@ -2808,9 +2864,9 @@ static inline void h264_loop_filter_chroma_c(uint8_t *pix, int xstride, int ystr
             const int q0 = pix[0];
             const int q1 = pix[1*xstride];
 
-            if( ABS( p0 - q0 ) < alpha &&
-                ABS( p1 - p0 ) < beta &&
-                ABS( q1 - q0 ) < beta ) {
+            if( FFABS( p0 - q0 ) < alpha &&
+                FFABS( p1 - p0 ) < beta &&
+                FFABS( q1 - q0 ) < beta ) {
 
                 int delta = clip( (((q0 - p0 ) << 2) + (p1 - q1) + 4) >> 3, -tc, tc );
 
@@ -2839,9 +2895,9 @@ static inline void h264_loop_filter_chroma_intra_c(uint8_t *pix, int xstride, in
         const int q0 = pix[0];
         const int q1 = pix[1*xstride];
 
-        if( ABS( p0 - q0 ) < alpha &&
-            ABS( p1 - p0 ) < beta &&
-            ABS( q1 - q0 ) < beta ) {
+        if( FFABS( p0 - q0 ) < alpha &&
+            FFABS( p1 - p0 ) < beta &&
+            FFABS( q1 - q0 ) < beta ) {
 
             pix[-xstride] = ( 2*p1 + p0 + q1 + 2 ) >> 2;   /* p0' */
             pix[0]        = ( 2*q1 + q0 + p1 + 2 ) >> 2;   /* q0' */
@@ -3070,9 +3126,9 @@ static int nsse16_c(void *v, uint8_t *s1, uint8_t *s2, int stride, int h){
         }
         if(y+1<h){
             for(x=0; x<15; x++){
-                score2+= ABS(  s1[x  ] - s1[x  +stride]
+                score2+= FFABS(  s1[x  ] - s1[x  +stride]
                              - s1[x+1] + s1[x+1+stride])
-                        -ABS(  s2[x  ] - s2[x  +stride]
+                        -FFABS(  s2[x  ] - s2[x  +stride]
                              - s2[x+1] + s2[x+1+stride]);
             }
         }
@@ -3080,8 +3136,8 @@ static int nsse16_c(void *v, uint8_t *s1, uint8_t *s2, int stride, int h){
         s2+= stride;
     }
 
-    if(c) return score1 + ABS(score2)*c->avctx->nsse_weight;
-    else  return score1 + ABS(score2)*8;
+    if(c) return score1 + FFABS(score2)*c->avctx->nsse_weight;
+    else  return score1 + FFABS(score2)*8;
 }
 
 static int nsse8_c(void *v, uint8_t *s1, uint8_t *s2, int stride, int h){
@@ -3096,9 +3152,9 @@ static int nsse8_c(void *v, uint8_t *s1, uint8_t *s2, int stride, int h){
         }
         if(y+1<h){
             for(x=0; x<7; x++){
-                score2+= ABS(  s1[x  ] - s1[x  +stride]
+                score2+= FFABS(  s1[x  ] - s1[x  +stride]
                              - s1[x+1] + s1[x+1+stride])
-                        -ABS(  s2[x  ] - s2[x  +stride]
+                        -FFABS(  s2[x  ] - s2[x  +stride]
                              - s2[x+1] + s2[x+1+stride]);
             }
         }
@@ -3106,8 +3162,8 @@ static int nsse8_c(void *v, uint8_t *s1, uint8_t *s2, int stride, int h){
         s2+= stride;
     }
 
-    if(c) return score1 + ABS(score2)*c->avctx->nsse_weight;
-    else  return score1 + ABS(score2)*8;
+    if(c) return score1 + FFABS(score2)*c->avctx->nsse_weight;
+    else  return score1 + FFABS(score2)*8;
 }
 
 static int try_8x8basis_c(int16_t rem[64], int16_t weight[64], int16_t basis[64], int scale){
@@ -3212,12 +3268,14 @@ void ff_set_cmp(DSPContext* c, me_cmp_func *cmp, int type){
         case FF_CMP_NSSE:
             cmp[i]= c->nsse[i];
             break;
+#ifdef CONFIG_SNOW_ENCODER
         case FF_CMP_W53:
             cmp[i]= c->w53[i];
             break;
         case FF_CMP_W97:
             cmp[i]= c->w97[i];
             break;
+#endif
         default:
             av_log(NULL, AV_LOG_ERROR,"internal error in cmp function selection\n");
         }
@@ -3295,7 +3353,7 @@ o2= (i1)-(i2);
     y= a-b;\
 }
 
-#define BUTTERFLYA(x,y) (ABS((x)+(y)) + ABS((x)-(y)))
+#define BUTTERFLYA(x,y) (FFABS((x)+(y)) + FFABS((x)-(y)))
 
 static int hadamard8_diff8x8_c(/*MpegEncContext*/ void *s, uint8_t *dst, uint8_t *src, int stride, int h){
     int i;
@@ -3392,7 +3450,7 @@ static int hadamard8_intra8x8_c(/*MpegEncContext*/ void *s, uint8_t *src, uint8_
             +BUTTERFLYA(temp[8*3+i], temp[8*7+i]);
     }
 
-    sum -= ABS(temp[8*0] + temp[8*4]); // -mean
+    sum -= FFABS(temp[8*0] + temp[8*4]); // -mean
 
     return sum;
 }
@@ -3409,7 +3467,7 @@ static int dct_sad8x8_c(/*MpegEncContext*/ void *c, uint8_t *src1, uint8_t *src2
     s->dsp.fdct(temp);
 
     for(i=0; i<64; i++)
-        sum+= ABS(temp[i]);
+        sum+= FFABS(temp[i]);
 
     return sum;
 }
@@ -3458,7 +3516,7 @@ static int dct264_sad8x8_c(/*MpegEncContext*/ void *c, uint8_t *src1, uint8_t *s
 #undef DST
 
 #define SRC(x) dct[x][i]
-#define DST(x,v) sum += ABS(v)
+#define DST(x,v) sum += FFABS(v)
     for( i = 0; i < 8; i++ )
         DCT8_1D
 #undef SRC
@@ -3479,12 +3537,10 @@ static int dct_max8x8_c(/*MpegEncContext*/ void *c, uint8_t *src1, uint8_t *src2
     s->dsp.fdct(temp);
 
     for(i=0; i<64; i++)
-        sum= FFMAX(sum, ABS(temp[i]));
+        sum= FFMAX(sum, FFABS(temp[i]));
 
     return sum;
 }
-
-void simple_idct(DCTELEM *block); //FIXME
 
 static int quant_psnr8x8_c(/*MpegEncContext*/ void *c, uint8_t *src1, uint8_t *src2, int stride, int h){
     MpegEncContext * const s= (MpegEncContext *)c;
@@ -3655,8 +3711,8 @@ static int vsad_intra16_c(/*MpegEncContext*/ void *c, uint8_t *s, uint8_t *dummy
 
     for(y=1; y<h; y++){
         for(x=0; x<16; x+=4){
-            score+= ABS(s[x  ] - s[x  +stride]) + ABS(s[x+1] - s[x+1+stride])
-                   +ABS(s[x+2] - s[x+2+stride]) + ABS(s[x+3] - s[x+3+stride]);
+            score+= FFABS(s[x  ] - s[x  +stride]) + FFABS(s[x+1] - s[x+1+stride])
+                   +FFABS(s[x+2] - s[x+2+stride]) + FFABS(s[x+3] - s[x+3+stride]);
         }
         s+= stride;
     }
@@ -3670,7 +3726,7 @@ static int vsad16_c(/*MpegEncContext*/ void *c, uint8_t *s1, uint8_t *s2, int st
 
     for(y=1; y<h; y++){
         for(x=0; x<16; x++){
-            score+= ABS(s1[x  ] - s2[x ] - s1[x  +stride] + s2[x +stride]);
+            score+= FFABS(s1[x  ] - s2[x ] - s1[x  +stride] + s2[x +stride]);
         }
         s1+= stride;
         s2+= stride;
@@ -3720,6 +3776,39 @@ WARPER8_16_SQ(dct_max8x8_c, dct_max16_c)
 WARPER8_16_SQ(quant_psnr8x8_c, quant_psnr16_c)
 WARPER8_16_SQ(rd8x8_c, rd16_c)
 WARPER8_16_SQ(bit8x8_c, bit16_c)
+
+static void vector_fmul_c(float *dst, const float *src, int len){
+    int i;
+    for(i=0; i<len; i++)
+        dst[i] *= src[i];
+}
+
+static void vector_fmul_reverse_c(float *dst, const float *src0, const float *src1, int len){
+    int i;
+    src1 += len-1;
+    for(i=0; i<len; i++)
+        dst[i] = src0[i] * src1[-i];
+}
+
+void ff_vector_fmul_add_add_c(float *dst, const float *src0, const float *src1, const float *src2, int src3, int len, int step){
+    int i;
+    for(i=0; i<len; i++)
+        dst[i*step] = src0[i] * src1[i] + src2[i] + src3;
+}
+
+void ff_float_to_int16_c(int16_t *dst, const float *src, int len){
+    int i;
+    for(i=0; i<len; i++) {
+        int_fast32_t tmp = ((int32_t*)src)[i];
+        if(tmp & 0xf0000){
+            tmp = (0x43c0ffff - tmp)>>31;
+            // is this faster on some gcc/cpu combinations?
+//          if(tmp > 0x43c0ffff) tmp = 0xFFFF;
+//          else                 tmp = 0;
+        }
+        dst[i] = tmp - 0x8000;
+    }
+}
 
 /* XXX: those functions should be suppressed ASAP when all IDCTs are
  converted */
@@ -3965,6 +4054,7 @@ void dsputil_init(DSPContext* c, AVCodecContext *avctx)
     c->avg_h264_chroma_pixels_tab[0]= avg_h264_chroma_mc8_c;
     c->avg_h264_chroma_pixels_tab[1]= avg_h264_chroma_mc4_c;
     c->avg_h264_chroma_pixels_tab[2]= avg_h264_chroma_mc2_c;
+    c->put_no_rnd_h264_chroma_pixels_tab[0]= put_no_rnd_h264_chroma_mc8_c;
 
     c->weight_h264_pixels_tab[0]= weight_h264_pixels16x16_c;
     c->weight_h264_pixels_tab[1]= weight_h264_pixels16x8_c;
@@ -3986,6 +4076,13 @@ void dsputil_init(DSPContext* c, AVCodecContext *avctx)
     c->biweight_h264_pixels_tab[7]= biweight_h264_pixels4x2_c;
     c->biweight_h264_pixels_tab[8]= biweight_h264_pixels2x4_c;
     c->biweight_h264_pixels_tab[9]= biweight_h264_pixels2x2_c;
+
+#ifdef CONFIG_CAVS_DECODER
+    ff_cavsdsp_init(c,avctx);
+#endif
+#if defined(CONFIG_VC1_DECODER) || defined(CONFIG_WMV3_DECODER)
+    ff_vc1dsp_init(c,avctx);
+#endif
 
     c->put_mspel_pixels_tab[0]= put_mspel8_mc00_c;
     c->put_mspel_pixels_tab[1]= put_mspel8_mc10_c;
@@ -4021,10 +4118,12 @@ void dsputil_init(DSPContext* c, AVCodecContext *avctx)
     c->vsse[4]= vsse_intra16_c;
     c->nsse[0]= nsse16_c;
     c->nsse[1]= nsse8_c;
+#ifdef CONFIG_SNOW_ENCODER
     c->w53[0]= w53_16_c;
     c->w53[1]= w53_8_c;
     c->w97[0]= w97_16_c;
     c->w97[1]= w97_8_c;
+#endif
 
     c->add_bytes= add_bytes_c;
     c->diff_bytes= diff_bytes_c;
@@ -4037,6 +4136,7 @@ void dsputil_init(DSPContext* c, AVCodecContext *avctx)
     c->h264_h_loop_filter_chroma= h264_h_loop_filter_chroma_c;
     c->h264_v_loop_filter_chroma_intra= h264_v_loop_filter_chroma_intra_c;
     c->h264_h_loop_filter_chroma_intra= h264_h_loop_filter_chroma_intra_c;
+    c->h264_loop_filter_strength= NULL;
 
     c->h263_h_loop_filter= h263_h_loop_filter_c;
     c->h263_v_loop_filter= h263_v_loop_filter_c;
@@ -4052,12 +4152,23 @@ void dsputil_init(DSPContext* c, AVCodecContext *avctx)
     c->inner_add_yblock = ff_snow_inner_add_yblock;
 #endif
 
+#ifdef CONFIG_VORBIS_DECODER
+    c->vorbis_inverse_coupling = vorbis_inverse_coupling;
+#endif
+    c->vector_fmul = vector_fmul_c;
+    c->vector_fmul_reverse = vector_fmul_reverse_c;
+    c->vector_fmul_add_add = ff_vector_fmul_add_add_c;
+    c->float_to_int16 = ff_float_to_int16_c;
+
     c->shrink[0]= ff_img_copy_plane;
     c->shrink[1]= ff_shrink22;
     c->shrink[2]= ff_shrink44;
     c->shrink[3]= ff_shrink88;
 
     c->prefetch= just_return;
+
+    memset(c->put_2tap_qpel_pixels_tab, 0, sizeof(c->put_2tap_qpel_pixels_tab));
+    memset(c->avg_2tap_qpel_pixels_tab, 0, sizeof(c->avg_2tap_qpel_pixels_tab));
 
 #ifdef HAVE_MMX
     dsputil_init_mmx(c, avctx);
@@ -4083,6 +4194,16 @@ void dsputil_init(DSPContext* c, AVCodecContext *avctx)
 #ifdef ARCH_SH4
     dsputil_init_sh4(c,avctx);
 #endif
+#ifdef ARCH_BFIN
+    dsputil_init_bfin(c,avctx);
+#endif
+
+    for(i=0; i<64; i++){
+        if(!c->put_2tap_qpel_pixels_tab[0][i])
+            c->put_2tap_qpel_pixels_tab[0][i]= c->put_h264_qpel_pixels_tab[0][i];
+        if(!c->avg_2tap_qpel_pixels_tab[0][i])
+            c->avg_2tap_qpel_pixels_tab[0][i]= c->avg_h264_qpel_pixels_tab[0][i];
+    }
 
     switch(c->idct_permutation_type){
     case FF_NO_IDCT_PERM:

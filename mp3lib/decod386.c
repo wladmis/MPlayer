@@ -1,7 +1,7 @@
 /*
- * Modified for use with MPlayer, for details see the CVS changelog at
- * http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
- * $Id: decod386.c 16990 2005-11-15 18:14:07Z diego $
+ * Modified for use with MPlayer, for details see the changelog at
+ * http://svn.mplayerhq.hu/mplayer/trunk/
+ * $Id: decod386.c 19138 2006-07-19 05:42:38Z rfelker $
  */
 
 /*
@@ -123,7 +123,7 @@ static int synth_1to1_mono2stereo(real *bandPtr,unsigned char *samples,int *pnt)
 
 static synth_func_t synth_func;
 
-#if defined(CAN_COMPILE_X86_ASM)
+#if defined(CAN_COMPILE_X86_ASM) && defined(HAVE_MMX)
 int synth_1to1_MMX( real *bandPtr,int channel,short * samples)
 {
     static short buffs[2][2][0x110];

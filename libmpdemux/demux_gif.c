@@ -9,8 +9,6 @@
 
 #include "config.h"
 
-#ifdef HAVE_GIF
-
 #include "mp_msg.h"
 #include "help_mp.h"
 
@@ -41,7 +39,6 @@ static int gif_check_file(demuxer_t *demuxer)
 static int demux_gif_fill_buffer(demuxer_t *demuxer, demux_stream_t *ds)
 {
   GifFileType *gif = (GifFileType *)demuxer->priv;
-  sh_video_t *sh_video = (sh_video_t *)demuxer->video->sh;
   GifRecordType type = UNDEFINED_RECORD_TYPE;
   int len = 0;
   demux_packet_t *dp = NULL;
@@ -236,5 +233,3 @@ demuxer_desc_t demuxer_desc_gif = {
   NULL,
   NULL
 };
-
-#endif /* HAVE_GIF */

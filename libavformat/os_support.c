@@ -2,25 +2,27 @@
  * Various utilities for ffmpeg system
  * Copyright (c) 2000, 2001, 2002 Fabrice Bellard
  *
- * This library is free software; you can redistribute it and/or
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * FFmpeg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 #include "config.h"
 #include "avformat.h"
 #if defined(CONFIG_WINCE)
 /* Skip includes on WinCE. */
-#elif defined(CONFIG_WIN32)
+#elif defined(__MINGW32__)
 #include <sys/types.h>
 #include <sys/timeb.h>
 #elif defined(CONFIG_OS2)
@@ -40,7 +42,7 @@ int64_t av_gettime(void)
 {
 #if defined(CONFIG_WINCE)
     return timeGetTime() * int64_t_C(1000);
-#elif defined(CONFIG_WIN32)
+#elif defined(__MINGW32__)
     struct timeb tb;
     _ftime(&tb);
     return ((int64_t)tb.time * int64_t_C(1000) + (int64_t)tb.millitm) * int64_t_C(1000);

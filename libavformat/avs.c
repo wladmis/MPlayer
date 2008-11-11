@@ -2,18 +2,20 @@
  * AVS demuxer.
  * Copyright (c) 2006  Aurelien Jacobs <aurel@gnuage.org>
  *
- * This library is free software; you can redistribute it and/or
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * FFmpeg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
@@ -40,9 +42,6 @@ typedef enum avs_block_type {
     AVS_PALETTE   = 0x03,
     AVS_GAME_DATA = 0x04,
 } avs_block_type_t;
-
-
-#ifdef CONFIG_DEMUXERS
 
 static int avs_probe(AVProbeData * p)
 {
@@ -217,7 +216,7 @@ static int avs_read_close(AVFormatContext * s)
     return 0;
 }
 
-static AVInputFormat avs_iformat = {
+AVInputFormat avs_demuxer = {
     "avs",
     "avs format",
     sizeof(avs_format_t),
@@ -226,13 +225,3 @@ static AVInputFormat avs_iformat = {
     avs_read_packet,
     avs_read_close,
 };
-
-#endif /* CONFIG_DEMUXERS */
-
-int avs_init(void)
-{
-#ifdef CONFIG_DEMUXERS
-    av_register_input_format(&avs_iformat);
-#endif /* CONFIG_DEMUXERS */
-    return 0;
-}

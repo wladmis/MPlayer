@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- $Revision: 18426 $ -->
+<!-- $Revision: 20394 $ -->
 <chapter id="cd-dvd">
 <title>CD/DVD usage</title>
 
@@ -59,7 +59,7 @@ man page for a detailed explanation).
 </para>
 
 <para>
-Please refer to &quot;<filename>/proc/ide/<replaceable>cdrom device</replaceable>/settings&quot;</filename>
+Please refer to &quot;<filename>/proc/ide/<replaceable>[cdrom device]</replaceable>/settings</filename>&quot;
 for fine-tuning your CD-ROM.
 </para>
 
@@ -97,13 +97,18 @@ sysctl hw.ata.atapi_dma=1
 <title>DVD playback</title>
 <para>
 For the complete list of available options, please read the man page.
-The Syntax for a standard Digital Versatile Disc (DVD) is as follows:
+The syntax to play a standard DVD is as follows:
 <screen>mplayer dvd://<replaceable>&lt;track&gt;</replaceable> [-dvd-device <replaceable>&lt;device&gt;</replaceable>]</screen>
 </para>
 
 <para>
 Example:
-<screen>mplayer dvd://<replaceable>1</replaceable> -dvd-device <replaceable>/dev/hdc</replaceable></screen>
+<screen>mplayer dvd://1 -dvd-device /dev/hdc</screen>
+</para>
+
+<para>
+If you have compiled <application>MPlayer</application> with dvdnav support, the
+syntax is the same, except that you need to use dvdnav:// instead of dvd://.
 </para>
 
 <para>
@@ -112,25 +117,13 @@ differs, make a symlink or specify the correct device on the command
 line with the <option>-dvd-device</option> option.
 </para>
 
-<formalpara>
-<title>New-style DVD support (mpdvdkit2)</title>
 <para>
 <application>MPlayer</application> uses <systemitem>libdvdread</systemitem> and
-<systemitem>libdvdcss</systemitem> for DVD decryption and playback. These two
-libraries are contained in the <filename class="directory">libmpdvdkit2/</filename>
+<systemitem>libdvdcss</systemitem> for DVD playback and decryption. These two
+libraries are contained in the <filename class="directory">libmpdvdkit2</filename>
 subdirectory of the <application>MPlayer</application> source tree, you do not have
-to install them separately. We opted for this solution because we had to fix a
-<systemitem>libdvdread</systemitem> bug and apply a patch which adds
-<emphasis role="bold">cracked CSS keys caching support</emphasis> to
-<systemitem>libdvdcss</systemitem>. This results in a large speed increase because the
-keys do not have to be cracked every time before playing.
-</para>
-</formalpara>
-
-<para>
-<application>MPlayer</application> can also use system-wide <systemitem>libdvdread</systemitem>
-and <systemitem>libdvdcss</systemitem> libraries, but this solution is
-<emphasis role="bold">not</emphasis> recommended, as it can result in bugs,
+to install them separately. You can also use system-wide versions of the two
+libraries, but this solution is not recommended, as it can result in bugs,
 library incompatibilities and slower speed.
 </para>
 
@@ -190,12 +183,11 @@ make a symlink, or specify the correct device on the command line with the
 </para>
 
 <formalpara>
-<title>DVD authentication</title>
+<title>DVD decryption</title>
 <para>
-The authentication and decryption method of the new-style DVD support is done
-using a patched <systemitem>libdvdcss</systemitem> (see above). The method can
-be specified through the environment variable <envar>DVDCSS_METHOD</envar>,
-which can be set to key, disk or title.
+DVD decryption is done by <systemitem>libdvdcss</systemitem>. The method
+can be specified through the <envar>DVDCSS_METHOD</envar> environment
+variable, which can be set to key, disk or title.
 </para>
 </formalpara>
 
@@ -216,7 +208,7 @@ to get and predecrypt the crypted disk key.
 <listitem><para>
 <emphasis role="bold">cached key</emphasis>: <application>MPlayer</application>
 looks for already cracked title keys which are stored in the
-<filename class="directory">~/.mplayer/DVDKeys</filename> directory (fast ;).
+<filename class="directory">~/.dvdcss</filename> directory (fast).
 </para></listitem>
 
 <listitem><para>
@@ -295,7 +287,7 @@ implement generic SCSI support for VCDs.
 
 <para>
 In the meantime you can extract data from VCDs with
-<ulink url="http://miketeo.net/links/readvcd-0.3.tgz">readvcd</ulink>
+<ulink url="http://ftp.ntut.edu.tw/ftp/OS/Linux/packages/X/viewers/readvcd/">readvcd</ulink>
 and play the resulting file with <application>MPlayer</application>.
 </para>
 

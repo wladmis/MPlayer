@@ -1,7 +1,7 @@
 /*
- * Modified for use with MPlayer, detailed CVS changelog at
- * http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
- * $Id: inputpin.c 15167 2005-04-15 20:17:14Z diego $
+ * Modified for use with MPlayer, detailed changelog at
+ * http://svn.mplayerhq.hu/mplayer/trunk/
+ * $Id: inputpin.c 18883 2006-07-02 03:59:36Z reynaldo $
  */
 
 #include "inputpin.h"
@@ -179,7 +179,7 @@ static long STDCALL CInputPin_ConnectionMediaType(IPin* This,
     *pmt=((CInputPin*)This)->type;
     if (pmt->cbFormat > 0)
     {
-	pmt->pbFormat=(char *)malloc(pmt->cbFormat);
+	pmt->pbFormat=malloc(pmt->cbFormat);
 	memcpy(pmt->pbFormat, ((CInputPin*)This)->type.pbFormat, pmt->cbFormat);
     }
     return 0;

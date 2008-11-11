@@ -2,18 +2,20 @@
  * IIDC1394 grab interface (uses libdc1394 and libraw1394)
  * Copyright (c) 2004 Roman Shaposhnik
  *
- * This library is free software; you can redistribute it and/or
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * FFmpeg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
@@ -180,7 +182,7 @@ static int dc1394_close(AVFormatContext * context)
     return 0;
 }
 
-static AVInputFormat dc1394_format = {
+AVInputFormat dc1394_demuxer = {
     .name           = "dc1394",
     .long_name      = "dc1394 A/V grab",
     .priv_data_size = sizeof(struct dc1394_data),
@@ -189,9 +191,3 @@ static AVInputFormat dc1394_format = {
     .read_close     = dc1394_close,
     .flags          = AVFMT_NOFILE
 };
-
-int dc1394_init(void)
-{
-    av_register_input_format(&dc1394_format);
-    return 0;
-}

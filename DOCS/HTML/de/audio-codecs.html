@@ -1,153 +1,131 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>7.2. Audio codecs</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.68.1"><link rel="start" href="index.html" title="MPlayer - Movie Player"><link rel="up" href="codecs.html" title="Kapitel 7. Codecs"><link rel="prev" href="video-codecs.html" title="7.1. Video codecs"><link rel="next" href="codec-importing.html" title="7.3. Win32 codecs importing HOWTO"><link rel="preface" href="howtoread.html" title="Wie diese Dokumentation gelesen werden soll"><link rel="chapter" href="intro.html" title="Kapitel 1. Einführung"><link rel="chapter" href="install.html" title="Kapitel 2. Installation"><link rel="chapter" href="usage.html" title="Kapitel 3. Gebrauch"><link rel="chapter" href="cd-dvd.html" title="Kapitel 4. CD/DVD usage"><link rel="chapter" href="faq.html" title="Kapitel 5. Häufig gestellte Fragen"><link rel="chapter" href="containers.html" title="Kapitel 6. Containerformate"><link rel="chapter" href="codecs.html" title="Kapitel 7. Codecs"><link rel="chapter" href="video.html" title="Kapitel 8. Videoausgabegeräte"><link rel="chapter" href="audio.html" title="Kapitel 9. Audioausgabegeräte"><link rel="chapter" href="tv.html" title="Kapitel 10. TV"><link rel="chapter" href="ports.html" title="Kapitel 11. Portierungen"><link rel="chapter" href="mencoder.html" title="Kapitel 12. Allgemeiner Gebrauch von MEncoder"><link rel="chapter" href="encoding-guide.html" title="Kapitel 13. Encodieren mit MEncoder"><link rel="appendix" href="mailinglists.html" title="Anhang A. Mailing-Listen"><link rel="appendix" href="bugreports.html" title="Anhang B. Wie Fehler (Bugs) berichtet werden"><link rel="appendix" href="bugs.html" title="Anhang C. Bekannte Fehler"><link rel="appendix" href="skin.html" title="Anhang D. MPlayers Skinformat"><link rel="appendix" href="users-vs-dev.html" title="Anhang E. Aufschrei der Entwickler"><link rel="subsection" href="audio-codecs.html#swac3" title="7.2.1. Software AC3 decoding"><link rel="subsection" href="audio-codecs.html#hwac3" title="7.2.2. Hardware AC3 decoding"><link rel="subsection" href="audio-codecs.html#libmad" title="7.2.3. libmad support"><link rel="subsection" href="audio-codecs.html#hwmpa" title="7.2.4. Hardware MPEG audio codec"><link rel="subsection" href="audio-codecs.html#vivo-audio" title="7.2.5. VIVO audio"><link rel="subsection" href="audio-codecs.html#realaudio" title="7.2.6. RealAudio"><link rel="subsection" href="audio-codecs.html#qdesign" title="7.2.7. QDesign codecs"><link rel="subsection" href="audio-codecs.html#qualcomm" title="7.2.8. Qualcomm codecs"><link rel="subsection" href="audio-codecs.html#aac" title="7.2.9. AAC codec"><link rel="subsection" href="audio-codecs.html#amr" title="7.2.10. AMR codecs"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">7.2. Audio codecs</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="video-codecs.html">Zurück</a> </td><th width="60%" align="center">Kapitel 7. Codecs</th><td width="20%" align="right"> <a accesskey="n" href="codec-importing.html">Weiter</a></td></tr></table><hr></div><div class="sect1" lang="de"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="audio-codecs"></a>7.2. Audio codecs</h2></div></div></div><div class="itemizedlist"><p class="title"><b>The most important audio codecs above all:</b></p><ul type="disc"><li>
-  MPEG layer 1/2/3 (MP1/2/3) audio (<span class="bold"><strong>native</strong></span>
-  code, with MMX/SSE/3DNow! optimization)
-  </li><li>
-  Windows Media Audio 7 and 8 (AKA WMAv1 and WMAv2) (<span class="bold"><strong>native</strong></span> code, with
-  <a href="video-codecs.html#ffmpeg" title="7.1.2. FFmpeg/libavcodec"><code class="systemitem">libavcodec</code></a>)
-  </li><li>
-  Windows Media Audio 9 (WMAv3) (using DMO DLL)
-  </li><li>
-  AC3 Dolby audio (<span class="bold"><strong>native</strong></span> code, with
-  MMX/SSE/3DNow! optimization)
-  </li><li>
-  AC3 passing through sound card hardware
-  </li><li>
-  AAC
-  </li><li>
-  Ogg Vorbis audio codec (<span class="bold"><strong>native</strong></span> library)
-  </li><li>
-  RealAudio: DNET (low bitrate AC3), Cook, Sipro and ATRAC3
-  </li><li>
-  QuickTime: Qualcomm and QDesign audio codecs
-  </li><li>
-  VIVO audio (g723, Vivo Siren)
-  </li><li>
-  Voxware audio (using DirectShow DLL)
-  </li><li>
-  alaw and ulaw, various gsm, adpcm and pcm formats and other simple old
-  audio codecs
-  </li><li>
-  Adaptive Multi-Rate (AMR) speech codecs
-  </li></ul></div><div class="sect2" lang="de"><div class="titlepage"><div><div><h3 class="title"><a name="swac3"></a>7.2.1. Software AC3 decoding</h3></div></div></div><p>
-This is the default decoder used for files with AC3 audio.
-</p><p>
-The AC3 decoder can create audio output mixes for 2, 4, or 6 speakers.
-When configured for 6 speakers, this decoder provides separate output of
-all the AC3 channels to the sound driver, allowing for full "surround
-sound" experience without the external AC3 decoder required to use the
-hwac3 codec.
-</p><p>
-Use the <tt class="option">-channels</tt> option to select the number of output
-channels.  Use <tt class="option">-channels 2</tt> for a stereo downmix.  For a 4
-channel downmix (Left Front, Right Front, Left Surround and Right Surround
-outputs), use <tt class="option">-channels 4</tt>.  In this case, any center
-channel will be mixed equally to the front channels.  <tt class="option">-channels
-6</tt> will output all the AC3 channels as they are encoded - in the
-order Left, Right, Left Surround, Right Surround, Center and LFE.
-</p><p>
-The default number of output channels is 2.
-</p><p>
-To use more than 2 output channels, you will need to use OSS, and have a
-sound card that supports the appropriate number of output channels via the
-SNDCTL_DSP_CHANNELS ioctl.  An example of a suitable driver is emu10k1
-(used by Soundblaster Live! cards) from August 2001 or newer (ALSA CVS is
-also supposed to work).
-</p></div><div class="sect2" lang="de"><div class="titlepage"><div><div><h3 class="title"><a name="hwac3"></a>7.2.2. Hardware AC3 decoding</h3></div></div></div><p>
-You need an AC3 capable sound card, with digital out (S/PDIF). The card's
-driver must properly support the AFMT_AC3 format (C-Media does).  Connect
-your AC3 decoder to the S/PDIF output, and use the <tt class="option">-ac
-hwac3</tt> option. It is experimental but known to work with C-Media
-cards and Soundblaster Live! + ALSA (but not OSS) drivers and DXR3/Hollywood+
-MPEG decoder cards.
-</p></div><div class="sect2" lang="de"><div class="titlepage"><div><div><h3 class="title"><a name="libmad"></a>7.2.3. libmad support</h3></div></div></div><p>
-<a href="http://www.underbit.com/products/mad/" target="_top">libmad</a> is a multiplatform,
-integer (internally 24bit PCM) only
-MPEG audio decoding library. It does not handle broken files well, and it
-sometimes has problems with seeking, but it may perform better on FPU-less
-(such as <a href="linux.html#arm" title="11.1.3. ARM">ARM</a>) platform than mp3lib.
-</p><p>
-To enable support, compile with the <tt class="option">--enable-mad</tt> configure
-option.
-</p></div><div class="sect2" lang="de"><div class="titlepage"><div><div><h3 class="title"><a name="hwmpa"></a>7.2.4. Hardware MPEG audio codec</h3></div></div></div><p>
-This codec (selected by -ac hwmpa) passes through MPEG audio packets 
-to hardware decoders, such as the ones found in full-featured DVB cards 
-and DXR2 adapters.
-Don't use it in combination with any other audio output device
-(such as OSS and ALSA) that isn't able to decode it (you will hear
-only white noise).
-</p></div><div class="sect2" lang="de"><div class="titlepage"><div><div><h3 class="title"><a name="vivo-audio"></a>7.2.5. VIVO audio</h3></div></div></div><p>
-The audio codec used in VIVO files depends on whether it is a VIVO/1.0 or
-VIVO/2.0 file. VIVO/1.0 files have <span class="bold"><strong>g.723</strong></span> audio,
-and VIVO/2.0 files have <span class="bold"><strong>Vivo Siren</strong></span> audio. Both are
-supported.
-</p></div><div class="sect2" lang="de"><div class="titlepage"><div><div><h3 class="title"><a name="realaudio"></a>7.2.6. RealAudio</h3></div></div></div><p>
-<span class="application">MPlayer</span> supports decoding nearly all versions of
-RealAudio:
-</p><div class="itemizedlist"><ul type="disc"><li>
-  RealAudio DNET - decoding supported by
-  <code class="systemitem">liba52</code>
-  </li><li>
-  RealAudio Cook/Sipro/ATRAC3 - decoding supported by
-  <span class="bold"><strong>RealPlayer libraries</strong></span>
-  </li></ul></div><p>
-Instructions on how to install the RealPlayer libraries are in the
-<a href="video-codecs.html#realvideo" title="7.1.7. RealVideo">RealVideo</a> section.
-</p></div><div class="sect2" lang="de"><div class="titlepage"><div><div><h3 class="title"><a name="qdesign"></a>7.2.7. QDesign codecs</h3></div></div></div><p>
-QDesign audio streams (fourcc:<span class="emphasis"><em>QDMC, QDM2</em></span>) are found
-in MOV/QT files. Both versions of this codec can be decoded with QuickTime
-libraries. For installation instructions please see the
-<a href="video-codecs.html#sorenson" title="7.1.9. Sorenson">Sorenson video codec</a> section.
-</p></div><div class="sect2" lang="de"><div class="titlepage"><div><div><h3 class="title"><a name="qualcomm"></a>7.2.8. Qualcomm codecs</h3></div></div></div><p>
-Qualcomm audio streams (fourcc:<span class="emphasis"><em>Qclp</em></span>) is found
-in MOV/QT files. It can be decoded with QuickTime
-libraries. For installation instructions please see the
-<a href="video-codecs.html#sorenson" title="7.1.9. Sorenson">Sorenson video codec</a> section.
-</p></div><div class="sect2" lang="de"><div class="titlepage"><div><div><h3 class="title"><a name="aac"></a>7.2.9. AAC codec</h3></div></div></div><p>
-AAC (Advanced Audio Coding) is an audio codec sometimes found in MOV and MP4
-files. An open source decoder called FAAD is available from
-<a href="http://www.audiocoding.com" target="_top">http://www.audiocoding.com</a>.
-<span class="application">MPlayer</span> includes a CVS snapshot of libfaad 2.1
-beta, so you do not need to get it separately.
-</p><p>
-If you use gcc 3.2 which fails to compile our internal FAAD or want to use
-the external library for some other reason, download the library from the
-<a href="http://www.audiocoding.com/modules/mydownloads/" target="_top">download page</a>
-and pass <tt class="option">--enable-external-faad</tt> to <tt class="filename">configure</tt>.
-You do not need all of faad2 to decode AAC files, libfaad is enough. Build
-it like this:
-</p><pre class="screen">
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>7.2. Audiocodecs</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.68.1"><link rel="start" href="index.html" title="MPlayer - Movie Player"><link rel="up" href="codecs.html" title="Kapitel 7. Codecs"><link rel="prev" href="video-codecs.html" title="7.1. Videocodecs"><link rel="next" href="codec-importing.html" title="7.3. HOWTO Win32-Codecs-Importierung"><link rel="preface" href="howtoread.html" title="Wie diese Dokumentation gelesen werden soll"><link rel="chapter" href="intro.html" title="Kapitel 1. Einführung"><link rel="chapter" href="install.html" title="Kapitel 2. Installation"><link rel="chapter" href="usage.html" title="Kapitel 3. Gebrauch"><link rel="chapter" href="cd-dvd.html" title="Kapitel 4. CD/DVD Nutzung"><link rel="chapter" href="faq.html" title="Kapitel 5. Häufig gestellte Fragen"><link rel="chapter" href="containers.html" title="Kapitel 6. Containerformate"><link rel="chapter" href="codecs.html" title="Kapitel 7. Codecs"><link rel="chapter" href="video.html" title="Kapitel 8. Videoausgabegeräte"><link rel="chapter" href="audio.html" title="Kapitel 9. Audioausgabegeräte"><link rel="chapter" href="tv.html" title="Kapitel 10. TV"><link rel="chapter" href="radio.html" title="Kapitel 11. Radio"><link rel="chapter" href="ports.html" title="Kapitel 12. Portierungen"><link rel="chapter" href="mencoder.html" title="Kapitel 13. Allgemeiner Gebrauch von MEncoder"><link rel="chapter" href="encoding-guide.html" title="Kapitel 14. Encodieren mit MEncoder"><link rel="appendix" href="bugreports.html" title="Anhang A. Wie Fehler (Bugs) berichtet werden"><link rel="appendix" href="bugs.html" title="Anhang B. Bekannte Fehler"><link rel="appendix" href="skin.html" title="Anhang C. MPlayers Skinformat"><link rel="appendix" href="history.html" title="Anhang D. Geschichte"><link rel="subsection" href="audio-codecs.html#swac3" title="7.2.1. Software-AC3-Decoder"><link rel="subsection" href="audio-codecs.html#hwac3" title="7.2.2. Hardware-AC3-Decoder"><link rel="subsection" href="audio-codecs.html#libmad" title="7.2.3. Unterstützung für libmad"><link rel="subsection" href="audio-codecs.html#hwmpa" title="7.2.4. Hardware-MPEG-Audiodecoder"><link rel="subsection" href="audio-codecs.html#aac" title="7.2.5. AAC Codec"><link rel="subsection" href="audio-codecs.html#amr" title="7.2.6. AMR Codecs"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">7.2. Audiocodecs</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="video-codecs.html">Zurück</a> </td><th width="60%" align="center">Kapitel 7. Codecs</th><td width="20%" align="right"> <a accesskey="n" href="codec-importing.html">Weiter</a></td></tr></table><hr></div><div class="sect1" lang="de"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="audio-codecs"></a>7.2. Audiocodecs</h2></div></div></div><div class="itemizedlist"><p class="title"><b>Die allerwichtigsten Audiocodecs:</b></p><ul type="disc"><li>
+        MPEG layer 1/2/3 (MP1/2/3) Audio (<span class="bold"><strong>nativer</strong></span>
+        Decoder, mit MMX/SSE/3DNow! Optimierung)
+      </li><li>
+        Windows Media Audio 7 und 8 (alias WMAv1 und WMAv2) (<span class="bold"><strong>nativer</strong></span> Decoder, mit
+        <a href="video-codecs.html#ffmpeg" title="7.1.1. FFmpeg/libavcodec"><code class="systemitem">libavcodec</code></a>)
+      </li><li>
+        Windows Media Audio 9 (WMAv3) (unter Verwendung der DMO-DLL)
+      </li><li>
+        AC3 Dolby Audio (<span class="bold"><strong>nativer</strong></span> Decoder, mit
+        MMX/SSE/3DNow! Optimierung)
+      </li><li>
+        AC3-Passthrough unter Verwendung der Soundkartenhardware
+      </li><li>
+        AAC
+      </li><li>
+        Ogg Vorbis Audiocodec (<span class="bold"><strong>native</strong></span> Bibliothek)
+      </li><li>
+        RealAudio: DNET (AC3 mit niedriger Bitrate), Cook, Sipro and ATRAC3
+      </li><li>
+        QuickTime: Qualcomm und QDesign Audio Decoder
+      </li><li>
+        VIVO Audio (g723, Vivo Siren)
+      </li><li>
+        Voxware Audio (unter Verwendung der DirectShow-DLL)
+      </li><li>
+        alaw und ulaw, verschiedene gsm, adpcm und pcm Formate und andere einfache alte
+        Audiocodecs
+      </li><li>
+        Adaptive Multi-Rate (AMR) Sprachcodecs
+      </li></ul></div><div class="sect2" lang="de"><div class="titlepage"><div><div><h3 class="title"><a name="swac3"></a>7.2.1. Software-AC3-Decoder</h3></div></div></div><p>
+      Das ist der Standarddecoder für Dateien, die AC3-Audio enthalten.
+    </p><p>
+      Der AC3-Decoder kann Audio für zwei, vier oder sechs Lautsprecher ausgeben.
+      Wenn er für sechs Lautsprecher konfiguriert wurde, stellt der Decoder dem
+      Audiotreiber alle Kanäle separat zur Verfügung und erlaubt so volle
+      "Surround"-Erfahrung ohne einen externen AC3 Decoder, der gebraucht wird,
+      um hwac3 zu benutzen.
+    </p><p>
+      Benutze die Option <tt class="option">-channels</tt>, um die Anzahl der Kanäle
+      anzugeben. Mit <tt class="option">-channels 2</tt> wird Stereo-Klang erzeugt.
+      Für eine 4-Kanal-Ausgabe (links vorne, rechts vorne, links Surround und
+      rechts Surround) verwende <tt class="option">-channels 4</tt>. In diesem
+      Fall wird der Kanal Center gleichmäßig auf die vorderen Kanäle verteilt.
+      <tt class="option">-channels 6</tt> gibt alle AC3-Kanäle aus, wie sie codiert
+      wurden - in der Reihenfolge links vorne, rechts vorne, links Surround, rechts
+      Surround, Center und LFE.
+    </p><p>
+      Standard sind zwei Ausgabekanäle.
+    </p><p>
+      Um mehr als zwei Ausgabekanäle verwenden zu können, muss OSS verwendet werden,
+      und die Soundkarte muss die entsprechende Anzahl an Kanälen mittels ioctl
+      SNDCTL_DSP_CHANNELS unterstützen. Ein funktionierender Treiber ist emu10k1
+      (wird für Soundblaster Live! Karten benutzt) seit August 2001
+      (Neuere ALSA-Versionen sollten auch funktionieren).
+    </p></div><div class="sect2" lang="de"><div class="titlepage"><div><div><h3 class="title"><a name="hwac3"></a>7.2.2. Hardware-AC3-Decoder</h3></div></div></div><p>
+      Benötigt wird eine AC3 fähige Soundkarte mit einem Digitalausgang (S/PDIF).
+      Der Treiber der Karte muss das AFMT_AC3 Format korrekt unterstützen (wie
+      z.B. C-Media). Verbinde dann den Hardware AC3 Decoder mit dem S/PDIF Ausgang
+      und benutze <tt class="option">-ac hwac3</tt>. Die Unterstützung ist experimentell,
+      funktioniert aber z.B. mit C-Media Karten und Soundblaster Live! mit ALSA
+      (aber nicht OSS) Treibern, sowie mit DXR3/Hollywood+ MPEG Decoder Karten.
+    </p></div><div class="sect2" lang="de"><div class="titlepage"><div><div><h3 class="title"><a name="libmad"></a>7.2.3. Unterstützung für libmad</h3></div></div></div><p>
+      <a href="http://www.underbit.com/products/mad/" target="_top">libmad</a> ist
+      eine Integer-MPEG-Audiodecoder-Bibliothek für mehrere Plattformen, die intern mit
+      24-bittigem PCM arbeitet. Sie funktioniert nicht sehr gut mit beschädigten
+      Dateien und hat manchmal Probleme mit Sprüngen (seeks), kann aber auf
+      Platformen ohne FPU (z.B. <a href="linux.html#arm" title="12.1.3. ARM">ARM</a>) schneller
+      sein als mp3lib.
+    </p><p>
+      Wenn libman bei dir korrekt installiert ist, wird <tt class="filename">configure</tt>
+      dies bemerken, und Unterstützung für MPEG-Audiodecodierung via
+      <code class="systemitem">libmad</code> wird automatisch eingebaut.
+    </p></div><div class="sect2" lang="de"><div class="titlepage"><div><div><h3 class="title"><a name="hwmpa"></a>7.2.4. Hardware-MPEG-Audiodecoder</h3></div></div></div><p>
+      Dieser Codec (ausgewählt durch <tt class="option">-ac hwmpa</tt>) reicht
+      MPEG-Audiopakete an Hardwaredecoder durch, wie sie z.B. auf
+      voll ausgestatteten DVB-Karten und DXR2-Adaptern existieren.
+      Es bringt nichts, ihn mit einem anderen Gerät (wie z.B. OSS und ALSA)
+      zu verwenden - das führt lediglich zu Rauschen.
+    </p></div><div class="sect2" lang="de"><div class="titlepage"><div><div><h3 class="title"><a name="aac"></a>7.2.5. AAC Codec</h3></div></div></div><p>
+      AAC (Advanced Audio Coding) ist ein Audiocodec, der vorwiegend
+      in MOV- und MP4-Dateien vorkommt. Ein Open-Source-Decoder namens
+      FAAD ist auf <a href="http://www.audiocoding.com" target="_top">http://www.audiocoding.com</a>
+      verfügbar. <span class="application">MPlayer</span> enthält
+      eine CVS Version von libfaad 2.1 beta, so dass es nicht extra
+      installiert werden muss.
+    </p><p>
+      Um die externe FAAD-Bibliothek verwenden zu können (z.B. um mit gcc 3.2
+      compilieren zu können, der die interne Version nicht übersetzt), muss
+      die Bibliothek von der
+      <a href="http://www.audiocoding.com/modules/mydownloads/" target="_top">Download Seite</a>
+      heruntergeladen und installiert werden. Anschließend muss die Option
+      <tt class="option">--enable-faad-external</tt> an <tt class="filename">configure</tt>
+      übergeben werden, damit die externe Bibliothek erkannt wird.
+      Es ist lediglich erforderlich, vorher libfaad zu installieren, und zwar so:
+      </p><pre class="screen">
 cd faad2/
 sh bootstrap
 ./configure
 cd libfaad
 make
-make install
-</pre><p>
-Binaries are not available from audiocoding.com, but you can (apt-)get Debian
-packages from <a href="http://hpisi.nerim.net" target="_top">Christian Marillat's homepage</a>,
-Mandrake/Mandriva RPMs from the <a href="http://plf.zarb.org" target="_top">P.L.F</a> and RedHat RPMs
-from <a href="http://greysector.rangers.eu.org/" target="_top">Grey Sector</a>.
-</p></div><div class="sect2" lang="de"><div class="titlepage"><div><div><h3 class="title"><a name="amr"></a>7.2.10. AMR codecs</h3></div></div></div><p>
-Adaptive Multi-Rate speech codec is used in third generation (3G) mobile
-phones.
-Reference implementation is available from
-<a href="http://www.3gpp.org" target="_top">The 3rd Generation Partnership Project</a>
-(free for private use).
-</p><p>
-To enable support, download the sources for
-<a href="http://www.3gpp.org/ftp/Specs/latest/Rel-6/26_series/26104-610.zip" target="_top">AMR-NB</a>
-and
-<a href="http://www.3gpp.org/ftp/Specs/latest/Rel-6/26_series/26204-600.zip" target="_top">AMR-WB</a>
-codecs, put them in the directory where you unpacked the
-<span class="application">MPlayer</span> source and run the following commands:
-</p><pre class="screen">
+make install</pre><p>
+      Binärpakete sind auf audiocoding.com nicht erhältlich, Debian-Pakete
+      können aber mit (apt-)get von
+      <a href="http://www.debian-multimedia.org/" target="_top">Christian Marillat's Homepage</a>, Mandrake/Mandriva RPMs von
+      <a href="http://plf.zarb.org" target="_top">P.L.F</a> und RedHat RPMs
+      von <a href="http://greysector.rangers.eu.org/" target="_top">Grey Sector</a>
+      heruntergeladen werden.
+    </p></div><div class="sect2" lang="de"><div class="titlepage"><div><div><h3 class="title"><a name="amr"></a>7.2.6. AMR Codecs</h3></div></div></div><p>
+      Adaptive Multi-Rate Sprachcodec, wird in 3G (UMTS) Mobiltelephonen verwendet.
+      Die Referenzimplementierung ist auf
+      <a href="http://www.3gpp.org" target="_top">The 3rd Generation Partnership Project</a>
+      erhältlich (frei - wie in Freibier - für private Benutzung).
+    </p><p>
+      Für Unterstützung müssen die Codecs
+      <a href="http://www.3gpp.org/ftp/Specs/latest/Rel-6/26_series/26104-610.zip" target="_top">AMR-NB</a>
+      und
+      <a href="http://www.3gpp.org/ftp/Specs/latest/Rel-6/26_series/26204-600.zip" target="_top">AMR-WB</a>
+      heruntergeladen und in dasselbe Verzeichnis wie
+      <span class="application">MPlayer</span> verschoben werden.
+      Anschließend folgende Befehle ausführen:
+      </p><pre class="screen">
 unzip 26104-610.zip
 unzip 26104-610_ANSI_C_source_code.zip
 mv c-code libavcodec/amr_float
 unzip 26204-600.zip
 unzip 26204-600_ANSI-C_source_code.zip
-mv c-code libavcodec/amrwb_float
-</pre><p>
-After that, follow the usual <span class="application">MPlayer</span>
-<a href="features.html" title="2.5. Features">build procedure</a>.
-</p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="video-codecs.html">Zurück</a> </td><td width="20%" align="center"><a accesskey="u" href="codecs.html">Nach oben</a></td><td width="40%" align="right"> <a accesskey="n" href="codec-importing.html">Weiter</a></td></tr><tr><td width="40%" align="left" valign="top">7.1. Video codecs </td><td width="20%" align="center"><a accesskey="h" href="index.html">Zum Anfang</a></td><td width="40%" align="right" valign="top"> 7.3. Win32 codecs importing HOWTO</td></tr></table></div></body></html>
+mv c-code libavcodec/amrwb_float</pre><p>
+      Befolge danach einfach das <a href="features.html" title="2.4. Features">Standardvorgehen für die Compilierung</a> von
+      <span class="application">MPlayer</span>.
+    </p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="video-codecs.html">Zurück</a> </td><td width="20%" align="center"><a accesskey="u" href="codecs.html">Nach oben</a></td><td width="40%" align="right"> <a accesskey="n" href="codec-importing.html">Weiter</a></td></tr><tr><td width="40%" align="left" valign="top">7.1. Videocodecs </td><td width="20%" align="center"><a accesskey="h" href="index.html">Zum Anfang</a></td><td width="40%" align="right" valign="top"> 7.3. HOWTO Win32-Codecs-Importierung</td></tr></table></div></body></html>

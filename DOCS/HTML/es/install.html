@@ -1,5 +1,5 @@
 <html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>1.2. Instalación</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.68.1"><link rel="start" href="index.html" title="MPlayer - El reproductor de Películas
-para LINUX"><link rel="up" href="intro.html" title="Capítulo 1. Introducción"><link rel="prev" href="history.html" title="1.1. Historia"><link rel="next" href="gui.html" title="1.3. ¿Qué hay acerca de la GUI?"><link rel="preface" href="howtoread.html" title="Como leer esta documentación"><link rel="chapter" href="intro.html" title="Capítulo 1. Introducción"><link rel="chapter" href="features.html" title="Capítulo 2. Características"><link rel="chapter" href="usage.html" title="Capítulo 3. Uso"><link rel="chapter" href="faq.html" title="Capítulo 4. Preguntas de Usuario Frecuentes"><link rel="chapter" href="cd-dvd.html" title="Capítulo 5. Uso de CD/DVD"><link rel="chapter" href="ports.html" title="Capítulo 6. Adaptaciones"><link rel="chapter" href="mencoder.html" title="Capítulo 7. Codificando con MEncoder"><link rel="appendix" href="mailinglists.html" title="Apéndice A. Listas de correo"><link rel="appendix" href="bugreports.html" title="Apéndice B. Cómo reportar errores"><link rel="appendix" href="bugs.html" title="Apéndice C. Problemas conocidos"><link rel="appendix" href="skin.html" title="Apéndice D. Formato del skin de MPlayer"><link rel="appendix" href="users-vs-dev.html" title="Apéndice E. Lloriqueos de desarrolladores"><link rel="subsection" href="install.html#softreq" title="1.2.1. Requerimientos de Software"><link rel="subsection" href="install.html#id2530591" title="1.2.2. Codecs"><link rel="subsection" href="install.html#video-cards" title="1.2.3. Placas de Vídeo"><link rel="subsection" href="install.html#sound-cards" title="1.2.4. Placas de Sonido"><link rel="subsection" href="install.html#id2531731" title="1.2.5. Características"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">1.2. Instalación</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="history.html">Anterior</a> </td><th width="60%" align="center">Capítulo 1. Introducción</th><td width="20%" align="right"> <a accesskey="n" href="gui.html">Siguiente</a></td></tr></table><hr></div><div class="sect1" lang="es"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="install"></a>1.2. Instalación</h2></div></div></div><p>
+para LINUX"><link rel="up" href="intro.html" title="Capítulo 1. Introducción"><link rel="prev" href="history.html" title="1.1. Historia"><link rel="next" href="gui.html" title="1.3. ¿Qué hay acerca de la GUI?"><link rel="preface" href="howtoread.html" title="Como leer esta documentación"><link rel="chapter" href="intro.html" title="Capítulo 1. Introducción"><link rel="chapter" href="features.html" title="Capítulo 2. Características"><link rel="chapter" href="usage.html" title="Capítulo 3. Uso"><link rel="chapter" href="faq.html" title="Capítulo 4. Preguntas de Usuario Frecuentes"><link rel="chapter" href="cd-dvd.html" title="Capítulo 5. Uso de CD/DVD"><link rel="chapter" href="ports.html" title="Capítulo 6. Adaptaciones"><link rel="chapter" href="mencoder.html" title="Capítulo 7. Codificando con MEncoder"><link rel="appendix" href="bugreports.html" title="Apéndice A. Cómo reportar errores"><link rel="appendix" href="bugs.html" title="Apéndice B. Problemas conocidos"><link rel="appendix" href="skin.html" title="Apéndice C. Formato del skin de MPlayer"><link rel="subsection" href="install.html#softreq" title="1.2.1. Requerimientos de Software"><link rel="subsection" href="install.html#id2530513" title="1.2.2. Codecs"><link rel="subsection" href="install.html#video-cards" title="1.2.3. Placas de Vídeo"><link rel="subsection" href="install.html#sound-cards" title="1.2.4. Placas de Sonido"><link rel="subsection" href="install.html#id2531653" title="1.2.5. Características"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">1.2. Instalación</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="history.html">Anterior</a> </td><th width="60%" align="center">Capítulo 1. Introducción</th><td width="20%" align="right"> <a accesskey="n" href="gui.html">Siguiente</a></td></tr></table><hr></div><div class="sect1" lang="es"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="install"></a>1.2. Instalación</h2></div></div></div><p>
 Una guía de instalación rápida puede encontrarse en el archivo
 <tt class="filename">README</tt>. Por favor, léala primero y luego vuelva
 aquí para obtener el resto de detalles sanguinolientos.
@@ -18,21 +18,9 @@ núcleo 2.4.x es recomendado.
   Este programa es el responsable de generar instrucciones  MMX/3DNow!/etc,
   por lo tanto muy importante.
 </p></li><li><p>
-  <span class="bold"><strong>gcc</strong></span> - versiones sugeridas: <span class="bold"><strong>2.95.3</strong></span>
-  (quizá <span class="bold"><strong>2.95.4</strong></span>) y <span class="bold"><strong>3.2+</strong></span>.
-  <span class="bold"><strong>Nunca</strong></span> use las versiones 2.96 o 3.0.x! Ellas generan código con fallas para
-  <span class="application">MPlayer</span>. Si decide cambiar su gcc de versión 2.96, 
-  entonces no se decida en favor de 3.x simplemente por que es más nuevo!
-  Las primeras versiones de 3.x fueron quizá hasta más defectuosas que 2.96.
-  Entonces, vuelva a la versión 2.95.x (baje la versión también para 
-  <code class="systemitem">libstdc++</code>, otros programas
-  podrían necesitarla) o no cambie las versiones para nada (pero en ese caso,
-  este preparado para problemas en tiempo de ejecución). Si se decide por 
-  3.x, trate de usar la última versión, las primeras tuvieron muchos problemas,
-  y asegúrese de usar por lo menos 3.1, está probado y funciona. Para información
-  detallada sobre los problemas de gcc 2.96 (que todavía NO están arreglados, ¡pero
-  han sido SOLUCIONADOS en <span class="application">MPlayer</span>!), vea la sección
-  <a href="gcc-296.html" title="E.1. GCC 2.96">gcc 2.96</a> y la <a href="faq.html">FAQ</a>.
+  <span class="bold"><strong>gcc</strong></span> - versiones recomendadas son
+  2.95 y 3.3+. 2.96 y 3.0.x generan código con fallas, 3.1 y 3.2
+  tambien tuvieron sus problemas.
   </p></li><li><p>
   <span class="bold"><strong>XFree86</strong></span> - versión sugerida <span class="bold"><strong>siempre la 
   más nueva</strong></span> (4.3). Normalmente, todos quieren esto, desde XFree 4.0.2,
@@ -68,7 +56,7 @@ núcleo 2.4.x es recomendado.
   </p></li><li><p>
   <span class="bold"><strong>libvorbis</strong></span> - opcional, necesario para reproducir archivos de audio OGG Vorbis.
   </p></li><li><p>
-  <span class="bold"><strong><a href="http://www.live.com/mplayer/" target="_top">LIVE.COM Streaming Media</a></strong></span>
+  <span class="bold"><strong><a href="http://www.live555.com/mplayer/" target="_top">LIVE.COM Streaming Media</a></strong></span>
   - opcional, necesario para reproducir flujos RTSP/RTP.
   </p></li><li><p>
   <span class="bold"><strong>directfb</strong></span> - opcional, de
@@ -83,7 +71,7 @@ núcleo 2.4.x es recomendado.
   La versión mínima necesaria es 1.2.7.
   </p></li><li><p>
   <span class="bold"><strong>libsmb</strong></span> - opcional, para soporte Samba.
-  </p></li></ul></div></div><div class="sect2" lang="es"><div class="titlepage"><div><div><h3 class="title"><a name="id2530591"></a>1.2.2. Codecs</h3></div></div></div><div class="itemizedlist"><ul type="disc"><li><p>
+  </p></li></ul></div></div><div class="sect2" lang="es"><div class="titlepage"><div><div><h3 class="title"><a name="id2530513"></a>1.2.2. Codecs</h3></div></div></div><div class="itemizedlist"><ul type="disc"><li><p>
   <span class="bold"><strong><code class="systemitem">libavcodec</code></strong></span>:
   Este paquete de codecs es capaz de decodificar flujos de vídeo codificado en 
   H263/MJPEG/RV10/DivX3/DivX4/DivX5/MP41/MP42/WMV1/WMV2/SVQ1/SVQ3
@@ -300,7 +288,7 @@ funciona con los siguientes controladores:
   Las características de <span class="bold"><strong>otras placas</strong></span> no están soportadas
   en <span class="application">MPlayer</span>. <span class="bold"><strong>¡Es muy recomendado leer la
   sección de <a href="devices.html#audio-dev" title="2.3.2. Dispositivos de salida de audio">placas de sonido</a>!</strong></span>.
-  </li></ul></div></div><div class="sect2" lang="es"><div class="titlepage"><div><div><h3 class="title"><a name="id2531731"></a>1.2.5. Características</h3></div></div></div><div class="itemizedlist"><ul type="disc"><li><p>
+  </li></ul></div></div><div class="sect2" lang="es"><div class="titlepage"><div><div><h3 class="title"><a name="id2531653"></a>1.2.5. Características</h3></div></div></div><div class="itemizedlist"><ul type="disc"><li><p>
   Decida si necesita GUI (interfaz gráfica de usuario). Si lo necesita, vea la sección
   <a href="gui.html" title="1.3. ¿Qué hay acerca de la GUI?">GUI</a> antes de compilar.
   </p></li><li><p>

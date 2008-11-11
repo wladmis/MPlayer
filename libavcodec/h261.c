@@ -3,18 +3,20 @@
  * Copyright (c) 2002-2004 Michael Niedermayer <michaelni@gmx.at>
  * Copyright (c) 2004 Maarten Daniels
  *
- * This library is free software; you can redistribute it and/or
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * FFmpeg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
@@ -372,8 +374,6 @@ static VLC h261_mba_vlc;
 static VLC h261_mtype_vlc;
 static VLC h261_mv_vlc;
 static VLC h261_cbp_vlc;
-
-void init_vlc_rl(RLTable *rl, int use_static);
 
 static void h261_decode_init_vlc(H261Context *h){
     static int done = 0;
@@ -781,7 +781,14 @@ static int h261_decode_picture_header(H261Context *h){
     }
 
     /* temporal reference */
-    s->picture_number = get_bits(&s->gb, 5); /* picture timestamp */
+    i= get_bits(&s->gb, 5); /* picture timestamp */
+    if(i < (s->picture_number&31))
+        i += 32;
+    s->picture_number = (s->picture_number&~31) + i;
+
+    s->avctx->time_base= (AVRational){1001, 30000};
+    s->current_picture.pts= s->picture_number;
+
 
     /* PTYPE starts here */
     skip_bits1(&s->gb); /* split screen off */
@@ -847,6 +854,7 @@ static int h261_decode_gob(H261Context *h){
     return -1;
 }
 
+#ifdef CONFIG_H261_PARSER
 static int h261_find_frame_end(ParseContext *pc, AVCodecContext* avctx, const uint8_t *buf, int buf_size){
     int vop_found, i, j;
     uint32_t state;
@@ -858,7 +866,6 @@ static int h261_find_frame_end(ParseContext *pc, AVCodecContext* avctx, const ui
         state= (state<<8) | buf[i];
         for(j=0; j<8; j++){
             if(((state>>j)&0xFFFFF) == 0x00010){
-                i++;
                 vop_found=1;
                 break;
             }
@@ -900,6 +907,7 @@ static int h261_parse(AVCodecParserContext *s,
     *poutbuf_size = buf_size;
     return next;
 }
+#endif
 
 /**
  * returns the number of bytes consumed for building the current frame
@@ -997,10 +1005,6 @@ assert(s->current_picture.pict_type == s->pict_type);
     *pict= *(AVFrame*)s->current_picture_ptr;
     ff_print_debug_info(s, pict);
 
-    /* Return the Picture timestamp as the frame number */
-    /* we substract 1 because it is added on utils.c    */
-    avctx->frame_number = s->picture_number - 1;
-
     *data_size = sizeof(AVFrame);
 
     return get_consumed_bytes(s, buf_size);
@@ -1024,6 +1028,7 @@ AVCodec h261_encoder = {
     MPV_encode_init,
     MPV_encode_picture,
     MPV_encode_end,
+    .pix_fmts= (enum PixelFormat[]){PIX_FMT_YUV420P, -1},
 };
 #endif
 
@@ -1039,6 +1044,7 @@ AVCodec h261_decoder = {
     CODEC_CAP_DR1,
 };
 
+#ifdef CONFIG_H261_PARSER
 AVCodecParser h261_parser = {
     { CODEC_ID_H261 },
     sizeof(ParseContext),
@@ -1046,3 +1052,4 @@ AVCodecParser h261_parser = {
     h261_parse,
     ff_parse_close,
 };
+#endif

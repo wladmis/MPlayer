@@ -4,8 +4,8 @@
  * Copyright (C) 1999-2003 VideoLAN
  *
  * Modified for use with MPlayer, changes contained in libdvdcss_changes.diff.
- * detailed CVS changelog at http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
- * $Id: css.c 16715 2005-10-09 10:18:24Z diego $
+ * detailed changelog at http://svn.mplayerhq.hu/mplayer/trunk/
+ * $Id: css.c 19826 2006-09-13 13:36:49Z diego $
  *
  * Authors: Stéphane Borel <stef@via.ecp.fr>
  *          Håkan Hjort <d95hjort@dtek.chalmers.se>
@@ -56,7 +56,7 @@
 #   include <limits.h>
 #endif
 
-#include "dvdcss.h"
+#include "dvdcss/dvdcss.h"
 
 #include "common.h"
 #include "css.h"

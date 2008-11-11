@@ -2,18 +2,20 @@
  * UDP prototype streaming system
  * Copyright (c) 2000, 2001, 2002 Fabrice Bellard.
  *
- * This library is free software; you can redistribute it and/or
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * FFmpeg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 #include "avformat.h"
@@ -51,7 +53,7 @@ typedef struct {
 
 #ifdef CONFIG_IPV6
 
-int udp_ipv6_is_multicast_address(const struct sockaddr *addr) {
+static int udp_ipv6_is_multicast_address(const struct sockaddr *addr) {
     if (addr->sa_family == AF_INET)
         return IN_MULTICAST(ntohl(((struct sockaddr_in *)addr)->sin_addr.s_addr));
     if (addr->sa_family == AF_INET6)
@@ -59,7 +61,7 @@ int udp_ipv6_is_multicast_address(const struct sockaddr *addr) {
     return -1;
 }
 
-int udp_ipv6_set_multicast_ttl(int sockfd, int mcastTTL, struct sockaddr *addr) {
+static int udp_ipv6_set_multicast_ttl(int sockfd, int mcastTTL, struct sockaddr *addr) {
     if (addr->sa_family == AF_INET) {
         if (setsockopt(sockfd, IPPROTO_IP, IP_MULTICAST_TTL, &mcastTTL, sizeof(mcastTTL)) < 0) {
             perror("setsockopt(IP_MULTICAST_TTL)");
@@ -75,7 +77,7 @@ int udp_ipv6_set_multicast_ttl(int sockfd, int mcastTTL, struct sockaddr *addr) 
     return 0;
 }
 
-int udp_ipv6_join_multicast_group(int sockfd, struct sockaddr *addr) {
+static int udp_ipv6_join_multicast_group(int sockfd, struct sockaddr *addr) {
     struct ip_mreq   mreq;
     struct ipv6_mreq mreq6;
     if (addr->sa_family == AF_INET) {
@@ -97,7 +99,7 @@ int udp_ipv6_join_multicast_group(int sockfd, struct sockaddr *addr) {
     return 0;
 }
 
-int udp_ipv6_leave_multicast_group(int sockfd, struct sockaddr *addr) {
+static int udp_ipv6_leave_multicast_group(int sockfd, struct sockaddr *addr) {
     struct ip_mreq   mreq;
     struct ipv6_mreq mreq6;
     if (addr->sa_family == AF_INET) {
@@ -119,7 +121,7 @@ int udp_ipv6_leave_multicast_group(int sockfd, struct sockaddr *addr) {
     return 0;
 }
 
-struct addrinfo* udp_ipv6_resolve_host(const char *hostname, int port, int type, int family, int flags) {
+static struct addrinfo* udp_ipv6_resolve_host(const char *hostname, int port, int type, int family, int flags) {
     struct addrinfo hints, *res = 0;
     int error;
     char sport[16];
@@ -144,7 +146,7 @@ struct addrinfo* udp_ipv6_resolve_host(const char *hostname, int port, int type,
     return res;
 }
 
-int udp_ipv6_set_remote_url(URLContext *h, const char *uri) {
+static int udp_ipv6_set_remote_url(URLContext *h, const char *uri) {
     UDPContext *s = h->priv_data;
     char hostname[256];
     int port;
@@ -158,7 +160,7 @@ int udp_ipv6_set_remote_url(URLContext *h, const char *uri) {
     return 0;
 }
 
-int udp_ipv6_set_local(URLContext *h) {
+static int udp_ipv6_set_local(URLContext *h) {
     UDPContext *s = h->priv_data;
     int udp_fd = -1;
     struct sockaddr_storage clientaddr;
@@ -428,7 +430,8 @@ static int udp_read(URLContext *h, uint8_t *buf, int size)
 #else
     struct sockaddr_storage from;
 #endif
-    int from_len, len;
+    socklen_t from_len;
+    int len;
 
     for(;;) {
         from_len = sizeof(from);

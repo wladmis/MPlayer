@@ -1,4 +1,4 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=KOI8-R"><title>1.5. RTC</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.68.1"><link rel="start" href="index.html" title="MPlayer - The Movie Player"><link rel="up" href="intro.html" title="Глава 1. Введение"><link rel="prev" href="subosd.html" title="1.4. Субтитры и OSD"><link rel="next" href="usage.html" title="Глава 2. Использование"><link rel="preface" href="howtoread.html" title="Как читать эту документацию"><link rel="chapter" href="intro.html" title="Глава 1. Введение"><link rel="chapter" href="usage.html" title="Глава 2. Использование"><link rel="chapter" href="cd-dvd.html" title="Глава 3. Использование CD/DVD"><link rel="chapter" href="faq.html" title="Глава 4. Frequently Asked Questions"><link rel="chapter" href="features.html" title="Глава 5. Возможности"><link rel="chapter" href="video.html" title="Глава 6. Video output devices"><link rel="chapter" href="audio.html" title="Глава 7. Audio output devices"><link rel="chapter" href="ports.html" title="Глава 8. Портинг"><link rel="chapter" href="mencoder.html" title="Глава 9. Basic usage of MEncoder"><link rel="chapter" href="encoding-guide.html" title="Глава 10. Encoding with MEncoder"><link rel="appendix" href="mailinglists.html" title="Приложение A. Почтовые рассылки"><link rel="appendix" href="bugreports.html" title="Приложение B. Как сообщать об ошибках"><link rel="appendix" href="bugs.html" title="Приложение C. Известные проблемы"><link rel="appendix" href="skin.html" title="Приложение D. MPlayer skin format"><link rel="appendix" href="users-vs-dev.html" title="Приложение E. Плач разработчиков"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">1.5. RTC</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="subosd.html">Пред.</a> </td><th width="60%" align="center">Глава 1. Введение</th><td width="20%" align="right"> <a accesskey="n" href="usage.html">След.</a></td></tr></table><hr></div><div class="sect1" lang="ru"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="rtc"></a>1.5. RTC</h2></div></div></div><p>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=KOI8-R"><title>2.7. RTC</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.68.1"><link rel="start" href="index.html" title="MPlayer - The Movie Player"><link rel="up" href="install.html" title="Глава 2. Установка"><link rel="prev" href="fonts-osd.html" title="2.6. Шрифты и OSD"><link rel="next" href="usage.html" title="Глава 3. Использование"><link rel="preface" href="howtoread.html" title="Как читать эту документацию"><link rel="chapter" href="intro.html" title="Глава 1. Введение"><link rel="chapter" href="install.html" title="Глава 2. Установка"><link rel="chapter" href="usage.html" title="Глава 3. Использование"><link rel="chapter" href="cd-dvd.html" title="Глава 4. Использование CD/DVD"><link rel="chapter" href="faq.html" title="Глава 5. Часто Задаваемые вопросы"><link rel="chapter" href="containers.html" title="Глава 6. Поддерживаемые форматы"><link rel="chapter" href="codecs.html" title="Глава 7. Поддерживаемые кодеки"><link rel="chapter" href="tv.html" title="Глава 8. TV"><link rel="chapter" href="radio.html" title="Глава 9. Радио"><link rel="chapter" href="video.html" title="Глава 10. Устройства вывода видео"><link rel="chapter" href="audio.html" title="Глава 11. Устройства вывода звука"><link rel="chapter" href="ports.html" title="Глава 12. Портинг"><link rel="chapter" href="mencoder.html" title="Глава 13. Основы использования MEncoder"><link rel="chapter" href="encoding-guide.html" title="Глава 14. Encoding with MEncoder"><link rel="appendix" href="bugreports.html" title="Приложение A. Как сообщать об ошибках"><link rel="appendix" href="bugs.html" title="Приложение B. Известные проблемы"><link rel="appendix" href="skin.html" title="Приложение C. Формат скинов MPlayer"><link rel="appendix" href="history.html" title="Приложение D. История"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">2.7. RTC</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="fonts-osd.html">Пред.</a> </td><th width="60%" align="center">Глава 2. Установка</th><td width="20%" align="right"> <a accesskey="n" href="usage.html">След.</a></td></tr></table><hr></div><div class="sect1" lang="ru"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="rtc"></a>2.7. RTC</h2></div></div></div><p>
 У <span class="application">MPlayer</span>'а есть три метода синхронизации.
 
 </p><div class="itemizedlist"><ul type="disc"><li>
@@ -9,31 +9,23 @@
   </li><li><p>
 <span class="bold"><strong>Новый таймер</strong></span> использует RTC (Real Time
   Clock[часы истинного времени]) для этой задачи потому, что это таймер
-  точностью 1ms. Это автоматически включается, когда доступно, но требует
-  привилегий root'а, <span class="emphasis"><em>съюднутого по root'у</em></span> исполняемого
-  файла <span class="application">MPlayer</span>'а, или правильно настроенного ядра.
+  точностью 1ms. Он включается опцией <tt class="option">-rtc</tt>, но требует
+  правильно настроенного ядра.
   Если Вы работаете с ядром 2.4.19pre8 или более поздним, Вы можете настроить
   максимальную частоту RTC для обычных пользователей через файловую систему
   <code class="systemitem">/proc</code>.
-  Используйте эту команду, чтобы сделать RTC доступным для обычных
+  Используйте одну из этих двух команд, чтобы сделать RTC доступным для обычных
   пользователей:
   </p><pre class="screen">echo 1024 &gt; /proc/sys/dev/rtc/max-user-freq</pre><p>
-  Если у Вас не такое свежее ядро, Вы также можете поменять одну строчку в 
-  <tt class="filename">drivers/char/rtc.c</tt> и перекомпилировать ядро.
-  Найдите место, которое выглядит как 
-  </p><pre class="programlisting">
-       * We don't really want Joe User enabling more
-       * than 64Hz of interrupts on a multi-user machine.
-       */
-      if ((rtc_freq &gt; 64) &amp;&amp; (!capable(CAP_SYS_RESOURCE)))
-   </pre><p>
-   и замените 64 на 1024. Хотя Вы должны знать, что Вы делаете.
+  </p><pre class="screen">sysctl dev/rtc/max-user-freq=1024</pre><p>
+  Можно сделать эти изменения постоянными, добавив последнюю в 
+  <tt class="filename">/etc/sysctl.conf</tt>.
+  </p><p>
    Вы увидите эффективность нового кода таймера по строке состояния.
    Функции управления потребляемой мощностью[power management] у некоторых
    ноутбуковских BIOS'ов со speedstep-CPU плохо взаимодействуют с RTC. Аудио и
    видео могут десинхронизироваться. Вероятно, если Вы вставите штекер внешнего
-   питания до включения ноутбука, то это поможет. Вы всегда можете отключить
-   поддержку RTC, указав опцию <tt class="option">-nortc</tt>. В некоторых аппаратных
+   питания до включения ноутбука, то это поможет. В некоторых аппаратных
    комбинациях (подтверждено при использовании не-DMA DVD драйва с материнской
    платой ALi1541) использование RTC таймера приводит к "прыгающему"[skippy]
    проигрыванию. В этом случае рекомендуется использовать третий метод.
@@ -42,9 +34,4 @@
   <tt class="option">-softsleep</tt>. У него эффективность RTC, но он не использует
   RTC. С другой стороны, он сильнее использует CPU.
   </li></ul></div><p>
-</p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Замечание</h3><p><span class="bold"><strong>НИКОГДА не устанавливайте съюднутый
-по root'у исполняемый файл <span class="application">MPlayer</span>'а на
-многопользовательской системе!</strong></span>
-Это прямой путь к тому, что каждый будет root'ом.
-</p></div><p>
-</p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="subosd.html">Пред.</a> </td><td width="20%" align="center"><a accesskey="u" href="intro.html">Уровень выше</a></td><td width="40%" align="right"> <a accesskey="n" href="usage.html">След.</a></td></tr><tr><td width="40%" align="left" valign="top">1.4. Субтитры и OSD </td><td width="20%" align="center"><a accesskey="h" href="index.html">Начало</a></td><td width="40%" align="right" valign="top"> Глава 2. Использование</td></tr></table></div></body></html>
+</p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="fonts-osd.html">Пред.</a> </td><td width="20%" align="center"><a accesskey="u" href="install.html">Уровень выше</a></td><td width="40%" align="right"> <a accesskey="n" href="usage.html">След.</a></td></tr><tr><td width="40%" align="left" valign="top">2.6. Шрифты и OSD </td><td width="20%" align="center"><a accesskey="h" href="index.html">Начало</a></td><td width="40%" align="right" valign="top"> Глава 3. Использование</td></tr></table></div></body></html>

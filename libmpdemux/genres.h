@@ -9,8 +9,8 @@
  ***********************************
  *
  * Initially modified for use with MPlayer by Diego Biurrun on 2004-08-22
- * $Id: genres.h 13082 2004-08-22 14:43:42Z diego $
- * detailed CVS changelog at http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
+ * $Id: genres.h 18786 2006-06-22 13:34:00Z diego $
+ * detailed changelog at http://svn.mplayerhq.hu/mplayer/trunk/
  */
 
 

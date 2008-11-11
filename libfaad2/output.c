@@ -20,8 +20,8 @@
 ** forbidden.
 **
 ** Initially modified for use with MPlayer by Rich Felker on 2005/03/29
-** $Id: output.c 18142 2006-04-18 19:39:34Z rtognimp $
-** detailed CVS changelog at http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
+** $Id: output.c 18786 2006-06-22 13:34:00Z diego $
+** detailed changelog at http://svn.mplayerhq.hu/mplayer/trunk/
 **/
 
 #include "common.h"

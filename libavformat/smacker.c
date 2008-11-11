@@ -2,18 +2,20 @@
  * Smacker decoder
  * Copyright (c) 2006 Konstantin Shishkov.
  *
- * This library is free software; you can redistribute it and/or
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * FFmpeg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
@@ -22,7 +24,7 @@
  */
 
 #include "avformat.h"
-#include "avi.h"
+#include "riff.h"
 #include "bswap.h"
 
 #define SMACKER_PAL 0x01
@@ -329,15 +331,10 @@ static int smacker_read_close(AVFormatContext *s)
     if(smk->frm_flags)
         av_free(smk->frm_flags);
 
-    for(i=0;i<s->nb_streams;i++) {
-        AVStream *st = s->streams[i];
-        if(st->codec->extradata)
-            av_free(st->codec->extradata);
-    }
     return 0;
 }
 
-static AVInputFormat smacker_iformat = {
+AVInputFormat smacker_demuxer = {
     "smk",
     "Smacker Video",
     sizeof(SmackerContext),
@@ -346,9 +343,3 @@ static AVInputFormat smacker_iformat = {
     smacker_read_packet,
     smacker_read_close,
 };
-
-int smacker_init(void)
-{
-    av_register_input_format(&smacker_iformat);
-    return 0;
-}

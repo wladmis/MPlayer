@@ -1,4 +1,4 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>8.2. Videó kimenet tradícionális videó kártyákhoz</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.68.1"><link rel="start" href="index.html" title="MPlayer - The Movie Player"><link rel="up" href="video.html" title="8. fejezet - Videó kimeneti eszközök"><link rel="prev" href="mtrr.html" title="8.1. Az MTRR beállítása"><link rel="next" href="mpeg_decoders.html" title="8.3. MPEG dekóderek"><link rel="preface" href="howtoread.html" title="Hogyan olvasd ezt a dokumentációt"><link rel="chapter" href="intro.html" title="1. fejezet - Bevezetés"><link rel="chapter" href="install.html" title="2. fejezet - Telepítés"><link rel="chapter" href="usage.html" title="3. fejezet - Használat"><link rel="chapter" href="cd-dvd.html" title="4. fejezet - CD/DVD használat"><link rel="chapter" href="faq.html" title="5. fejezet - Gyakran ismételt kérdések"><link rel="chapter" href="containers.html" title="6. fejezet - Konténerek"><link rel="chapter" href="codecs.html" title="7. fejezet - Codec-ek"><link rel="chapter" href="video.html" title="8. fejezet - Videó kimeneti eszközök"><link rel="chapter" href="audio.html" title="9. fejezet - Audió kimeneti eszközök"><link rel="chapter" href="tv.html" title="10. fejezet - TV"><link rel="chapter" href="ports.html" title="11. fejezet - Portok"><link rel="chapter" href="mencoder.html" title="12. fejezet - A MEncoder használatának alapjai"><link rel="chapter" href="encoding-guide.html" title="13. fejezet - Kódolás a MEncoderrel"><link rel="appendix" href="mailinglists.html" title="A. függelék - Levelezési listák"><link rel="appendix" href="bugreports.html" title="B. függelék - Hogyan jelentsd a hibákat"><link rel="appendix" href="bugs.html" title="C. függelék - Ismert hibák"><link rel="appendix" href="skin.html" title="D. függelék - MPlayer skin formátum"><link rel="appendix" href="users-vs-dev.html" title="E. függelék - Fejleszt&#337;i panaszok"><link rel="subsection" href="output-trad.html#xv" title="8.2.1. Xv"><link rel="subsection" href="output-trad.html#dga" title="8.2.2. DGA"><link rel="subsection" href="output-trad.html#sdl" title="8.2.3. SDL"><link rel="subsection" href="output-trad.html#svgalib" title="8.2.4. SVGAlib"><link rel="subsection" href="output-trad.html#fbdev" title="8.2.5. Framebuffer kimenet (FBdev)"><link rel="subsection" href="output-trad.html#mga_vid" title="8.2.6. Matrox framebuffer (mga_vid)"><link rel="subsection" href="output-trad.html#tdfxfb" title="8.2.7. 3Dfx YUV támogatás"><link rel="subsection" href="output-trad.html#opengl" title="8.2.8. OpenGL kimenet"><link rel="subsection" href="output-trad.html#aalib" title="8.2.9. AAlib - szöveges módú megjelenítés"><link rel="subsection" href="output-trad.html#caca" title="8.2.10. libcaca - Színes ASCII Art függvénykönyvtár"><link rel="subsection" href="output-trad.html#vesa" title="8.2.11. VESA - kimenet a VESA BIOS-hoz"><link rel="subsection" href="output-trad.html#x11" title="8.2.12. X11"><link rel="subsection" href="output-trad.html#vidix" title="8.2.13. VIDIX"><link rel="subsection" href="output-trad.html#directfb" title="8.2.14. DirectFB"><link rel="subsection" href="output-trad.html#dfbmga" title="8.2.15. DirectFB/Matrox (dfbmga)"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">8.2. Videó kimenet tradícionális videó kártyákhoz</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="mtrr.html">El&#337;z&#337;</a> </td><th width="60%" align="center">8. fejezet - Videó kimeneti eszközök</th><td width="20%" align="right"> <a accesskey="n" href="mpeg_decoders.html">Következ&#337;</a></td></tr></table><hr></div><div class="sect1" lang="hu"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="output-trad"></a>8.2. Videó kimenet tradícionális videó kártyákhoz</h2></div></div></div><div class="sect2" lang="hu"><div class="titlepage"><div><div><h3 class="title"><a name="xv"></a>8.2.1. Xv</h3></div></div></div><p>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>8.2. Videó kimenet tradícionális videó kártyákhoz</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.68.1"><link rel="start" href="index.html" title="MPlayer - The Movie Player"><link rel="up" href="video.html" title="8. fejezet - Videó kimeneti eszközök"><link rel="prev" href="mtrr.html" title="8.1. Az MTRR beállítása"><link rel="next" href="mpeg_decoders.html" title="8.3. MPEG dekóderek"><link rel="preface" href="howtoread.html" title="Hogyan olvasd ezt a dokumentációt"><link rel="chapter" href="intro.html" title="1. fejezet - Bevezetés"><link rel="chapter" href="install.html" title="2. fejezet - Telepítés"><link rel="chapter" href="usage.html" title="3. fejezet - Használat"><link rel="chapter" href="cd-dvd.html" title="4. fejezet - CD/DVD használat"><link rel="chapter" href="faq.html" title="5. fejezet - Gyakran ismételt kérdések"><link rel="chapter" href="containers.html" title="6. fejezet - Konténerek"><link rel="chapter" href="codecs.html" title="7. fejezet - Codec-ek"><link rel="chapter" href="video.html" title="8. fejezet - Videó kimeneti eszközök"><link rel="chapter" href="audio.html" title="9. fejezet - Audió kimeneti eszközök"><link rel="chapter" href="tv.html" title="10. fejezet - TV"><link rel="chapter" href="radio.html" title="11. fejezet - Rádió"><link rel="chapter" href="ports.html" title="12. fejezet - Portok"><link rel="chapter" href="mencoder.html" title="13. fejezet - A MEncoder használatának alapjai"><link rel="chapter" href="encoding-guide.html" title="14. fejezet - Kódolás a MEncoderrel"><link rel="appendix" href="bugreports.html" title="A. függelék - Hogyan jelentsd a hibákat"><link rel="appendix" href="bugs.html" title="B. függelék - Ismert hibák"><link rel="appendix" href="skin.html" title="C. függelék - MPlayer skin formátum"><link rel="appendix" href="history.html" title="D. függelék - Történelem"><link rel="subsection" href="output-trad.html#xv" title="8.2.1. Xv"><link rel="subsection" href="output-trad.html#dga" title="8.2.2. DGA"><link rel="subsection" href="output-trad.html#sdl" title="8.2.3. SDL"><link rel="subsection" href="output-trad.html#svgalib" title="8.2.4. SVGAlib"><link rel="subsection" href="output-trad.html#fbdev" title="8.2.5. Framebuffer kimenet (FBdev)"><link rel="subsection" href="output-trad.html#mga_vid" title="8.2.6. Matrox framebuffer (mga_vid)"><link rel="subsection" href="output-trad.html#tdfxfb" title="8.2.7. 3Dfx YUV támogatás"><link rel="subsection" href="output-trad.html#opengl" title="8.2.8. OpenGL kimenet"><link rel="subsection" href="output-trad.html#aalib" title="8.2.9. AAlib - szöveges módú megjelenítés"><link rel="subsection" href="output-trad.html#caca" title="8.2.10. libcaca - Színes ASCII Art függvénykönyvtár"><link rel="subsection" href="output-trad.html#vesa" title="8.2.11. VESA - kimenet a VESA BIOS-hoz"><link rel="subsection" href="output-trad.html#x11" title="8.2.12. X11"><link rel="subsection" href="output-trad.html#vidix" title="8.2.13. VIDIX"><link rel="subsection" href="output-trad.html#directfb" title="8.2.14. DirectFB"><link rel="subsection" href="output-trad.html#dfbmga" title="8.2.15. DirectFB/Matrox (dfbmga)"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">8.2. Videó kimenet tradícionális videó kártyákhoz</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="mtrr.html">El&#337;z&#337;</a> </td><th width="60%" align="center">8. fejezet - Videó kimeneti eszközök</th><td width="20%" align="right"> <a accesskey="n" href="mpeg_decoders.html">Következ&#337;</a></td></tr></table><hr></div><div class="sect1" lang="hu"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="output-trad"></a>8.2. Videó kimenet tradícionális videó kártyákhoz</h2></div></div></div><div class="sect2" lang="hu"><div class="titlepage"><div><div><h3 class="title"><a name="xv"></a>8.2.1. Xv</h3></div></div></div><p>
 XFree86 4.0.2 vagy újabb alatt használhatod a kártyád YUV rutinjait
 az XVideo kiterjesztés használatával. Ez az, amit a '<tt class="option">-vo xv</tt>'
 kapcsoló használ. Ez a vezérl&#337; támogatja a
@@ -84,8 +84,7 @@ Jelenleg nem tisztázott, hogy mely Savage modellekb&#337;l hiányzik a YV12 támog
 konvertál a vezérl&#337; (lassú). Ha a kártyára gyanakodsz, szerezz be egy újabb vezérl&#337;t,
 vagy udvariasan kérj az MPlayer-users levelezési listán egy MMX/3DNow! támogatású vezérl&#337;t.
 </p></div></div><div class="sect3" lang="hu"><div class="titlepage"><div><div><h4 class="title"><a name="nvidia"></a>8.2.1.3. nVidia kártyák</h4></div></div></div><p>
-Az nVidia soha nem volt egy jó választás Linux alatt (az nVidia szerint ez
-<a href="nvidia-opinions.html" title="E.3. nVidia">nem igaz</a>)... Az XFree86
+Az nVidia nem mindig a legjobb választás Linux alatt... Az XFree86
 nyílt forráskódú vezérl&#337;je támogatja a legtöbb kártyát, de a legtöbb esetben a
 bináris, zárt forrású nVidia vezérl&#337;t kell használnod, ami elérhet&#337;
 az <a href="http://www.nvidia.com/object/linux.html" target="_top">nVidia weboldalán</a>.
@@ -347,27 +346,7 @@ rendszer miatt) vagy az audió késett.
 </p><p>
 Az SDL videó kimenet támogatja a feliratok megjelenítését a film alatt, a
 (ha van) fekete soron.
-</p><div class="variablelist"><p class="title"><b>Számos parancssori kapcsoló van az SDL-hez:</b></p><dl><dt><span class="term"><tt class="option">-vo sdl:driver=<em class="replaceable"><code>név</code></em></tt></span></dt><dd>
-    el&#337;írja a használni kívánt SDL videó vezérl&#337;t (pl. <code class="literal">aalib</code>,
-    <code class="literal">dga</code>, <code class="literal">x11</code>)
-  </dd><dt><span class="term"><tt class="option">-ao sdl:<em class="replaceable"><code>name</code></em></tt></span></dt><dd>
-    el&#337;írja a használni kívánt SDL audió vezérl&#337;t (pl. <code class="literal">dsp</code>,
-    <code class="literal">esd</code>, <code class="literal">artsc</code>)
-  </dd><dt><span class="term"><tt class="option">-noxv</tt></span></dt><dd>
-    letiltja a XVideo hardveres gyorsítását
-  </dd><dt><span class="term"><tt class="option">-forcexv</tt></span></dt><dd>
-    megpróbálja kikényszeríteni az XVideo gyorsítást
-  </dd></dl></div><div class="table"><a name="id2565046"></a><p class="title"><b>8.1. táblázat - Csak SDL alatt használható billenty&#369;k</b></p><table summary="Csak SDL alatt használható billenty&#369;k" border="1"><colgroup><col><col></colgroup><thead><tr><th>Gomb</th><th>Tevékenység</th></tr></thead><tbody><tr><td><span class="keycap"><b>c</b></span></td><td>
-    váltás az elérhet&#337; teljes képerny&#337;s módok között
-    </td></tr><tr><td><span class="keycap"><b>n</b></span></td><td>
-    váltás normál módra
-    </td></tr></tbody></table></div><div class="itemizedlist"><p class="title"><b>Ismert hibák:</b></p><ul type="disc"><li>
-  Az sdl:driver=aalib konzol vezérl&#337; alatt leütött billenty&#369;k a végtelenségig
-  ismétl&#337;dnek. (Használd a <tt class="option">-vo aa</tt>-t!) Ez egy SDL hiba, nem
-  tudunk segíteni rajta (tesztelve SDL 1.2.1-el).
-  </li><li>
-  NE HASZNÁLD AZ SDL-T GUI-VAL! Nem úgy m&#369;ködik, ahogy kellene neki.
-  </li></ul></div></div><div class="sect2" lang="hu"><div class="titlepage"><div><div><h3 class="title"><a name="svgalib"></a>8.2.4. SVGAlib</h3></div></div></div><p><b>TELEPÍTÉS. </b>
+</p></div><div class="sect2" lang="hu"><div class="titlepage"><div><div><h3 class="title"><a name="svgalib"></a>8.2.4. SVGAlib</h3></div></div></div><p><b>TELEPÍTÉS. </b>
 Telepítened kell az svgalib-et és a fejleszt&#337;i csomagjait ahhoz, hogy az
 <span class="application">MPlayer</span> elkészítse az SVGAlib vezérl&#337;jét (automatikusan
 felismeri, de lehet kényszeríteni is rá) és ne felejtsd el átírni a
@@ -463,13 +442,13 @@ framebufferrel és ne is kérd, hogy m&#369;ködjön, mivel ez nem az
 <span class="application">MPlayer</span> korlátja.
 </p></div></div><div class="sect2" lang="hu"><div class="titlepage"><div><div><h3 class="title"><a name="mga_vid"></a>8.2.6. Matrox framebuffer (mga_vid)</h3></div></div></div><p>
 Ez a rész a Matrox G200/G400/G450/G550 BES (Back-End Scaler) támogatásról
-szól, az mga_vid kernel vezérl&#337;r&#337;l. Jelenleg A'rpi fejleszti, van
-benne hardveres VSYNC támogatás tripla buffereléssel. M&#369;ködik mind
+szól, az <code class="systemitem">mga_vid</code> kernel vezérl&#337;r&#337;l.
+Van benne hardveres VSYNC támogatás tripla buffereléssel. M&#369;ködik mind
 framebufferes konzolon, mind X alatt.
 </p><div class="warning" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Figyelem</h3><p>
 Mindez csak Linux alatt! Nem-Linux (FreeBSD-n tesztelve) rendszereken a
 <a href="output-trad.html#vidix" title="8.2.13. VIDIX">VIDIX</a>-et használhatod helyette!
-</p></div><div class="procedure"><a name="id2565628"></a><p class="title"><b>Telepítés:</b></p><ol type="1"><li><p>
+</p></div><div class="procedure"><a name="id2561417"></a><p class="title"><b>Telepítés:</b></p><ol type="1"><li><p>
   A használatához el&#337;ször <tt class="filename">mga_vid.o</tt>-t kell forgatnod:
   </p><pre class="screen">
 cd drivers
@@ -831,11 +810,6 @@ csinálj ilyet, ha teljesen biztos vagy benne, hogy m&#369;ködik és az
 kérjük jelezd ezt a fejleszt&#337;knek is. A helyes módszer a VIDIX argumentumok
 nélküli használata, és így az automatikus detektálás engedélyezése.
 </p><p>
-A VIDIX egy új technológia és eléggé elképzelhet&#337;, hogy a te rendszereden
-nem fog m&#369;ködni. Ebben az esetben az egyetlen megoldás, ha portolod
-(leginkább a libdha-t). De van remény, hogy m&#369;ködni fog azokon a rendszereken,
-amiken az X11 megy.
-</p><p>
 Mivel a VIDIX-nek direkt hardver elérés kell, futtathatod root-ként vagy
 beállíthatod a SUID bit-et az <span class="application">MPlayer</span> binárisán
 (<span class="bold"><strong>Figyelem: Ez biztonsági kockázatot jelent!</strong></span>).
@@ -887,30 +861,11 @@ A vezérl&#337;t
 Habár van vezérl&#337; a 3DLabs GLINT R3 és Permedia3 chip-ekhez, senki sem
 tesztelte le, így örömmel fogadjuk a jelentéseket.
 </p></div><div class="sect3" lang="hu"><div class="titlepage"><div><div><h4 class="title"><a name="vidix-nvidia"></a>8.2.13.5. nVidia kártya</h4></div></div></div><p>
-Van egy eléggé új nVidia vezérl&#337;, tudvalev&#337;leg m&#369;ködik a Riva
-128, TNT és GeForce2 chipset-ekkel, de a többi esetében is jelezték, hogy megy.
-</p><div class="itemizedlist"><p class="title"><b>KORLÁTOZÁSOK</b></p><ul type="disc" compact><li><p>
-  Ajánlatos a bináris nVidia vezérl&#337;k használata az X-szel, miel&#337;tt ezen VIDIX
-  vezérl&#337;t használnád, mert néhány regiszter, melyek inicializálása szükséges,
-  még nem lettek teljesen felderítve, így valószín&#369;leg sikertelen lesz a Nyílt
-  Forráskódú XFree86 <tt class="filename">nv.o</tt> vezérl&#337;jével.
-  </p></li><li><p>
-  Jelenleg csak az UYVY színter&#369; kimenetre képes codec-ek m&#369;ködnek együtt ezzel
-  ezzel a vezérl&#337;vel. Sajnos ez kizár minden egyes dekódolót a
-  <code class="systemitem">libavcodec</code> családból. Emiatt a
-  következ&#337; használható, népszer&#369; codec-ek maradnak:
-  <code class="systemitem">cvid, divxds, xvid, divx4, wmv7, wmv8</code> és pár
-  egyéb. Kérjük vedd figyelembe, hogy ez csak ideiglenes kényelmetlenség.
-  A használati szintaxis a következ&#337;:
-  </p><pre class="screen">mplayer -vf format=uyvy -vc divxds <em class="replaceable"><code>divx3file.avi</code></em></pre><p>
-  </p></li></ul></div><p>
   Egy egyedülálló tulajdonsága az nvidia_vid vezérl&#337;nek a
   <span class="bold"><strong>sima, egyszer&#369;, csak szöveges konzolon</strong></span> történ&#337;
   videó megjelenítés - framebuffer vagy X varázslag és egyebek nélkül. Ehhez a
   <tt class="option">cvidix</tt> videó kimenetet kell használni, amint az itt látható:
-  </p><pre class="screen">mplayer -vf format=uyvy -vc divxds -vo cvidix <em class="replaceable"><code>example.avi</code></em></pre><p>
-</p><p>
-Várjuk a visszajelzéseket!
+  </p><pre class="screen">mplayer -vo cvidix <em class="replaceable"><code>pelda.avi</code></em></pre><p>
 </p></div><div class="sect3" lang="hu"><div class="titlepage"><div><div><h4 class="title"><a name="vidix-sis"></a>8.2.13.6. SiS kártyák</h4></div></div></div><p>
 Ez nagyon kísérleti kód, csakúgy mint az nvidia_vid.
 </p><p>

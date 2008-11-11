@@ -1,3 +1,23 @@
+/*
+ * copyright (c) 2006 Michael Niedermayer <michaelni@gmx.at>
+ *
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * FFmpeg is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with FFmpeg; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ */
+
 #include "common.h"
 #include "crc.h"
 
@@ -33,10 +53,12 @@ int av_crc_init(AVCRC *ctx, int le, int bits, uint32_t poly, int ctx_size){
         }
     }
     ctx[256]=1;
+#ifndef CONFIG_SMALL
     if(ctx_size >= sizeof(AVCRC)*1024)
         for (i = 0; i < 256; i++)
             for(j=0; j<3; j++)
                 ctx[256*(j+1) + i]= (ctx[256*j + i]>>8) ^ ctx[ ctx[256*j + i]&0xFF ];
+#endif
 
     return 0;
 }
@@ -44,6 +66,7 @@ int av_crc_init(AVCRC *ctx, int le, int bits, uint32_t poly, int ctx_size){
 uint32_t av_crc(const AVCRC *ctx, uint32_t crc, const uint8_t *buffer, size_t length){
     const uint8_t *end= buffer+length;
 
+#ifndef CONFIG_SMALL
     if(!ctx[256])
         while(buffer<end-3){
             crc ^= le2me_32(*(uint32_t*)buffer); buffer+=4;
@@ -52,6 +75,7 @@ uint32_t av_crc(const AVCRC *ctx, uint32_t crc, const uint8_t *buffer, size_t le
                   ^ctx[1*256 + ((crc>>16)&0xFF)]
                   ^ctx[0*256 + ((crc>>24)     )];
         }
+#endif
     while(buffer<end)
         crc = ctx[((uint8_t)crc) ^ *buffer++] ^ (crc >> 8);
 

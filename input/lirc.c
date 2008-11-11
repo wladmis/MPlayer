@@ -1,8 +1,6 @@
 
 #include "config.h"
 
-#ifdef HAVE_LIRC
-
 #include <lirc/lirc_client.h>
 #include <errno.h>
 #include <stdio.h>
@@ -25,14 +23,14 @@ int
 mp_input_lirc_init(void) {
   int lirc_sock;
 
-  mp_msg(MSGT_LIRC,MSGL_INFO,MSGTR_SettingUpLIRC);
+  mp_msg(MSGT_LIRC,MSGL_V,MSGTR_SettingUpLIRC);
   if((lirc_sock=lirc_init("mplayer",1))==-1){
-    mp_msg(MSGT_LIRC,MSGL_ERR,MSGTR_LIRCopenfailed MSGTR_LIRCdisabled);
+    mp_msg(MSGT_LIRC,MSGL_ERR,MSGTR_LIRCopenfailed);
     return -1;
   }
 
   if(lirc_readconfig( lirc_configfile,&lirc_config,NULL )!=0 ){
-    mp_msg(MSGT_LIRC,MSGL_ERR,MSGTR_LIRCcfgerr MSGTR_LIRCdisabled,
+    mp_msg(MSGT_LIRC,MSGL_ERR,MSGTR_LIRCcfgerr,
 		    lirc_configfile == NULL ? "~/.lircrc" : lirc_configfile);
     lirc_deinit();
     return -1;
@@ -115,5 +113,3 @@ mp_input_lirc_close(int fd) {
   lirc_freeconfig(lirc_config);
   lirc_deinit();
 }
-
-#endif

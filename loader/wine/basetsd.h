@@ -4,9 +4,9 @@
  */
 
 /*
- * Modified for use with MPlayer, detailed CVS changelog at
- * http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
- * $Id: basetsd.h 15692 2005-06-07 13:54:17Z faust3 $
+ * Modified for use with MPlayer, detailed changelog at
+ * http://svn.mplayerhq.hu/mplayer/trunk/
+ * $Id: basetsd.h 18786 2006-06-22 13:34:00Z diego $
  */
 
 #ifndef __WINE_BASETSD_H

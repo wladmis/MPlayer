@@ -21,8 +21,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  * Modified for use with MPlayer, see libmpeg-0.4.0.diff for the exact changes.
- * detailed CVS changelog at http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
- * $Id: mpeg2.h 14733 2005-02-19 02:32:12Z diego $
+ * detailed changelog at http://svn.mplayerhq.hu/mplayer/trunk/
+ * $Id: mpeg2.h 18786 2006-06-22 13:34:00Z diego $
  */
 
 #ifndef MPEG2_H
@@ -159,6 +159,7 @@ void mpeg2_custom_fbuf (mpeg2dec_t * mpeg2dec, int custom_fbuf);
 #define MPEG2_ACCEL_X86_MMX 1
 #define MPEG2_ACCEL_X86_3DNOW 2
 #define MPEG2_ACCEL_X86_MMXEXT 4
+#define MPEG2_ACCEL_X86_SSE2 8
 #define MPEG2_ACCEL_PPC_ALTIVEC 1
 #define MPEG2_ACCEL_ALPHA 1
 #define MPEG2_ACCEL_ALPHA_MVI 2

@@ -1,7 +1,7 @@
 /*
- * Modified for use with MPlayer, for details see the CVS changelog at
- * http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
- * $Id: decode_i586.c 16990 2005-11-15 18:14:07Z diego $
+ * Modified for use with MPlayer, for details see the changelog at
+ * http://svn.mplayerhq.hu/mplayer/trunk/
+ * $Id: decode_i586.c 18786 2006-06-22 13:34:00Z diego $
  */
 
 /*
@@ -27,7 +27,7 @@
 *
 * Stefan Bieschewski <stb@acm.org>
 *
-* $Id: decode_i586.c 16990 2005-11-15 18:14:07Z diego $
+* $Id: decode_i586.c 18786 2006-06-22 13:34:00Z diego $
 */
 #include "config.h"
 #include "mangle.h"

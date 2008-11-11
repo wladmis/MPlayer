@@ -1,9 +1,8 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>13.2. Mit kezdjünk a telecine-nel és az átlapolással NTSC DVD-ken</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.68.1"><link rel="start" href="index.html" title="MPlayer - The Movie Player"><link rel="up" href="encoding-guide.html" title="13. fejezet - Kódolás a MEncoderrel"><link rel="prev" href="menc-feat-dvd-mpeg4.html" title='13.1. Nagyon jó min&#337;ség&#369; MPEG-4 ("DivX") rip készítése DVD filmb&#337;l'><link rel="next" href="menc-feat-enc-libavcodec.html" title="13.3. Kódolás a libavcodec
-  codec családdal"><link rel="preface" href="howtoread.html" title="Hogyan olvasd ezt a dokumentációt"><link rel="chapter" href="intro.html" title="1. fejezet - Bevezetés"><link rel="chapter" href="install.html" title="2. fejezet - Telepítés"><link rel="chapter" href="usage.html" title="3. fejezet - Használat"><link rel="chapter" href="cd-dvd.html" title="4. fejezet - CD/DVD használat"><link rel="chapter" href="faq.html" title="5. fejezet - Gyakran ismételt kérdések"><link rel="chapter" href="containers.html" title="6. fejezet - Konténerek"><link rel="chapter" href="codecs.html" title="7. fejezet - Codec-ek"><link rel="chapter" href="video.html" title="8. fejezet - Videó kimeneti eszközök"><link rel="chapter" href="audio.html" title="9. fejezet - Audió kimeneti eszközök"><link rel="chapter" href="tv.html" title="10. fejezet - TV"><link rel="chapter" href="ports.html" title="11. fejezet - Portok"><link rel="chapter" href="mencoder.html" title="12. fejezet - A MEncoder használatának alapjai"><link rel="chapter" href="encoding-guide.html" title="13. fejezet - Kódolás a MEncoderrel"><link rel="appendix" href="mailinglists.html" title="A. függelék - Levelezési listák"><link rel="appendix" href="bugreports.html" title="B. függelék - Hogyan jelentsd a hibákat"><link rel="appendix" href="bugs.html" title="C. függelék - Ismert hibák"><link rel="appendix" href="skin.html" title="D. függelék - MPlayer skin formátum"><link rel="appendix" href="users-vs-dev.html" title="E. függelék - Fejleszt&#337;i panaszok"><link rel="subsection" href="menc-feat-telecine.html#menc-feat-telecine-intro" title="13.2.1. Bevezetés"><link rel="subsection" href="menc-feat-telecine.html#menc-feat-telecine-ident" title="13.2.2. Hogyan állapítható meg egy videó típusa"><link rel="subsection" href="menc-feat-telecine.html#menc-feat-telecine-encode" title="13.2.3. Hogyan lehet elkódolni ezen kategóriákat"><link rel="subsection" href="menc-feat-telecine.html#menc-feat-telecine-footnotes" title="13.2.4. Lábjegyzet"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">13.2. Mit kezdjünk a telecine-nel és az átlapolással NTSC DVD-ken</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="menc-feat-dvd-mpeg4.html">El&#337;z&#337;</a> </td><th width="60%" align="center">13. fejezet - Kódolás a <span class="application">MEncoder</span>rel</th><td width="20%" align="right"> <a accesskey="n" href="menc-feat-enc-libavcodec.html">Következ&#337;</a></td></tr></table><hr></div><div class="sect1" lang="hu"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="menc-feat-telecine"></a>13.2. Mit kezdjünk a telecine-nel és az átlapolással NTSC DVD-ken</h2></div></div></div><div class="sect2" lang="hu"><div class="titlepage"><div><div><h3 class="title"><a name="menc-feat-telecine-intro"></a>13.2.1. Bevezetés</h3></div></div></div><p><b>Mi az a telecine? </b>
-  Gondolom azért kerested meg ezt a részt, mert nem sok mindent értesz abból,
-  ami ebben a dokumentumban le van írva:
-  <a href="http://www.divx.com/support/guides/guide.php?gid=10" target="_top">http://www.divx.com/support/guides/guide.php?gid=10</a>
-  Ez az URL egy érthet&#337; és meglehet&#337;sen átfogó leírás arról, hogy mi is az
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>14.2. Mit kezdjünk a telecine-nel és az átlapolással NTSC DVD-ken</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.68.1"><link rel="start" href="index.html" title="MPlayer - The Movie Player"><link rel="up" href="encoding-guide.html" title="14. fejezet - Kódolás a MEncoderrel"><link rel="prev" href="menc-feat-dvd-mpeg4.html" title='14.1. Nagyon jó min&#337;ség&#369; MPEG-4 ("DivX") rip készítése DVD filmb&#337;l'><link rel="next" href="menc-feat-enc-libavcodec.html" title="14.3. Kódolás a libavcodec
+  codec családdal"><link rel="preface" href="howtoread.html" title="Hogyan olvasd ezt a dokumentációt"><link rel="chapter" href="intro.html" title="1. fejezet - Bevezetés"><link rel="chapter" href="install.html" title="2. fejezet - Telepítés"><link rel="chapter" href="usage.html" title="3. fejezet - Használat"><link rel="chapter" href="cd-dvd.html" title="4. fejezet - CD/DVD használat"><link rel="chapter" href="faq.html" title="5. fejezet - Gyakran ismételt kérdések"><link rel="chapter" href="containers.html" title="6. fejezet - Konténerek"><link rel="chapter" href="codecs.html" title="7. fejezet - Codec-ek"><link rel="chapter" href="video.html" title="8. fejezet - Videó kimeneti eszközök"><link rel="chapter" href="audio.html" title="9. fejezet - Audió kimeneti eszközök"><link rel="chapter" href="tv.html" title="10. fejezet - TV"><link rel="chapter" href="radio.html" title="11. fejezet - Rádió"><link rel="chapter" href="ports.html" title="12. fejezet - Portok"><link rel="chapter" href="mencoder.html" title="13. fejezet - A MEncoder használatának alapjai"><link rel="chapter" href="encoding-guide.html" title="14. fejezet - Kódolás a MEncoderrel"><link rel="appendix" href="bugreports.html" title="A. függelék - Hogyan jelentsd a hibákat"><link rel="appendix" href="bugs.html" title="B. függelék - Ismert hibák"><link rel="appendix" href="skin.html" title="C. függelék - MPlayer skin formátum"><link rel="appendix" href="history.html" title="D. függelék - Történelem"><link rel="subsection" href="menc-feat-telecine.html#menc-feat-telecine-intro" title="14.2.1. Bevezetés"><link rel="subsection" href="menc-feat-telecine.html#menc-feat-telecine-ident" title="14.2.2. Hogyan állapítható meg egy videó típusa"><link rel="subsection" href="menc-feat-telecine.html#menc-feat-telecine-encode" title="14.2.3. Hogyan lehet elkódolni ezen kategóriákat"><link rel="subsection" href="menc-feat-telecine.html#menc-feat-telecine-footnotes" title="14.2.4. Lábjegyzet"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">14.2. Mit kezdjünk a telecine-nel és az átlapolással NTSC DVD-ken</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="menc-feat-dvd-mpeg4.html">El&#337;z&#337;</a> </td><th width="60%" align="center">14. fejezet - Kódolás a <span class="application">MEncoder</span>rel</th><td width="20%" align="right"> <a accesskey="n" href="menc-feat-enc-libavcodec.html">Következ&#337;</a></td></tr></table><hr></div><div class="sect1" lang="hu"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="menc-feat-telecine"></a>14.2. Mit kezdjünk a telecine-nel és az átlapolással NTSC DVD-ken</h2></div></div></div><div class="sect2" lang="hu"><div class="titlepage"><div><div><h3 class="title"><a name="menc-feat-telecine-intro"></a>14.2.1. Bevezetés</h3></div></div></div><p><b>Mi az a telecine? </b>
+  Ha nem érted teljesen, ami ebben a dokumentumban le van írva, olvasd el a
+  <a href="http://en.wikipedia.org/wiki/Telecine" target="_top">Wikipedia telecine szócikkét</a>.
+  Ez egy érthet&#337; és meglehet&#337;sen átfogó leírás arról, hogy mi is az
   a telecine.
 </p><p><b>Megjegyzés a számokhoz. </b>
   Sok dokumentáció, beleértve a fent belinkeltet is, az NTSC videó mez&#337;
@@ -68,8 +67,8 @@
   maximális min&#337;ség eléréséhez nem tartozik ezen dokumentum célkit&#369;zései közé.
   </p></li><li><p>
   Sok megjegyzés vonatkozik erre a leírásra, melyek így vannak jelölve:
-  <a href="menc-feat-telecine.html#menc-feat-telecine-footnotes" title="13.2.4. Lábjegyzet">[1]</a>
-  </p></li></ul></div></div><div class="sect2" lang="hu"><div class="titlepage"><div><div><h3 class="title"><a name="menc-feat-telecine-ident"></a>13.2.2. Hogyan állapítható meg egy videó típusa</h3></div></div></div><div class="sect3" lang="hu"><div class="titlepage"><div><div><h4 class="title"><a name="menc-feat-telecine-ident-progressive"></a>13.2.2.1. Progresszív</h4></div></div></div><p>
+  <a href="menc-feat-telecine.html#menc-feat-telecine-footnotes" title="14.2.4. Lábjegyzet">[1]</a>
+  </p></li></ul></div></div><div class="sect2" lang="hu"><div class="titlepage"><div><div><h3 class="title"><a name="menc-feat-telecine-ident"></a>14.2.2. Hogyan állapítható meg egy videó típusa</h3></div></div></div><div class="sect3" lang="hu"><div class="titlepage"><div><div><h4 class="title"><a name="menc-feat-telecine-ident-progressive"></a>14.2.2.1. Progresszív</h4></div></div></div><p>
   A progresszív videót eredetileg 24000/1001 fps-sel rögzítették és változtatás
   nélkül tárolják a DVD-n.
 </p><p>
@@ -103,7 +102,7 @@
 </p><p>
   Néha a progresszív videóra "soft-telecine"-ként hivatkoznak,
   mert a DVD lejátszónak kell ezt telecine-elnie.
-</p></div><div class="sect3" lang="hu"><div class="titlepage"><div><div><h4 class="title"><a name="menc-feat-telecine-ident-telecined"></a>13.2.2.2. Telecine-lt</h4></div></div></div><p>
+</p></div><div class="sect3" lang="hu"><div class="titlepage"><div><div><h4 class="title"><a name="menc-feat-telecine-ident-telecined"></a>14.2.2.2. Telecine-lt</h4></div></div></div><p>
   A telecine-lt videót eredetileg 24000/1001 fps-sel vették fel, de telecine-lve lett
   a DVD-re írás <span class="emphasis"><em>el&#337;tt</em></span>.
 </p><p>
@@ -140,7 +139,7 @@
   Ennek a technikának megvan az az el&#337;nye, hogy nem kell a forrást nézned
   az azonosításhoz, ami akkor jó, ha automatizálni szeretnéd a kódolási
   folyamatot vagy távolról, lassú kapcsolaton keresztül szeretnéd megcsinálni.
-</p></div><div class="sect3" lang="hu"><div class="titlepage"><div><div><h4 class="title"><a name="menc-feat-telecine-ident-interlaced"></a>13.2.2.3. Átlapolt</h4></div></div></div><p>
+</p></div><div class="sect3" lang="hu"><div class="titlepage"><div><div><h4 class="title"><a name="menc-feat-telecine-ident-interlaced"></a>14.2.2.3. Átlapolt</h4></div></div></div><p>
   Az átlapolt videót eredetileg 60000/1001 mez&#337; per másodperc sebességgel filmezték
   és 30000/1001 képkocka per másodperccel került fel a DVD-re. Az átlapolási effektus
   (gyakran "combing"-nak hívják) a mez&#337; párok képkockává történ&#337;
@@ -153,7 +152,7 @@
 </p><p>
   Ha egy átlapolt videót közelebbr&#337;l megnézel képkocka-léptetéssel a
   <span class="keycap"><b>.</b></span> gombot nyomogatva, megláthatod, hogy minden egyes képkocka átlapolt.
-</p></div><div class="sect3" lang="hu"><div class="titlepage"><div><div><h4 class="title"><a name="menc-feat-telecine-ident-mixedpt"></a>13.2.2.4. Kevert progresszív és telecine</h4></div></div></div><p>
+</p></div><div class="sect3" lang="hu"><div class="titlepage"><div><div><h4 class="title"><a name="menc-feat-telecine-ident-mixedpt"></a>14.2.2.4. Kevert progresszív és telecine</h4></div></div></div><p>
   Az összes "kevert progresszív és telecine" videót eredetileg
   24000/1001 képkocka per másodperccel rögzítették, de egyes részei utólag
   telecine-lve lettek.
@@ -166,18 +165,18 @@
 </p><p>
   Nézd meg a "30000/1001 fps NTSC" részeket, és meggy&#337;z&#337;dhetsz róla,
   hogy telecine-ltek, nem csak átlapoltak.
-</p></div><div class="sect3" lang="hu"><div class="titlepage"><div><div><h4 class="title"><a name="menc-feat-telecine-ident-mixedpi"></a>13.2.2.5. Kevert progresszív és átlapolt</h4></div></div></div><p>
+</p></div><div class="sect3" lang="hu"><div class="titlepage"><div><div><h4 class="title"><a name="menc-feat-telecine-ident-mixedpi"></a>14.2.2.5. Kevert progresszív és átlapolt</h4></div></div></div><p>
   "Kevert progresszív és átlapolt" tartalomnál a progresszív
   és az átlapolt videót összeillesztették.
 </p><p>
   Ez a kategória ugyan úgy viselkedik, mint a "kevert progresszív és telecine",
   egészen addig, amíg meg nem vizsgálod a 30000/1001 fps-es részeket és észre
   nem veszed, hogy nincs bennük telecine minta.
-</p></div></div><div class="sect2" lang="hu"><div class="titlepage"><div><div><h3 class="title"><a name="menc-feat-telecine-encode"></a>13.2.3. Hogyan lehet elkódolni ezen kategóriákat</h3></div></div></div><p>
+</p></div></div><div class="sect2" lang="hu"><div class="titlepage"><div><div><h3 class="title"><a name="menc-feat-telecine-encode"></a>14.2.3. Hogyan lehet elkódolni ezen kategóriákat</h3></div></div></div><p>
   Ahogy említettem az elején, például a <span class="application">MEncoder</span>
   alábbi parancssorai <span class="bold"><strong>nem</strong></span> igazán használhatóak;
   csak demonstrálják a minimum paramétereket az egyes kategóriák megfelel&#337; kódolásához.
-</p><div class="sect3" lang="hu"><div class="titlepage"><div><div><h4 class="title"><a name="menc-feat-telecine-encode-progressive"></a>13.2.3.1. Progresszív</h4></div></div></div><p>
+</p><div class="sect3" lang="hu"><div class="titlepage"><div><div><h4 class="title"><a name="menc-feat-telecine-encode-progressive"></a>14.2.3.1. Progresszív</h4></div></div></div><p>
   A progresszív videóhoz nem kell semmilyen különleges sz&#369;rés. Az egyetlen
   paraméterm, amit biztosan használnod kell, az a
   <tt class="option">-ofps 24000/1001</tt>. Egyébként a <span class="application">MEncoder</span>
@@ -188,17 +187,17 @@
   Gyakran az az eset áll fenn, hogy a videó progresszívnek t&#369;nik, de valójában
   nagyon rövid telecine-s részek vannak belekeverve. Ha nem vagy biztos
   a dolgodban, a legbiztonságosabb, ha
-  <a href="menc-feat-telecine.html#menc-feat-telecine-encode-mixedpt" title="13.2.3.4. Kevert progresszív és telecine">kevert progresszív és telecine-lt</a>
+  <a href="menc-feat-telecine.html#menc-feat-telecine-encode-mixedpt" title="14.2.3.4. Kevert progresszív és telecine">kevert progresszív és telecine-lt</a>
   videóként kezeled. A teljesítményvesztés kicsi
-  <a href="menc-feat-telecine.html#menc-feat-telecine-footnotes" title="13.2.4. Lábjegyzet">[3]</a>.
-</p></div><div class="sect3" lang="hu"><div class="titlepage"><div><div><h4 class="title"><a name="menc-feat-telecine-encode-telecined"></a>13.2.3.2. Telecine-lt</h4></div></div></div><p>
+  <a href="menc-feat-telecine.html#menc-feat-telecine-footnotes" title="14.2.4. Lábjegyzet">[3]</a>.
+</p></div><div class="sect3" lang="hu"><div class="titlepage"><div><div><h4 class="title"><a name="menc-feat-telecine-encode-telecined"></a>14.2.3.2. Telecine-lt</h4></div></div></div><p>
   A telecine visszafordítható, hogy megkapd az eredeti 24000/1001-es
   tartalmat, egy inverz-telecine-nek nevezett eljárással.
   Az <span class="application">MPlayer</span> számos sz&#369;r&#337;vel rendelkezik ennek
   az elvégzéséhez; a legjobb sz&#369;r&#337; a <tt class="option">pullup</tt> le van írva
-  a <a href="menc-feat-telecine.html#menc-feat-telecine-encode-mixedpt" title="13.2.3.4. Kevert progresszív és telecine">kevert progresszív és telecine</a>
+  a <a href="menc-feat-telecine.html#menc-feat-telecine-encode-mixedpt" title="14.2.3.4. Kevert progresszív és telecine">kevert progresszív és telecine</a>
   részben.
-</p></div><div class="sect3" lang="hu"><div class="titlepage"><div><div><h4 class="title"><a name="menc-feat-telecine-encode-interlaced"></a>13.2.3.3. Átlapolt</h4></div></div></div><p>
+</p></div><div class="sect3" lang="hu"><div class="titlepage"><div><div><h4 class="title"><a name="menc-feat-telecine-encode-interlaced"></a>14.2.3.3. Átlapolt</h4></div></div></div><p>
   A legtöbb gyakorlati esetben nem lehetséges a teljes progresszív videó
   visszanyerése az átlapolt tartalomból. Az egyetlen út ehhez a függ&#337;leges
   felbontás felének elvesztése nélkül a frameráta megduplázása és
@@ -212,7 +211,7 @@
   paramétere speciálisan az átlapolt videó tárolásának egy kicsit jobb
   kezeléséhez: <tt class="option"> ildct</tt> és <tt class="option">ilme</tt>. Az
   <tt class="option">mbd=2</tt> használata is javasolt
-  <a href="menc-feat-telecine.html#menc-feat-telecine-footnotes" title="13.2.4. Lábjegyzet">[2] </a>, mert ez a
+  <a href="menc-feat-telecine.html#menc-feat-telecine-footnotes" title="14.2.4. Lábjegyzet">[2] </a>, mert ez a
   makroblokkokat nem-átlapoltként fogja elkódolni azokon a helyeken, ahol
   nincs mozgás. Ügyelj rá, hogy itt a <tt class="option">-ofps</tt> NEM kell.
 
@@ -225,7 +224,7 @@
   MPlayer levelezési listáin</a> a sok beszélgetés között, ami a különböz&#337;
   sz&#369;r&#337;kr&#337;l szól. A frameráta itt sem változik, így nem kell
   <tt class="option">-ofps</tt>. A deinterlacing-et a vágás után
-  <a href="menc-feat-telecine.html#menc-feat-telecine-footnotes" title="13.2.4. Lábjegyzet">[1]</a> és a méretezés
+  <a href="menc-feat-telecine.html#menc-feat-telecine-footnotes" title="14.2.4. Lábjegyzet">[1]</a> és a méretezés
   el&#337;tt kell elvégezni.
 
   </p><pre class="screen">mencoder dvd://1 -oac copy -vf pp=lb -ovc lavc</pre><p>
@@ -257,19 +256,19 @@
   felét, de ha downscaling-et tervezel legfeljebb az eredeti 1/2-ével, a
   veszteség nem számottev&#337;. Az eredmény egy progresszív 30000/1001 képkocka per
   másodperces fájl lesz. Az helyes eljárás a <tt class="option">-vf field</tt>
-  használata, majd vágás <a href="menc-feat-telecine.html#menc-feat-telecine-footnotes" title="13.2.4. Lábjegyzet">[1]</a>
+  használata, majd vágás <a href="menc-feat-telecine.html#menc-feat-telecine-footnotes" title="14.2.4. Lábjegyzet">[1]</a>
   és megfelel&#337; méretezés. Emlékezz, hogy be kell állítanod a méretarányt a
   felezett függ&#337;leges felbontásnak megfelel&#337;en.
 
   </p><pre class="screen">mencoder dvd://1 -oac copy -vf field=0 -ovc lavc</pre><p>
-  </p></li></ol></div></div><div class="sect3" lang="hu"><div class="titlepage"><div><div><h4 class="title"><a name="menc-feat-telecine-encode-mixedpt"></a>13.2.3.4. Kevert progresszív és telecine</h4></div></div></div><p>
+  </p></li></ol></div></div><div class="sect3" lang="hu"><div class="titlepage"><div><div><h4 class="title"><a name="menc-feat-telecine-encode-mixedpt"></a>14.2.3.4. Kevert progresszív és telecine</h4></div></div></div><p>
   Ahhoz, hogy egy kevert, progresszív és telecine-s videót teljesen
   progresszív videóvá konvertálj, a telecine-lt részeket
   inverz-telecine-elni kell. Ez háromféle képpen végezhet&#337; el,
   mint ahogy az lejjebb látható. Figyelj rá, hogy <span class="bold"><strong>mindig</strong></span>
   az inverse-telecine legyen meg bármilyen átméretezés el&#337;tt; hacsak
   nem vagy teljesen biztos a dolgodban, és az inverse-telecine legyen a
-  vágás el&#337;tt is <a href="menc-feat-telecine.html#menc-feat-telecine-footnotes" title="13.2.4. Lábjegyzet">[1]</a>.
+  vágás el&#337;tt is <a href="menc-feat-telecine.html#menc-feat-telecine-footnotes" title="14.2.4. Lábjegyzet">[1]</a>.
   A <tt class="option">-ofps 24000/1001</tt> kell ide, mert a kimeneti videó 24000/1001
   képkocka per másodperc sebesség&#369; lesz.
 </p><div class="itemizedlist"><ul type="disc"><li><p>
@@ -303,7 +302,7 @@
     jelenségeket okoz. Ha használni akarod, el kell töltened egy kis
     id&#337;t az opciók próbálgatásával és az eredmény megfigyelésével,
     hogy biztos légy benne, nem rontja el az egészet.</p></blockquote></div><p>
-  </p></li></ul></div></div><div class="sect3" lang="hu"><div class="titlepage"><div><div><h4 class="title"><a name="menc-feat-telecine-encode-mixedpi"></a>13.2.3.5. Kevert progresszív és átlapolt</h4></div></div></div><p>
+  </p></li></ul></div></div><div class="sect3" lang="hu"><div class="titlepage"><div><div><h4 class="title"><a name="menc-feat-telecine-encode-mixedpi"></a>14.2.3.5. Kevert progresszív és átlapolt</h4></div></div></div><p>
   Két módon kezelheted ezt a kategóriát, mindkett&#337; kompromisszum. Az
   id&#337;tartam/hely alapján kell döntened.
 </p><div class="itemizedlist"><ul type="disc"><li><p>
@@ -339,7 +338,7 @@
   Kezeld teljesen átlapoltként. A progresszív részekben néhány
   képkockát meg kell duplázni, ami egyenl&#337;tlen ugrásokat eredményez.
   De hangsúlyozom, a deinterlacing sz&#369;r&#337;k rontják a progresszív részeket.
-  </p></li></ul></div></div></div><div class="sect2" lang="hu"><div class="titlepage"><div><div><h3 class="title"><a name="menc-feat-telecine-footnotes"></a>13.2.4. Lábjegyzet</h3></div></div></div><div class="orderedlist"><ol type="1"><li><p><b>A vágásról: </b>
+  </p></li></ul></div></div></div><div class="sect2" lang="hu"><div class="titlepage"><div><div><h3 class="title"><a name="menc-feat-telecine-footnotes"></a>14.2.4. Lábjegyzet</h3></div></div></div><div class="orderedlist"><ol type="1"><li><p><b>A vágásról: </b>
   A videó adatot a DVD-ken egy úgynevezett YUV 4:2:0 formátumban tárolják.
   A YUV videóban a luma ("fényer&#337;") és a chroma ("szín")
   külön tárolódik. Mivel az emberi szem valamivel érzéketlenebb a színre,
@@ -392,5 +391,5 @@
   A zenefeldolgozás hozzáadása és a fejlett <tt class="option">lavcopts</tt>
   háttérbe szorítja ezt a különbséget, a <tt class="option">pullup</tt> miatti
   teljesítményromlást 2%-ra csökkentve.
-  </p></li></ol></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="menc-feat-dvd-mpeg4.html">El&#337;z&#337;</a> </td><td width="20%" align="center"><a accesskey="u" href="encoding-guide.html">Fel</a></td><td width="40%" align="right"> <a accesskey="n" href="menc-feat-enc-libavcodec.html">Következ&#337;</a></td></tr><tr><td width="40%" align="left" valign="top">13.1. Nagyon jó min&#337;ség&#369; MPEG-4 ("DivX") rip készítése DVD filmb&#337;l </td><td width="20%" align="center"><a accesskey="h" href="index.html">Tartalom</a></td><td width="40%" align="right" valign="top"> 13.3. Kódolás a <code class="systemitem">libavcodec</code>
+  </p></li></ol></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="menc-feat-dvd-mpeg4.html">El&#337;z&#337;</a> </td><td width="20%" align="center"><a accesskey="u" href="encoding-guide.html">Fel</a></td><td width="40%" align="right"> <a accesskey="n" href="menc-feat-enc-libavcodec.html">Következ&#337;</a></td></tr><tr><td width="40%" align="left" valign="top">14.1. Nagyon jó min&#337;ség&#369; MPEG-4 ("DivX") rip készítése DVD filmb&#337;l </td><td width="20%" align="center"><a accesskey="h" href="index.html">Tartalom</a></td><td width="40%" align="right" valign="top"> 14.3. Kódolás a <code class="systemitem">libavcodec</code>
   codec családdal</td></tr></table></div></body></html>

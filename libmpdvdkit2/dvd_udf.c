@@ -7,8 +7,8 @@
  *   Björn Englund <d4bjorn@dtek.chalmers.se>.
  *
  * Modified for use with MPlayer, changes contained in libdvdread_changes.diff.
- * detailed CVS changelog at http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
- * $Id: dvd_udf.c 15875 2005-06-30 22:48:26Z aurel $
+ * detailed changelog at http://svn.mplayerhq.hu/mplayer/trunk/
+ * $Id: dvd_udf.c 18786 2006-06-22 13:34:00Z diego $
  *
  * dvdudf: parse and read the UDF volume information of a DVD Video
  * Copyright (C) 1999 Christian Wolff for convergence integrated media

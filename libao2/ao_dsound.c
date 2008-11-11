@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  *
  *****************************************************************************/
 /**
@@ -176,7 +176,7 @@ static void UninitDirectSound(void)
 /**
 \brief print the commandline help
 */
-static void print_help()
+static void print_help(void)
 {
   mp_msg(MSGT_AO, MSGL_FATAL,
            "\n-ao dsound commandline help:\n"
@@ -526,7 +526,7 @@ static int init(int rate, int channels, int format, int flags)
 /**
 \brief stop playing and empty buffers (for seeking/pause)
 */
-static void reset()
+static void reset(void)
 {
 	IDirectSoundBuffer_Stop(hdsbuf);
 	// reset directsound buffer
@@ -537,7 +537,7 @@ static void reset()
 /**
 \brief stop playing, keep buffers (for pause)
 */
-static void audio_pause()
+static void audio_pause(void)
 {
 	IDirectSoundBuffer_Stop(hdsbuf);
 }
@@ -545,7 +545,7 @@ static void audio_pause()
 /**
 \brief resume playing, after audio_pause()
 */
-static void audio_resume()
+static void audio_resume(void)
 {
 	IDirectSoundBuffer_Play(hdsbuf, 0, 0, DSBPLAY_LOOPING);
 }
@@ -571,7 +571,7 @@ static void uninit(int immed)
 \brief find out how many bytes can be written into the audio buffer without
 \return free space in bytes, has to return 0 if the buffer is almost full
 */
-static int get_space()
+static int get_space(void)
 {
 	int space;
 	DWORD play_offset;
@@ -605,6 +605,7 @@ static int play(void* data, int len, int flags)
 	if(space > buffer_size)space -= buffer_size; // write_offset < play_offset
 	if(space < len) len = space;
 
+	if (!(flags & AOPLAY_FINAL_CHUNK))
 	len = (len / ao_data.outburst) * ao_data.outburst;
 	return write_buffer(data, len);
 }
@@ -613,7 +614,7 @@ static int play(void* data, int len, int flags)
 \brief get the delay between the first and last sample in the buffer
 \return delay in seconds
 */
-static float get_delay()
+static float get_delay(void)
 {
 	DWORD play_offset;
 	int space;

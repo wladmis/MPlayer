@@ -2,19 +2,21 @@
  * American Laser Games MM Format Demuxer
  * Copyright (c) 2006 Peter Ross
  *
- * This library is free software; you can redistribute it and/or
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * FFmpeg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * License along with FFmpeg; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 /**
@@ -199,7 +201,7 @@ static int mm_read_close(AVFormatContext *s)
     return 0;
 }
 
-static AVInputFormat mm_iformat = {
+AVInputFormat mm_demuxer = {
     "mm",
     "American Laser Games MM format",
     sizeof(MmDemuxContext),
@@ -208,9 +210,3 @@ static AVInputFormat mm_iformat = {
     mm_read_packet,
     mm_read_close,
 };
-
-int mm_init(void)
-{
-    av_register_input_format(&mm_iformat);
-    return 0;
-}

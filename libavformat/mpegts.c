@@ -2,18 +2,20 @@
  * MPEG2 transport stream (aka DVB) demux
  * Copyright (c) 2002-2003 Fabrice Bellard.
  *
- * This library is free software; you can redistribute it and/or
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * FFmpeg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 #include "avformat.h"
@@ -151,7 +153,7 @@ static void write_section_data(AVFormatContext *s, MpegTSFilter *tss1,
     }
 }
 
-MpegTSFilter *mpegts_open_section_filter(MpegTSContext *ts, unsigned int pid,
+static MpegTSFilter *mpegts_open_section_filter(MpegTSContext *ts, unsigned int pid,
                                          SectionCallback *section_cb, void *opaque,
                                          int check_crc)
 
@@ -183,7 +185,7 @@ MpegTSFilter *mpegts_open_section_filter(MpegTSContext *ts, unsigned int pid,
     return filter;
 }
 
-MpegTSFilter *mpegts_open_pes_filter(MpegTSContext *ts, unsigned int pid,
+static MpegTSFilter *mpegts_open_pes_filter(MpegTSContext *ts, unsigned int pid,
                                      PESCallback *pes_cb,
                                      void *opaque)
 {
@@ -205,7 +207,7 @@ MpegTSFilter *mpegts_open_pes_filter(MpegTSContext *ts, unsigned int pid,
     return filter;
 }
 
-void mpegts_close_filter(MpegTSContext *ts, MpegTSFilter *filter)
+static void mpegts_close_filter(MpegTSContext *ts, MpegTSFilter *filter)
 {
     int pid;
 
@@ -427,10 +429,14 @@ static void pmt_cb(void *opaque, const uint8_t *section, int section_len)
             desc_tag = get8(&p, desc_list_end);
             if (desc_tag < 0)
                 break;
-            if (stream_type == STREAM_TYPE_PRIVATE_DATA &&
-                ((desc_tag == 0x6A) || (desc_tag == 0x7A))) {
+            if (stream_type == STREAM_TYPE_PRIVATE_DATA) {
+                if((desc_tag == 0x6A) || (desc_tag == 0x7A)) {
                     /*assume DVB AC-3 Audio*/
                     stream_type = STREAM_TYPE_AUDIO_AC3;
+                } else if(desc_tag == 0x7B) {
+                    /* DVB DTS audio */
+                    stream_type = STREAM_TYPE_AUDIO_DTS;
+                }
             }
             desc_len = get8(&p, desc_list_end);
             desc_end = p + desc_len;
@@ -609,7 +615,7 @@ static void pat_scan_cb(void *opaque, const uint8_t *section, int section_len)
     ts->pat_filter = NULL;
 }
 
-void mpegts_set_service(MpegTSContext *ts, int sid,
+static void mpegts_set_service(MpegTSContext *ts, int sid,
                         SetServiceCallback *set_service_cb, void *opaque)
 {
     ts->set_service_cb = set_service_cb;
@@ -696,7 +702,7 @@ static void sdt_cb(void *opaque, const uint8_t *section, int section_len)
 }
 
 /* scan services in a transport stream by looking at the SDT */
-void mpegts_scan_sdt(MpegTSContext *ts)
+static void mpegts_scan_sdt(MpegTSContext *ts)
 {
     ts->sdt_filter = mpegts_open_section_filter(ts, SDT_PID,
                                                 sdt_cb, ts, 1);
@@ -704,7 +710,7 @@ void mpegts_scan_sdt(MpegTSContext *ts)
 
 /* scan services in a transport stream by looking at the PAT (better
    than nothing !) */
-void mpegts_scan_pat(MpegTSContext *ts)
+static void mpegts_scan_pat(MpegTSContext *ts)
 {
     ts->pat_filter = mpegts_open_section_filter(ts, PAT_PID,
                                                 pat_scan_cb, ts, 1);
@@ -1199,7 +1205,7 @@ goto_auto_guess:
             url_fseek(pb, pos, SEEK_SET);
             mpegts_scan_sdt(ts);
 
-            handle_packets(ts, MAX_SCAN_PACKETS);
+            handle_packets(ts, s->probesize);
 
             if (ts->nb_services <= 0) {
                 /* no SDT found, we try to look at the PAT */
@@ -1213,7 +1219,7 @@ goto_auto_guess:
                 url_fseek(pb, pos, SEEK_SET);
                 mpegts_scan_pat(ts);
 
-                handle_packets(ts, MAX_SCAN_PACKETS);
+                handle_packets(ts, s->probesize);
             }
 
             if (ts->nb_services <= 0) {
@@ -1237,7 +1243,7 @@ goto_auto_guess:
                 url_fseek(pb, pos, SEEK_SET);
                 mpegts_set_service(ts, sid, set_service_cb, ts);
 
-                handle_packets(ts, MAX_SCAN_PACKETS);
+                handle_packets(ts, s->probesize);
             }
             /* if could not find service, exit */
 
@@ -1507,7 +1513,7 @@ void mpegts_parse_close(MpegTSContext *ts)
     av_free(ts);
 }
 
-AVInputFormat mpegts_demux = {
+AVInputFormat mpegts_demuxer = {
     "mpegts",
     "MPEG2 transport stream format",
     sizeof(MpegTSContext),
@@ -1519,12 +1525,3 @@ AVInputFormat mpegts_demux = {
     mpegts_get_pcr,
     .flags = AVFMT_SHOW_IDS,
 };
-
-int mpegts_init(void)
-{
-    av_register_input_format(&mpegts_demux);
-#ifdef CONFIG_MUXERS
-    av_register_output_format(&mpegts_mux);
-#endif
-    return 0;
-}

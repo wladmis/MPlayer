@@ -1,18 +1,20 @@
 /*
  * Copyright (c) 2002 The FFmpeg Project.
  *
- * This library is free software; you can redistribute it and/or
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * FFmpeg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  *
  */
@@ -207,7 +209,6 @@ void ff_wmv2_encode_mb(MpegEncContext * s,
 
     if (!s->mb_intra) {
         /* compute cbp */
-        set_stat(ST_INTER_MB);
         cbp = 0;
         for (i = 0; i < 6; i++) {
             if (s->block_last_index[i] >= 0)
@@ -244,7 +245,6 @@ void ff_wmv2_encode_mb(MpegEncContext * s,
 #endif
 
         if (s->pict_type == I_TYPE) {
-            set_stat(ST_INTRA_MB);
             put_bits(&s->pb,
                      ff_msmp4_mb_i_table[coded_cbp][1], ff_msmp4_mb_i_table[coded_cbp][0]);
         } else {
@@ -252,7 +252,6 @@ void ff_wmv2_encode_mb(MpegEncContext * s,
                      wmv2_inter_table[w->cbp_table_index][cbp][1],
                      wmv2_inter_table[w->cbp_table_index][cbp][0]);
         }
-        set_stat(ST_INTRA_MB);
         put_bits(&s->pb, 1, 0);         /* no AC prediction yet */
         if(s->inter_intra_pred){
             s->h263_aic_dir=0;
@@ -514,7 +513,7 @@ static int16_t *wmv2_pred_motion(Wmv2Context *w, int *px, int *py){
     C = s->current_picture.motion_val[0][xy + 2 - wrap];
 
     if(s->mb_x && !s->first_slice_line && !s->mspel && w->top_left_mv_flag)
-        diff= FFMAX(ABS(A[0] - B[0]), ABS(A[1] - B[1]));
+        diff= FFMAX(FFABS(A[0] - B[0]), FFABS(A[1] - B[1]));
     else
         diff=0;
 
@@ -851,5 +850,6 @@ AVCodec wmv2_encoder = {
     wmv2_encode_init,
     MPV_encode_picture,
     MPV_encode_end,
+    .pix_fmts= (enum PixelFormat[]){PIX_FMT_YUV420P, -1},
 };
 #endif

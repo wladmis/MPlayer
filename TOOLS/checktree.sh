@@ -10,7 +10,7 @@
 # Thanks to Melchior Franz of the FlightGear project for the original idea
 # of a source-tree checker and Torinthiel for the feedback along the way.
 
-# $Id: checktree.sh 18088 2006-04-14 10:47:40Z reimar $
+# $Id: checktree.sh 20210 2006-10-14 15:28:33Z diego $
 
 # -----------------------------------------------------------------------------
 
@@ -23,11 +23,12 @@ _trailws=no
 _rcsid=no
 _oll=no
 _charset=no
+_stupid=no
 _showcont=no
 
 _color=yes
 _head=yes
-_cvs=yes
+_svn=yes
 _files=
 
 # -----------------------------------------------------------------------------
@@ -48,6 +49,7 @@ enable_all_tests() {
     _rcsid=yes
     _oll=yes
     _charset=yes
+    _stupid=yes
 }
 
 disable_all_tests() {
@@ -58,6 +60,7 @@ disable_all_tests() {
     _rcsid=no
     _oll=no
     _charset=no
+    _stupid=no
 }
 
 printoption() {
@@ -71,21 +74,28 @@ printhead() {
 all_filenames() {
     test "$_files" != "" && echo "$_files" && return
 
-    if [ "$_cvs" == "no" ]; then
+    if [ "$_svn" = "no" ]; then
         find . -type f \
-        | grep -v "\.\#\|\~$\|\.depend\|\/CVS\/\|config.mak\|^\./config\.h" \
-        | grep -v "^\./version\.h\|\.o$\|\.a$"
+        | grep -v "\.\#\|\~$\|\.depend\|\/\.svn\/\|config.mak\|^\./config\.h" \
+        | grep -v "^\./version\.h\|\.o$\|\.a$\|configure.log\|^\./help_mp.h"
     else
-        list_cvs .
+        list_svn .
     fi
 }
 
-list_cvs() {
-    for i in `grep "^/" $1/CVS/Entries | cut -d '/' -f 2`; do
+list_svn() {
+    tmpfiles=`sed '/name/ba; /kind/ba; d; b;
+                   :a; s/^ *....=\"\(.*\)\".*$/\1/;' $1/.svn/entries | \
+              sed '/$/N; s/\n/ /; / dir$/d; s/ file$//;'`
+    tmpdirs=`sed ' /name/ba; /kind/ba; d; b;
+                   :a; s/^ *....=\"\(.*\)\".*$/\1/;' $1/.svn/entries | \
+             sed ' /$/N; s/\n/ /; / file$/d; /^ dir$/d; s/ dir$//;'`
+
+    for i in $tmpfiles; do
         echo $1/$i
     done
-    for j in `grep "^D/" $1/CVS/Entries | cut -d '/' -f 2`; do
-        list_cvs $1/$j
+    for j in $tmpdirs; do
+        list_svn $1/$j
     done
 }
 
@@ -105,19 +115,26 @@ for i in "$@"; do
         printoption "rcsid     " "test for missing RCS Id's" "$_rcsid"
         printoption "oll       " "test for overly long lines" "$_oll"
         printoption "charset   " "test for wrong charset" "$_charset"
+        printoption "stupid    " "test for stupid code" "$_stupid"
         echo
         printoption "all       " "enable all tests" "no"
         echo
         printoption "showcont  " "show offending content of file(s)" \
-                                                                    "$_showcont"
+                                                                   "$_showcont"
         echo
         printoption "color     " "colored output" "$_color"
         printoption "head      " "print heading for each test" "$_head"
-        printoption "cvs       " "use CVS/ to determine which files to check" \
-                                                                        "$_cvs"
+        printoption "svn       " "use .svn/ to determine which files to " \
+                                                                "check" "$_svn"
         echo -e "\nIf no files are specified, the whole tree is traversed."
-        echo -e "If there are, -(no)cvs has no effect.\n"
+        echo -e "If there are, -(no)svn has no effect.\n"
         exit
+        ;;
+    -stupid)
+        _stupid=yes
+        ;;
+    -nostupid)
+        _stupid=no
         ;;
     -charset)
         _charset=yes
@@ -131,11 +148,11 @@ for i in "$@"; do
     -nooll)
         _oll=no
         ;;
-    -cvs)
-        _cvs=yes
+    -svn)
+        _svn=yes
         ;;
-    -nocvs)
-        _cvs=no
+    -nosvn)
+        _svn=no
         ;;
     -head)
         _head=yes
@@ -208,7 +225,7 @@ done
 
 # Set heading color
 
-if [ "$_color" == "yes" ]; then
+if [ "$_color" = "yes" ]; then
     COLB="\e[36m"
     COLE="\e[m"
 else
@@ -216,11 +233,11 @@ else
     COLE=""
 fi
 
-# Generate filelist once so -cvs isn't _that_ much slower than -nocvs anymore
+# Generate filelist once so -svn isn't _that_ much slower than -nosvn anymore
 
 filelist=`all_filenames`
 
-if [ "$_showcont" == "yes" ]; then
+if [ "$_showcont" = "yes" ]; then
   _diffopts="-u"
   _grepopts="-n -I"
 else
@@ -234,50 +251,50 @@ fi
 
 # -----------------------------------------------------------------------------
 
-if [ "$_spaces" == "yes" ]; then
+if [ "$_spaces" = "yes" ]; then
     printhead "checking for spaces in filenames ..."
     find . | grep " "
 fi
 
 # -----------------------------------------------------------------------------
 
-if [ "$_extensions" == "yes" ]; then
+if [ "$_extensions" = "yes" ]; then
     printhead "checking for uppercase extensions ..."
     echo $filelist | grep "\.[[:upper:]]\+$" | grep -v "\.S$"
 fi
 
 # -----------------------------------------------------------------------------
 
-if [ "$_crlf" == "yes" ]; then
+if [ "$_crlf" = "yes" ]; then
     printhead "checking for MSDOS line endings ..."
-    grep $_grepopts "
-" $filelist
+    CR=`echo " " | tr ' ' '\015'`
+    grep $_grepopts "$CR" $filelist
 fi
 
 # -----------------------------------------------------------------------------
 
-if [ "$_trailws" == "yes" ]; then
+if [ "$_trailws" = "yes" ]; then
     printhead "checking for trailing whitespace ..."
     grep $_grepopts "[[:space:]]\+$" $filelist
 fi
 
 # -----------------------------------------------------------------------------
 
-if [ "$_rcsid" == "yes" ]; then
+if [ "$_rcsid" = "yes" ]; then
     printhead "checking for missing RCS \$Id\$ or \$Revision\$ tags ..."
     grep -L -I "\$\(Id\|Revision\)[[:print:]]\+\$" $filelist
 fi
 
 # -----------------------------------------------------------------------------
 
-if [ "$_oll" == "yes" ]; then
+if [ "$_oll" = "yes" ]; then
     printhead "checking for overly long lines (over 79 characters) ..."
     grep $_grepopts "^[[:print:]]\{80,\}$" $filelist
 fi
 
 # -----------------------------------------------------------------------------
 
-if [ "$_charset" == "yes" ]; then
+if [ "$_charset" = "yes" ]; then
     printhead "checking bad charsets ..."
     for I in $filelist ; do
       case "$I" in
@@ -294,5 +311,46 @@ fi
 
 # -----------------------------------------------------------------------------
 
-# End
+if [ "$_stupid" = "yes" ]; then
+    printhead "checking for stupid code ..."
 
+    # avoid false-positives in xpm files, docs, etc, only check .c and .h files
+    chfilelist=`echo $filelist | tr ' ' '\n' | grep "[\.][ch]$"`
+
+    for i in calloc malloc realloc memalign av_malloc av_mallocz faad_malloc \
+             lzo_malloc safe_malloc mpeg2_malloc _ogg_malloc; do
+        printhead "--> casting of void* $i()"
+        grep $_grepopts "([ 	]*[a-zA-Z_]\+[ 	]*\*.*)[ 	]*$i" $chfilelist
+    done
+
+    for i in "" signed unsigned; do
+        printhead "--> usage of sizeof($i char)"
+        grep $_grepopts "sizeof[ 	]*([ 	]*$i[ 	]*char[ 	]*)" $chfilelist
+    done
+
+    for i in int8_t uint8_t; do
+        printhead "--> usage of sizeof($i)"
+        grep $_grepopts "sizeof[ 	]*([ 	]*$i[ 	]*)" $chfilelist
+    done
+
+    printhead "--> usage of &&1"
+    grep $_grepopts "&&[ 	]*1" $chfilelist
+
+    printhead "--> usage of ||0"
+    grep $_grepopts "||[ 	]*0" $chfilelist
+
+    # added a-fA-F_ to eliminate some false positives
+    printhead "--> usage of *0"
+    grep $_grepopts "[a-zA-Z0-9)]\+[ 	]*\*[ 	]*0[^.0-9xa-fA-F_]" $chfilelist
+
+    printhead "--> usage of *1"
+    grep $_grepopts "[a-zA-Z0-9)]\+[ 	]*\*[ 	]*1[^.0-9ea-fA-F_]" $chfilelist
+
+    printhead "--> usage of +0"
+    grep $_grepopts "[a-zA-Z0-9)]\+[ 	]*+[ 	]*0[^.0-9xa-fA-F_]" $chfilelist
+
+    printhead "--> usage of -0"
+    grep $_grepopts "[a-zA-Z0-9)]\+[ 	]*-[ 	]*0[^.0-9xa-fA-F_]" $chfilelist
+fi
+
+# -----------------------------------------------------------------------------

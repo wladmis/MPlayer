@@ -2,18 +2,20 @@
  * Sierra VMD Audio & Video Decoders
  * Copyright (C) 2004 the ffmpeg project
  *
- * This library is free software; you can redistribute it and/or
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * FFmpeg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  *
  */
@@ -92,7 +94,7 @@ static void lz_unpack(unsigned char *src, unsigned char *dest, int dest_len)
     d_end = d + dest_len;
     dataleft = LE_32(s);
     s += 4;
-    memset(queue, QUEUE_SIZE, 0x20);
+    memset(queue, 0x20, QUEUE_SIZE);
     if (LE_32(s) == 0x56781234) {
         s += 4;
         qpos = 0x111;

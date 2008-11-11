@@ -1,18 +1,20 @@
 /*
  * Copyright (c) 2000, 2001 Fabrice Bellard.
  *
- * This library is free software; you can redistribute it and/or
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * FFmpeg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 #define PACKET_SIZE 3200
@@ -32,7 +34,7 @@ typedef struct {
     int ds_data_size;
     int ds_silence_data;
 
-    int packet_pos;
+    int64_t packet_pos;
 
 } ASFStream;
 
@@ -98,6 +100,9 @@ typedef struct {
     ByteIOContext pb;
     /* only for reading */
     uint64_t data_offset; /* begining of the first data packet */
+    uint64_t data_object_offset; /* data object offset (excl. GUID & size)*/
+    uint64_t data_object_size;   /* size of the data object */
+    int index_read;
 
     ASFMainHeader hdr;
 
@@ -117,7 +122,7 @@ typedef struct {
     int packet_obj_size;
     int packet_time_delta;
     int packet_time_start;
-    int packet_pos;
+    int64_t packet_pos;
 
     int stream_index;
 

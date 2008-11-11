@@ -1,7 +1,7 @@
 /*
- * Modified for use with MPlayer, for details see the CVS changelog at
- * http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
- * $Id: mpg123.h 16990 2005-11-15 18:14:07Z diego $
+ * Modified for use with MPlayer, for details see the changelog at
+ * http://svn.mplayerhq.hu/mplayer/trunk/
+ * $Id: mpg123.h 18786 2006-06-22 13:34:00Z diego $
  */
 
 /*

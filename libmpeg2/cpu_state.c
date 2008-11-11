@@ -21,8 +21,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  * Modified for use with MPlayer, see libmpeg-0.4.0.diff for the exact changes.
- * detailed CVS changelog at http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
- * $Id: cpu_state.c 15484 2005-05-15 20:11:34Z nplourde $
+ * detailed changelog at http://svn.mplayerhq.hu/mplayer/trunk/
+ * $Id: cpu_state.c 18786 2006-06-22 13:34:00Z diego $
  */
 
 #include "config.h"

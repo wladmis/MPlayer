@@ -77,7 +77,7 @@ static volatile int write_pos;
  * return value may change between immediately following two calls,
  * and the real number of free bytes might be larger!
  */
-static int buf_free() {
+static int buf_free(void) {
   int free = read_pos - write_pos - CHUNK_SIZE;
   if (free < 0) free += BUFFSIZE;
   return free;
@@ -91,7 +91,7 @@ static int buf_free() {
  * return value may change between immediately following two calls,
  * and the real number of buffered bytes might be larger!
  */
-static int buf_used() {
+static int buf_used(void) {
   int used = write_pos - read_pos;
   if (used < 0) used += BUFFSIZE;
   return used;
@@ -130,11 +130,13 @@ static int write_buffer(unsigned char* data, int len) {
  *
  * Assumes the data in the buffer is of type float, the number of bytes
  * read is res * num_bufs * sizeof(float), where res is the return value.
+ * If there is not enough data in the buffer remaining parts will be filled
+ * with silence.
  */
 static int read_buffer(float **bufs, int cnt, int num_bufs) {
-  int first_len = BUFFSIZE - read_pos;
   int buffered = buf_used();
   int i, j;
+  int orig_cnt = cnt;
   if (cnt * sizeof(float) * num_bufs > buffered)
     cnt = buffered / sizeof(float) / num_bufs;
   for (i = 0; i < cnt; i++) {
@@ -143,6 +145,9 @@ static int read_buffer(float **bufs, int cnt, int num_bufs) {
       read_pos = (read_pos + sizeof(float)) % BUFFSIZE;
     }
   }
+  for (i = cnt; i < orig_cnt; i++)
+    for (j = 0; j < num_bufs; j++)
+      bufs[j][i] = 0;
   return cnt;
 }
 
@@ -178,11 +183,11 @@ static int outputaudio(jack_nframes_t nframes, void *arg) {
   int i;
   for (i = 0; i < num_ports; i++)
     bufs[i] = jack_port_get_buffer(ports[i], nframes);
-  if (!paused && !underrun)
-    if (read_buffer(bufs, nframes, num_ports) < nframes)
-      underrun = 1;
   if (paused || underrun)
     silence(bufs, nframes, num_ports);
+  else
+    if (read_buffer(bufs, nframes, num_ports) < nframes)
+      underrun = 1;
   if (estimate) {
     float now = (float)GetTimer() / 1000000.0;
     float diff = callback_time + callback_interval - now;
@@ -198,7 +203,7 @@ static int outputaudio(jack_nframes_t nframes, void *arg) {
 /**
  * \brief print suboption usage help
  */
-static void print_help ()
+static void print_help (void)
 {
   mp_msg (MSGT_AO, MSGL_FATAL,
            "\n-ao jack commandline help:\n"
@@ -235,7 +240,7 @@ static int init(int rate, int channels, int format, int flags) {
     goto err_out;
   }
   if (!client_name) {
-    client_name = (char *)malloc(40);
+    client_name = malloc(40);
   sprintf(client_name, "MPlayer [%d]", getpid());
   }
   client = jack_client_new(client_name);
@@ -321,7 +326,7 @@ static void uninit(int immed) {
 /**
  * \brief stop playing and empty buffers (for seeking/pause)
  */
-static void reset() {
+static void reset(void) {
   paused = 1;
   read_pos = 0;
   write_pos = 0;
@@ -331,18 +336,18 @@ static void reset() {
 /**
  * \brief stop playing, keep buffers (for pause)
  */
-static void audio_pause() {
+static void audio_pause(void) {
   paused = 1;
 }
 
 /**
  * \brief resume playing, after audio_pause()
  */
-static void audio_resume() {
+static void audio_resume(void) {
   paused = 0;
 }
 
-static int get_space() {
+static int get_space(void) {
   return buf_free();
 }
 
@@ -350,12 +355,13 @@ static int get_space() {
  * \brief write data into buffer and reset underrun flag
  */
 static int play(void *data, int len, int flags) {
+  if (!(flags & AOPLAY_FINAL_CHUNK))
   len -= len % ao_data.outburst;
   underrun = 0;
   return write_buffer(data, len);
 }
 
-static float get_delay() {
+static float get_delay(void) {
   int buffered = BUFFSIZE - CHUNK_SIZE - buf_free(); // could be less
   float in_jack = jack_latency;
   if (estimate && callback_interval > 0) {

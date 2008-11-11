@@ -14,9 +14,9 @@
  * by KIMURA Takuhiro <kim@hannah.ipc.miyakyo-u.ac.jp> - until 31.Mar.1999
  *                    <kim@comtec.co.jp>               - after  1.Apr.1999
  *
- * Modified for use with MPlayer, for details see the CVS changelog at
- * http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
- * $Id: dct36_3dnow.c 16990 2005-11-15 18:14:07Z diego $
+ * Modified for use with MPlayer, for details see the changelog at
+ * http://svn.mplayerhq.hu/mplayer/trunk/
+ * $Id: dct36_3dnow.c 18786 2006-06-22 13:34:00Z diego $
  *
  * Original disclaimer:
  *  The author of this program disclaim whole expressed or implied

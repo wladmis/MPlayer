@@ -18,7 +18,7 @@
 #include "config.h"
 #include "mp_msg.h"
 #include "subreader.h"
-#include "libmpdemux/stream.h"
+#include "stream/stream.h"
 
 #ifdef HAVE_ENCA
 #include <enca.h>
@@ -68,7 +68,7 @@ unsigned long previous_sub_end;
 #endif
 
 static int eol(char p) {
-    return (p=='\r' || p=='\n' || p=='\0');
+	return (p=='\r' || p=='\n' || p=='\0');
 }
 
 /* Remove leading and trailing space */
@@ -95,7 +95,7 @@ static char *stristr(const char *haystack, const char *needle) {
     return NULL;
 }
 
-subtitle *sub_read_line_sami(stream_t* st, subtitle *current) {
+static subtitle *sub_read_line_sami(stream_t* st, subtitle *current) {
     static char line[LINE_LEN+1];
     static char *s = NULL, *slacktime_s;
     char text[LINE_LEN+1], *p=NULL, *q;
@@ -236,7 +236,7 @@ subtitle *sub_read_line_sami(stream_t* st, subtitle *current) {
 }
 
 
-char *sub_readtext(char *source, char **dest) {
+static char *sub_readtext(char *source, char **dest) {
     int len=0;
     char *p=source;
     
@@ -246,7 +246,7 @@ char *sub_readtext(char *source, char **dest) {
 	p++,len++;
     }
     
-    *dest= (char *)malloc (len+1);
+    *dest= malloc (len+1);
     if (!dest) {return ERR;}
     
     strncpy(*dest, source, len);
@@ -258,7 +258,7 @@ char *sub_readtext(char *source, char **dest) {
     else return NULL;  // last text field
 }
 
-subtitle *sub_read_line_microdvd(stream_t *st,subtitle *current) {
+static subtitle *sub_read_line_microdvd(stream_t *st,subtitle *current) {
     char line[LINE_LEN+1];
     char line2[LINE_LEN+1];
     char *p, *next;
@@ -286,7 +286,7 @@ subtitle *sub_read_line_microdvd(stream_t *st,subtitle *current) {
     return current;
 }
 
-subtitle *sub_read_line_mpl2(stream_t *st,subtitle *current) {
+static subtitle *sub_read_line_mpl2(stream_t *st,subtitle *current) {
     char line[LINE_LEN+1];
     char line2[LINE_LEN+1];
     char *p, *next;
@@ -312,7 +312,7 @@ subtitle *sub_read_line_mpl2(stream_t *st,subtitle *current) {
     return current;
 }
 
-subtitle *sub_read_line_subrip(stream_t* st, subtitle *current) {
+static subtitle *sub_read_line_subrip(stream_t* st, subtitle *current) {
     char line[LINE_LEN+1];
     int a1,a2,a3,a4,b1,b2,b3,b4;
     char *p=NULL, *q=NULL;
@@ -329,7 +329,7 @@ subtitle *sub_read_line_subrip(stream_t* st, subtitle *current) {
 	p=q=line;
 	for (current->lines=1; current->lines < SUB_MAX_TEXT; current->lines++) {
 	    for (q=p,len=0; *p && *p!='\r' && *p!='\n' && *p!='|' && strncmp(p,"[br]",4); p++,len++);
-	    current->text[current->lines-1]=(char *)malloc (len+1);
+	    current->text[current->lines-1]=malloc (len+1);
 	    if (!current->text[current->lines-1]) return ERR;
 	    strncpy (current->text[current->lines-1], q, len);
 	    current->text[current->lines-1][len]='\0';
@@ -342,7 +342,7 @@ subtitle *sub_read_line_subrip(stream_t* st, subtitle *current) {
     return current;
 }
 
-subtitle *sub_read_line_subviewer(stream_t *st,subtitle *current) {
+static subtitle *sub_read_line_subviewer(stream_t *st,subtitle *current) {
     char line[LINE_LEN+1];
     int a1,a2,a3,a4,b1,b2,b3,b4;
     char *p=NULL;
@@ -360,7 +360,7 @@ subtitle *sub_read_line_subviewer(stream_t *st,subtitle *current) {
 	    for (p=line; *p!='\n' && *p!='\r' && *p; p++,len++);
 	    if (len) {
                 int j=0,skip=0;
-		char *curptr=current->text[i]=(char *)malloc (len+1);
+		char *curptr=current->text[i]=malloc (len+1);
 		if (!current->text[i]) return ERR;
 		//strncpy (current->text[i], line, len); current->text[i][len]='\0';
                 for(; j<len; j++) {
@@ -391,7 +391,7 @@ subtitle *sub_read_line_subviewer(stream_t *st,subtitle *current) {
     return current;
 }
 
-subtitle *sub_read_line_subviewer2(stream_t *st,subtitle *current) {
+static subtitle *sub_read_line_subviewer2(stream_t *st,subtitle *current) {
     char line[LINE_LEN+1];
     int a1,a2,a3,a4;
     char *p=NULL;
@@ -410,7 +410,7 @@ subtitle *sub_read_line_subviewer2(stream_t *st,subtitle *current) {
             len=0;
             for (p=line; *p!='\n' && *p!='\r' && *p; ++p,++len);
             if (len) {
-                current->text[i]=(char *)malloc (len+1);
+                current->text[i]=malloc (len+1);
                 if (!current->text[i]) return ERR;
                 strncpy (current->text[i], line, len); current->text[i][len]='\0';
                 ++i;
@@ -424,7 +424,7 @@ subtitle *sub_read_line_subviewer2(stream_t *st,subtitle *current) {
 }
 
 
-subtitle *sub_read_line_vplayer(stream_t *st,subtitle *current) {
+static subtitle *sub_read_line_vplayer(stream_t *st,subtitle *current) {
 	char line[LINE_LEN+1];
 	int a1,a2,a3;
 	char *p=NULL, *next,separator;
@@ -470,7 +470,7 @@ subtitle *sub_read_line_vplayer(stream_t *st,subtitle *current) {
 	return current;
 }
 
-subtitle *sub_read_line_rt(stream_t *st,subtitle *current) {
+static subtitle *sub_read_line_rt(stream_t *st,subtitle *current) {
 	//TODO: This format uses quite rich (sub/super)set of xhtml 
 	// I couldn't check it since DTD is not included.
 	// WARNING: full XML parses can be required for proper parsing 
@@ -520,7 +520,7 @@ subtitle *sub_read_line_rt(stream_t *st,subtitle *current) {
     return current;
 }
 
-subtitle *sub_read_line_ssa(stream_t *st,subtitle *current) {
+static subtitle *sub_read_line_ssa(stream_t *st,subtitle *current) {
 /*
  * Sub Station Alpha v4 (and v2?) scripts have 9 commas before subtitle
  * other Sub Station Alpha scripts have only 8 commas before subtitle
@@ -577,7 +577,7 @@ subtitle *sub_read_line_ssa(stream_t *st,subtitle *current) {
 	current->end   = 360000*hour2 + 6000*min2 + 100*sec2 + hunsec2;
 	
         while (((tmp=strstr(line2, "\\n")) != NULL) || ((tmp=strstr(line2, "\\N")) != NULL) ){
-		current->text[num]=(char *)malloc(tmp-line2+1);
+		current->text[num]=malloc(tmp-line2+1);
 		strncpy (current->text[num], line2, tmp-line2);
 		current->text[num][tmp-line2]='\0';
 		line2=tmp+2;
@@ -592,7 +592,7 @@ subtitle *sub_read_line_ssa(stream_t *st,subtitle *current) {
 	return current;
 }
 
-void sub_pp_ssa(subtitle *sub) {
+static void sub_pp_ssa(subtitle *sub) {
 	int l=sub->lines;
 	char *so,*de,*start;
 
@@ -621,7 +621,7 @@ void sub_pp_ssa(subtitle *sub) {
  *
  * by set, based on code by szabi (dunnowhat sub format ;-)
  */
-subtitle *sub_read_line_pjs(stream_t *st,subtitle *current) {
+static subtitle *sub_read_line_pjs(stream_t *st,subtitle *current) {
     char line[LINE_LEN+1];
     char text[LINE_LEN+1], *s, *d;
 
@@ -659,7 +659,7 @@ subtitle *sub_read_line_pjs(stream_t *st,subtitle *current) {
     return current;
 }
 
-subtitle *sub_read_line_mpsub(stream_t *st, subtitle *current) {
+static subtitle *sub_read_line_mpsub(stream_t *st, subtitle *current) {
 	char line[LINE_LEN+1];
 	float a,b;
 	int num=0;
@@ -704,7 +704,7 @@ subtitle *sub_read_line_mpsub(stream_t *st, subtitle *current) {
 subtitle *previous_aqt_sub = NULL;
 #endif
 
-subtitle *sub_read_line_aqt(stream_t *st,subtitle *current) {
+static subtitle *sub_read_line_aqt(stream_t *st,subtitle *current) {
     char line[LINE_LEN+1];
     char *next;
     int i;
@@ -761,7 +761,7 @@ subtitle *sub_read_line_aqt(stream_t *st,subtitle *current) {
 subtitle *previous_subrip09_sub = NULL;
 #endif
 
-subtitle *sub_read_line_subrip09(stream_t *st,subtitle *current) {
+static subtitle *sub_read_line_subrip09(stream_t *st,subtitle *current) {
     char line[LINE_LEN+1];
     int a1,a2,a3;
     char * next=NULL;
@@ -813,7 +813,7 @@ subtitle *sub_read_line_subrip09(stream_t *st,subtitle *current) {
     return current;
 }
 
-subtitle *sub_read_line_jacosub(stream_t* st, subtitle * current)
+static subtitle *sub_read_line_jacosub(stream_t* st, subtitle * current)
 {
     char line1[LINE_LEN], line2[LINE_LEN], directive[LINE_LEN], *p, *q;
     unsigned a1, a2, a3, a4, b1, b2, b3, b4, comment = 0;
@@ -1004,7 +1004,7 @@ subtitle *sub_read_line_jacosub(stream_t* st, subtitle * current)
     return current;
 }
 
-int sub_autodetect (stream_t* st, int *uses_time) {
+static int sub_autodetect (stream_t* st, int *uses_time) {
     char line[LINE_LEN+1];
     int i,j=0;
     char p;
@@ -1091,7 +1091,8 @@ void	subcp_open (stream_t *st)
 		    free_cp_tmp = 1;
 		  } else {
 		    cp_tmp = enca_fallback;
-		    mp_msg(MSGT_SUBREADER,MSGL_WARN,"SUB: enca faild, stream must be seakable.\n"); 
+		    if (st)
+		      mp_msg(MSGT_SUBREADER,MSGL_WARN,"SUB: enca failed, stream must be seakable.\n"); 
 		  }
 		}
 #endif
@@ -1115,68 +1116,34 @@ void	subcp_close (void)
 	}
 }
 
-#define ICBUFFSIZE 512
-static char icbuffer[ICBUFFSIZE];
-
 subtitle* subcp_recode (subtitle *sub)
 {
 	int l=sub->lines;
 	size_t ileft, oleft;
 	char *op, *ip, *ot;
+	if(icdsc == (iconv_t)(-1)) return sub;
 
 	while (l){
-		op = icbuffer;
 		ip = sub->text[--l];
 		ileft = strlen(ip);
-		oleft = ICBUFFSIZE - 1;
+		oleft = 4 * ileft;
 
+		if (!(ot = malloc(oleft + 1))){
+			mp_msg(MSGT_SUBREADER,MSGL_WARN,"SUB: error allocating mem.\n");
+		   	continue;
+		}
+		op = ot;
 		if (iconv(icdsc, &ip, &ileft,
 			  &op, &oleft) == (size_t)(-1)) {
-			mp_msg(MSGT_SUBREADER,MSGL_WARN,"SUB: error recoding line (1).\n");
-			l++;
-			break;
-		}
-		if (!(ot = (char *)malloc(op - icbuffer + 1))){
-			mp_msg(MSGT_SUBREADER,MSGL_WARN,"SUB: error allocating mem.\n");
-			l++;
-		   	break;
+			mp_msg(MSGT_SUBREADER,MSGL_WARN,"SUB: error recoding line.\n");
+			free(ot);
+			continue;
 		}
 		*op='\0' ;
-		strcpy (ot, icbuffer);
 		free (sub->text[l]);
 		sub->text[l] = ot;
 	}
-	if (l){
-		for (l = sub->lines; l;)
-			free (sub->text[--l]);
-		return ERR;
-	}
 	return sub;
-}
-
-// for demux_ogg.c:
-subtitle* subcp_recode1 (subtitle *sub)
-{
-  int l=sub->lines;
-  size_t ileft, oleft;
-  
-  if(icdsc == (iconv_t)(-1)) return sub;
-
-  while (l){
-     char *ip = icbuffer;
-     char *op = sub->text[--l];
-     strlcpy(ip, op, ICBUFFSIZE);
-     ileft = strlen(ip);
-     oleft = ICBUFFSIZE - 1;
-		
-     if (iconv(icdsc, &ip, &ileft,
-	      &op, &oleft) == (size_t)(-1)) {
-	mp_msg(MSGT_SUBREADER,MSGL_V,"SUB: error recoding line (2).\n");
-	return sub;
-     }
-     *op='\0' ;
-  }
-  return sub;
 }
 #endif
 
@@ -1218,7 +1185,7 @@ subtitle* sub_fribidi (subtitle *sub, int sub_utf8)
     if(log2vis) {
       len = fribidi_remove_bidi_marks (visual, len, NULL, NULL,
 				       NULL);
-      if((op = (char*)malloc(sizeof(char)*(max(2*orig_len,2*len) + 1))) == NULL) {
+      if((op = malloc((max(2*orig_len,2*len) + 1))) == NULL) {
 	mp_msg(MSGT_SUBREADER,MSGL_WARN,"SUB: error allocating mem.\n");
 	l++;
 	break;	
@@ -1303,19 +1270,14 @@ struct subreader {
 };
 
 #ifdef HAVE_ENCA
-#define MAX_GUESS_BUFFER_SIZE (256*1024)
-void* guess_cp(stream_t *st, char *preferred_language, char *fallback)
+void* guess_buffer_cp(unsigned char* buffer, int buflen, char *preferred_language, char *fallback)
 {
     const char **languages;
-    size_t langcnt, buflen;
+    size_t langcnt;
     EncaAnalyser analyser;
     EncaEncoding encoding;
-    unsigned char *buffer;
     char *detected_sub_cp = NULL;
     int i;
-
-    buffer = (unsigned char*)malloc(MAX_GUESS_BUFFER_SIZE*sizeof(char));
-    buflen = stream_read(st,buffer, MAX_GUESS_BUFFER_SIZE);
 
     languages = enca_get_languages(&langcnt);
     mp_msg(MSGT_SUBREADER, MSGL_V, "ENCA supported languages: ");
@@ -1339,9 +1301,6 @@ void* guess_cp(stream_t *st, char *preferred_language, char *fallback)
     }
     
     free(languages);
-    free(buffer);
-    stream_reset(st);
-    stream_seek(st,0);
 
     if (!detected_sub_cp) {
 	detected_sub_cp = strdup(fallback);
@@ -1350,6 +1309,26 @@ void* guess_cp(stream_t *st, char *preferred_language, char *fallback)
 
     return detected_sub_cp;
 }
+
+#define MAX_GUESS_BUFFER_SIZE (256*1024)
+void* guess_cp(stream_t *st, char *preferred_language, char *fallback)
+{
+    size_t buflen;
+    unsigned char *buffer;
+    char *detected_sub_cp = NULL;
+
+    buffer = malloc(MAX_GUESS_BUFFER_SIZE);
+    buflen = stream_read(st,buffer, MAX_GUESS_BUFFER_SIZE);
+
+    detected_sub_cp = guess_buffer_cp(buffer, buflen, preferred_language, fallback);
+    
+    free(buffer);
+    stream_reset(st);
+    stream_seek(st,0);
+
+    return detected_sub_cp;
+}
+#undef MAX_GUESS_BUFFER_SIZE
 #endif
 
 sub_data* sub_read_file (char *filename, float fps) {
@@ -1378,6 +1357,7 @@ sub_data* sub_read_file (char *filename, float fps) {
     struct subreader *srp;
     
     if(filename==NULL) return NULL; //qnx segfault
+    i = 0;
     fd=open_stream (filename, NULL, &i); if (!fd) return NULL;
     
     sub_format=sub_autodetect (fd, &uses_time);
@@ -1397,7 +1377,7 @@ sub_data* sub_read_file (char *filename, float fps) {
 	    if ((l=strlen(filename))>4){
 		    char *exts[] = {".utf", ".utf8", ".utf-8" };
 		    for (k=3;--k>=0;)
-			if (!strcasecmp(filename+(l - strlen(exts[k])), exts[k])){
+			if (l >= strlen(exts[k]) && !strcasecmp(filename+(l - strlen(exts[k])), exts[k])){
 			    sub_utf8 = 1;
 			    break;
 			}
@@ -1407,7 +1387,7 @@ sub_data* sub_read_file (char *filename, float fps) {
 #endif
 
     sub_num=0;n_max=32;
-    first=(subtitle *)malloc(n_max*sizeof(subtitle));
+    first=malloc(n_max*sizeof(subtitle));
     if(!first){
 #ifdef USE_ICONV
 	  subcp_close();
@@ -1417,7 +1397,7 @@ sub_data* sub_read_file (char *filename, float fps) {
     }
     
 #ifdef USE_SORTSUB
-    sub = (subtitle *)malloc(sizeof(subtitle));
+    sub = malloc(sizeof(subtitle));
     //This is to deal with those formats (AQT & Subrip) which define the end of a subtitle
     //as the beginning of the following
     previous_sub_end = 0;
@@ -1547,9 +1527,9 @@ if ((suboverlap_enabled == 2) ||
 	// used by the subs, a 'placeholder'
 	counter = 2 * sub_to_add + 1;  // the maximum number of subs derived
 	                               // from a block of sub_to_add+1 subs
-	placeholder = (int **) malloc(sizeof(int *) * counter);
+	placeholder = malloc(sizeof(int *) * counter);
 	for (i = 0; i < counter; ++i) {
-	    placeholder[i] = (int *) malloc(sizeof(int) * lines_to_add);
+	    placeholder[i] = malloc(sizeof(int) * lines_to_add);
 	    for (j = 0; j < lines_to_add; ++j) {
 		placeholder[i][j] = -1;
 	    }
@@ -1720,7 +1700,7 @@ if ((suboverlap_enabled == 2) ||
     return_sub = first;
 }
     if (return_sub == NULL) return NULL;
-    subt_data = (sub_data *)malloc(sizeof(sub_data));
+    subt_data = malloc(sizeof(sub_data));
     subt_data->filename = strdup(filename);
     subt_data->sub_uses_time = uses_time;
     subt_data->sub_num = sub_num;
@@ -1810,16 +1790,16 @@ typedef struct _subfn
 
 static int compare_sub_priority(const void *a, const void *b)
 {
-    if (((subfn*)a)->priority > ((subfn*)b)->priority) {
+    if (((const subfn*)a)->priority > ((const subfn*)b)->priority) {
 	return -1;
-    } else if (((subfn*)a)->priority < ((subfn*)b)->priority) {
+    } else if (((const subfn*)a)->priority < ((const subfn*)b)->priority) {
 	return 1;
     } else {
-	return strcoll(((subfn*)a)->fname, ((subfn*)b)->fname);
+	return strcoll(((const subfn*)a)->fname, ((const subfn*)b)->fname);
     }
 }
 
-char** sub_filenames(char* path, char *fname)
+char** sub_filenames(const char* path, char *fname)
 {
     char *f_dir, *f_fname, *f_fname_noext, *f_fname_trim, *tmp, *tmp_sub_id;
     char *tmp_fname_noext, *tmp_fname_trim, *tmp_fname_ext, *tmpresult;
@@ -1839,18 +1819,18 @@ char** sub_filenames(char* path, char *fname)
     len = (strlen(fname) > 256 ? strlen(fname) : 256)
 	+(strlen(path) > 256 ? strlen(path) : 256)+2;
 
-    f_dir = (char*)malloc(len);
-    f_fname = (char*)malloc(len);
-    f_fname_noext = (char*)malloc(len);
-    f_fname_trim = (char*)malloc(len);
+    f_dir = malloc(len);
+    f_fname = malloc(len);
+    f_fname_noext = malloc(len);
+    f_fname_trim = malloc(len);
 
-    tmp_fname_noext = (char*)malloc(len);
-    tmp_fname_trim = (char*)malloc(len);
-    tmp_fname_ext = (char*)malloc(len);
+    tmp_fname_noext = malloc(len);
+    tmp_fname_trim = malloc(len);
+    tmp_fname_ext = malloc(len);
 
-    tmpresult = (char*)malloc(len);
+    tmpresult = malloc(len);
 
-    result = (subfn*)malloc(sizeof(subfn)*MAX_SUBTITLE_FILES);
+    result = malloc(sizeof(subfn)*MAX_SUBTITLE_FILES);
     memset(result, 0, sizeof(subfn)*MAX_SUBTITLE_FILES);
     
     subcnt = 0;
@@ -1876,7 +1856,7 @@ char** sub_filenames(char* path, char *fname)
 
     tmp_sub_id = NULL;
     if (dvdsub_lang && !whiteonly(dvdsub_lang)) {
-	tmp_sub_id = (char*)malloc(strlen(dvdsub_lang)+1);
+	tmp_sub_id = malloc(strlen(dvdsub_lang)+1);
 	strcpy_trim(tmp_sub_id, dvdsub_lang);
     }
 
@@ -1988,7 +1968,7 @@ char** sub_filenames(char* path, char *fname)
 
     qsort(result, subcnt, sizeof(subfn), compare_sub_priority);
 
-    result2 = (char**)malloc(sizeof(char*)*(subcnt+1));
+    result2 = malloc(sizeof(char*)*(subcnt+1));
     memset(result2, 0, sizeof(char*)*(subcnt+1));
 
     for (i = 0; i < subcnt; i++) {
