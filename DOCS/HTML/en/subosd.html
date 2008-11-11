@@ -9,7 +9,7 @@ destination formats, with the given options:
 </p><div class="itemizedlist"><ul type="disc"><li><p>MPsub: <tt class="option">-dumpmpsub</tt></p></li><li><p>SubRip: <tt class="option">-dumpsrtsub</tt></p></li><li><p>MicroDVD: <tt class="option">-dumpmicrodvdsub</tt></p></li><li><p>JACOsub: <tt class="option">-dumpjacosub</tt></p></li><li><p>Sami: <tt class="option">-dumpsami</tt></p></li></ul></div><p>
 </p><p>
 <span class="application">MEncoder</span> can dump DVD subtitles into
-<a href="menc-feat-extractsub.html" title="7.8. Extracting DVD subtitles to VOBsub file">VOBsub</a> format.
+<a href="menc-feat-extractsub.html" title="7.7. Extracting DVD subtitles to VOBsub file">VOBsub</a> format.
 </p><p>
 The command line options differ slightly for the different formats:
 </p><p><b>VOBsub subtitles. </b>
@@ -36,7 +36,7 @@ you have to pass the option <tt class="option">-sub
 <i><tt>sample.txt</tt></i></tt> (full path optional).
 </p><div class="variablelist"><p><b>Adjusting subtitle timing and placement:</b></p><dl><dt><span class="term"><tt class="option">-subdelay <i><tt>sec</tt></i></tt></span></dt><dd>
     Delays subtitles by <tt class="option"><i><tt>sec</tt></i></tt> seconds.
-    Can be negative.
+    Can be negative. The value is added to movie's time position counter.
     </dd><dt><span class="term"><tt class="option">-subfps <i><tt>RATE</tt></i></tt></span></dt><dd>
     Specify frame/sec rate of subtitle file (float number).
     </dd><dt><span class="term"><tt class="option">-subpos <i><tt>0-100</tt></i></tt></span></dt><dd>
@@ -45,13 +45,14 @@ you have to pass the option <tt class="option">-sub
 If you experience a growing delay between the movie and the subtitles when
 using a MicroDVD subtitle file, most likely the frame rate of the movie and
 the subtitle file are different. Please note that the MicroDVD subtitle
-format uses absolute frame numbers for its timing, and therefore the
-<tt class="option">-subfps</tt> option cannot be used with this format. As
-<span class="application">MPlayer</span> has no way to guess the frame rate of
-the subtitle file, you have to manually convert the frame rate. There is a
-little perl script in the <tt class="filename">contrib</tt>
-directory of the <span class="application">MPlayer</span> FTP site to do this
-conversion for you.
+format uses absolute frame numbers for its timing, but there is no fps
+information in it, and therefore the <tt class="option">-subfps</tt> option should
+be used with this format. If you like to solve this problem permanently,
+you have to manually convert the subtitle file framerate.
+<span class="application">MPlayer</span> can do this
+conversion for you:
+
+<pre class="screen">mplayer -dumpmicrodvdsub -fps <i><tt>subtitles_fps</tt></i> -subfps <i><tt>avi_fps</tt></i> -sub <i><tt>subtitle_filename</tt></i> <i><tt>dummy.avi</tt></i></pre>
 </p><p>
 About DVD subtitles, read the <a href="dvd.html" title="5.2. DVD playback">DVD</a> section.
 </p><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="mpsub"></a>1.4.1. <span class="application">MPlayer</span>'s own subtitle format (MPsub)</h3></div></div><p>
@@ -84,7 +85,7 @@ current directory, which will contain the source subtitle's text, but in
 seconds to/from the subtitle.
 </p><p>
 Subtitles are displayed with a technique called <span class="bold"><b>'OSD',
-On Screen Display</b></span>.OSD is used to display current time, volume bar,
+On Screen Display</b></span>. OSD is used to display current time, volume bar,
 seek bar etc.
 </p></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="mpsub-install"></a>1.4.2. Installing OSD and subtitles</h3></div></div><p>
 You need an <span class="application">MPlayer</span> font package to be able to use

@@ -28,6 +28,10 @@ typedef struct frac_s
   int d; // Denominator
 } frac_t;
 
+int af_gcd(register int a, register int b);
+void af_frac_cancel(frac_t *f);
+void af_frac_mul(frac_t *out, const frac_t *in);
+
 // Flags used for defining the behavior of an audio filter
 #define AF_FLAGS_REENTRANT 	0x00000000
 #define AF_FLAGS_NOT_REENTRANT 	0x00000001
@@ -153,8 +157,8 @@ af_data_t* af_play(af_stream_t* s, af_data_t* data);
 
 // send control to all filters, starting with the last until
 // one accepts the command with AF_OK.
-// Returns true if accepting filter was found.
-int af_control_any_rev (af_stream_t* s, int cmd, void* arg);
+// Returns the accepting filter or NULL if none was found.
+af_instance_t *af_control_any_rev (af_stream_t* s, int cmd, void* arg);
 
 /* Calculate how long the output from the filters will be given the
    input length "len". The calculated length is >= the actual
@@ -205,8 +209,14 @@ int af_to_ms(int n, int* in, float* out, int rate);
 /* Helper function for testing the output format */
 int af_test_output(struct af_instance_s* af, af_data_t* out);
 
+float af_softclip(float a);
+
 /** Print a list of all available audio filters */
 void af_help(void);
+
+/* Fill the missing parameters in the af_data_t structure.
+   Used for stuffing bps with a value based on format. */
+void af_fix_parameters(af_data_t *data);
 
 /* Memory reallocation macro: if a local buffer is used (i.e. if the
    filter doesn't operate on the incoming buffer this macro must be
@@ -263,5 +273,3 @@ extern af_msg_cfg_t af_msg_cfg; // Message
 #endif
 
 #endif /* __aop_h__ */
-
-

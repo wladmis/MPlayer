@@ -453,6 +453,7 @@ static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
 
 static int vf_open(vf_instance_t *vf, char* args){
     vf->config=config;
+    vf->default_caps=VFCAP_CONSTANT;
     vf->control=control;
     vf->query_format=query_format;
     vf->put_image=put_image;
@@ -463,7 +464,7 @@ static int vf_open(vf_instance_t *vf, char* args){
     memset(vf->priv,0,sizeof(struct vf_priv_s));
     vf->priv->mux=(muxer_stream_t*)args;
 
-    mux_v->bih=malloc(sizeof(BITMAPINFOHEADER));
+    mux_v->bih=calloc(1, sizeof(BITMAPINFOHEADER));
     mux_v->bih->biSize=sizeof(BITMAPINFOHEADER);
     mux_v->bih->biWidth=0;
     mux_v->bih->biHeight=0;

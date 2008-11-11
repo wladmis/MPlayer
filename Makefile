@@ -20,8 +20,8 @@ DO_MAKE = @ for i in $(SUBDIRS); do $(MAKE) -C $$i $@; done
 endif
 
 SRCS_COMMON = cpudetect.c codec-cfg.c spudec.c playtree.c playtreeparser.c asxparser.c vobsub.c subreader.c sub_cc.c find_sub.c m_config.c m_option.c parser-cfg.c m_struct.c edl.c
-SRCS_MENCODER = mencoder.c mp_msg-mencoder.c $(SRCS_COMMON) libao2/afmt.c divx4_vbr.c libvo/aclib.c libvo/osd.c libvo/sub.c libvo/font_load.c libvo/font_load_ft.c xvid_vbr.c parser-mecmd.c
-SRCS_MPLAYER = mplayer.c mp_msg.c $(SRCS_COMMON) mixer.c parser-mpcmd.c
+SRCS_MENCODER = mencoder.c mp_msg-mencoder.c $(SRCS_COMMON) divx4_vbr.c libvo/aclib.c libvo/osd.c libvo/sub.c libvo/font_load.c libvo/font_load_ft.c xvid_vbr.c parser-mecmd.c
+SRCS_MPLAYER = mplayer.c mp_msg.c $(SRCS_COMMON) mixer.c parser-mpcmd.c subopt-helper.c
 
 ifeq ($(UNRARLIB),yes)
 SRCS_COMMON += unrarlib.c
@@ -77,6 +77,9 @@ endif
 ifeq ($(LIBMENU),yes)
 PARTS += libmenu
 endif
+ifeq ($(TREMOR),yes)
+PARTS += tremor
+endif
 
 ALL_PRG = $(PRG)
 ifeq ($(MENCODER),yes)
@@ -99,6 +102,10 @@ COMMON_LIBS += libmpeg2/libmpeg2.a
 endif
 ifeq ($(INTERNAL_FAAD),yes)
 COMMON_DEPS += libfaad2/libfaad2.a
+endif
+ifeq ($(TREMOR),yes)
+COMMON_DEPS += tremor/libvorbisidec.a
+COMMON_LIBS += tremor/libvorbisidec.a
 endif
 ifeq ($(VIDIX),yes)
 COMMON_DEPS += libdha/libdha.so vidix/libvidix.a
@@ -184,6 +191,9 @@ libfaad2/libfaad2.a:
 mp3lib/libMP3.a:
 	$(MAKE) -C mp3lib
 
+tremor/libvorbisidec.a:
+	$(MAKE) -C tremor
+
 libdha/libdha.so:
 	$(MAKE) -C libdha
 
@@ -267,11 +277,14 @@ $(MPLAYER_DEP): version.h help_mp.h
 $(MENCODER_DEP): version.h help_mp.h
 
 $(PRG_CFG): version.h codec-cfg.c codec-cfg.h
-	$(HOST_CC) $(CFLAGS) -g codec-cfg.c mp_msg.c -o $(PRG_CFG) -DCODECS2HTML $(EXTRA_LIB) $(I18NLIBS)
+	$(HOST_CC) $(HOST_CFLAGS) -I. -g codec-cfg.c mp_msg.c -o $(PRG_CFG) -DCODECS2HTML $(EXTRA_LIB) $(EXTRA_INC) $(I18NLIBS)
 
 install: $(ALL_PRG)
 ifeq ($(VIDIX),yes)
 	$(DO_MAKE)
+endif
+ifeq ($(SHARED_PP),yes)
+	$(MAKE) install -C libavcodec/libpostproc
 endif
 	if test ! -d $(BINDIR) ; then mkdir -p $(BINDIR) ; fi
 	$(INSTALL) -m 755 $(INSTALLSTRIP) $(PRG) $(BINDIR)/$(PRG)
@@ -389,7 +402,11 @@ doxygen_clean:
 help_mp.h: help/help_mp-en.h $(HELP_FILE)
 	@echo '// WARNING! This is a generated file. Do NOT edit.' > help_mp.h
 	@echo '// See the help/ subdir for the editable files.' >> help_mp.h
+ifeq ($(CHARSET),)
 	@echo '#include "$(HELP_FILE)"' >> help_mp.h
+else
+	iconv -f `cat $(HELP_FILE).charset` -t $(CHARSET) "$(HELP_FILE)" >> help_mp.h
+endif
 
 ifneq ($(HELP_FILE),help/help_mp-en.h)
 	@echo "Adding untranslated messages to help_mp.h"

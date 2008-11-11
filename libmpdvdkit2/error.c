@@ -2,7 +2,10 @@
  * error.c: error management functions
  *****************************************************************************
  * Copyright (C) 1998-2002 VideoLAN
- * $Id: error.c,v 1.4 2003/08/30 13:35:25 arpi Exp $
+ *
+ * Modified for use with MPlayer, changes contained in libdvdcss_changes.diff.
+ * detailed CVS changelog at http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
+ * $Id: error.c,v 1.5 2005/03/01 06:41:41 diego Exp $
  *
  * Author: Samuel Hocevar <sam@zoy.org>
  *

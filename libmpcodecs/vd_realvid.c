@@ -253,7 +253,10 @@ static int init(sh_video_t *sh){
 	}
 	// setup rv30 codec (codec sub-type and image dimensions):
 	if((sh->format<=0x30335652) && (extrahdr[1]>=0x20200002)){
-	    uint32_t cmsg24[4]={sh->disp_w,sh->disp_h,((unsigned short *)extrahdr)[4],((unsigned short *)extrahdr)[5]};
+	    // We could read nonsense data while filling this, but input is big enough so no sig11
+	    uint32_t cmsg24[8]={sh->disp_w,sh->disp_h,((unsigned char *)extrahdr)[8]*4,((unsigned char *)extrahdr)[9]*4,
+	                        ((unsigned char *)extrahdr)[10]*4,((unsigned char *)extrahdr)[11]*4,
+	                        ((unsigned char *)extrahdr)[12]*4,((unsigned char *)extrahdr)[13]*4};
 	    cmsg_data_t cmsg_data={0x24,1+((extrahdr[0]>>16)&7), &cmsg24[0]};
 
 #ifdef USE_WIN32DLL
@@ -287,6 +290,7 @@ static void uninit(sh_video_t *sh){
 	if(rv_handle) dlclose(rv_handle);
 #endif
 	rv_handle=NULL;
+	inited = 0;
 }
 
 // copypaste from demux_real.c - it should match to get it working!

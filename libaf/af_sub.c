@@ -61,14 +61,14 @@ static int control(struct af_instance_s* af, int cmd, void* arg)
 
     af->data->rate   = ((af_data_t*)arg)->rate;
     af->data->nch    = max(s->ch+1,((af_data_t*)arg)->nch);
-    af->data->format = AF_FORMAT_F | AF_FORMAT_NE;
+    af->data->format = AF_FORMAT_FLOAT_NE;
     af->data->bps    = 4;
 
     // Design low-pass filter
     s->k = 1.0;
-    if((-1 == szxform(sp[0].a, sp[0].b, Q, s->fc,
+    if((-1 == af_filter_szxform(sp[0].a, sp[0].b, Q, s->fc,
        (float)af->data->rate, &s->k, s->w[0])) ||
-       (-1 == szxform(sp[1].a, sp[1].b, Q, s->fc,
+       (-1 == af_filter_szxform(sp[1].a, sp[1].b, Q, s->fc,
        (float)af->data->rate, &s->k, s->w[1])))
       return AF_ERROR;
     return af_test_output(af,(af_data_t*)arg);

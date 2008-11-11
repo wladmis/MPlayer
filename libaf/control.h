@@ -113,13 +113,9 @@ typedef struct af_control_ext_s{
 // Set resampling accuracy
 #define AF_CONTROL_RESAMPLE_ACCURACY	0x00000300 | AF_CONTROL_FILTER_SPECIFIC
 
-// Format 
+// Format
 
-// Set output format bits per sample
-#define AF_CONTROL_FORMAT_BPS		0x00000400 | AF_CONTROL_FILTER_SPECIFIC
-
-// Set output format sample format
-#define AF_CONTROL_FORMAT_FMT		0x00000500 | AF_CONTROL_FILTER_SPECIFIC
+#define AF_CONTROL_FORMAT_FMT		0x00000400 | AF_CONTROL_FILTER_SPECIFIC
 
 // Channels
 
@@ -221,5 +217,11 @@ typedef struct af_control_ext_s{
 
 // ExtraStereo Multiplier
 #define AF_CONTROL_ES_MUL		0x00002100 | AF_CONTROL_FILTER_SPECIFIC
+
+
+// Center
+
+// Channel number which to inster the filtered data, arg in int*
+#define AF_CONTROL_CENTER_CH		0x00002200 | AF_CONTROL_FILTER_SPECIFIC
 
 #endif /*__af_control_h */

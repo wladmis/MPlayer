@@ -1,3 +1,9 @@
+/*
+ * Modified for use with MPlayer, detailed CVS changelog at
+ * http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
+ * $Id: cmediasample.c,v 1.11 2005/04/15 20:17:13 diego Exp $
+ */
+
 #include "cmediasample.h"
 #include "wine/winerror.h"
 #include <stdio.h>

@@ -60,8 +60,8 @@ static int control(struct af_instance_s* af, int cmd, void* arg)
     af->data->rate   = ((af_data_t*)arg)->rate;
     af->data->nch    = ((af_data_t*)arg)->nch;
     
-    if(s->fast && (((af_data_t*)arg)->format != (AF_FORMAT_F | AF_FORMAT_NE))){
-      af->data->format = AF_FORMAT_SI | AF_FORMAT_NE;
+    if(s->fast && (((af_data_t*)arg)->format != (AF_FORMAT_FLOAT_NE))){
+      af->data->format = AF_FORMAT_S16_NE;
       af->data->bps    = 2;
     }
     else{
@@ -70,7 +70,7 @@ static int control(struct af_instance_s* af, int cmd, void* arg)
       float t = 2.0-cos(x);
       s->time = 1.0 - (t - sqrt(t*t - 1));
       af_msg(AF_MSG_DEBUG0,"[volume] Forgetting factor = %0.5f\n",s->time);
-      af->data->format = AF_FORMAT_F | AF_FORMAT_NE;
+      af->data->format = AF_FORMAT_FLOAT_NE;
       af->data->bps    = 4;
     }
     return af_test_output(af,(af_data_t*)arg);
@@ -140,7 +140,7 @@ static af_data_t* play(struct af_instance_s* af, af_data_t* data)
   register int  i   = 0;
 
   // Basic operation volume control only (used on slow machines)
-  if(af->data->format == (AF_FORMAT_SI | AF_FORMAT_NE)){
+  if(af->data->format == (AF_FORMAT_S16_NE)){
     int16_t*    a   = (int16_t*)c->audio;	// Audio data
     int         len = c->len/2;			// Number of samples
     for(ch = 0; ch < nch ; ch++){
@@ -154,7 +154,7 @@ static af_data_t* play(struct af_instance_s* af, af_data_t* data)
     }
   }
   // Machine is fast and data is floating point
-  else if(af->data->format == (AF_FORMAT_F | AF_FORMAT_NE)){ 
+  else if(af->data->format == (AF_FORMAT_FLOAT_NE)){ 
     float*   	a   	= (float*)c->audio;	// Audio data
     int       	len 	= c->len/4;		// Number of samples
     for(ch = 0; ch < nch ; ch++){
@@ -177,14 +177,8 @@ static af_data_t* play(struct af_instance_s* af, af_data_t* data)
 	    s->pow[ch] = t*s->pow[ch] + pow*s->time; // LP filter
 	  /* Soft clipping, the sound of a dream, thanks to Jon Wattes
 	     post to Musicdsp.org */
-	  if(s->soft){
-	    if (x >=  M_PI/2)
-	      x = 1.0;
-	    else if(x <= -M_PI/2)
-	      x = -1.0;
-	    else
-	      x = sin(x);
-	  }
+	  if(s->soft)
+	    x=af_softclip(x);
 	  // Hard clipping
 	  else
 	    x=clamp(x,-1.0,1.0);

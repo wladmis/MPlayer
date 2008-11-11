@@ -1,5 +1,149 @@
 MPlayer (1.0)
 
+  pre7: "PatentCounter" April 16, 2005
+
+    Security:
+    * heap overflow in Real RTSP streaming code fixed
+    * buffer overflow in MMST streaming code fixed
+
+
+    DOCS:
+    * Czech documentation translation in progress
+    * German man page almost synced
+    * slave mode command documentation finished
+    * TOOLS documented in TOOLS/README
+    * audio filter documentation moved to the man page and updated
+    * all audio filters documented
+    * improved encoding guide
+    * preliminary documentation for snow codec in DOCS/tech/snow.txt
+    * misc updates and fixes all over the place
+
+    Ports:
+    * DirectX video output fixed on Windows95
+    * DirectX video output now supports 256 color mode
+    * audio device selection support for dsound audio output driver
+    * --enable-macosx-bundle, use config directory in the appwrapper on OS X
+    * Sun audio output cleanup
+    * x86_64 support fixes
+    * OpenBSD support in libdha
+    * VIDIX support for more Radeon 9200 models
+
+    Drivers:
+    * fixed ontop event for some window managers
+    * audio output layer cleanup
+    * unified colorkey handling code
+    * vo_xvmc panscan fix
+    * fixed some X11 crashes
+    * OSD fixes in various video output drivers
+
+    Decoders:
+    * TWinVQ decoder via binary DLL
+    * integrated Tremor decoder for Ogg/Vorbis
+    * fixed decoding of stereo alaw files
+    * preload QT DLLs to work around problems with their hardcoded paths
+    * support for Real 10 RV30/40 Linux binary codec (fixes some RV40 files)
+    * expose support for 422P and 444P raw formats
+    * 32 bit RGB support in binary TSCC decoder
+    * dropped support of old FAAD2 versions (<= 1.1)
+    * support for Real 10 cook Linux binary codec (decodes cook5.1)
+    * improved NV12/NV21 support
+    * support for 32 bit float and extended WAV files
+    * prefer native RealAudio 1.0 / 2.0 decoder over binary decoders
+    * support for multichannel WAV files
+    * ALAC (QuickTime lossless audio) support via lavc
+    * WNV1 support via lavc
+    * AASC (Autoderk RLE video) support via lavc
+    * LOCO video support via lavc
+    * fixed Layer 1 stereo playback via mp3lib
+    * VMnc (VMware video) decoder via binary DLL
+    * AMR NB/WB support via libavcodec and external reference decoders
+    * ADTS AAC support
+
+    Demuxers:
+    * vqf demuxer
+    * seeking in MPEG-ES fixed
+    * support for Real multirate files
+    * framerate autodetection for MPEG-4 and H.264 video in ES and TS streams
+    * MP3 in Real files
+    * more user-friendly info about audio and subtitle tracks in Ogg files
+    * avisynth demuxer
+    * Multichannel MP3 in MP4 files support (MP3on4)
+    * some classes of nonworking 14.4/28.8 RealAudio files fixed
+    * added code to autodetect and demux MPEG audio layers 1 and 2
+    * demux AC3 audio files using libavformat by default
+    * online audio stream switching in the MPEG and Matroska demuxers
+    * 3GP demuxing support
+    * DVB updates and ATSC tuner support
+    * AVC in Matroska support
+    * SWF and FLV support via libavformat
+    * use proper Vorbis fourcc
+
+    Streaming:
+    * stream selection and bandwidth support for MMS over HTTP
+    * fallback to HTTP if connection refused on pnm://
+    * support for UDP streaming (udp://)
+    * support for vstream TiVo streams (tivo://)
+    * EOF detect and bugfixes in pnm:// streams
+
+    FFmpeg/libavcodec:
+    * RV20 fixes
+    * many H.264 fixes
+    * B-frames in H.264, H.264 weighted prediction support
+    * a lot of integer overflow and pointer fixes
+    * 32 bit RGB support in TSCC
+    * multichannel MP3 decoder (MP3on4)
+    * 3g2 support
+    * ALAC audio decoder
+    * LOCO video decoder
+    * WNV1 video decoder
+    * shorten audio decoder and demuxer
+    * AASC video decoder
+    * AMR NB/WB support via external reference decoders
+    * significantly faster snow decoding
+    * experimental ratecontrol for snow
+    * countless bug fixes all over the place
+
+    GUI:
+    * half size event implemented and added to the menu
+    * ESD configuration dialog and software volume control option
+    * memleaks fixed
+
+    Filters:
+    * big cleanup of audio filter layer
+    * faster af_format for most common cases
+    * float handling in the audio filter layer finally fixed
+    * obsolete audio plugins finally removed
+    * updated HRTF filter
+    * center channel adding filter
+    * soft-telecined input support in pullup improved
+
+    MEncoder:
+    * new experimental MPEG muxer, compatible with DVD and (S)VCD
+    * multiple file support
+    * -speed support (framerate conversion with speedup/slowdown)
+    * EDL support
+    * low bitrate mp3lame encoding fix
+    * MJPEG encoding fix
+    * NUV endianness fix (makes old NUV files unplayable)
+    * experimental libavformat muxer
+    * mp3lame CBR encoding fix
+    * 35% faster turbo mode for 1st pass
+
+    Others:
+    * -z option replaced by -vo png suboption
+    * icc fix in the Win32 loader
+    * crash with Turkish locale fixed
+    * several memleak fixes
+    * -aa* options are replaced by -vo aa suboptions
+    * excessive verbosity reduced
+    * RTC support for *BSD
+    * non-UTF-8 external subtitles with Matroska fixed
+    * gcc 4 fixes
+    * partial NX (noexec bit) support
+    * support libsmbclient with SSL
+    * put changed notices into all imported files for GPL §2a compliance
+
+
   pre6: "X-mas present" December 23, 2004
 
     DOCS:
@@ -137,7 +281,7 @@ MPlayer (1.0)
     * better and faster audio resampler
     * New dc1394 grabbing interface
     * preliminary decoding support for H.264 with CABAC and B-frames
-    * dvr-ms suport in ASF demuxer
+    * dvr-ms support in ASF demuxer
     * NSV demuxer
     * DVD compatible MPEG muxer
     * MJPEG-B fixes

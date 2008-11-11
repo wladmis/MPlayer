@@ -5,6 +5,10 @@ dvbstream
 
 The latest version can be found at http://www.linuxstb.org/dvbstream
 
+Modified for use with MPlayer, for details see the CVS changelog at
+http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
+$Id: dvbin.c,v 1.13 2005/04/16 12:51:09 diego Exp $
+
 Copyright notice:
 
 This program is free software; you can redistribute it and/or modify
@@ -133,6 +137,7 @@ static dvb_channels_list *dvb_get_channels(char *filename, int type)
 	const char *cbl_conf = "%a[^:]:%d:%a[^:]:%d:%a[^:]:%a[^:]:%a[^:]:%a[^:]\n";
 	const char *sat_conf = "%a[^:]:%d:%c:%d:%d:%a[^:]:%a[^:]\n";
 	const char *ter_conf = "%a[^:]:%d:%a[^:]:%a[^:]:%a[^:]:%a[^:]:%a[^:]:%a[^:]:%a[^:]:%a[^:]:%a[^:]:%a[^:]\n";
+	const char *atsc_conf = "%a[^:]:%d:%a[^:]:%a[^:]:%a[^:]\n";
 	
 	mp_msg(MSGT_DEMUX, MSGL_V, "CONFIG_READ FILE: %s, type: %d\n", filename, type);
 	if((f=fopen(filename, "r"))==NULL)
@@ -180,6 +185,16 @@ static dvb_channels_list *dvb_get_channels(char *filename, int type)
 				"CBL, NUM: %d, NUM_FIELDS: %d, NAME: %s, FREQ: %d, SRATE: %d",
 				list->NUM_CHANNELS, fields, ptr->name, ptr->freq, ptr->srate);
 		}
+#ifdef DVB_ATSC
+		else if(type == TUNER_ATSC)
+		{
+			fields = sscanf(line, atsc_conf,
+				&ptr->name, &ptr->freq, &mod, &vpid_str, &apid_str);
+			mp_msg(MSGT_DEMUX, MSGL_V,
+				"ATSC, NUM: %d, NUM_FIELDS: %d, NAME: %s, FREQ: %d\n",
+				list->NUM_CHANNELS, fields, ptr->name, ptr->freq);
+		}
+#endif
 		else //SATELLITE
 		{
 			fields = sscanf(line, sat_conf,
@@ -264,7 +279,11 @@ static dvb_channels_list *dvb_get_channels(char *filename, int type)
 			else if(! strcmp(cr, "FEC_NONE"))
 				ptr->cr =FEC_NONE;
 			else ptr->cr =FEC_AUTO;
+		}
+	
 
+		if((type == TUNER_TER) || (type == TUNER_CBL) || (type == TUNER_ATSC))
+		{
 			if(! strcmp(mod, "QAM_128"))
 				ptr->mod = QAM_128;
 			else if(! strcmp(mod, "QAM_256"))
@@ -275,9 +294,15 @@ static dvb_channels_list *dvb_get_channels(char *filename, int type)
 				ptr->mod = QAM_32;
 			else if(! strcmp(mod, "QAM_16"))
 				ptr->mod = QAM_16;
-			//else ptr->mod = QPSK;
-		}
+#ifdef DVB_ATSC	
+			else if(! strcmp(mod, "VSB_8") || ! strcmp(mod, "8VSB"))
+				ptr->mod = VSB_8;
+			else if(! strcmp(mod, "VSB_16") || !strcmp(mod, "16VSB"))
+				ptr->mod = VSB_16;
 
+			ptr->inv = INVERSION_AUTO;
+#endif
+		}
 
 		if(type == TUNER_TER)
 		{
@@ -487,6 +512,11 @@ int dvb_set_channel(dvb_priv_t *priv, int card, int n)
 			sprintf(priv->new_tuning, "%d|%09d|%d|%d|%d|%d", priv->card, channel->freq, channel->inv, channel->srate,
 				channel->cr, channel->mod);
 		break;
+#ifdef DVB_ATSC
+		case TUNER_ATSC:
+			sprintf(priv->new_tuning, "%d|%09d|%d", priv->card, channel->freq, channel->mod);
+		break;
+#endif
 	}
 
 
@@ -752,7 +782,7 @@ dvb_config_t *dvb_get_config()
 			
 		type = dvb_get_tuner_type(fd);
 		close(fd);
-		if(type != TUNER_SAT && type != TUNER_TER && type != TUNER_CBL)
+		if(type != TUNER_SAT && type != TUNER_TER && type != TUNER_CBL && type != TUNER_ATSC)
 		{
 			mp_msg(MSGT_DEMUX, MSGL_V, "DVB_CONFIG, can't detect tuner type of card %d, skipping\n", i);
 			continue;
@@ -768,6 +798,9 @@ dvb_config_t *dvb_get_config()
 					break;
 				case TUNER_SAT:
 				conf_file = get_path("channels.conf.sat");
+					break;
+				case TUNER_ATSC:
+				conf_file = get_path("channels.conf.atsc");
 					break;
 			}
 		

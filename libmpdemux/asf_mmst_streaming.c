@@ -31,7 +31,6 @@
 #ifdef USE_LANGINFO
 #include <langinfo.h>
 #endif
-#include <locale.h>
 #endif
 
 #include "url.h"
@@ -43,6 +42,7 @@
 
 #define BUF_SIZE 102400
 #define HDR_BUF_SIZE 8192
+#define MAX_STREAMS 20
 
 typedef struct 
 {
@@ -53,7 +53,7 @@ typedef struct
 
 static int seq_num;
 static int num_stream_ids;
-static int stream_ids[20];
+static int stream_ids[MAX_STREAMS];
 
 static int get_data (int s, char *buf, size_t count);
 
@@ -137,6 +137,7 @@ static void string_utf16(char *dest, char *src, int len) {
     else
     {
 #endif
+	if (len > 499) len = 499;
 	for (i=0; i<len; i++) {
 	    dest[i*2] = src[i];
 	    dest[i*2+1] = 0;
@@ -334,8 +335,12 @@ static int interp_header (uint8_t *header, int header_len)
 
       printf ("stream object, stream id: %d\n", stream_id);
 
+      if (num_stream_ids < MAX_STREAMS) {
       stream_ids[num_stream_ids] = stream_id;
       num_stream_ids++;
+      } else {
+        printf ("too many id, stream skipped");
+      }
       
     } else {
       printf ("unknown object\n");
@@ -535,11 +540,10 @@ int asf_mmst_streaming_start(stream_t *stream)
 
   /* prepare for the url encoding conversion */
 #ifdef USE_ICONV
-  setlocale(LC_CTYPE, "");
 #ifdef USE_LANGINFO
   url_conv = iconv_open("UTF-16LE",nl_langinfo(CODESET));
 #else
-  url_conv = iconv_open("UTF-16LE",setlocale(LC_CTYPE, NULL));
+  url_conv = iconv_open("UTF-16LE", NULL);
 #endif
 #endif
 

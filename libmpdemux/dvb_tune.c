@@ -2,6 +2,10 @@
 
    Copyright (C) Dave Chapman 2001,2002
 
+   Modified for use with MPlayer, for details see the CVS changelog at
+   http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
+   $Id: dvb_tune.c,v 1.12 2005/04/16 12:51:09 diego Exp $
+
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
    as published by the Free Software Foundation; either version 2
@@ -27,6 +31,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <error.h>
+#include <time.h>
 #include <errno.h>
 #include "config.h"
 
@@ -83,6 +88,11 @@ int dvb_get_tuner_type(int fe_fd)
       mp_msg(MSGT_DEMUX, MSGL_V, "TUNER TYPE SEEMS TO BE DVB-C\n");
 	  return TUNER_CBL;
 
+#ifdef DVB_ATSC
+	case FE_ATSC:
+      mp_msg(MSGT_DEMUX, MSGL_V, "TUNER TYPE SEEMS TO BE DVB-ATSC\n");
+	  return TUNER_ATSC;
+#endif
 	default:
 	  mp_msg(MSGT_DEMUX, MSGL_ERR, "UNKNOWN TUNER TYPE\n");
 	  return 0;
@@ -332,14 +342,9 @@ static int check_status(int fd_frontend,struct dvb_frontend_parameters* feparams
 {
 	int32_t strength;
 	fe_status_t festatus;
-	struct dvb_frontend_event event;
 	struct pollfd pfd[1];
-
-	while(1) 
-	{
-	    if (ioctl(fd_frontend, FE_GET_EVENT, &event) < 0)	//EMPTY THE EVENT QUEUE
-	    	break;
-	}
+	int ok=0, locks=0;
+	time_t tm1, tm2;
 
 	if (ioctl(fd_frontend,FE_SET_FRONTEND,feparams) < 0)
 	{
@@ -350,45 +355,55 @@ static int check_status(int fd_frontend,struct dvb_frontend_parameters* feparams
 	pfd[0].fd = fd_frontend;
 	pfd[0].events = POLLPRI;
 
-	event.status=0;
-	while (((event.status & FE_TIMEDOUT)==0) && ((event.status & FE_HAS_LOCK)==0))
+	mp_msg(MSGT_DEMUX, MSGL_V, "Getting frontend status\n");
+	tm1 = tm2 = time((time_t*) NULL);
+	while(!ok)
 	{
-		mp_msg(MSGT_DEMUX, MSGL_V, "polling....\n");
-		if(poll(pfd,1,10000) > 0)
+		festatus = 0;
+		if(poll(pfd,1,3000) > 0)
 		{
 			if (pfd[0].revents & POLLPRI)
 			{
-				mp_msg(MSGT_DEMUX, MSGL_V, "Getting frontend event\n");
-				if ( ioctl(fd_frontend, FE_GET_EVENT, &event) < 0)
-				{
-					mp_msg(MSGT_DEMUX, MSGL_ERR, "FE_GET_EVENT");
-					return -1;
-				}
+				if(ioctl(fd_frontend, FE_READ_STATUS, &festatus) >= 0)
+					if(festatus & FE_HAS_LOCK)
+						locks++;
 			}
-			print_status(event.status);
 		}
+		usleep(10000);
+		tm2 = time((time_t*) NULL);
+		if((festatus & FE_TIMEDOUT) || (locks >= 2) || (tm2 - tm1 >= 3))
+			ok = 1;
 	}
 
-	if(event.status & FE_HAS_LOCK)
+	if(festatus & FE_HAS_LOCK)
 	{
+		if(ioctl(fd_frontend,FE_GET_FRONTEND,feparams) >= 0)
+		{
 		switch(tuner_type)
 		{
 			case FE_OFDM:
-			mp_msg(MSGT_DEMUX, MSGL_V, "Event:  Frequency: %d\n",event.parameters.frequency);
+			mp_msg(MSGT_DEMUX, MSGL_V, "Event:  Frequency: %d\n",feparams->frequency);
 			break;
 			case FE_QPSK:
-			mp_msg(MSGT_DEMUX, MSGL_V, "Event:  Frequency: %d\n",(unsigned int)((event.parameters.frequency)+base));
-			mp_msg(MSGT_DEMUX, MSGL_V, "        SymbolRate: %d\n",event.parameters.u.qpsk.symbol_rate);
-			mp_msg(MSGT_DEMUX, MSGL_V, "        FEC_inner:  %d\n",event.parameters.u.qpsk.fec_inner);
+			mp_msg(MSGT_DEMUX, MSGL_V, "Event:  Frequency: %d\n",(unsigned int)((feparams->frequency)+base));
+			mp_msg(MSGT_DEMUX, MSGL_V, "        SymbolRate: %d\n",feparams->u.qpsk.symbol_rate);
+			mp_msg(MSGT_DEMUX, MSGL_V, "        FEC_inner:  %d\n",feparams->u.qpsk.fec_inner);
 			mp_msg(MSGT_DEMUX, MSGL_V, "\n");
 			break;
 			case FE_QAM:
-			mp_msg(MSGT_DEMUX, MSGL_V, "Event:  Frequency: %d\n",event.parameters.frequency);
-			mp_msg(MSGT_DEMUX, MSGL_V, "        SymbolRate: %d\n",event.parameters.u.qpsk.symbol_rate);
-			mp_msg(MSGT_DEMUX, MSGL_V, "        FEC_inner:  %d\n",event.parameters.u.qpsk.fec_inner);
+			mp_msg(MSGT_DEMUX, MSGL_V, "Event:  Frequency: %d\n",feparams->frequency);
+			mp_msg(MSGT_DEMUX, MSGL_V, "        SymbolRate: %d\n",feparams->u.qpsk.symbol_rate);
+			mp_msg(MSGT_DEMUX, MSGL_V, "        FEC_inner:  %d\n",feparams->u.qpsk.fec_inner);
 			break;
+#ifdef DVB_ATSC
+			case FE_ATSC:
+			mp_msg(MSGT_DEMUX, MSGL_V, "Event:  Frequency: %d\n",feparams->frequency);
+			mp_msg(MSGT_DEMUX, MSGL_V, "        Modulation: %d\n",feparams->u.vsb.modulation);
+			break;
+#endif
 			default:
 			break;
+		}
 		}
 
 		strength=0;
@@ -403,8 +418,10 @@ static int check_status(int fd_frontend,struct dvb_frontend_parameters* feparams
 		if(ioctl(fd_frontend,FE_READ_SNR,&strength) >= 0)
 		mp_msg(MSGT_DEMUX, MSGL_V, "SNR: %d\n",strength);
 
-		festatus=0;
-		if(ioctl(fd_frontend,FE_READ_STATUS,&festatus) >= 0)
+		strength=0;
+		if(ioctl(fd_frontend,FE_READ_UNCORRECTED_BLOCKS,&strength) >= 0)
+		mp_msg(MSGT_DEMUX, MSGL_V, "UNC: %d\n",strength);
+		
 		print_status(festatus);
 	}
 	else
@@ -680,7 +697,7 @@ static int tune_it(int fd_frontend, int fd_sec, unsigned int freq, unsigned int 
       feparams.u.ofdm.guardInterval=guardInterval;
       feparams.u.ofdm.HierarchyInformation=hier;
 #endif
-      mp_msg(MSGT_DEMUX, MSGL_V, "tuning DVB-T (%s) to %d Hz, bandwidth: %d\n",DVB_T_LOCATION,freq, bandwidth);
+      mp_msg(MSGT_DEMUX, MSGL_V, "tuning DVB-T to %d Hz, bandwidth: %d\n",freq, bandwidth);
       break;
     case FE_QPSK:
       if (freq > 2200000)
@@ -753,6 +770,13 @@ static int tune_it(int fd_frontend, int fd_sec, unsigned int freq, unsigned int 
       feparams.u.qam.QAM = modulation;
 #endif
       break;
+#ifdef DVB_ATSC
+    case FE_ATSC:
+      mp_msg(MSGT_DEMUX, MSGL_V, "tuning ATSC to %d, modulation=%d\n",freq,modulation);
+      feparams.frequency=freq;
+      feparams.u.vsb.modulation = modulation;
+      break;
+#endif
     default:
       mp_msg(MSGT_DEMUX, MSGL_V, "Unknown FE type. Aborting\n");
       return 0;

@@ -57,7 +57,7 @@ int match_ext(const char *filename, const char *extensions)
         p = extensions;
         for(;;) {
             q = ext1;
-            while (*p != '\0' && *p != ',') 
+            while (*p != '\0' && *p != ',' && q-ext1<sizeof(ext1)-1) 
                 *q++ = *p++;
             *q = '\0';
             if (!strcasecmp(ext1, ext)) 
@@ -180,7 +180,10 @@ static void av_destruct_packet(AVPacket *pkt)
  */
 int av_new_packet(AVPacket *pkt, int size)
 {
-    void *data = av_malloc(size + FF_INPUT_BUFFER_PADDING_SIZE);
+    void *data;
+    if((unsigned)size > (unsigned)size + FF_INPUT_BUFFER_PADDING_SIZE)
+        return AVERROR_NOMEM;        
+    data = av_malloc(size + FF_INPUT_BUFFER_PADDING_SIZE);
     if (!data)
         return AVERROR_NOMEM;
     memset(data + size, 0, FF_INPUT_BUFFER_PADDING_SIZE);
@@ -200,6 +203,8 @@ int av_dup_packet(AVPacket *pkt)
         uint8_t *data;
         /* we duplicate the packet and don't forget to put the padding
            again */
+        if((unsigned)pkt->size > (unsigned)pkt->size + FF_INPUT_BUFFER_PADDING_SIZE)
+            return AVERROR_NOMEM;        
         data = av_malloc(pkt->size + FF_INPUT_BUFFER_PADDING_SIZE);
         if (!data) {
             return AVERROR_NOMEM;
@@ -277,8 +282,8 @@ int fifo_read(FifoBuffer *f, uint8_t *buf, int buf_size, uint8_t **rptr_ptr)
     return 0;
 }
 
-void fifo_realloc(FifoBuffer *f, int new_size){
-    int old_size= f->end - f->buffer;
+void fifo_realloc(FifoBuffer *f, unsigned int new_size){
+    unsigned int old_size= f->end - f->buffer;
     
     if(old_size < new_size){
         uint8_t *old= f->buffer;
@@ -740,7 +745,7 @@ static void compute_pkt_fields(AVFormatContext *s, AVStream *st,
         st->last_IP_pts= pkt->pts;
         /* cannot compute PTS if not present (we can compute it only
            by knowing the futur */
-    } else {
+    } else if(pkt->pts != AV_NOPTS_VALUE || pkt->dts != AV_NOPTS_VALUE || pkt->duration){
         if(pkt->pts != AV_NOPTS_VALUE && pkt->duration){
             int64_t old_diff= ABS(st->cur_dts - pkt->duration - pkt->pts);
             int64_t new_diff= ABS(st->cur_dts - pkt->pts);
@@ -816,7 +821,7 @@ static int av_read_frame_internal(AVFormatContext *s, AVPacket *pkt)
                 compute_pkt_fields(s, st, NULL, pkt);
                 s->cur_st = NULL;
                 return 0;
-            } else if (s->cur_len > 0) {
+            } else if (s->cur_len > 0 && st->discard < AVDISCARD_ALL) {
                 len = av_parser_parse(st->parser, &st->codec, &pkt->data, &pkt->size, 
                                       s->cur_ptr, s->cur_len,
                                       s->cur_pkt.pts, s->cur_pkt.dts);
@@ -1007,13 +1012,19 @@ int av_add_index_entry(AVStream *st,
     AVIndexEntry *entries, *ie;
     int index;
     
+    if((unsigned)st->nb_index_entries + 1 >= UINT_MAX / sizeof(AVIndexEntry))
+        return -1;
+    
     entries = av_fast_realloc(st->index_entries,
                               &st->index_entries_allocated_size,
                               (st->nb_index_entries + 1) * 
                               sizeof(AVIndexEntry));
+    if(!entries)
+        return -1;
+
     st->index_entries= entries;
 
-    index= av_index_search_timestamp(st, timestamp, 0);
+    index= av_index_search_timestamp(st, timestamp, AVSEEK_FLAG_ANY);
 
     if(index<0){
         index= st->nb_index_entries++;
@@ -1079,13 +1090,14 @@ static int is_raw_stream(AVFormatContext *s)
 
 /**
  * gets the index for a specific timestamp.
- * @param backward if non zero then the returned index will correspond to 
+ * @param flags if AVSEEK_FLAG_BACKWARD then the returned index will correspond to 
  *                 the timestamp which is <= the requested one, if backward is 0 
  *                 then it will be >=
+ *              if AVSEEK_FLAG_ANY seek to any frame, only keyframes otherwise
  * @return < 0 if no such timestamp could be found
  */
 int av_index_search_timestamp(AVStream *st, int64_t wanted_timestamp,
-                              int backward)
+                              int flags)
 {
     AVIndexEntry *entries= st->index_entries;
     int nb_entries= st->nb_index_entries;
@@ -1103,7 +1115,13 @@ int av_index_search_timestamp(AVStream *st, int64_t wanted_timestamp,
         if(timestamp <= wanted_timestamp)
             a = m;
     }
-    m= backward ? a : b;
+    m= (flags & AVSEEK_FLAG_BACKWARD) ? a : b;
+    
+    if(!(flags & AVSEEK_FLAG_ANY)){
+        while(m>=0 && m<nb_entries && !(entries[m].flags & AVINDEX_KEYFRAME)){
+            m += (flags & AVSEEK_FLAG_BACKWARD) ? -1 : 1;
+        }
+    }
 
     if(m == nb_entries) 
         return -1;
@@ -1141,7 +1159,7 @@ int av_seek_frame_binary(AVFormatContext *s, int stream_index, int64_t target_ts
     if(st->index_entries){
         AVIndexEntry *e;
 
-        index= av_index_search_timestamp(st, target_ts, 1);
+        index= av_index_search_timestamp(st, target_ts, flags | AVSEEK_FLAG_BACKWARD); //FIXME whole func must be checked for non keyframe entries in index case, especially read_timestamp()
         index= FFMAX(index, 0);
         e= &st->index_entries[index];
 
@@ -1155,8 +1173,10 @@ int av_seek_frame_binary(AVFormatContext *s, int stream_index, int64_t target_ts
         }else{
             assert(index==0);
         }
-        index++;
-        if(index < st->nb_index_entries){
+        
+        index= av_index_search_timestamp(st, target_ts, flags & ~AVSEEK_FLAG_BACKWARD); 
+        assert(index < st->nb_index_entries);
+        if(index >= 0){
             e= &st->index_entries[index];
             assert(e->timestamp >= target_ts);
             pos_max= e->pos;
@@ -1264,7 +1284,6 @@ av_log(s, AV_LOG_DEBUG, "%Ld %Ld %Ld / %Ld %Ld %Ld target:%Ld limit:%Ld start:%L
 }
 
 static int av_seek_frame_byte(AVFormatContext *s, int stream_index, int64_t pos, int flags){
-    AVInputFormat *avif= s->iformat;
     int64_t pos_min, pos_max;
 #if 0
     AVStream *st;
@@ -1306,7 +1325,7 @@ static int av_seek_frame_generic(AVFormatContext *s,
     }
 
     st = s->streams[stream_index];
-    index = av_index_search_timestamp(st, timestamp, flags & AVSEEK_FLAG_BACKWARD);
+    index = av_index_search_timestamp(st, timestamp, flags);
     if (index < 0)
         return -1;
 
@@ -1772,6 +1791,11 @@ int av_find_stream_info(AVFormatContext *ic)
         if (ret < 0) {
             /* EOF or error */
             ret = -1; /* we could not have all the codec parameters before EOF */
+            for(i=0;i<ic->nb_streams;i++) {
+                st = ic->streams[i];
+                if (!has_codec_parameters(&st->codec))
+                    break;
+            }
             if ((ic->ctx_flags & AVFMTCTX_NOHEADER) &&
                 i == ic->nb_streams)
                 ret = 0;
@@ -1830,6 +1854,7 @@ int av_find_stream_info(AVFormatContext *ic)
              st->codec.codec_id == CODEC_ID_PGMYUV ||
              st->codec.codec_id == CODEC_ID_PBM ||
              st->codec.codec_id == CODEC_ID_PPM ||
+             st->codec.codec_id == CODEC_ID_SHORTEN ||
              (st->codec.codec_id == CODEC_ID_MPEG4 && !st->need_parsing)))
             try_decode_frame(st, pkt->data, pkt->size);
         
@@ -1880,7 +1905,7 @@ int av_find_stream_info(AVFormatContext *ic)
                        higher level as it can change in a film */
                     if (coded_frame_rate >= 24.97 && 
                         (est_frame_rate >= 23.5 && est_frame_rate < 24.5)) {
-                        st->r_frame_rate = 24024;
+                        st->r_frame_rate = 24000;
                         st->r_frame_rate_base = 1001;
                     }
                 }
@@ -2276,12 +2301,13 @@ static int av_interleave_packet(AVFormatContext *s, AVPacket *out, AVPacket *in,
 int av_interleaved_write_frame(AVFormatContext *s, AVPacket *pkt){
     AVStream *st= s->streams[ pkt->stream_index];
 
-    if(compute_pkt_fields2(st, pkt) < 0)
-        return -1;
-    
     //FIXME/XXX/HACK drop zero sized packets
     if(st->codec.codec_type == CODEC_TYPE_AUDIO && pkt->size==0)
         return 0;
+
+//av_log(NULL, AV_LOG_DEBUG, "av_interleaved_write_frame %d %Ld %Ld\n", pkt->size, pkt->dts, pkt->pts);
+    if(compute_pkt_fields2(st, pkt) < 0)
+        return -1;
     
     if(pkt->dts == AV_NOPTS_VALUE)
         return -1;
@@ -2471,6 +2497,8 @@ int parse_frame_rate(int *frame_rate, int *frame_rate_base, const char *arg)
 
     /* Then, we try to parse it as fraction */
     cp = strchr(arg, '/');
+    if (!cp)
+        cp = strchr(arg, ':');
     if (cp) {
         char* cpp;
 	*frame_rate = strtol(arg, &cpp, 10);

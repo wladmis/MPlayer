@@ -34,6 +34,7 @@
 HMODULE   WINAPI LoadLibraryA(LPCSTR);
 FARPROC   WINAPI GetProcAddress(HMODULE,LPCSTR);
 int       WINAPI FreeLibrary(HMODULE);
+static HINSTANCE qtime_qts; //handle to preloaded quicktime.qts
 static HMODULE handler;
 
 static OSErr        (*FindCodec)(CodecType              cType,
@@ -277,6 +278,7 @@ if(!codec_inited){
 static int vf_open(vf_instance_t *vf, char* args){
     OSErr cres = 1;
     vf->config=config;
+    vf->default_caps=VFCAP_CONSTANT;
     vf->control=control;
     vf->query_format=query_format;
     vf->put_image=put_image;
@@ -284,7 +286,7 @@ static int vf_open(vf_instance_t *vf, char* args){
     memset(vf->priv,0,sizeof(struct vf_priv_s));
     vf->priv->mux=(muxer_stream_t*)args;
 
-    mux_v->bih=malloc(sizeof(BITMAPINFOHEADER)+MAX_IDSIZE);
+    mux_v->bih=calloc(1, sizeof(BITMAPINFOHEADER)+MAX_IDSIZE);
     mux_v->bih->biSize=sizeof(BITMAPINFOHEADER)+MAX_IDSIZE;
     mux_v->bih->biWidth=0;
     mux_v->bih->biHeight=0;
@@ -296,6 +298,13 @@ static int vf_open(vf_instance_t *vf, char* args){
 #ifdef WIN32_LOADER
     Setup_LDT_Keeper();
 #endif
+    //preload quicktime.qts to avoid the problems caused by the hardcoded path inside the dll
+    qtime_qts = LoadLibraryA("QuickTime.qts");
+    if(!qtime_qts){
+        mp_msg(MSGT_MENCODER,MSGL_ERR,"unable to load QuickTime.qts\n" );
+        return 0;
+    }
+    
     handler = LoadLibraryA("qtmlClient.dll");
     if(!handler){
         mp_msg(MSGT_MENCODER,MSGL_ERR,"unable to load qtmlClient.dll\n");

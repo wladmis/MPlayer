@@ -23,8 +23,9 @@
 ** For more info contact Ahead Software through Mpeg4AAClicense@nero.com.
 **
 ** Initially modified for use with MPlayer by Arpad Gereöffy on 2003/08/30
-** $Id: common.h,v 1.8 2004/10/19 01:16:03 diego Exp $
+** $Id: common.h,v 1.10 2005/02/19 02:19:21 diego Exp $
 ** detailed CVS changelog at http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
+** local_changes.diff contains the exact changes to this file.
 **/
 
 #ifndef __COMMON_H__
@@ -34,7 +35,7 @@
 extern "C" {
 #endif
 
-/* Allow build on cygwin*/
+/* Allow build on Cygwin*/
 #if defined(__CYGWIN__)
 #define __STRICT_ANSI__
 #endif

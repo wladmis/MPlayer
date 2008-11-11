@@ -1,4 +1,4 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>2.2. Támogatott codec-ek</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - The Movie Player"><link rel="up" href="features.html" title="2. fejezet - Funkciók"><link rel="previous" href="formats.html" title="2.1. Támogatott formátumok"><link rel="next" href="video.html" title="2.3. Video output devices"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">2.2. Támogatott codec-ek</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="formats.html">El&#337;z&#337;</a> </td><th width="60%" align="center">2. fejezet - Funkciók</th><td width="20%" align="right"> <a accesskey="n" href="video.html">Következ&#337;</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="codecs"></a>2.2. Támogatott codec-ek</h2></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="video-codecs"></a>2.2.1. Videó codec-ek</h3></div></div><p>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>2.2. Támogatott codec-ek</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - The Movie Player"><link rel="up" href="features.html" title="2. fejezet - Funkciók"><link rel="previous" href="formats.html" title="2.1. Támogatott formátumok"><link rel="next" href="video.html" title="2.3. Videó kimeneti eszközök"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">2.2. Támogatott codec-ek</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="formats.html">El&#337;z&#337;</a> </td><th width="60%" align="center">2. fejezet - Funkciók</th><td width="20%" align="right"> <a accesskey="n" href="video.html">Következ&#337;</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="codecs"></a>2.2. Támogatott codec-ek</h2></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="video-codecs"></a>2.2.1. Videó codec-ek</h3></div></div><p>
 Nézd meg a <a href="http://www.mplayerhq.hu/homepage/codecs-status.html" target="_top">codec státusz táblázatot</a>
 a teljes, naponta generált listáért. Elég sok codec elérhet&#337; letöltésként a
 weboldalunkon. Szedd le &#337;ket a
@@ -426,8 +426,8 @@ A telepítési útmutatóhoz olvasd el a
 Az AAC (Advanced Audio Coding) egy audió codec, amit néha MOV és MP4 fájlokban
 található. Egy FAAD nev&#369;, nyílt forráskódú dekódoló elérhet&#337; a
 <a href="http://www.audiocoding.com" target="_top">http://www.audiocoding.com</a> címen.
-Az <span class="application">MPlayer</span> tartalmazza a libfaad 2.0RC1-et, nem szükséges
-külön beszerezni.
+Az <span class="application">MPlayer</span> tartalmazza a libfaad 2.1 béta CVS kódját,
+nem szükséges külön beszerezni.
 </p><p>
 Ha gcc 3.2-t használsz, ami nem tudja lefordítani a bels&#337; FAAD forrásunkat vagy valami
 más okból a küls&#337; függvénykönyvtárat szeretnéd használni, töltsd le a
@@ -436,8 +436,7 @@ más okból a küls&#337; függvénykönyvtárat szeretnéd használni, töltsd le a
 Nem kell a teljes faad2 az AAC fájlok dekódolásához, a libfaad elég. Így készítsd el:
 <pre class="screen">
 cd faad2/
-chmod +x bootstrap
-./bootstrap
+sh bootstrap
 ./configure
 cd libfaad
 make
@@ -542,4 +541,4 @@ az FTP-re:
 Ha saját magad szeretnél beépíteni egy codec-et, olvasd el a
 <a href="http://www.mplayerhq.hu/MPlayer/DOCS/tech/codecs.conf.txt" target="_top">DOCS/tech/codecs.conf.txt</a>
 fájlt.
-</p></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="formats.html">El&#337;z&#337;</a> </td><td width="20%" align="center"><a accesskey="u" href="features.html">Fel</a></td><td width="40%" align="right"> <a accesskey="n" href="video.html">Következ&#337;</a></td></tr><tr><td width="40%" align="left" valign="top">2.1. Támogatott formátumok </td><td width="20%" align="center"><a accesskey="h" href="index.html">Tartalom</a></td><td width="40%" align="right" valign="top"> 2.3. Video output devices</td></tr></table></div></body></html>
+</p></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="formats.html">El&#337;z&#337;</a> </td><td width="20%" align="center"><a accesskey="u" href="features.html">Fel</a></td><td width="40%" align="right"> <a accesskey="n" href="video.html">Következ&#337;</a></td></tr><tr><td width="40%" align="left" valign="top">2.1. Támogatott formátumok </td><td width="20%" align="center"><a accesskey="h" href="index.html">Tartalom</a></td><td width="40%" align="right" valign="top"> 2.3. Videó kimeneti eszközök</td></tr></table></div></body></html>

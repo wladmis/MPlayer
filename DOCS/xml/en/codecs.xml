@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- $Revision: 1.57 $ -->
+<!-- $Revision: 1.59 $ -->
 <sect1 id="codecs">
 <title>Supported codecs</title>
 
@@ -715,8 +715,8 @@ libraries. For installation instructions please see the
 AAC (Advanced Audio Coding) is an audio codec sometimes found in MOV and MP4
 files. An open source decoder called FAAD is available from
 <ulink url="http://www.audiocoding.com"/>.
-<application>MPlayer</application> includes libfaad 2.0RC1, so you do not need
-to get it separately.
+<application>MPlayer</application> includes a CVS snapshot of libfaad 2.1
+beta, so you do not need to get it separately.
 </para>
 
 <para>
@@ -728,8 +728,7 @@ You do not need all of faad2 to decode AAC files, libfaad is enough. Build
 it like this:
 <screen>
 cd faad2/
-chmod +x bootstrap
-./bootstrap
+sh bootstrap
 ./configure
 cd libfaad
 make

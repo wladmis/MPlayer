@@ -3,6 +3,9 @@
    AFMT_U16_LE, AFMT_U16_BE, AFMT_S32_LE and AFMT_S32_BE.
 */
 
+// Must be defined before any libc headers are included!
+#define _ISOC9X_SOURCE
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -12,11 +15,12 @@
 
 #include "af.h"
 #include "../bswap.h"
+#include "../libvo/fastmemcpy.h"
 
 // Integer to float conversion through lrintf()
 #ifdef HAVE_LRINTF
-#define __USE_ISOC99 1
 #include <math.h>
+long int lrintf(float);
 #else
 #define lrintf(x) ((int)(x))
 #endif
@@ -38,94 +42,14 @@ static void us2si(void* in, void* out, int len, int bps);
 // Change the number of bits per sample
 static void change_bps(void* in, void* out, int len, int inbps, int outbps);
 // From float to int signed
-static void float2int(void* in, void* out, int len, int bps);
+static void float2int(float* in, void* out, int len, int bps);
 // From signed int to float
-static void int2float(void* in, void* out, int len, int bps);
+static void int2float(void* in, float* out, int len, int bps);
 
-// Convert from string to format
-static int str2fmt(char* str)
-{
-  int format=0;
-  // Scan for endianess
-  if(strstr(str,"be") || strstr(str,"BE"))
-    format |= AF_FORMAT_BE;
-  else if(strstr(str,"le") || strstr(str,"LE"))
-    format |= AF_FORMAT_LE;
-  else
-    format |= AF_FORMAT_NE;    
-
-  // Scan for special formats
-  if(strstr(str,"mulaw") || strstr(str,"MULAW")){
-    format |= AF_FORMAT_MU_LAW; return format;
-  }
-  if(strstr(str,"alaw") || strstr(str,"ALAW")){
-    format |= AF_FORMAT_A_LAW; return format;
-  }
-  if(strstr(str,"ac3") || strstr(str,"AC3")){
-    format |= AF_FORMAT_AC3; return format;
-  }
-  if(strstr(str,"mpeg2") || strstr(str,"MPEG2")){
-    format |= AF_FORMAT_MPEG2; return format;
-  }
-  if(strstr(str,"imaadpcm") || strstr(str,"IMAADPCM")){
-    format |= AF_FORMAT_IMA_ADPCM; return format;
-  }
-  
-  // Scan for int/float
-  if(strstr(str,"float") || strstr(str,"FLOAT")){
-    format |= AF_FORMAT_F; return format;
-  }
-  else
-    format |= AF_FORMAT_I;
-
-  // Scan for signed/unsigned
-  if(strstr(str,"unsigned") || strstr(str,"UNSIGNED"))
-    format |= AF_FORMAT_US; 
-  else
-    format |= AF_FORMAT_SI;
-  
-  return format;
-}
-
-/* Convert format to str input str is a buffer for the 
-   converted string, size is the size of the buffer */
-char* fmt2str(int format, char* str, size_t size)
-{
-  int i=0;
-  // Print endinaness
-  if(AF_FORMAT_LE == (format & AF_FORMAT_END_MASK))
-    i+=snprintf(str,size,"little endian ");
-  else
-    i+=snprintf(str,size,"big endian ");
-  
-  if(format & AF_FORMAT_SPECIAL_MASK){
-    switch(format & AF_FORMAT_SPECIAL_MASK){
-    case(AF_FORMAT_MU_LAW): 
-      i+=snprintf(&str[i],size-i,"mu law "); break;
-    case(AF_FORMAT_A_LAW): 
-      i+=snprintf(&str[i],size-i,"A law "); break;
-    case(AF_FORMAT_MPEG2): 
-      i+=snprintf(&str[i],size-i,"MPEG 2 "); break;
-    case(AF_FORMAT_AC3): 
-      i+=snprintf(&str[i],size-i,"AC3 "); break;
-    }
-  }
-  else{
-    // Point
-    if(AF_FORMAT_F == (format & AF_FORMAT_POINT_MASK))
-      i+=snprintf(&str[i],size,"float ");
-    else{
-      // Sign
-      if(AF_FORMAT_US == (format & AF_FORMAT_SIGN_MASK))
-	i+=snprintf(&str[i],size-i,"unsigned ");
-      else
-	i+=snprintf(&str[i],size-i,"signed ");
-
-      i+=snprintf(&str[i],size,"int ");
-    }
-  }
-  return str;
-}
+static af_data_t* play(struct af_instance_s* af, af_data_t* data);
+static af_data_t* play_swapendian(struct af_instance_s* af, af_data_t* data);
+static af_data_t* play_float_s16(struct af_instance_s* af, af_data_t* data);
+static af_data_t* play_s16_float(struct af_instance_s* af, af_data_t* data);
 
 // Helper functions to check sanity for input arguments
 
@@ -145,10 +69,11 @@ static int check_format(int format)
 {
   char buf[256];
   switch(format & AF_FORMAT_SPECIAL_MASK){
+  case(AF_FORMAT_IMA_ADPCM): 
   case(AF_FORMAT_MPEG2): 
   case(AF_FORMAT_AC3):
     af_msg(AF_MSG_ERROR,"[format] Sample format %s not yet supported \n",
-	 fmt2str(format,buf,255)); 
+	 af_fmt2str(format,buf,256)); 
     return AF_ERROR;
   }
   return AF_OK;
@@ -161,71 +86,73 @@ static int control(struct af_instance_s* af, int cmd, void* arg)
   case AF_CONTROL_REINIT:{
     char buf1[256];
     char buf2[256];
+    af_data_t *data = arg;
+    
     // Make sure this filter isn't redundant 
-    if(af->data->format == ((af_data_t*)arg)->format && 
-       af->data->bps == ((af_data_t*)arg)->bps)
+    if(af->data->format == data->format && 
+       af->data->bps == data->bps)
       return AF_DETACH;
 
     // Check for errors in configuraton
-    if((AF_OK != check_bps(((af_data_t*)arg)->bps)) ||
-       (AF_OK != check_format(((af_data_t*)arg)->format)) ||
+    if((AF_OK != check_bps(data->bps)) ||
+       (AF_OK != check_format(data->format)) ||
        (AF_OK != check_bps(af->data->bps)) ||
        (AF_OK != check_format(af->data->format)))
       return AF_ERROR;
 
-    af_msg(AF_MSG_VERBOSE,"[format] Changing sample format from %ibit %sto %ibit %s \n",
-	   ((af_data_t*)arg)->bps*8,fmt2str(((af_data_t*)arg)->format,buf1,255),
-	   af->data->bps*8,fmt2str(af->data->format,buf2,255));
+    af_msg(AF_MSG_VERBOSE,"[format] Changing sample format from %s to %s\n",
+	   af_fmt2str(data->format,buf1,256),
+	   af_fmt2str(af->data->format,buf2,256));
 
-    af->data->rate = ((af_data_t*)arg)->rate;
-    af->data->nch  = ((af_data_t*)arg)->nch;
+    af->data->rate = data->rate;
+    af->data->nch  = data->nch;
     af->mul.n      = af->data->bps;
-    af->mul.d      = ((af_data_t*)arg)->bps;
+    af->mul.d      = data->bps;
+    af_frac_cancel(&af->mul);
+    
+    af->play = play; // set default
+    
+    // look whether only endianess differences are there
+    if ((af->data->format & ~AF_FORMAT_END_MASK) ==
+	(data->format & ~AF_FORMAT_END_MASK))
+    {
+	af_msg(AF_MSG_VERBOSE,"[format] Accelerated endianess conversion only\n");
+	af->play = play_swapendian;
+    }
+    if ((data->format == AF_FORMAT_FLOAT_NE) &&
+	(af->data->format == AF_FORMAT_S16_NE))
+    {
+	af_msg(AF_MSG_VERBOSE,"[format] Accelerated %s to %s conversion\n",
+	   af_fmt2str(data->format,buf1,256),
+	   af_fmt2str(af->data->format,buf2,256));
+	af->play = play_float_s16;
+    }
+    if ((data->format == AF_FORMAT_S16_NE) &&
+	(af->data->format == AF_FORMAT_FLOAT_NE))
+    {
+	af_msg(AF_MSG_VERBOSE,"[format] Accelerated %s to %s conversion\n",
+	   af_fmt2str(data->format,buf1,256),
+	   af_fmt2str(af->data->format,buf2,256));
+	af->play = play_s16_float;
+    }
     return AF_OK;
   }
   case AF_CONTROL_COMMAND_LINE:{
-    int bps = 2;
-    int format = AF_FORMAT_NE;
-    char str[256];
-    str[0] = '\0';
-    sscanf((char*)arg,"%i:%s",&bps,str);
-    // Convert string to format
-    format = str2fmt(str);
-    
-    // Automatic correction of errors
-    switch(format & AF_FORMAT_SPECIAL_MASK){
-    case(AF_FORMAT_A_LAW):
-    case(AF_FORMAT_MU_LAW): 
-      bps=1; break;
-    case(AF_FORMAT_AC3):
-      bps=4; break; // I think
-    }
-    if(AF_FORMAT_F == (format & AF_FORMAT_POINT_MASK))
-      bps=4;
-    
-    if((AF_OK != af->control(af,AF_CONTROL_FORMAT_BPS | AF_CONTROL_SET,&bps)) ||
-       (AF_OK != af->control(af,AF_CONTROL_FORMAT_FMT | AF_CONTROL_SET,&format)))
+    int format = af_str2fmt_short(arg);
+    if(AF_OK != af->control(af,AF_CONTROL_FORMAT_FMT | AF_CONTROL_SET,&format))
       return AF_ERROR;
     return AF_OK;
   }
-  case AF_CONTROL_FORMAT_BPS | AF_CONTROL_SET:
-    // Reinit must be called after this function has been called
-    
-    // Check for errors in configuraton
-    if(AF_OK != check_bps(*(int*)arg))
-      return AF_ERROR;
-
-    af->data->bps = *(int*)arg;
-    return AF_OK;
-  case AF_CONTROL_FORMAT_FMT | AF_CONTROL_SET:
-    // Reinit must be called after this function has been called
-
+  case AF_CONTROL_FORMAT_FMT | AF_CONTROL_SET:{
     // Check for errors in configuraton
     if(AF_OK != check_format(*(int*)arg))
       return AF_ERROR;
 
     af->data->format = *(int*)arg;
+    af->data->bps = af_fmt2bits(af->data->format)/8;
+
     return AF_OK;
+  }
   }
   return AF_UNKNOWN;
 }
@@ -236,6 +163,61 @@ static void uninit(struct af_instance_s* af)
   if(af->data)
     free(af->data);
   af->setup = 0;  
+}
+
+static af_data_t* play_swapendian(struct af_instance_s* af, af_data_t* data)
+{
+  af_data_t*   l   = af->data;	// Local data
+  af_data_t*   c   = data;	// Current working data
+  int 	       len = c->len/c->bps; // Lenght in samples of current audio block
+
+  if(AF_OK != RESIZE_LOCAL_BUFFER(af,data))
+    return NULL;
+
+  endian(c->audio,l->audio,len,c->bps);
+
+  c->audio = l->audio;
+  c->format = l->format;
+
+  return c;
+}
+
+static af_data_t* play_float_s16(struct af_instance_s* af, af_data_t* data)
+{
+  af_data_t*   l   = af->data;	// Local data
+  af_data_t*   c   = data;	// Current working data
+  int 	       len = c->len/4; // Lenght in samples of current audio block
+
+  if(AF_OK != RESIZE_LOCAL_BUFFER(af,data))
+    return NULL;
+
+  float2int(c->audio, l->audio, len, 2);
+
+  c->audio = l->audio;
+  c->len = len*2;
+  c->bps = 2;
+  c->format = l->format;
+
+  return c;
+}
+
+static af_data_t* play_s16_float(struct af_instance_s* af, af_data_t* data)
+{
+  af_data_t*   l   = af->data;	// Local data
+  af_data_t*   c   = data;	// Current working data
+  int 	       len = c->len/2; // Lenght in samples of current audio block
+
+  if(AF_OK != RESIZE_LOCAL_BUFFER(af,data))
+    return NULL;
+
+  int2float(c->audio, l->audio, len, 2);
+
+  c->audio = l->audio;
+  c->len = len*4;
+  c->bps = 4;
+  c->format = l->format;
+
+  return c;
 }
 
 // Filter data through filter
@@ -253,22 +235,19 @@ static af_data_t* play(struct af_instance_s* af, af_data_t* data)
     endian(c->audio,c->audio,len,c->bps);
 
   // Conversion table
-  switch(c->format & ~AF_FORMAT_END_MASK){
-  case(AF_FORMAT_MU_LAW):
+  if((c->format & AF_FORMAT_SPECIAL_MASK) == AF_FORMAT_MU_LAW) {
     from_ulaw(c->audio, l->audio, len, l->bps, l->format&AF_FORMAT_POINT_MASK);
     if(AF_FORMAT_A_LAW == (l->format&AF_FORMAT_SPECIAL_MASK))
       to_ulaw(l->audio, l->audio, len, 1, AF_FORMAT_SI);
     if((l->format&AF_FORMAT_SIGN_MASK) == AF_FORMAT_US)
       si2us(l->audio,l->audio,len,l->bps);
-    break;
-  case(AF_FORMAT_A_LAW):
+  } else if((c->format & AF_FORMAT_SPECIAL_MASK) == AF_FORMAT_A_LAW) {
     from_alaw(c->audio, l->audio, len, l->bps, l->format&AF_FORMAT_POINT_MASK);
     if(AF_FORMAT_A_LAW == (l->format&AF_FORMAT_SPECIAL_MASK))
       to_alaw(l->audio, l->audio, len, 1, AF_FORMAT_SI);
     if((l->format&AF_FORMAT_SIGN_MASK) == AF_FORMAT_US)
       si2us(l->audio,l->audio,len,l->bps);
-    break;
-  case(AF_FORMAT_F):
+  } else if((c->format & AF_FORMAT_POINT_MASK) == AF_FORMAT_F) {
     switch(l->format&AF_FORMAT_SPECIAL_MASK){
     case(AF_FORMAT_MU_LAW):
       to_ulaw(c->audio, l->audio, len, c->bps, c->format&AF_FORMAT_POINT_MASK);
@@ -282,8 +261,7 @@ static af_data_t* play(struct af_instance_s* af, af_data_t* data)
 	si2us(l->audio,l->audio,len,l->bps);
       break;
     }
-    break;
-  default:
+  } else {
     // Input must be int
     
     // Change signed/unsigned
@@ -312,7 +290,6 @@ static af_data_t* play(struct af_instance_s* af, af_data_t* data)
 	memcpy(l->audio,c->audio,len*c->bps);
       break;
     }
-    break;
   }
 
   // Switch from cpu native endian to the correct endianess 
@@ -522,48 +499,48 @@ static void change_bps(void* in, void* out, int len, int inbps, int outbps)
   }
 }
 
-static void float2int(void* in, void* out, int len, int bps)
+static void float2int(float* in, void* out, int len, int bps)
 {
   register int i;
   switch(bps){
   case(1):
     for(i=0;i<len;i++)
-      ((int8_t*)out)[i]=(int8_t)lrintf(SCHAR_MAX*((float*)in)[i]);
+      ((int8_t*)out)[i] = lrintf(127.0 * in[i]);
     break;
   case(2): 
     for(i=0;i<len;i++)
-      ((int16_t*)out)[i]=(int16_t)lrintf(SHRT_MAX*((float*)in)[i]);
+      ((int16_t*)out)[i] = lrintf(32767.0 * in[i]);
     break;
   case(3):
     for(i=0;i<len;i++)
-      store24bit(out, i, (int32_t)lrintf(INT_MAX*((float*)in)[i]));
+      store24bit(out, i, lrintf(2147483647.0 * in[i]));
     break;
   case(4):
     for(i=0;i<len;i++)
-      ((int32_t*)out)[i]=(int32_t)lrintf(INT_MAX*((float*)in)[i]);
+      ((int32_t*)out)[i] = lrintf(2147483647.0 * in[i]);
     break;
   }	
 }
 
-static void int2float(void* in, void* out, int len, int bps)
+static void int2float(void* in, float* out, int len, int bps)
 {
   register int i;
   switch(bps){
   case(1):
     for(i=0;i<len;i++)
-      ((float*)out)[i]=(1.0/SCHAR_MAX)*((float)((int8_t*)in)[i]);
+      out[i]=(1.0/128.0)*((int8_t*)in)[i];
     break;
   case(2):
     for(i=0;i<len;i++)
-      ((float*)out)[i]=(1.0/SHRT_MAX)*((float)((int16_t*)in)[i]);
+      out[i]=(1.0/32768.0)*((int16_t*)in)[i];
     break;
   case(3):
     for(i=0;i<len;i++)
-      ((float*)out)[i]=(1.0/INT_MAX)*((float)((int32_t)load24bit(in, i)));
+      out[i]=(1.0/2147483648.0)*((int32_t)load24bit(in, i));
     break;
   case(4):
     for(i=0;i<len;i++)
-      ((float*)out)[i]=(1.0/INT_MAX)*((float)((int32_t*)in)[i]);
+      out[i]=(1.0/2147483648.0)*((int32_t*)in)[i];
     break;
   }	
 }

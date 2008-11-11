@@ -5,6 +5,10 @@
  * Copyright (C) 2001, 2002 Samuel Hocevar <sam@zoy.org>,
  *                          Håkan Hjort <d95hjort@dtek.chalmers.se>
  *
+ * Modified for use with MPlayer, changes contained in libdvdread_changes.diff.
+ * detailed CVS changelog at http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
+ * $Id: dvd_input.h,v 1.3 2005/03/11 02:40:28 diego Exp $
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -36,12 +40,12 @@ typedef struct dvd_input_s *dvd_input_t;
 /**
  * Pointers which will be filled either the input meathods functions.
  */
-dvd_input_t (*DVDinput_open)  (const char *);
-int         (*DVDinput_close) (dvd_input_t);
-int         (*DVDinput_seek)  (dvd_input_t, int, int);
-int         (*DVDinput_title) (dvd_input_t, int); 
-int         (*DVDinput_read)  (dvd_input_t, void *, int, int);
-char *      (*DVDinput_error) (dvd_input_t);
+extern dvd_input_t (*DVDinput_open)  (const char *);
+extern int         (*DVDinput_close) (dvd_input_t);
+extern int         (*DVDinput_seek)  (dvd_input_t, int, int);
+extern int         (*DVDinput_title) (dvd_input_t, int); 
+extern int         (*DVDinput_read)  (dvd_input_t, void *, int, int);
+extern char *      (*DVDinput_error) (dvd_input_t);
 
 /**
  * Setup function accessed by dvd_reader.c.  Returns 1 if there is CSS support.

@@ -22,9 +22,7 @@
 ** Commercial non-GPL licensing of this software is possible.
 ** For more info contact Ahead Software through Mpeg4AAClicense@nero.com.
 **
-** Initially modified for use with MPlayer by Arpad Gereöffy on 2003/08/30
-** $Id: pulse.c,v 1.4 2004/06/23 13:50:51 diego Exp $
-** detailed CVS changelog at http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
+** $Id: pulse.c,v 1.15 2004/02/26 09:29:27 menno Exp $
 **/
 
 #include "common.h"
@@ -41,7 +39,8 @@ uint8_t pulse_decode(ic_stream *ics, int16_t *spec_data, uint16_t framelen)
 
     k = ics->swb_offset[pul->pulse_start_sfb];
 
-    for(i = 0; i <= pul->number_pulse; i++) {
+    for (i = 0; i <= pul->number_pulse; i++)
+    {
         k += pul->pulse_offset[i];
 
         if (k >= framelen)

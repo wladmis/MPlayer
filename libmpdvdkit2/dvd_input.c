@@ -2,6 +2,10 @@
  * Copyright (C) 2002 Samuel Hocevar <sam@zoy.org>,
  *                    Håkan Hjort <d95hjort@dtek.chalmers.se>
  *
+ * Modified for use with MPlayer, changes contained in libdvdread_changes.diff.
+ * detailed CVS changelog at http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
+ * $Id: dvd_input.c,v 1.5 2005/03/11 02:40:28 diego Exp $
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -34,6 +38,12 @@ int           (*DVDcss_title) (dvdcss_handle, int);
 int           (*DVDcss_read)  (dvdcss_handle, void *, int, int);
 char *        (*DVDcss_error) (dvdcss_handle);
 
+dvd_input_t (*DVDinput_open)  (const char *);
+int         (*DVDinput_close) (dvd_input_t);
+int         (*DVDinput_seek)  (dvd_input_t, int, int);
+int         (*DVDinput_title) (dvd_input_t, int); 
+int         (*DVDinput_read)  (dvd_input_t, void *, int, int);
+char *      (*DVDinput_error) (dvd_input_t);
 
 /* The DVDinput handle, add stuff here for new input methods. */
 struct dvd_input_s {

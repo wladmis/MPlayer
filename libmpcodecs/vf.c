@@ -356,6 +356,7 @@ mp_image_t* vf_get_image(vf_instance_t* vf, unsigned int outfmt, int mp_imgtype,
 	      //if(!mpi->stride[0]) 
 	      mpi->stride[0]=mpi->width;
 	      //if(!mpi->stride[1]) 
+	      if(mpi->num_planes > 2){
 	      mpi->stride[1]=mpi->stride[2]=mpi->chroma_width;
 	      if(mpi->flags&MP_IMGFLAG_SWAPPED){
 	          // I420/IYUV  (Y,U,V)
@@ -365,6 +366,11 @@ mp_image_t* vf_get_image(vf_instance_t* vf, unsigned int outfmt, int mp_imgtype,
 	          // YV12,YVU9,IF09  (Y,V,U)
 	          mpi->planes[2]=mpi->planes[0]+mpi->width*mpi->height;
 	          mpi->planes[1]=mpi->planes[2]+mpi->chroma_width*mpi->chroma_height;
+	      }
+	      } else {
+	          // NV12/NV21
+	          mpi->stride[1]=mpi->chroma_width;
+	          mpi->planes[1]=mpi->planes[0]+mpi->width*mpi->height;
 	      }
 	  } else {
 	      //if(!mpi->stride[0]) 
@@ -535,6 +541,37 @@ void vf_clone_mpi_attributes(mp_image_t* dst, mp_image_t* src){
 	dst->qscale= src->qscale;
     }
 }
+/**
+ * \brief Video config() function wrapper
+ *
+ * Blocks config() calls with different size or format for filters
+ * with VFCAP_CONSTANT
+ *
+ * First call is redirected to vf->config.
+ *
+ * In following calls, it verifies that the configuration parameters
+ * are unchanged, and returns either success or error.
+ *
+*/
+int vf_config_wrapper(struct vf_instance_s* vf,
+		    int width, int height, int d_width, int d_height,
+		    unsigned int flags, unsigned int outfmt)
+{
+    if ((vf->default_caps&VFCAP_CONSTANT) && vf->fmt.have_configured) {
+        if ((vf->fmt.orig_width != width)
+	    || (vf->fmt.orig_height != height)
+	    || (vf->fmt.orig_fmt != outfmt)) {
+            mp_msg(MSGT_VFILTER,MSGL_ERR,MSGTR_ResolutionDoesntMatch);
+            return 0;
+        }
+        return 1;
+    }
+    vf->fmt.have_configured = 1;
+    vf->fmt.orig_height = height;
+    vf->fmt.orig_width = width;
+    vf->fmt.orig_fmt = outfmt;
+    return vf->config(vf, width, height, d_width, d_height, flags, outfmt);
+}
 
 int vf_next_config(struct vf_instance_s* vf,
         int width, int height, int d_width, int d_height,
@@ -565,7 +602,7 @@ int vf_next_config(struct vf_instance_s* vf,
 	vf->next=vf2;
     }
     vf->next->w = width; vf->next->h = height;
-    return vf->next->config(vf->next,width,height,d_width,d_height,voflags,outfmt);
+    return vf_config_wrapper(vf->next,width,height,d_width,d_height,voflags,outfmt);
 }
 
 int vf_next_control(struct vf_instance_s* vf, int request, void* data){

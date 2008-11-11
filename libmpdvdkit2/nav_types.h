@@ -4,6 +4,10 @@
 /*
  * Copyright (C) 2000, 2001 Håkan Hjort <d95hjort@dtek.chalmers.se>
  *
+ * Modified for use with MPlayer, changes contained in libdvdread_changes.diff.
+ * detailed CVS changelog at http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
+ * $Id: nav_types.h,v 1.3 2005/03/11 02:40:28 diego Exp $
+ *
  * The data structures in this file should represent the layout of the
  * pci and dsi packets as they are stored in the stream.  Information
  * found by reading the source to VOBDUMP is the base for the structure

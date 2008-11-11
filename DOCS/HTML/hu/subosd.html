@@ -9,7 +9,7 @@ az alábbi formátumokba, a megadott kapcsolókkal:
 </p><div class="itemizedlist"><ul type="disc"><li><p>MPsub: <tt class="option">-dumpmpsub</tt></p></li><li><p>SubRip: <tt class="option">-dumpsrtsub</tt></p></li><li><p>MicroDVD: <tt class="option">-dumpmicrodvdsub</tt></p></li><li><p>JACOsub: <tt class="option">-dumpjacosub</tt></p></li><li><p>Sami: <tt class="option">-dumpsami</tt></p></li></ul></div><p>
 </p><p>
 A <span class="application">MEncoder</span> el tudja menteni a DVD feliratokat
-<a href="menc-feat-extractsub.html" title="7.8. Extracting DVD subtitles to VOBsub file">VOBsub</a> formában.
+<a href="menc-feat-extractsub.html" title="7.7. Extracting DVD subtitles to VOBsub file">VOBsub</a> formában.
 </p><p>
 A parancssori kapcsolók eléggé különböznek az az egyes formátumoknál:
 </p><p><b>VOBsub feliratok. </b>
@@ -36,7 +36,7 @@ akkor a <tt class="option">-sub <i><tt>sample.txt</tt></i></tt> kapcsolóval
 tudod megadni (teljes elérési út is megadható).
 </p><div class="variablelist"><p><b>Felirat id&#337;zítés és pozícionálás beállítása:</b></p><dl><dt><span class="term"><tt class="option">-subdelay <i><tt>mp</tt></i></tt></span></dt><dd>
     Késlelteti a feliratot <tt class="option"><i><tt>mp</tt></i></tt> másodperccel.
-    Lehet negatív is.
+    Lehet negatív is. Az érték a film id&#337;pozíciójának számlálójához adódik hozzá.
     </dd><dt><span class="term"><tt class="option">-subfps <i><tt>RÁTA</tt></i></tt></span></dt><dd>
     Megadhatod a felirat fájl képkocka/mp rátáját (lebeg&#337;pontos szám).
     </dd><dt><span class="term"><tt class="option">-subpos <i><tt>0-100</tt></i></tt></span></dt><dd>
@@ -45,12 +45,13 @@ tudod megadni (teljes elérési út is megadható).
 Ha MicroDVD felirat fájl használa közben egyre növekv&#337; csúszást tapasztalsz a
 film és a felirat között, akkor a legvalószín&#369;bb, hogy a film és a felirat frame
 rátája különböz&#337;. Jegyezd meg, hogy a MicroDVD felirat formátum abszolút képkocka
-számokat használ az id&#337;zítéshez, és emiatt a <tt class="option">-subfps</tt> kapcsoló
-nem használható ezzel a formátummal. Mivel az <span class="application">MPlayer</span>
-nem tudja kitalálni a felirat fájl frame rátáját, kézzel kell átkonvertálnod.
-Van egy kis Perl script a <tt class="filename">contrib</tt>
-könyvtárban az <span class="application">MPlayer</span> FTP szerverén, ami megcsinálja
-ezt a konvertálást neked.
+számokat használ az id&#337;zítéshez, és nincs benne fps információ, emiatt a
+<tt class="option">-subfps</tt> kapcsoló használata javasolt ezzel a formátummal. Ha
+végleg meg akarod oldani ezt a problémát, kézzel kell átkonvertálnod a felirat
+fájl frame rátáját.
+Az <span class="application">MPlayer</span> el tudja végezni ezt a konverziót neked:
+<pre class="screen">mplayer <i><tt>dummy.avi</tt></i> -fps subtitles_fps -subfps avi_fps [-subdelay sec] [-sub subtitle_filename] <i><tt>-dumpmicrodvdsub</tt></i></pre>
+<pre class="screen">mplayer -dumpmicrodvdsub -fps <i><tt>subtitles_fps</tt></i> -subfps <i><tt>avi_fps</tt></i> -sub <i><tt>subtitle_filename</tt></i> <i><tt>dummy.avi</tt></i></pre>
 </p><p>
 A DVD feliratokról a <a href="dvd.html" title="5.2. DVD lejátszás">DVD</a> fejezetben olvashatsz b&#337;vebben.
 </p><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="mpsub"></a>1.4.1. Az <span class="application">MPlayer</span> saját felirat formátuma (MPsub)</h3></div></div><p>

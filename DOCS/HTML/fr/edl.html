@@ -4,7 +4,7 @@ permet de sauter ou rendre muet des sections de vidéos pendant la lecture,
 basé sur un fichier de configuration EDL spécifique au film.
 </p><p>
 Ceci est utile pour ceux qui veulent voir un film en mode "tout public".
-Vous pouvez couper toutes violence, profanation, Jar-Jar Binks .. d'un film
+Vous pouvez couper toute violence, profanation, Jar-Jar Binks .. d'un film
 suivant vos préférences personnelles. A part ça, il y a d'autres
 utilisations, comme sauter automatiquement les publicités dans les fichiers vidéos
 que vous regardez.
@@ -13,10 +13,6 @@ Le format de fichier EDL est plutôt rudimentaire. Une fois que le système EDL
 aura atteint un certain niveau de maturité, un format de fichier basé sur XML
 sera probablement implémenté (en gardant une compatibilité descendante avec les
 précédents formats EDL).
-</p><p>
-Le nombre maximum d'entrées EDL pour l'incarnation actuelle de EDL est 1000.
-Si vous avez besoin de plus, changez le <tt>#define MAX_EDL_ENTRIES</tt>
-dans le fichier <tt class="filename">edl.h</tt>.
 </p><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="edl_using"></a>3.5.1. Utiliser un fichier EDL</h3></div></div><p>
 Incluez l'option <tt class="option">-edl &lt;nomfichier&gt;</tt> quand vous lancez
 <span class="application">MPlayer</span>, avec le nom du fichier EDL que vous voulez
@@ -36,7 +32,7 @@ Exemple:
 </pre>
 Cela va sauter de la seconde 5.3 à la seconde 7.1 de la vidéo, puis va couper
 le son à 15 secondes, le remettre à 16.7 secondes et sauter de la seconde 420
-à la seconde 422 de la vidéo. Ces actions seront appliqués quand le temps de
+à la seconde 422 de la vidéo. Ces actions seront appliquées quand le temps de
 lecture atteint le temps indiqué dans le fichier.
 </p><p>
 Pour créer un fichier EDL à partir duquel travailler, utilisez l'option

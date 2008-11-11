@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- $Revision: 1.50 $ -->
+<!-- $Revision: 1.57 $ -->
 <sect1 id="install">
 <title>Installation</title>
 
@@ -118,6 +118,10 @@ You need a fairly recent system. On Linux, 2.4.x kernels are recommended.
   <emphasis role="bold">libsmb</emphasis> - optional, for Samba support.
   </para></listitem>
 <listitem><para>
+  <emphasis role="bold">ALSA</emphasis> - optional, for ALSA audio output
+  support. At least 0.9.0rc4 is required.
+  </para></listitem>
+<listitem><para>
   <emphasis role="bold">bio2jack</emphasis> - optional, for JACK audio output
   support, needed only in compile time. You can obtain it from
   <ulink url="http://bio2jack.sf.net/">http://bio2jack.sf.net</ulink>. Since it
@@ -158,9 +162,9 @@ You need a fairly recent system. On Linux, 2.4.x kernels are recommended.
 <listitem><para>
   <emphasis role="bold">Win32 codecs</emphasis>: If you plan to use
   <application>MPlayer</application> on x86 architecture, you will possibly need
-  them. Download the Win32 codecs from our
-  <ulink url="http://www.mplayerhq.hu/MPlayer/releases/codecs/">codecs page</ulink>
-  and install them to <filename class="directory">/usr/local/lib/codecs</filename>
+  them. Download a codec package from our
+  <ulink url="http://www.mplayerhq.hu/homepage/design7/codecs.html">codecs page</ulink>
+  and put the codecs in <filename class="directory">/usr/local/lib/codecs</filename>
   <emphasis role="bold">BEFORE</emphasis> compiling <application>MPlayer</application>,
   otherwise no Win32 support will be compiled!
   <note><para>The avifile project has similar codecs package, but it
@@ -201,7 +205,7 @@ You need a fairly recent system. On Linux, 2.4.x kernels are recommended.
   and encoding. Features:
   <itemizedlist>
   <listitem><simpara>
-    1 pass or 2 pass encoding with
+    one pass or two pass encoding with
     <link linkend="mencoder"><application>MEncoder</application></link>
     </simpara></listitem>
   <listitem><simpara>
@@ -219,7 +223,7 @@ You need a fairly recent system. On Linux, 2.4.x kernels are recommended.
   DivX4Linux. Features:
   <itemizedlist>
   <listitem><simpara>
-    1 pass or 2 pass encoding with
+    one pass or two pass encoding with
     <link linkend="mencoder"><application>MEncoder</application></link>
     </simpara></listitem>
   <listitem><simpara>
@@ -642,7 +646,7 @@ you have to pass the option <option>-sub
   <term><option>-subdelay <replaceable>sec</replaceable></option></term>
   <listitem><simpara>
     Delays subtitles by <option><replaceable>sec</replaceable></option> seconds.
-    Can be negative.
+    Can be negative. The value is added to movie's time position counter.
     </simpara></listitem>
 </varlistentry>
 <varlistentry>
@@ -663,13 +667,14 @@ you have to pass the option <option>-sub
 If you experience a growing delay between the movie and the subtitles when
 using a MicroDVD subtitle file, most likely the frame rate of the movie and
 the subtitle file are different. Please note that the MicroDVD subtitle
-format uses absolute frame numbers for its timing, and therefore the
-<option>-subfps</option> option cannot be used with this format. As
-<application>MPlayer</application> has no way to guess the frame rate of
-the subtitle file, you have to manually convert the frame rate. There is a
-little perl script in the <filename class="directory">contrib</filename>
-directory of the <application>MPlayer</application> FTP site to do this
-conversion for you.
+format uses absolute frame numbers for its timing, but there is no fps
+information in it, and therefore the <option>-subfps</option> option should
+be used with this format. If you like to solve this problem permanently,
+you have to manually convert the subtitle file framerate.
+<application>MPlayer</application> can do this
+conversion for you:
+
+<screen>mplayer -dumpmicrodvdsub -fps <replaceable>subtitles_fps</replaceable> -subfps <replaceable>avi_fps</replaceable> -sub <replaceable>subtitle_filename</replaceable> <replaceable>dummy.avi</replaceable></screen>
 </para>
 
 <para>
@@ -716,7 +721,7 @@ seconds to/from the subtitle.
 
 <para>
 Subtitles are displayed with a technique called <emphasis role="bold">'OSD',
-On Screen Display</emphasis>.OSD is used to display current time, volume bar,
+On Screen Display</emphasis>. OSD is used to display current time, volume bar,
 seek bar etc.
 </para>
 </sect2>

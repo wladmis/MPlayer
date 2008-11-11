@@ -62,7 +62,7 @@ il était nécessaire de spécifier le format de sortie. Ce problème devrait être r
 actuelle et <tt class="option">outfmt</tt> n'est plus requis, et la valeur par défaut
 convient dans la plupart des cas. Par exemple, si vous capturez en DivX en utilisant
 <tt>libavcodec</tt> et que vous spécifiez <tt class="option">outfmt=RGB24</tt> de façon à augmenter
-la qualité de l'image capturée, l'image capturée sera reconverti plus tard en YV12;
+la qualité de l'image capturée, l'image capturée sera reconvertie plus tard en YV12;
 donc la seule chose que vous obtiendrez est un gaspillage massif de puissance CPU.
 </p></li><li><p>
 Pour spécifier la palette I420 (<tt class="option">outfmt=i420</tt>), vous devez ajouter
@@ -79,7 +79,7 @@ pas celle de <span class="application">MPlayer</span>) pour les instructions d'u
 Si <span class="application">MEncoder</span> ne peut pas ouvrir le périphérique audio,
 assurez-vous qu'il soit réellement disponible. Il peut y avoir des ennuis avec
 certains serveurs de son comme arts (KDE) ou esd (GNOME). Si vous avez une carte
-son full duplex (presques toutes les cartes décentes le supportent aujourd'hui),
+son full duplex (presque toutes les cartes décentes le supportent aujourd'hui),
 et que vous utilisez KDE, essayez d'activer l'otpion "full duplex" dans le
 menu des préférences du serveur de son.
 </p></li></ul></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="tv-examples"></a>2.5.3. Exemples</h3></div></div><div class="informalexample"><p>
@@ -93,7 +93,7 @@ mplayer -tv driver=v4l:width=640:height=480:outfmt=i420 -vc rawi420 -vo xv tv://
 </p></div><div class="informalexample"><p>
 Un exemple plus élaboré. Ici <span class="application">MEncoder</span> capture l'image PAL entière, coupe les marges, et
 désentrelace l'image en utilisant un algorithme de mélange linéaire. L'audio est
-compressé à un débit constant de 64kbps, en utilisant le codec LAME. Cette
+compressée à un débit constant de 64kbps, en utilisant le codec LAME. Cette
 combinaison est adaptée pour capturer des films.
 <pre class="screen">
      mencoder -tv driver=v4l:width=768:height=576 \
@@ -113,9 +113,9 @@ très importante.
      -oac mp3lame -lameopts cbr:br=48 \
      -vf crop=720:540:24:18,pp=tn/lb,scale=384:288 -sws 1 -o <i><tt>sortie.avi</tt></i> tv://
 </pre>
-Il est également possible de spécifier des dimensions d'image plus petites
+Il est également possible de spécifier des dimensions d'images plus petites
 dans l'option <tt class="option">-tv</tt> et d'omettre le zoom logiciel mais cette approche
-utilise le maximum d'informations disponibles et est un peut plus résistant au bruit.
+utilise le maximum d'informations disponibles et, est un peu plus résistant au bruit.
 Les chipsets bt8x8 peuvent faire une moyenne de pixels uniquement dans la direction
 horizontale à cause d'une limitation matérielle.
 </p></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="audio.html">Précédent</a> </td><td width="20%" align="center"><a accesskey="u" href="features.html">Niveau supérieur</a></td><td width="40%" align="right"> <a accesskey="n" href="usage.html">Suivant</a></td></tr><tr><td width="40%" align="left" valign="top">2.4. Périphériques de sortie audio </td><td width="20%" align="center"><a accesskey="h" href="index.html">Sommaire</a></td><td width="40%" align="right" valign="top"> Chapitre 3. Utilisation</td></tr></table></div></body></html>

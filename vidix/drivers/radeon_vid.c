@@ -233,15 +233,15 @@ static uint32_t SAVED_CONFIG_CNTL = 0;
 #define GETREG(TYPE,PTR,OFFZ)		(*((volatile TYPE*)((PTR)+(OFFZ))))
 #define SETREG(TYPE,PTR,OFFZ,VAL)	(*((volatile TYPE*)((PTR)+(OFFZ))))=VAL
 
-#define INREG8(addr)		GETREG(uint8_t,(uint32_t)(radeon_mmio_base),addr)
-#define OUTREG8(addr,val)	SETREG(uint8_t,(uint32_t)(radeon_mmio_base),addr,val)
+#define INREG8(addr)		GETREG(uint8_t,(uint8_t*)(radeon_mmio_base),addr)
+#define OUTREG8(addr,val)	SETREG(uint8_t,(uint8_t*)(radeon_mmio_base),addr,val)
 
 static inline uint32_t INREG (uint32_t addr) {
-	uint32_t tmp = GETREG(uint32_t,(uint32_t)(radeon_mmio_base),addr);
+	uint32_t tmp = GETREG(uint32_t,(uint8_t*)(radeon_mmio_base),addr);
 	return le2me_32(tmp);
 }
-//#define OUTREG(addr,val)	SETREG(uint32_t,(uint32_t)(radeon_mmio_base),addr,val)
-#define OUTREG(addr,val)	SETREG(uint32_t,(uint32_t)(radeon_mmio_base),addr,le2me_32(val))
+//#define OUTREG(addr,val)	SETREG(uint32_t,(uint8_t*)(radeon_mmio_base),addr,val)
+#define OUTREG(addr,val)	SETREG(uint32_t,(uint8_t*)(radeon_mmio_base),addr,le2me_32(val))
 #define OUTREGP(addr,val,mask)  					\
 	do {								\
 		unsigned int _tmp = INREG(addr);			\
@@ -895,6 +895,7 @@ static unsigned short ati_card_ids[] =
  DEVICE_ATI_RV280_RADEON_92003,
  DEVICE_ATI_RV280_RADEON_92004,
  DEVICE_ATI_RV280_RADEON_92005,
+ DEVICE_ATI_RV280_RADEON_92006,
  DEVICE_ATI_RADEON_R300_ND,
  DEVICE_ATI_RADEON_R300_NE,
  DEVICE_ATI_RADEON_R300_NF,
@@ -1074,6 +1075,7 @@ int vixProbe( int verbose,int force )
             case DEVICE_ATI_RV280_RADEON_92003:
             case DEVICE_ATI_RV280_RADEON_92004:
             case DEVICE_ATI_RV280_RADEON_92005:
+            case DEVICE_ATI_RV280_RADEON_92006:
               RadeonFamily = 280;
               break;
 
@@ -1153,6 +1155,7 @@ int vixInit( void )
   /* Rage Mobility (rage128) also has memsize bug */
   if (radeon_ram_size == 0 &&
       (def_cap.device_id == DEVICE_ATI_RAGE_MOBILITY_M3 ||
+       def_cap.device_id == DEVICE_ATI_RAGE_128_RL_VR ||
        def_cap.device_id == DEVICE_ATI_RAGE_MOBILITY_M32))
   {
       printf(RADEON_MSG" Workarounding buggy Rage Mobility M3 (0 vs. 8MB ram)\n");

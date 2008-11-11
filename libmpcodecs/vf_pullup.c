@@ -178,7 +178,14 @@ static int put_image(struct vf_instance_s* vf, mp_image_t *mpi)
 		if (!f) return 0;
 		if (f->length < 2) {
 			pullup_release_frame(f);
-			return 0;
+			if (!(mpi->fields & MP_IMGFIELD_REPEAT_FIRST))
+				return 0;
+			f = pullup_get_frame(c);
+			if (!f) return 0;
+			if (f->length < 2) {
+				pullup_release_frame(f);
+				return 0;
+			}
 		}
 	}
 
@@ -310,7 +317,7 @@ static int open(vf_instance_t *vf, char* args)
 {
 	struct vf_priv_s *p;
 	struct pullup_context *c;
-	vf->get_image = get_image;
+	//vf->get_image = get_image;
 	vf->put_image = put_image;
 	vf->config = config;
 	vf->query_format = query_format;
@@ -318,8 +325,8 @@ static int open(vf_instance_t *vf, char* args)
 	vf->default_reqs = VFCAP_ACCEPT_STRIDE;
 	vf->priv = p = calloc(1, sizeof(struct vf_priv_s));
 	p->ctx = c = pullup_alloc_context();
-	p->fakecount = 2;
-	c->verbose = verbose;
+	p->fakecount = 1;
+	c->verbose = verbose>0;
 	c->junk_left = c->junk_right = 1;
 	c->junk_top = c->junk_bottom = 4;
 	c->strict_breaks = 0;

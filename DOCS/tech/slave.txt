@@ -1,13 +1,15 @@
 SLAVE MODE PROTOCOL
 -------------------
 
-FIXME: Some of these options are still not documented, patches welcome.
-
 Most slave mode commands are equivalent to command line options.
 Have a look at the man page for more detailed descriptions.
 
 If the -slave option is given, playback is controlled by a line-based protocol.
 Each line must contain one of the following commands:
+
+All commands can be prefixed with "pausing ", causing MPlayer to get into
+paused mode as soon as possible after processing the command.
+Please note that this can be before the command is fully executed.
 
 seek <value> [<type>]
     Seek to some place in the movie.
@@ -25,7 +27,7 @@ speed_mult <value>
     Multiply the current speed by <value>.
 
 edl_mark
-    ???
+    Write the current position into the EDL file.
 
 audio_delay <value>
     Adjust the audio delay by <value> seconds.
@@ -41,7 +43,7 @@ frame_step
     Play one frame, then pause again.
 
 grab_frames
-    ???
+    Currently unimplemented.
 
 pt_step <value> [<force>]
     Go to the next/previous entry in the playtree. The sign of <value> tells
@@ -59,14 +61,15 @@ sub_delay <value> [<abs>]
     Adjust the subtitle delay by +/- <value> seconds or set it to <value>
     seconds when <abs> is nonzero.
 
-sub_step
-    ???
+sub_step <value>
+    Step forward in the subtitle list by <value> steps or backwards if <value>
+    is negative.
 
 osd [<level>]
     Toggle OSD mode or set it to level when <level> >= 0.
 
-osd_show_text <value>
-    ???
+osd_show_text <string>
+    Show <string> on the OSD.
 
 volume <value>
     Increase/decrease volume.
@@ -76,6 +79,9 @@ use_master
 
 mute
     Mute/unmute sound output.
+
+switch_audio (MPEG and Matroska only)
+    Cycle through the available audio tracks.
 
 [contrast|gamma|brightness|hue|saturation] <-100 - 100> [<abs>]
     Set/adjust video parameters.
@@ -95,10 +101,18 @@ sub_visibility
 get_sub_visibility
     Print out subtitle visibility (1 == on, 0 == off).
 
-sub_select
-    Cycle through the available subtitles. Supported subtitle sources are
-    -sub options on the command line, VOBsubs, DVD subtitles, and Ogg text
-    streams.
+sub_select [<value>]
+    Display subtitle with index <value>. Turn subtitle display off if
+    <value> is -1 or greater than the highest available subtitle index.
+    Cycle through the available subtitles if <value> is omitted or less
+    than -1. Supported subtitle sources are -sub options on the command
+    line, VOBsubs, DVD subtitles, and Ogg and Matroska text streams.
+
+sub_log
+    Logs the current or last displayed subtitle together with filename
+    and time information to ~/.mplayer/subtitle_log. Intended purpose
+    is to allow convenient marking of bogus subtitles which need to be
+    fixed while watching the movie.
 
 vobsub_lang
     This is a stub linked to sub_select for backwards compatibility.
@@ -130,8 +144,11 @@ switch_ratio [<value>]
     as a float (e.g. 1.77778 for 16/9).
     There might be problems with some video filters.
 
-panscan <value> [value2]
-    ???
+panscan <-1.0 - 1.0> | <0.0 - 1.0> <absolute>
+    Increase or decrease the pan-and-scan range by <value>, 1.0 is the maximum.
+    Negative values decrease the pan-and-scan range.
+    If <absolute> is != 0, then the pan-and scan range is interpreted as an
+    absolute range.
 
 loadfile <file|url>
     Load the given file/URL.
@@ -167,7 +184,7 @@ dvdnav <button>
         6 select
 
 dvdnav_event <value>
-    ???
+    Send <value> as DVDNAV event. DVDNAV support in MPlayer is disabled.
 
 tv_step_channel <channel>
     Select next/previous TV channel.
@@ -212,27 +229,31 @@ dvb_set_channel <channel_number> <card_number>
     Set DVB channel.
 
 screenshot
-    Take a screenshot.
+    Take a screenshot. Currently not implemented in any video output driver.
 
-menu <value>
-    ???
+menu <command>
+    Execute an OSD menu command.
+        up     Move cursor up.
+        down   Move cursor down.
+        ok     Accept selection.
+        cancel Cancel selection.
+        hide   Hide the OSD menu.
 
-set_menu <value>
-    ???
+set_menu <menu_name>
+    Display the menu named <menu_name>.
+
+The following commands are really only useful for OSD menu console mode:
 
 help
-    ???
+    Displays help text, currently empty.
 
 exit
-    ???
+    Exits from OSD menu console. Unlike 'quit', does not quit MPlayer.
 
 hide
-    ???
+    Hides the OSD menu console. Clicking a menu command unhides it. Other
+    keybindings act as usual.
 
 run <value>
-    ???
-
-All commands can be prefixed with "pausing ", causing MPlayer to get into
-paused mode as soon as possible after processing the command.
-Please note that this can be before the command is fully executed.
-
+    Run <value> as shell command. In OSD menu console mode stdout and stdin
+    are through the video output driver.

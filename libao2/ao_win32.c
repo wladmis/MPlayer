@@ -23,7 +23,8 @@
 #include <windows.h>
 #include <mmsystem.h>
 
-#include "afmt.h"
+#include "config.h"
+#include "libaf/af_format.h"
 #include "audio_out.h"
 #include "audio_out_internal.h"
 #include "mp_msg.h"
@@ -149,29 +150,29 @@ static int init(int rate,int channels,int format,int flags)
 	int i;
    
 	switch(format){
-		case AFMT_AC3:
-		case AFMT_S24_LE:
-		case AFMT_S16_LE:
-		case AFMT_S8:
+		case AF_FORMAT_AC3:
+		case AF_FORMAT_S24_LE:
+		case AF_FORMAT_S16_LE:
+		case AF_FORMAT_S8:
 			break;
 		default:
-			mp_msg(MSGT_AO, MSGL_V,"ao_win32: format %s not supported defaulting to Signed 16-bit Little-Endian\n",audio_out_format_name(format));
-			format=AFMT_S16_LE;
+			mp_msg(MSGT_AO, MSGL_V,"ao_win32: format %s not supported defaulting to Signed 16-bit Little-Endian\n",af_fmt2str_short(format));
+			format=AF_FORMAT_S16_LE;
 	}   
 	//fill global ao_data 
 	ao_data.channels=channels;
 	ao_data.samplerate=rate;
 	ao_data.format=format;
 	ao_data.bps=channels*rate;
-	if(format != AFMT_U8 && format != AFMT_S8)
+	if(format != AF_FORMAT_U8 && format != AF_FORMAT_S8)
 	  ao_data.bps*=2;
 	if(ao_data.buffersize==-1)
 	{
-		ao_data.buffersize=audio_out_format_bits(format)/8;
+		ao_data.buffersize=af_fmt2bits(format)/8;
         ao_data.buffersize*= channels;
 		ao_data.buffersize*= SAMPLESIZE;
 	}
-	mp_msg(MSGT_AO, MSGL_V,"ao_win32: Samplerate:%iHz Channels:%i Format:%s\n",rate, channels, audio_out_format_name(format));
+	mp_msg(MSGT_AO, MSGL_V,"ao_win32: Samplerate:%iHz Channels:%i Format:%s\n",rate, channels, af_fmt2str_short(format));
     mp_msg(MSGT_AO, MSGL_V,"ao_win32: Buffersize:%d\n",ao_data.buffersize);
 	
 	//fill waveformatex
@@ -179,7 +180,7 @@ static int init(int rate,int channels,int format,int flags)
     wformat.Format.cbSize          = (channels>2)?sizeof(WAVEFORMATEXTENSIBLE)-sizeof(WAVEFORMATEX):0;
     wformat.Format.nChannels       = channels;                
     wformat.Format.nSamplesPerSec  = rate;            
-    if(format == AFMT_AC3)
+    if(format == AF_FORMAT_AC3)
     {
         wformat.Format.wFormatTag      = WAVE_FORMAT_DOLBY_AC3_SPDIF;
         wformat.Format.wBitsPerSample  = 16;
@@ -188,27 +189,27 @@ static int init(int rate,int channels,int format,int flags)
     else 
     {
         wformat.Format.wFormatTag      = (channels>2)?WAVE_FORMAT_EXTENSIBLE:WAVE_FORMAT_PCM;
-        wformat.Format.wBitsPerSample  = audio_out_format_bits(format); 
+        wformat.Format.wBitsPerSample  = af_fmt2bits(format); 
         wformat.Format.nBlockAlign     = wformat.Format.nChannels * (wformat.Format.wBitsPerSample >> 3);
     }
 	if(channels>2)
 	{
         wformat.dwChannelMask = channel_mask[channels-3];
         wformat.SubFormat = KSDATAFORMAT_SUBTYPE_PCM;
-	    wformat.Samples.wValidBitsPerSample=audio_out_format_bits(format);
+	    wformat.Samples.wValidBitsPerSample=af_fmt2bits(format);
     }
   
     wformat.Format.nAvgBytesPerSec = wformat.Format.nSamplesPerSec * wformat.Format.nBlockAlign;
  	
     //open sound device
     //WAVE_MAPPER always points to the default wave device on the system
-    result = waveOutOpen(&hWaveOut,WAVE_MAPPER,(WAVEFORMATEX*)&wformat,(DWORD_PTR)waveOutProc,0,CALLBACK_FUNCTION|WAVE_FORMAT_DIRECT);
+    result = waveOutOpen(&hWaveOut,WAVE_MAPPER,(WAVEFORMATEX*)&wformat,(DWORD_PTR)waveOutProc,0,CALLBACK_FUNCTION);
 	if(result == WAVERR_BADFORMAT)
 	{
 		mp_msg(MSGT_AO, MSGL_ERR,"ao_win32: format not supported switching to default\n");
         ao_data.channels = wformat.Format.nChannels = 2;
 	    ao_data.samplerate = wformat.Format.nSamplesPerSec = 44100;
-	    ao_data.format = AFMT_S16_LE;
+	    ao_data.format = AF_FORMAT_S16_LE;
 		ao_data.bps=ao_data.channels * ao_data.samplerate*2;
 	    wformat.Format.wBitsPerSample=16;
         wformat.Format.wFormatTag=WAVE_FORMAT_PCM;
@@ -219,7 +220,7 @@ static int init(int rate,int channels,int format,int flags)
 	}
 	if(result != MMSYSERR_NOERROR)
 	{
-		mp_msg(MSGT_AO, MSGL_ERR,"ao_win32: unable to open wave mapper device\n");
+		mp_msg(MSGT_AO, MSGL_ERR,"ao_win32: unable to open wave mapper device (result=%i)\n",result);
 		return 0;
     }
 	//allocate buffer memory as one big block

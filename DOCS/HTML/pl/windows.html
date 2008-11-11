@@ -4,7 +4,7 @@
   Nie ma jeszcze interfejsu GUI, ale wersja dla wiersza polece&#324; jest ju&#380; prawie w pe&#322;ni
   funkcjonalna. <a href="../../tech/patches.txt" target="_top">&#321;atki</a> s&#261; zawsze mile widziane.
   Powiniene&#347; sprawdzi&#263; list&#281;
-  <a href="http://mplayerhq.hu/mailman/listinfo/mplayer-cygwin/" target="_top">mplayer-cygwin</a>,
+  <a href="http://mplayerhq.hu/mailman/listinfo/mplayer-cygwin/" target="_top">MPlayer-cygwin</a>,
   aby uzyska&#263; pomoc albo otrzyma&#263; najnowsze informacje.</p><p>Najlepsze wyniki s&#261; osi&#261;gane ze sterownikami wyj&#347;ciowymi video DirectX
   (<tt class="option">-vo directx</tt>) i rdzennym wyj&#347;ciem d&#378;wi&#281;kowym wave Windows
   (<tt class="option">-ao win32</tt>). Mo&#380;esz skorzysta&#263; równie&#380; z OpenGL lub SDL, jednak
@@ -38,7 +38,6 @@
   <tt class="filename">mplayer/vidix</tt>
   wzgl&#281;dem po&#322;o&#380;nia pliku <tt class="filename">mplayer.exe</tt>.</p><p>&#379;eby osi&#261;gn&#261;&#263; najlepsze wyniki <span class="application">MPlayer</span> powinien
   korzysta&#263; z przestrzeni kolorów, któr&#261; Twoja karta wspomaga sprz&#281;towo. Niestety
-  
   wiele sterowników graficznych Windowsa &#378;le informuje o obs&#322;ugiwanych przez kart&#281;
   przestrzeniach. Aby sprawdzi&#263; które s&#261; &#378;le obs&#322;ugiwane, wykonaj poni&#380;sz&#261; komend&#281;:
 
@@ -48,18 +47,18 @@
   warto&#347;ci&#261; spo&#347;ród tych uzyskanych przez opcj&#281; <tt class="option">-vf format=fmt=help</tt>.
   Je&#347;li która&#347; z nich dzia&#322;a szczególnie &#378;le, opcja
   <tt class="option">-vf noformat=<i><tt>przestrze&#324;</tt></i></tt>
-  zapobiegnie jej u&#380;ywaniu. Mo&#380;esz to na sta&#322;e doda&#263; do Twojego pliku konfiguracyjnego.</p><p>Mo&#380;esz wykorzysta&#263; kodeki Win32 i Real dla Win32 (nie kodeki Real dla Linuksa),
-  je&#380;eli chcesz. Umie&#347;&#263; je gdzie&#347; w swojej
-  &#347;cie&#380;ce (zmienna PATH - przyp. t&#322;umacza) albo u&#380;yj opcji
-  <tt class="option">--with-codecsdir=c:/&#347;cie&#380;ka/do/twoich/kodeków</tt> (lub
-  <tt class="option">--with-codecsdir=/&#347;cie&#380;ka/do/twoich/kodeków</tt> tylko na
-  <span class="application">Cygwin</span>) dla <tt class="filename">configure</tt>.
-  Mieli&#347;my doniesienia, &#380;e biblioteki Real musz&#261; by&#263; zapisywalne dla u&#380;ytkownika,
-  który korzysta z <span class="application">MPlayera</span>, ale tylko na niektórych
-  systemach. Spróbuj nada&#263; im atrybut zapisywalno&#347;ci, je&#380;eli napotkasz jakie&#347; problemy.
-  Biblioteki DLL QuickTime równie&#380; dzia&#322;aj&#261;, ale b&#281;dzisz musia&#322; je umie&#347;ci&#263;
-  w katalogu systemowym Windows
-  (<tt class="filename"><i><tt>C:\Windows\system\</tt></i></tt>).</p><p>Mo&#380;esz odtwarza&#263; VCD, odtwarzaj&#261;c pliki <tt class="filename">.DAT</tt> lub <tt class="filename">.MPG</tt>,
+  zapobiegnie jej u&#380;ywaniu. Mo&#380;esz to na sta&#322;e doda&#263; do Twojego pliku konfiguracyjnego.</p><p>Dost&#281;pne s&#261; specjalne zbiory z kodekami przeznaczone dla systemu Windows, znajdziesz je na
+  <a href="http://mplayerhq.hu/homepage/design7/codecs.html" target="_top">stronie kodeków</a>.
+  Pozwol&#261; Ci one na odtwarzanie formatów, które nie s&#261; jeszcze bezpo&#347;rednio obs&#322;ugiwane w
+  <span class="application">MPlayerze</span>. Umie&#347;&#263; je, gdzie&#347; w swojej &#347;cie&#380;ce (w katalogu podanym w
+  zmiennej PATH - przyp. t&#322;umacza) lub przeka&#380; opcj&#281;
+  <tt class="option">--with-codecsdir=<i><tt>c:/&#347;cie&#380;ka/do/Twoich/kodeków</tt></i></tt>
+  (lub, tylko w &#347;rodowkisku Cygwin,
+  <tt class="option">--with-codecsdir=<i><tt>/&#347;cie&#380;ka/do/Twoich/kodeków</tt></i></tt>)
+  do skryptu <tt class="filename">configure</tt>.
+  Mieli&#347;my doniesienia, &#380;e biblioteki Real, musz&#261; by&#263; zapisywalne dla u&#380;ytkownika, który
+  uruchamia <span class="application">MPlayera</span>, ale tylko na niektórych systemach (NT4).
+  Spróbuj nada&#263; im atrybut zapisywalno&#347;ci.</p><p>Mo&#380;esz odtwarza&#263; VCD, odtwarzaj&#261;c pliki <tt class="filename">.DAT</tt> lub <tt class="filename">.MPG</tt>,
   które Windows pokazuje na VCD. To dzia&#322;a mniej wi&#281;cej tak (dopasuj liter&#281; dysku do Twojego
   CD-ROMu):</p><pre class="screen">mplayer <i><tt>d:/mpegav/avseq01.dat</tt></i></pre><p>DVD równie&#380; dzia&#322;a, podaj liter&#281; Twojego DVD-ROMu przez
   opcj&#281; <tt class="option">-dvd-device</tt>:</p><pre class="screen">mplayer dvd://<i><tt>&lt;tytu&#322;&gt;</tt></i> -dvd-device <i><tt>d</tt></i>:</pre><p>Konsola <span class="application">Cygwin</span>/<span class="application">MinGW</span>

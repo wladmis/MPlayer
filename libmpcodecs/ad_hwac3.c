@@ -25,7 +25,7 @@ static int isdts = -1;
 
 static ad_info_t info = 
 {
-  "AC3/DTS pass-through SP/DIF",
+  "AC3/DTS pass-through S/PDIF",
   "hwac3",
   "Nick Kurshev/Peter Schüller",
   "???",
@@ -105,7 +105,7 @@ static int preinit(sh_audio_t *sh)
   sh->audio_in_minsize = 8192;
   sh->channels = 2;
   sh->samplesize = 2;
-  sh->sample_format = AFMT_AC3;
+  sh->sample_format = AF_FORMAT_AC3;
   return 1;
 }
 

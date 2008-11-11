@@ -12,10 +12,6 @@
 #include <fcntl.h>
 #include <ctype.h>
 
-#ifdef USE_SETLOCALE
-#include <locale.h>
-#endif
-
 #include "input.h"
 #include "mouse.h"
 #ifdef MP_DEBUG
@@ -50,7 +46,7 @@
 /// is the default value wich is used for optional arguments
 
 static mp_cmd_t mp_cmds[] = {
-  { MP_CMD_SEEK, "seek", 1, { {MP_CMD_ARG_INT,{0}}, {MP_CMD_ARG_INT,{0}}, {-1,{0}} } },
+  { MP_CMD_SEEK, "seek", 1, { {MP_CMD_ARG_FLOAT,{0}}, {MP_CMD_ARG_INT,{0}}, {-1,{0}} } },
 #ifdef USE_EDL
   { MP_CMD_EDL_MARK, "edl_mark", 0, { {-1,{0}} } },
 #endif
@@ -81,10 +77,12 @@ static mp_cmd_t mp_cmds[] = {
   { MP_CMD_SUB_POS, "sub_pos", 1, { {MP_CMD_ARG_INT,{0}}, {MP_CMD_ARG_INT,{0}}, {-1,{0}} } },
   { MP_CMD_SUB_ALIGNMENT, "sub_alignment",0, { {MP_CMD_ARG_INT,{-1}}, {-1,{0}} } },
   { MP_CMD_SUB_VISIBILITY, "sub_visibility", 0, { {-1,{0}} } },
-  { MP_CMD_SUB_SELECT, "vobsub_lang", 0, { {-1,{0}} } }, // for compatibility
-  { MP_CMD_SUB_SELECT, "sub_select", 0, { {-1,{0}} } },
+  { MP_CMD_SUB_SELECT, "vobsub_lang", 0, { { MP_CMD_ARG_INT,{-2} }, {-1,{0}} } }, // for compatibility
+  { MP_CMD_SUB_SELECT, "sub_select", 0, { { MP_CMD_ARG_INT,{-2} }, {-1,{0}} } },
+  { MP_CMD_SUB_LOG, "sub_log", 0, { {-1,{0}} } },
   { MP_CMD_GET_PERCENT_POS, "get_percent_pos", 0, { {-1,{0}} } },
   { MP_CMD_GET_TIME_LENGTH, "get_time_length", 0, { {-1,{0}} } },
+  { MP_CMD_SWITCH_AUDIO, "switch_audio", 0, { {-1,{0}} } },
 #ifdef USE_TV
   { MP_CMD_TV_STEP_CHANNEL, "tv_step_channel", 1,  { { MP_CMD_ARG_INT ,{0}}, {-1,{0}} }},
   { MP_CMD_TV_STEP_NORM, "tv_step_norm",0, { {-1,{0}} }  },
@@ -320,6 +318,7 @@ static mp_cmd_bind_t def_cmd_binds[] = {
   { { 'b', 0 }, "sub_select" },
   { { 'j', 0 }, "vobsub_lang" },
   { { 'F', 0 }, "forced_subs_only" },
+  { { '#', 0 }, "switch_audio" },
 #ifdef USE_EDL
   { { 'i', 0 }, "edl_mark" },
 #endif
@@ -599,14 +598,7 @@ mp_input_parse_cmd(char* str) {
       break;
     case MP_CMD_ARG_FLOAT:
       errno = 0;
-      /* <olo@altkom.com.pl> Use portable C locale for parsing floats: */
-#ifdef USE_SETLOCALE
-      setlocale(LC_NUMERIC, "C");
-#endif
       cmd->args[i].v.f = atof(ptr);
-#ifdef USE_SETLOCALE
-      setlocale(LC_NUMERIC, "");
-#endif
       if(errno != 0) {
 	mp_msg(MSGT_INPUT,MSGL_ERR,"Command %s: argument %d isn't a float.\n",cmd_def->name,i+1);
 	ptr = NULL;
@@ -636,7 +628,7 @@ mp_input_parse_cmd(char* str) {
       } else if(!e) e = ptr+strlen(ptr);
       l = e-start;
       ptr2 = start;
-       for(e = strchr(ptr2,'\\') ; e ; e = strchr(ptr2,'\\')) {
+      for(e = strchr(ptr2,'\\') ; e && e<start+l ; e = strchr(ptr2,'\\')) {
 	memmove(e,e+1,strlen(e));
 	ptr2 = e + 1;
         l--;
@@ -644,9 +636,11 @@ mp_input_parse_cmd(char* str) {
       cmd->args[i].v.s = (char*)malloc((l+1)*sizeof(char));
       strncpy(cmd->args[i].v.s,start,l);
       cmd->args[i].v.s[l] = '\0';
+      if(term != ' ') ptr += l+2;
     } break;
     case -1:
       ptr = NULL;
+      break;
     default :
       mp_msg(MSGT_INPUT,MSGL_ERR,"Unknown argument %d\n",i);
     }

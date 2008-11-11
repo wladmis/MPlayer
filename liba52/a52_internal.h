@@ -6,6 +6,10 @@
  * This file is part of a52dec, a free ATSC A-52 stream decoder.
  * See http://liba52.sourceforge.net/ for updates.
  *
+ * Modified for use with MPlayer, changes contained in liba52_changes.diff.
+ * detailed CVS changelog at http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
+ * $Id: a52_internal.h,v 1.4 2005/03/22 23:27:18 diego Exp $
+ *
  * a52dec is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or

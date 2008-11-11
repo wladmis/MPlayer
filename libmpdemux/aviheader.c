@@ -44,29 +44,10 @@ static int odml_get_vstream_id(int id, unsigned char res[])
     return 0;
 }
 
-/*
- * Simple quicksort for AVIINDEXENTRYs
- */
-static void avi_idx_quicksort(AVIINDEXENTRY *idx, int from, int to)
-{
-    AVIINDEXENTRY temp;
-    int lo = to;
-    int hi = from;
-    off_t pivot_ofs = AVI_IDX_OFFSET(&idx[(from + to) / 2]);
-    do {
-	while(pivot_ofs < AVI_IDX_OFFSET(&idx[lo])) lo--;
-	while(pivot_ofs > AVI_IDX_OFFSET(&idx[hi])) hi++;
-	if(hi <= lo) {
-	    if (hi != lo) {
-		memcpy(&temp, &idx[lo], sizeof(temp));
-		memcpy(&idx[lo], &idx[hi], sizeof(temp));
-		memcpy(&idx[hi], &temp, sizeof(temp));
-	    }
-	    lo--; hi++;
-	}
-    } while (lo >= hi);
-    if (from < lo) avi_idx_quicksort(idx, from, lo);
-    if (to > hi) avi_idx_quicksort(idx, hi, to);
+int avi_idx_cmp(const void *elem1,const void *elem2) {
+  register off_t a = AVI_IDX_OFFSET((AVIINDEXENTRY *)elem1);
+  register off_t b = AVI_IDX_OFFSET((AVIINDEXENTRY *)elem2);
+  return (a > b) - (b > a);
 }
 
 void read_avi_header(demuxer_t *demuxer,int index_mode){
@@ -308,6 +289,8 @@ while(1){
         case mmioFOURCC('D', 'X', '5', '0'):
         case mmioFOURCC('X', 'V', 'I', 'D'):
         case mmioFOURCC('x', 'v', 'i', 'd'):
+        case mmioFOURCC('F', 'M', 'P', '4'):
+        case mmioFOURCC('f', 'm', 'p', '4'):
           idxfix_divx=2; // set index recovery mpeg4 flavour: generic mpeg4
 	  mp_msg(MSGT_HEADER,MSGL_V,"Regenerating keyframe table for MPEG4 video\n");
 	  break;
@@ -519,7 +502,7 @@ if (priv->isodml && (index_mode==-1 || index_mode==0)) {
 	    }
 	}
     }
-    avi_idx_quicksort(priv->idx, 0, priv->idx_size-1);
+    qsort(priv->idx, priv->idx_size, sizeof(AVIINDEXENTRY), avi_idx_cmp);
 
     /*
        Hack to work around a "wrong" index in some divx odml files

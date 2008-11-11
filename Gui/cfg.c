@@ -6,13 +6,10 @@
 #include "../config.h"
 #include "../mp_msg.h"
 #include "../help_mp.h"
+#include "../mixer.h"
 #include "../mplayer.h"
 #include "../m_config.h"
 #include "../m_option.h"
-
-#ifdef USE_SETLOCALE
-#include <locale.h>
-#endif
 
 #include "../../libvo/video_out.h"
 
@@ -49,6 +46,9 @@ char * gtkAOALSADevice;
 #endif
 #ifdef HAVE_SDL
 char * gtkAOSDLDriver;
+#endif
+#ifdef USE_ESD
+char * gtkAOESDDevice;
 #endif
 
 int    gtkCacheOn = 0;
@@ -112,6 +112,7 @@ static m_option_t gui_opts[] =
 
  { "ao_driver",&audio_driver_list,CONF_TYPE_STRING_LIST,0,0,0,NULL },
  { "ao_volnorm",&gtkAONorm,CONF_TYPE_FLAG,0,0,1,NULL },
+ { "softvol",&soft_vol,CONF_TYPE_FLAG,0,0,1,NULL },
  { "ao_surround",&gtkAOSurround,CONF_TYPE_FLAG,0,0,1,NULL },
  { "ao_extra_stereo",&gtkAOExtraStereo,CONF_TYPE_FLAG,0,0,1,NULL },
  { "ao_extra_stereo_coefficient",&gtkAOExtraStereoMul,CONF_TYPE_FLOAT,CONF_RANGE,-10,10,NULL },
@@ -127,6 +128,9 @@ static m_option_t gui_opts[] =
 #endif
 #ifdef HAVE_SDL
  { "ao_sdl_subdriver",&gtkAOSDLDriver,CONF_TYPE_STRING,0,0,0,NULL },
+#endif
+#ifdef USE_ESD
+ { "ao_esd_device",&gtkAOESDDevice,CONF_TYPE_STRING,0,0,0,NULL },
 #endif
 
  { "dvd_device",&dvd_device,CONF_TYPE_STRING,0,0,0,NULL },
@@ -208,10 +212,6 @@ int cfg_read( void )
  char * cfg = get_path( "gui.conf" );
  FILE * f;
 
-#ifdef USE_SETLOCALE
- setlocale( LC_ALL,"C" );
-#endif
-
 // -- read configuration
  mp_msg( MSGT_GPLAYER,MSGL_V,"[cfg] reading config file: %s\n",cfg );
  gui_conf=m_config_new();
@@ -272,10 +272,6 @@ int cfg_read( void )
   }
  free( cfg );
 
-#ifdef USE_SETLOCALE
- setlocale( LC_ALL,"" );
-#endif
-
  return 0;
 }
 
@@ -284,10 +280,6 @@ int cfg_write( void )
  char * cfg = get_path( "gui.conf" );
  FILE * f;
  int    i;
-
-#ifdef USE_SETLOCALE
- setlocale( LC_ALL,"C" );
-#endif
 
 // -- save configuration 
  if ( (f=fopen( cfg,"wt+" )) )
@@ -347,10 +339,6 @@ int cfg_write( void )
    fclose( f );
   }
  free( cfg );
-
-#ifdef USE_SETLOCALE
- setlocale( LC_ALL,"" );
-#endif
 
  return 0;
 }

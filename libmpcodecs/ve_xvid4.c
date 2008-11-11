@@ -154,13 +154,13 @@ static int xvidenc_closed_gop = 1;
 static int xvidenc_interlaced = 0;
 static int xvidenc_quarterpel = 0;
 static int xvidenc_gmc = 0;
-static int xvidenc_trellis = 0;
+static int xvidenc_trellis = 1;
 static int xvidenc_cartoon = 0;
 static int xvidenc_hqacpred = 1;
-static int xvidenc_chromame = 0;
+static int xvidenc_chromame = 1;
 static int xvidenc_chroma_opt = 0;
-static int xvidenc_vhq = 0;
-static int xvidenc_bvhq = 0;
+static int xvidenc_vhq = 1;
+static int xvidenc_bvhq = 1;
 static int xvidenc_motion = 6;
 static int xvidenc_turbo = 0;
 static int xvidenc_stats = 0;
@@ -546,6 +546,7 @@ vf_open(vf_instance_t *vf, char* args)
 
 	/* Setting libmpcodec module API pointers */
 	vf->config       = config;
+	vf->default_caps = VFCAP_CONSTANT;
 	vf->control      = control;
 	vf->uninit       = uninit;
 	vf->query_format = query_format;
@@ -570,7 +571,7 @@ vf_open(vf_instance_t *vf, char* args)
 	mod->mux = (muxer_stream_t*)args;
 
 	/* Initialize muxer BITMAP header */
-	mod->mux->bih = malloc(sizeof(BITMAPINFOHEADER));
+	mod->mux->bih = calloc(1, sizeof(BITMAPINFOHEADER));
 
 	if(mod->mux->bih  == NULL) {
 		mp_msg(MSGT_MENCODER,MSGL_ERR,

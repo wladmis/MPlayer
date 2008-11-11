@@ -7,7 +7,6 @@
 #endif
 
 #include "af.h"
-#include "../config.h"
 
 // Static list of filters
 extern af_info_t af_info_dummy;
@@ -29,6 +28,7 @@ extern af_info_t af_info_lavcresample;
 extern af_info_t af_info_sweep;
 extern af_info_t af_info_hrtf;
 extern af_info_t af_info_ladspa;
+extern af_info_t af_info_center;
 
 static af_info_t* filter_list[]={ 
    &af_info_dummy,
@@ -56,6 +56,7 @@ static af_info_t* filter_list[]={
 #ifdef HAVE_LADSPA
    &af_info_ladspa,
 #endif
+   &af_info_center,
    NULL 
 };
 
@@ -223,12 +224,17 @@ void af_remove(af_stream_t* s, af_instance_t* af)
    failure */
 int af_reinit(af_stream_t* s, af_instance_t* af)
 {
-  if(!af)
-    return AF_ERROR;
-
   do{
     af_data_t in; // Format of the input to current filter
     int rv=0; // Return value
+
+    // Check if there are any filters left in the list
+    if(NULL == af){
+      if(!(af=af_append(s,s->first,"dummy"))) 
+	return AF_UNKNOWN; 
+      else
+	return AF_ERROR;
+    }
 
     // Check if this is the first filter 
     if(!af->prev) 
@@ -242,6 +248,7 @@ int af_reinit(af_stream_t* s, af_instance_t* af)
     rv = af->control(af,AF_CONTROL_REINIT,&in);
     switch(rv){
     case AF_OK:
+	af = af->next;
       break;
     case AF_FALSE:{ // Configuration filter is needed
       // Do auto insertion only if force is not specified
@@ -264,14 +271,13 @@ int af_reinit(af_stream_t* s, af_instance_t* af)
 	    return rv;
 	}
 	// Insert format filter
-	if(((af->prev?af->prev->data->format:s->input.format) != in.format) || 
-	   ((af->prev?af->prev->data->bps:s->input.bps) != in.bps)){
+	if((af->prev?af->prev->data->format:s->input.format) != in.format){
 	  // Create format filter
 	  if(NULL == (new = af_prepend(s,af,"format")))
 	    return AF_ERROR;
 	  // Set output bits per sample
-	  if(AF_OK != (rv = new->control(new,AF_CONTROL_FORMAT_BPS,&in.bps)) || 
-	     AF_OK != (rv = new->control(new,AF_CONTROL_FORMAT_FMT,&in.format)))
+	  in.format |= af_bits2fmt(in.bps*8);
+	  if(AF_OK != (rv = new->control(new,AF_CONTROL_FORMAT_FMT,&in.format)))
 	    return rv;
 	  // Initialize format filter
 	  if(!new->prev) 
@@ -286,7 +292,7 @@ int af_reinit(af_stream_t* s, af_instance_t* af)
 		 "This error should never uccur, please send bugreport.\n");
 	  return AF_ERROR;
 	}
-	af=new;
+	af=new->next;
       }
       break;
     }
@@ -296,7 +302,7 @@ int af_reinit(af_stream_t* s, af_instance_t* af)
 	af_instance_t* aft=af->prev;
 	af_remove(s,af);
 	if(aft)
-	  af=aft;
+	  af=aft->next;
 	else
 	  af=s->first; // Restart configuration
       }
@@ -307,13 +313,6 @@ int af_reinit(af_stream_t* s, af_instance_t* af)
 	     " filter '%s' returned error code %i\n",af->info->name,rv);
       return AF_ERROR;
     }
-    // Check if there are any filters left in the list
-    if(NULL == af){
-      if(!(af=af_append(s,s->first,"dummy"))) 
-	return -1; 
-    }
-    else
-      af=af->next;
   }while(af);
   return AF_OK;
 }
@@ -380,29 +379,43 @@ int af_init(af_stream_t* s, int force_output)
     af_instance_t* af = NULL; // New filter
     // Check output frequency if not OK fix with resample
     if(s->last->data->rate!=s->output.rate){
-      if(NULL==(af=af_get(s,"resample"))){
+      // try to find a filter that can change samplrate
+      af = af_control_any_rev(s, AF_CONTROL_RESAMPLE_RATE | AF_CONTROL_SET,
+               &(s->output.rate));
+      if (!af) {
+        char *resampler = "resample";
+#ifdef USE_LIBAVCODEC
+        if ((AF_INIT_TYPE_MASK & s->cfg.force) == AF_INIT_SLOW)
+          resampler = "lavcresample";
+#endif
 	if((AF_INIT_TYPE_MASK & s->cfg.force) == AF_INIT_SLOW){
 	  if(!strcmp(s->first->info->name,"format"))
-	    af = af_append(s,s->first,"resample");
+	    af = af_append(s,s->first,resampler);
 	  else
-	    af = af_prepend(s,s->first,"resample");
+	    af = af_prepend(s,s->first,resampler);
 	}		
 	else{
 	  if(!strcmp(s->last->info->name,"format"))
-	    af = af_prepend(s,s->last,"resample");
+	    af = af_prepend(s,s->last,resampler);
 	  else
-	    af = af_append(s,s->last,"resample");
+	    af = af_append(s,s->last,resampler);
 	}
-      }
       // Init the new filter
-      if(!af || (AF_OK != af->control(af,AF_CONTROL_RESAMPLE_RATE,
+      if(!af || (AF_OK != af->control(af,AF_CONTROL_RESAMPLE_RATE | AF_CONTROL_SET,
 				      &(s->output.rate))))
 	return -1;
       // Use lin int if the user wants fast
       if ((AF_INIT_TYPE_MASK & s->cfg.force) == AF_INIT_FAST) {
         char args[32];
-	sprintf(args, "%d:0:0", s->output.rate);
+	sprintf(args, "%d", s->output.rate);
+#ifdef USE_LIBAVCODEC
+	if (strcmp(resampler, "lavcresample") == 0)
+	  strcat(args, ":1");
+	else
+#endif
+	strcat(args, ":0:0");
 	af->control(af, AF_CONTROL_COMMAND_LINE, args);
+      }
       }
       if(AF_OK != af_reinit(s,af))
       	return -1;
@@ -423,15 +436,14 @@ int af_init(af_stream_t* s, int force_output)
     }
     
     // Check output format fix if not OK
-    if((s->last->data->format != s->output.format) || 
-       (s->last->data->bps != s->output.bps)){
+    if(s->last->data->format != s->output.format){
       if(strcmp(s->last->info->name,"format"))
 	af = af_append(s,s->last,"format");
       else
 	af = s->last;
       // Init the new filter
-      if(!af ||(AF_OK != af->control(af,AF_CONTROL_FORMAT_BPS,&(s->output.bps))) 
-	 || (AF_OK != af->control(af,AF_CONTROL_FORMAT_FMT,&(s->output.format))))
+      s->output.format |= af_bits2fmt(s->output.bps*8);
+      if(!af || (AF_OK != af->control(af,AF_CONTROL_FORMAT_FMT,&(s->output.format))))
 	return -1;
       if(AF_OK != af_reinit(s,af))
 	return -1;
@@ -442,7 +454,6 @@ int af_init(af_stream_t* s, int force_output)
       return -1;
 
     if((s->last->data->format != s->output.format) || 
-       (s->last->data->bps    != s->output.bps)    ||
        (s->last->data->nch    != s->output.nch)    || 
        (s->last->data->rate   != s->output.rate))  {
       // Something is stuffed audio out will not work 
@@ -507,11 +518,10 @@ int af_outputlen(af_stream_t* s, int len)
 {
   int t = s->input.bps*s->input.nch;
   af_instance_t* af=s->first; 
-  register frac_t mul = {1,1};
+  frac_t mul = {1,1};
   // Iterate through all filters 
   do{
-    mul.n *= af->mul.n;
-    mul.d *= af->mul.d;
+    af_frac_mul(&mul, &af->mul);
     af=af->next;
   }while(af);
   return t * (((len/t)*mul.n + 1)/mul.d);
@@ -525,11 +535,10 @@ int af_inputlen(af_stream_t* s, int len)
 {
   int t = s->input.bps*s->input.nch;
   af_instance_t* af=s->first; 
-  register frac_t mul = {1,1};
+  frac_t mul = {1,1};
   // Iterate through all filters 
   do{
-    mul.n *= af->mul.n;
-    mul.d *= af->mul.d;
+    af_frac_mul(&mul, &af->mul);
     af=af->next;
   }while(af);
   return t * (((len/t) * mul.d - 1)/mul.n);
@@ -550,11 +559,10 @@ int af_calc_insize_constrained(af_stream_t* s, int len,
   int in  = 0;
   int out = 0;
   af_instance_t* af=s->first; 
-  register frac_t mul = {1,1};
+  frac_t mul = {1,1};
   // Iterate through all filters and calculate total multiplication factor
   do{
-    mul.n *= af->mul.n;
-    mul.d *= af->mul.d;
+    af_frac_mul(&mul, &af->mul);
     af=af->next;
   }while(af);
   // Sanity check 
@@ -614,16 +622,64 @@ inline int af_resize_local_buffer(af_instance_t* af, af_data_t* data)
   return AF_OK;
 }
 
-// send control to all filters, starting with the last until
-// one responds with AF_OK
-int af_control_any_rev (af_stream_t* s, int cmd, void* arg) {
+/**
+ * \brief send control to all filters, starting with the last, until
+ *        one responds with AF_OK
+ * \return The instance that accepted the command or NULL if none did.
+ */
+af_instance_t *af_control_any_rev (af_stream_t* s, int cmd, void* arg) {
   int res = AF_UNKNOWN;
   af_instance_t* filt = s->last;
-  while (filt && res != AF_OK) {
+  while (filt) {
     res = filt->control(filt, cmd, arg);
+    if (res == AF_OK)
+      return filt;
     filt = filt->prev;
   }
-  return (res == AF_OK);
+  return NULL;
+}
+
+/**
+ * \brief calculate greatest common divisior of a and b.
+ *   Extended for negative and 0 values. If both are 0 the result is 1.
+ *   The sign of the result will be so that it has the same sign as b.
+ */
+int af_gcd(register int a, register int b) {
+  int b_org = b;
+  while (b != 0) {
+    a %= b;
+    if (a == 0)
+      break;
+    b %= a;
+  }
+  // the result is either in a or b. As the other one is 0 just add them.
+  a += b;
+  if (!a)
+    return 1;
+  if (a * b_org < 0)
+    return -a;
+  return a;
+}
+
+/**
+ * \brief cancel down a fraction f
+ */
+void af_frac_cancel(frac_t *f) {
+  int gcd = af_gcd(f->n, f->d);
+  f->n /= gcd;
+  f->d /= gcd;
+}
+
+/**
+ * \brief multiply out by in and store result in out.
+ *        the resulting fraction wil be cancelled down
+ *        if in and out were.
+ */
+void af_frac_mul(frac_t *out, const frac_t *in) {
+  int gcd1 = af_gcd(out->n, in->d);
+  int gcd2 = af_gcd(in->n, out->d);
+  out->n = (out->n / gcd1) * (in->n / gcd2);
+  out->d = (out->d / gcd2) * (in->d / gcd1);
 }
 
 void af_help (void) {
@@ -638,3 +694,7 @@ void af_help (void) {
   }
 }
 
+void af_fix_parameters(af_data_t *data)
+{
+    data->bps = af_fmt2bits(data->format)/8;
+}

@@ -1,3 +1,8 @@
+/*
+ * Modified for use with MPlayer, for details see the CVS changelog at
+ * http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
+ * $Id: dct64.c,v 1.3 2005/04/15 22:21:34 diego Exp $
+ */
 
 /*
  * Discrete Cosine Tansform (DCT) for subband synthesis

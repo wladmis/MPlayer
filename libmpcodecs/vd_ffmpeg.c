@@ -281,7 +281,7 @@ static int init(sh_video_t *sh){
     {
 	avctx->flags |= CODEC_FLAG_EXTERN_HUFF;
 	avctx->extradata_size = sh->bih->biSize-sizeof(BITMAPINFOHEADER);
-	avctx->extradata = malloc(avctx->extradata_size);
+	avctx->extradata = av_malloc(avctx->extradata_size);
 	memcpy(avctx->extradata, sh->bih+sizeof(BITMAPINFOHEADER),
 	    avctx->extradata_size);
 
@@ -303,7 +303,7 @@ static int init(sh_video_t *sh){
        || sh->format == mmioFOURCC('R', 'V', '4', '0')
        ){
         avctx->extradata_size= 8;
-        avctx->extradata = malloc(avctx->extradata_size);
+        avctx->extradata = av_malloc(avctx->extradata_size);
         if(sh->bih->biSize!=sizeof(*sh->bih)+8){
             /* only 1 packet per frame & sub_id from fourcc */
 	    ((uint32_t*)avctx->extradata)[0] = 0;
@@ -326,6 +326,7 @@ static int init(sh_video_t *sh){
 	 sh->format == mmioFOURCC('H','F','Y','U') ||
 	 sh->format == mmioFOURCC('F','F','V','H') ||
 	 sh->format == mmioFOURCC('W','M','V','2') ||
+	 sh->format == mmioFOURCC('W','M','V','3') ||
 	 sh->format == mmioFOURCC('A','S','V','1') ||
 	 sh->format == mmioFOURCC('A','S','V','2') ||
 	 sh->format == mmioFOURCC('V','S','S','H') ||
@@ -334,11 +335,12 @@ static int init(sh_video_t *sh){
 	 sh->format == mmioFOURCC('M','P','4','V') ||
 	 sh->format == mmioFOURCC('F','L','I','C') ||
 	 sh->format == mmioFOURCC('S','N','O','W') ||
-	 sh->format == mmioFOURCC('a','v','c','1')
+	 sh->format == mmioFOURCC('a','v','c','1') ||
+	 sh->format == mmioFOURCC('L','O','C','O')
          ))
     {
 	avctx->extradata_size = sh->bih->biSize-sizeof(BITMAPINFOHEADER);
-	avctx->extradata = malloc(avctx->extradata_size);
+	avctx->extradata = av_malloc(avctx->extradata_size);
 	memcpy(avctx->extradata, sh->bih+1, avctx->extradata_size);
     }
     /* Pass palette to codec */
@@ -359,7 +361,7 @@ static int init(sh_video_t *sh){
     if (sh->ImageDesc &&
 	 sh->format == mmioFOURCC('S','V','Q','3')){
 	avctx->extradata_size = (*(int*)sh->ImageDesc) - sizeof(int);
-	avctx->extradata = malloc(avctx->extradata_size);
+	avctx->extradata = av_malloc(avctx->extradata_size);
 	memcpy(avctx->extradata, ((int*)sh->ImageDesc)+1, avctx->extradata_size);
     }
     
@@ -395,22 +397,14 @@ static void uninit(sh_video_t *sh){
     if (avcodec_close(avctx) < 0)
     	    mp_msg(MSGT_DECVIDEO,MSGL_ERR, MSGTR_CantCloseCodec);
 
-    if (avctx->extradata_size)
-	free(avctx->extradata);
-    avctx->extradata=NULL;
+    av_freep(&avctx->extradata);
 #if LIBAVCODEC_BUILD >= 4689
-    if (avctx->palctrl)
-	    free(avctx->palctrl);
-    avctx->palctrl=NULL;
+    av_freep(&avctx->palctrl);
 #endif
-    if(avctx->slice_offset!=NULL) 
-        free(avctx->slice_offset);
-    avctx->slice_offset=NULL;
+    av_freep(&avctx->slice_offset);
 
-    if (avctx)
-	free(avctx);
-    if (ctx->pic)
-	free(ctx->pic);
+    av_freep(&avctx);
+    av_freep(&ctx->pic);
     if (ctx)
 	free(ctx);
 }
@@ -490,9 +484,15 @@ static int init_vo(sh_video_t *sh, enum PixelFormat pix_fmt){
 	sh->disp_h = avctx->height;
 	ctx->vo_inited=1;
 	switch(pix_fmt){
+	// YUVJ are YUV formats that use the full Y range and not just
+	// 16 - 235 (see colorspaces.txt).
+	// Currently they are all treated the same way.
 	case PIX_FMT_YUV410P: ctx->best_csp=IMGFMT_YVU9;break; //svq1
+	case PIX_FMT_YUVJ420P:
 	case PIX_FMT_YUV420P: ctx->best_csp=IMGFMT_YV12;break; //mpegs
+	case PIX_FMT_YUVJ422P:
 	case PIX_FMT_YUV422P: ctx->best_csp=IMGFMT_422P;break; //mjpeg / huffyuv
+	case PIX_FMT_YUVJ444P:
 	case PIX_FMT_YUV444P: ctx->best_csp=IMGFMT_444P;break; //photo jpeg
 	case PIX_FMT_YUV411P: ctx->best_csp=IMGFMT_411P;break; //dv ntsc
 	case PIX_FMT_YUV422:  ctx->best_csp=IMGFMT_YUY2;break; //huffyuv perhaps in the future
@@ -601,7 +601,7 @@ static int get_buffer(AVCodecContext *avctx, AVFrame *pic){
 #if LIBAVCODEC_BUILD >= 4689
 	// Palette support: libavcodec copies palette to *data[1]
 	if (mpi->bpp == 8)
-		mpi->planes[1] = malloc(AVPALETTE_SIZE);
+		mpi->planes[1] = av_malloc(AVPALETTE_SIZE);
 #endif
 
     pic->data[0]= mpi->planes[0];
@@ -677,8 +677,8 @@ static void release_buffer(struct AVCodecContext *avctx, AVFrame *pic){
   }
 
 	// Palette support: free palette buffer allocated in get_buffer
-	if ( mpi && (mpi->bpp == 8) && (mpi->planes[1] != NULL))
-		free(mpi->planes[1]);
+	if ( mpi && (mpi->bpp == 8))
+		av_freep(&mpi->planes[1]);
 
 #if LIBAVCODEC_BUILD >= 4644
     if(pic->type!=FF_BUFFER_TYPE_USER){
@@ -751,7 +751,7 @@ static mp_image_t* decode(sh_video_t *sh,void* data,int len,int flags){
         dp_hdr_t *hdr= (dp_hdr_t*)data;
 
         if(avctx->slice_offset==NULL) 
-            avctx->slice_offset= malloc(sizeof(int)*1000);
+            avctx->slice_offset= av_malloc(sizeof(int)*1000);
         
 //        for(i=0; i<25; i++) printf("%02X ", ((uint8_t*)data)[i]);
         

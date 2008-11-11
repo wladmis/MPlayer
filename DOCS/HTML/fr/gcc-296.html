@@ -13,7 +13,7 @@ l'exemple de Red Hat et a lancé la diffusion de GCC 2.96 avec sa série Linux-Man
 L'équipe GCC a nié tout lien avec GCC 2.96 et a publié une
 <a href="http://gcc.gnu.org/gcc-2.96.html" target="_top">réponse officielle</a>
 à GCC 2.96. De nombreux développeurs à travers le monde ont commencé à avoir des
-problèmes avec GCC 2.96, et ont commencé à recommander d'autres compilateurs. Par Exemple
+problèmes avec GCC 2.96, et ont donc recommandé d'autres compilateurs. Par Exemple
 <a href="http://www.mysql.com/downloads/mysql-3.23.html" target="_top">MySQL</a> et
 <a href="http://avifile.sf.net/news-old1.htm" target="_top">avifile</a>.
 D'autres liens intéressants sont
@@ -33,14 +33,17 @@ variante Intel. Le problème est qu'il ignore <span class="bold"><b>silencieuseme
 le bloc assembleur entier. Cela est théoriquement fixé maintenant, GCC affichant
 un warning au lieu de sauter le bloc.
 </p><p><b>Le présent: </b>
-Red Hat dit que GCC 2.96-85 et supérieur est réparé. La situation c'est en effet
+Red Hat dit que GCC 2.96-85 et supérieur est réparé. La situation s'est en effet
 améliorée, mais nous voyons toujours des problèmes sur les listes de diffusion qui
 disparaissent avec un compilateur différent. Dans tous les cas cela ne peut plus durer.
 Normalement un GCC 3.x mature résoudra les problèmes. Si vous voulez compiler avec 2.96
 passez l'option <tt class="option">--disable-gcc-checking</tt> à <tt class="filename">configure</tt>.
 Rappelez-vous que vous êtes seul et donc <span class="bold"><b>de ne pas rapporter de bogues</b></span>.
-Si vous le faites, vous serez juste insulté voir banni de nos listes de diffusion car
-nous en avons plus qu'assez des empoignes sur GCC 2.96. S'il vous plaît, restons-en là.
+Si vous le faites quand même, préparez-vous au pire comme vous faire 
+insulter, voir banni de nos listes de diffusions car nous en avons par 
+dessus la tête des problèmes relatifs à GCC-2.96 ; alors s'il vous 
+plaît, abstenez-vous.
+
 </p><p>
 Si vous avez des problèmes avec GCC 2.96, vous pouvez obtenir les paquetages 2.96-85
 sur le <a href="ftp://updates.redhat.com" target="_top">serveur ftp</a> de Red Hat, ou
@@ -54,7 +57,7 @@ compiler GCC 3 depuis les sources:
   Allez sur la
   <a href="http://gcc.gnu.org/mirrors.html" target="_top">page des miroirs GCC</a>
   et téléchargez <tt class="filename">gcc-core-<i><tt>XXX</tt></i>.tar.gz</tt> où
-  <i><tt>XXX</tt></i> est le numéro de version. Ceci inclue le compilateur C
+  <i><tt>XXX</tt></i> est le numéro de version. Ceci inclus le compilateur C
   complet et est suffisant pour <span class="application">MPlayer</span>. Si vous voulez
   aussi C++, Java ou certaines autres fonctions avancées de GCC,
   <tt class="filename">gcc-<i><tt>XXX</tt></i>.tar.gz</tt> pourrait mieux convenir à vos besoins.

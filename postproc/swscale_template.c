@@ -796,6 +796,15 @@ yuv2yuvXinC(lumFilter, lumSrc, lumFilterSize,
 #endif
 }
 
+static inline void RENAME(yuv2nv12X)(SwsContext *c, int16_t *lumFilter, int16_t **lumSrc, int lumFilterSize,
+				     int16_t *chrFilter, int16_t **chrSrc, int chrFilterSize,
+				     uint8_t *dest, uint8_t *uDest, int dstW, int chrDstW, int dstFormat)
+{
+yuv2nv12XinC(lumFilter, lumSrc, lumFilterSize,
+	     chrFilter, chrSrc, chrFilterSize,
+	     dest, uDest, dstW, chrDstW, dstFormat);
+}
+
 static inline void RENAME(yuv2yuv1)(int16_t *lumSrc, int16_t *chrSrc,
 				    uint8_t *dest, uint8_t *uDest, uint8_t *vDest, int dstW, int chrDstW)
 {
@@ -2271,12 +2280,26 @@ static inline void RENAME(hyscale)(uint16_t *dst, int dstWidth, uint8_t *src, in
 			PREFETCH" 32(%%"REG_c")		\n\t"
 			PREFETCH" 64(%%"REG_c")		\n\t"
 
+#ifdef ARCH_X86_64
+
 #define FUNNY_Y_CODE \
-			"mov (%%"REG_b"), %%"REG_S"	\n\t"\
+			"movl (%%"REG_b"), %%esi	\n\t"\
 			"call *%4			\n\t"\
-			"addl (%%"REG_b", %%"REG_a"), %%ecx\n\t"\
-			"add %%"REG_a", %%"REG_d"	\n\t"\
+			"movl (%%"REG_b", %%"REG_a"), %%esi\n\t"\
+			"add %%"REG_S", %%"REG_c"	\n\t"\
+			"add %%"REG_a", %%"REG_D"	\n\t"\
 			"xor %%"REG_a", %%"REG_a"	\n\t"\
+
+#else
+
+#define FUNNY_Y_CODE \
+			"movl (%%"REG_b"), %%esi	\n\t"\
+			"call *%4			\n\t"\
+			"addl (%%"REG_b", %%"REG_a"), %%"REG_c"\n\t"\
+			"add %%"REG_a", %%"REG_D"	\n\t"\
+			"xor %%"REG_a", %%"REG_a"	\n\t"\
+
+#endif
 
 FUNNY_Y_CODE
 FUNNY_Y_CODE
@@ -2289,7 +2312,7 @@ FUNNY_Y_CODE
 
 			:: "m" (src), "m" (dst), "m" (mmx2Filter), "m" (mmx2FilterPos),
 			"m" (funnyYCode)
-			: "%"REG_a, "%"REG_b, "%"REG_c, "%"REG_d, "%"REG_S, "%"REG_d
+			: "%"REG_a, "%"REG_b, "%"REG_c, "%"REG_d, "%"REG_S, "%"REG_D
 		);
 		for(i=dstWidth-1; (i*xInc)>>16 >=srcW-1; i--) dst[i] = src[srcW-1]*128;
 	}
@@ -2440,12 +2463,26 @@ inline static void RENAME(hcscale)(uint16_t *dst, int dstWidth, uint8_t *src1, u
 			PREFETCH" 32(%%"REG_c")		\n\t"
 			PREFETCH" 64(%%"REG_c")		\n\t"
 
+#ifdef ARCH_X86_64
+
 #define FUNNY_UV_CODE \
 			"movl (%%"REG_b"), %%esi	\n\t"\
 			"call *%4			\n\t"\
-			"addl (%%"REG_b", %%"REG_a"), %%ecx\n\t"\
+			"movl (%%"REG_b", %%"REG_a"), %%esi\n\t"\
+			"add %%"REG_S", %%"REG_c"	\n\t"\
 			"add %%"REG_a", %%"REG_D"	\n\t"\
 			"xor %%"REG_a", %%"REG_a"	\n\t"\
+
+#else
+
+#define FUNNY_UV_CODE \
+			"movl (%%"REG_b"), %%esi	\n\t"\
+			"call *%4			\n\t"\
+			"addl (%%"REG_b", %%"REG_a"), %%"REG_c"\n\t"\
+			"add %%"REG_a", %%"REG_D"	\n\t"\
+			"xor %%"REG_a", %%"REG_a"	\n\t"\
+
+#endif
 
 FUNNY_UV_CODE
 FUNNY_UV_CODE
@@ -2466,7 +2503,7 @@ FUNNY_UV_CODE
 
 			:: "m" (src1), "m" (dst), "m" (mmx2Filter), "m" (mmx2FilterPos),
 			"m" (funnyUVCode), "m" (src2)
-			: "%"REG_a, "%"REG_b, "%"REG_c, "%"REG_d, "%esi", "%"REG_D
+			: "%"REG_a, "%"REG_b, "%"REG_c, "%"REG_d, "%"REG_S, "%"REG_D
 		);
 		for(i=dstWidth-1; (i*xInc)>>16 >=srcW-1; i--)
 		{
@@ -2764,7 +2801,15 @@ i--;
 				((uint16_t)vChrFilter[chrDstY*vChrFilterSize + i])*0x10001;
 		}
 #endif
-		if(isPlanarYUV(dstFormat) || isGray(dstFormat)) //YV12 like
+		if(dstFormat == IMGFMT_NV12 || dstFormat == IMGFMT_NV21){
+			const int chrSkipMask= (1<<c->chrDstVSubSample)-1;
+			if(dstY&chrSkipMask) uDest= NULL; //FIXME split functions in lumi / chromi
+			RENAME(yuv2nv12X)(c,
+				vLumFilter+dstY*vLumFilterSize   , lumSrcPtr, vLumFilterSize,
+				vChrFilter+chrDstY*vChrFilterSize, chrSrcPtr, vChrFilterSize,
+				dest, uDest, dstW, chrDstW, dstFormat);
+		}
+		else if(isPlanarYUV(dstFormat) || isGray(dstFormat)) //YV12 like
 		{
 			const int chrSkipMask= (1<<c->chrDstVSubSample)-1;
 			if((dstY&chrSkipMask) || isGray(dstFormat)) uDest=vDest= NULL; //FIXME split functions in lumi / chromi
@@ -2812,7 +2857,15 @@ i--;
 	    {
 		int16_t **lumSrcPtr= lumPixBuf + lumBufIndex + firstLumSrcY - lastInLumBuf + vLumBufSize;
 		int16_t **chrSrcPtr= chrPixBuf + chrBufIndex + firstChrSrcY - lastInChrBuf + vChrBufSize;
-		if(isPlanarYUV(dstFormat) || isGray(dstFormat)) //YV12
+		if(dstFormat == IMGFMT_NV12 || dstFormat == IMGFMT_NV21){
+			const int chrSkipMask= (1<<c->chrDstVSubSample)-1;
+			if(dstY&chrSkipMask) uDest= NULL; //FIXME split functions in lumi / chromi
+			yuv2nv12XinC(
+				vLumFilter+dstY*vLumFilterSize   , lumSrcPtr, vLumFilterSize,
+				vChrFilter+chrDstY*vChrFilterSize, chrSrcPtr, vChrFilterSize,
+				dest, uDest, dstW, chrDstW, dstFormat);
+		}
+		else if(isPlanarYUV(dstFormat) || isGray(dstFormat)) //YV12
 		{
 			const int chrSkipMask= (1<<c->chrDstVSubSample)-1;
 			if((dstY&chrSkipMask) || isGray(dstFormat)) uDest=vDest= NULL; //FIXME split functions in lumi / chromi

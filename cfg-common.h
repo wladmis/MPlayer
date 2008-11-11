@@ -6,6 +6,9 @@
 	{"verbose", &verbose, CONF_TYPE_INT, CONF_RANGE|CONF_GLOBAL, 0, 100, NULL},
 	{"v", cfg_inc_verbose, CONF_TYPE_FUNC, CONF_GLOBAL|CONF_NOSAVE, 0, 0, NULL},
 	{"include", cfg_include, CONF_TYPE_FUNC_PARAM, CONF_NOSAVE, 0, 0, NULL},
+#ifdef WIN32
+	{"priority", &proc_priority, CONF_TYPE_STRING, 0, 0, 0, NULL},
+#endif
 
 // ------------------------- stream options --------------------
 
@@ -31,6 +34,7 @@
 	{"dvdangle", &dvd_angle, CONF_TYPE_INT, CONF_RANGE, 1, 99, NULL},
 	{"chapter", dvd_parse_chapter_range, CONF_TYPE_FUNC_PARAM, 0, 0, 0, NULL},
 #else
+	{"dvd-device", "MPlayer was compiled without libdvdread support.\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
 	{"dvd", "MPlayer was compiled without libdvdread support.\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
 #endif
 	{"alang", &audio_lang, CONF_TYPE_STRING, 0, 0, 0, NULL},
@@ -73,6 +77,11 @@
 	{"sb", &seek_to_byte, CONF_TYPE_POSITION, CONF_MIN, 0, 0, NULL},
 	{"ss", &seek_to_sec, CONF_TYPE_STRING, CONF_MIN, 0, 0, NULL},
 
+#ifdef USE_EDL
+	{"edl", &edl_filename,  CONF_TYPE_STRING, 0, 0, 0, NULL},
+#else
+	{"edl", "MPlayer was compiled without EDL support.\n", CONF_TYPE_PRINT, 0, 0, 0, NULL},
+#endif
 	// AVI specific: force non-interleaved mode
 	{"ni", &force_ni, CONF_TYPE_FLAG, 0, 0, 1, NULL},
 	{"noni", &force_ni, CONF_TYPE_FLAG, 0, 1, 0, NULL},
@@ -134,7 +143,8 @@
 	{"fps", &force_fps, CONF_TYPE_FLOAT, CONF_MIN, 0, 0, NULL},
 	{"srate", &force_srate, CONF_TYPE_INT, CONF_RANGE, 1000, 8*48000, NULL},
 	{"channels", &audio_output_channels, CONF_TYPE_INT, CONF_RANGE, 1, 6, NULL},
-	{"format", &audio_output_format, CONF_TYPE_INT, CONF_RANGE, 0, 0x00002000, NULL},
+	{"format", &audio_output_format, CONF_TYPE_AFMT, 0, 0, 0, NULL},
+	{"speed", &playback_speed, CONF_TYPE_FLOAT, CONF_RANGE, 0.01, 100.0, NULL},
 
 #ifdef USE_LIBA52
         {"a52drc", &a52_drc_level, CONF_TYPE_FLOAT, CONF_RANGE, 0, 1, NULL},
@@ -462,6 +472,24 @@ m_option_t audio_filter_conf[]={
         {"force", &af_cfg.force, CONF_TYPE_INT, CONF_RANGE, 0, 7, NULL},
 	{NULL, NULL, 0, 0, 0, 0, NULL}
 };
+
+#ifdef WIN32
+
+extern char * proc_priority;
+
+struct {
+  char* name;
+  int prio;
+} priority_presets_defs[] = {
+  { "realtime", REALTIME_PRIORITY_CLASS},
+  { "high", HIGH_PRIORITY_CLASS},
+  { "abovenormal", ABOVE_NORMAL_PRIORITY_CLASS},
+  { "normal", NORMAL_PRIORITY_CLASS},
+  { "belownormal", BELOW_NORMAL_PRIORITY_CLASS},
+  { "idle", IDLE_PRIORITY_CLASS},
+  { NULL, NORMAL_PRIORITY_CLASS} /* default */
+};
+#endif /* WIN32 */
 
 #ifdef USE_LIBAVCODEC
 extern m_option_t lavc_decode_opts_conf[];

@@ -86,8 +86,8 @@ Les retours sur ce document sont les bienvenus. Merci de nous faire savoir comme
   Les filtres audio sont utilisés pour changer les propriétés des données audio avant
   que le son n'atteigne la carte son. L'activation et la désactivation sont normalement
   automatisés mais peuvent être outrepassés. Les filtres sont activés quand les
-  propriétés des données audio différent de celles requises par la carte son et
-  désactivés si nécessaire. L'option <tt class="option">-af filtre1,filtre2,...</tt> est
+  propriétés des données audio sont différentes de celles requises par la carte son et
+  désactivées si nécessaire. L'option <tt class="option">-af filtre1,filtre2,...</tt> est
   utilisée pour outrepasser l'activation automatique des filtres ou pour insérer des
   filtres qui ne le sont pas automatiquement. Les filtres seront exécutés dans l'ordre
   où ils apparaissent dans la liste séparée par des virgules.
@@ -142,8 +142,8 @@ La couche filtre est également affectée par les options génériques suivantes:
 Augmente le niveau de verbosité et fait afficher des messages d'état supplémentaires à
 la plupart des filtres.
 </p></dd><dt><span class="term"><tt class="option">-channels</tt></span></dt><dd><p>
-Cette option définie le nombre de canaux de sortie voulus pour votre carte son. Il
-affecte également le nombre de canaux qui sont décodés à partir des média. Si le médium
+Cette option défini le nombre de canaux de sortie voulus pour votre carte son. Il
+affecte également le nombre de canaux qui sont décodés à partir des médias. Si le médium
 contient moins de canaux que le nombre demandé le filtre channels (voir plus bas) sera
 automatiquement inséré. Le routage sera le routage par défaut pour le filtre channels.
 </p></dd><dt><span class="term"><tt class="option">-srate</tt></span></dt><dd><p>
@@ -296,7 +296,7 @@ amplifierait le son de 10.1dB et bloque le volume si il est trop haut.
 Ce filtre a une seconde fonction: Il mesure le niveau maximum du son et l'affiche
 quand <span class="application">MPlayer</span> se termine. Cette estimation de volume peut être
 utilisée pour définir le niveau de son dans <span class="application">MEncoder</span> pour que
-la dynamique maximale soit utilisé.
+la dynamique maximale soit utilisée.
 </p></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="af_equalizer"></a>2.4.3.6. Égaliseur</h4></div></div><p>
 Le filtre <tt class="option">equalizer</tt> est un égaliseur graphique à 10 bandes, implémenté
 en utilisant 10 filtres passe-bande IIR. Cela signifie qu'il fonctionne quel que
@@ -486,8 +486,8 @@ Usage:
 Si votre carte son ne supporte pas le format de données int 16bit signé, ce plugin peut
 être utilisé pour le changer dans un format que votre carte son comprend. Il a une
 option, <tt class="option">format</tt>, qui peut être initialisé avec les nombres trouvés
-dans <tt class="filename">libao2/afmt.h</tt>. Ce plugin est très rarement utilisé et est
-réservée aux utilisateurs avancés. Gardez à l'esprit que ce plugin ne change que le
+dans <tt class="filename">libao2/afmt.h</tt>. Ce plugin est très rarement utilisé et, est
+réservé aux utilisateurs avancés. Gardez à l'esprit que ce plugin ne change que le
 format de sample et pas sa fréquence ou le nombre de canaux.
 </p><p>
 Utilisation:
@@ -541,7 +541,7 @@ mplayer <i><tt>media.avi</tt></i> -aop list=extrastereo:mul=3.45</pre>
 Le coefficient par défaut (<tt class="option">mul</tt>) est un nombre à virgule initialisé à
 2.5. Si vous l'initialisez à <tt>0.0</tt>, vous aurez un son mono (moyenne
 des deux canaux). Si vous l'initialisez à <tt>1.0</tt>, le son sera inchangé,
-si vous l'initialisez à <tt>-1.0</tt>, les canaux gauche et droit seront inversés.
+si vous l'initialisez à <tt>-1.0</tt>, les canaux gauches et droits seront inversés.
 </p></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="volnorm"></a>2.4.4.7. Normaliseur de volume</h4></div></div><p>
 Ce plugin maximise le volume sans distordre le son.
 </p><p>

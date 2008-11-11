@@ -1,3 +1,7 @@
+/*
+ * $Id: bsdi_dvd.h,v 1.3 2002/12/19 15:29:53 sam Exp $
+*/
+
 #ifndef	_DVD_H_
 #define	_DVD_H_
 

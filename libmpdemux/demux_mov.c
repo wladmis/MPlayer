@@ -112,6 +112,8 @@ typedef struct {
     int duration;    // 0 = variable
     int width,height; // for video
     unsigned int fourcc;
+    unsigned int nchannels;
+    unsigned int samplebytes;
     //
     int tkdata_len;  // track data 
     unsigned char* tkdata;
@@ -866,6 +868,23 @@ static void lschunks(demuxer_t* demuxer,int level,off_t endpos,mov_track_t* trak
 		sh_audio_t* sh=new_sh_audio(demuxer,priv->track_db);
 		sh->format=trak->fourcc;
 
+		switch( sh->format ) {
+		    case 0x726D6173: /* samr */
+			/* amr narrowband */
+			trak->samplebytes=sh->samplesize=1;
+			trak->nchannels=sh->channels=1;
+			sh->samplerate=8000;
+			break;
+			
+		    case 0x62776173: /* sawb */
+			/* amr wideband */
+			trak->samplebytes=sh->samplesize=1;
+			trak->nchannels=sh->channels=1;
+			sh->samplerate=16000;
+			break;
+
+		    default:
+			
 // assumptions for below table: short is 16bit, int is 32bit, intfp is 16bit
 // XXX: 32bit fixed point numbers (intfp) are only 2 Byte!		
 // short values are usually one byte leftpadded by zero		
@@ -892,8 +911,8 @@ static void lschunks(demuxer_t* demuxer,int level,off_t endpos,mov_track_t* trak
 //      32  char[4]	atom type (fourc charater code -> esds)		
 //      36  char[]  	atom data (len=size-8)
 
-		sh->samplesize=char2short(trak->stdata,18)/8;
-		sh->channels=char2short(trak->stdata,16);
+		trak->samplebytes=sh->samplesize=char2short(trak->stdata,18)/8;
+		trak->nchannels=sh->channels=char2short(trak->stdata,16);
 		/*printf("MOV: timescale: %d samplerate: %d durmap: %d (%d) -> %d (%d)\n",
 		    trak->timescale, char2short(trak->stdata,24), trak->durmap[0].dur,
 		    trak->durmap[0].num, trak->timescale/trak->durmap[0].dur,
@@ -916,9 +935,9 @@ static void lschunks(demuxer_t* demuxer,int level,off_t endpos,mov_track_t* trak
 		      sh->samplerate = 44100;
 		  }  
 		}  
-
+		}
 		mp_msg(MSGT_DEMUX, MSGL_INFO, "Audio bits: %d  chans: %d  rate: %d\n",
-		    trak->stdata[19],trak->stdata[17],sh->samplerate);
+		    sh->samplesize*8,sh->channels,sh->samplerate);
 
 		if(trak->stdata_len >= 44 && trak->stdata[9]>=1){
 		  mp_msg(MSGT_DEMUX,MSGL_V,"Audio header: samp/pack=%d bytes/pack=%d bytes/frame=%d bytes/samp=%d  \n",
@@ -931,8 +950,19 @@ static void lschunks(demuxer_t* demuxer,int level,off_t endpos,mov_track_t* trak
 		    int fcc=char2int(trak->stdata,48);
 		    // we have extra audio headers!!!
 		    printf("Audio extra header: len=%d  fcc=0x%X\n",len,fcc);
+		    if((len >= 4) && 
+		       (char2int(trak->stdata,52) >= 12) &&
+		       (char2int(trak->stdata,52+4) == MOV_FOURCC('f','r','m','a')) &&
+		       (char2int(trak->stdata,52+8) == MOV_FOURCC('a','l','a','c')) &&
+		       (len >= 36 + char2int(trak->stdata,52))) {
+			    sh->codecdata_len = char2int(trak->stdata,52+char2int(trak->stdata,52));
+			    mp_msg(MSGT_DEMUX, MSGL_INFO, "MOV: Found alac atom (%d)!\n", sh->codecdata_len);
+			    sh->codecdata = (unsigned char *)malloc(sh->codecdata_len);
+			    memcpy(sh->codecdata, &trak->stdata[52+char2int(trak->stdata,52)], sh->codecdata_len);
+		    } else {
 		    sh->codecdata_len = len-8;
 		    sh->codecdata = trak->stdata+44+8;
+		    }
 		  }
 		}
 
@@ -954,6 +984,8 @@ static void lschunks(demuxer_t* demuxer,int level,off_t endpos,mov_track_t* trak
 
 			    // dump away the codec specific configuration for the AAC decoder
 			    if(esds.decoderConfigLen){
+			    if( (esds.decoderConfig[0]>>3) == 29 )
+			    	sh->format = 0x1d61346d; // request multi-channel mp3 decoder
 			    sh->codecdata_len = esds.decoderConfigLen;
 			    sh->codecdata = (unsigned char *)malloc(sh->codecdata_len);
 			    memcpy(sh->codecdata, esds.decoderConfig, sh->codecdata_len);
@@ -965,6 +997,15 @@ static void lschunks(demuxer_t* demuxer,int level,off_t endpos,mov_track_t* trak
 			  fwrite(&trak->stdata[36],atom_len-8,1,f);
 			  fclose(f); }
 #endif			  
+			}
+		      } break;
+		      case MOV_FOURCC('a','l','a','c'): {
+			mp_msg(MSGT_DEMUX, MSGL_INFO, "MOV: Found alac atom (%d)!\n", atom_len);
+			if(atom_len > 8) {
+			    // copy all the atom (not only payload) for lavc alac decoder
+			    sh->codecdata_len = atom_len;
+			    sh->codecdata = (unsigned char *)malloc(sh->codecdata_len);
+			    memcpy(sh->codecdata, &trak->stdata[28], sh->codecdata_len);
 			}
 		      } break;
 		      default:
@@ -985,7 +1026,7 @@ static void lschunks(demuxer_t* demuxer,int level,off_t endpos,mov_track_t* trak
 		// Emulate WAVEFORMATEX struct:
 		sh->wf=malloc(sizeof(WAVEFORMATEX));
 		memset(sh->wf,0,sizeof(WAVEFORMATEX));
-		sh->wf->nChannels=(trak->stdata[16]<<8)+trak->stdata[17];
+		sh->wf->nChannels=sh->channels;
 		sh->wf->wBitsPerSample=(trak->stdata[18]<<8)+trak->stdata[19];
 		// sh->wf->nSamplesPerSec=trak->timescale;
 		sh->wf->nSamplesPerSec=(trak->stdata[24]<<8)+trak->stdata[25];
@@ -1588,6 +1629,8 @@ int mov_read_header(demuxer_t* demuxer){
 	return 0;
     }
     lschunks(demuxer, 0, priv->moov_end, NULL);
+    // just in case we have hit eof while parsing...
+    demuxer->stream->eof = 0;
 //    mp_msg(MSGT_DEMUX, MSGL_INFO, "--------------\n");
 
     // find the best (longest) streams:
@@ -1691,6 +1734,7 @@ int mov_read_header(demuxer_t* demuxer){
 	    }
 	}
     }
+    demuxer->stream->eof = 0;
 #endif
 
     return 1;
@@ -1748,9 +1792,8 @@ if(trak->samplesize){
 	    // with missing stsd v1 header containing compression rate
 	    x/=ds->ss_div; x*=ds->ss_mul; // compression ratio fix  ! HACK !
 	} else {
-	    x*=(trak->stdata[16]<<8)+trak->stdata[17]; //channels
-	    x*=(trak->stdata[18]<<8)+trak->stdata[19]; //bits/sample
-	    x/=8;  // bits/sample
+	    x*=trak->nchannels;
+	    x*=trak->samplebytes;
 	}
       }
       mp_msg(MSGT_DEMUX, MSGL_DBG2, "Audio sample %d bytes pts %5.3f\n",trak->chunks[trak->pos].size*trak->samplesize,pts);
@@ -1866,6 +1909,8 @@ void demux_seek_mov(demuxer_t *demuxer,float pts,int flags){
 	//if(flags&2) pts*=(float)trak->length/(float)trak->timescale;
 	//if(!(flags&1)) pts+=ds->pts;
 	ds->pts=mov_seek_track(trak,pts,flags);
+	if (demuxer->video->id < 0)
+	  ((sh_audio_t*)ds->sh)->delay = ds->pts;
     }
 
 }

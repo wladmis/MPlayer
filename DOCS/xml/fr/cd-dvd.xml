@@ -179,10 +179,14 @@ Si rien n'est spécifié il essaie les méthodes suivantes (par défaut: clé, demand
 
 <orderedlist>
 <listitem><para>
-<emphasis role="bold">clé bus</emphasis>: Cette clé est négociée durant la certification (un long mix
-d'ioctls et d'échanges de clé variés, trucs de crypto) et est utilisé pour crypter le titre et les clés
-disque avant de les envoyer sur un bus non protégé (pour empêcher les écoutes). La clé bus est requise
-pour obtenir et décrypter les clés disque cryptées.
+<emphasis role="bold">clé bus</emphasis>: Cette clé est
+négociée durant l'authentification (une longue suite
+d'ioctls et d'échanges de diverses clefs cryptographiques) et est
+utilisé pour crypter le titre et la clef du
+disque avant de les envoyer sur un bus non protégé (pour
+empêcher les écoutes). La clef bus est nécessaire
+pour obtenir et pré-décrypter la clef disque cryptée.
+
 </para></listitem>
 
 <listitem><para>
@@ -212,7 +216,7 @@ cryptées avec les clés bus et disque.
 </para></listitem>
 
 <listitem><para>
-<emphasis role="bold">titre</emphasis>: Cette méthode est utilisé si la demande de titre a échoué et ne
+<emphasis role="bold">titre</emphasis>: Cette méthode est utilisée si la demande de titre a échoué et ne
 repose sur aucun échange de clé avec le lecteur DVD. Il utilise une attaque crypto pour deviner la clé
 titre directement (en trouvant un motif répété dans le contenu VOB décodé et en supposant que le texte
 en clair correspondant aux premiers octets cryptés est une continuation de ce motif). Cette méthode est
@@ -302,7 +306,7 @@ copier et même lire les fichiers .DAT avec mplayer. Mais cela ne <emphasis role=
 avec le pilote iso9660 standard du noyau! Il est recommandé d'utiliser l'option <option>vcd://</option>
 à la place. D'autres possibilités pour la copie de VCD sont le nouveau pilote noyau
 <ulink url="http://www.elis.rug.ac.be/~ronsse/cdfs/">cdfs</ulink> (qui ne fait pas partie du noyau
-officiel) qui montre les sessions du CD en temps que fichiers image) et
+officiel) qui montre les sessions du CD en temps que fichier image) et
 <ulink url="http://cdrdao.sf.net/">cdrdao</ulink>, une application d'enregistrement/copie
 bit-a-bit).
 </para>

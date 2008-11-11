@@ -25,7 +25,7 @@
 
 #include "audio_out.h"
 #include "audio_out_internal.h"
-#include "afmt.h"
+#include "libaf/af_format.h"
 #include "mp_msg.h"
 #include "help_mp.h"
 
@@ -57,7 +57,6 @@ static int queued_bursts = 0;
 static int queued_samples = 0;
 static int bytes_per_sample = 0;
 static int byte_per_sec = 0;
-static int convert_u8_s8;
 static int audio_fd = -1;
 static enum {
     RTSC_UNKNOWN = 0,
@@ -69,22 +68,23 @@ extern int verbose;
 
 
 // convert an OSS audio format specification into a sun audio encoding
-static int oss2sunfmt(int oss_format)
+static int af2sunfmt(int format)
 {
-    switch (oss_format){
-    case AFMT_MU_LAW:
+    switch (format){
+    case AF_FORMAT_MU_LAW:
 	return AUDIO_ENCODING_ULAW;
-    case AFMT_A_LAW:
+    case AF_FORMAT_A_LAW:
 	return AUDIO_ENCODING_ALAW;
-    case AFMT_S16_BE:
-    case AFMT_S16_LE:
+    case AF_FORMAT_S16_NE:
 	return AUDIO_ENCODING_LINEAR;
 #ifdef	AUDIO_ENCODING_LINEAR8	// Missing on SunOS 5.5.1...
-    case AFMT_U8:
+    case AF_FORMAT_U8:
 	return AUDIO_ENCODING_LINEAR8;
 #endif
+    case AF_FORMAT_S8:
+	return AUDIO_ENCODING_LINEAR;
 #ifdef	AUDIO_ENCODING_DVI	// Missing on NetBSD...
-    case AFMT_IMA_ADPCM:
+    case AF_FORMAT_IMA_ADPCM:
 	return AUDIO_ENCODING_DVI;
 #endif
     default:
@@ -457,6 +457,7 @@ static int init(int rate,int channels,int format,int flags){
     audio_info_t info;
     int pass;
     int ok;
+    int convert_u8_s8;
 
     setup_device_paths();
 
@@ -465,22 +466,8 @@ static int init(int rate,int channels,int format,int flags){
 	enable_sample_timing = realtime_samplecounter_available(audio_dev);
     }
 
-#define	AF_FILTER_TEST 0
-#if	AF_FILTER_TEST
-    /* test code to force use of the audio filter modules */
-    {
-	char *s;
-	if (s = getenv("AF_RATE"))
-	    rate = atoi(s);
-	if (s = getenv("AF_CHANNELS"))
-	    channels = atoi(s);
-	if (s = getenv("AF_BITS"))
-	    format = atoi(s) == 16 ? AFMT_S16_NE : AFMT_U8;
-    }
-#endif
-
-//    printf("ao2: %d Hz  %d chans  %s [0x%X]\n",
-//	   rate,channels,audio_out_format_name(format),format);
+    printf("ao2: %d Hz  %d chans  %s [0x%X]\n",
+	   rate,channels,af_fmt2str_short(format),format);
 
     audio_fd=open(audio_dev, O_WRONLY);
     if(audio_fd<0){
@@ -490,12 +477,15 @@ static int init(int rate,int channels,int format,int flags){
 
     ioctl(audio_fd, AUDIO_DRAIN, 0);
 
+    if (af2sunfmt(format) == AUDIO_ENCODING_NONE)
+      format = AF_FORMAT_S16_NE;
+
     for (ok = pass = 0; pass <= 5; pass++) { /* pass 6&7 not useful */
 
 	AUDIO_INITINFO(&info);
-	info.play.encoding = oss2sunfmt(ao_data.format = format);
+	info.play.encoding = af2sunfmt(ao_data.format = format);
 	info.play.precision =
-	    (format==AFMT_S16_LE || format==AFMT_S16_BE
+	    (format==AF_FORMAT_S16_NE
 	     ? AUDIO_PRECISION_16
 	     : AUDIO_PRECISION_8);
 	info.play.channels = ao_data.channels = channels;
@@ -511,7 +501,9 @@ static int init(int rate,int channels,int format,int flags){
 	     * Try S8, and if it works, use our own U8->S8 conversion before
 	     * sending the samples to the sound driver.
 	     */
+#ifdef AUDIO_ENCODING_LINEAR8
 	    if (info.play.encoding != AUDIO_ENCODING_LINEAR8)
+#endif
 		continue;
 	    info.play.encoding = AUDIO_ENCODING_LINEAR;
 	    convert_u8_s8 = 1;
@@ -558,10 +550,14 @@ static int init(int rate,int channels,int format,int flags){
     }
 
     if (!ok) {
+	char buf[128];
 	mp_msg(MSGT_AO, MSGL_ERR, MSGTR_AO_SUN_UnsupSampleRate,
-	       channels, audio_out_format_name(format), rate);
+	       channels, af_fmt2str(format, buf, 128), rate);
 	return 0;
     }
+
+    if (convert_u8_s8)
+      ao_data.format = AF_FORMAT_S8;
 
     bytes_per_sample = channels * info.play.precision / 8;
     ao_data.bps = byte_per_sec = bytes_per_sample * ao_data.samplerate;
@@ -578,7 +574,7 @@ static int init(int rate,int channels,int format,int flags){
 	ao_data.buffersize=0;
 #ifdef HAVE_AUDIO_SELECT
 	data = malloc(ao_data.outburst);
-	memset(data, format==AFMT_U8 ? 0x80 : 0, ao_data.outburst);
+	memset(data, format==AF_FORMAT_U8 ? 0x80 : 0, ao_data.outburst);
 	while(ao_data.buffersize<0x40000){
 	    fd_set rfds;
 	    struct timeval tv;
@@ -639,9 +635,9 @@ static void reset(){
     ioctl(audio_fd, AUDIO_DRAIN, 0);
 
     AUDIO_INITINFO(&info);
-    info.play.encoding = oss2sunfmt(ao_data.format);
+    info.play.encoding = af2sunfmt(ao_data.format);
     info.play.precision =
-	(ao_data.format==AFMT_S16_LE || ao_data.format==AFMT_S16_BE 
+	(ao_data.format==AF_FORMAT_S16_NE 
 	 ? AUDIO_PRECISION_16
 	 : AUDIO_PRECISION_8);
     info.play.channels = ao_data.channels;
@@ -709,38 +705,9 @@ static int get_space(){
 // it should round it down to outburst*n
 // return: number of bytes played
 static int play(void* data,int len,int flags){
-#if	WORDS_BIGENDIAN
-    int native_endian = AFMT_S16_BE;
-#else
-    int native_endian = AFMT_S16_LE;
-#endif
-
     if (len < ao_data.outburst) return 0;
     len /= ao_data.outburst;
     len *= ao_data.outburst;
-
-    /* 16-bit format using the 'wrong' byteorder?  swap words */
-    if ((ao_data.format == AFMT_S16_LE || ao_data.format == AFMT_S16_BE)
-	&& ao_data.format != native_endian) {
-	static void *swab_buf;
-	static int swab_len;
-	if (len > swab_len) {
-	    if (swab_buf)
-		swab_buf = realloc(swab_buf, len);
-	    else
-		swab_buf = malloc(len);
-	    swab_len = len;
-	    if (swab_buf == NULL) return 0;
-	}
-	swab(data, swab_buf, len);
-	data = swab_buf;
-    } else if (ao_data.format == AFMT_U8 && convert_u8_s8) {
-	int i;
-	unsigned char *p = data;
-
-	for (i = 0, p = data; i < len; i++, p++)
-	    *p ^= 0x80;
-    }
 
     len = write(audio_fd, data, len);
     if(len > 0) {

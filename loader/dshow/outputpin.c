@@ -1,3 +1,8 @@
+/*
+ * Modified for use with MPlayer, detailed CVS changelog at
+ * http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
+ * $Id: outputpin.c,v 1.13 2005/04/15 20:17:13 diego Exp $
+ */
 
 #include "wine/winerror.h"
 #include "wine/windef.h"

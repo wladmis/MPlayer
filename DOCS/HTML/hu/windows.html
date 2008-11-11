@@ -4,7 +4,7 @@
   Még nincs GUI-ja, de a parancssoros verzió majdnem teljesen m&#369;ködik.
   <a href="../../tech/patches.txt" target="_top">Javításokat</a> mindig örömmel fogadunk.
   Ajánlott szétnézni az
-  <a href="http://mplayerhq.hu/mailman/listinfo/mplayer-cygwin/" target="_top">mplayer-cygwin</a>
+  <a href="http://mplayerhq.hu/mailman/listinfo/mplayer-cygwin/" target="_top">MPlayer-cygwin</a>
   levelezési listán is a legfrissebb információkért.</p><p>A legjobb eredmény a natív DirectX videó kimeneti vezérl&#337;vel
   (<tt class="option">-vo directx</tt>) és a natív Windows waveout audió vezérl&#337;vel
   (<tt class="option">-ao win32</tt>) érhet&#337; el. Alternatívaként van OpenGL és SDL, de
@@ -44,18 +44,18 @@
   olyan színteret, amit a kártyád részben hibásan kezel,
   <tt class="option">-vf noformat=<i><tt>szinter</tt></i></tt>
   kapcsolóval megakadályozhatod a használatát. Írd be ezt a konfigurációs fájlodba,
-  hogy véglegesen kimaradjon a használatból.</p><p>Használhatod a Win32 codec-eket és a Real Win32 codec-eket (nem a Real Linux codec-eket)
-  ha akarod. Tedd a codec-eket valahova a path-ba vagy add meg a
-  <tt class="option">--with-codecsdir=<i><tt>c:/eleresi/ut/a/codecekhez</tt></i></tt> (alternatívaként
-  <tt class="option">--with-codecsdir=<i><tt>/eleresi/ut/a/codecekhez</tt></i></tt> csak
-  <span class="application">Cygwin</span> alatt) kapcsolót a <tt class="filename">configure</tt>-nak.
-  Kaptunk pár jelentést, hogy a Real DLL-eknek írhatóaknak kell lenniük az
-  <span class="application">MPlayer</span>t futtató felhasználó által, de csak néhány
-  rendszeren. Próbáld meg írhatóvá tenni &#337;ket, ha probléma adódna. A QuickTime
-  DLL-ek szintén m&#369;ködnek, de be kell másolnod &#337;ket a Windows system könyvtárába
-  (<tt class="filename"><i><tt>C:\Windows\system\</tt></i></tt>
-  vagy hasonló). Utolsó reményként próbáld meg az <span class="application">MPlayer</span>rel
-  azonos könyvtárba tenni &#337;ket.</p><p>VCD-ket is lejátszhatsz a <tt class="filename">.DAT</tt> vagy <tt class="filename">.MPG</tt> fájlok
+  hogy véglegesen kimaradjon a használatból.</p><p>Vannak speciálisan Windowsra készített codec csomagok a
+  <a href="http://mplayerhq.hu/homepage/design7/codecs.html" target="_top">codec oldalunkon</a>,
+  melyek segítségével azokat a formátumokat is lejátszhatod, amikhez még
+  nincs natív támogatás.
+  Tedd be a codec-eket valahova az elérési útvonaladba vagy add meg a
+  <tt class="option">--with-codecsdir=<i><tt>c:/ut/a/codecjeidhez</tt></i></tt>
+  (alternatívaként
+  <tt class="option">--with-codecsdir=<i><tt>/ut/a/codecjeidhez</tt></i></tt>
+  csak <span class="application">Cygwin</span> alatt) kapcsolóval a <tt class="filename">configure</tt>-nak.
+  Kaptunk olyan visszajelzéseket, hogy a Real DLL-eknek írhatóaknak kell lenniük az
+  <span class="application">MPlayer</span>t futtató felhasználó által, de csak bizonyos
+  rendszereken (NT4). Próbáld meg írhatóvá tenni &#337;ket, ha problémáid vannak.</p><p>VCD-ket is lejátszhatsz a <tt class="filename">.DAT</tt> vagy <tt class="filename">.MPG</tt> fájlok
   lejátszásával, amit a Windows meglát a VCD-n. Így nagyszer&#369;en m&#369;ködik (javítsd ki a CD-ROM-od
   bet&#369;jelét):</p><pre class="screen">mplayer <i><tt>d:/mpegav/avseq01.dat</tt></i></pre><p>A DVD-k is m&#369;ködnek, add meg a <tt class="option">-dvd-device</tt> kapcsolócal a DVD-ROM-od
   bet&#369;jelét:</p><pre class="screen">mplayer dvd://<i><tt>&lt;title&gt;</tt></i> -dvd-device <i><tt>d</tt></i>:</pre><p>A <span class="application">Cygwin</span>/<span class="application">MinGW</span>

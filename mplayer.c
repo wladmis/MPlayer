@@ -58,7 +58,6 @@ extern int mp_input_win32_slave_cmd_func(int fd,char* dest,int size);
 #endif
 
 #include "libao2/audio_out.h"
-#include "libao2/audio_plugin.h"
 
 #include "codec-cfg.h"
 
@@ -89,11 +88,21 @@ int verbose=0;
 int identify=0;
 int quiet=0;
 
+#ifdef WIN32
+char * proc_priority=NULL;
+#endif
+
 #define ABS(x) (((x)>=0)?(x):(-(x)))
 #define ROUND(x) ((int)((x)<0 ? (x)-0.5 : (x)+0.5))
 
 #ifdef HAVE_RTC
+#ifdef __linux__
 #include <linux/rtc.h>
+#else
+#include <rtc.h>
+#define RTC_IRQP_SET RTCIO_IRQP_SET
+#define RTC_PIE_ON   RTCIO_PIE_ON
+#endif
 #endif
 
 #ifdef USE_TV
@@ -358,8 +367,6 @@ static char* rtc_device;
 #ifdef USE_EDL
 edl_record_ptr edl_records = NULL; ///< EDL entries memory area
 edl_record_ptr next_edl_record = NULL; ///< only for traversing edl_records
-int edl_memory_slots = 0; ///< number of EDL entries (1 for skip + 2 for each mute)
-int edl_operations = 0; ///< number of EDL operations, skip + mute
 short user_muted = 0; ///< Stores whether User wanted muted mode.
 short edl_muted  = 0; ///< Stores whether EDL is currently in muted mode.
 short edl_decision = 0; ///< 1 when an EDL operation has been made
@@ -389,6 +396,9 @@ static void uninit_player(unsigned int mask){
     inited_flags&=~INITED_ACODEC;
     current_module="uninit_acodec";
     if(sh_audio) uninit_audio(sh_audio);
+#ifdef HAVE_NEW_GUI
+    guiGetEvent(guiSetAfilter, (char *)NULL);
+#endif
     sh_audio=NULL;
   }
 
@@ -746,6 +756,7 @@ int sub_source()
 #ifdef USE_SUB
 
 sub_data* subdata = NULL;
+static subtitle* vo_sub_last = NULL;
 
 void add_subtitles(char *filename, float fps, int silent)
 {
@@ -766,7 +777,7 @@ void add_subtitles(char *filename, float fps, int silent)
       mp_msg(MSGT_GLOBAL, MSGL_INFO, "ID_FILE_SUB_FILENAME=%s\n", filename);
     }
     ++set_of_sub_size;
-    mp_msg(MSGT_FIXME, MSGL_FIXME, MSGTR_AddedSubtitleFile, set_of_sub_size, filename);
+    mp_msg(MSGT_CPLAYER, MSGL_INFO, MSGTR_AddedSubtitleFile, set_of_sub_size, filename);
 }
 
 // FIXME: if/when the GUI calls this, global sub numbering gets (potentially) broken.
@@ -927,6 +938,9 @@ static int build_afilter_chain(sh_audio_t *sh_audio, ao_data_t *ao_data)
   int result;
   if (!sh_audio)
   {
+#ifdef HAVE_NEW_GUI
+    guiGetEvent(guiSetAfilter, (char *)NULL);
+#endif
     mixer.afilter = NULL;
     return 0;
   }
@@ -940,13 +954,52 @@ static int build_afilter_chain(sh_audio_t *sh_audio, ao_data_t *ao_data)
     playback_speed = (float)new_srate / (float)sh_audio->samplerate;
   }
   result =  init_audio_filters(sh_audio, new_srate,
-           sh_audio->channels, sh_audio->sample_format, sh_audio->samplesize,
+           sh_audio->channels, sh_audio->sample_format,
            ao_data->samplerate, ao_data->channels, ao_data->format,
-           audio_out_format_bits(ao_data->format) / 8, /* ao_data.bps, */
            ao_data->outburst * 4, ao_data->buffersize);
   mixer.afilter = sh_audio->afilter;
+#ifdef HAVE_NEW_GUI
+  guiGetEvent(guiSetAfilter, (char *)sh_audio->afilter);
+#endif
   return result;
 }
+
+#ifdef USE_SUB
+/**
+ * \brief Log the currently displayed subtitle to a file
+ * 
+ * Logs the current or last displayed subtitle together with filename
+ * and time information to ~/.mplayer/subtitle_log
+ *
+ * Intended purpose is to allow convenient marking of bogus subtitles
+ * which need to be fixed while watching the movie.
+ */
+
+static void log_sub(){
+    char *fname;
+    FILE *f;
+    int i;
+
+    if (subdata == NULL || vo_sub_last == NULL) return;
+    fname = get_path("subtitle_log");
+    f = fopen(fname, "a");
+    if (!f) return;
+    fprintf(f, "----------------------------------------------------------\n");
+    if (subdata->sub_uses_time) {
+	fprintf(f, "N: %s S: %02d:%02d:%02d.%02d E: %02d:%02d:%02d.%02d\n", filename, 
+		vo_sub_last->start/360000, (vo_sub_last->start/6000)%60,
+		(vo_sub_last->start/100)%60, vo_sub_last->start%100,
+		vo_sub_last->end/360000, (vo_sub_last->end/6000)%60,
+		(vo_sub_last->end/100)%60, vo_sub_last->end%100);
+    } else {
+	fprintf(f, "N: %s S: %d E: %d\n", filename, vo_sub_last->start, vo_sub_last->end);
+    }
+    for (i = 0; i < vo_sub_last->lines; i++) {
+	fprintf(f, "%s\n", vo_sub_last->text[i]);
+    }
+    fclose(f);
+}
+#endif
 
 int main(int argc,char* argv[]){
 
@@ -995,10 +1048,10 @@ int gui_no_filename=0;
   mp_msg_init();
   mp_msg_set_level(MSGL_STATUS);
 
-  mp_msg(MSGT_CPLAYER,MSGL_INFO, "MPlayer " VERSION " (C) 2000-2004 MPlayer Team\n");
+  mp_msg(MSGT_CPLAYER,MSGL_INFO, "MPlayer " VERSION " (C) 2000-2005 MPlayer Team\n");
   /* Test for cpu capabilities (and corresponding OS support) for optimizing */
   GetCpuCaps(&gCpuCaps);
-#ifdef ARCH_X86
+#if defined(ARCH_X86) || defined(ARCH_X86_64)
   mp_msg(MSGT_CPLAYER,MSGL_INFO,"CPUflags:  MMX: %d MMX2: %d 3DNow: %d 3DNow2: %d SSE: %d SSE2: %d\n",
       gCpuCaps.hasMMX,gCpuCaps.hasMMX2,
       gCpuCaps.has3DNow, gCpuCaps.has3DNowExt,
@@ -1096,6 +1149,18 @@ int gui_no_filename=0;
       }
     }
 	
+#ifdef WIN32
+	if(proc_priority){
+		int i;
+        	for(i=0; priority_presets_defs[i].name; i++){
+        		if(strcasecmp(priority_presets_defs[i].name, proc_priority) == 0)
+				break;
+		}
+		mp_msg(MSGT_CPLAYER,MSGL_STATUS,"Setting process priority: %s\n",
+				priority_presets_defs[i].name);
+		SetPriorityClass(GetCurrentProcess(), priority_presets_defs[i].prio);
+	}
+#endif	
 #ifndef HAVE_NEW_GUI
     if(use_gui){
       mp_msg(MSGT_CPLAYER,MSGL_WARN,MSGTR_NoGui);
@@ -1197,30 +1262,8 @@ if (edl_check_mode() == EDL_ERROR && edl_filename)
     exit_player(NULL);
 } else if (edl_filename)
 {
-    edl_memory_slots = edl_count_entries();
-    if (edl_memory_slots > 0)
-    {
-        edl_records = calloc(edl_memory_slots, sizeof(struct edl_record));
-        if (edl_records == NULL)
-        {
-            mp_msg(MSGT_CPLAYER, MSGL_FATAL, MSGTR_EdlOutOfMem);
-            exit_player(NULL);	    
-        } else
-        {
-            if ((edl_operations = edl_parse_file(edl_records)) > 0)
-            {
-                mp_msg(MSGT_CPLAYER, MSGL_INFO, MSGTR_EdlRecordsNo,
-                       edl_operations);
-            } else
-            {
-
-                mp_msg(MSGT_CPLAYER, MSGL_INFO, MSGTR_EdlQueueEmpty);
-            }
-        }
-    }
-
-    next_edl_record = edl_records;
-
+    if (edl_records) free_edl(edl_records);
+    next_edl_record = edl_records = edl_parse_file();
 } else if (edl_output_filename)
 {
     if ((edl_fd = fopen(edl_output_filename, "w")) == NULL)
@@ -1243,8 +1286,8 @@ if (edl_check_mode() == EDL_ERROR && edl_filename)
     // Many users forget to include command line in bugreports...
     if(verbose>0){
       mp_msg(MSGT_CPLAYER, MSGL_INFO, MSGTR_CommandLine);
-      for(i=1;i<argc;i++)mp_msg(MSGT_FIXME, MSGL_FIXME," '%s'",argv[i]);
-      mp_msg(MSGT_FIXME, MSGL_FIXME, "\n");
+      for(i=1;i<argc;i++)mp_msg(MSGT_CPLAYER, MSGL_INFO," '%s'",argv[i]);
+      mp_msg(MSGT_CPLAYER, MSGL_INFO, "\n");
     }
 
     mp_msg_set_level(verbose+MSGL_STATUS);
@@ -2091,20 +2134,15 @@ if(sh_audio){
   if(!preinit_audio_filters(sh_audio,
         // input:
         (int)(sh_audio->samplerate*playback_speed),
-	sh_audio->channels, sh_audio->sample_format, sh_audio->samplesize,
+	sh_audio->channels, sh_audio->sample_format,
 	// output:
-	&ao_data.samplerate, &ao_data.channels, &ao_data.format,
-	audio_out_format_bits(ao_data.format)/8)){
+	&ao_data.samplerate, &ao_data.channels, &ao_data.format)){
       mp_msg(MSGT_CPLAYER,MSGL_ERR,MSGTR_AudioFilterChainPreinitError);
-  } else {
-    mp_msg(MSGT_CPLAYER,MSGL_INFO,"AF_pre: %dHz %dch %s\n",
-      ao_data.samplerate, ao_data.channels,
-      audio_out_format_name(ao_data.format));
   }
 #endif  
   current_module="ao2_init";
   if(!(audio_out=init_best_audio_out(audio_driver_list,
-      (ao_plugin_cfg.plugin_list!=NULL), // plugin flag
+      0, // plugin flag
       force_srate?force_srate:ao_data.samplerate,
       audio_output_channels?audio_output_channels:ao_data.channels,
       audio_output_format?audio_output_format:ao_data.format,0))){
@@ -2118,8 +2156,8 @@ if(sh_audio){
     mp_msg(MSGT_CPLAYER,MSGL_INFO,"AO: [%s] %dHz %dch %s (%d bps)\n",
       audio_out->info->short_name,
       ao_data.samplerate, ao_data.channels,
-      audio_out_format_name(ao_data.format),
-      audio_out_format_bits(ao_data.format)/8 );
+      af_fmt2str_short(ao_data.format),
+      af_fmt2bits(ao_data.format)/8 );
     mp_msg(MSGT_CPLAYER,MSGL_V,"AO: Description: %s\nAO: Author: %s\n",
       audio_out->info->name, audio_out->info->author);
     if(strlen(audio_out->info->comment) > 0)
@@ -2664,7 +2702,7 @@ if (stream->type==STREAMTYPE_DVDNAV && dvd_nav_still)
  if( next_edl_record ) { // Are we (still?) doing EDL?
   if ( !sh_video ) {
     mp_msg( MSGT_CPLAYER, MSGL_ERR, MSGTR_EdlNOsh_video );
-    free(edl_records);
+    free_edl(edl_records);
     next_edl_record = NULL; 
     edl_records = NULL;
   } else {
@@ -2696,9 +2734,10 @@ if (stream->type==STREAMTYPE_DVDNAV && dvd_nav_still)
   while( !brk_cmd && (cmd = mp_input_get_cmd(0,0,0)) != NULL) {
     switch(cmd->id) {
     case MP_CMD_SEEK : {
-      int v,abs;
+      float v;
+      int abs;
       osd_show_percentage = 25;
-      v = cmd->args[0].v.i;
+      v = cmd->args[0].v.f;
       abs = (cmd->nargs > 1) ? cmd->args[1].v.i : 0;
       if(abs==2) { /* Absolute seek to a specific timestamp in seconds */
         abs_seek_pos = 1;
@@ -2843,6 +2882,11 @@ if (stream->type==STREAMTYPE_DVDNAV && dvd_nav_still)
       step_sub(subdata, sh_video->pts, movement);
       osd_show_sub_delay = 9; // show the subdelay in OSD
     }
+#endif
+    } break;
+    case MP_CMD_SUB_LOG : {
+#ifdef USE_SUB
+	log_sub();
 #endif
     } break;
     case MP_CMD_OSD :  {
@@ -3279,11 +3323,6 @@ if (stream->type==STREAMTYPE_DVDNAV && dvd_nav_still)
 	  vo_osd_progbar_value=vo_panscan*256;
 	  vo_osd_changed(OSDTYPE_PROGBAR);
         }
-#ifdef HAVE_FREETYPE
-	if (sh_video && (subtitle_autoscale == 2 || subtitle_autoscale == 3))
-	    // force scaling font to movie width or diagonal
-	    force_load_font = 1;
-#endif
 #endif
        }
     } break;
@@ -3336,8 +3375,12 @@ if (stream->type==STREAMTYPE_DVDNAV && dvd_nav_still)
     case MP_CMD_SUB_SELECT:
     if (global_sub_size) {
         int source = -1;
+        int v = cmd->args[0].v.i;
 
-        global_sub_pos++;
+        if (v < -1)
+            global_sub_pos++;
+        else
+            global_sub_pos = v;
         if (global_sub_pos >= global_sub_size)
             global_sub_pos = -1;
         if (global_sub_pos >= 0)
@@ -3351,7 +3394,7 @@ if (stream->type==STREAMTYPE_DVDNAV && dvd_nav_still)
 #ifdef USE_SUB
         set_of_sub_pos = -1;
         subdata = NULL;
-        vo_sub = NULL;
+        vo_sub_last = vo_sub = NULL;
 #endif
         vobsub_id = -1;
         dvdsub_id = -1;
@@ -3401,7 +3444,7 @@ if (stream->type==STREAMTYPE_DVDNAV && dvd_nav_still)
         if (vo_spudec != NULL)
           spudec_free(vo_spudec);
         vo_spudec =
-          spudec_new_scaled_vobsub(mkv_sh_sub->palette, mkv_sh_sub->colors,
+          spudec_new_scaled_vobsub(mkv_sh_sub->has_palette ? mkv_sh_sub->palette : NULL, mkv_sh_sub->colors,
                                    mkv_sh_sub->custom_colors,
                                    mkv_sh_sub->width,
                                    mkv_sh_sub->height);
@@ -3451,6 +3494,9 @@ if (stream->type==STREAMTYPE_DVDNAV && dvd_nav_still)
     case MP_CMD_GET_PERCENT_POS : {
 	mp_msg(MSGT_GLOBAL,MSGL_INFO,MSGTR_AnsPercentPos, demuxer_get_percent_pos(demuxer));
     } break;
+    case MP_CMD_SWITCH_AUDIO :
+        demuxer_switch_audio(demuxer);
+        break;
     case MP_CMD_RUN : {
 #ifndef __MINGW32__
         if(!fork()) {
@@ -3864,16 +3910,15 @@ if ((user_muted | edl_muted) != mixer.muted) mixer_mute(&mixer);
 	  osd_show_sub_visibility--;
       } else
       if (osd_show_vobsub_changed) {
+	  snprintf(osd_text_tmp, 63, "Subtitles: off");
 	  if (vo_vobsub && vobsub_id >= 0) {
 	      const char *language = "none";
 	      language = vobsub_get_id(vo_vobsub, (unsigned int) vobsub_id);
-	  snprintf(osd_text_tmp, 63, "Subtitles: (%d) %s", vobsub_id, language ? language : "unknown");
+	      snprintf(osd_text_tmp, 63, "Subtitles: (%d) %s", vobsub_id, language ? language : "unknown");
 	  }
 #ifdef HAVE_OGGVORBIS
 	  if (d_dvdsub && demuxer->type == DEMUXER_TYPE_OGG) {
-	      if (dvdsub_id < 0)
-		snprintf(osd_text_tmp, 63, "Subtitles: (off)");
-	      else {
+	      if (dvdsub_id >= 0) {
 		char *lang = demux_ogg_sub_lang(demuxer, dvdsub_id);
 		if (!lang) lang = "unknown";
 		snprintf(osd_text_tmp, 63, "Subtitles: (%d) %s", dvdsub_id, lang);
@@ -3882,15 +3927,17 @@ if ((user_muted | edl_muted) != mixer.muted) mixer_mute(&mixer);
 #endif
 #ifdef USE_DVDREAD
 	  if (vo_spudec && (demuxer->type != DEMUXER_TYPE_MATROSKA)) {
-	      char lang[5] = "none";
-	      int code = 0;
-	      if (dvdsub_id >= 0) code = dvd_lang_from_sid(stream, dvdsub_id);
-	      if (code) {
-	         lang[0] = code >> 8;
-	         lang[1] = code;
-	         lang[2] = 0;
+	      if (dvdsub_id >= 0) {
+		  char lang[5] = "none";
+		  int code = 0;
+		  code = dvd_lang_from_sid(stream, dvdsub_id);
+		  if (code) {
+		      lang[0] = code >> 8;
+		      lang[1] = code;
+		      lang[2] = 0;
+		  }
+		  snprintf(osd_text_tmp, 63, "Subtitles: (%d) %s", dvdsub_id, lang);
 	      }
-	      snprintf(osd_text_tmp, 63, "Subtitles: (%d) %s", dvdsub_id, lang);
 	  }
 #endif
 #ifdef HAVE_MATROSKA
@@ -3899,9 +3946,8 @@ if ((user_muted | edl_muted) != mixer.muted) mixer_mute(&mixer);
       if (dvdsub_id >= 0) {
         demux_mkv_get_sub_lang(demuxer, dvdsub_id, lang, 9);
         lang[9] = 0;
-      } else
-        strcpy(lang, "off");
-      snprintf(osd_text_tmp, 63, "Subtitles: (%d) %s", dvdsub_id, lang);
+	snprintf(osd_text_tmp, 63, "Subtitles: (%d) %s", dvdsub_id, lang);
+      }
     }
 #endif
 	  osd_show_vobsub_changed--;
@@ -3985,13 +4031,14 @@ if ((user_muted | edl_muted) != mixer.muted) mixer_mute(&mixer);
   
 #ifdef USE_SUB
   // find sub
-  if(subdata && sh_video->pts>0){
+  if(subdata &&  sh_video && sh_video->pts>0){
       float pts=sh_video->pts;
       if(sub_fps==0) sub_fps=sh_video->fps;
       current_module="find_sub";
       if (pts > sub_last_pts || pts < sub_last_pts-1.0 ) {
          find_sub(subdata, (pts+sub_delay) * 
 				 (subdata->sub_uses_time ? 100. : sub_fps)); 
+	 if (vo_sub) vo_sub_last = vo_sub;
 	 // FIXME! frame counter...
          sub_last_pts = pts;
       }
@@ -4094,7 +4141,7 @@ uninit_player(INITED_ALL-(INITED_GUI+INITED_INPUT+(fixed_vo?INITED_VO:0)));
     for (i = 0; i < set_of_sub_size; ++i)
         sub_free( set_of_subtitles[i] );
     set_of_sub_size = 0;
-    vo_sub=NULL;
+    vo_sub_last = vo_sub=NULL;
     subdata=NULL;
    }
 #endif

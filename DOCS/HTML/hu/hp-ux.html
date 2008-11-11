@@ -32,7 +32,7 @@ A kártya a 8/16-os hardver útra az 1-essel hivatkozik.
 </p><p>
 Készíts egy linket a nyers eszközr&#337;l a DVD eszközre.
 </p><pre class="screen">
-# ln -s /dev/rdsk/c<i><tt>&lt;SCSI busz hivatkozás&gt;</tt></i>t<i><tt>&lt;SCSI cél ID&gt;</tt></i>d<i><tt>&lt;LUN&gt;</tt></i> /dev/<i><tt>&lt;eszköz&lt;</tt></i>
+# ln -s /dev/rdsk/c<i><tt>&lt;SCSI busz hivatkozás&gt;</tt></i>t<i><tt>&lt;SCSI cél ID&gt;</tt></i>d<i><tt>&lt;LUN&gt;</tt></i> /dev/<i><tt>&lt;eszköz&gt;</tt></i>
 </pre><p>
 Például:
 </p><pre class="screen">
@@ -55,7 +55,7 @@ Megoldás: Használd a legújabb Mesa depot fájlt.
 /usr/lib/dld.sl: Unresolved symbol: sem_init (code) from /usr/local/lib/libSDL-1.2.sl.0
 </pre>
 </p><p>
-Megoldás: Használd a configure extralib opcióját
+Megoldás: Használd a configure extralibdir opcióját
 <tt class="option">--with-extralibdir="/usr/lib -lrt"</tt>
 </p></li><li><p>
 Az MPlayer segfault-ol egy ilyesmi üzenettel:

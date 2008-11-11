@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-#define LIBAVFORMAT_BUILD       4621
+#define LIBAVFORMAT_BUILD       4623
 
 #define LIBAVFORMAT_VERSION_INT FFMPEG_VERSION_INT
 #define LIBAVFORMAT_VERSION     FFMPEG_VERSION
@@ -124,6 +124,7 @@ typedef struct AVFormatParameters {
 #define AVFMT_SHOW_IDS      0x0008 /* show format stream IDs numbers */
 #define AVFMT_RAWPICTURE    0x0020 /* format wants AVPicture structure for
                                       raw picture data */
+#define AVFMT_GLOBALHEADER  0x0040 /* format wants global header */
 
 typedef struct AVOutputFormat {
     const char *name;
@@ -138,7 +139,7 @@ typedef struct AVOutputFormat {
     int (*write_header)(struct AVFormatContext *);
     int (*write_packet)(struct AVFormatContext *, AVPacket *pkt);
     int (*write_trailer)(struct AVFormatContext *);
-    /* can use flags: AVFMT_NOFILE, AVFMT_NEEDNUMBER */
+    /* can use flags: AVFMT_NOFILE, AVFMT_NEEDNUMBER, AVFMT_GLOBALHEADER */
     int flags;
     /* currently only used to set pixel format if not YUV420P */
     int (*set_parameters)(struct AVFormatContext *, AVFormatParameters *);
@@ -211,6 +212,15 @@ typedef struct AVIndexEntry {
     int min_distance;         /* min distance between this and the previous keyframe, used to avoid unneeded searching */
 } AVIndexEntry;
 
+enum AVDiscard{
+//we leave some space between them for extensions (drop some keyframes for intra only or drop just some bidir frames)
+    AVDISCARD_NONE   =-16, ///< discard nothing
+    AVDISCARD_DEFAULT=  0, ///< discard useless packets like 0 size packets in avi
+    AVDISCARD_BIDIR  = 16, ///< discard all bidirectional frames
+    AVDISCARD_NONKEY = 32, ///< discard all frames except keyframes
+    AVDISCARD_ALL    = 48, ///< discard all
+};
+
 typedef struct AVStream {
     int index;    /* stream index in AVFormatContext */
     int id;       /* format specific stream id */
@@ -227,6 +237,8 @@ typedef struct AVStream {
     int pts_wrap_bits; /* number of bits in pts (used for wrapping control) */
     /* ffmpeg.c private use */
     int stream_copy; /* if TRUE, just copy stream */
+    enum AVDiscard discard; ///< selects which packets can be discarded at will and dont need to be demuxed
+    //FIXME move stuff to a flags field?
     /* quality, as it has been removed from AVCodecContext and put in AVVideoFrame
      * MN:dunno if thats the right place, for it */
     float quality; 
@@ -455,8 +467,11 @@ int mp3_init(void);
 /* yuv4mpeg.c */
 int yuv4mpeg_init(void);
 
-/* ogg.c */
+/* ogg2.c */
 int ogg_init(void);
+
+/* ogg.c */
+int libogg_init(void);
 
 /* dv.c */
 int ff_dv_init(void);
@@ -546,7 +561,7 @@ int fifo_size(FifoBuffer *f, uint8_t *rptr);
 int fifo_read(FifoBuffer *f, uint8_t *buf, int buf_size, uint8_t **rptr_ptr);
 void fifo_write(FifoBuffer *f, uint8_t *buf, int size, uint8_t **wptr_ptr);
 int put_fifo(ByteIOContext *pb, FifoBuffer *f, int buf_size, uint8_t **rptr_ptr);
-void fifo_realloc(FifoBuffer *f, int size);
+void fifo_realloc(FifoBuffer *f, unsigned int size);
 
 /* media file input */
 AVInputFormat *av_find_input_format(const char *short_name);
@@ -582,6 +597,7 @@ void av_set_pts_info(AVStream *s, int pts_wrap_bits,
 
 #define AVSEEK_FLAG_BACKWARD 1 ///< seek backward
 #define AVSEEK_FLAG_BYTE     2 ///< seeking based on position in bytes
+#define AVSEEK_FLAG_ANY      4 ///< seek to any frame, even non keyframes
 
 int av_find_default_stream_index(AVFormatContext *s);
 int av_index_search_timestamp(AVStream *st, int64_t timestamp, int flags);
@@ -677,3 +693,4 @@ int match_ext(const char *filename, const char *extensions);
 #endif
 
 #endif /* AVFORMAT_H */
+

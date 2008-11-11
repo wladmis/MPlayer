@@ -13,7 +13,7 @@
 
 #include "audio_out.h"
 #include "audio_out_internal.h"
-#include "afmt.h"
+#include "libaf/af_format.h"
 
 #include "mp_msg.h"
 #include "help_mp.h"
@@ -52,7 +52,7 @@ static int init(int rate_hz, int channels, int format, int flags)
     snd_pcm_channel_info_t chninfo;
 
     mp_msg(MSGT_AO, MSGL_INFO, MSGTR_AO_ALSA5_InitInfo, rate_hz,
-	channels, audio_out_format_name(format));
+	channels, af_fmt2str_short(format));
 
     alsa_handler = NULL;
 
@@ -75,28 +75,28 @@ static int init(int rate_hz, int channels, int format, int flags)
     memset(&alsa_format, 0, sizeof(alsa_format));
     switch (format)
     {
-	case AFMT_S8:
+	case AF_FORMAT_S8:
 	    alsa_format.format = SND_PCM_SFMT_S8;
 	    break;
-	case AFMT_U8:
+	case AF_FORMAT_U8:
 	    alsa_format.format = SND_PCM_SFMT_U8;
 	    break;
-	case AFMT_U16_LE:
+	case AF_FORMAT_U16_LE:
 	    alsa_format.format = SND_PCM_SFMT_U16_LE;
 	    break;
-	case AFMT_U16_BE:
+	case AF_FORMAT_U16_BE:
 	    alsa_format.format = SND_PCM_SFMT_U16_BE;
 	    break;
 #ifndef WORDS_BIGENDIAN
-	case AFMT_AC3:
+	case AF_FORMAT_AC3:
 #endif
-	case AFMT_S16_LE:
+	case AF_FORMAT_S16_LE:
 	    alsa_format.format = SND_PCM_SFMT_S16_LE;
 	    break;
 #ifdef WORDS_BIGENDIAN
-	case AFMT_AC3:
+	case AF_FORMAT_AC3:
 #endif
-	case AFMT_S16_BE:
+	case AF_FORMAT_S16_BE:
 	    alsa_format.format = SND_PCM_SFMT_S16_BE;
 	    break;
 	default:
@@ -111,8 +111,7 @@ static int init(int rate_hz, int channels, int format, int flags)
 	    ao_data.bps *= 2;
 	    break;
 	case -1:
-	    mp_msg(MSGT_AO, MSGL_ERR, MSGTR_AO_ALSA5_InvalidFormatReq,
-		audio_out_format_name(format));
+	    mp_msg(MSGT_AO, MSGL_ERR, MSGTR_AO_ALSA5_InvalidFormatReq,af_fmt2str_short(format));
 	    return(0);
 	default:
 	    break;

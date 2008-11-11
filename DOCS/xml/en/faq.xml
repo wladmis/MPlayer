@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- $Revision: 1.56 $ -->
+<!-- $Revision: 1.72 $ -->
 <chapter id="faq" xreflabel="FAQ">
 <title>Frequently Asked Questions</title>
 
@@ -25,7 +25,7 @@ How do I translate <application>MPlayer</application> to a new language?
 <answer><para>
 Read the <ulink url="../../tech/translations.txt">translation HOWTO</ulink>,
 it should explain everything. You can get further help on the
-<ulink url="http://mplayerhq.hu/mailman/listinfo/mplayer-docs">mplayer-docs</ulink>
+<ulink url="http://mplayerhq.hu/mailman/listinfo/mplayer-docs">MPlayer-docs</ulink>
 mailing list.
 </para></answer>
 </qandaentry>
@@ -49,10 +49,10 @@ How can I become an <application>MPlayer</application> developer?
 We always welcome coders and documenters. Read the
 <ulink url="../../tech/">technical documentation</ulink>
 to get a first grasp. Then you should subscribe to the
-<ulink url="http://mplayerhq.hu/mailman/listinfo/mplayer-dev-eng">mplayer-dev-eng</ulink>
+<ulink url="http://mplayerhq.hu/mailman/listinfo/mplayer-dev-eng">MPlayer-dev-eng</ulink>
 mailing list and start coding. If you want to help out with the documentation,
 join the
-<ulink url="http://mplayerhq.hu/mailman/listinfo/mplayer-docs">mplayer-docs</ulink>
+<ulink url="http://mplayerhq.hu/mailman/listinfo/mplayer-docs">MPlayer-docs</ulink>
 mailing list.
 </para></answer>
 </qandaentry>
@@ -73,11 +73,41 @@ job, so why change? Besides, we dislike the auto* tools, just like
 <title>Compilation</title>
 <qandaentry>
 <question><para>
+Compilation fails with an error and <application>gcc</application> bails out
+with some cryptic message containing the phrase
+<systemitem>internal compiler error</systemitem> or
+<systemitem>unable to find a register to spill</systemitem>.
+</para></question>
+<answer><para>
+You have stumbled over a bug in <application>gcc</application>. Please
+<ulink url="http://gcc.gnu.org/bugs.html">report it to the gcc team</ulink>
+but not to us. For some reason <application>MPlayer</application> seems to
+trigger compiler bugs frequently. Nevertheless we cannot fix them and do not
+add workarounds for compiler bugs to our sources. To avoid this problem,
+either stick with a compiler version that is known to be reliable and
+stable, or upgrade frequently.
+</para></answer>
+</qandaentry>
+
+<qandaentry>
+<question><para>
 Are there binary (RPM/deb) packages of <application>MPlayer</application>?
 </para></question>
 <answer><para>
 See the <link linkend="debian">Debian</link> and <link linkend="rpm">RPM</link>
 section for details.
+</para></answer>
+</qandaentry>
+
+<qandaentry>
+<question><para>
+How can I build a 32 bit <application>MPlayer</application> on 64 bit Athlon?
+</para></question>
+<answer><para>
+Try the following configure options:
+<screen>
+./configure --target=athlon_xp --cc="gcc -m32" --as="as --32" --with-extralibdir=/usr/lib
+</screen>
 </para></answer>
 </qandaentry>
 
@@ -170,7 +200,7 @@ support, see the <link linkend="install">Installation</link> section.
 </para></question>
 <answer><para>
 Quoted from a <ulink url="http://www.mplayerhq.hu/pipermail/mplayer-users/2001-October/005351.html">mail</ulink>
-A'rpi sent to the <ulink url="http://mplayerhq.hu/pipermail/mplayer-users/">mplayer-users</ulink>
+A'rpi sent to the <ulink url="http://mplayerhq.hu/pipermail/mplayer-users/">MPlayer-users</ulink>
 list (the word 'ideg' is described below):
 <blockquote>
 <para>
@@ -238,46 +268,10 @@ Now type <command>make</command>. You're done!
 
 <qandaentry>
 <question><para>
-It doesn't compile, and it misses <systemitem>uint64_t</systemitem>,
-<filename>inttypes.h</filename> and similar things ...
-</para></question>
-<answer><para>
-Copy <ulink url="http://www.mplayerhq.hu/MPlayer/releases/win32-beta/contrib/inttypes.h">this <filename>inttypes.h</filename></ulink>
-to <filename class="directory">/usr/local/include/</filename> or an equivalent
-place and try again ...
-</para></answer>
-</qandaentry>
-
-<qandaentry>
-<question><para>
-I have Linux running on a Pentium III but <filename>./configure</filename>
-doesn't detect SSE ...
-</para></question>
-<answer><para>
-Only kernel versions 2.4.x support SSE (or try 2.2.19 or newer, but be
-prepared for problems).
-</para></answer>
-</qandaentry>
-
-<qandaentry>
-<question><para>
 I have a Matrox G200/G400/G450/G550, how do I compile/use the mga_vid driver?
 </para></question>
 <answer><para>
 Read the <link linkend="mga_vid">mga_vid</link> section.
-</para></answer>
-</qandaentry>
-
-<qandaentry>
-<question><para>
-Hmm, strange. When loading the <filename>mga_vid.o</filename> kernel
-module, I found this in the logs:
-<screen>Warning: loading mga_vid.o will taint the kernel: no license</screen>
-</para></question>
-<answer><para>
-The latest kernel modutils require a flag indicating the license
-(mainly to avoid kernel hackers debugging closed source drivers).
-Upgrade your kernel, modutils and <application>MPlayer</application>.
 </para></answer>
 </qandaentry>
 
@@ -289,7 +283,8 @@ I don't understand, I DO have X installed!?
 <answer><para>
 ... but you don't have the X development package installed. Or not correctly.
 It's called <filename>XFree86-devel*</filename> under Red Hat, and
-<filename>xlibs-dev</filename> under Debian. Also check if the
+<filename>xlibs-dev</filename> under Debian Woody,
+<filename>libx11-dev</filename> under Debian Sarge. Also check if the
 <filename class="directory">/usr/X11</filename> and
 <filename class="directory">/usr/include/X11</filename> symlinks exist (this
 can be a problem on Mandrake systems). They can be created with these commands:
@@ -527,18 +522,6 @@ connected to the perverted minds of the <application>MPlayer</application> devel
 
 <qandaentry>
 <question><para>
-LIRC doesn't work, because ...
-</para></question>
-<answer><para>
-Are you sure you are using <command>mplayer</command> instead of
-<command>mplayer_lirc</command>? Note that it was <command>mplayer_lirc</command>
-for a long time, including the 0.60 release, but it was recently changed back to
-<command>mplayer</command>.
-</para></answer>
-</qandaentry>
-
-<qandaentry>
-<question><para>
 Subtitles are very nice, the most beautiful I've ever seen, but they
 slow down playing! I know it's unlikely ...
 </para></question>
@@ -546,16 +529,6 @@ slow down playing! I know it's unlikely ...
 After running <filename>./configure</filename>, edit <filename>config.h</filename>
 and replace <systemitem>#undef FAST_OSD</systemitem> with
 <systemitem>#define FAST_OSD</systemitem>. Then recompile.
-</para></answer>
-</qandaentry>
-
-<qandaentry>
-<question><para>
-The onscreen display (OSD) is flickering!
-</para></question>
-<answer><para>
-You use a vo driver with single buffering (x11, xv). With xv, use the
-<option>-double</option> option. Also try <option>-vf expand</option>.
 </para></answer>
 </qandaentry>
 
@@ -580,17 +553,6 @@ You need to get <systemitem class="library">libavcodec</systemitem> from
 FFmpeg's CVS. Read the instructions in the
 <link linkend="ffmpeg"><systemitem class="library">libavcodec</systemitem></link>
 section.
-</para></answer>
-</qandaentry>
-
-<qandaentry>
-<question><para>
-Icewm's taskbar keeps covering the movie in fullscreen mode!
-</para></question>
-<answer><para>
-This shouldn't happen anymore, if it still does use the <option>-fstype</option>
-layer option and report it to the <ulink url="http://mplayerhq.hu/pipermail/mplayer-users/">mplayer-users</ulink>
-mailing list.
 </para></answer>
 </qandaentry>
 
@@ -622,6 +584,25 @@ Use:
 
 <qandadiv id="faq-playback">
 <title>Playback problems</title>
+
+<qandaentry>
+<question><para>
+I cannot pinpoint the cause of some strange playback problem.
+</para></question>
+<answer><para>
+Do you have a stray <filename>codecs.conf</filename> file in
+<filename>~/.mplayer/</filename>, <filename>/etc/</filename>,
+<filename>/usr/local/etc/</filename> or a similar location? Remove it,
+an outdated <filename>codecs.conf</filename> file can cause obscure
+problems and is intended for use only by developers working on codec
+support. It overrides <application>MPlayer</application>'s internal
+codec settings, which will wreak havoc if incompatible changes are
+made in newer program versions. Unless used by experts it is a recipe
+for disaster in the form of seemingly random and very hard to localize
+crashes and playback problems. If you still have it somewhere on your
+system, you should remove it now.
+</para></answer>
+</qandaentry>
 
 <qandaentry>
 <question><para>
@@ -699,22 +680,9 @@ I'm having trouble getting my subtitles to display, help!!
 Make sure you have installed fonts properly. Run through the steps in the
 <link linkend="mpsub-install">OSD and subtitle</link> part of the installation
 section again. If you are using TrueType fonts, verify that you have the
-<systemitem class="library">freetype</systemitem> library installed.
+<systemitem class="library">FreeType</systemitem> library installed.
 Other things include checking your subtitles in a text editor or with other
 players. Also try converting them to another format.
-</para></answer>
-</qandaentry>
-
-<qandaentry>
-<question><para>
-I cannot pinpoint the cause of some strange playback problem.
-</para></question>
-<answer><para>
-Do you have a stray <filename>codecs.conf</filename> file in
-<filename>~/.mplayer/</filename>, <filename>/etc/</filename>,
-<filename>/usr/local/etc/</filename> or a similar location? Remove it,
-outdated <filename>codecs.conf</filename> files can cause obscure
-problems. <application>MPlayer</application> will use its built-in one instead.
 </para></answer>
 </qandaentry>
 
@@ -779,11 +747,11 @@ quite a while.)</para></listitem>
 
 <qandaentry>
 <question><para>
-... works with <application>xine/avifile/...</application> but doesn't with
+... works with <application>xine/vlc/...</application> but doesn't with
 <application>MPlayer</application>.
 </para></question>
 <answer><para>
-<application>MPlayer</application> is not <application>xine/avifile/...</application>.
+<application>MPlayer</application> is not <application>xine/vlc/...</application>.
 Although these players have some code in common, the codecs (DLL) set,
 synchronization, demultiplexing etc is different and should not be
 compared. If you have a file <application>MPlayer</application> fails to
@@ -799,7 +767,9 @@ Audio goes out of sync playing an AVI file.
 </para></question>
 <answer><para>
 Try the <option>-bps</option> or <option>-nobps</option> option. If it does not
-improve, read <link linkend="bugreports">this</link> and upload the file to FTP.
+improve, read the
+<link linkend="bugreports">bug reporting guidelines</link>
+and upload the file to FTP.
 </para></answer>
 </qandaentry>
 
@@ -815,7 +785,7 @@ where &quot;?&quot; is any number then it's OK, the error is not here. If it is:
 then there is a problem with your kernel/libc. Maybe you are using some security
 patches (for example Solar Designer's OpenWall patch) which forces loading
 libraries to very low addresses. Because <filename>l3codeca.acm</filename> is a
-non-relocatable DLL, it must be loaded to <literal>0x00400000</literal>, we can't
+non-relocatable DLL, it must be loaded to <literal>0x40000000</literal>, we can't
 change this. You should use a non-patched kernel, or use <application>MPlayer</application>'s
 <option>-afm 1</option> option to disable using <filename>l3codeca.acm</filename>.
 </para></answer>
@@ -853,6 +823,7 @@ I have problems with [your window manager] and fullscreen xv/xmga/sdl/x11 modes 
 <answer><para>
 Read the <link linkend="bugreports">bug reporting guidelines</link> and send us
 a proper bug report.
+Also try experimenting with the <option>-fstype</option> option.
 </para></answer>
 </qandaentry>
 
@@ -1051,6 +1022,9 @@ I have no sound when playing a video and get error messages similar to this one:
 Are you running KDE or GNOME with the ARTS or ESD sound daemon? Try disabling
 the sound daemon or use the <option>-ao arts</option> or <option>-ao esd</option>
 option to make <application>MPlayer</application> use ARTS or ESD.
+You might also be running ALSA without OSS emulation, try loading the ALSA OSS
+kernel modules or add <option>-ao alsa</option> to your command line to
+directly use the ALSA audio output driver.
 </para></answer>
 </qandaentry>
 
@@ -1298,15 +1272,17 @@ All attempts have failed so far, but patches are welcome.
 I'd like to seek +/- 1 frames instead of 10 seconds.
 </para></question>
 <answer><para>
-This won't be done. It was, but then it messed up A/V sync.
-Feel free to implement it, and send a patch. Don't ask for it.
+You can step forward one frame by pressing <keycap>.</keycap>.
+If the movie was not paused it will be paused afterwards
+(see the man page for details).
+Stepping backwards is unlikely to be implemented anytime soon.
 </para></answer>
 </qandaentry>
 
 <qandaentry>
 <question><para>
 How can I make <application>MPlayer</application> remember the options I use
-for this particular file?
+for a particular file, e.g. <filename>movie.avi</filename>?
 </para></question>
 <answer><para>
 Create a file named <filename>movie.avi.conf</filename> with the file-specific
@@ -1344,31 +1320,34 @@ and even burn them directly to CD.
 How can I join two video files?
 </para></question>
 <answer><para>
-This has been discussed to no end on mplayer-users. Go search the
-<ulink url="http://mplayerhq.hu/cgi-bin/s-arch.cgi?sbm=mplayer-users">archives</ulink>
-for a complete answer. This is a complicated topic and your mileage may vary a
-lot depending on the kind of files you want to merge. MPEGs can be concatenated
-into a single file with luck. For AVIs there are two tools,
+MPEG files can be concatenated into a single file with luck.
+For AVI files, you can use <application>MEncoder</application>'s
+multiple file support like this:
+<screen>
+mencoder -ovc copy -oac copy -o out.avi file1.avi file2.avi
+</screen>
+This will only work if the files are of the same resolution and codec.
+You can also try
 <ulink url="http://fixounet.free.fr/avidemux/">avidemux</ulink> and
 <application>avimerge</application> (part of the
-<ulink url="http://www.theorie.physik.uni-goettingen.de/~ostreich/transcode/">transcode</ulink>
-tool set), available that might do the job. You can also try <application>MEncoder</application>
-if you have two files sharing the same dimensions and codec. Try
-<screen>
-     cat file1 file2 > file3
-     mencoder -ovc copy -oac copy -o out.avi -forceidx file3.avi
-</screen>
+<ulink url="http://www.transcoding.org/">transcode</ulink>
+tool set).
 </para></answer>
 </qandaentry>
 
 <qandaentry>
 <question><para>
-My tuner works, I can hear the sound and watch the video with <application>MPlayer</application>,
-but <application>MEncoder</application> doesn't encode audio!
+How can I fix AVI files with broken index or interleaving?
 </para></question>
 <answer><para>
-TV audio encoding for Linux is currently unimplemented, we're working
-on it. At the moment it works only on BSD.
+Simply copy the video and audio streams into a new file, and
+<application>MEncoder</application> generates the index.
+Of course this cannot fix possible bugs in the video and/or audio streams.
+It also fixes files with broken interleaving, thus the
+<option>-ni</option> option will not be needed for them anymore.
+<screen>
+mencoder -idx <replaceable>input.avi</replaceable> -ovc copy -oac copy -o <replaceable>output.avi</replaceable>
+</screen>
 </para></answer>
 </qandaentry>
 
@@ -1378,15 +1357,6 @@ I can't encode DVD subtitles into the AVI!
 </para></question>
 <answer><para>
 You have to specify the <option>-sid</option> option correctly!
-</para></answer>
-</qandaentry>
-
-<qandaentry>
-<question><para>
-<application>MEncoder</application> segfaults on startup!
-</para></question>
-<answer><para>
-Upgrade DivX4Linux.
 </para></answer>
 </qandaentry>
 

@@ -87,6 +87,7 @@ const CodecTag codec_bmp_tags[] = {
     { CODEC_ID_H263P, MKTAG('U', '2', '6', '3') },
     { CODEC_ID_H263P, MKTAG('v', 'i', 'v', '1') },
 
+    { CODEC_ID_MPEG4, MKTAG('F', 'M', 'P', '4')},
     { CODEC_ID_MPEG4, MKTAG('D', 'I', 'V', 'X'), .invalid_asf = 1 },
     { CODEC_ID_MPEG4, MKTAG('D', 'X', '5', '0'), .invalid_asf = 1 },
     { CODEC_ID_MPEG4, MKTAG('X', 'V', 'I', 'D'), .invalid_asf = 1 },
@@ -99,6 +100,7 @@ const CodecTag codec_bmp_tags[] = {
     { CODEC_ID_MPEG4, MKTAG('B', 'L', 'Z', '0') },
     { CODEC_ID_MPEG4, MKTAG('m', 'p', '4', 'v') },
     { CODEC_ID_MPEG4, MKTAG('U', 'M', 'P', '4') },
+    { CODEC_ID_MPEG4, MKTAG('W', 'V', '1', 'F') },
 
     { CODEC_ID_MSMPEG4V3, MKTAG('D', 'I', 'V', '3'), .invalid_asf = 1 }, /* default signature when using MSMPEG4 */
     { CODEC_ID_MSMPEG4V3, MKTAG('M', 'P', '4', '3') }, 
@@ -174,6 +176,10 @@ const CodecTag codec_bmp_tags[] = {
     { CODEC_ID_QPEG, MKTAG('Q', 'P', 'E', 'G') },
     { CODEC_ID_QPEG, MKTAG('Q', '1', '.', '0') },
     { CODEC_ID_QPEG, MKTAG('Q', '1', '.', '1') },
+    { CODEC_ID_WMV3, MKTAG('W', 'M', 'V', '3') },
+    { CODEC_ID_LOCO, MKTAG('L', 'O', 'C', 'O') },
+    { CODEC_ID_WNV1, MKTAG('W', 'N', 'V', '1') },
+    { CODEC_ID_AASC, MKTAG('A', 'A', 'S', 'C') },
     { CODEC_ID_RAWVIDEO, 0 },
     { 0, 0 },
 };
@@ -242,7 +248,7 @@ void put_bmp_header(ByteIOContext *pb, AVCodecContext *enc, const CodecTag *tags
     
     put_le16(pb, enc->bits_per_sample ? enc->bits_per_sample : 24); /* depth */
     /* compression type */
-    put_le32(pb, for_asf ? codec_get_asf_tag(tags, enc->codec_id) : enc->codec_tag);
+    put_le32(pb, for_asf ? (enc->codec_tag ? enc->codec_tag : codec_get_asf_tag(tags, enc->codec_id)) : enc->codec_tag); //
     put_le32(pb, enc->width * enc->height * 3);
     put_le32(pb, 0);
     put_le32(pb, 0);
@@ -392,7 +398,7 @@ static int avi_write_header(AVFormatContext *s)
             put_le32(pb, nb_frames); /* length, XXX: fill later */
             put_le32(pb, 1024 * 1024); /* suggested buffer size */
             put_le32(pb, -1); /* quality */
-            put_le32(pb, stream->width * stream->height * 3); /* sample size */
+            put_le32(pb, 0); /* sample size */
             put_le16(pb, 0);
             put_le16(pb, 0);
             put_le16(pb, stream->width);
@@ -408,7 +414,7 @@ static int avi_write_header(AVFormatContext *s)
             parse_specific_params(stream, &au_byterate, &au_ssize, &au_scale);
             put_le32(pb, au_scale); /* scale */
             put_le32(pb, au_byterate); /* rate */
-//            av_set_pts_info(&s->streams[i], 64, au_scale, au_byterate);
+            av_set_pts_info(s->streams[i], 64, au_scale, au_byterate);
             put_le32(pb, 0); /* start */
             avi->frames_hdr_strm[i] = url_ftell(pb); /* remember this offset to fill later */
             put_le32(pb, 0); /* length, XXX: filled later */
@@ -619,7 +625,7 @@ static int avi_write_packet(AVFormatContext *s, AVPacket *pkt)
     int size= pkt->size;
 
 //    av_log(s, AV_LOG_DEBUG, "%lld %d %d\n", pkt->dts, avi->packet_count[stream_index], stream_index);
-    while(enc->codec_type == CODEC_TYPE_VIDEO && pkt->dts != AV_NOPTS_VALUE && pkt->dts > avi->packet_count[stream_index]){
+    while(enc->block_align==0 && pkt->dts != AV_NOPTS_VALUE && pkt->dts > avi->packet_count[stream_index]){
         AVPacket empty_packet;
 
         av_init_packet(&empty_packet);

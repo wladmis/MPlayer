@@ -3,6 +3,12 @@
  * for both Win32 and Win64 are supported by this file.
  */
 
+/*
+ * Modified for use with MPlayer, detailed CVS changelog at
+ * http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
+ * $Id: basetsd.h,v 1.3 2005/04/15 20:17:14 diego Exp $
+ */
+
 #ifndef __WINE_BASETSD_H
 #define __WINE_BASETSD_H
 
@@ -28,6 +34,8 @@ extern "C" {
 
 /* Type model indepent typedefs */
 
+#ifndef __INTEL_COMPILER
+
 typedef char          __int8;
 typedef unsigned char __uint8;
 
@@ -39,6 +47,15 @@ typedef unsigned int __uint32;
 
 typedef long long          __int64;
 typedef unsigned long long __uint64;
+
+#else
+
+typedef unsigned __int8  __uint8;
+typedef unsigned __int16 __uint16;
+typedef unsigned __int32 __uint32;
+typedef unsigned __int64 __uint64;
+
+#endif /* __INTEL_COMPILER */
 
 #if defined(_WIN64)
 

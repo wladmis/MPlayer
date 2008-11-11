@@ -116,6 +116,7 @@ static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
     ench->comptype  = 'R'; // compressor data for RTjpeg
     ench->packetlength = 128*sizeof(long int);
   
+    le2me_rtframeheader(ench);
     mux_v->buffer=vf->priv->buffer;
     muxer_write_chunk(mux_v,FRAMEHEADERSIZE + 128*sizeof(long int), 0x10);
     vf->priv->tbl_wrote = 1;
@@ -172,6 +173,7 @@ static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
     
   ench->frametype = 'V'; // video frame
   ench->packetlength = len;
+  le2me_rtframeheader(ench);
   mux_v->buffer=(void*)ench;
   muxer_write_chunk(mux_v, len + FRAMEHEADERSIZE, 0x10);
   return 1;
@@ -192,6 +194,7 @@ static void uninit(struct vf_instance_s* vf) {
 
 static int vf_open(vf_instance_t *vf, char* args){
   vf->config=config;
+  vf->default_caps=VFCAP_CONSTANT;
   vf->control=control;
   vf->query_format=query_format;
   vf->put_image=put_image;
@@ -200,7 +203,7 @@ static int vf_open(vf_instance_t *vf, char* args){
   memcpy(vf->priv, &nuv_priv_dflt,sizeof(struct vf_priv_s));
   vf->priv->mux=(muxer_stream_t*)args;
   
-  mux_v->bih=malloc(sizeof(BITMAPINFOHEADER));
+  mux_v->bih=calloc(1, sizeof(BITMAPINFOHEADER));
   mux_v->bih->biSize=sizeof(BITMAPINFOHEADER);
   mux_v->bih->biWidth=0;
   mux_v->bih->biHeight=0;

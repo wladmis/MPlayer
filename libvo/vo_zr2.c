@@ -1,10 +1,10 @@
 /* 
  * vo_zr2.c - playback on zoran cards 
  * Based on vo_zr.c,v 1.27
- * Copyright (C) Rik Snel 2001-2003, License GNU GPL v2
+ * Copyright (C) Rik Snel 2001-2005, License GNU GPL v2
  */
 
-/* $Id: vo_zr2.c,v 1.5 2004/10/28 01:15:52 diego Exp $ */
+/* $Id: vo_zr2.c,v 1.9 2005/01/25 22:25:39 rik Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -26,12 +26,13 @@
 #include "video_out.h"
 #include "video_out_internal.h"
 #include "mp_msg.h"
+#include "subopt-helper.h"
 #include "fastmemcpy.h"
 
 static vo_info_t info = {
 	"Zoran ZR360[56]7/ZR36060 Driver (DC10(+)/buz/lml33/MatroxRR)",
 	"zr2",
-	"Rik Snel <snel@phys.uu.nl>",
+	"Rik Snel <rsnel@cube.dyndns.org>",
 	""
 };
 
@@ -77,7 +78,7 @@ static void stop_playing(vo_zr2_priv_t *p) {
 	}
 }
 
-static char *guess_device(char *suggestion) {
+static const char *guess_device(const char *suggestion, int inform) {
 	struct stat vstat;
 	int res;
 	char *devs[] = {
@@ -98,7 +99,7 @@ static char *guess_device(char *suggestion) {
 
 		res = stat(suggestion, &vstat);
 		if (res == 0 && S_ISCHR(vstat.st_mode)) {
-			VERBOSE("using device %s\n", suggestion);
+			if (inform) VERBOSE("using device %s\n", suggestion);
 			return suggestion;
 		} else {
 			if (res != 0) ERROR("%s does not exist\n", suggestion);
@@ -155,7 +156,7 @@ static uint32_t draw_image(mp_image_t *mpi) {
 	return VO_TRUE;
 }
 
-static char *normstring(int norm) {
+static const char *normstring(int norm) {
 	switch (norm) {
 		case VIDEO_MODE_PAL:
 			return "PAL";
@@ -169,55 +170,69 @@ static char *normstring(int norm) {
 	return "undefined";
 }
 
-static uint32_t preinit(const char *arg) {
-	char *dev = NULL, *ptr = NULL, *tmp;
-	vo_zr2_priv_t *p = &priv;
-	int last = 0, norm = VIDEO_MODE_AUTO;
+static int get_norm(const char *n) {
+	if (!strcmp(n, "PAL")) return VIDEO_MODE_PAL;
+	if (!strcmp(n, "NTSC")) return VIDEO_MODE_NTSC;
+	if (!strcmp(n, "SECAM")) return VIDEO_MODE_SECAM;
+	if (!strcmp(n, "auto")) return VIDEO_MODE_AUTO;
+	return -1; /* invalid */
+}
 
-	VERBOSE("preinit() called\n");
+static int nc(const char **norm) {
+	if (get_norm(*norm) == -1) {
+		ERROR("norm \"%s\" is not supported, choose from PAL, NTSC, SECAM and auto\n", *norm);
+		return 0;
+	} else return 1;
+}
+
+static int pbc(int *prebuf) {
+	if (*prebuf) WARNING("prebuffering is not yet supported\n");
+	return 1;
+}
+
+static uint32_t preinit(const char *arg) {
+	vo_zr2_priv_t *p = &priv;
+	const char *dev = NULL;
+	char *dev_arg = NULL, *norm_arg = NULL;
+	int norm = VIDEO_MODE_AUTO, prebuf = 0;
+	opt_t subopts[] = { /* don't want warnings with -Wall... */
+		{ "dev",    OPT_ARG_MSTRZ, &dev_arg,   NULL, 	        0 },
+		{ "prebuf", OPT_ARG_BOOL,  &prebuf,    (opt_test_f)pbc, 0 },
+		{ "norm",   OPT_ARG_MSTRZ, &norm_arg,  (opt_test_f)nc,  0 },
+		{ NULL,     0, 		   NULL,       NULL, 	        0 }
+	};
+
+	VERBOSE("preinit() called with arg: %s\n", arg);
 	memset(p, 0, sizeof(*p)); /* set defaults */
 	p->vdes = -1;
 
-	if (arg) {
-		/* save subdevice string */
-		p->subdevice = strdup(arg);
-		if (!p->subdevice) {
-			ERROR("out of memory, this is bad\n");
-			uninit();
-			return 1;
-		}
-
-		tmp = ptr = p->subdevice;
-		do {
-			while (*tmp != ':' && *tmp) tmp++;
-			if (*tmp == ':') *tmp++ = '\0';
-			else last = 1;
-			DBG2("processing subdevice option \"%s\"\n", ptr);
-			if (!strncmp("dev=", ptr, 4)) {
-				dev = ptr + 4;
-				VERBOSE("user specified device \"%s\"\n", dev);
-			} else if (!strcasecmp("PAL", ptr)) {
-				norm = VIDEO_MODE_PAL;
-				VERBOSE("user specified video norm PAL\n");
-			} else if (!strcasecmp("SECAM", ptr)) {
-				norm = VIDEO_MODE_SECAM;
-				VERBOSE("user specified video norm SECAM\n");
-			} else if (!strcasecmp("NTSC", ptr)) {
-				norm = VIDEO_MODE_NTSC;
-				VERBOSE("user specified video norm NTSC\n");
-			} else if (!strcmp("prebuf", ptr)) {
-				WARNING("prebuffering is not yet supported\n");
-			} else {
-				WARNING("ignoring unknown subdevice option " 
-						"\"%s\", or missing argument\n",
-						ptr);
-			}
-			ptr = tmp;
-		} while (!last);
+	if (subopt_parse(arg, subopts)) {
+		mp_msg(MSGT_VO, MSGL_FATAL,
+				"Allowed suboptions for -vo zr2 are:\n"
+				"-  dev=DEVICE               (default: %s)\n"
+				"-  norm=PAL|NTSC|SECAM|auto (default: auto)\n"
+				"-  prebuf/noprebuf          (default:"
+				" noprebuf)\n"
+				"\n"
+				"Example: mplayer -vo zr2:dev=/dev/video1:"
+				"norm=PAL movie.avi\n\n"
+				, guess_device(NULL, 0));
+		free(norm_arg);
+		free(dev_arg);
+		return -1;
+	}
+				
+	/* interpret the strings we got from subopt_parse */
+	if (norm_arg) {
+		norm = get_norm(norm_arg);
+		free(norm_arg);
 	}
 
-	dev = guess_device(dev);
+	if (dev_arg) dev = dev_arg;
+
+	dev = guess_device(dev, 1);
 	if (!dev) {
+		free(dev_arg);
 		uninit();
 		return 1;
 	}
@@ -225,10 +240,13 @@ static uint32_t preinit(const char *arg) {
 	p->vdes = open(dev, O_RDWR);
 	if (p->vdes < 0) {
 		ERROR("error opening %s: %s\n", dev, strerror(errno));
+		free(dev_arg);
 		uninit();
 		return 1;
 	}
 	
+	free(dev_arg);
+
 	/* check if we really are dealing with a zoran card */
 	if (ioctl(p->vdes, MJPIOC_G_PARAMS, &p->zp) < 0) {
 		ERROR("%s probably is not a DC10(+)/buz/lml33\n", dev);

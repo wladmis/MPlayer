@@ -62,22 +62,6 @@ typedef struct af_resample_s
   int		setup;	// Setup parameters cmdline or through postcreate
 } af_resample_t;
 
-// Euclids algorithm for calculating Greatest Common Divisor GCD(a,b)
-static inline int gcd(register int a, register int b)
-{
-  register int r = min(a,b);
-  a=max(a,b);
-  b=r;
-
-  r=a%b;
-  while(r!=0){
-    a=b;
-    b=r;
-    r=a%b;
-  }
-  return b;
-}
-
 // Fast linear interpolation resample with modest audio quality
 static int linint(af_data_t* c,af_data_t* l, af_resample_t* s)
 {
@@ -135,29 +119,28 @@ static int set_types(struct af_instance_s* af, af_data_t* data)
   // Make sure this filter isn't redundant 
   if((af->data->rate == data->rate) || (af->data->rate == 0))
     return AF_DETACH;
-
   /* If sloppy and small resampling difference (2%) */
   rd = abs((float)af->data->rate - (float)data->rate)/(float)data->rate;
   if((((s->setup & FREQ_MASK) == FREQ_SLOPPY) && (rd < 0.02) && 
-      (data->format != (AF_FORMAT_NE | AF_FORMAT_F))) || 
+      (data->format != (AF_FORMAT_FLOAT_NE))) || 
      ((s->setup & RSMP_MASK) == RSMP_LIN)){
     s->setup = (s->setup & ~RSMP_MASK) | RSMP_LIN;
-    af->data->format = AF_FORMAT_NE | AF_FORMAT_SI;
+    af->data->format = AF_FORMAT_S16_NE;
     af->data->bps    = 2;
     af_msg(AF_MSG_VERBOSE,"[resample] Using linear interpolation. \n");
   }
   else{
     /* If the input format is float or if float is explicitly selected
        use float, otherwise use int */
-    if((data->format == (AF_FORMAT_NE | AF_FORMAT_F)) || 
+    if((data->format == (AF_FORMAT_FLOAT_NE)) || 
        ((s->setup & RSMP_MASK) == RSMP_FLOAT)){
       s->setup = (s->setup & ~RSMP_MASK) | RSMP_FLOAT;
-      af->data->format = AF_FORMAT_NE | AF_FORMAT_F;
+      af->data->format = AF_FORMAT_FLOAT_NE;
       af->data->bps    = 4;
     }
     else{
       s->setup = (s->setup & ~RSMP_MASK) | RSMP_INT;
-      af->data->format = AF_FORMAT_NE | AF_FORMAT_SI;
+      af->data->format = AF_FORMAT_S16_NE;
       af->data->bps    = 2;
     }
     af_msg(AF_MSG_VERBOSE,"[resample] Using %s processing and %s frequecy"
@@ -203,11 +186,12 @@ static int control(struct af_instance_s* af, int cmd, void* arg)
 	     s->step);
       af->mul.n = af->data->rate;
       af->mul.d = n->rate;
+      af_frac_cancel(&af->mul);
       return rv;
     }
 
     // Calculate up and down sampling factors
-    d=gcd(af->data->rate,n->rate);
+    d=af_gcd(af->data->rate,n->rate);
 
     // If sloppy resampling is enabled limit the upsampling factor
     if(((s->setup & FREQ_MASK) == FREQ_SLOPPY) && (af->data->rate/d > 5000)){
@@ -215,7 +199,7 @@ static int control(struct af_instance_s* af, int cmd, void* arg)
       int dn=n->rate/2;
       int m=2;
       while(af->data->rate/(d*m) > 5000){
-	d=gcd(up,dn); 
+	d=af_gcd(up,dn); 
 	up/=2; dn/=2; m*=2;
       }
       d*=m;
@@ -246,7 +230,7 @@ static int control(struct af_instance_s* af, int cmd, void* arg)
 
       // Design prototype filter type using Kaiser window with beta = 10
       if(NULL == w || NULL == s->w || 
-	 -1 == design_fir(s->up*L, w, &fc, LP|KAISER , 10.0)){
+	 -1 == af_filter_design_fir(s->up*L, w, &fc, LP|KAISER , 10.0)){
 	af_msg(AF_MSG_ERROR,"[resample] Unable to design prototype filter.\n");
 	return AF_ERROR;
       }

@@ -372,14 +372,14 @@ static int config(struct vf_instance_s* vf,
     lavc_venc_context->b_quant_factor= lavc_param_vb_qfactor;
     lavc_venc_context->rc_strategy= lavc_param_vrc_strategy;
     lavc_venc_context->b_frame_strategy= lavc_param_vb_strategy;
-    lavc_venc_context->b_quant_offset= lavc_param_vb_qoffset;
+    lavc_venc_context->b_quant_offset= (int)(FF_QP2LAMBDA * lavc_param_vb_qoffset + 0.5);
     lavc_venc_context->luma_elim_threshold= lavc_param_luma_elim_threshold;
     lavc_venc_context->chroma_elim_threshold= lavc_param_chroma_elim_threshold;
     lavc_venc_context->rtp_payload_size= lavc_param_packet_size;
     if(lavc_param_packet_size )lavc_venc_context->rtp_mode=1;
     lavc_venc_context->strict_std_compliance= lavc_param_strict;
     lavc_venc_context->i_quant_factor= lavc_param_vi_qfactor;
-    lavc_venc_context->i_quant_offset= lavc_param_vi_qoffset;
+    lavc_venc_context->i_quant_offset= (int)(FF_QP2LAMBDA * lavc_param_vi_qoffset + 0.5);
     lavc_venc_context->rc_qsquish= lavc_param_rc_qsquish;
     lavc_venc_context->rc_qmod_amp= lavc_param_rc_qmod_amp;
     lavc_venc_context->rc_qmod_freq= lavc_param_rc_qmod_freq;
@@ -437,7 +437,7 @@ static int config(struct vf_instance_s* vf,
 	char *tmp;
 
 	lavc_venc_context->intra_matrix =
-	    malloc(sizeof(*lavc_venc_context->intra_matrix)*64);
+	    av_malloc(sizeof(*lavc_venc_context->intra_matrix)*64);
 
 	i = 0;
 	while ((tmp = strsep(&lavc_param_intra_matrix, ",")) && (i < 64))
@@ -448,10 +448,7 @@ static int config(struct vf_instance_s* vf,
 	}
 	
 	if (i != 64)
-	{
-	    free(lavc_venc_context->intra_matrix);
-	    lavc_venc_context->intra_matrix = NULL;
-	}
+	    av_freep(&lavc_venc_context->intra_matrix);
 	else
 	    mp_msg(MSGT_MENCODER, MSGL_V, "Using user specified intra matrix\n");
     }
@@ -460,7 +457,7 @@ static int config(struct vf_instance_s* vf,
 	char *tmp;
 
 	lavc_venc_context->inter_matrix =
-	    malloc(sizeof(*lavc_venc_context->inter_matrix)*64);
+	    av_malloc(sizeof(*lavc_venc_context->inter_matrix)*64);
 
 	i = 0;
 	while ((tmp = strsep(&lavc_param_inter_matrix, ",")) && (i < 64))
@@ -471,10 +468,7 @@ static int config(struct vf_instance_s* vf,
 	}
 	
 	if (i != 64)
-	{
-	    free(lavc_venc_context->inter_matrix);
-	    lavc_venc_context->inter_matrix = NULL;
-	}
+	    av_freep(&lavc_venc_context->inter_matrix);
 	else
 	    mp_msg(MSGT_MENCODER, MSGL_V, "Using user specified inter matrix\n");
     }
@@ -615,6 +609,10 @@ static int config(struct vf_instance_s* vf,
     switch(lavc_param_format)
     {
 	case IMGFMT_YV12:
+	    // HACK, mjpeg accepts PIX_FMT_YUV420P only with vstrict=-1
+	    if (strcasecmp(lavc_param_vcodec, "mjpeg") == 0)
+	      lavc_venc_context->pix_fmt = PIX_FMT_YUVJ420P;
+	    else
 	    lavc_venc_context->pix_fmt = PIX_FMT_YUV420P;
 	    break;
 	case IMGFMT_422P:
@@ -652,7 +650,7 @@ static int config(struct vf_instance_s* vf,
 	size= ftell(stats_file);
 	fseek(stats_file, 0, SEEK_SET);
 	
-	lavc_venc_context->stats_in= malloc(size + 1);
+	lavc_venc_context->stats_in= av_malloc(size + 1);
 	lavc_venc_context->stats_in[size]=0;
 
 	if(fread(lavc_venc_context->stats_in, size, 1, stats_file)<1){
@@ -680,14 +678,12 @@ static int config(struct vf_instance_s* vf,
 
 	  /* Disables diamond motion estimation */
 	  lavc_venc_context->pre_dia_size = 0;
-	  lavc_venc_context->dia_size = 0;
+	  lavc_venc_context->dia_size = 1;
 
 	  lavc_venc_context->quantizer_noise_shaping = 0; // qns=0
 	  lavc_venc_context->noise_reduction = 0; // nr=0
+	  lavc_venc_context->mb_decision = 0; // mbd=0 ("realtime" encoding)
 
-	  if (lavc_param_mb_decision) {
-	    lavc_venc_context->mb_decision = 1; // mbd=0 ("realtime" encoding)
-	  }
 	  lavc_venc_context->flags &= ~CODEC_FLAG_QPEL;
 	  lavc_venc_context->flags &= ~CODEC_FLAG_4MV;
 	  lavc_venc_context->flags &= ~CODEC_FLAG_TRELLIS_QUANT;
@@ -728,8 +724,7 @@ static int config(struct vf_instance_s* vf,
     }
     
     /* free second pass buffer, its not needed anymore */
-    if(lavc_venc_context->stats_in) free(lavc_venc_context->stats_in);
-    lavc_venc_context->stats_in= NULL;
+    av_freep(&lavc_venc_context->stats_in);
     if(lavc_venc_context->bits_per_sample)
         mux_v->bih->biBitCount= lavc_venc_context->bits_per_sample;
     if(lavc_venc_context->extradata_size){
@@ -907,12 +902,8 @@ static void uninit(struct vf_instance_s* vf){
 #endif
 
 #if LIBAVCODEC_BUILD >= 4675
-    if (lavc_venc_context->intra_matrix)
-	free(lavc_venc_context->intra_matrix);
-    lavc_venc_context->intra_matrix = NULL;
-    if (lavc_venc_context->inter_matrix)
-	free(lavc_venc_context->inter_matrix);
-    lavc_venc_context->inter_matrix = NULL;
+    av_freep(&lavc_venc_context->intra_matrix);
+    av_freep(&lavc_venc_context->inter_matrix);
 #endif
 
     avcodec_close(lavc_venc_context);
@@ -920,11 +911,9 @@ static void uninit(struct vf_instance_s* vf){
     if(stats_file) fclose(stats_file);
     
     /* free rc_override */
-    if(lavc_venc_context->rc_override) free(lavc_venc_context->rc_override);
-    lavc_venc_context->rc_override= NULL;
+    av_freep(&lavc_venc_context->rc_override);
 
-    if(vf->priv->context) free(vf->priv->context);
-    vf->priv->context= NULL;
+    av_freep(&vf->priv->context);
 }
 
 //===========================================================================//
@@ -932,6 +921,7 @@ static void uninit(struct vf_instance_s* vf){
 static int vf_open(vf_instance_t *vf, char* args){
     vf->uninit=uninit;
     vf->config=config;
+    vf->default_caps=VFCAP_CONSTANT;
     vf->control=control;
     vf->query_format=query_format;
     vf->put_image=put_image;
@@ -1003,7 +993,7 @@ static int vf_open(vf_instance_t *vf, char* args){
     else if (!strcasecmp(lavc_param_vcodec, "ljpeg"))
 	mux_v->bih->biCompression = mmioFOURCC('L', 'J', 'P', 'G');
     else if (!strcasecmp(lavc_param_vcodec, "mpeg4"))
-	mux_v->bih->biCompression = mmioFOURCC('D', 'I', 'V', 'X');
+	mux_v->bih->biCompression = mmioFOURCC('F', 'M', 'P', '4');
     else if (!strcasecmp(lavc_param_vcodec, "msmpeg4"))
 	mux_v->bih->biCompression = mmioFOURCC('d', 'i', 'v', '3');
     else if (!strcasecmp(lavc_param_vcodec, "msmpeg4v2"))

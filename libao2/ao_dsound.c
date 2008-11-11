@@ -28,12 +28,14 @@
 #define DIRECTSOUND_VERSION 0x0600
 #include <dsound.h>
 
-#include "afmt.h"
+#include "config.h"
+#include "libaf/af_format.h"
 #include "audio_out.h"
 #include "audio_out_internal.h"
 #include "mp_msg.h"
 #include "libvo/fastmemcpy.h"
 #include "osdep/timer.h"
+#include "subopt-helper.h"
 
 
 static ao_info_t info =
@@ -112,7 +114,12 @@ static LPDIRECTSOUNDBUFFER hdspribuf = NULL; ///primary direct sound buffer
 static LPDIRECTSOUNDBUFFER hdsbuf = NULL; ///secondary direct sound buffer (stream buffer)
 static int buffer_size = 0;               ///size in bytes of the direct sound buffer   
 static int write_offset = 0;              ///offset of the write cursor in the direct sound buffer
-static int min_free_space = 4096;         ///if the free space is below this value get_space() will return 0
+static int min_free_space = 0;            ///if the free space is below this value get_space() will return 0
+                                          ///there will always be at least this amout of free space to prevent
+                                          ///get_space() from returning wrong values when buffer is 100% full.
+                                          ///will be replaced with nBlockAlign in init()
+static int device_num = 0;                ///wanted device number
+static GUID device;                       ///guid of the device 
 
 /***************************************************************************************/
 
@@ -166,6 +173,41 @@ static void UninitDirectSound(void)
 }
 
 /**
+\brief print the commandline help
+*/
+static void print_help()
+{
+  mp_msg(MSGT_AO, MSGL_FATAL,
+           "\n-ao dsound commandline help:\n"
+           "Example: mplayer -ao dsound:device=1\n"
+           "  sets 1st device\n"
+           "\nOptions:\n"
+           "  device=<device-number>\n"
+           "    Sets device number, use -v to get a list\n");
+}
+
+
+/**
+\brief enumerate direct sound devices
+\return TRUE to continue with the enumeration
+*/
+static BOOL CALLBACK DirectSoundEnum(LPGUID guid,LPCSTR desc,LPCSTR module,LPVOID context)
+{
+    int* device_index=context;
+    mp_msg(MSGT_AO, MSGL_V,"%i %s ",*device_index,desc);
+    if(device_num==*device_index){
+        mp_msg(MSGT_AO, MSGL_V,"<--");
+        if(guid){
+            memcpy(&device,guid,sizeof(GUID));
+        }
+    }
+    mp_msg(MSGT_AO, MSGL_V,"\n");
+    (*device_index)++;
+    return TRUE;
+}
+
+
+/**
 \brief initilize direct sound
 \return 0 if error, 1 if ok
 */
@@ -175,21 +217,37 @@ static int InitDirectSound(void)
 
 	// initialize directsound
     HRESULT (WINAPI *OurDirectSoundCreate)(LPGUID, LPDIRECTSOUND *, LPUNKNOWN);
+	HRESULT (WINAPI *OurDirectSoundEnumerate)(LPDSENUMCALLBACKA, LPVOID);   
+	int device_index=0;
+	opt_t subopts[] = {
+	  {"device", OPT_ARG_INT, &device_num,NULL},
+	  {NULL}
+	}; 
+	if (subopt_parse(ao_subdevice, subopts) != 0) {
+		print_help();
+		return 0;
+	}
+    
 	hdsound_dll = LoadLibrary("DSOUND.DLL");
 	if (hdsound_dll == NULL) {
 		mp_msg(MSGT_AO, MSGL_ERR, "ao_dsound: cannot load DSOUND.DLL\n");
 		return 0;
 	}
 	OurDirectSoundCreate = (void*)GetProcAddress(hdsound_dll, "DirectSoundCreate");
+	OurDirectSoundEnumerate = (void*)GetProcAddress(hdsound_dll, "DirectSoundEnumerateA");
 
-	if (OurDirectSoundCreate == NULL) {
+	if (OurDirectSoundCreate == NULL || OurDirectSoundEnumerate == NULL) {
 		mp_msg(MSGT_AO, MSGL_ERR, "ao_dsound: GetProcAddress FAILED\n");
 		FreeLibrary(hdsound_dll);
 		return 0;
 	}
+    
+	// Enumerate all directsound devices
+	mp_msg(MSGT_AO, MSGL_V,"ao_dsound: Output Devices:\n");
+	OurDirectSoundEnumerate(DirectSoundEnum,&device_index);
 
 	// Create the direct sound object
-	if FAILED(OurDirectSoundCreate(NULL, &hds, NULL )) {
+	if FAILED(OurDirectSoundCreate((device_num)?&device:NULL, &hds, NULL )) {
 		mp_msg(MSGT_AO, MSGL_ERR, "ao_dsound: cannot create a DirectSound device\n");
 		FreeLibrary(hdsound_dll);
 		return 0;
@@ -265,7 +323,7 @@ static int write_buffer(unsigned char *data, int len)
   
   if (SUCCEEDED(res)) 
   {
-  	if( (ao_data.channels == 6) && (ao_data.format!=AFMT_AC3) ) {
+  	if( (ao_data.channels == 6) && (ao_data.format!=AF_FORMAT_AC3) ) {
   	    // reorder channels while writing to pointers.
   	    // it's this easy because buffer size and len are always
   	    // aligned to multiples of channels*bytespersample
@@ -274,7 +332,7 @@ static int write_buffer(unsigned char *data, int len)
   	    int i, j;
   	    int numsamp,sampsize;
 
-  	    sampsize = audio_out_format_bits(ao_data.format)>>3; // bytes per sample
+  	    sampsize = af_fmt2bits(ao_data.format)>>3; // bytes per sample
   	    numsamp = dwBytes1 / (ao_data.channels * sampsize);  // number of samples for each channel in this buffer
 
   	    for( i = 0; i < numsamp; i++ ) for( j = 0; j < ao_data.channels; j++ ) {
@@ -366,22 +424,22 @@ static int init(int rate, int channels, int format, int flags)
 
 	//check if the format is supported in general
 	switch(format){
-		case AFMT_AC3:
-		case AFMT_S24_LE:
-		case AFMT_S16_LE:
-		case AFMT_S8:
+		case AF_FORMAT_AC3:
+		case AF_FORMAT_S24_LE:
+		case AF_FORMAT_S16_LE:
+		case AF_FORMAT_S8:
 			break;
 		default:
-			mp_msg(MSGT_AO, MSGL_V,"ao_dsound: format %s not supported defaulting to Signed 16-bit Little-Endian\n",audio_out_format_name(format));
-			format=AFMT_S16_LE;
+			mp_msg(MSGT_AO, MSGL_V,"ao_dsound: format %s not supported defaulting to Signed 16-bit Little-Endian\n",af_fmt2str_short(format));
+			format=AF_FORMAT_S16_LE;
 	}   	
 	//fill global ao_data
 	ao_data.channels = channels;
 	ao_data.samplerate = rate;
 	ao_data.format = format;
-	ao_data.bps = channels * rate * (audio_out_format_bits(format)>>3);
+	ao_data.bps = channels * rate * (af_fmt2bits(format)>>3);
 	if(ao_data.buffersize==-1) ao_data.buffersize = ao_data.bps; // space for 1 sec
-	mp_msg(MSGT_AO, MSGL_V,"ao_dsound: Samplerate:%iHz Channels:%i Format:%s\n", rate, channels, audio_out_format_name(format));
+	mp_msg(MSGT_AO, MSGL_V,"ao_dsound: Samplerate:%iHz Channels:%i Format:%s\n", rate, channels, af_fmt2str_short(format));
 	mp_msg(MSGT_AO, MSGL_V,"ao_dsound: Buffersize:%d bytes (%d msec)\n", ao_data.buffersize, ao_data.buffersize / ao_data.bps * 1000);
 
 	//fill waveformatex
@@ -389,13 +447,13 @@ static int init(int rate, int channels, int format, int flags)
 	wformat.Format.cbSize          = (channels > 2) ? sizeof(WAVEFORMATEXTENSIBLE)-sizeof(WAVEFORMATEX) : 0;
 	wformat.Format.nChannels       = channels;
 	wformat.Format.nSamplesPerSec  = rate;
-	if (format == AFMT_AC3) {
+	if (format == AF_FORMAT_AC3) {
 		wformat.Format.wFormatTag      = WAVE_FORMAT_DOLBY_AC3_SPDIF;
 		wformat.Format.wBitsPerSample  = 16;
 		wformat.Format.nBlockAlign     = 4;
 	} else {
 		wformat.Format.wFormatTag      = (channels > 2) ? WAVE_FORMAT_EXTENSIBLE : WAVE_FORMAT_PCM;
-		wformat.Format.wBitsPerSample  = audio_out_format_bits(format);
+		wformat.Format.wBitsPerSample  = af_fmt2bits(format);
 		wformat.Format.nBlockAlign     = wformat.Format.nChannels * (wformat.Format.wBitsPerSample >> 3);
 	}
 
@@ -426,6 +484,8 @@ static int init(int rate, int channels, int format, int flags)
 	dsbdesc.dwBufferBytes = ao_data.buffersize;
 	dsbdesc.lpwfxFormat = (WAVEFORMATEX *)&wformat;
 	buffer_size = dsbdesc.dwBufferBytes;
+	write_offset = 0;
+	min_free_space = wformat.Format.nBlockAlign;
 	ao_data.outburst = wformat.Format.nBlockAlign * 512;
 
 	// create primary buffer and set its format
@@ -491,11 +551,17 @@ static void audio_resume()
 
 /** 
 \brief close audio device
-\param immed stop playback immediately, currently not supported
+\param immed stop playback immediately
 */
 static void uninit(int immed)
 {
-	reset();
+	if(immed)reset();
+	else{
+		DWORD status;
+		IDirectSoundBuffer_Play(hdsbuf, 0, 0, 0);
+		while(!IDirectSoundBuffer_GetStatus(hdsbuf,&status) && (status&DSBSTATUS_PLAYING))
+			usec_sleep(20000);
+	}
 	DestroyBuffer();
 	UninitDirectSound();
 }
@@ -517,7 +583,7 @@ static int get_space()
 	// write_offset is the postion where we actually write the data to
 	if(space > buffer_size)space -= buffer_size; // write_offset < play_offset
 	if(space < min_free_space)return 0;
-	return space;
+	return space-min_free_space;
 }
 
 /**

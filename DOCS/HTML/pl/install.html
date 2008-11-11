@@ -18,8 +18,8 @@ Potrzebujesz do&#347;&#263; nowego sprz&#281;tu. Je&#347;li u&#380;ywasz Linuksa
 </p></li><li><p>
   <span class="bold"><b>gcc</b></span> - zalecanymi wersjami s&#261;: <span class="bold"><b>2.95.3</b></span>
   (mo&#380;e <span class="bold"><b>2.95.4</b></span>) i <span class="bold"><b>3.2+</b></span>.
-  <span class="bold"><b>Nigdy</b></span> nie u&#380;ywaj 2.96 lub 3.0.x! Tworz&#261; one
-  wadliwy kod dla <span class="application">MPlayera</span>. Je&#380;eli zdecydujesz si&#281;
+  <span class="bold"><b>Nigdy</b></span> nie u&#380;ywaj 2.96 lub 3.0.x! Generuj&#261; one
+  wadliwy kod <span class="application">MPlayera</span>. Je&#380;eli zdecydujesz si&#281;
   na zmian&#281; gcc z 2.96, nie rób tego na korzy&#347;&#263; 3.x tylko dlatego, &#380;e jest nowsze! Wczesne
   wydania 3.x mia&#322;y jeszcze wi&#281;cej b&#322;&#281;dów ni&#380; 2.96. Spróbuj obni&#380;y&#263; wersj&#281; do 2.95.x
   (obni&#380; równie&#380; wersj&#281; <tt>libstdc++</tt>, inne
@@ -88,6 +88,9 @@ Potrzebujesz do&#347;&#263; nowego sprz&#281;tu. Je&#347;li u&#380;ywasz Linuksa
   </p></li><li><p>
   <span class="bold"><b>libsmb</b></span> - opcjonalna, do obs&#322;ugi Samby.
   </p></li><li><p>
+  <span class="bold"><b>ALSA</b></span> - opcjonalna, do obs&#322;ugi wyj&#347;cia d&#378;wi&#281;ku
+  przez ALSA. Wymagana jest przynajmniej wersja 0.9.0rc4.
+  </p></li><li><p>
   <span class="bold"><b>bio2jack</b></span> - opcjonalna, do obs&#322;ugi wyj&#347;cia
   d&#378;wi&#281;ku poprzez JACK, potrzebna jedynie w czasie kompilacji. Do pobrania z
   <a href="http://bio2jack.sf.net/" target="_top">http://bio2jack.sf.net</a>. Poniewa&#380;
@@ -96,7 +99,7 @@ Potrzebujesz do&#347;&#263; nowego sprz&#281;tu. Je&#347;li u&#380;ywasz Linuksa
   (np. <tt class="filename">/usr/local/lib/</tt>) lub u&#380;y&#263; opcji
   <tt class="option">--with-bio2jack=KATALOG</tt> aby przekaza&#263; jego lokalizacj&#281; do
   skryptu <tt class="filename">./configure</tt>.
-  </p></li></ul></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="id2839554"></a>1.2.2. Kodeki</h3></div></div><div class="itemizedlist"><ul type="disc"><li><p>
+  </p></li></ul></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="id2839596"></a>1.2.2. Kodeki</h3></div></div><div class="itemizedlist"><ul type="disc"><li><p>
   <span class="bold"><b><tt>libavcodec</tt></b></span>:
   Ten pakiet kodeków jest zdolny do dekodowania strumieni video zakodowanych
   H.263/MJPEG/RV10/DivX3/DivX4/DivX5/MP41/MP42/WMV1/WMV2/SVQ1/SVQ3
@@ -114,9 +117,9 @@ Potrzebujesz do&#347;&#263; nowego sprz&#281;tu. Je&#347;li u&#380;ywasz Linuksa
   </p></li><li><p>
   <span class="bold"><b>Kodeki Win32</b></span>: Je&#347;li zamierzasz u&#380;ywa&#263;
   <span class="application">MPlayera</span> na architekturze x86, b&#281;dziesz ich prawdopodobnie
-  potrzebowa&#322;. &#346;ci&#261;gnij je z naszej
-  <a href="http://www.mplayerhq.hu/MPlayer/releases/codecs/" target="_top">strony kodeków</a>
-  i zainstaluj je do <tt class="filename">/usr/local/lib/codecs</tt>
+  potrzebowa&#322;. &#346;ci&#261;gnij pakiet z naszej
+  <a href="http://www.mplayerhq.hu/homepage/design7/codecs.html" target="_top">strony kodeków</a>
+  i umie&#347;&#263; je w katalogu <tt class="filename">/usr/local/lib/codecs</tt>
   <span class="bold"><b>PRZED</b></span> kompilacj&#261; <span class="application">MPlayera</span>,
   w przeciwnym wypadku obs&#322;uga Win32 nie b&#281;dzie wkompilowana!
   </p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Notatka</h3><p>Projekt avifile ma podobny pakiet kodeków, ale ró&#380;ni si&#281; on od naszego,
@@ -124,7 +127,7 @@ Potrzebujesz do&#347;&#263; nowego sprz&#281;tu. Je&#347;li u&#380;ywasz Linuksa
   naszej paczki (nie przejmuj si&#281;, avifile dzia&#322;a z ni&#261; bez problemów).</p></div><p>
   Cechy:
   </p><div class="itemizedlist"><ul type="round"><li>
-    potrzebujesz tego do zakodowania, na przyk&#322;ad, filmów nagranych z u&#380;yciem
+    potrzebujesz tego do odtwarzania i zakodowania, na przyk&#322;ad, filmów nagranych z u&#380;yciem
     ró&#380;nych kompresorów sprz&#281;towych, jak tunery, kamery cyfrowe
     (na przyk&#322;ad: DV, ATI VCR, MJPEG)
     </li><li>
@@ -312,7 +315,7 @@ dzia&#322;a ona z nast&#281;puj&#261;cymi sterownikami:
   Mo&#380;liwo&#347;ci <span class="bold"><b>innych kart</b></span> nie s&#261; obs&#322;ugiwane przez
   <span class="application">MPlayera</span>. <span class="bold"><b>Zalecamy, aby&#347; przeczyta&#322;
   sekcj&#281; <a href="audio.html" title="2.4. Urz&#261;dzenia wyj&#347;ciowe audio">karty d&#378;wi&#281;kowe</a>!</b></span>
-  </li></ul></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="id2839102"></a>1.2.5. Mo&#380;liwo&#347;ci</h3></div></div><div class="itemizedlist"><ul type="disc"><li><p>
+  </li></ul></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="id2841337"></a>1.2.5. Mo&#380;liwo&#347;ci</h3></div></div><div class="itemizedlist"><ul type="disc"><li><p>
   Zdecyduj czy potrzebujesz GUI. Je&#347;li tak, przeczytaj rozdzia&#322; <a href="gui.html" title="1.3. A co z GUI?">GUI
   </a> przed kompilacj&#261;.
   </p></li><li><p>
@@ -361,7 +364,7 @@ w g&#322;ównym katalogu <span class="application">MPlayera</span>. Przeczytaj ro
 </p><p>
 <span class="bold"><b>Zawsze przejrzyj wyniki</b></span>
 <tt class="filename">./configure</tt> i plik
-<tt class="filename">configure.log</tt>, zawieraj&#261; informacje o tym, co b&#281;dzie zbudowane,
+<tt class="filename">configure.log</tt>, zawieraj&#261; one informacje o tym, co b&#281;dzie zbudowane,
 a co nie. Mo&#380;esz równie&#380; obejrze&#263; pliki
 <tt class="filename">config.h</tt> i <tt class="filename">config.mak</tt>.
 Je&#380;eli masz zainstalowane jakie&#347; biblioteki, ale nie s&#261; one wykrywane przez

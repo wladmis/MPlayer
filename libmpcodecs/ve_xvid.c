@@ -539,6 +539,7 @@ vf_open(vf_instance_t *vf, char* args)
 {
     XVID_INIT_PARAM params = { 0, 0, 0};
     vf->config = config;
+    vf->default_caps = VFCAP_CONSTANT;
     vf->control = control;
     vf->uninit = uninit;
     vf->query_format = query_format;
@@ -547,7 +548,7 @@ vf_open(vf_instance_t *vf, char* args)
     memset(vf->priv, 0, sizeof(struct vf_priv_s));
     vf->priv->mux = (muxer_stream_t*)args;
 
-    vf->priv->mux->bih = malloc(sizeof(BITMAPINFOHEADER));
+    vf->priv->mux->bih = calloc(1, sizeof(BITMAPINFOHEADER));
     vf->priv->mux->bih->biSize = sizeof(BITMAPINFOHEADER);
     vf->priv->mux->bih->biWidth = 0;
     vf->priv->mux->bih->biHeight = 0;

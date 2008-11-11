@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-2"?>
-<!-- synced with 1.50 -->
+<!-- synced with 1.57 -->
 <sect1 id="install">
 <title>Telepítés</title>
 
@@ -115,6 +115,10 @@ Nem árt, ha vmi újabb rendszered van. Linuxon a 2.4.x-es kernel javasolt.
   <emphasis role="bold">libsmb</emphasis> - választható, Samba támogatáshoz kell.
   </para></listitem>
 <listitem><para>
+  <emphasis role="bold">ALSA</emphasis> - választható, az ALSA audió kimenet
+  támogatásához. Legalább 0.9.0rc4 szükséges.
+  </para></listitem>
+<listitem><para>
   <emphasis role="bold">bio2jack</emphasis> - választható, a JACK audió kimenet támogatásához kell,
   de csak a fordítás alatt. Beszerezheted a <ulink url="http://bio2jack.sf.net/">http://bio2jack.sf.net</ulink>
   címről. Mivel nincs install opciója, kézzel kell bemásolnod a <filename>libbio2jack.a</filename> fájlt
@@ -152,9 +156,9 @@ Nem árt, ha vmi újabb rendszered van. Linuxon a 2.4.x-es kernel javasolt.
 <listitem><para>
   <emphasis role="bold">Win32 codecek</emphasis>: Ha x86-os gépen akarod használni
   az <application>MPlayer</application>t, valószínűleg szükséged lesz rájuk.
-  Töltsd le a Win32 codec-eket a
-  <ulink url="http://www.mplayerhq.hu/MPlayer/releases/codecs/">codec oldalunkról</ulink>
-  és telepítsd a <filename class="directory">/usr/local/lib/codecs</filename> könyvtárba
+  Töltsd le egy codec csomagot a
+  <ulink url="http://www.mplayerhq.hu/homepage/design7/codecs.html">codec oldalunkról</ulink>
+  és tedd be a codec-eket a <filename class="directory">/usr/local/lib/codecs</filename> könyvtárba
   az <application>MPlayer</application> fordítása <emphasis role="bold">ELŐTT</emphasis>,
   különben nem lesz befordított Win32 támogatásod!
   <note><para>Az avifile projektnek hasonló codec csomagja van, de az különbözik
@@ -195,7 +199,7 @@ Nem árt, ha vmi újabb rendszered van. Linuxon a 2.4.x-es kernel javasolt.
   Jellemzők:
   <itemizedlist>
   <listitem><simpara>
-    1 vagy 2 menetes kódolás
+    egy vagy két menetes kódolás
     <link linkend="mencoder"><application>MEncoder</application></link>-rel
     </simpara></listitem>
   <listitem><simpara>
@@ -213,7 +217,7 @@ Nem árt, ha vmi újabb rendszered van. Linuxon a 2.4.x-es kernel javasolt.
   DivX4Linux mellett. Jellemzők:
   <itemizedlist>
   <listitem><simpara>
-    1 vagy 2 menetes kódolás
+    egy vagy két menetes kódolás
     <link linkend="mencoder"><application>MEncoder</application></link>-rel
     </simpara></listitem>
   <listitem><simpara>
@@ -633,7 +637,7 @@ tudod megadni (teljes elérési út is megadható).
   <term><option>-subdelay <replaceable>mp</replaceable></option></term>
   <listitem><simpara>
     Késlelteti a feliratot <option><replaceable>mp</replaceable></option> másodperccel.
-    Lehet negatív is.
+    Lehet negatív is. Az érték a film időpozíciójának számlálójához adódik hozzá.
     </simpara></listitem>
 </varlistentry>
 <varlistentry>
@@ -654,12 +658,13 @@ tudod megadni (teljes elérési út is megadható).
 Ha MicroDVD felirat fájl használa közben egyre növekvő csúszást tapasztalsz a
 film és a felirat között, akkor a legvalószínűbb, hogy a film és a felirat frame
 rátája különböző. Jegyezd meg, hogy a MicroDVD felirat formátum abszolút képkocka
-számokat használ az időzítéshez, és emiatt a <option>-subfps</option> kapcsoló
-nem használható ezzel a formátummal. Mivel az <application>MPlayer</application>
-nem tudja kitalálni a felirat fájl frame rátáját, kézzel kell átkonvertálnod.
-Van egy kis Perl script a <filename class="directory">contrib</filename>
-könyvtárban az <application>MPlayer</application> FTP szerverén, ami megcsinálja
-ezt a konvertálást neked.
+számokat használ az időzítéshez, és nincs benne fps információ, emiatt a
+<option>-subfps</option> kapcsoló használata javasolt ezzel a formátummal. Ha
+végleg meg akarod oldani ezt a problémát, kézzel kell átkonvertálnod a felirat
+fájl frame rátáját.
+Az <application>MPlayer</application> el tudja végezni ezt a konverziót neked:
+<screen>mplayer <replaceable>dummy.avi</replaceable> -fps subtitles_fps -subfps avi_fps [-subdelay sec] [-sub subtitle_filename] <replaceable>-dumpmicrodvdsub</replaceable></screen>
+<screen>mplayer -dumpmicrodvdsub -fps <replaceable>subtitles_fps</replaceable> -subfps <replaceable>avi_fps</replaceable> -sub <replaceable>subtitle_filename</replaceable> <replaceable>dummy.avi</replaceable></screen>
 </para>
 
 <para>

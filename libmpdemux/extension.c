@@ -51,7 +51,15 @@ static struct {
         { "vqf", DEMUXER_TYPE_XMMS },
         { "nsv", DEMUXER_TYPE_NSV },
         { "nsa", DEMUXER_TYPE_NSV },
-	{ "nut", DEMUXER_TYPE_LAVF }
+#ifdef USE_WIN32DLL
+        { "avs", DEMUXER_TYPE_AVS },
+#endif
+	{ "nut", DEMUXER_TYPE_LAVF },
+	{ "swf", DEMUXER_TYPE_LAVF },
+	{ "flv", DEMUXER_TYPE_LAVF },
+        { "264", DEMUXER_TYPE_H264_ES },
+        { "26l", DEMUXER_TYPE_H264_ES },
+	{ "ac3", DEMUXER_TYPE_LAVF }
 };
 
 int demuxer_type_by_filename(char* filename){

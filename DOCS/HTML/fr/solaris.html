@@ -64,7 +64,7 @@ d'un dépassement des entiers 32Bit, on accède à une adresse disque modulo 4 Go.
 Ce problème n'existe pas sur la version SPARC de Solaris 8.
 </p></li><li><p>
 Un bogue similaire est présent dans le code du système de fichier hsfs(7FS) (alias ISO9660), il se peut
-que hsfs ne supporte pas les partitions/disques plus gros(ses) que 4GB, toutes les donnés sont accédés
+que hsfs ne supporte pas les partitions/disques plus gros(ses) que 4GB, toutes les données sont accédées
 modulo 4Go.
 (<a href="http://groups.yahoo.com/group/solarisonintel/message/22592" target="_top">http://groups.yahoo.com/group/solarisonintel/message/22592</a>).
 Le problème hsfs peut être résolu en installant le patch 109764-04 (sparc) / 109765-04 (x86).

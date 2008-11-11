@@ -1,4 +1,10 @@
 /*
+ * Modified for use with MPlayer, for details see the CVS changelog at
+ * http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
+ * $Id: decode_i586.c,v 1.8 2005/04/15 22:21:34 diego Exp $
+ */
+
+/*
 * mpg123_synth_1to1 works the same way as the c version of this
 * file.  only two types of changes have been made:
 * - reordered floating point instructions to
@@ -21,7 +27,7 @@
 *
 * Stefan Bieschewski <stb@acm.org>
 *
-* $Id: decode_i586.c,v 1.7 2004/08/03 18:54:26 faust3 Exp $
+* $Id: decode_i586.c,v 1.8 2005/04/15 22:21:34 diego Exp $
 */
 #include "../config.h"
 #include "../mangle.h"

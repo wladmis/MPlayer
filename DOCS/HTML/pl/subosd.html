@@ -1,7 +1,7 @@
 <html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>1.4. Napisy i OSD</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - Odtwarzacz filmów"><link rel="up" href="intro.html" title="Rozdzia&#322; 1. Wprowadzenie"><link rel="previous" href="gui.html" title="1.3. A co z GUI?"><link rel="next" href="rtc.html" title="1.5. RTC"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">1.4. Napisy i OSD</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="gui.html">Poprzedni</a> </td><th width="60%" align="center">Rozdzia&#322; 1. Wprowadzenie</th><td width="20%" align="right"> <a accesskey="n" href="rtc.html">Nast&#281;pny</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="subosd"></a>1.4. Napisy i OSD</h2></div></div><p>
 <span class="application">MPlayer</span> mo&#380;e wy&#347;wietla&#263; napisy podczas odtwarzania
-filmu. Obecnie nast&#281;puj&#261;ce formaty s&#261; obs&#322;ugiwane:
-</p><div class="itemizedlist"><ul type="disc"><li><p>VOBsub</p></li><li><p>OGM</p></li><li><p>CC (zamkni&#281;ty format napisów)</p></li><li><p>MicroDVD</p></li><li><p>SubRip</p></li><li><p>SubViewer</p></li><li><p>Sami</p></li><li><p>VPlayer</p></li><li><p>RT</p></li><li><p>SSA</p></li><li><p>PJS (Phoenix Japanimation Society)</p></li><li><p><a href="subosd.html#mpsub" title="1.4.1. MPsub - W&#322;asny format napisów MPlayera">MPsub</a></p></li><li><p>AQTitle</p></li><li><p><a href="http://unicorn.us.com/jacosub/" target="_top">JACOsub</a></p></li></ul></div><p>
+filmu. Obecnie obs&#322;ugiwane s&#261; nast&#281;puj&#261;ce formaty:
+</p><div class="itemizedlist"><ul type="disc"><li><p>VOBsub</p></li><li><p>OGM</p></li><li><p>CC (closed caption)</p></li><li><p>MicroDVD</p></li><li><p>SubRip</p></li><li><p>SubViewer</p></li><li><p>Sami</p></li><li><p>VPlayer</p></li><li><p>RT</p></li><li><p>SSA</p></li><li><p>PJS (Phoenix Japanimation Society)</p></li><li><p><a href="subosd.html#mpsub" title="1.4.1. MPsub - W&#322;asny format napisów MPlayera">MPsub</a></p></li><li><p>AQTitle</p></li><li><p><a href="http://unicorn.us.com/jacosub/" target="_top">JACOsub</a></p></li></ul></div><p>
 </p><p>
 <span class="application">MPlayer</span> mo&#380;e zrzuci&#263; wy&#380;ej wymienione formaty napisów
 (<span class="bold"><b>poza pierwszymi trzema</b></span>) do nast&#281;puj&#261;cych formatów,
@@ -9,7 +9,7 @@ je&#347;li podasz odpowiedni&#261; opcj&#281;:
 </p><div class="itemizedlist"><ul type="disc"><li><p>MPsub: <tt class="option">-dumpmpsub</tt></p></li><li><p>SubRip: <tt class="option">-dumpsrtsub</tt></p></li><li><p>MicroDVD: <tt class="option">-dumpmicrodvdsub</tt></p></li><li><p>JACOsub: <tt class="option">-dumpjacosub</tt></p></li><li><p>Sami: <tt class="option">-dumpsami</tt></p></li></ul></div><p>
 </p><p>
 <span class="application">MEncoder</span> mo&#380;e zrzuci&#263; napisy DVD do formatu
-<a href="menc-feat-extractsub.html" title="7.8. Wyci&#261;ganie napisów z DVD do pliku Vobsub">VOBsub</a>.
+<a href="menc-feat-extractsub.html" title="7.8. Ekstraktowanie napisów z DVD do pliku VOBsub">VOBsub</a>.
 </p><p>
 Opcje dla wiersza polece&#324; ró&#380;ni&#261; si&#281; nieco dla poszczególnych formatów:
 </p><p><b>Format VOBsub. </b>
@@ -36,7 +36,7 @@ musisz przekaza&#263; opcj&#281; <tt class="option">-sub
 <i><tt>przyk&#322;ad.txt</tt></i></tt> (pe&#322;na &#347;cie&#380;ka jest opcjonalna).
 </p><div class="variablelist"><p><b>Dopasowywanie czasu wy&#347;wietlania i po&#322;o&#380;enia napisów:</b></p><dl><dt><span class="term"><tt class="option">-subdelay <i><tt>sek</tt></i></tt></span></dt><dd>
     Opó&#378;nia wy&#347;wietlanie napisów o <tt class="option"><i><tt>sek</tt></i></tt> sekund.
-    Mo&#380;e by&#263; liczb&#261; ujemn&#261;.
+    Mo&#380;e by&#263; liczb&#261; ujemn&#261;. Warto&#347;&#263; jest dodawana do licznika czasu filmu.
     </dd><dt><span class="term"><tt class="option">-subfps <i><tt>ILO&#346;&#262;</tt></i></tt></span></dt><dd>
     Okre&#347;la ilo&#347;&#263; klatek na sekund&#281; pliku z napisami (liczba rzeczywista).
     </dd><dt><span class="term"><tt class="option">-subpos <i><tt>0-100</tt></i></tt></span></dt><dd>
@@ -44,14 +44,15 @@ musisz przekaza&#263; opcj&#281; <tt class="option">-sub
     </dd></dl></div><p>
 Je&#380;eli podczas u&#380;ywania napisów w formacie MicroDVD zauwa&#380;ysz rosn&#261;ce opó&#378;nienie
 mi&#281;dzy nimi a filmem, to prawdopodobnie ilo&#347;&#263; klatek na sekund&#281; filmu ró&#380;ni si&#281;
-od warto&#347;ci, do której zosta&#322;y przystosowane napisy. Zauwa&#380;, &#380;e format ten korzysta
-z bezwzgl&#281;dnych numerów ramek, dla wy&#347;wietlania napisów w odpowiednim momencie i
-dlatego nie mo&#380;esz skorzysta&#263; w tym wypadku z opcji <tt class="option">-subfps</tt>. Jako, &#380;e
-<span class="application">MPlayer</span> nie mo&#380;e w &#380;aden sposób zgadn&#261;&#263; ilo&#347;ci klatek
-na sekund&#281;, do której by&#322;y przystosowane napisy, musisz j&#261; r&#281;cznie zmieni&#263;.
-W katalogu <tt class="filename">contrib</tt> znajduj&#261;cym si&#281; na
-serwerze FTP <span class="application">MPlayera</span> znajdziesz ma&#322;y skrypt napisany
-w perlu, który Ci w tym pomo&#380;e.
+od warto&#347;ci, do której zosta&#322;y przystosowane napisy.
+Zauwa&#380;, &#380;e format ten korzysta z bezwzgl&#281;dnych numerów klatek do wy&#347;wietlania
+napisów w odpowiednim momencie, ale nie zawiera w sobie informacji o warto&#347;ci fps,
+dlatego powiniene&#347; skorzysta&#263; z opcji <tt class="option">-subfps</tt>.
+Je&#380;eli chcia&#322;by&#347; trwale rozwi&#261;za&#263; ten problem, musisz r&#281;cznie zmieni&#263;
+warto&#347;&#263; framerate pliku z napisami.
+<span class="application">MPlayer</span> mo&#380;e zrobi&#263; to za ciebie:
+
+<pre class="screen">mplayer -dumpmicrodvdsub -fps <i><tt>fps_napisów</tt></i> -subfps <i><tt>fps_filmu</tt></i> -sub <i><tt>zbiór_z_napisami</tt></i> <i><tt>atrapa.avi</tt></i></pre>
 </p><p>
 O napisach DVD przeczytasz w rozdziale <a href="dvd.html" title="5.2. Odtwarzanie DVD">DVD</a>.
 </p><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="mpsub"></a>1.4.1. MPsub - W&#322;asny format napisów <span class="application">MPlayera</span></h3></div></div><p>
@@ -90,7 +91,7 @@ On Screen Display (Wy&#347;wietlanie Na Ekranie)</b></span>. OSD u&#380;ywany je
 do wy&#347;wietlania obecnego czasu odtwarzania, paska g&#322;o&#347;no&#347;ci, paska przeszukiwania
 filmu, itp.
 </p></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="mpsub-install"></a>1.4.2. Instalacja OSD i napisów</h3></div></div><p>
-B&#281;dziesz potrzebowa&#322; paczki zwieraj&#261;cej czcionk&#281; dla <span class="application">MPlayera</span>,
+B&#281;dziesz potrzebowa&#322; paczki zawieraj&#261;cej czcionk&#281; dla <span class="application">MPlayera</span>,
 &#380;eby móc skorzysta&#263; z OSD/NAPISÓW. Jest wiele sposobów, aby j&#261; uzyska&#263;:
 </p><div class="itemizedlist"><ul type="disc"><li><p>
  Skorzystaj z generatora czcionki w znajduj&#261;cego si&#281; w katalogu <tt class="filename">TOOLS/subfont-c</tt>. Jest to kompletne narz&#281;dzie, które

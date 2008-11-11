@@ -1,7 +1,7 @@
 /*
    MPlayer video driver for DirectFB / Matrox G200/G400/G450/G550
 
-   Copyright (C) 2002,2003 Ville Syrjala <syrjala@sci.fi>
+   Copyright (C) 2002-2005 Ville Syrjala <syrjala@sci.fi>
 
    Originally based on vo_directfb.c by
    Jiri Svoboda <Jiri.Svoboda@seznam.cz>
@@ -102,7 +102,7 @@ static int osd_dirty;
 static int osd_current;
 static int osd_max;
 
-static int is_g200 = 0;
+static int is_g200;
 
 /******************************
 *	    vo_dfbmga         *
@@ -149,6 +149,12 @@ pixelformat_name( DFBSurfacePixelFormat format )
 	  return "I420";
      case DSPF_ALUT44:
 	  return "ALUT44";
+#if DIRECTFBVERSION > 921
+     case DSPF_NV12:
+          return "NV12";
+     case DSPF_NV21:
+          return "NV21";
+#endif
      default:
 	  return "Unknown pixel format";
      }
@@ -158,16 +164,12 @@ static DFBSurfacePixelFormat
 imgfmt_to_pixelformat( uint32_t format )
 {
      switch (format) {
-     case IMGFMT_RGB32:
      case IMGFMT_BGR32:
 	  return DSPF_RGB32;
-     case IMGFMT_RGB24:
      case IMGFMT_BGR24:
 	  return DSPF_RGB24;
-     case IMGFMT_RGB16:
      case IMGFMT_BGR16:
 	  return DSPF_RGB16;
-     case IMGFMT_RGB15:
      case IMGFMT_BGR15:
 	  return DSPF_ARGB1555;
      case IMGFMT_YUY2:
@@ -179,6 +181,12 @@ imgfmt_to_pixelformat( uint32_t format )
      case IMGFMT_I420:
      case IMGFMT_IYUV:
           return DSPF_I420;
+#if DIRECTFBVERSION > 921
+     case IMGFMT_NV12:
+          return DSPF_NV12;
+     case IMGFMT_NV21:
+          return DSPF_NV21;
+#endif
      default:
 	  return DSPF_UNKNOWN;
      }
@@ -215,6 +223,8 @@ get_layer_by_name( DFBDisplayLayerID id,
 
      return DFENUM_OK;
 }
+
+static void uninit( void );
 
 static uint32_t
 preinit( const char *arg )
@@ -417,11 +427,13 @@ preinit( const char *arg )
           if (l.res != DFB_OK) {
                mp_msg( MSGT_VO, MSGL_ERR, "vo_dfbmga: Can't get primary layer - %s\n",
                        DirectFBErrorString( l.res ) );
+               uninit();
                return -1;
           }
           if ((res = primary->SetCooperativeLevel( primary, DLSCL_EXCLUSIVE )) != DFB_OK) {
                mp_msg( MSGT_VO, MSGL_ERR, "Can't get exclusive access to primary layer - %s\n",
                        DirectFBErrorString( res ) );
+               uninit();
                return -1;
           }
           use_input = 1;
@@ -443,11 +455,13 @@ preinit( const char *arg )
           if (l.res != DFB_OK) {
                mp_msg( MSGT_VO, MSGL_ERR, "Can't get BES layer - %s\n",
                        DirectFBErrorString( l.res ) );
+               uninit();
                return -1;
           }
           if ((res = bes->SetCooperativeLevel( bes, DLSCL_EXCLUSIVE )) != DFB_OK) {
                mp_msg( MSGT_VO, MSGL_ERR, "Can't get exclusive access to BES - %s\n",
                        DirectFBErrorString( res ) );
+               uninit();
                return -1;
           }
           dlc.flags = DLCONF_PIXELFORMAT;
@@ -473,11 +487,13 @@ preinit( const char *arg )
           if (l.res != DFB_OK) {
                mp_msg( MSGT_VO, MSGL_ERR, "Can't get CRTC2 layer - %s\n",
                        DirectFBErrorString( l.res ) );
+               uninit();
                return -1;
           }
           if ((res = crtc2->SetCooperativeLevel( crtc2, DLSCL_EXCLUSIVE )) != DFB_OK) {
                mp_msg( MSGT_VO, MSGL_ERR, "Can't get exclusive access to CRTC2 - %s\n",
                        DirectFBErrorString( res ) );
+               uninit();
                return -1;
           }
      }
@@ -487,10 +503,16 @@ preinit( const char *arg )
                mp_msg( MSGT_VO, MSGL_ERR,
                        "vo_dfbmga: Can't get keyboard - %s\n",
                        DirectFBErrorString( res ) );
+               uninit();
                return -1;
           }
-          keyboard->CreateEventBuffer( keyboard, &buffer );
-          buffer->Reset( buffer );
+          if ((res = keyboard->CreateEventBuffer( keyboard, &buffer )) != DFB_OK) {
+               mp_msg( MSGT_VO, MSGL_ERR,
+                       "vo_dfbmga: Can't create event buffer - %s\n",
+                       DirectFBErrorString( res ) );
+               uninit();
+               return -1;
+          }
      }
 
      return 0;
@@ -838,13 +860,9 @@ static uint32_t
 query_format( uint32_t format )
 {
      switch (format) {
-          case IMGFMT_RGB32:
           case IMGFMT_BGR32:
-          case IMGFMT_RGB24:
           case IMGFMT_BGR24:
-          case IMGFMT_RGB16:
           case IMGFMT_BGR16:
-          case IMGFMT_RGB15:
           case IMGFMT_BGR15:
           case IMGFMT_UYVY:
           case IMGFMT_YV12:
@@ -853,14 +871,23 @@ query_format( uint32_t format )
                if (is_g200)
                     return 0;
           case IMGFMT_YUY2:
-               return (VFCAP_HWSCALE_UP |
-                       VFCAP_HWSCALE_DOWN |
-                       VFCAP_CSP_SUPPORTED_BY_HW |
-                       VFCAP_CSP_SUPPORTED |
-                       VFCAP_OSD);
+               break;
+#if DIRECTFBVERSION > 921
+          case IMGFMT_NV12:
+          case IMGFMT_NV21:
+               if (!use_bes || use_crtc2)
+                    return 0;
+               break;
+#endif
+          default:
+               return 0;
      }
 
-     return 0;
+     return (VFCAP_HWSCALE_UP |
+             VFCAP_HWSCALE_DOWN |
+             VFCAP_CSP_SUPPORTED_BY_HW |
+             VFCAP_CSP_SUPPORTED |
+             VFCAP_OSD);
 }
 
 static void
@@ -954,6 +981,10 @@ draw_alpha( int x0, int y0,
 			      ((uint8_t *) dst) + pitch * y0 + 2 * x0 + 1,
                               pitch );
 	  break;
+#if DIRECTFBVERSION > 921
+     case DSPF_NV12:
+     case DSPF_NV21:
+#endif
      case DSPF_I420:
      case DSPF_YV12:
 	  vo_draw_alpha_yv12( w, h, src, srca, stride,
@@ -985,8 +1016,18 @@ draw_slice( uint8_t * src[], int stride[], int w, int h, int x, int y )
 
      dst += pitch * in_height;
 
-     x /= 2; y /= 2;
-     w /= 2; h /= 2;
+     y /= 2;
+     h /= 2;
+
+#if DIRECTFBVERSION > 921
+     if (frame_format == DSPF_NV12 || frame_format == DSPF_NV21) {
+          memcpy_pic( dst + pitch * y + x, src[1],
+                      w, h, pitch, stride[1] );
+     } else
+#endif
+     {
+     x /= 2;
+     w /= 2;
      pitch /= 2;
 
      if (frame_format == DSPF_I420 )
@@ -1004,6 +1045,7 @@ draw_slice( uint8_t * src[], int stride[], int w, int h, int x, int y )
      else
           memcpy_pic( dst + pitch * y + x, src[1],
                       w, h, pitch, stride[1] );
+     }
 
      frame->Unlock( frame );
 
@@ -1170,14 +1212,22 @@ get_image( mp_image_t *mpi )
           mpi->stride[0] = pitch;
 
           if (mpi->flags & MP_IMGFLAG_PLANAR) {
+               if (mpi->num_planes > 2) {
                mpi->stride[1] = mpi->stride[2] = pitch / 2;
 
                if (mpi->flags & MP_IMGFLAG_SWAPPED) {
+                    /* I420 */
                     mpi->planes[1] = dst + in_height * pitch;
                     mpi->planes[2] = mpi->planes[1] + in_height * pitch / 4;
                } else {
+                    /* YV12 */
                     mpi->planes[2] = dst + in_height * pitch;
                     mpi->planes[1] = mpi->planes[2] + in_height * pitch / 4;
+               }
+               } else {
+                    /* NV12/NV21 */
+                    mpi->stride[1] = pitch;
+                    mpi->planes[1] = dst + in_height * pitch;
                }
           }
 

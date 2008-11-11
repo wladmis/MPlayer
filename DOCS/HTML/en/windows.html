@@ -4,7 +4,7 @@
   It does not have a GUI yet, but the command line version is almost completely
   functional. <a href="../../tech/patches.txt" target="_top">Patches</a> are always welcome.
   You should check out the
-  <a href="http://mplayerhq.hu/mailman/listinfo/mplayer-cygwin/" target="_top">mplayer-cygwin</a>
+  <a href="http://mplayerhq.hu/mailman/listinfo/mplayer-cygwin/" target="_top">MPlayer-cygwin</a>
   mailing list for help and latest information.</p><p>Best results are achieved with the native DirectX video output driver
   (<tt class="option">-vo directx</tt>) and the native Windows waveout audio driver
   (<tt class="option">-ao win32</tt>). Alternatives are OpenGL and SDL, but OpenGL
@@ -47,18 +47,17 @@
   find a colorspace your card handles particularly bad
   <tt class="option">-vf noformat=<i><tt>colorspace</tt></i></tt>
   will keep it from being used. Add this to your config file to permanently
-  keep it from being used.</p><p>You can use Win32 codecs and Real Win32 codecs (not Real Linux codecs)
-  if you want to. Put the codecs somewhere in your path or pass
-  <tt class="option">--with-codecsdir=<i><tt>c:/path/to/your/codecs</tt></i></tt> (alternatively
-  <tt class="option">--with-codecsdir=<i><tt>/path/to/your/codecs</tt></i></tt> only on
-  <span class="application">Cygwin</span>) to <tt class="filename">configure</tt>. We
-  have had some reports that Real DLLs need to be writable by the user running
-  <span class="application">MPlayer</span>, but only on some systems. Try making
-  them writable if you have problems. QuickTime DLLs also work, but you will
-  have to put them in your Windows system directory
-  (<tt class="filename"><i><tt>C:\Windows\system\</tt></i></tt>
-  or similar). As a last resort, try putting them in the same directory as
-  <span class="application">MPlayer</span>.</p><p>You can play VCDs by playing the <tt class="filename">.DAT</tt> or <tt class="filename">.MPG</tt> files
+  keep it from being used.</p><p>There are special codec packages for Windows available on our
+  <a href="http://mplayerhq.hu/homepage/design7/codecs.html" target="_top">codecs page</a>
+  to allow playing formats for which there is no native support yet.
+  Put the codecs somewhere in your path or pass
+  <tt class="option">--with-codecsdir=<i><tt>c:/path/to/your/codecs</tt></i></tt>
+  (alternatively
+  <tt class="option">--with-codecsdir=<i><tt>/path/to/your/codecs</tt></i></tt>
+  only on <span class="application">Cygwin</span>) to <tt class="filename">configure</tt>.
+  We have had some reports that Real DLLs need to be writable by the user
+  running <span class="application">MPlayer</span>, but only on some systems (NT4).
+  Try making them writable if you have problems.</p><p>You can play VCDs by playing the <tt class="filename">.DAT</tt> or <tt class="filename">.MPG</tt> files
   that Windows exposes on VCDs. It works like this (adjust for the drive letter
   of your CD-ROM):</p><pre class="screen">mplayer <i><tt>d:/mpegav/avseq01.dat</tt></i></pre><p>DVDs also work, adjust <tt class="option">-dvd-device</tt> for the drive letter
   of your DVD-ROM:</p><pre class="screen">mplayer dvd://<i><tt>&lt;title&gt;</tt></i> -dvd-device <i><tt>d</tt></i>:</pre><p>The <span class="application">Cygwin</span>/<span class="application">MinGW</span>

@@ -27,6 +27,7 @@
 #define AVCODEC_MPEGVIDEO_H
 
 #include "dsputil.h"
+#include "bitstream.h"
 
 #define FRAME_SKIPED 100 ///< return value for header parsers if frame is not coded
 
@@ -66,6 +67,8 @@ enum OutputFormat {
 #define S_TYPE FF_S_TYPE  ///< S(GMC)-VOP MPEG4
 #define SI_TYPE FF_SI_TYPE  ///< Switching Intra
 #define SP_TYPE FF_SP_TYPE  ///< Switching Predicted
+
+#define MAX_MB_BYTES (30*16*16*3/8 + 120)
 
 typedef struct Predictor{
     double coeff;
@@ -170,6 +173,8 @@ typedef struct Picture{
     int frame_num;              ///< h264 frame_num
     int pic_id;                 ///< h264 pic_num or long_term_pic_idx
     int long_ref;               ///< 1->long term reference 0->short term reference
+    int ref_poc[2][16];         ///< h264 POCs of the frames used as reference
+    int ref_count[2];           ///< number of entries in ref_poc
 
     int mb_var_sum;             ///< sum of MB variance for current frame 
     int mc_mb_var_sum;          ///< motion compensated MB variance for current frame 
@@ -598,9 +603,9 @@ typedef struct MpegEncContext {
     int divx_version;
     int divx_build;
     int divx_packed;
-#define BITSTREAM_BUFFER_SIZE 1024*256
     uint8_t *bitstream_buffer; //Divx 5.01 puts several frames in a single one, this is used to reorder them
     int bitstream_buffer_size;
+    int allocated_bitstream_buffer_size;
     
     int xvid_build;
     

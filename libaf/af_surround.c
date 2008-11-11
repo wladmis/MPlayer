@@ -93,7 +93,7 @@ static int control(struct af_instance_s* af, int cmd, void* arg)
     float fc;
     af->data->rate   = ((af_data_t*)arg)->rate;
     af->data->nch    = ((af_data_t*)arg)->nch*2;
-    af->data->format = AF_FORMAT_F | AF_FORMAT_NE;
+    af->data->format = AF_FORMAT_FLOAT_NE;
     af->data->bps    = 4;
 
     if (af->data->nch != 4){
@@ -102,7 +102,7 @@ static int control(struct af_instance_s* af, int cmd, void* arg)
     }
     // Surround filer coefficients
     fc = 2.0 * 7000.0/(float)af->data->rate;
-    if (-1 == design_fir(L, s->w, &fc, LP|HAMMING, 0)){
+    if (-1 == af_filter_design_fir(L, s->w, &fc, LP|HAMMING, 0)){
       af_msg(AF_MSG_ERROR,"[surround] Unable to design low-pass filter.\n");
       return AF_ERROR;
     }

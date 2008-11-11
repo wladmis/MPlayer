@@ -1,5 +1,10 @@
+#define HRTF_MIX_51 0
+#define HRTF_MIX_STEREO 1
+#define HRTF_MIX_MATRIX2CH 2
+
 /* Amplitude scaling factors */
 #define M17_0DB		0.1414213562
+#define M9_03DB		0.3535533906
 #define M6_99DB		0.4472135955
 #define M4_77DB		0.5773502692
 #define M3_01DB		0.7071067812
@@ -13,8 +18,18 @@
 
 #define BASSFILTFREQ	180	/* Bass compensation filter cut (Hz) */
 #define BASSFILTLEN	193	/* Bass compensation filter length */
-#define BASSGAIN	M4_77DB	/* Bass compensation gain */
+#define BASSGAIN	M_SQRT2	/* Bass compensation gain */
 #define BASSCROSS	0.35	/* Bass cross talk */
+
+#define FWRDURATION	240	/* FWR average duration (samples) */
+#define MATREARDELAY	720	/* Matrix mode rear delay (samples) */
+
+#define MATAGCTRIG	8.0	/* (Fuzzy) AGC trigger */
+#define MATAGCDECAY	1.0	/* AGC baseline decay rate (1/samp.) */
+#define MATAGCLOCK	0.2	/* AGC range (around 1) where the
+				   matrix behaves passively */
+#define MATCOMPGAIN	0.37	/* Cross talk compensation gain,
+				   0.50 - 0.55 is full cancellation. */
 
 #define CFECHODELAY	360	/* Center front echo delay (samples) */
 #define CFECHOAMPL	M17_0DB	/* Center front echo amplitude */
@@ -23,14 +38,11 @@
 
 /* Head related impulse response (HRIR) derived from KEMAR measurement
    data by Bill Gardner <billg@media.mit.edu> and Keith Martin
-   <kdm@media.mit.edu>:
-
-   "This data is Copyright 1994 by the MIT Media Laboratory.  It is
-   provided free with no restrictions on use, provided the authors are
-   cited when the data is used in any research or commercial
-   application."
+   <kdm@media.mit.edu>
 
    URL: http://sound.media.mit.edu/KEMAR.html
+
+   Distributed under GPL with authors' permission
 */
 
 /* EQUALIZED KEMAR HRIR

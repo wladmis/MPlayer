@@ -1,3 +1,9 @@
+/*
+ * Modified for use with MPlayer, detailed CVS changelog at
+ * http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
+ * $Id: driver.c,v 1.14 2005/04/15 20:17:11 diego Exp $
+ */
+
 #include "config.h"
 
 #include <stdio.h>

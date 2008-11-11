@@ -18,7 +18,7 @@
 #include "stheader.h"
 #include "mf.h"
 
-#include "../libao2/afmt.h"
+#include "../libaf/af_format.h"
 #include "../libvo/fastmemcpy.h"
 
 // Should be set to 1 by demux module if ids it passes to new_sh_audio and
@@ -91,7 +91,7 @@ sh_audio_t* new_sh_audio(demuxer_t *demuxer,int id){
         sh = demuxer->a_streams[id];
         // set some defaults
         sh->samplesize=2;
-        sh->sample_format=AFMT_S16_NE;
+        sh->sample_format=AF_FORMAT_S16_NE;
         sh->audio_out_minsize=8192;/* default size, maybe not enough for Win32/ACM*/
         if (identify && !demux_aid_vid_mismatch)
           mp_msg(MSGT_GLOBAL, MSGL_INFO, "ID_AUDIO_ID=%d\n", id);
@@ -156,6 +156,10 @@ extern void demux_close_mkv(demuxer_t* demuxer);
 extern void demux_close_ra(demuxer_t* demuxer);
 extern void demux_close_ty(demuxer_t* demuxer);
 extern void demux_close_lavf(demuxer_t* demuxer);
+extern void demux_close_vqf(demuxer_t* demuxer);
+#ifdef USE_WIN32DLL
+extern void demux_close_avs(demuxer_t* demuxer);
+#endif
 
 
 #ifdef USE_TV
@@ -218,13 +222,13 @@ void free_demuxer(demuxer_t *demuxer){
       demux_close_rtp(demuxer); break;
 #endif
     case DEMUXER_TYPE_SMJPEG:
-      demux_close_smjpeg(demuxer); return;
+      demux_close_smjpeg(demuxer); break;
     case DEMUXER_TYPE_DEMUXERS:
-      demux_close_demuxers(demuxer); return;
+      demux_close_demuxers(demuxer); break;
     case DEMUXER_TYPE_AVI: 
     case DEMUXER_TYPE_AVI_NI:
     case DEMUXER_TYPE_AVI_NINI:
-      demux_close_avi(demuxer); return;
+      demux_close_avi(demuxer); break;
 #ifdef HAVE_XMMS
     case DEMUXER_TYPE_XMMS:
       demux_close_xmms(demuxer); break;
@@ -241,16 +245,22 @@ void free_demuxer(demuxer_t *demuxer){
       demux_close_mpg(demuxer); break;
     case DEMUXER_TYPE_REALAUDIO:
       demux_close_ra(demuxer); break;
+    case DEMUXER_TYPE_VQF:
+      demux_close_vqf(demuxer); break;
 #ifdef USE_LIBAVFORMAT
     case DEMUXER_TYPE_LAVF:
       demux_close_lavf(demuxer); break;
 #endif
+#ifdef USE_WIN32DLL
+    case DEMUXER_TYPE_AVS:
+      demux_close_avs(demuxer); break;
+#endif
     }
     // free streams:
-    for(i=0;i<256;i++){
+    for(i = 0; i < MAX_A_STREAMS; i++)
 	if(demuxer->a_streams[i]) free_sh_audio(demuxer->a_streams[i]);
+    for(i = 0; i < MAX_V_STREAMS; i++)
 	if(demuxer->v_streams[i]) free_sh_video(demuxer->v_streams[i]);
-    }
     //if(sh_audio) free_sh_audio(sh_audio);
     //if(sh_video) free_sh_video(sh_video);
     // free demuxers:
@@ -326,6 +336,7 @@ int demux_xmms_fill_buffer(demuxer_t *demux,demux_stream_t *ds);
 int demux_gif_fill_buffer(demuxer_t *demux);
 int demux_ts_fill_buffer(demuxer_t *demux);
 int demux_ra_fill_buffer(demuxer_t *demux);
+int demux_vqf_fill_buffer(demuxer_t *demux);
 
 extern int demux_demuxers_fill_buffer(demuxer_t *demux,demux_stream_t *ds);
 extern int demux_ogg_fill_buffer(demuxer_t *d);
@@ -335,6 +346,9 @@ extern int demux_smjpeg_fill_buffer(demuxer_t* demux);
 extern int demux_lmlm4_fill_buffer(demuxer_t* demux);
 extern int demux_mkv_fill_buffer(demuxer_t *d);
 extern int demux_lavf_fill_buffer(demuxer_t *d);
+#ifdef USE_WIN32DLL
+extern int demux_avs_fill_buffer(demuxer_t *d);
+#endif
 
 int demux_fill_buffer(demuxer_t *demux,demux_stream_t *ds){
   // Note: parameter 'ds' can be NULL!
@@ -390,8 +404,12 @@ int demux_fill_buffer(demuxer_t *demux,demux_stream_t *ds){
     case DEMUXER_TYPE_MPEG_TS: 
 	return demux_ts_fill_buffer(demux);
     case DEMUXER_TYPE_REALAUDIO: return demux_ra_fill_buffer(demux);
+    case DEMUXER_TYPE_VQF: return demux_vqf_fill_buffer(demux);
 #ifdef USE_LIBAVFORMAT
      case DEMUXER_TYPE_LAVF: return demux_lavf_fill_buffer(demux);
+#endif
+#ifdef USE_WIN32DLL
+    case DEMUXER_TYPE_AVS: return demux_avs_fill_buffer(demux);
 #endif
   }
   return 0;
@@ -604,6 +622,10 @@ int demux_open_rawdv(demuxer_t* demuxer);
 extern int rawdv_check_file(demuxer_t *demuxer);
 #endif
 
+#ifdef USE_WIN32DLL
+int avs_check_file(demuxer_t *demuxer, const char *filename);
+#endif
+
 extern int vivo_check_file(demuxer_t *demuxer);
 extern void demux_open_vivo(demuxer_t *demuxer);
 extern int y4m_check_file(demuxer_t *demuxer);
@@ -634,11 +656,16 @@ extern int demux_open_ts(demuxer_t *demuxer);
 extern int demux_open_mkv(demuxer_t *demuxer);
 extern int ra_check_file(demuxer_t *demuxer);
 extern int demux_open_ra(demuxer_t* demuxer);
+extern int demux_probe_vqf(demuxer_t *demuxer);
+extern int demux_open_vqf(demuxer_t* demuxer);
 #ifdef HAVE_MATROSKA
 extern int demux_mkv_open(demuxer_t *demuxer);
 #endif
 extern int lavf_check_file(demuxer_t *demuxer);
 extern int demux_open_lavf(demuxer_t* demuxer);
+#ifdef USE_WIN32DLL
+extern int demux_open_avs(demuxer_t* demuxer);
+#endif
 
 extern demuxer_t* init_avi_with_ogg(demuxer_t* demuxer);
 #ifdef STREAMING_LIVE_DOT_COM
@@ -809,6 +836,18 @@ if(file_format==DEMUXER_TYPE_UNKNOWN || file_format==DEMUXER_TYPE_REALAUDIO){
   }
 }
 
+//=============== Try to open as VQF file: =================
+if(file_format==DEMUXER_TYPE_UNKNOWN || file_format==DEMUXER_TYPE_VQF){
+  demuxer=new_demuxer(stream,DEMUXER_TYPE_VQF,audio_id,video_id,dvdsub_id);
+  if(demux_probe_vqf(demuxer)){
+      mp_msg(MSGT_DEMUXER,MSGL_INFO,MSGTR_Detected_XXX_FileFormat,"VQF");
+      file_format=DEMUXER_TYPE_VQF;
+  } else {
+      free_demuxer(demuxer);
+      demuxer = NULL;
+  }
+}
+
 //=============== Try based on filename EXTENSION: =================
 // Ok. We're over the stable detectable fileformats, the next ones are a bit
 // fuzzy. So by default (extension_parsing==1) try extension-based detection
@@ -817,7 +856,7 @@ if(file_format==DEMUXER_TYPE_UNKNOWN && filename && extension_parsing==1){
   file_format=demuxer_type_by_filename(filename);
   if(file_format!=DEMUXER_TYPE_UNKNOWN){
     // we like recursion :)
-    demuxer=demux_open_stream(stream,file_format,audio_id,video_id,dvdsub_id,NULL);
+    demuxer=demux_open_stream(stream,file_format,audio_id,video_id,dvdsub_id,filename);
     if(demuxer) return demuxer; // done!
     file_format=DEMUXER_TYPE_UNKNOWN; // continue fuzzy guessing...
     mp_msg(MSGT_DEMUXER,MSGL_V,"demuxer: continue fuzzy content-based format guessing...\n");
@@ -909,6 +948,19 @@ if(file_format==DEMUXER_TYPE_UNKNOWN || file_format==DEMUXER_TYPE_OGG){
   if(demux_ogg_open(demuxer)){
       mp_msg(MSGT_DEMUXER,MSGL_INFO,MSGTR_Detected_XXX_FileFormat,"Ogg");
       file_format=DEMUXER_TYPE_OGG;
+  } else {
+      free_demuxer(demuxer);
+      demuxer = NULL;
+  }
+}
+#endif
+#ifdef USE_WIN32DLL
+//=============== Try to open as Avisynth file: =================
+if(file_format==DEMUXER_TYPE_UNKNOWN || file_format==DEMUXER_TYPE_AVS){
+  demuxer=new_demuxer(stream,DEMUXER_TYPE_AVS,audio_id,video_id,dvdsub_id);
+  if (avs_check_file(demuxer, filename)){
+      mp_msg(MSGT_DEMUXER,MSGL_INFO,MSGTR_Detected_XXX_FileFormat,"AVS");
+      file_format=DEMUXER_TYPE_AVS;
   } else {
       free_demuxer(demuxer);
       demuxer = NULL;
@@ -1031,6 +1083,8 @@ if(file_format==DEMUXER_TYPE_UNKNOWN || file_format==DEMUXER_TYPE_MPEG_PS){
         mp_msg(MSGT_DEMUXER,MSGL_ERR,"MPEG: " MSGTR_MissingVideoStreamBug);
       else
         mp_msg(MSGT_DEMUXER,MSGL_V,MSGTR_NotSystemStream);
+    }
+    if (demuxer && file_format != DEMUXER_TYPE_MPEG_PS) {
       free_demuxer(demuxer);
       demuxer = NULL;
     }
@@ -1294,26 +1348,7 @@ switch(file_format){
    break;
  }
 
- case DEMUXER_TYPE_MPEG_TY: {
-  sh_video=d_video->sh;sh_video->ds=d_video;
-
-  if(audio_id!=-2) {
-   if(!ds_fill_buffer(d_audio)){
-    mp_msg(MSGT_DEMUXER,MSGL_INFO,"MPEG: " MSGTR_MissingAudioStream);
-    sh_audio=NULL;
-   } else {
-    sh_audio=d_audio->sh;sh_audio->ds=d_audio;
-    switch(d_audio->id & 0xE0){  // 1110 0000 b  (high 3 bit: type  low 5: id)
-      case 0x00: sh_audio->format=0x50;break; // mpeg
-      case 0xA0: sh_audio->format=0x10001;break;  // dvd pcm
-      case 0x80: if((d_audio->id & 0xF8) == 0x88) sh_audio->format=0x2001;//dts
-                 else sh_audio->format=0x2000;break; // ac3
-      default: sh_audio=NULL; // unknown type
-    }
-   }
-  }
-  break;
- }
+ case DEMUXER_TYPE_MPEG_TY: 
  case DEMUXER_TYPE_MPEG_PS: {
   sh_video=d_video->sh;sh_video->ds=d_video;
 //  if(demuxer->stream->type!=STREAMTYPE_VCD) demuxer->movi_start=0; // for VCD
@@ -1324,13 +1359,6 @@ switch(file_format){
     sh_audio=NULL;
    } else {
     sh_audio=d_audio->sh;sh_audio->ds=d_audio;
-    switch(d_audio->id & 0xE0){  // 1110 0000 b  (high 3 bit: type  low 5: id)
-      case 0x00: sh_audio->format=0x50;break; // mpeg
-      case 0xA0: sh_audio->format=0x10001;break;  // dvd pcm
-      case 0x80: if((d_audio->id & 0xF8) == 0x88) sh_audio->format=0x2001;//dts
-                 else sh_audio->format=0x2000;break; // ac3
-      default: sh_audio=NULL; // unknown type
-    }
    }
   }
   break;
@@ -1355,9 +1383,19 @@ switch(file_format){
   if (!demux_open_ra(demuxer)) return NULL;
   break;
  }
+ case DEMUXER_TYPE_VQF: {
+  if (!demux_open_vqf(demuxer)) return NULL;
+  break;
+ }
 #ifdef USE_LIBAVFORMAT
   case DEMUXER_TYPE_LAVF: {
   if (!demux_open_lavf(demuxer)) return NULL;
+  break;
+ }
+#endif
+#ifdef USE_WIN32DLL
+  case DEMUXER_TYPE_AVS: {
+  if (!demux_open_avs(demuxer)) return NULL;
   break;
  }
 #endif
@@ -1462,6 +1500,9 @@ int demux_seek_real(demuxer_t *demuxer,float rel_seek_secs,int flags);
 int demux_seek_pva(demuxer_t *demuxer,float rel_seek_secs,int flags);
 int demux_seek_ts(demuxer_t *demuxer,float rel_seek_secs,int flags);
 int demux_seek_lavf(demuxer_t *demuxer,float rel_seek_secs,int flags);
+#ifdef USE_WIN32DLL
+int demux_seek_avs(demuxer_t *demuxer,float rel_seek_secs,int flags);
+#endif
 
 #ifdef HAVE_LIBDV095
 int demux_seek_rawdv(demuxer_t *demuxer, float pts, int flags);
@@ -1474,6 +1515,7 @@ extern void demux_rawaudio_seek(demuxer_t *demuxer,float rel_seek_secs,int flags
 extern void demux_rawvideo_seek(demuxer_t *demuxer,float rel_seek_secs,int flags);
 extern void demux_xmms_seek(demuxer_t *demuxer,float rel_seek_secs,int flags);
 extern void demux_mkv_seek(demuxer_t *demuxer,float rel_seek_secs,int flags);
+extern void demux_seek_vqf(demuxer_t *demuxer,float rel_seek_secs,int flags);
 
 int demux_seek(demuxer_t *demuxer,float rel_seek_secs,int flags){
     demux_stream_t *d_audio=demuxer->audio;
@@ -1576,6 +1618,12 @@ switch(demuxer->file_format){
  case DEMUXER_TYPE_LAVF:
       demux_seek_lavf(demuxer,rel_seek_secs,flags); break;
  #endif
+ case DEMUXER_TYPE_VQF:
+      demux_seek_vqf(demuxer,rel_seek_secs,flags); break;
+ #ifdef USE_WIN32DLL
+ case DEMUXER_TYPE_AVS:
+      demux_seek_avs(demuxer,rel_seek_secs,flags); break;
+ #endif
 
 } // switch(demuxer->file_format)
 
@@ -1643,6 +1691,12 @@ extern int demux_ogg_control(demuxer_t *demuxer, int cmd, void *arg);
 extern int demux_real_control(demuxer_t *demuxer, int cmd, void *arg);
 extern int demux_lavf_control(demuxer_t *demuxer, int cmd, void *arg);
 extern int demux_mov_control(demuxer_t *demuxer, int cmd, void *arg);
+#ifdef USE_WIN32DLL
+extern int demux_avs_control(demuxer_t *demuxer, int cmd, void *arg);
+#endif
+#ifdef HAVE_LIBDV095
+extern int demux_rawdv_control(demuxer_t *demuxer,int cmd, void *arg);
+#endif
 
 int demux_control(demuxer_t *demuxer, int cmd, void *arg) {
     switch(demuxer->type) {
@@ -1681,7 +1735,14 @@ int demux_control(demuxer_t *demuxer, int cmd, void *arg) {
 #endif
         case DEMUXER_TYPE_MOV:
    	    return demux_mov_control(demuxer, cmd, arg);
-
+#ifdef USE_WIN32DLL
+        case DEMUXER_TYPE_AVS:
+   	    return demux_avs_control(demuxer, cmd, arg);
+#endif 
+#ifdef HAVE_LIBDV095
+        case DEMUXER_TYPE_RAWDV:
+            return demux_rawdv_control(demuxer,cmd, arg);
+#endif
 	default:
 	    return DEMUXER_CTRL_NOTIMPL;
     }
@@ -1691,7 +1752,12 @@ int demux_control(demuxer_t *demuxer, int cmd, void *arg) {
 
 unsigned long demuxer_get_time_length(demuxer_t *demuxer){     
     unsigned long get_time_ans;     
+    sh_video_t *sh_video = demuxer->video->sh;
+    // <= 0 means DEMUXER_CTRL_NOTIMPL or DEMUXER_CTRL_DONTKNOW
     if (demux_control(demuxer, DEMUXER_CTRL_GET_TIME_LENGTH,(void *)&get_time_ans)<=0)  {
+      if (sh_video && sh_video->i_bps)
+        get_time_ans = (demuxer->movi_end-demuxer->movi_start)/sh_video->i_bps;
+      else
         get_time_ans=0;     
     }
     return get_time_ans;
@@ -1701,9 +1767,19 @@ int demuxer_get_percent_pos(demuxer_t *demuxer){
     int ans = 0;
     int res = demux_control(demuxer, DEMUXER_CTRL_GET_PERCENT_POS, &ans);
     int len = (demuxer->movi_end - demuxer->movi_start) / 100;
-    if (res == DEMUXER_CTRL_NOTIMPL && len > 0)
+    if (res <= 0) {
+      if (len > 0)
       ans = (demuxer->filepos - demuxer->movi_start) / len;
-    if (ans>100 || ans<0) ans=0;
+      else
+       ans = 0;
+    }
+    if (ans < 0) ans = 0;
+    if (ans > 100) ans = 100;
     return ans;
 }
 
+int demuxer_switch_audio(demuxer_t *demuxer){     
+    int ans = 0;
+    int res = demux_control(demuxer, DEMUXER_CTRL_SWITCH_AUDIO, &ans);
+    return ans;
+}

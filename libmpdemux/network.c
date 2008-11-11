@@ -228,7 +228,7 @@ connect2Server_with_af(char *host, int port, int af,int verb) {
 	}
 	
 	
-	bzero(&server_address, sizeof(server_address));
+	memset(&server_address, 0, sizeof(server_address));
 	
 #ifndef HAVE_WINSOCK2
 #ifdef USE_ATON
@@ -700,6 +700,11 @@ extension=NULL;
 #endif
 		}
 
+		if(!strcasecmp(url->protocol, "udp") ) {
+			*file_format = DEMUXER_TYPE_UNKNOWN;
+			return 0;
+		}
+
 	// Old, hacked RTP support, which works for MPEG Streams
 	//   RTP streams only:
 		// Checking for RTP
@@ -998,7 +1003,7 @@ pnm_streaming_start( stream_t *stream ) {
 	if(fd<0) return -1;
 	
 	pnm = pnm_connect(fd,stream->streaming_ctrl->url->file);
-	if(!pnm) return -1;
+	if(!pnm) return -2;
 
 	stream->fd=fd;
 	stream->streaming_ctrl->data=pnm;
@@ -1185,7 +1190,7 @@ rtp_streaming_read( int fd, char *buffer, int size, streaming_ctrl_t *streaming_
 }
 
 static int
-rtp_streaming_start( stream_t *stream ) {
+rtp_streaming_start( stream_t *stream, int raw_udp ) {
 	streaming_ctrl_t *streaming_ctrl;
 	int fd;
 
@@ -1199,7 +1204,10 @@ rtp_streaming_start( stream_t *stream ) {
 		stream->fd = fd;
 	}
 
-	streaming_ctrl->streaming_read = rtp_streaming_read;
+	if(raw_udp)
+		streaming_ctrl->streaming_read = nop_streaming_read;
+	else
+		streaming_ctrl->streaming_read = rtp_streaming_read;
 	streaming_ctrl->streaming_seek = nop_streaming_seek;
 	streaming_ctrl->prebuffer_size = 64*1024;	// 64 KBytes	
 	streaming_ctrl->buffering = 0;
@@ -1244,12 +1252,16 @@ streaming_start(stream_t *stream, int *demuxer_type, URL_t *url) {
 				mp_msg(MSGT_NETWORK,MSGL_ERR,"streaming_start : Closing socket %d failed %s\n",stream->fd,strerror(errno));
 		}
 		stream->fd = -1;
-		ret = rtp_streaming_start( stream );
+		ret = rtp_streaming_start( stream, 0);
 	} else
 
 	if( !strcasecmp( stream->streaming_ctrl->url->protocol, "pnm")) {
 		stream->fd = -1;
 		ret = pnm_streaming_start( stream );
+		if (ret == -1) {
+		    mp_msg(MSGT_NETWORK,MSGL_INFO,"Can't connect with pnm, retrying with http.\n");
+		    goto stream_switch;
+		}
 	} else
 	
 	if( (!strcasecmp( stream->streaming_ctrl->url->protocol, "rtsp")) &&
@@ -1259,16 +1271,24 @@ streaming_start(stream_t *stream, int *demuxer_type, URL_t *url) {
 		    mp_msg(MSGT_NETWORK,MSGL_INFO,"Not a Realmedia rtsp url. Trying standard rtsp protocol.\n");
 #ifdef STREAMING_LIVE_DOT_COM
 		    *demuxer_type =  DEMUXER_TYPE_RTP;
-		    goto try_livedotcom;
+		    goto stream_switch;
 #else
 		    mp_msg(MSGT_NETWORK,MSGL_ERR,"RTSP support requires the \"LIVE.COM Streaming Media\" libraries!\n");
 		    return -1;
 #endif
 		}
+	} else if(!strcasecmp( stream->streaming_ctrl->url->protocol, "udp")) {
+		stream->fd = -1;
+		ret = rtp_streaming_start(stream, 1);
+		if(ret<0) {
+			mp_msg(MSGT_NETWORK,MSGL_ERR,"rtp_streaming_start(udp) failed\n");
+			return -1;
+		}
+		*demuxer_type =  DEMUXER_TYPE_UNKNOWN;
 	} else
 
 	// For connection-oriented streams, we can usually determine the streaming type.
-try_livedotcom:
+stream_switch:
 	switch( *demuxer_type ) {
 		case DEMUXER_TYPE_ASF:
 			// Send the appropriate HTTP request

@@ -1,36 +1,40 @@
 #
 # libavcodec Makefile
-# (c) 2000-2003 Fabrice Bellard
+# (c) 2000-2005 Fabrice Bellard
 #
 include ../config.mak
 
 VPATH=$(SRC_PATH)/libavcodec
 
 # NOTE: -I.. is needed to include config.h
-CFLAGS=$(OPTFLAGS) -DHAVE_AV_CONFIG_H -I.. -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_GNU_SOURCE
+CFLAGS=$(OPTFLAGS) -DHAVE_AV_CONFIG_H -I.. -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_GNU_SOURCE $(AMR_CFLAGS)
 
-OBJS= common.o utils.o mem.o allcodecs.o \
+OBJS= bitstream.o utils.o mem.o allcodecs.o \
       mpegvideo.o jrevdct.o jfdctfst.o jfdctint.o\
       mpegaudio.o ac3enc.o mjpeg.o resample.o resample2.o dsputil.o \
       motion_est.o imgconvert.o imgresample.o \
       mpeg12.o mpegaudiodec.o pcm.o simple_idct.o \
       ratecontrol.o adpcm.o eval.o dv.o error_resilience.o \
-      fft.o mdct.o mace.o huffyuv.o cyuv.o opts.o raw.o h264.o golomb.o \
+      fft.o mdct.o mace.o huffyuv.o cyuv.o raw.o h264.o golomb.o \
       vp3.o asv1.o 4xm.o cabac.o ffv1.o ra144.o ra288.o vcr1.o cljr.o \
       roqvideo.o dpcm.o interplayvideo.o xan.o rpza.o cinepak.o msrle.o \
       msvideo1.o vqavideo.o idcinvideo.o adx.o rational.o faandct.o 8bps.o \
       smc.o parser.o flicvideo.o truemotion1.o vmdav.o lcl.o qtrle.o g726.o \
       flac.o vp3dsp.o integer.o snow.o tscc.o sonic.o ulti.o h264idct.o \
-      qdrw.o xl.o rangecoder.o png.o pnm.o qpeg.o
+      qdrw.o xl.o rangecoder.o png.o pnm.o qpeg.o vc9.o h263.o h261.o \
+      msmpeg4.o h263dec.o svq1.o rv10.o wmadec.o indeo3.o shorten.o loco.o \
+      alac.o wnv1.o ws-snd1.o aasc.o
 
+AMROBJS=
 ifeq ($(AMR_NB),yes)
 ifeq ($(AMR_NB_FIXED),yes)
-OBJS+= amr.o
+AMROBJS= amr.o
 AMREXTRALIBS+= amr/*.o
 AMRLIBS=amrlibs
 CLEANAMR=cleanamr
 else
-OBJS+= amr.o amr_float/sp_dec.o amr_float/sp_enc.o amr_float/interf_dec.o amr_float/interf_enc.o
+AMROBJS= amr.o
+OBJS+= amr_float/sp_dec.o amr_float/sp_enc.o amr_float/interf_dec.o amr_float/interf_enc.o
 CLEANAMR=cleanamrfloat
 endif
 endif
@@ -48,20 +52,17 @@ OBJS+= beosthread.o
 endif
 
 ifeq ($(AMR_WB),yes)
-OBJS+= amr.o amrwb_float/dec_acelp.o amrwb_float/dec_dtx.o amrwb_float/dec_gain.o \
+AMROBJS= amr.o
+OBJS+= amrwb_float/dec_acelp.o amrwb_float/dec_dtx.o amrwb_float/dec_gain.o \
 		amrwb_float/dec_if.o amrwb_float/dec_lpc.o amrwb_float/dec_main.o \
 		amrwb_float/dec_rom.o amrwb_float/dec_util.o amrwb_float/enc_acelp.o \
 		amrwb_float/enc_dtx.o amrwb_float/enc_gain.o amrwb_float/enc_if.o \
 		amrwb_float/enc_lpc.o amrwb_float/enc_main.o amrwb_float/enc_rom.o \
 		amrwb_float/enc_util.o amrwb_float/if_rom.o
 endif
+OBJS+= $(AMROBJS)
 CLEANAMRWB=cleanamrwbfloat
 ASM_OBJS=
-
-# codecs which are patented in some non free countries like the us
-ifeq ($(CONFIG_RISKY),yes)
-OBJS+= h263.o h261.o msmpeg4.o h263dec.o svq1.o rv10.o wmadec.o indeo3.o
-endif
 
 ifeq ($(HAVE_XVMC_ACCEL),yes)
 OBJS+= xvmcvideo.o
@@ -104,6 +105,11 @@ OBJS+= xvidff.o
 EXTRALIBS += -lxvidcore
 endif
 
+ifeq ($(CONFIG_X264),yes)
+OBJS+= x264.o
+EXTRALIBS += -lx264
+endif
+
 ifeq ($(CONFIG_PP),yes)
 ifeq ($(SHARED_PP),yes)
 EXTRALIBS += -L$(VPATH)/libpostproc -lpostproc
@@ -118,9 +124,16 @@ OBJS += mp3lameaudio.o
 EXTRALIBS += -lmp3lame
 endif
 
-ifeq ($(CONFIG_VORBIS),yes)
+ifeq ($(CONFIG_LIBOGG),yes)
+ifeq ($(CONFIG_LIBVORBIS),yes)
 OBJS += oggvorbis.o
-EXTRALIBS += -lvorbis -lvorbisenc
+EXTRALIBS += -lvorbisenc -lvorbis
+endif
+ifeq ($(CONFIG_LIBTHEORA), yes)
+OBJS += oggtheora.o
+EXTRALIBS += -ltheora
+endif
+EXTRALIBS += -logg
 endif
 
 ifeq ($(TARGET_GPROF),yes)
@@ -159,7 +172,7 @@ ifeq ($(TARGET_ARCH_ALPHA),yes)
 OBJS += alpha/dsputil_alpha.o alpha/mpegvideo_alpha.o \
 	alpha/simple_idct_alpha.o alpha/motion_est_alpha.o
 ASM_OBJS += alpha/dsputil_alpha_asm.o alpha/motion_est_mvi_asm.o
-CFLAGS += -fforce-addr -freduce-all-givs
+CFLAGS += -fforce-addr
 endif
 
 ifeq ($(TARGET_ARCH_POWERPC),yes)
@@ -212,7 +225,7 @@ $(LIB): $(OBJS) $(AMRLIBS)
 
 $(SLIB): $(OBJS)
 ifeq ($(CONFIG_PP),yes)
-	$(MAKE) -C $(VPATH)/libpostproc
+	$(MAKE) -C libpostproc
 endif
 ifeq ($(CONFIG_WIN32),yes)
 	$(CC) $(SHFLAGS) -Wl,--output-def,$(@:.dll=.def) -o $@ $(OBJS) $(EXTRALIBS) $(AMREXTRALIBS)
@@ -289,20 +302,20 @@ install: all install-headers
 ifeq ($(CONFIG_WIN32),yes)
 	install $(INSTALLSTRIP) -m 755 $(SLIB) "$(prefix)"
 else
-	install -d $(prefix)/lib
-	install $(INSTALLSTRIP) -m 755 $(SLIB) $(prefix)/lib/libavcodec-$(VERSION).so
-	ln -sf libavcodec-$(VERSION).so $(prefix)/lib/libavcodec.so
+	install -d $(libdir)
+	install $(INSTALLSTRIP) -m 755 $(SLIB) $(libdir)/libavcodec-$(VERSION).so
+	ln -sf libavcodec-$(VERSION).so $(libdir)/libavcodec.so
 	ldconfig || true
 endif
 ifeq ($(CONFIG_PP),yes)
-	$(MAKE) -C $(VPATH)/libpostproc $@
+	$(MAKE) -C libpostproc $@
 endif
 else
 install:
 endif
 
 installlib: all install-headers
-	install -m 644 $(LIB) $(prefix)/lib
+	install -m 644 $(LIB) "$(libdir)"
 
 install-headers:
 	mkdir -p "$(prefix)/include/ffmpeg"

@@ -22,15 +22,6 @@ extern char *fb_mode_name;
 extern char *dfb_params;
 #endif
 #endif
-#ifdef HAVE_PNG
-extern int z_compression;
-#endif
-#ifdef HAVE_SDL
-//extern char *sdl_driver;
-extern int sdl_noxv;
-extern int sdl_forcexv;
-//extern char *sdl_adriver;
-#endif
 #ifdef USE_FAKE_MONO
 extern int fakemono; // defined in dec_audio.c
 #endif
@@ -82,11 +73,6 @@ extern int WinID;
 extern int menu_startup;
 #endif
 
-#ifdef HAVE_AA
-extern int vo_aa_parseoption(m_option_t* conf, char *opt, char * param);
-extern void vo_aa_revertoption(m_option_t* opt,char* param);
-#endif
-
 #ifdef HAVE_ZR
 extern int vo_zr_parseoption(m_option_t* conf, char *opt, char * param);
 extern void vo_zr_revertoption(m_option_t* opt,char* pram);
@@ -122,22 +108,15 @@ extern int nortc;
 /* from libvo/aspect.c */
 extern float monitor_aspect;
 
-/* Options related to audio out plugins */
-m_option_t ao_plugin_conf[]={
-	{"list", &ao_plugin_cfg.plugin_list, CONF_TYPE_STRING, 0, 0, 0, NULL},
-	{"delay", &ao_plugin_cfg.pl_delay_len, CONF_TYPE_INT, CONF_MIN, 0, 0, NULL},
-	{"format", &ao_plugin_cfg.pl_format_type, CONF_TYPE_INT, CONF_MIN, 0, 0, NULL},
-	{"fout", &ao_plugin_cfg.pl_resample_fout, CONF_TYPE_INT, CONF_MIN, 0, 0, NULL},
-	{"volume", &ao_plugin_cfg.pl_volume_volume, CONF_TYPE_INT, CONF_RANGE, 0, 255, NULL},
-	{"mul", &ao_plugin_cfg.pl_extrastereo_mul, CONF_TYPE_FLOAT, CONF_RANGE, -10.0, 10.0, NULL},
-	{"softclip", &ao_plugin_cfg.pl_volume_softclip, CONF_TYPE_FLAG, 0, 0, 1, NULL},
-	{NULL, NULL, 0, 0, 0, 0, NULL}
-};
-
 extern int sws_flags;
 extern int readPPOpt(void *conf, char *arg);
 extern void revertPPOpt(void *conf, char* opt);
 extern char* pp_help;
+
+m_option_t vd_conf[]={
+	{"help", "Use MPlayer with an appropriate video file instead of live partners to avoid vd.\n", CONF_TYPE_PRINT, CONF_NOCFG|CONF_GLOBAL, 0, 0, NULL},
+	{NULL, NULL, 0, 0, 0, 0, NULL}
+};
 
 /*
  * CONF_TYPE_FUNC_FULL :
@@ -166,7 +145,7 @@ m_option_t mplayer_opts[]={
 	{"noontop", &vo_ontop, CONF_TYPE_FLAG, 0, 1, 0, NULL},
 	{"rootwin", &vo_rootwin, CONF_TYPE_FLAG, 0, 0, 1, NULL},
 
-	{"aop", ao_plugin_conf, CONF_TYPE_SUBCONFIG, 0, 0, 0, NULL},
+	{"aop", "-aop is deprecated, use -af instead.\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
 	{"dsp", "Use -ao oss:dsp_path.\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
         {"mixer", &mixer_device, CONF_TYPE_STRING, 0, 0, 0, NULL},
         {"mixer-channel", &mixer_channel, CONF_TYPE_STRING, 0, 0, 0, NULL},
@@ -174,24 +153,22 @@ m_option_t mplayer_opts[]={
         {"nosoftvol", &soft_vol, CONF_TYPE_FLAG, 0, 1, 0, NULL},
         {"softvol-max", &soft_vol_max, CONF_TYPE_FLOAT, CONF_RANGE, 10, 10000, NULL},
 	{"volstep", &volstep, CONF_TYPE_INT, CONF_RANGE, 0, 100, NULL},
-	{"master", "Option -master has been removed, use -aop list=volume instead.\n", CONF_TYPE_PRINT, 0, 0, 0, NULL},
+	{"master", "Option -master has been removed, use -af volume instead.\n", CONF_TYPE_PRINT, 0, 0, 0, NULL},
 	// override audio buffer size (used only by -ao oss, anyway obsolete...)
 	{"abs", &ao_data.buffersize, CONF_TYPE_INT, CONF_MIN, 0, 0, NULL},
 
 	// -ao pcm options:
-	{"aofile", &ao_outputfilename, CONF_TYPE_STRING, 0, 0, 0, NULL},
-	{"waveheader", &ao_pcm_waveheader, CONF_TYPE_FLAG, 0, 0, 1, NULL},
-	{"nowaveheader", &ao_pcm_waveheader, CONF_TYPE_FLAG, 0, 1, 0, NULL},
+	{"aofile", "-aofile is deprecated. Use -ao pcm:file=<filename> instead.\n", CONF_TYPE_PRINT, 0, 0, 0, NULL},
+	{"waveheader", "-waveheader is deprecated. Use -ao pcm:waveheader instead.\n", CONF_TYPE_PRINT, 0, 0, 1, NULL},
+	{"nowaveheader", "-nowaveheader is deprecated. Use -ao pcm:nowaveheader instead.\n", CONF_TYPE_PRINT, 0, 1, 0, NULL},
 
 	{"alsa", "-alsa has been removed. Remove it from your config file.\n",
             CONF_TYPE_PRINT, 0, 0, 0, NULL},
 	{"noalsa", "-noalsa has been removed. Remove it from your config file.\n",
             CONF_TYPE_PRINT, 0, 0, 0, NULL},
 #ifdef USE_EDL
-	{"edl", &edl_filename,  CONF_TYPE_STRING, 0, 0, 0, NULL}, 
 	{"edlout", &edl_output_filename,  CONF_TYPE_STRING, 0, 0, 0, NULL}, 
 #else
-	{"edl", "MPlayer was compiled without EDL support.\n", CONF_TYPE_PRINT, 0, 0, 0, NULL},
 	{"edlout", "MPlayer was compiled without EDL support.\n", CONF_TYPE_PRINT, 0, 0, 0, NULL},
 #endif
 
@@ -201,7 +178,7 @@ m_option_t mplayer_opts[]={
 
 	// -vo png only:
 #ifdef HAVE_PNG
-	{"z", &z_compression, CONF_TYPE_INT, CONF_RANGE, 0, 9, NULL},
+	{"z", "-z is replaced by -vo png:z=<0-9>\n", CONF_TYPE_PRINT, 0, 0, 0, NULL},
 #endif
 	// -vo jpeg only:
 #ifdef HAVE_JPEG
@@ -209,15 +186,13 @@ m_option_t mplayer_opts[]={
 	    CONF_TYPE_PRINT, 0, 0, 0, NULL},
 #endif
 	// -vo sdl only:
-#ifdef HAVE_SDL
-	{"sdl", "Use -vo sdl:driver instead of -vo sdl -sdl driver.\n",
+	{"sdl", "Use -vo sdl:driver=<driver> instead of -vo sdl -sdl driver.\n",
 	    CONF_TYPE_PRINT, 0, 0, 0, NULL},
-	{"noxv", &sdl_noxv, CONF_TYPE_FLAG, 0, 0, 1, NULL},
-	{"forcexv", &sdl_forcexv, CONF_TYPE_FLAG, 0, 0, 1, NULL},
+	{"noxv", "-noxv is deprecated. Use -vo sdl:nohwaccel instead.\n", CONF_TYPE_PRINT, 0, 0, 0, NULL},
+	{"forcexv", "-forcexv is deprecated. Use -vo sdl:forcexv instead.\n", CONF_TYPE_PRINT, 0, 0, 0, NULL},
 	// -ao sdl only:
 	{"sdla", "Use -ao sdl:driver instead of -ao sdl -sdla driver.\n",
 	    CONF_TYPE_PRINT, 0, 0, 0, NULL},
-#endif
 
 #if defined(HAVE_FBDEV)||defined(HAVE_VESA) 
        {"monitor-hfreq", &monitor_hfreq_str, CONF_TYPE_STRING, 0, 0, 0, NULL}, 
@@ -245,7 +220,7 @@ m_option_t mplayer_opts[]={
 	// Geometry string
 	{"geometry", &vo_geometry, CONF_TYPE_STRING, 0, 0, 0, NULL},
 	// set aspect ratio of monitor - useful for 16:9 TVout
-	{"monitoraspect", &monitor_aspect, CONF_TYPE_FLOAT, CONF_RANGE, 0.2, 3.0, NULL},
+	{"monitoraspect", &monitor_aspect, CONF_TYPE_FLOAT, CONF_RANGE, 0.2, 9.0, NULL},
 	// video mode switching: (x11,xv,dga)
         {"vm", &vidmode, CONF_TYPE_FLAG, 0, 0, 1, NULL},
         {"novm", &vidmode, CONF_TYPE_FLAG, 0, 1, 0, NULL},
@@ -302,7 +277,7 @@ m_option_t mplayer_opts[]={
 
 #ifdef HAVE_AA
 	// -vo aa
-	{"aa*",	vo_aa_parseoption,  CONF_TYPE_FUNC_FULL, 0, 0, 0 , &vo_aa_revertoption},
+	{"aa*", "-aa* is deprecated. Use -vo aa:suboption instead.\n", CONF_TYPE_PRINT, 0, 0, 0, NULL},
 #endif
 
 #ifdef HAVE_ZR
@@ -347,8 +322,6 @@ m_option_t mplayer_opts[]={
 
 	// set a-v distance, should be moved to -common and supported in MEncoder
 	{"delay", &audio_delay, CONF_TYPE_FLOAT, CONF_RANGE, -100.0, 100.0, NULL},
-
-	{"speed", &playback_speed, CONF_TYPE_FLOAT, CONF_RANGE, 0.01, 100.0, NULL},
 
 	{"framedrop", &frame_dropping, CONF_TYPE_FLAG, 0, 0, 1, NULL},
 	{"hardframedrop", &frame_dropping, CONF_TYPE_FLAG, 0, 0, 2, NULL},
@@ -418,5 +391,7 @@ m_option_t mplayer_opts[]={
 	{"-help", help_text, CONF_TYPE_PRINT, CONF_NOCFG|CONF_GLOBAL, 0, 0, NULL},
 	{"help", help_text, CONF_TYPE_PRINT, CONF_NOCFG|CONF_GLOBAL, 0, 0, NULL},
 	{"h", help_text, CONF_TYPE_PRINT, CONF_NOCFG|CONF_GLOBAL, 0, 0, NULL},
+
+	{"vd", vd_conf, CONF_TYPE_SUBCONFIG, 0, 0, 0, NULL},
 	{NULL, NULL, 0, 0, 0, 0, NULL}
 };

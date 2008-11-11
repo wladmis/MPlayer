@@ -7,7 +7,9 @@
  *
  * Email: crh@ubiqx.mn.org
  *
- * $Id: md5sum.c,v 1.1 2004/09/20 01:01:08 ivo Exp $
+ * Modified for use with MPlayer, detailed CVS changelog at
+ * http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
+ * $Id: md5sum.c,v 1.2 2005/04/15 18:43:41 diego Exp $
  *
  * -------------------------------------------------------------------------- **
  *

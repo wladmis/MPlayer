@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-2"?>
-<!-- synced with 1.57 -->
+<!-- synced with 1.62 -->
 <chapter id="ports" xreflabel="Ports">
 <title>Portok</title>
 
@@ -53,10 +53,9 @@ a betűtípusokból, melyek akár az apt-get segítségével is telepíthetők
 <sect2 id="rpm">
 <title>RedHat csomagolás</title>
 <para>
-Dominik Mierzejweski a "hivatalos" <application>MPlayer</application> csomagok
-karbantartója. A 
-<ulink url="http://greysector.rangers.eu.org/mplayer.html">honlapjáról</ulink>.
-elérhetőek a csomagok.
+Dominik Mierzejewski készítette el és tartja karban az <application>MPlayer</application>
+hivatalos RPM csomagjait a Red Hat-hoz és a Fedora Core-hoz. Elérhetőek ezen a
+<ulink url="http://rpm.greysector.net/mplayer/">helyen</ulink>.
 </para>
 
 <para>
@@ -149,6 +148,7 @@ Lásd a <link linkend="macos">Mac OS</link> részt.
 <title>Sun Solaris</title>
 <para>
 Az <application>MPlayer</application> Solaris 2.6 vagy újabb rendszereken működik.
+A SUN audió vezérlőjét a <option>-ao sun</option> kapcsolóval használhatod.
 </para>
 
 <para>
@@ -321,7 +321,7 @@ Készíts egy linket a nyers eszközről a DVD eszközre.
 </para>
 
 <screen>
-# ln -s /dev/rdsk/c<replaceable>&lt;SCSI busz hivatkozás&gt;</replaceable>t<replaceable>&lt;SCSI cél ID&gt;</replaceable>d<replaceable>&lt;LUN&gt;</replaceable> /dev/<replaceable>&lt;eszköz&lt;</replaceable>
+# ln -s /dev/rdsk/c<replaceable>&lt;SCSI busz hivatkozás&gt;</replaceable>t<replaceable>&lt;SCSI cél ID&gt;</replaceable>d<replaceable>&lt;LUN&gt;</replaceable> /dev/<replaceable>&lt;eszköz&gt;</replaceable>
 </screen>
 
 <para>
@@ -362,7 +362,7 @@ Megoldás: Használd a legújabb Mesa depot fájlt.
 </para>
 
 <para>
-Megoldás: Használd a configure extralib opcióját
+Megoldás: Használd a configure extralibdir opcióját
 <option>--with-extralibdir="/usr/lib -lrt"</option>
 </para>
 </listitem>
@@ -418,7 +418,7 @@ Használj SDL-t.
   Még nincs GUI-ja, de a parancssoros verzió majdnem teljesen működik.
   <ulink url="../../tech/patches.txt">Javításokat</ulink> mindig örömmel fogadunk.
   Ajánlott szétnézni az
-  <ulink url="http://mplayerhq.hu/mailman/listinfo/mplayer-cygwin/">mplayer-cygwin</ulink>
+  <ulink url="http://mplayerhq.hu/mailman/listinfo/mplayer-cygwin/">MPlayer-cygwin</ulink>
   levelezési listán is a legfrissebb információkért.</para>
 
 <para>A legjobb eredmény a natív DirectX videó kimeneti vezérlővel
@@ -466,18 +466,18 @@ Használj SDL-t.
   kapcsolóval megakadályozhatod a használatát. Írd be ezt a konfigurációs fájlodba,
   hogy véglegesen kimaradjon a használatból.</para>
 
-<para>Használhatod a Win32 codec-eket és a Real Win32 codec-eket (nem a Real Linux codec-eket)
-  ha akarod. Tedd a codec-eket valahova a path-ba vagy add meg a
-  <option>--with-codecsdir=<replaceable>c:/eleresi/ut/a/codecekhez</replaceable></option> (alternatívaként
-  <option>--with-codecsdir=<replaceable>/eleresi/ut/a/codecekhez</replaceable></option> csak
-  <application>Cygwin</application> alatt) kapcsolót a <filename>configure</filename>-nak.
-  Kaptunk pár jelentést, hogy a Real DLL-eknek írhatóaknak kell lenniük az
-  <application>MPlayer</application>t futtató felhasználó által, de csak néhány
-  rendszeren. Próbáld meg írhatóvá tenni őket, ha probléma adódna. A QuickTime
-  DLL-ek szintén működnek, de be kell másolnod őket a Windows system könyvtárába
-  (<filename class="directory"><replaceable>C:\Windows\system\</replaceable></filename>
-  vagy hasonló). Utolsó reményként próbáld meg az <application>MPlayer</application>rel
-  azonos könyvtárba tenni őket.</para>
+<para>Vannak speciálisan Windowsra készített codec csomagok a
+  <ulink url="http://mplayerhq.hu/homepage/design7/codecs.html">codec oldalunkon</ulink>,
+  melyek segítségével azokat a formátumokat is lejátszhatod, amikhez még
+  nincs natív támogatás.
+  Tedd be a codec-eket valahova az elérési útvonaladba vagy add meg a
+  <option>--with-codecsdir=<replaceable>c:/ut/a/codecjeidhez</replaceable></option>
+  (alternatívaként
+  <option>--with-codecsdir=<replaceable>/ut/a/codecjeidhez</replaceable></option>
+  csak <application>Cygwin</application> alatt) kapcsolóval a <filename>configure</filename>-nak.
+  Kaptunk olyan visszajelzéseket, hogy a Real DLL-eknek írhatóaknak kell lenniük az
+  <application>MPlayer</application>t futtató felhasználó által, de csak bizonyos
+  rendszereken (NT4). Próbáld meg írhatóvá tenni őket, ha problémáid vannak.</para>
 
 <para>VCD-ket is lejátszhatsz a <filename>.DAT</filename> vagy <filename>.MPG</filename> fájlok
   lejátszásával, amit a Windows meglát a VCD-n. Így nagyszerűen működik (javítsd ki a CD-ROM-od

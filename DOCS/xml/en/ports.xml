@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- $Revision: 1.58 $ -->
+<!-- $Revision: 1.62 $ -->
 <chapter id="ports" xreflabel="Ports">
 <title>Ports</title>
 
@@ -52,9 +52,9 @@ our bitmap fonts for a while, you can (apt-)get them from
 <sect2 id="rpm">
 <title>RPM packaging</title>
 <para>
-Dominik Mierzejewski created and maintains official Red Hat RPM packages of
-<application>MPlayer</application>. They are available from his
-<ulink url="http://greysector.rangers.eu.org/mplayer.html">homepage</ulink>.
+Dominik Mierzejewski created and maintains the official RPM packages of
+<application>MPlayer</application> for Red Hat and Fedora Core. They are available
+from his <ulink url="http://rpm.greysector.net/mplayer/">repository</ulink>.
 </para>
 
 <para>
@@ -145,6 +145,7 @@ See the <link linkend="macos">Mac OS</link> section.
 <title>Sun Solaris</title>
 <para>
 <application>MPlayer</application> should work on Solaris 2.6 or newer.
+Use the SUN audio driver with the <option>-ao sun</option> option for sound.
 </para>
 
 <para>
@@ -413,7 +414,7 @@ since QNX has only X <emphasis>emulation</emphasis> which is VERY slow. Use SDL.
   It does not have a GUI yet, but the command line version is almost completely
   functional. <ulink url="../../tech/patches.txt">Patches</ulink> are always welcome.
   You should check out the
-  <ulink url="http://mplayerhq.hu/mailman/listinfo/mplayer-cygwin/">mplayer-cygwin</ulink>
+  <ulink url="http://mplayerhq.hu/mailman/listinfo/mplayer-cygwin/">MPlayer-cygwin</ulink>
   mailing list for help and latest information.</para>
 
 <para>Best results are achieved with the native DirectX video output driver
@@ -464,18 +465,17 @@ since QNX has only X <emphasis>emulation</emphasis> which is VERY slow. Use SDL.
   will keep it from being used. Add this to your config file to permanently
   keep it from being used.</para>
 
-<para>You can use Win32 codecs and Real Win32 codecs (not Real Linux codecs)
-  if you want to. Put the codecs somewhere in your path or pass
-  <option>--with-codecsdir=<replaceable>c:/path/to/your/codecs</replaceable></option> (alternatively
-  <option>--with-codecsdir=<replaceable>/path/to/your/codecs</replaceable></option> only on
-  <application>Cygwin</application>) to <filename>configure</filename>. We
-  have had some reports that Real DLLs need to be writable by the user running
-  <application>MPlayer</application>, but only on some systems. Try making
-  them writable if you have problems. QuickTime DLLs also work, but you will
-  have to put them in your Windows system directory
-  (<filename class="directory"><replaceable>C:\Windows\system\</replaceable></filename>
-  or similar). As a last resort, try putting them in the same directory as
-  <application>MPlayer</application>.</para>
+<para>There are special codec packages for Windows available on our
+  <ulink url="http://mplayerhq.hu/homepage/design7/codecs.html">codecs page</ulink>
+  to allow playing formats for which there is no native support yet.
+  Put the codecs somewhere in your path or pass
+  <option>--with-codecsdir=<replaceable>c:/path/to/your/codecs</replaceable></option>
+  (alternatively
+  <option>--with-codecsdir=<replaceable>/path/to/your/codecs</replaceable></option>
+  only on <application>Cygwin</application>) to <filename>configure</filename>.
+  We have had some reports that Real DLLs need to be writable by the user
+  running <application>MPlayer</application>, but only on some systems (NT4).
+  Try making them writable if you have problems.</para>
 
 <para>You can play VCDs by playing the <filename>.DAT</filename> or <filename>.MPG</filename> files
   that Windows exposes on VCDs. It works like this (adjust for the drive letter

@@ -36,6 +36,8 @@ Buffer allocation:
 #include "sub.h"
 #include "aspect.h"
 
+#include "subopt-helper.h"
+
 #ifdef HAVE_NEW_GUI
 #include "Gui/interface.h"
 #endif
@@ -66,13 +68,14 @@ static int Shmem_Flag;
 // FIXME: dynamically allocate this stuff
 static void allocate_xvimage(int);
 static unsigned int ver, rel, req, ev, err;
-static unsigned int formats, adaptors, xv_port, xv_format;
+static unsigned int formats, adaptors, xv_format;
 static XvAdaptorInfo *ai = NULL;
 static XvImageFormatValues *fo=NULL;
 
 static int current_buf = 0;
 static int current_ip_buf = 0;
 static int num_buffers = 1;     // default
+static int visible_buf = -1;    // -1 means: no buffer was drawn yet
 static XvImage *xvimage[NUM_BUFFERS];
 
 
@@ -175,6 +178,7 @@ static uint32_t config(uint32_t width, uint32_t height, uint32_t d_width,
     vo_mouse_autohide = 1;
 
     int_pause = 0;
+    visible_buf = -1;
 
     vo_dx = (vo_screenwidth - d_width) / 2;
     vo_dy = (vo_screenheight - d_height) / 2;
@@ -270,6 +274,10 @@ static uint32_t config(uint32_t width, uint32_t height, uint32_t d_width,
         XMatchVisualInfo(mDisplay, mScreen, depth, TrueColor, &vinfo);
 
         xswa.background_pixel = 0;
+        if (xv_ck_info.method == CK_METHOD_BACKGROUND)
+        {
+          xswa.background_pixel = xv_colorkey;
+        }
         xswa.border_pixel = 0;
         xswamask = CWBackPixel | CWBorderPixel;
 
@@ -302,6 +310,7 @@ static uint32_t config(uint32_t width, uint32_t height, uint32_t d_width,
                                             vinfo.visual, hint.x, hint.y,
                                             hint.width, hint.height, depth,
                                             CopyFromParent);
+            XChangeWindowAttributes(mDisplay, vo_window, xswamask, &xswa);
 
             vo_x11_classhint(mDisplay, vo_window, "xv");
             vo_hidecursor(mDisplay, vo_window);
@@ -320,7 +329,7 @@ static uint32_t config(uint32_t width, uint32_t height, uint32_t d_width,
                                                               ExposureMask)));
             XSetStandardProperties(mDisplay, vo_window, hello, hello, None,
                                    NULL, 0, &hint);
-            XSetWMNormalHints(mDisplay, vo_window, &hint);
+            vo_x11_sizehint(hint.x, hint.y, hint.width, hint.height, 0);
             XMapWindow(mDisplay, vo_window);
             if (flags & 1)
                 vo_x11_fullscreen();
@@ -329,8 +338,6 @@ static uint32_t config(uint32_t width, uint32_t height, uint32_t d_width,
 #ifdef HAVE_XINERAMA
                 vo_x11_xinerama_move(mDisplay, vo_window);
 #endif
-                vo_x11_sizehint(hint.x, hint.y, hint.width, hint.height,
-                                0);
             }
         } else
         {
@@ -419,7 +426,6 @@ static uint32_t config(uint32_t width, uint32_t height, uint32_t d_width,
 
     panscan_calc();
 
-    XClearWindow(mDisplay, vo_window);
 #if 0
 #ifdef HAVE_SHM
     if (Shmem_Flag)
@@ -515,22 +521,34 @@ static void deallocate_xvimage(int foo)
     return;
 }
 
+static inline void put_xvimage( XvImage * xvi )
+{
+#ifdef HAVE_SHM
+    if (Shmem_Flag)
+    {
+        XvShmPutImage(mDisplay, xv_port, vo_window, vo_gc,
+                      xvi, 0, 0, image_width,
+                      image_height, drwX - (vo_panscan_x >> 1),
+                      drwY - (vo_panscan_y >> 1), vo_dwidth + vo_panscan_x,
+                      vo_dheight + vo_panscan_y,
+                      False);
+    } else
+#endif
+    {
+        XvPutImage(mDisplay, xv_port, vo_window, vo_gc,
+                   xvi, 0, 0, image_width, image_height,
+                   drwX - (vo_panscan_x >> 1), drwY - (vo_panscan_y >> 1),
+                   vo_dwidth + vo_panscan_x,
+                   vo_dheight + vo_panscan_y);
+    }
+}
+
 static void check_events(void)
 {
     int e = vo_x11_check_events(mDisplay);
 
-    if (e & VO_EVENT_EXPOSE && vo_fs)
-        vo_x11_clearwindow(mDisplay, vo_window);
-
     if (e & VO_EVENT_RESIZE)
     {
-        if (vo_fs)
-        {
-            e |= VO_EVENT_EXPOSE;
-            XClearWindow(mDisplay, vo_window);
-            XFlush(mDisplay);
-        }
-
         XGetGeometry(mDisplay, vo_window, &mRoot, &drwX, &drwY, &vo_dwidth,
                      &vo_dheight, &drwBorderWidth, &drwDepth);
         drwX = drwY = 0;
@@ -558,8 +576,23 @@ static void check_events(void)
         }
     }
 
+    if (e & VO_EVENT_EXPOSE || e & VO_EVENT_RESIZE)
+    {
+	vo_xv_draw_colorkey(drwX - (vo_panscan_x >> 1),
+			    drwY - (vo_panscan_y >> 1),
+			    vo_dwidth + vo_panscan_x - 1,
+			    vo_dheight + vo_panscan_y - 1);
+    }
+
     if ((e & VO_EVENT_EXPOSE || e & VO_EVENT_RESIZE) && int_pause)
-        flip_page();
+    {
+        /* did we already draw a buffer */
+        if ( visible_buf != -1 )
+        {
+          /* redraw the last visible buffer */
+          put_xvimage( xvimage[visible_buf] );
+        }
+    }
 }
 
 static void draw_osd(void)
@@ -571,25 +604,11 @@ static void draw_osd(void)
 
 static void flip_page(void)
 {
+    put_xvimage( xvimage[current_buf] );
 
-#ifdef HAVE_SHM
-    if (Shmem_Flag)
-    {
-        XvShmPutImage(mDisplay, xv_port, vo_window, vo_gc,
-                      xvimage[current_buf], 0, 0, image_width,
-                      image_height, drwX - (vo_panscan_x >> 1),
-                      drwY - (vo_panscan_y >> 1), vo_dwidth + vo_panscan_x,
-                      vo_dheight + vo_panscan_y,
-                      False);
-    } else
-#endif
-    {
-        XvPutImage(mDisplay, xv_port, vo_window, vo_gc,
-                   xvimage[current_buf], 0, 0, image_width, image_height,
-                   drwX - (vo_panscan_x >> 1), drwY - (vo_panscan_y >> 1),
-                   vo_dwidth + vo_panscan_x,
-                   vo_dheight + vo_panscan_y);
-    }
+    /* remember the currently visible buffer */
+    visible_buf = current_buf;
+
     if (num_buffers > 1)
     {
         current_buf =
@@ -759,6 +778,7 @@ static void uninit(void)
 
     if (!vo_config_count)
         return;
+    visible_buf = -1;
     XvFreeAdaptorInfo(ai);
     ai = NULL;
     if(fo){
@@ -778,21 +798,29 @@ static uint32_t preinit(const char *arg)
     XvPortID xv_p;
     int busy_ports = 0;
     unsigned int i;
+    strarg_t ck_src_arg = { 0, NULL };
+    strarg_t ck_method_arg = { 0, NULL };
+
+    opt_t subopts[] =
+    {  
+      /* name         arg type     arg var         test */
+      {  "port",      OPT_ARG_INT, &xv_port,       (opt_test_f)int_pos },
+      {  "ck",        OPT_ARG_STR, &ck_src_arg,    xv_test_ck },
+      {  "ck-method", OPT_ARG_STR, &ck_method_arg, xv_test_ckm },
+      {  NULL }
+    };
 
     xv_port = 0;
 
-    if (arg)
+    /* parse suboptions */
+    if ( subopt_parse( arg, subopts ) != 0 )
     {
-        if ((strlen(arg) >= 6) && !strncmp(arg, "port=", 5))
-        {
-            xv_port = atoi(arg + 5);
-        } else
-        {
-            mp_msg(MSGT_VO, MSGL_ERR, "vo_xv: Unknown subdevice: %s\n",
-                   arg);
-            return ENOSYS;
-        }
+      return -1;
     }
+
+    /* modify colorkey settings according to the given options */
+    xv_setup_colorkeyhandling( ck_method_arg.str, ck_src_arg.str );
+
     if (!vo_init())
         return -1;
 
@@ -880,20 +908,9 @@ static uint32_t preinit(const char *arg)
         return -1;
     }
 
+    if ( !vo_xv_init_colorkey() )
     {
-        int howmany, i;
-        XvAttribute * const attributes =
-            XvQueryPortAttributes(mDisplay, xv_port, &howmany);
-
-        for (i = 0; i < howmany && attributes; i++)
-            if (!strcmp(attributes[i].name, "XV_AUTOPAINT_COLORKEY"))
-            {
-                const Atom autopaint =
-                    XInternAtom(mDisplay, "XV_AUTOPAINT_COLORKEY", False);
-                XvSetPortAttribute(mDisplay, xv_port, autopaint, 1);
-                break;
-            }
-	XFree(attributes);
+      return -1; // bail out, colorkey setup failed
     }
 
     fo = XvListImageFormats(mDisplay, xv_port, (int *) &formats);
@@ -938,6 +955,10 @@ static uint32_t control(uint32_t request, void *data, ...)
                                             vo_dwidth + vo_panscan_x - 1,
                                             vo_dheight + vo_panscan_y - 1,
                                             1);
+		    vo_xv_draw_colorkey(drwX - (vo_panscan_x >> 1),
+					drwY - (vo_panscan_y >> 1),
+					vo_dwidth + vo_panscan_x - 1,
+					vo_dheight + vo_panscan_y - 1);
                     flip_page();
                 }
             }

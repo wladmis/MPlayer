@@ -41,8 +41,8 @@ static int control(int cmd, void *arg){
 // open & setup audio device
 // return: 1=success 0=fail
 static int init(int rate, int channels, int format, int flags) {
-  
-  mp_msg(MSGT_AO, MSGL_INFO, MSGTR_AO_SGI_InitInfo, rate, (channels > 1) ? "Stereo" : "Mono", audio_out_format_name(format));
+
+  mp_msg(MSGT_AO, MSGL_INFO, MSGTR_AO_SGI_InitInfo, rate, (channels > 1) ? "Stereo" : "Mono", af_fmt2str_short(format));
   
   { /* from /usr/share/src/dmedia/audio/setrate.c */
   
@@ -126,6 +126,7 @@ static void uninit(int immed) {
   mp_msg(MSGT_AO, MSGL_INFO, MSGTR_AO_SGI_Uninit);
 
   if (ao_port) {
+    if (!immed)
     while(alGetFilled(ao_port) > 0) sginap(1);  
     alClosePort(ao_port);
     alFreeConfig(ao_config);

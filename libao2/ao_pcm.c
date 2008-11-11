@@ -5,7 +5,8 @@
 #include <string.h>
 
 #include "bswap.h"
-#include "afmt.h"
+#include "subopt-helper.h"
+#include "libaf/af_format.h"
 #include "audio_out.h"
 #include "audio_out_internal.h"
 #include "mp_msg.h"
@@ -24,8 +25,8 @@ LIBAO_EXTERN(pcm)
 
 extern int vo_pts;
 
-char *ao_outputfilename = NULL;
-int ao_pcm_waveheader = 1;
+static char *ao_outputfilename = NULL;
+static int ao_pcm_waveheader = 1;
 
 #define WAV_ID_RIFF 0x46464952 /* "RIFF" */
 #define WAV_ID_WAVE 0x45564157 /* "WAVE" */
@@ -79,8 +80,17 @@ static int control(int cmd,void *arg){
 // return: 1=success 0=fail
 static int init(int rate,int channels,int format,int flags){
 	int bits;
-	if(!ao_outputfilename) {
-		ao_outputfilename = strdup(ao_pcm_waveheader ? "audiodump.wav" : "audiodump.pcm");
+	opt_t subopts[] = {
+	  {"waveheader", OPT_ARG_BOOL, &ao_pcm_waveheader, NULL},
+	  {"file",       OPT_ARG_MSTRZ, &ao_outputfilename, NULL},
+	  {NULL}
+	};
+	// set defaults
+	ao_pcm_waveheader = 1;
+	ao_outputfilename =
+	      strdup((ao_pcm_waveheader)?"audiodump.wav":"audiodump.pcm");
+	if (subopt_parse(ao_subdevice, subopts) != 0) {
+	  return 0;
 	}
 
 	/* bits is only equal to format if (format == 8) or (format == 16);
@@ -89,12 +99,12 @@ static int init(int rate,int channels,int format,int flags){
 
 	bits=8;
 	switch(format){
-	case AFMT_S8:
-	    format=AFMT_U8;
-	case AFMT_U8:
+	case AF_FORMAT_S8:
+	    format=AF_FORMAT_U8;
+	case AF_FORMAT_U8:
 	    break;
 	default:
-	    format=AFMT_S16_LE;
+	    format=AF_FORMAT_S16_LE;
 	    bits=16;
 	    break;
 	}
@@ -116,7 +126,7 @@ static int init(int rate,int channels,int format,int flags){
 
 	mp_msg(MSGT_AO, MSGL_INFO, MSGTR_AO_PCM_FileInfo, ao_outputfilename, 
 	       (ao_pcm_waveheader?"WAVE":"RAW PCM"), rate, 
-	       (channels > 1) ? "Stereo" : "Mono", audio_out_format_name(format));
+	       (channels > 1) ? "Stereo" : "Mono", af_fmt2str_short(format));
 	mp_msg(MSGT_AO, MSGL_INFO, MSGTR_AO_PCM_HintInfo);
 
 	fp = fopen(ao_outputfilename, "wb");
@@ -142,6 +152,9 @@ static void uninit(int immed){
 		fwrite(&wavhdr,sizeof(wavhdr),1,fp);
 	}
 	fclose(fp);
+	if (ao_outputfilename)
+	  free(ao_outputfilename);
+	ao_outputfilename = NULL;
 }
 
 // stop playing and empty buffers (for seeking/pause)

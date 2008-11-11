@@ -1,5 +1,10 @@
 /*
  * Copyright 1998 Marcus Meissner
+ *
+ * Modified for use with MPlayer, detailed CVS changelog at
+ * http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
+ * $Id: vfl.c,v 1.9 2005/04/15 20:17:12 diego Exp $
+ *
  */
 #include <config.h>
 

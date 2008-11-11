@@ -11,23 +11,20 @@
 
 struct edl_record {
   float start_sec;
-  long start_frame;
   float stop_sec;
-  long stop_frame;
   float length_sec;
-  long length_frame;
   short action;
-  short mute_state;
   struct edl_record* next;
+  struct edl_record* prev;
 };
 
 typedef struct edl_record* edl_record_ptr;
 
-char *edl_filename; // file to extract EDL entries from (-edl)
-char *edl_output_filename; // file to put EDL entries in (-edlout)
+extern char *edl_filename; // file to extract EDL entries from (-edl)
+extern char *edl_output_filename; // file to put EDL entries in (-edlout)
 
 int edl_check_mode(void); // we cannot do -edl and -edlout at the same time
-int edl_count_entries(void); // returns total number of entries needed
-int edl_parse_file(edl_record_ptr edl_records); // fills EDL stack
+void free_edl(edl_record_ptr next_edl_record); // free's entire EDL list.
+edl_record_ptr edl_parse_file(); // fills EDL stack
 
 #endif

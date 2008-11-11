@@ -40,7 +40,6 @@ typedef struct af_resample_s{
 // Initialization and runtime control
 static int control(struct af_instance_s* af, int cmd, void* arg)
 {
-  int g;
   af_resample_t* s   = (af_resample_t*)af->setup; 
   af_data_t *data= (af_data_t*)arg;
   int out_rate, test_output_res; // helpers for checking input format
@@ -52,11 +51,11 @@ static int control(struct af_instance_s* af, int cmd, void* arg)
 
     af->data->nch    = data->nch;
     if (af->data->nch > CHANS) af->data->nch = CHANS;
-    af->data->format = AF_FORMAT_SI | AF_FORMAT_NE;
+    af->data->format = AF_FORMAT_S16_NE;
     af->data->bps    = 2;
-    g= ff_gcd(af->data->rate, data->rate);
-    af->mul.n = af->data->rate/g;
-    af->mul.d = data->rate/g;
+    af->mul.n = af->data->rate;
+    af->mul.d = data->rate;
+    af_frac_cancel(&af->mul);
     af->delay = 500*s->filter_length/(double)min(af->data->rate, data->rate);
 
     if(s->avrctx) av_resample_close(s->avrctx);
@@ -118,9 +117,18 @@ static af_data_t* play(struct af_instance_s* af, af_data_t* data)
       }
   }
 
-  for(j=0; j<in_len; j++){
-      for(i=0; i<chans; i++){
-          s->in[i][j + s->index]= *(in++);
+  if(chans==1){
+      memcpy(&s->in[0][s->index], in, in_len * sizeof(int16_t));
+  }else if(chans==2){
+      for(j=0; j<in_len; j++){
+          s->in[0][j + s->index]= *(in++);
+          s->in[1][j + s->index]= *(in++);
+      }
+  }else{
+      for(j=0; j<in_len; j++){
+          for(i=0; i<chans; i++){
+              s->in[i][j + s->index]= *(in++);
+          }
       }
   }
   in_len += s->index;
@@ -135,9 +143,18 @@ static af_data_t* play(struct af_instance_s* af, af_data_t* data)
       memmove(s->in[i], s->in[i] + consumed, s->index*sizeof(int16_t));
   }
 
-  for(j=0; j<out_len; j++){
-      for(i=0; i<chans; i++){
-          *(out++)= tmp[i][j];
+  if(chans==1){
+      memcpy(out, tmp[0], out_len*sizeof(int16_t));
+  }else if(chans==2){
+      for(j=0; j<out_len; j++){
+          *(out++)= tmp[0][j];
+          *(out++)= tmp[1][j];
+      }
+  }else{
+      for(j=0; j<out_len; j++){
+          for(i=0; i<chans; i++){
+              *(out++)= tmp[i][j];
+          }
       }
   }
 

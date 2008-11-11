@@ -28,11 +28,29 @@ typedef struct af_hrtf_s {
     float *ba_ir;
     /* Whether to matrix decode the rear center channel */
     int matrix_mode;
-    /* Full wave rectified amplitude used to steer the active matrix
-       decoding of center rear channel */
-    float lr_fwr, rr_fwr;
+    /* How to decode the input:
+       0 = 5/5+1 channels
+       1 = 2 channels
+       2 = matrix encoded 2 channels */
+    int decode_mode;
+    /* Full wave rectified (FWR) amplitudes and gain used to steer the
+       active matrix decoding of front channels (variable names
+       lpr/lmr means Lt + Rt, Lt - Rt) */
+    float l_fwr, r_fwr, lpr_fwr, lmr_fwr;
+    float adapt_l_gain, adapt_r_gain, adapt_lpr_gain, adapt_lmr_gain;
+    /* Matrix input decoding require special FWR buffer, since the
+       decoding is done in place. */
+    float *fwrbuf_l, *fwrbuf_r, *fwrbuf_lr, *fwrbuf_rr;
+    /* Rear channel delay buffer for matrix decoding */
+    float *rear_dlbuf;
+    /* Full wave rectified amplitude and gain used to steer the active
+       matrix decoding of center rear channel */
+    float lr_fwr, rr_fwr, lrprr_fwr, lrmrr_fwr;
+    float adapt_lr_gain, adapt_rr_gain;
+    float adapt_lrprr_gain, adapt_lrmrr_gain;
     /* Cyclic position on the ring buffer */
     int cyc_pos;
+    int print_flag;
 } af_hrtf_t;
 
 /* Convolution on a ring buffer
@@ -49,10 +67,10 @@ static float conv(const int nx, const int nk, float *sx, float *sk,
     int k = offset >= 0 ? offset % nx : nx + (offset % nx);
 
     if(nk + k <= nx)
-	return fir(nk, sx + k, sk);
+	return af_filter_fir(nk, sx + k, sk);
     else
-	return fir(nk + k - nx, sx, sk + nx - k) +
-	    fir(nx - k, sx + k, sk);
+	return af_filter_fir(nk + k - nx, sx, sk + nx - k) +
+	    af_filter_fir(nx - k, sx + k, sk);
 }
 
 /* Detect when the impulse response starts (significantly) */
@@ -70,32 +88,179 @@ int pulse_detect(float *sx)
     return 0;
 }
 
-inline void update_ch(af_hrtf_t *s, short *in, const int k)
+/* Fuzzy matrix coefficient transfer function to "lock" the matrix on
+   a effectively passive mode if the gain is approximately 1 */
+inline float passive_lock(float x)
 {
-    /* Update the full wave rectified total amplutude */
-    s->lr_fwr += abs(in[2]) - fabs(s->lr[k]);
-    s->rr_fwr += abs(in[3]) - fabs(s->rr[k]);
+   const float x1 = x - 1;
+   const float ax1s = fabs(x - 1) * (1.0 / MATAGCLOCK);
 
-    s->lf[k] = in[0];
-    s->cf[k] = in[4];
-    s->rf[k] = in[1];
-    s->lr[k] = in[2];
-    s->rr[k] = in[3];
-
-    s->ba_l[k] = in[0] + in[4] + in[2];
-    s->ba_r[k] = in[4] + in[1] + in[3];
+   return x1 - x1 / (1 + ax1s * ax1s) + 1;
 }
 
-inline void matrix_decode_cr(af_hrtf_t *s, short *in, const int k)
+/* Unified active matrix decoder for 2 channel matrix encoded surround
+   sources */
+inline void matrix_decode(short *in, const int k, const int il,
+			  const int ir, const int decode_rear,
+			  const int dlbuflen,
+			  float l_fwr, float r_fwr,
+			  float lpr_fwr, float lmr_fwr,
+			  float *adapt_l_gain, float *adapt_r_gain,
+			  float *adapt_lpr_gain, float *adapt_lmr_gain,
+			  float *lf, float *rf, float *lr,
+			  float *rr, float *cf)
 {
-    /* Active matrix decoding of the center rear channel, 1 in the
-       denominator is to prevent singularity */
-    float lr_agc = in[2] * (s->lr_fwr + s->rr_fwr) /
-	(1 + s->lr_fwr + s->lr_fwr);
-    float rr_agc = in[3] * (s->lr_fwr + s->rr_fwr) /
-	(1 + s->rr_fwr + s->rr_fwr);
+   const int kr = (k + MATREARDELAY) % dlbuflen;
+   float l_gain = (l_fwr + r_fwr) /
+      (1 + l_fwr + l_fwr);
+   float r_gain = (l_fwr + r_fwr) /
+      (1 + r_fwr + r_fwr);
+   /* The 2nd axis has strong gain fluctuations, and therefore require
+      limits.  The factor corresponds to the 1 / amplification of (Lt
+      - Rt) when (Lt, Rt) is strongly correlated. (e.g. during
+      dialogues).  It should be bigger than -12 dB to prevent
+      distortion. */
+   float lmr_lim_fwr = lmr_fwr > M9_03DB * lpr_fwr ?
+      lmr_fwr : M9_03DB * lpr_fwr;
+   float lpr_gain = (lpr_fwr + lmr_lim_fwr) /
+      (1 + lpr_fwr + lpr_fwr);
+   float lmr_gain = (lpr_fwr + lmr_lim_fwr) /
+      (1 + lmr_lim_fwr + lmr_lim_fwr);
+   float lmr_unlim_gain = (lpr_fwr + lmr_fwr) /
+      (1 + lmr_fwr + lmr_fwr);
+   float lpr, lmr;
+   float l_agc, r_agc, lpr_agc, lmr_agc;
+   float f, d_gain, c_gain, c_agc_cfk;
 
-    s->cr[k] = (lr_agc + rr_agc) * M_SQRT1_2;
+#if 0
+   static int counter = 0;
+   static FILE *fp_out;
+
+   if(counter == 0)
+      fp_out = fopen("af_hrtf.log", "w");
+   if(counter % 240 == 0)
+      fprintf(fp_out, "%g %g %g %g %g ", counter * (1.0 / 48000),
+	      l_gain, r_gain, lpr_gain, lmr_gain);
+#endif
+
+   /*** AXIS NO. 1: (Lt, Rt) -> (C, Ls, Rs) ***/
+   /* AGC adaption */
+   d_gain = (fabs(l_gain - *adapt_l_gain) +
+	     fabs(r_gain - *adapt_r_gain)) * 0.5;
+   f = d_gain * (1.0 / MATAGCTRIG);
+   f = MATAGCDECAY - MATAGCDECAY / (1 + f * f);
+   *adapt_l_gain = (1 - f) * *adapt_l_gain + f * l_gain;
+   *adapt_r_gain = (1 - f) * *adapt_r_gain + f * r_gain;
+   /* Matrix */
+   l_agc = in[il] * passive_lock(*adapt_l_gain);
+   r_agc = in[ir] * passive_lock(*adapt_r_gain);
+   cf[k] = (l_agc + r_agc) * M_SQRT1_2;
+   if(decode_rear) {
+      lr[kr] = rr[kr] = (l_agc - r_agc) * M_SQRT1_2;
+      /* Stereo rear channel is steered with the same AGC steering as
+	 the decoding matrix. Note this requires a fast updating AGC
+	 at the order of 20 ms (which is the case here). */
+      lr[kr] *= (l_fwr + l_fwr) /
+	 (1 + l_fwr + r_fwr);
+      rr[kr] *= (r_fwr + r_fwr) /
+	 (1 + l_fwr + r_fwr);
+   }
+
+   /*** AXIS NO. 2: (Lt + Rt, Lt - Rt) -> (L, R) ***/
+   lpr = (in[il] + in[ir]) * M_SQRT1_2;
+   lmr = (in[il] - in[ir]) * M_SQRT1_2;
+   /* AGC adaption */
+   d_gain = fabs(lmr_unlim_gain - *adapt_lmr_gain);
+   f = d_gain * (1.0 / MATAGCTRIG);
+   f = MATAGCDECAY - MATAGCDECAY / (1 + f * f);
+   *adapt_lpr_gain = (1 - f) * *adapt_lpr_gain + f * lpr_gain;
+   *adapt_lmr_gain = (1 - f) * *adapt_lmr_gain + f * lmr_gain;
+   /* Matrix */
+   lpr_agc = lpr * passive_lock(*adapt_lpr_gain);
+   lmr_agc = lmr * passive_lock(*adapt_lmr_gain);
+   lf[k] = (lpr_agc + lmr_agc) * M_SQRT1_2;
+   rf[k] = (lpr_agc - lmr_agc) * M_SQRT1_2;
+
+   /*** CENTER FRONT CANCELLATION ***/
+   /* A heuristic approach exploits that Lt + Rt gain contains the
+      information about Lt, Rt correlation.  This effectively reshapes
+      the front and rear "cones" to concentrate Lt + Rt to C and
+      introduce Lt - Rt in L, R. */
+   /* 0.67677 is the emprical lower bound for lpr_gain. */
+   c_gain = 8 * (*adapt_lpr_gain - 0.67677);
+   c_gain = c_gain > 0 ? c_gain : 0;
+   /* c_gain should not be too high, not even reaching full
+      cancellation (~ 0.50 - 0.55 at current AGC implementation), or
+      the center will s0und too narrow. */
+   c_gain = MATCOMPGAIN / (1 + c_gain * c_gain);
+   c_agc_cfk = c_gain * cf[k];
+   lf[k] -= c_agc_cfk;
+   rf[k] -= c_agc_cfk;
+   cf[k] += c_agc_cfk + c_agc_cfk;
+#if 0
+   if(counter % 240 == 0)
+      fprintf(fp_out, "%g %g %g %g %g\n",
+	      *adapt_l_gain, *adapt_r_gain,
+	      *adapt_lpr_gain, *adapt_lmr_gain,
+	      c_gain);
+   counter++;
+#endif
+}
+
+inline void update_ch(af_hrtf_t *s, short *in, const int k)
+{
+    const int fwr_pos = (k + FWRDURATION) % s->dlbuflen;
+    /* Update the full wave rectified total amplitude */
+    /* Input matrix decoder */
+    if(s->decode_mode == HRTF_MIX_MATRIX2CH) {
+       s->l_fwr += abs(in[0]) - fabs(s->fwrbuf_l[fwr_pos]);
+       s->r_fwr += abs(in[1]) - fabs(s->fwrbuf_r[fwr_pos]);
+       s->lpr_fwr += abs(in[0] + in[1]) -
+	  fabs(s->fwrbuf_l[fwr_pos] + s->fwrbuf_r[fwr_pos]);
+       s->lmr_fwr += abs(in[0] - in[1]) -
+	  fabs(s->fwrbuf_l[fwr_pos] - s->fwrbuf_r[fwr_pos]);
+    }
+    /* Rear matrix decoder */
+    if(s->matrix_mode) {
+       s->lr_fwr += abs(in[2]) - fabs(s->fwrbuf_lr[fwr_pos]);
+       s->rr_fwr += abs(in[3]) - fabs(s->fwrbuf_rr[fwr_pos]);
+       s->lrprr_fwr += abs(in[2] + in[3]) -
+	  fabs(s->fwrbuf_lr[fwr_pos] + s->fwrbuf_rr[fwr_pos]);
+       s->lrmrr_fwr += abs(in[2] - in[3]) -
+	  fabs(s->fwrbuf_lr[fwr_pos] - s->fwrbuf_rr[fwr_pos]);
+    }
+
+    switch (s->decode_mode) {
+    case HRTF_MIX_51:
+       /* 5/5+1 channel sources */
+       s->lf[k] = in[0];
+       s->cf[k] = in[4];
+       s->rf[k] = in[1];
+       s->fwrbuf_lr[k] = s->lr[k] = in[2];
+       s->fwrbuf_rr[k] = s->rr[k] = in[3];
+       break;
+    case HRTF_MIX_MATRIX2CH:
+       /* Matrix encoded 2 channel sources */
+       s->fwrbuf_l[k] = in[0];
+       s->fwrbuf_r[k] = in[1];
+       matrix_decode(in, k, 0, 1, 1, s->dlbuflen,
+		     s->l_fwr, s->r_fwr,
+		     s->lpr_fwr, s->lmr_fwr,
+		     &(s->adapt_l_gain), &(s->adapt_r_gain),
+		     &(s->adapt_lpr_gain), &(s->adapt_lmr_gain),
+		     s->lf, s->rf, s->lr, s->rr, s->cf);
+       break;
+    case HRTF_MIX_STEREO:
+       /* Stereo sources */
+       s->lf[k] = in[0];
+       s->rf[k] = in[1];
+       s->cf[k] = s->lr[k] = s->rr[k] = 0;
+       break;
+    }
+
+    /* We need to update the bass compensation delay line, too. */
+    s->ba_l[k] = in[0] + in[4] + in[2];
+    s->ba_r[k] = in[4] + in[1] + in[3];
 }
 
 /* Initialization and runtime control */
@@ -118,35 +283,41 @@ static int control(struct af_instance_s *af, int cmd, void* arg)
 	af->data->nch    = ((af_data_t*)arg)->nch;
 	if(af->data->nch < 5) {
 	    af->data->nch = 5;
+	    if(af->data->nch == 2) {
+ 	       /* 2 channel input */
+ 	       if(s->decode_mode != HRTF_MIX_MATRIX2CH) {
+   		  /* Default behavior is stereo mixing. */
+ 		  s->decode_mode = HRTF_MIX_STEREO;
+	       }
+	    }
 	}
-	af->data->format = AF_FORMAT_SI | AF_FORMAT_NE;
+	af->data->format = AF_FORMAT_S16_NE;
 	af->data->bps    = 2;
+	s->print_flag = 1;
 	return af_test_output(af, (af_data_t*)arg);
     case AF_CONTROL_COMMAND_LINE:
 	sscanf((char*)arg, "%c", &mode);
 	switch(mode) {
 	case 'm':
+	    /* Use matrix rear decoding. */
 	    s->matrix_mode = 1;
+	    break;
+	case 's':
+	    /* Input needs matrix decoding. */
+	    s->decode_mode = HRTF_MIX_MATRIX2CH;
 	    break;
 	case '0':
 	    s->matrix_mode = 0;
 	    break;
 	default:
 	    af_msg(AF_MSG_ERROR,
-		   "[hrtf] Mode is neither 'm', nor '0' (%c).\n",
+		   "[hrtf] Mode is neither 'm', 's', nor '0' (%c).\n",
 		   mode);
 	    return AF_ERROR;
 	}
+	s->print_flag = 1;
 	return AF_OK;
     }    
-
-    af_msg(AF_MSG_INFO,
-	   "[hrtf] Using HRTF to mix %s discrete surround into "
-	   "L, R channels\n", s->matrix_mode ? "5" : "5+1");
-    if(s->matrix_mode)
-	af_msg(AF_MSG_INFO,
-	       "[hrtf] Using active matrix to decode rear center "
-	       "channel\n");
 
     return AF_UNKNOWN;
 }
@@ -175,6 +346,14 @@ static void uninit(struct af_instance_s *af)
 	    free(s->ba_r);
 	if(s->ba_ir)
 	    free(s->ba_ir);
+	if(s->fwrbuf_l)
+	   free(s->fwrbuf_l);
+	if(s->fwrbuf_r)
+	   free(s->fwrbuf_r);
+	if(s->fwrbuf_lr)
+	   free(s->fwrbuf_lr);
+	if(s->fwrbuf_rr)
+	   free(s->fwrbuf_rr);
 	free(af->setup);
     }
     if(af->data)
@@ -203,6 +382,37 @@ static af_data_t* play(struct af_instance_s *af, af_data_t *data)
 
     if(AF_OK != RESIZE_LOCAL_BUFFER(af, data))
 	return NULL;
+
+    if(s->print_flag) {
+	s->print_flag = 0;
+	switch (s->decode_mode) {
+	case HRTF_MIX_51:
+	  af_msg(AF_MSG_INFO,
+		 "[hrtf] Using HRTF to mix %s discrete surround into "
+		 "L, R channels\n", s->matrix_mode ? "5+1" : "5");
+	  break;
+	case HRTF_MIX_STEREO:
+	  af_msg(AF_MSG_INFO,
+		 "[hrtf] Using HRTF to mix stereo into "
+		 "L, R channels\n");
+	  break;
+	case HRTF_MIX_MATRIX2CH:
+	  af_msg(AF_MSG_INFO,
+		 "[hrtf] Using active matrix to decode 2 channel "
+		 "input, HRTF to mix %s matrix surround into "
+		 "L, R channels\n", "3/2");
+	  break;
+	default:
+	  af_msg(AF_MSG_WARN,
+		 "[hrtf] bogus decode_mode: %d\n", s->decode_mode);
+	  break;
+	}
+	
+       if(s->matrix_mode)
+	  af_msg(AF_MSG_INFO,
+		 "[hrtf] Using active matrix to decode rear center "
+		 "channel\n");
+    }
 
     out = af->data->audio;
 
@@ -236,48 +446,71 @@ static af_data_t* play(struct af_instance_s *af, af_data_t *data)
 	s->lf[k] += CFECHOAMPL * s->cf[(k + CFECHODELAY) % s->dlbuflen];
 	s->rf[k] += CFECHOAMPL * s->cf[(k + CFECHODELAY) % s->dlbuflen];
 
-	/* Mixer filter matrix */
-	common = conv(dblen, hlen, s->cf, s->cf_ir, k + s->cf_o);
-	if(s->matrix_mode) {
-	    /* In matrix decoding mode, the rear channel gain must be
-	       renormalized, as there is an additional channel. */
-	    matrix_decode_cr(s, in, k);
-	    common +=
-		conv(dblen, hlen, s->cr, s->cr_ir, k + s->cr_o) *
-		M1_76DB;
-	    left    =
-		( conv(dblen, hlen, s->lf, s->af_ir, k + s->af_o) +
-		  conv(dblen, hlen, s->rf, s->of_ir, k + s->of_o) +
-		  (conv(dblen, hlen, s->lr, s->ar_ir, k + s->ar_o) +
-		   conv(dblen, hlen, s->rr, s->or_ir, k + s->or_o)) *
-		  M1_76DB + common);
-	    right   =
-		( conv(dblen, hlen, s->rf, s->af_ir, k + s->af_o) +
-		  conv(dblen, hlen, s->lf, s->of_ir, k + s->of_o) +
-		  (conv(dblen, hlen, s->rr, s->ar_ir, k + s->ar_o) +
-		   conv(dblen, hlen, s->lr, s->or_ir, k + s->or_o)) *
-		  M1_76DB + common);
-	}
-	else {
-	    left    =
-		( conv(dblen, hlen, s->lf, s->af_ir, k + s->af_o) +
-		  conv(dblen, hlen, s->rf, s->of_ir, k + s->of_o) +
-		  conv(dblen, hlen, s->lr, s->ar_ir, k + s->ar_o) +
-		  conv(dblen, hlen, s->rr, s->or_ir, k + s->or_o) +
-		  common);
-	    right   =
-		( conv(dblen, hlen, s->rf, s->af_ir, k + s->af_o) +
-		  conv(dblen, hlen, s->lf, s->of_ir, k + s->of_o) +
-		  conv(dblen, hlen, s->rr, s->ar_ir, k + s->ar_o) +
-		  conv(dblen, hlen, s->lr, s->or_ir, k + s->or_o) +
-		  common);
+	switch (s->decode_mode) {
+	case HRTF_MIX_51:
+	case HRTF_MIX_MATRIX2CH:
+	   /* Mixer filter matrix */
+	   common = conv(dblen, hlen, s->cf, s->cf_ir, k + s->cf_o);
+	   if(s->matrix_mode) {
+	      /* In matrix decoding mode, the rear channel gain must be
+		 renormalized, as there is an additional channel. */
+	      matrix_decode(in, k, 2, 3, 0, s->dlbuflen,
+			    s->lr_fwr, s->rr_fwr,
+			    s->lrprr_fwr, s->lrmrr_fwr,
+			    &(s->adapt_lr_gain), &(s->adapt_rr_gain),
+			    &(s->adapt_lrprr_gain), &(s->adapt_lrmrr_gain),
+			    s->lr, s->rr, NULL, NULL, s->cr);
+	      common +=
+		 conv(dblen, hlen, s->cr, s->cr_ir, k + s->cr_o) *
+		 M1_76DB;
+	      left    =
+		 ( conv(dblen, hlen, s->lf, s->af_ir, k + s->af_o) +
+		   conv(dblen, hlen, s->rf, s->of_ir, k + s->of_o) +
+		   (conv(dblen, hlen, s->lr, s->ar_ir, k + s->ar_o) +
+		    conv(dblen, hlen, s->rr, s->or_ir, k + s->or_o)) *
+		   M1_76DB + common);
+	      right   =
+		 ( conv(dblen, hlen, s->rf, s->af_ir, k + s->af_o) +
+		   conv(dblen, hlen, s->lf, s->of_ir, k + s->of_o) +
+		   (conv(dblen, hlen, s->rr, s->ar_ir, k + s->ar_o) +
+		    conv(dblen, hlen, s->lr, s->or_ir, k + s->or_o)) *
+		   M1_76DB + common);
+	   } else {
+	      left    =
+		 ( conv(dblen, hlen, s->lf, s->af_ir, k + s->af_o) +
+		   conv(dblen, hlen, s->rf, s->of_ir, k + s->of_o) +
+		   conv(dblen, hlen, s->lr, s->ar_ir, k + s->ar_o) +
+		   conv(dblen, hlen, s->rr, s->or_ir, k + s->or_o) +
+		   common);
+	      right   =
+		 ( conv(dblen, hlen, s->rf, s->af_ir, k + s->af_o) +
+		   conv(dblen, hlen, s->lf, s->of_ir, k + s->of_o) +
+		   conv(dblen, hlen, s->rr, s->ar_ir, k + s->ar_o) +
+		   conv(dblen, hlen, s->lr, s->or_ir, k + s->or_o) +
+		   common);
+	   }
+	   break;
+	case HRTF_MIX_STEREO:
+	   left    =
+	      ( conv(dblen, hlen, s->lf, s->af_ir, k + s->af_o) +
+		conv(dblen, hlen, s->rf, s->of_ir, k + s->of_o));
+	   right   =
+	      ( conv(dblen, hlen, s->rf, s->af_ir, k + s->af_o) +
+		conv(dblen, hlen, s->lf, s->of_ir, k + s->of_o));
+	   break;
+	default:
+	    /* make gcc happy */
+	    left = 0.0;
+	    right = 0.0;
+	    break;
 	}
 
 	/* Bass compensation for the lower frequency cut of the HRTF.  A
 	   cross talk of the left and right channel is introduced to
 	   match the directional characteristics of higher frequencies.
 	   The bass will not have any real 3D perception, but that is
-	   OK. */
+	   OK (note at 180 Hz, the wavelength is about 2 m, and any
+	   spatial perception is impossible). */
 	left_b  = conv(dblen, blen, s->ba_l, s->ba_ir, k);
 	right_b = conv(dblen, blen, s->ba_r, s->ba_ir, k);
 	left  += (1 - BASSCROSS) * left_b  + BASSCROSS * right_b;
@@ -292,12 +525,25 @@ static af_data_t* play(struct af_instance_s *af, af_data_t *data)
 	left  *= AMPLNORM;
 	right *= AMPLNORM;
 
-	/* "Cheating": linear stereo expansion to amplify the 3D
-	   perception.  Note: Too much will destroy the acoustic space
-	   and may even result in headaches. */
-	diff = STEXPAND2 * (left - right);
-	out[0] = (int16_t)(left  + diff);
-	out[1] = (int16_t)(right - diff);
+	switch (s->decode_mode) {
+	case HRTF_MIX_51:
+	case HRTF_MIX_STEREO:
+	   /* "Cheating": linear stereo expansion to amplify the 3D
+	      perception.  Note: Too much will destroy the acoustic space
+	      and may even result in headaches. */
+	   diff = STEXPAND2 * (left - right);
+	   out[0] = (int16_t)(left  + diff);
+	   out[1] = (int16_t)(right - diff);
+	   break;
+	case HRTF_MIX_MATRIX2CH:
+	   /* Do attempt any stereo expansion with matrix encoded
+	      sources.  The L, R channels are already stereo expanded
+	      by the steering, any further stereo expansion will sound
+	      very unnatural. */
+	   out[0] = (int16_t)left;
+	   out[1] = (int16_t)right;
+	   break;
+	}
 
 	/* The remaining channels are not needed any more */
 	out[2] = out[3] = out[4] = 0;
@@ -330,6 +576,14 @@ static int allocate(af_hrtf_t *s)
     if ((s->cr = malloc(s->dlbuflen * sizeof(float))) == NULL) return -1;
     if ((s->ba_l = malloc(s->dlbuflen * sizeof(float))) == NULL) return -1;
     if ((s->ba_r = malloc(s->dlbuflen * sizeof(float))) == NULL) return -1;
+    if ((s->fwrbuf_l =
+	 malloc(s->dlbuflen * sizeof(float))) == NULL) return -1;
+    if ((s->fwrbuf_r =
+	 malloc(s->dlbuflen * sizeof(float))) == NULL) return -1;
+    if ((s->fwrbuf_lr =
+	 malloc(s->dlbuflen * sizeof(float))) == NULL) return -1;
+    if ((s->fwrbuf_rr =
+	 malloc(s->dlbuflen * sizeof(float))) == NULL) return -1;
     return 0;
 }
 
@@ -339,15 +593,6 @@ static int open(af_instance_t* af)
     int i;
     af_hrtf_t *s;
     float fc;
-
-    af_msg(AF_MSG_INFO,
-	   "[hrtf] Head related impulse response (HRIR) derived from KEMAR measurement\n"
-	   "[hrtf] data by Bill Gardner <billg@media.mit.edu>\n"
-	   "[hrtf] and Keith Martin <kdm@media.mit.edu>.\n"
-	   "[hrtf] This data is Copyright 1994 by the MIT Media Laboratory.  It is\n"
-	   "[hrtf] provided free with no restrictions on use, provided the authors are\n"
-	   "[hrtf] cited when the data is used in any research or commercial application.\n"
-	   "[hrtf] URL: http://sound.media.mit.edu/KEMAR.html\n");
 
     af->control = control;
     af->uninit = uninit;
@@ -366,7 +611,13 @@ static int open(af_instance_t* af)
     s->basslen = BASSFILTLEN;
 
     s->cyc_pos = s->dlbuflen - 1;
-    s->matrix_mode = 1;
+    /* With a full (two axis) steering matrix decoder, s->matrix_mode
+       should not be enabled lightly (it will also steer the Ls, Rs
+       channels). */
+    s->matrix_mode = 0;
+    s->decode_mode = HRTF_MIX_51;
+
+    s->print_flag = 1;
 
     if (allocate(s) != 0) {
  	af_msg(AF_MSG_ERROR, "[hrtf] Memory allocation error.\n");
@@ -392,7 +643,7 @@ static int open(af_instance_t* af)
 	return AF_ERROR;
     }
     fc = 2.0 * BASSFILTFREQ / (float)af->data->rate;
-    if(design_fir(s->basslen, s->ba_ir, &fc, LP | KAISER, 4 * M_PI) ==
+    if(af_filter_design_fir(s->basslen, s->ba_ir, &fc, LP | KAISER, 4 * M_PI) ==
        -1) {
 	af_msg(AF_MSG_ERROR, "[hrtf] Unable to design low-pass "
 	       "filter.\n");

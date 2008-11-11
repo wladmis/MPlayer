@@ -9,7 +9,7 @@
   de télévision, toute vidéo destinée à être joué sur un poste de télévision
   NTSC doit être à 59.94 champs par seconde. Les téléfilms et les émissions
   sont souvent filmés directement à 59.94 champs par seconde, alors que la
-  majorité les films de cinéma sont filmé à 24 ou 23.976 trames par seconde.
+  majorité les films de cinéma sont filmés à 24 ou 23.976 trames par seconde.
   Quand le DVD d'un film est masterisé, la vidéo est convertie pour la
   télévision en utilisant un procédé appelé téléciné.
 </p><p>
@@ -41,10 +41,10 @@ Notes:
 </p><div class="itemizedlist"><ul type="disc"><li><p>
   Cette section ne s'applique qu'aux DVDs NTSC, et non PAL.
   </p></li><li><p>
-  Les exemples de d'utilisation de <span class="application">MEncoder</span>
+  Les exemples de l'utilisation de <span class="application">MEncoder</span>
   présents dans ce document ne sont <span class="bold"><b>pas</b></span>
-  destinées à un usage tel-quel.
-  Ce sont juste le minimum requis pour encoder des vidéos de cette catégorie.
+  destinés à un usage tel-quel.
+  C'est juste le minimum requis pour encoder des vidéos de cette catégorie.
   Comment faire des bons rips DVD ou paramétrer 
   <tt>libavcodec</tt> pour la meilleure qualité
   possible est en dehors du cadre de ce document.
@@ -100,12 +100,12 @@ Notes:
     Regardez le motif des trames à l'apparence entrelacées et progressives.
     Si le motif que vous voyez est PPPII,PPPII,PPPII,... alors la vidéo est
     téléciné. Si vous voyez un autre motif, alors la vidéo a été téléciné en
-    utiliisant une méthode non-standard et <span class="application">MEncoder</span>
+    utilisant une méthode non-standard et <span class="application">MEncoder</span>
     ne peut pas la convertir en progressive sans perte. Si vous ne voyez
-    aucun motif, c'est certainement que la vidéo est entrelaçé.
+    aucun motif, c'est certainement que la vidéo est entrelaçée.
     </p></li></ol></div><p>
 </p><p>
-  Parfois la vidéo téléciné est appelé "hard-telecine".
+  Parfois la vidéo téléciné est appelée "hard-telecine".
 </p></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="menc-feat-telecine-ident-interlaced"></a>7.12.1.3. Entrelaçée</h4></div></div><p>
   La vidéo entrelaçée a été filmé à 59.94 champs par seconde, et stockée sur
   DVD à 29.97 trames par seconde. L'entrelacement est le résultat de la
@@ -131,14 +131,14 @@ Notes:
   Vous devriez regarder les sections "30fps NTSC" pour vérifier que
   c'est effectivement du téléciné, et pas juste de l'entrelaçé.
 </p></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="menc-feat-telecine-ident-mixedpi"></a>7.12.1.5. Progressive et entrelacée mélangées</h4></div></div><p>
-  Dans le contenu "progressive et entrelaçée", la vidéo progressive
-  et entrelaçée ont été collé l'un après l'autre.
+  Dans ce type de vidéo, le contenu progressif et entrelaçé,
+  ont été collés l'un après l'autre.
 </p><p>
   Cette catégorie ressemble tout à fait à "progressive et télécinée
   mélangées", jusqu'à ce que vous examiniez les sections 30fps et voyez
   qu'elles n'ont pas de motif de téléciné.
 </p></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="menc-feat-telecine-encode"></a>7.12.2. Comment encoder chaque catégorie</h3></div></div><p>
-  Comme mentionné au début, les exemples d'utilisations de
+  Comme mentionné au début, les exemples d'utilisation de
   <span class="application">MEncoder</span> ne sont
   <span class="bold"><b>pas</b></span> destinés a être utilisé directement;
   ils démontrent juste les paramètres minimum pour encoder chaque catégorie.
@@ -154,10 +154,10 @@ Notes:
   en utilisant un procédé appelé inverse-téléciné.
   <span class="application">MPlayer</span> contient deux filtres pour accomplir cela:
   <tt class="option">detc</tt> et <tt class="option">ivtc</tt>. Vous pouvez lire la page de
-  man pour voir leur différences, mais pour les DVDs je n'ai jamais eu de
+  man pour voir leurs différences, mais pour les DVDs je n'ai jamais eu de
   problèmes avec <tt class="option">ivtc</tt>. Notez que vous devriez 
   <span class="bold"><b>toujours</b></span> appliquer l'inverse-telecine avant
-  tout redimensionnement; à mois que vous ne sachiez vraiment ce que vous
+  tout redimensionnement; à moins que vous ne sachiez vraiment ce que vous
   faites, appliquez l'inverse-téléciné également avant tout découpage
   <a href="menc-feat-telecine.html#menc-feat-telecine-footnotes" title="7.12.3. Notes de bas-de-page">[1]</a>. De nouveau,
   <tt class="option">-ofps 23.976</tt> est également requis.
@@ -178,7 +178,7 @@ Notes:
   <tt class="option"> ildct</tt> et <tt class="option">ilme</tt>. De plus,
   utiliser <tt class="option">mbd=2</tt> est fortement recommandé
   <a href="menc-feat-telecine.html#menc-feat-telecine-footnotes" title="7.12.3. Notes de bas-de-page">[2] </a> car il encodera les
-  macroblocs en tant que non-entrelaçé là où il n'y a pas de mouvement.
+  macroblocs en tant que non-entrelaçés là où il n'y a pas de mouvement.
   Notez que <tt class="option">-ofps</tt> n'est PAS requis ici.
 
   <pre class="screen">mencoder dvd://1 -nosound -ovc lavc -lavcopts ildct:ilme:mbd=2</pre>
@@ -210,7 +210,7 @@ Notes:
   désentrelacement.
   Générer les lignes manquantes créé d'autres problèmes, également, simplement
   parce que la quantité de données double. Donc, un débit d'encodage supérieur
-  est requis pour maintenir la qualité, et plus de puissance CPU est utilisé
+  est requis pour maintenir la qualité, et plus de puissance CPU est utilisée
   pour l'encodage et le décodage. tflields a de nombreuses options différentes
   pour la création des lignes manquantes de chaque trame. Si vous utilisez
   cette méthode, alors référez vous à la page de manuel, et choisissez
@@ -233,7 +233,7 @@ Notes:
   <pre class="screen">mencoder dvd://1 -nosound -vf field=0 -ovc lavc</pre>
   </p></li></ol></div></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="menc-feat-telecine-encode-mixedpt"></a>7.12.2.4. Progressive et téléciné mélangées</h4></div></div><p>
   De façon à transformer la vidéo progressive et télécinée mélangée en
-  vidéo entièrement progressive, l'inverse-telecine doit être appliqué sur
+  vidéo entièrement progressive, l'inverse-telecine doit être appliquée sur
   les parties télécinées. Il y a deux filtres qui accomplissent nativement
   cette tâche, mais la plupart du temps la meilleure solution est d'utiliser
   deux filtres en conjonction (lire la suite pour plus de détails).

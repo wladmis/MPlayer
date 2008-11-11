@@ -22,9 +22,7 @@
 ** Commercial non-GPL licensing of this software is possible.
 ** For more info contact Ahead Software through Mpeg4AAClicense@nero.com.
 **
-** Initially modified for use with MPlayer by Alex Beregszaszi on 2003/10/03
-** $Id: huffman.c,v 1.4 2004/09/24 17:31:33 diego Exp $
-** detailed CVS changelog at http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
+** $Id: huffman.c,v 1.20 2004/03/10 19:45:41 menno Exp $
 **/
 
 #include "common.h"

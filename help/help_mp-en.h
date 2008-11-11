@@ -1,4 +1,4 @@
-// $Revision: 1.155 $
+// $Revision: 1.167 $
 // MASTER FILE. Use this file as base for translations.
 // Translated files should be sent to the mplayer-DOCS mailing list or
 // to the help messages maintainer, see DOCS/tech/MAINTAINERS.
@@ -215,6 +215,11 @@ static char help_text[]=
 #define MSGTR_WritingAVIHeader "Writing AVI header...\n"
 #define MSGTR_DuplicateFrames "\n%d duplicate frame(s)!\n"
 #define MSGTR_SkipFrame "\nSkipping frame!\n"
+#define MSGTR_ResolutionDoesntMatch "\nNew video file has different resolution or colorspace than the previous one.\n"
+#define MSGTR_FrameCopyFileMismatch "\nAll video files must have identical fps, resolution, and codec for -ovc copy.\n"
+#define MSGTR_AudioCopyFileMismatch "\nAll files must have identical audio codec and format for -oac copy.\n"
+#define MSGTR_NoSpeedWithFrameCopy "WARNING: -speed is not guaranteed to work correctly with -oac copy!\n"\
+"Your encode might be broken!\n"
 #define MSGTR_ErrorWritingFile "%s: Error writing file.\n"
 #define MSGTR_WritingAVIIndex "\nWriting AVI index...\n"
 #define MSGTR_FixupAVIHeader "Fixing AVI header...\n"
@@ -337,6 +342,9 @@ static char help_text[]=
 "mw-us => 40kbps/mono        voice => 56kbps/mono\n"\
 "fm/radio/tape => 112kbps    hifi => 160kbps\n"\
 "cd => 192kbps               studio => 256kbps"
+#define MSGTR_LameCantInit "Cannot set LAME options, check bitrate/samplerate,"\
+"some very low bitrates (<32) need lower samplerates (i.e. -srate 8000)."\
+"If everything else fails, try a preset."
 #define MSGTR_ConfigfileError "configfile error"
 #define MSGTR_ErrorParsingCommandLine "error parsing cmdline"
 #define MSGTR_VideoStreamRequired "Video stream is mandatory!\n"
@@ -519,8 +527,8 @@ static char help_text[]=
 #define MSGTR_DemuxerInfoAlreadyPresent "Demuxer info %s already present!\n"
 #define MSGTR_ClipInfo "Clip info:\n"
 
-#define MSGTR_LeaveTelecineMode "\ndemux_mpg: 30fps NTSC content detected, switching framerate.\n"
-#define MSGTR_EnterTelecineMode "\ndemux_mpg: 24fps progressive NTSC content detected, switching framerate.\n"
+#define MSGTR_LeaveTelecineMode "\ndemux_mpg: 30000/1001fps NTSC content detected, switching framerate.\n"
+#define MSGTR_EnterTelecineMode "\ndemux_mpg: 24000/1001fps progressive NTSC content detected, switching framerate.\n"
 
 // dec_video.c & dec_audio.c:
 #define MSGTR_CantOpenCodec "Could not open codec.\n"
@@ -669,6 +677,7 @@ static char help_text[]=
 #define MSGTR_MENU_NextStream "Next stream"
 #define MSGTR_MENU_PrevStream "Prev stream"
 #define MSGTR_MENU_Size "Size"
+#define MSGTR_MENU_HalfSize   "Half size"
 #define MSGTR_MENU_NormalSize "Normal size"
 #define MSGTR_MENU_DoubleSize "Double size"
 #define MSGTR_MENU_FullScreen "Fullscreen"
@@ -734,6 +743,7 @@ static char help_text[]=
 #define MSGTR_PREFERENCES_DoNotPlaySound "Do not play sound"
 #define MSGTR_PREFERENCES_NormalizeSound "Normalize sound"
 #define MSGTR_PREFERENCES_EnEqualizer "Enable equalizer"
+#define MSGTR_PREFERENCES_SoftwareMixer "Enable Software Mixer"
 #define MSGTR_PREFERENCES_ExtraStereo "Enable extra stereo"
 #define MSGTR_PREFERENCES_Coefficient "Coefficient:"
 #define MSGTR_PREFERENCES_AudioDelay "Audio delay"
@@ -839,7 +849,7 @@ static char help_text[]=
 // cfg.c
 
 #define MSGTR_ConfigFileReadError "[cfg] config file read error ...\n"
-#define MSGTR_UnableToSaveOption "Unable to save the '%s' option.\n"
+#define MSGTR_UnableToSaveOption "[cfg] Unable to save the '%s' option.\n"
 
 // interface.c
 
@@ -889,6 +899,16 @@ static char help_text[]=
 #define MSGTR_VO_NoValueSpecified "No value specified."
 #define MSGTR_VO_UnknownSuboptions "Unknown suboption(s)"
 
+// vo_aa.c
+
+#define MSGTR_VO_AA_HelpHeader "\n\nHere are the aalib vo_aa suboptions:\n"
+#define MSGTR_VO_AA_AdditionalOptions "Additional options vo_aa provides:\n" \
+"  help        print this help message\n" \
+"  osdcolor    set osd color\n  subcolor    set subtitle color\n" \
+"        the color parameters are:\n           0 : normal\n" \
+"           1 : dim\n           2 : bold\n           3 : boldfont\n" \
+"           4 : reverse\n           5 : special\n\n\n"
+
 // vo_jpeg.c
 #define MSGTR_VO_JPEG_ProgressiveJPEG "Progressive JPEG enabled."
 #define MSGTR_VO_JPEG_NoProgressiveJPEG "Progressive JPEG disabled."
@@ -932,7 +952,7 @@ static char help_text[]=
 #define MSGTR_AO_OSS_ChanNotFound "[AO OSS] audio_setup: Audio card mixer does not have channel '%s' using default.\n"
 #define MSGTR_AO_OSS_CantOpenDev "[AO OSS] audio_setup: Can't open audio device %s: %s\n"
 #define MSGTR_AO_OSS_CantMakeFd "[AO OSS] audio_setup: Can't make filedescriptor blocking: %s\n"
-#define MSGTR_AO_OSS_CantSetAC3 "[AO OSS] Can't set audio device %s to AC3 output, trying S16...\n"
+#define MSGTR_AO_OSS_CantSet "[AO OSS] Can't set audio device %s to %s output, trying %s...\n"
 #define MSGTR_AO_OSS_CantSetChans "[AO OSS] audio_setup: Failed to set audio device to %d channels.\n"
 #define MSGTR_AO_OSS_CantUseGetospace "[AO OSS] audio_setup: driver doesn't support SNDCTL_DSP_GETOSPACE :-(\n"
 #define MSGTR_AO_OSS_CantUseSelect "[AO OSS]\n   ***  Your audio driver DOES NOT support select()  ***\n Recompile MPlayer with #undef HAVE_AUDIO_SELECT in config.h !\n\n"

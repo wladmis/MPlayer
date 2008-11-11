@@ -3,7 +3,7 @@
  * Copyright (C) Rik Snel 2001,2002, License GNU GPL v2
  */
 
-/* $Id: vo_zr.c,v 1.29 2004/10/28 01:15:52 diego Exp $ */
+/* $Id: vo_zr.c,v 1.30 2005/01/08 14:32:25 rik Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -34,7 +34,7 @@ static vo_info_t info =
 {
 	"Zoran ZR360[56]7/ZR36060 Driver (DC10(+)/buz/lml33/MatroxRR)",
 	"zr",
-	"Rik Snel <snel@phys.uu.nl>",
+	"Rik Snel <rsnel@cube.dyndns.org>",
 	""
 };
 

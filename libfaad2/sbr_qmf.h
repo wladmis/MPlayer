@@ -22,9 +22,7 @@
 ** Commercial non-GPL licensing of this software is possible.
 ** For more info contact Ahead Software through Mpeg4AAClicense@nero.com.
 **
-** Initially modified for use with MPlayer by Arpad Gereöffy on 2003/08/30
-** $Id: sbr_qmf.h,v 1.5 2004/09/24 17:31:35 diego Exp $
-** detailed CVS changelog at http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
+** $Id: sbr_qmf.h,v 1.18 2004/06/30 12:45:57 menno Exp $
 **/
 
 #ifndef __SBR_QMF_H__
@@ -55,3 +53,4 @@ void sbr_qmf_synthesis_64_sse(sbr_info *sbr, qmfs_info *qmfs, qmf_t X[MAX_NTSRHF
 }
 #endif
 #endif
+

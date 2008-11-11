@@ -11,6 +11,13 @@
  */
 
 /* applied some modification to make make our xine friend more happy */
+
+/*
+ * Modified for use with MPlayer, detailed CVS changelog at
+ * http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
+ * $Id: ldt_keeper.c,v 1.17 2005/04/15 20:17:12 diego Exp $
+ */
+
 #include "ldt_keeper.h"
 
 #include <string.h>
@@ -201,6 +208,7 @@ ldt_fs_t* Setup_LDT_Keeper(void)
 	return NULL;
     }
     *(void**)((char*)ldt_fs->fs_seg+0x18) = ldt_fs->fs_seg;
+    memset(&array, 0, sizeof(array));
     array.base_addr=(int)ldt_fs->fs_seg;
     array.entry_number=TEB_SEL_IDX;
     array.limit=array.base_addr+getpagesize()-1;

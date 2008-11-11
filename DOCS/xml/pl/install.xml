@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-2"?>
-<!-- synced with 1.50 -->
+<!-- synced with 1.57 -->
 <sect1 id="install">
 <title>Instalacja</title>
 
@@ -35,8 +35,8 @@ Potrzebujesz dość nowego sprzętu. Jeśli używasz Linuksa, zalecane są jądra z ser
 <listitem><para>
   <emphasis role="bold">gcc</emphasis> - zalecanymi wersjami są: <emphasis role="bold">2.95.3</emphasis>
   (może <emphasis role="bold">2.95.4</emphasis>) i <emphasis role="bold">3.2+</emphasis>.
-  <emphasis role="bold">Nigdy</emphasis> nie używaj 2.96 lub 3.0.x! Tworzą one
-  wadliwy kod dla <application>MPlayera</application>. Jeżeli zdecydujesz się
+  <emphasis role="bold">Nigdy</emphasis> nie używaj 2.96 lub 3.0.x! Generują one
+  wadliwy kod <application>MPlayera</application>. Jeżeli zdecydujesz się
   na zmianę gcc z 2.96, nie rób tego na korzyść 3.x tylko dlatego, że jest nowsze! Wczesne
   wydania 3.x miały jeszcze więcej błędów niż 2.96. Spróbuj obniżyć wersję do 2.95.x
   (obniż również wersję <systemitem class="library">libstdc++</systemitem>, inne
@@ -121,6 +121,10 @@ Potrzebujesz dość nowego sprzętu. Jeśli używasz Linuksa, zalecane są jądra z ser
   <emphasis role="bold">libsmb</emphasis> - opcjonalna, do obsługi Samby.
   </para></listitem>
 <listitem><para>
+  <emphasis role="bold">ALSA</emphasis> - opcjonalna, do obsługi wyjścia dźwięku
+  przez ALSA. Wymagana jest przynajmniej wersja 0.9.0rc4.
+  </para></listitem>
+<listitem><para>
   <emphasis role="bold">bio2jack</emphasis> - opcjonalna, do obsługi wyjścia
   dźwięku poprzez JACK, potrzebna jedynie w czasie kompilacji. Do pobrania z
   <ulink url="http://bio2jack.sf.net/">http://bio2jack.sf.net</ulink>. Ponieważ
@@ -161,9 +165,9 @@ Potrzebujesz dość nowego sprzętu. Jeśli używasz Linuksa, zalecane są jądra z ser
 <listitem><para>
   <emphasis role="bold">Kodeki Win32</emphasis>: Jeśli zamierzasz używać
   <application>MPlayera</application> na architekturze x86, będziesz ich prawdopodobnie
-  potrzebował. Ściągnij je z naszej
-  <ulink url="http://www.mplayerhq.hu/MPlayer/releases/codecs/">strony kodeków</ulink>
-  i zainstaluj je do <filename class="directory">/usr/local/lib/codecs</filename>
+  potrzebował. Ściągnij pakiet z naszej
+  <ulink url="http://www.mplayerhq.hu/homepage/design7/codecs.html">strony kodeków</ulink>
+  i umieść je w katalogu <filename class="directory">/usr/local/lib/codecs</filename>
   <emphasis role="bold">PRZED</emphasis> kompilacją <application>MPlayera</application>,
   w przeciwnym wypadku obsługa Win32 nie będzie wkompilowana!
   <note><para>Projekt avifile ma podobny pakiet kodeków, ale różni się on od naszego,
@@ -173,7 +177,7 @@ Potrzebujesz dość nowego sprzętu. Jeśli używasz Linuksa, zalecane są jądra z ser
   Cechy:
   <itemizedlist>
   <listitem><simpara>
-    potrzebujesz tego do zakodowania, na przykład, filmów nagranych z użyciem
+    potrzebujesz tego do odtwarzania i zakodowania, na przykład, filmów nagranych z użyciem
     różnych kompresorów sprzętowych, jak tunery, kamery cyfrowe
     (na przykład: DV, ATI VCR, MJPEG)
     </simpara></listitem>
@@ -512,7 +516,7 @@ w głównym katalogu <application>MPlayera</application>. Przeczytaj rozdział
 <para>
 <emphasis role="bold">Zawsze przejrzyj wyniki</emphasis>
 <filename>./configure</filename> i plik
-<filename>configure.log</filename>, zawierają informacje o tym, co będzie zbudowane,
+<filename>configure.log</filename>, zawierają one informacje o tym, co będzie zbudowane,
 a co nie. Możesz również obejrzeć pliki
 <filename>config.h</filename> i <filename>config.mak</filename>.
 Jeżeli masz zainstalowane jakieś biblioteki, ale nie są one wykrywane przez
@@ -575,11 +579,11 @@ program korzystał ze skórki w katalogu
 
 <para>
 <application>MPlayer</application> może wyświetlać napisy podczas odtwarzania
-filmu. Obecnie następujące formaty są obsługiwane:
+filmu. Obecnie obsługiwane są następujące formaty:
 <itemizedlist>
 <listitem><para>VOBsub</para></listitem>
 <listitem><para>OGM</para></listitem>
-<listitem><para>CC (zamknięty format napisów)</para></listitem>
+<listitem><para>CC (closed caption)</para></listitem>
 <listitem><para>MicroDVD</para></listitem>
 <listitem><para>SubRip</para></listitem>
 <listitem><para>SubViewer</para></listitem>
@@ -654,7 +658,7 @@ musisz przekazać opcję <option>-sub
   <term><option>-subdelay <replaceable>sek</replaceable></option></term>
   <listitem><simpara>
     Opóźnia wyświetlanie napisów o <option><replaceable>sek</replaceable></option> sekund.
-    Może być liczbą ujemną.
+    Może być liczbą ujemną. Wartość jest dodawana do licznika czasu filmu.
     </simpara></listitem>
 </varlistentry>
 <varlistentry>
@@ -674,14 +678,15 @@ musisz przekazać opcję <option>-sub
 <para>
 Jeżeli podczas używania napisów w formacie MicroDVD zauważysz rosnące opóźnienie
 między nimi a filmem, to prawdopodobnie ilość klatek na sekundę filmu różni się
-od wartości, do której zostały przystosowane napisy. Zauważ, że format ten korzysta
-z bezwzględnych numerów ramek, dla wyświetlania napisów w odpowiednim momencie i
-dlatego nie możesz skorzystać w tym wypadku z opcji <option>-subfps</option>. Jako, że
-<application>MPlayer</application> nie może w żaden sposób zgadnąć ilości klatek
-na sekundę, do której były przystosowane napisy, musisz ją ręcznie zmienić.
-W katalogu <filename class="directory">contrib</filename> znajdującym się na
-serwerze FTP <application>MPlayera</application> znajdziesz mały skrypt napisany
-w perlu, który Ci w tym pomoże.
+od wartości, do której zostały przystosowane napisy.
+Zauważ, że format ten korzysta z bezwzględnych numerów klatek do wyświetlania
+napisów w odpowiednim momencie, ale nie zawiera w sobie informacji o wartości fps,
+dlatego powinieneś skorzystać z opcji <option>-subfps</option>.
+Jeżeli chciałbyś trwale rozwiązać ten problem, musisz ręcznie zmienić
+wartość framerate pliku z napisami.
+<application>MPlayer</application> może zrobić to za ciebie:
+
+<screen>mplayer -dumpmicrodvdsub -fps <replaceable>fps_napisów</replaceable> -subfps <replaceable>fps_filmu</replaceable> -sub <replaceable>zbiór_z_napisami</replaceable> <replaceable>atrapa.avi</replaceable></screen>
 </para>
 
 <para>
@@ -741,7 +746,7 @@ filmu, itp.
 <title>Instalacja OSD i napisów</title>
 
 <para>
-Będziesz potrzebował paczki zwierającej czcionkę dla <application>MPlayera</application>,
+Będziesz potrzebował paczki zawierającej czcionkę dla <application>MPlayera</application>,
 żeby móc skorzystać z OSD/NAPISÓW. Jest wiele sposobów, aby ją uzyskać:
 </para>
 

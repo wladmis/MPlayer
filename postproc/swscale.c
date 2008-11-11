@@ -53,6 +53,7 @@ untested special converters
 #include <string.h>
 #include <math.h>
 #include <stdio.h>
+#include <unistd.h>
 #include "../config.h"
 #include "../mangle.h"
 #include <assert.h>
@@ -60,6 +61,12 @@ untested special converters
 #include <malloc.h>
 #else
 #include <stdlib.h>
+#endif
+#ifdef HAVE_SYS_MMAN_H
+#include <sys/mman.h>
+#if defined(MAP_ANON) && !defined(MAP_ANONYMOUS)
+#define MAP_ANONYMOUS MAP_ANON
+#endif
 #endif
 #include "swscale.h"
 #include "swscale_internal.h"
@@ -97,6 +104,7 @@ untested special converters
 
 //FIXME replace this with something faster
 #define isPlanarYUV(x) ((x)==IMGFMT_YV12 || (x)==IMGFMT_YVU9 \
+			|| (x)==IMGFMT_NV12 || (x)==IMGFMT_NV21 \
 			|| (x)==IMGFMT_444P || (x)==IMGFMT_422P || (x)==IMGFMT_411P)
 #define isYUV(x)       ((x)==IMGFMT_UYVY || (x)==IMGFMT_YUY2 || isPlanarYUV(x))
 #define isGray(x)      ((x)==IMGFMT_Y800)
@@ -110,6 +118,7 @@ untested special converters
 #define isSupportedOut(x) ((x)==IMGFMT_YV12 || (x)==IMGFMT_YUY2 || (x)==IMGFMT_UYVY\
 			|| (x)==IMGFMT_444P || (x)==IMGFMT_422P || (x)==IMGFMT_411P\
 			|| isRGB(x) || isBGR(x)\
+			|| (x)==IMGFMT_NV12 || (x)==IMGFMT_NV21\
 			|| (x)==IMGFMT_Y800 || (x)==IMGFMT_YVU9)
 #define isPacked(x)    ((x)==IMGFMT_YUY2 || (x)==IMGFMT_UYVY ||isRGB(x) || isBGR(x))
 
@@ -247,6 +256,56 @@ static inline void yuv2yuvXinC(int16_t *lumFilter, int16_t **lumSrc, int lumFilt
 		}
 }
 
+static inline void yuv2nv12XinC(int16_t *lumFilter, int16_t **lumSrc, int lumFilterSize,
+				int16_t *chrFilter, int16_t **chrSrc, int chrFilterSize,
+				uint8_t *dest, uint8_t *uDest, int dstW, int chrDstW, int dstFormat)
+{
+	//FIXME Optimize (just quickly writen not opti..)
+	int i;
+	for(i=0; i<dstW; i++)
+	{
+		int val=1<<18;
+		int j;
+		for(j=0; j<lumFilterSize; j++)
+			val += lumSrc[j][i] * lumFilter[j];
+
+		dest[i]= MIN(MAX(val>>19, 0), 255);
+	}
+
+	if(uDest == NULL)
+		return;
+
+	if(dstFormat == IMGFMT_NV12)
+		for(i=0; i<chrDstW; i++)
+		{
+			int u=1<<18;
+			int v=1<<18;
+			int j;
+			for(j=0; j<chrFilterSize; j++)
+			{
+				u += chrSrc[j][i] * chrFilter[j];
+				v += chrSrc[j][i + 2048] * chrFilter[j];
+			}
+
+			uDest[2*i]= MIN(MAX(u>>19, 0), 255);
+			uDest[2*i+1]= MIN(MAX(v>>19, 0), 255);
+		}
+	else
+		for(i=0; i<chrDstW; i++)
+		{
+			int u=1<<18;
+			int v=1<<18;
+			int j;
+			for(j=0; j<chrFilterSize; j++)
+			{
+				u += chrSrc[j][i] * chrFilter[j];
+				v += chrSrc[j][i + 2048] * chrFilter[j];
+			}
+
+			uDest[2*i]= MIN(MAX(v>>19, 0), 255);
+			uDest[2*i+1]= MIN(MAX(u>>19, 0), 255);
+		}
+}
 
 #define YSCALE_YUV_2_PACKEDX_C(type) \
 		for(i=0; i<(dstW>>1); i++){\
@@ -1175,7 +1234,7 @@ static void initMMX2HScaler(int dstW, int xInc, uint8_t *funnyCode, int16_t *fil
 		"pshufw $0xFF, %%mm0, %%mm0	\n\t"
 		"2:				\n\t"
 		"psubw %%mm1, %%mm0		\n\t"
-		"mov 8(%%"REG_b", %%"REG_a"), %%"REG_S"\n\t"
+		"movl 8(%%"REG_b", %%"REG_a"), %%esi\n\t"
 		"pmullw %%mm3, %%mm0		\n\t"
 		"psllw $7, %%mm1		\n\t"
 		"paddw %%mm1, %%mm0		\n\t"
@@ -1213,7 +1272,7 @@ static void initMMX2HScaler(int dstW, int xInc, uint8_t *funnyCode, int16_t *fil
 		"pshufw $0xFF, %%mm0, %%mm0	\n\t"
 		"2:				\n\t"
 		"psubw %%mm1, %%mm0		\n\t"
-		"mov 8(%%"REG_b", %%"REG_a"), %%"REG_S"\n\t"
+		"movl 8(%%"REG_b", %%"REG_a"), %%esi\n\t"
 		"pmullw %%mm3, %%mm0		\n\t"
 		"psllw $7, %%mm1		\n\t"
 		"paddw %%mm1, %%mm0		\n\t"
@@ -1375,13 +1434,16 @@ static int PlanarToNV12Wrapper(SwsContext *c, uint8_t* src[], int srcStride[], i
 		uint8_t *dstPtr= dst;
 		for(i=0; i<srcSliceH; i++)
 		{
-			memcpy(dstPtr, srcPtr, srcStride[0]);
+			memcpy(dstPtr, srcPtr, c->srcW);
 			srcPtr+= srcStride[0];
 			dstPtr+= dstStride[0];
 		}
 	}
-	dst = dstParam[1] + dstStride[1]*srcSliceY;
-	interleaveBytes( src[1],src[2],dst,c->srcW,srcSliceH,srcStride[1],srcStride[2],dstStride[0] );
+	dst = dstParam[1] + dstStride[1]*srcSliceY/2;
+	if (c->dstFormat == IMGFMT_NV12)
+		interleaveBytes( src[1],src[2],dst,c->srcW/2,srcSliceH/2,srcStride[1],srcStride[2],dstStride[0] );
+	else
+		interleaveBytes( src[2],src[1],dst,c->srcW/2,srcSliceH/2,srcStride[2],srcStride[1],dstStride[0] );
 
 	return srcSliceH;
 }
@@ -1551,6 +1613,15 @@ static inline void sws_orderYUV(int format, uint8_t * sortedP[], int sortedStrid
 		sortedStride[0]= stride[0];
 		sortedStride[1]= stride[1];
 		sortedStride[2]= stride[2];
+	}
+	else if(format == IMGFMT_NV12 || format == IMGFMT_NV21)
+	{
+		sortedP[0]= p[0];
+		sortedP[1]= p[1];
+		sortedP[2]= NULL;
+		sortedStride[0]= stride[0];
+		sortedStride[1]= stride[1];
+		sortedStride[2]= 0;
 	}else{
 		MSG_ERR("internal error in orderYUV\n");
 	}
@@ -1641,6 +1712,8 @@ static void getSubSampleFactors(int *h, int *v, int format){
 		break;
 	case IMGFMT_YV12:
 	case IMGFMT_Y800: //FIXME remove after different subsamplings are fully implemented
+	case IMGFMT_NV12:
+	case IMGFMT_NV21:
 		*h=1;
 		*v=1;
 		break;
@@ -1869,7 +1942,7 @@ SwsContext *sws_getContext(int srcW, int srcH, int origSrcFormat, int dstW, int 
 	if(unscaled && !usesHFilter && !usesVFilter)
 	{
 		/* yv12_to_nv12 */
-		if(srcFormat == IMGFMT_YV12 && dstFormat == IMGFMT_NV12)
+		if(srcFormat == IMGFMT_YV12 && (dstFormat == IMGFMT_NV12 || dstFormat == IMGFMT_NV21))
 		{
 			c->swScale= PlanarToNV12Wrapper;
 		}
@@ -1999,6 +2072,15 @@ SwsContext *sws_getContext(int srcW, int srcH, int origSrcFormat, int dstW, int 
 // can't downscale !!!
 		if(c->canMMX2BeUsed && (flags & SWS_FAST_BILINEAR))
 		{
+#define MAX_FUNNY_CODE_SIZE 10000
+#ifdef MAP_ANONYMOUS
+			c->funnyYCode = (uint8_t*)mmap(NULL, MAX_FUNNY_CODE_SIZE, PROT_EXEC | PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, 0, 0);
+			c->funnyUVCode = (uint8_t*)mmap(NULL, MAX_FUNNY_CODE_SIZE, PROT_EXEC | PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, 0, 0);
+#else
+			c->funnyYCode = (uint8_t*)memalign(32, MAX_FUNNY_CODE_SIZE);
+			c->funnyUVCode = (uint8_t*)memalign(32, MAX_FUNNY_CODE_SIZE);
+#endif
+
 			c->lumMmx2Filter   = (int16_t*)memalign(8, (dstW        /8+8)*sizeof(int16_t));
 			c->chrMmx2Filter   = (int16_t*)memalign(8, (c->chrDstW  /4+8)*sizeof(int16_t));
 			c->lumMmx2FilterPos= (int32_t*)memalign(8, (dstW      /2/8+8)*sizeof(int32_t));
@@ -2555,6 +2637,18 @@ void sws_freeContext(SwsContext *c){
 	c->hLumFilterPos = NULL;
 	if(c->hChrFilterPos) free(c->hChrFilterPos);
 	c->hChrFilterPos = NULL;
+
+#if defined(ARCH_X86) || defined(ARCH_X86_64)
+#ifdef MAP_ANONYMOUS
+	if(c->funnyYCode) munmap(c->funnyYCode, MAX_FUNNY_CODE_SIZE);
+	if(c->funnyUVCode) munmap(c->funnyUVCode, MAX_FUNNY_CODE_SIZE);
+#else
+	if(c->funnyYCode) free(c->funnyYCode);
+	if(c->funnyUVCode) free(c->funnyUVCode);
+#endif
+	c->funnyYCode=NULL;
+	c->funnyUVCode=NULL;
+#endif
 
 	if(c->lumMmx2Filter) free(c->lumMmx2Filter);
 	c->lumMmx2Filter=NULL;

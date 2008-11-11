@@ -31,6 +31,24 @@
 #include <stdarg.h>
 #include <limits.h>
 
+const uint8_t ff_sqrt_tab[128]={
+        0, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 5,
+        5, 5, 5, 5, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+        8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
+        9, 9, 9, 9,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,11,11,11,11,11,11,11
+};
+
+const uint8_t ff_log2_tab[256]={
+        0,0,1,1,2,2,2,2,3,3,3,3,3,3,3,3,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,
+        5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,
+        6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,
+        6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,
+        7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
+        7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
+        7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
+        7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7
+};
+
 void avcodec_default_free_buffers(AVCodecContext *s);
 
 void *av_mallocz(unsigned int size)
@@ -64,7 +82,7 @@ void *av_fast_realloc(void *ptr, unsigned int *size, unsigned int min_size)
     if(min_size < *size) 
         return ptr;
     
-    *size= 17*min_size/16 + 32;
+    *size= FFMAX(17*min_size/16 + 32, min_size);
 
     return av_realloc(ptr, *size);
 }
@@ -83,6 +101,8 @@ void *av_mallocz_static(unsigned int size)
 
     if(ptr){ 
         array_static =av_fast_realloc(array_static, &allocated_static, sizeof(void*)*(last_static+1));
+        if(!array_static)
+            return NULL;
         array_static[last_static++] = ptr;
     }
 
@@ -199,6 +219,12 @@ void avcodec_align_dimensions(AVCodecContext *s, int *width, int *height){
             h_align=4;
         }
         break;
+    case PIX_FMT_BGR24:
+        if((s->codec_id == CODEC_ID_MSZH) || (s->codec_id == CODEC_ID_ZLIB)){
+            w_align=4;
+            h_align=4;
+        }
+        break;
     default:
         w_align= 1;
         h_align= 1;
@@ -209,15 +235,26 @@ void avcodec_align_dimensions(AVCodecContext *s, int *width, int *height){
     *height= ALIGN(*height, h_align);
 }
 
+int avcodec_check_dimensions(void *av_log_ctx, unsigned int w, unsigned int h){
+    if((int)w>0 && (int)h>0 && (w+128)*(uint64_t)(h+128) < INT_MAX/4)
+        return 0;
+    
+    av_log(av_log_ctx, AV_LOG_ERROR, "picture size invalid (%ux%u)\n", w, h);
+    return -1;
+}
+
 int avcodec_default_get_buffer(AVCodecContext *s, AVFrame *pic){
     int i;
     int w= s->width;
     int h= s->height;
     InternalBuffer *buf;
     int *picture_number;
-    
+
     assert(pic->data[0]==NULL);
     assert(INTERNAL_BUFFER_SIZE > s->internal_buffer_count);
+
+    if(avcodec_check_dimensions(s,w,h))
+        return -1;
 
     if(s->internal_buffer==NULL){
         s->internal_buffer= av_mallocz(INTERNAL_BUFFER_SIZE*sizeof(InternalBuffer));
@@ -277,7 +314,7 @@ int avcodec_default_get_buffer(AVCodecContext *s, AVFrame *pic){
             //FIXME next ensures that linesize= 2^x uvlinesize, thats needed because some MC code assumes it
             buf->linesize[i]= ALIGN(pixel_size*w>>h_shift, STRIDE_ALIGN<<(h_chroma_shift-h_shift)); 
 
-            buf->base[i]= av_mallocz((buf->linesize[i]*h>>v_shift)+16); //FIXME 16
+            buf->base[i]= av_malloc((buf->linesize[i]*h>>v_shift)+16); //FIXME 16
             if(buf->base[i]==NULL) return -1;
             memset(buf->base[i], 128, buf->linesize[i]*h>>v_shift);
         
@@ -393,8 +430,8 @@ void avcodec_get_context_defaults(AVCodecContext *s){
     s->bit_rate_tolerance= s->bit_rate*10;
     s->qmin= 2;
     s->qmax= 31;
-    s->mb_qmin= 2;
-    s->mb_qmax= 31;
+    s->mb_lmin= FF_QP2LAMBDA * 2;
+    s->mb_lmax= FF_QP2LAMBDA * 31;
     s->rc_eq= "tex^qComp";
     s->qcompress= 0.5;
     s->max_qdiff= 3;
@@ -421,6 +458,7 @@ void avcodec_get_context_defaults(AVCodecContext *s){
     s->ildct_cmp= FF_CMP_VSAD;
     s->profile= FF_PROFILE_UNKNOWN;
     s->level= FF_LEVEL_UNKNOWN;
+    s->me_penalty_compensation= 256;
     
     s->intra_quant_bias= FF_DEFAULT_QUANT_BIAS;
     s->inter_quant_bias= FF_DEFAULT_QUANT_BIAS;
@@ -446,6 +484,7 @@ void avcodec_get_frame_defaults(AVFrame *pic){
     memset(pic, 0, sizeof(AVFrame));
 
     pic->pts= AV_NOPTS_VALUE;
+    pic->key_frame= 1;
 }
 
 /**
@@ -485,6 +524,11 @@ int avcodec_open(AVCodecContext *avctx, AVCodec *codec)
     else if(avctx->width && avctx->height)
         avcodec_set_dimensions(avctx, avctx->width, avctx->height);
 
+    if((avctx->coded_width||avctx->coded_height) && avcodec_check_dimensions(avctx,avctx->coded_width,avctx->coded_height)){
+        av_freep(&avctx->priv_data);
+        return -1;
+    }
+
     ret = avctx->codec->init(avctx);
     if (ret < 0) {
         av_freep(&avctx->priv_data);
@@ -496,6 +540,10 @@ int avcodec_open(AVCodecContext *avctx, AVCodec *codec)
 int avcodec_encode_audio(AVCodecContext *avctx, uint8_t *buf, int buf_size, 
                          const short *samples)
 {
+    if(buf_size < FF_MIN_BUFFER_SIZE && 0){
+        av_log(avctx, AV_LOG_ERROR, "buffer smaller then minimum size\n");
+        return -1;
+    }
     if((avctx->codec->capabilities & CODEC_CAP_DELAY) || samples){
         int ret = avctx->codec->encode(avctx, buf, buf_size, (void *)samples);
         avctx->frame_number++;
@@ -507,6 +555,12 @@ int avcodec_encode_audio(AVCodecContext *avctx, uint8_t *buf, int buf_size,
 int avcodec_encode_video(AVCodecContext *avctx, uint8_t *buf, int buf_size, 
                          const AVFrame *pict)
 {
+    if(buf_size < FF_MIN_BUFFER_SIZE){
+        av_log(avctx, AV_LOG_ERROR, "buffer smaller then minimum size\n");
+        return -1;
+    }
+    if(avcodec_check_dimensions(avctx,avctx->width,avctx->height))
+        return -1;
     if((avctx->codec->capabilities & CODEC_CAP_DELAY) || pict){
         int ret = avctx->codec->encode(avctx, buf, buf_size, (void *)pict);
         avctx->frame_number++;
@@ -533,13 +587,19 @@ int avcodec_decode_video(AVCodecContext *avctx, AVFrame *picture,
     int ret;
     
     *got_picture_ptr= 0;
-    ret = avctx->codec->decode(avctx, picture, got_picture_ptr, 
-                               buf, buf_size);
+    if((avctx->coded_width||avctx->coded_height) && avcodec_check_dimensions(avctx,avctx->coded_width,avctx->coded_height))
+        return -1;
+    if((avctx->codec->capabilities & CODEC_CAP_DELAY) || buf_size){
+        ret = avctx->codec->decode(avctx, picture, got_picture_ptr, 
+                                buf, buf_size);
 
-    emms_c(); //needed to avoid a emms_c() call before every return;
+        emms_c(); //needed to avoid a emms_c() call before every return;
     
-    if (*got_picture_ptr)                           
-        avctx->frame_number++;
+        if (*got_picture_ptr)                           
+            avctx->frame_number++;
+    }else
+        ret= 0;
+
     return ret;
 }
 
@@ -612,18 +672,6 @@ AVCodec *avcodec_find_decoder_by_name(const char *name)
     p = first_avcodec;
     while (p) {
         if (p->decode != NULL && strcmp(name,p->name) == 0)
-            return p;
-        p = p->next;
-    }
-    return NULL;
-}
-
-static AVCodec *avcodec_find(enum CodecID id)
-{
-    AVCodec *p;
-    p = first_avcodec;
-    while (p) {
-        if (p->id == id)
             return p;
         p = p->next;
     }
@@ -708,7 +756,7 @@ void avcodec_string(char *buf, int buf_size, AVCodecContext *enc, int encode)
                 strcpy(channels_str, "5:1");
                 break;
             default:
-                sprintf(channels_str, "%d channels", enc->channels);
+                snprintf(channels_str, sizeof(channels_str), "%d channels", enc->channels);
                 break;
         }
         if (enc->sample_rate) {
@@ -879,6 +927,11 @@ int64_t av_rescale_rnd(int64_t a, int64_t b, int64_t c, enum AVRounding rnd){
 
 int64_t av_rescale(int64_t a, int64_t b, int64_t c){
     return av_rescale_rnd(a, b, c, AV_ROUND_NEAR_INF);
+}
+
+int64_t ff_gcd(int64_t a, int64_t b){
+    if(b) return ff_gcd(b, a%b);
+    else  return a;
 }
 
 /* av_log API */

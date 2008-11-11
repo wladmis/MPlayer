@@ -28,7 +28,7 @@ recommandés.
   pour un 3.x, essayez toujours la dernière version, les plus anciennes avaient des
   bogues variés, donc assurez-vous d'utiliser au moins 3.1, il est testé et
   fonctionnel. Pour de plus amples informations sur les bogues de gcc 2.96 (qui ne
-  sont toujours PAS fixés, il ont été CONTOURNÉS dans MPlayer!), voir la section
+  sont toujours PAS fixés, ils ont été CONTOURNÉS dans MPlayer!), voir la section
   <a href="gcc-296.html" title="E.1. GCC 2.96">gcc 2.96</a> et la <a href="faq.html">FAQ</a>.
   </p></li><li><p>
   <span class="bold"><b>XFree86</b></span> - version conseillée :
@@ -46,7 +46,7 @@ recommandés.
   Ceci n'est en général pas très important.
   </p></li><li><p>
   <span class="bold"><b>SDL</b></span> - pas obligatoire, mais peut aider dans certains cas (mauvaise sortie audio,
-    cartes vidéo qui rament avec le pilote xv). Utilisez toujours la plus récente version
+    cartes vidéos qui rament avec le pilote xv). Utilisez toujours la version la plus récente.
     (à partir de 1.2.x).
   </p></li><li><p>
   <span class="bold"><b>libjpeg</b></span> - décodeur JPEG optionnel, utilisé par
@@ -94,7 +94,7 @@ recommandés.
   (par ex. <tt class="filename">/usr/local/lib</tt>) ou utiliser l'option
   <tt class="option">--with-bio2jack=DIR</tt> pour dire à
   <tt class="filename">./configure</tt> où se trouve le fichier.
-  </p></li></ul></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="id2835303"></a>1.2.2. Codecs</h3></div></div><div class="itemizedlist"><ul type="disc"><li><p>
+  </p></li></ul></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="id2835330"></a>1.2.2. Codecs</h3></div></div><div class="itemizedlist"><ul type="disc"><li><p>
   <span class="bold"><b><tt>libavcodec</tt></b></span>: Ce paquet de codecs est capable de
   décoder les flux encodés en H263/MJPEG/RV10/DivX3/DivX4/DivX5/MP41/MP42/WMV1/WMV2/SVQ1/SVQ3
   et les flux audio WMA (Windows Media Audio) v1/v2, sur
@@ -216,7 +216,7 @@ taille qui tient dans leur mémoire, avec <span class="bold"><b>peu d'utilisation
   est fourni pour les cartes suivantes:
   <span class="bold"><b>Radeon, Rage128, Mach64</b></span> (Rage XL/Mobility, Xpert98).
   Voir aussi la section <a href="video.html#tvout-ati" title="2.3.5.3. Cartes ATI">Cartes ATI</a> de la documentation TV-out,
-  pour savoir si la sortie TV de votre carte est supporté sous Linux/<span class="application">MPlayer</span>.
+  pour savoir si la sortie TV de votre carte est supportée sous Linux/<span class="application">MPlayer</span>.
   </p></li><li><p>
   <span class="bold"><b>Cartes S3</b></span>: les chipsets Savage et Virge/DX possèdent 
   l'accélération matérielle. Utilisez la plus récente version de XFree86 possible, les 
@@ -243,7 +243,7 @@ taille qui tient dans leur mémoire, avec <span class="bold"><b>peu d'utilisation
     Si ce n'est pas le cas, alors les fonctionnalités de votre carte vidéo ne sont
     pas supportées sous votre système d'exploitation :(
     Si le zoom matériel fonctionne sous Windows, cela ne veut pas dire qu'il
-    fonctionnera sous Linux ou d'autres systèmes d'exploitation: cela dépends des pilotes.
+    fonctionnera sous Linux ou d'autres systèmes d'exploitation: cela dépend des pilotes.
     La plupart des fabriquants ne font pas de pilotes Linux ni ne diffusent les spécifications
     de leurs chipsets, donc vous n'avez pas de chance d'utiliser leur cartes.
     Voir <a href="install.html#non-yuv-cards">Non-YUV cards</a>.
@@ -296,7 +296,7 @@ n'avez pas d'accélération YUV, cette dernière méthode est recommandée. Le change
   Les Fonctions des <span class="bold"><b>autres cartes</b></span> ne sont pas supportées par
   <span class="application">MPlayer</span>. <span class="bold"><b>Il est fortement recommandé de lire
   la section <a href="audio.html" title="2.4. Périphériques de sortie audio">cartes son</a> !</b></span>
-  </li></ul></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="id2836627"></a>1.2.5. Fonctionalités</h3></div></div><div class="itemizedlist"><ul type="disc"><li><p>
+  </li></ul></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="id2837041"></a>1.2.5. Fonctionalités</h3></div></div><div class="itemizedlist"><ul type="disc"><li><p>
   Décidez si vous avez besoin d'une GUI (interface graphique). Si c'est le cas,
   voir la section <a href="gui.html" title="1.3. À propos de l'interface graphique ?">GUI</a> avant de compiler.
   </p></li><li><p>
@@ -326,7 +326,7 @@ répertoire personnel (<tt class="filename">~/.mplayer/codecs.conf</tt>) provenan
 ancienne installation de <span class="application">MPlayer</span>, et supprimez-le.
 </p><p>
 Notez que si vous avez un <tt class="filename">codecs.conf</tt> dans
-<tt class="filename">~/.mplayer/</tt>, les fichier <tt class="filename">codecs.conf</tt>
+<tt class="filename">~/.mplayer/</tt>, les fichiers <tt class="filename">codecs.conf</tt>
 du système ou celui intégré seront complètement ignorés.
 Ne faites pas cela à moins de vouloir jouer avec le fonctionnement interne de
 <span class="application">MPlayer</span> car cela peut poser des problèmes. Si vous voulez changer l'ordre de

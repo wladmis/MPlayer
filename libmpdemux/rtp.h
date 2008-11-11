@@ -1,3 +1,10 @@
+/* Imported from the dvbstream project
+ *
+ * Modified for use with MPlayer, for details see the CVS changelog at
+ * http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
+ * $Id: rtp.h,v 1.4 2005/04/16 12:51:09 diego Exp $
+ */
+
 #ifndef _RTP_H
 #define _RTP_H
 

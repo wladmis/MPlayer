@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- $Revision: 1.23 $ -->
+<!-- $Revision: 1.24 $ -->
 <chapter id="usage">
 <title>Usage</title>
 
@@ -327,12 +327,6 @@ uses, like automatically skipping over commercials in video files you watch.
 The EDL file format is pretty bare-bones. Once the EDL system has reached a
 certain level of maturity, an XML-based file format will probably be implemented
 (keeping backwards compatibility with previous EDL formats).
-</para>
-
-<para>
-The maximum number of EDL entries for the current incarnation of EDL is 1000.
-If you happen to need more, change the <systemitem>#define MAX_EDL_ENTRIES</systemitem>
-in the <filename>edl.h</filename> file.
 </para>
 
 <sect2 id="edl_using">

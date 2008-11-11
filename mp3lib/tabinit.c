@@ -1,3 +1,9 @@
+/*
+ * Modified for use with MPlayer, for details see the CVS changelog at
+ * http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
+ * $Id: tabinit.c,v 1.7 2005/04/15 22:21:35 diego Exp $
+ */
+
 real mp3lib_decwin[(512+32)];
 static real cos64[32], cos32[16], cos16[8], cos8[4], cos4[2];
 real *mp3lib_pnts[]={ cos64,cos32,cos16,cos8,cos4 };

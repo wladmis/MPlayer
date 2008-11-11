@@ -1,3 +1,9 @@
+/*
+ * Modified for use with MPlayer, detailed CVS changelog at
+ * http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
+ * $Id: vfw.h,v 1.14 2005/04/15 20:17:14 diego Exp $
+ */
+
 #ifndef __WINE_VFW_H
 #define __WINE_VFW_H
 //#include "pshpack1.h"

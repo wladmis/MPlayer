@@ -1,3 +1,9 @@
+/* Imported from the dvbstream project
+ *
+ * Modified for use with MPlayer, for details see the CVS changelog at
+ * http://www.mplayerhq.hu/cgi-bin/cvsweb.cgi/main/
+ * $Id: dvbin.h,v 1.10 2005/04/16 12:51:09 diego Exp $
+ */
 
 #ifndef DVBIN_H
 #define DVBIN_H
@@ -8,6 +14,7 @@
 #ifdef HAVE_DVB_HEAD
 	#include <linux/dvb/dmx.h>
 	#include <linux/dvb/frontend.h>
+	#include <linux/dvb/version.h>
 #else
 	#include <ost/dmx.h>
 	#include <ost/sec.h>
@@ -26,6 +33,12 @@
 	#define dmx_pes_type_t dmxPesType_t
 #endif
 
+#undef DVB_ATSC
+#if defined(DVB_API_VERSION_MINOR)
+#if DVB_API_VERSION == 3 && DVB_API_VERSION_MINOR >= 1
+#define DVB_ATSC 1
+#endif
+#endif
 
 
 #define DVB_CHANNEL_LOWER -1
@@ -92,6 +105,7 @@ typedef struct {
 #define TUNER_SAT	1
 #define TUNER_TER	2
 #define TUNER_CBL	3
+#define TUNER_ATSC	4
 
 extern int dvb_step_channel(dvb_priv_t *, int);
 extern int dvb_set_channel(dvb_priv_t *, int, int);

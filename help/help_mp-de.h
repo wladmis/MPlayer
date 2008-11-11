@@ -4,7 +4,7 @@
 // Alexander Strasser <eclipse7@gmx.net>
 // Sebastian Krämer <mplayer@skraemer.de>
 
-// In synch with rev 1.153
+// In synch with rev 1.164
 
 // ========================= MPlayer help ===========================
 
@@ -219,6 +219,9 @@ static char help_text[]=
 #define MSGTR_WritingAVIHeader "Schreibe AVI-Header...\n"
 #define MSGTR_DuplicateFrames "\n%d doppelte(r) Frame(s)!\n"
 #define MSGTR_SkipFrame "\nFrame übersprungen!\n"
+#define MSGTR_ResolutionDoesntMatch "\nNeue Videodatei hat eine andere Auflösung oder anderen Farbraum als die vorige.\n"
+#define MSGTR_FrameCopyFileMismatch "\nAlle Videodateien müssen für -ovc copy identische fps, Auflösung und Codec haben.\n"
+#define MSGTR_AudioCopyFileMismatch "\nAlle Videodateien müssen für -oac copy identischen Audiocodec und Format haben.\n"
 #define MSGTR_ErrorWritingFile "%s: Fehler beim Schreiben der Datei.\n"
 #define MSGTR_WritingAVIIndex "\nSchreibe AVI-Index...\n"
 #define MSGTR_FixupAVIHeader "Korrigiere AVI-Header...\n"
@@ -343,6 +346,9 @@ static char help_text[]=
 "mw-us => 40kbps/Mono        voice => 56kbps/Mono\n"\
 "fm/radio/tape => 112kbps    hifi => 160kbps\n"\
 "cd => 192kbps               studio => 256kbps"
+#define MSGTR_LameCantInit "Kann Optionen für Lame nicht setzen, überprüfe Bitrate/Samplerate. "\
+"Manche sehr niedrige Bitraten (<32) benötigen niedrigere Sampleraten (z.B. -srate 8000). "\
+"Wenn alles andere nicht funktioniert, versuche es mit einem Preset."
 #define MSGTR_ConfigfileError "Konfigurationsdatei-Fehler"
 #define MSGTR_ErrorParsingCommandLine "Fehler beim Parsen der Kommandozeile."
 #define MSGTR_VideoStreamRequired "Videostream zwingend notwendig!\n"
@@ -398,15 +404,15 @@ static char help_text[]=
 "               ein, liefert leicht schlechtere Qualität und höhere Bitraten.\n"\
 "\n"\
 " preset=<wert> Bietet die bestmöglichen Qualitätseinstellungen.\n"\
-"                 medium: VBR-Enkodierung, gute Qualität\n"\
+"                 medium: VBR-Encodierung, gute Qualität\n"\
 "                 (150-180 kbps Bitratenbereich)\n"\
-"                 standard:  VBR-Enkodierung, hohe Qualität\n"\
+"                 standard:  VBR-Encodierung, hohe Qualität\n"\
 "                 (170-210 kbps Bitratenbereich)\n"\
-"                 extreme: VBR-Enkodierung, sehr hohe Qualität\n"\
+"                 extreme: VBR-Encodierung, sehr hohe Qualität\n"\
 "                 (200-240 kbps Bitratenbereich)\n"\
-"                 insane:  CBR-Enkodierung, höchste Preset-Qualität\n"\
+"                 insane:  CBR-Encodierung, höchste Preset-Qualität\n"\
 "                 (320 kbps Bitrate)\n"\
-"                 <8-320>: ABR-Enkodierung mit der angegebenen durchschnittlichen\n"\
+"                 <8-320>: ABR-Encodierung mit der angegebenen durchschnittlichen\n"\
 "                          Bitrate\n\n"
 
 //codec-cfg.c:
@@ -493,8 +499,8 @@ static char help_text[]=
 #define MSGTR_NotSystemStream "Kein MPEG System Stream... (vielleicht ein Transport Stream?)\n"
 #define MSGTR_InvalidMPEGES "Ungültiger MPEG-ES Stream??? Kontaktiere den Autor, das könnte ein Bug sein :(\n"
 #define MSGTR_FormatNotRecognized "========= Sorry, dieses Dateiformat wird nicht erkannt/unterstützt ============\n"\
-				  "============== Sollte dies ein AVI, ASF oder MPEG Stream sein, ===============\n"\
-				  "================== dann kontaktiere bitte den Autor. ========================\n"
+                                  "============== Sollte dies ein AVI, ASF oder MPEG Stream sein, ===============\n"\
+                                  "================== dann kontaktiere bitte den Autor. ========================\n"
 #define MSGTR_MissingVideoStream "Kein Videostream gefunden.\n"
 #define MSGTR_MissingAudioStream "Kein Audiostream gefunden. -> kein Ton.\n"
 #define MSGTR_MissingVideoStreamBug "Fehlender Videostream!? Kontaktiere den Autor, dies könnte ein Bug sein :(\n"
@@ -530,7 +536,7 @@ static char help_text[]=
 
 #define MSGTR_LeaveTelecineMode "demux_mpg: 30fps NTSC-Inhalt erkannt, wechsele Framerate.\n"
 #define MSGTR_EnterTelecineMode "demux_mpg: 24fps progressiven NTSC-Inhalt erkannt, wechsele Framerate.\n"
-				  
+
 // dec_video.c & dec_audio.c:
 #define MSGTR_CantOpenCodec "Konnte Codec nicht öffnen.\n"
 #define MSGTR_CantCloseCodec "Konnte Codec nicht schließen.\n"
@@ -631,13 +637,15 @@ static char help_text[]=
 #define MSGTR_NEMDB "Sorry, nicht genug Speicher für den Zeichnungs-Puffer."
 #define MSGTR_NEMFMR "Sorry, nicht genug Speicher für Menü-Rendering."
 #define MSGTR_IDFGCVD "Sorry, kann keinen GUI-kompatiblen Ausgabetreiber finden."
-#define MSGTR_NEEDLAVCFAME "Sorry, du versuchst, Nicht-MPEG Dateien ohne erneute Enkodierung abzuspielen.\nBitte aktiviere lavc oder fame in der DXR3/H+-Configbox."
+#define MSGTR_NEEDLAVCFAME "Sorry, du versuchst, Nicht-MPEG Dateien ohne erneute Encodierung abzuspielen.\nBitte aktiviere lavc oder fame in der DXR3/H+-Configbox."
+#define MSGTR_UNKNOWNWINDOWTYPE "Unbekannten Fenstertyp gefunden ..."
 
 // --- skin loader error messages
 #define MSGTR_SKIN_ERRORMESSAGE "[Skin] Fehler in Skin-Konfigurationsdatei in Zeile %d: %s" 
 #define MSGTR_SKIN_WARNING1 "[Skin] Warnung in Skin-Konfigurationsdatei in Zeile %d:\nWidget (%s) gefunden, aber davor wurde \"section\" nicht gefunden"
 #define MSGTR_SKIN_WARNING2 "[Skin] Warnung in Skin-Konfigurationsdatei in Zeile %d:\nWidget (%s) gefunden, aber davor wurde \"subsection\" nicht gefunden (%s)"
 #define MSGTR_SKIN_WARNING3 "[skin] Warnung in Skin-Konfigurationsdatei in Zeile %d:\nDiese Untersektion wird vom Widget nicht unterstützt (%s).\n"
+#define MSGTR_SKIN_SkinFileNotFound "[skin] Datei ( %s ) nicht gefunden.\n"
 #define MSGTR_SKIN_BITMAP_16bit  "Bitmaps mit 16 Bits oder weniger werden nicht unterstützt (%s).\n"
 #define MSGTR_SKIN_BITMAP_FileNotFound  "Datei nicht gefunden (%s)\n"
 #define MSGTR_SKIN_BITMAP_BMPReadError "BMP-Lesefehler (%s)\n"
@@ -654,6 +662,7 @@ static char help_text[]=
 #define MSGTR_SKIN_FONT_NonExistentFontID "nicht existierende Schriftbezeichnung (%s)\n"
 #define MSGTR_SKIN_UnknownParameter "unbekannter Parameter (%s)\n"
 #define MSGTR_SKIN_SKINCFG_SkinNotFound "Skin nicht gefunden (%s).\n"
+#define MSGTR_SKIN_SKINCFG_SelectedSkinNotFound "Ausgewähltes Skin ( %s ) wurde nicht gefunden, versuche 'Standard'...\n"
 #define MSGTR_SKIN_SKINCFG_SkinCfgReadError "Skin-Konfigurationsdatei: Lesefehler (%s)\n"
 #define MSGTR_SKIN_LABEL "Skins:"
 
@@ -674,6 +683,7 @@ static char help_text[]=
 #define MSGTR_MENU_NextStream "Nächster Stream"
 #define MSGTR_MENU_PrevStream "Vorheriger Stream"
 #define MSGTR_MENU_Size "Größe"
+#define MSGTR_MENU_HalfSize "Halbe Größe"
 #define MSGTR_MENU_NormalSize "Normale Größe"
 #define MSGTR_MENU_DoubleSize "Doppelte Größe"
 #define MSGTR_MENU_FullScreen "Vollbild"
@@ -739,6 +749,7 @@ static char help_text[]=
 #define MSGTR_PREFERENCES_DoNotPlaySound "Spiele keinen Ton"
 #define MSGTR_PREFERENCES_NormalizeSound "Normalisiere Ton"
 #define MSGTR_PREFERENCES_EnEqualizer "Equalizer verwenden"
+#define MSGTR_PREFERENCES_SoftwareMixer "Aktiviere Software-Mixer"
 #define MSGTR_PREFERENCES_ExtraStereo "Extra Stereo verwenden"
 #define MSGTR_PREFERENCES_Coefficient "Koeffizient:"
 #define MSGTR_PREFERENCES_AudioDelay "Audio-Verzögerung"
@@ -808,7 +819,7 @@ static char help_text[]=
 #define MSGTR_PREFERENCES_FontPropWidth "Proportional zur Breite des Films"
 #define MSGTR_PREFERENCES_FontPropHeight "Proportional zur Höhe des Films"
 #define MSGTR_PREFERENCES_FontPropDiagonal "Proportional zur Diagonale des Films"
-#define MSGTR_PREFERENCES_FontEncoding "Kodierung:"
+#define MSGTR_PREFERENCES_FontEncoding "Codierung:"
 #define MSGTR_PREFERENCES_FontBlur "Unschärfe:"
 #define MSGTR_PREFERENCES_FontOutLine "Zeichenumriss (Outline):"
 #define MSGTR_PREFERENCES_FontTextScale "Textskalierung:"
@@ -836,6 +847,45 @@ static char help_text[]=
 #define MSGTR_MSGBOX_LABEL_Error "Fehler!"
 #define MSGTR_MSGBOX_LABEL_Warning "Warnung!"
 
+// bitmap.c
+
+#define MSGTR_NotEnoughMemoryC32To1 "[c32to1] Für das Bild ist nicht genügend Speicher vorhanden.\n"
+#define MSGTR_NotEnoughMemoryC1To32 "[c1to32] Für das Bild ist nicht genügend Speicher vorhanden.\n"
+
+// cfg.c
+
+#define MSGTR_ConfigFileReadError "[cfg] Fehler beim Lesen der Konfigurationsdatei ...\n"
+#define MSGTR_UnableToSaveOption "[cfg] Kann die Option '%s' nicht speichern.\n"
+
+// interface.c
+
+#define MSGTR_DeletingSubtitles "[GUI] Lösche Untertitel.\n"
+#define MSGTR_LoadingSubtitles "[GUI] Lade Untertitel: %s\n"
+#define MSGTR_AddingVideoFilter "[GUI] Füge Videofilter %s hinzu.\n"
+#define MSGTR_RemovingVideoFilter "[GUI] Entferne Videofilter: %s\n"
+
+// mw.c
+
+#define MSGTR_NotAFile "Dies scheint keine Datei zu sein: %s !\n"
+
+// ws.c
+
+#define MSGTR_WS_CouldNotOpenDisplay "[ws] Konnte das Display nicht öffnen.\n"
+#define MSGTR_WS_RemoteDisplay "[ws] Ferngesteuertes Display, deaktiviere XMITSHM.\n"
+#define MSGTR_WS_NoXshm "[ws] Sorry, dein System unterstützt die Shared-Memory-Erweiterung von X nicht.\n"
+#define MSGTR_WS_NoXshape "[ws] Sorry, dein System unterstützt die XShape-Erweiterung nicht.\n"
+#define MSGTR_WS_ColorDepthTooLow "[ws] Sorry, die Farbtiefe ist zu niedrig.\n"
+#define MSGTR_WS_TooManyOpenWindows "[ws] Es sind zu viele Fenster geöffnet.\n"
+#define MSGTR_WS_ShmError "[ws] Fehler der Shared-Memory-Erweiterung\n"
+#define MSGTR_WS_NotEnoughMemoryDrawBuffer "[ws] Sorry, nicht genügend Speicher zum Schreiben in den Buffer.\n"
+#define MSGTR_WS_DpmsUnavailable "DPMS nicht verfügbar?\n"
+#define MSGTR_WS_DpmsNotEnabled "Konnte DPMS nicht aktivieren.\n"
+ 
+// wsxdnd.c
+
+#define MSGTR_WS_NotAFile "Dies scheint keine Datei zu sein...\n"
+#define MSGTR_WS_DDNothing "D&D: Nichts zurückgegeben!\n"
+ 
 #endif
 
  // ======================= VO Video Output drivers ========================
@@ -854,6 +904,16 @@ static char help_text[]=
 #define MSGTR_VO_ValueOutOfRange "Wert außerhalb des gültigen Bereichs"
 #define MSGTR_VO_NoValueSpecified "Kein Wert angegeben."
 #define MSGTR_VO_UnknownSuboptions "Unbekannte Unteroption(en)"
+
+// vo_aa.c
+
+#define MSGTR_VO_AA_HelpHeader "\n\nDies sind die Unteroptionen von aalib vo_aa:\n"
+#define MSGTR_VO_AA_AdditionalOptions "Zusätzlich von vo_aa bereitgestellte Optionen:\n" \
+"  help        gib diese Hilfsnachricht aus\n" \
+"  osdcolor    setze OSD-Farbe\n  subcolor    setze Untertitelfarbe\n" \
+"        die Farbparameter sind folgende:\n           0 : normal\n" \
+"           1 : dim\n           2 : bold\n           3 : boldfont\n" \
+"           4 : reverse\n           5 : special\n\n\n"
 
  // vo_jpeg.c
 #define MSGTR_VO_JPEG_ProgressiveJPEG "Progressives JPEG aktiviert."
@@ -898,7 +958,7 @@ static char help_text[]=
 #define MSGTR_AO_OSS_ChanNotFound "[AO OSS] audio_setup: Soundkartenmixer hat Kanal '%s' nicht, benutze Standard.\n"
 #define MSGTR_AO_OSS_CantOpenDev "[AO OSS] audio_setup: Kann Audiogerät %s nicht öffnen: %s\n"
 #define MSGTR_AO_OSS_CantMakeFd "[AO OSS] audio_setup: Kann Dateideskriptor nicht anlegen, blockiert: %s\n"
-#define MSGTR_AO_OSS_CantSetAC3 "[AO OSS] Kann Audiogerät %s nicht auf AC3-Ausgabe setzen, versuche S16...\n"
+#define MSGTR_AO_OSS_CantSet "[AO OSS] Kann Audiogerät %s nicht auf %s-Ausgabe setzen, versuche %s...\n"
 #define MSGTR_AO_OSS_CantSetChans "[AO OSS] audio_setup: Audiogerät auf %d Kanäle zu setzen ist fehlgeschlagen.\n"
 #define MSGTR_AO_OSS_CantUseGetospace "[AO OSS] audio_setup: Treiber unterstützt SNDCTL_DSP_GETOSPACE nicht :-(\n"
 #define MSGTR_AO_OSS_CantUseSelect "[AO OSS]\n   *** Dein Audiotreiber unterstützt select() NICHT ***\nKompiliere MPlayer mit #undef HAVE_AUDIO_SELECT in der Datei config.h !\n\n"
@@ -990,3 +1050,25 @@ static char help_text[]=
 // ao_plugin.c
 
 #define MSGTR_AO_PLUGIN_InvalidPlugin "[AO PLUGIN] ungültiges Plugin: %s\n"
+
+// ======================= AF Audio Filters ================================
+
+// libaf
+
+// af_ladspa.c
+
+#define MSGTR_AF_LADSPA_AvailableLabels "verfügbare Label in"
+#define MSGTR_AF_LADSPA_WarnNoInputs "WARNUNG! Dieses LADSPA-Plugin hat keine Audio-Inputs.\n  Das eingehende Audiosignal wird verlorengehen."
+#define MSGTR_AF_LADSPA_ErrMultiChannel "Multi-channel (>2) Plugins werden (noch) nicht unterstützt.\n  Benutze nur Mono- und Stereo-Plugins."
+#define MSGTR_AF_LADSPA_ErrNoOutputs "Dieses LADSPA-Plugin hat keine Audio-Outputs."
+#define MSGTR_AF_LADSPA_ErrInOutDiff "Die Anzahl der Audio-Inputs und Audio-Outputs des LADSPA-Plugins sind verschieden."
+#define MSGTR_AF_LADSPA_ErrFailedToLoad "konnte nicht laden"
+#define MSGTR_AF_LADSPA_ErrNoDescriptor "Konnte die Funktion ladspa_descriptor() in der angegebenen Bibliotheksdatei nicht finden."
+#define MSGTR_AF_LADSPA_ErrLabelNotFound "Konnte Label in der Plugin-Bibliothek nicht finden."
+#define MSGTR_AF_LADSPA_ErrNoSuboptions "Keine Suboptionen angegeben"
+#define MSGTR_AF_LADSPA_ErrNoLibFile "Keine Bibliotheksdatei angegeben"
+#define MSGTR_AF_LADSPA_ErrNoLabel "Keine Filterlabel angegeben"
+#define MSGTR_AF_LADSPA_ErrNotEnoughControls "Nicht genügend Bedienelemente in der Kommandozeile angegeben"
+#define MSGTR_AF_LADSPA_ErrControlBelow "%s: Input-Kontrolle #%d ist unterhalb der Grenze von %0.4f.\n"
+#define MSGTR_AF_LADSPA_ErrControlAbove "%s: Input-Kontrolle #%d ist überhalb der Grenze von %0.4f.\n"
+

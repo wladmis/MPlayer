@@ -14,7 +14,7 @@
 
 #include "dec_audio.h"
 #include "ad.h"
-#include "../libao2/afmt.h"
+#include "../libaf/af_format.h"
 
 #include "../libaf/af.h"
 
@@ -28,8 +28,6 @@ int fakemono=0;
 /* used for ac3surround decoder - set using -channels option */
 int audio_output_channels = 2;
 af_cfg_t af_cfg; // Configuration for audio filters
-
-static ad_functions_t* mpadec;
 
 void afm_help(){
     int i;
@@ -49,7 +47,15 @@ void afm_help(){
 
 int init_audio_codec(sh_audio_t *sh_audio)
 {
-  if(!mpadec->preinit(sh_audio))
+  if ((af_cfg.force & AF_INIT_FORMAT_MASK) == AF_INIT_FLOAT) {
+      int fmt = AF_FORMAT_FLOAT_NE;
+      if (sh_audio->ad_driver->control(sh_audio, ADCTRL_QUERY_FORMAT,
+				       &fmt) == CONTROL_TRUE) {
+	  sh_audio->sample_format = fmt;
+	  sh_audio->samplesize = 4;
+      }
+  }
+  if(!sh_audio->ad_driver->preinit(sh_audio))
   {
       mp_msg(MSGT_DECAUDIO,MSGL_ERR,MSGTR_ADecoderPreinitFailed);
       return 0;
@@ -79,7 +85,7 @@ int init_audio_codec(sh_audio_t *sh_audio)
   memset(sh_audio->a_buffer,0,sh_audio->a_buffer_size);
   sh_audio->a_buffer_len=0;
 
-  if(!mpadec->init(sh_audio)){
+  if(!sh_audio->ad_driver->init(sh_audio)){
       mp_msg(MSGT_DECAUDIO,MSGL_WARN,MSGTR_ADecoderInitFailed);
       uninit_audio(sh_audio); // free buffers
       return 0;
@@ -96,10 +102,11 @@ int init_audio_codec(sh_audio_t *sh_audio)
   if(!sh_audio->o_bps)
   sh_audio->o_bps=sh_audio->channels*sh_audio->samplerate*sh_audio->samplesize;
 
-  mp_msg(MSGT_DECAUDIO,MSGL_INFO,"AUDIO: %d Hz, %d ch, %d bit (0x%X), ratio: %d->%d (%3.1f kbit)\n",
+  mp_msg(MSGT_DECAUDIO,MSGL_INFO,"AUDIO: %d Hz, %d ch, %s, %3.1f kbit/%3.2f%% (ratio: %d->%d)\n",
 	sh_audio->samplerate,sh_audio->channels,
-	sh_audio->samplesize*8,sh_audio->sample_format,
-        sh_audio->i_bps,sh_audio->o_bps,sh_audio->i_bps*8*0.001);
+	af_fmt2str_short(sh_audio->sample_format),
+	sh_audio->i_bps*8*0.001,((float)sh_audio->i_bps/sh_audio->o_bps)*100.0,
+        sh_audio->i_bps,sh_audio->o_bps);
 
   sh_audio->a_out_buffer_size=sh_audio->a_buffer_size;
   sh_audio->a_out_buffer=sh_audio->a_buffer;
@@ -112,7 +119,9 @@ int init_audio(sh_audio_t *sh_audio,char* codecname,char* afm,int status){
     unsigned int orig_fourcc=sh_audio->wf?sh_audio->wf->wFormatTag:0;
     sh_audio->codec=NULL;
     while(1){
+	ad_functions_t* mpadec;
 	int i;
+	sh_audio->ad_driver = 0;
 	// restore original fourcc:
 	if(sh_audio->wf) sh_audio->wf->wFormatTag=i=orig_fourcc;
 	if(!(sh_audio->codec=find_codec(sh_audio->format,
@@ -169,6 +178,7 @@ int init_audio(sh_audio_t *sh_audio,char* codecname,char* afm,int status){
 	// it's available, let's try to init!
 	// init()
 	mp_msg(MSGT_DECAUDIO,MSGL_INFO,MSGTR_OpeningAudioDecoder,mpadec->info->short_name,mpadec->info->name);
+	sh_audio->ad_driver = mpadec;
 	if(!init_audio_codec(sh_audio)){
 	    mp_msg(MSGT_DECAUDIO,MSGL_INFO,MSGTR_ADecoderInitFailed);
 	    continue; // try next...
@@ -239,7 +249,7 @@ void uninit_audio(sh_audio_t *sh_audio)
     }
     if(sh_audio->inited){
 	mp_msg(MSGT_DECAUDIO,MSGL_V,MSGTR_UninitAudioStr,sh_audio->codec->drv);
-	mpadec->uninit(sh_audio);
+	sh_audio->ad_driver->uninit(sh_audio);
 #ifdef DYNAMIC_PLUGINS
 	if (sh_audio->dec_handle)
 	    dlclose(sh_audio->dec_handle);
@@ -252,36 +262,33 @@ void uninit_audio(sh_audio_t *sh_audio)
     sh_audio->a_buffer=NULL;
     if(sh_audio->a_in_buffer) free(sh_audio->a_in_buffer);
     sh_audio->a_in_buffer=NULL;
-    if(sh_audio->wf) free(sh_audio->wf);
-    sh_audio->wf=NULL;
 }
 
  /* Init audio filters */
 int preinit_audio_filters(sh_audio_t *sh_audio, 
-	int in_samplerate, int in_channels, int in_format, int in_bps,
-	int* out_samplerate, int* out_channels, int* out_format, int out_bps){
-  char strbuf[200];
+	int in_samplerate, int in_channels, int in_format,
+	int* out_samplerate, int* out_channels, int* out_format){
   af_stream_t* afs=malloc(sizeof(af_stream_t));
   memset(afs,0,sizeof(af_stream_t));
 
   // input format: same as codec's output format:
   afs->input.rate   = in_samplerate;
   afs->input.nch    = in_channels;
-  afs->input.format = af_format_decode(in_format);
-  afs->input.bps    = in_bps;
+  afs->input.format = in_format;
+  af_fix_parameters(&(afs->input));
 
   // output format: same as ao driver's input format (if missing, fallback to input)
   afs->output.rate   = *out_samplerate ? *out_samplerate : afs->input.rate;
   afs->output.nch    = *out_channels ? *out_channels : afs->input.nch;
-  afs->output.format = *out_format ? af_format_decode(*out_format) : afs->input.format;
-  afs->output.bps    = out_bps ? out_bps : afs->input.bps;
+  afs->output.format = *out_format ? *out_format : afs->input.format;
+  af_fix_parameters(&(afs->output));
 
   // filter config:  
   memcpy(&afs->cfg,&af_cfg,sizeof(af_cfg_t));
   
-  mp_msg(MSGT_DECAUDIO, MSGL_INFO, "Checking audio filter chain for %dHz/%dch/%dbit -> %dHz/%dch/%dbit...\n",
-      afs->input.rate,afs->input.nch,afs->input.bps*8,
-      afs->output.rate,afs->output.nch,afs->output.bps*8);
+  mp_msg(MSGT_DECAUDIO, MSGL_INFO, "Checking audio filter chain for %dHz/%dch/%s -> %dHz/%dch/%s...\n",
+      afs->input.rate,afs->input.nch,af_fmt2str_short(afs->input.format),
+      afs->output.rate,afs->output.nch,af_fmt2str_short(afs->output.format));
   
   // let's autoprobe it!
   if(0 != af_init(afs,0)){
@@ -291,11 +298,11 @@ int preinit_audio_filters(sh_audio_t *sh_audio,
   
   *out_samplerate=afs->output.rate;
   *out_channels=afs->output.nch;
-  *out_format=af_format_encode((void*)(&afs->output));
-  
-  mp_msg(MSGT_DECAUDIO, MSGL_INFO, "AF_pre: af format: %d bps, %d ch, %d hz, %s\n",
-      afs->output.bps, afs->output.nch, afs->output.rate,
-      fmt2str(afs->output.format,strbuf,200));
+  *out_format=afs->output.format;
+
+  mp_msg(MSGT_DECAUDIO, MSGL_INFO, "AF_pre: %dHz/%dch/%s\n",
+      afs->output.rate, afs->output.nch,
+      af_fmt2str_short(afs->output.format));
   
   sh_audio->afilter=(void*)afs;
   return 1;
@@ -303,8 +310,8 @@ int preinit_audio_filters(sh_audio_t *sh_audio,
 
  /* Init audio filters */
 int init_audio_filters(sh_audio_t *sh_audio, 
-	int in_samplerate, int in_channels, int in_format, int in_bps,
-	int out_samplerate, int out_channels, int out_format, int out_bps,
+	int in_samplerate, int in_channels, int in_format,
+	int out_samplerate, int out_channels, int out_format,
 	int out_minsize, int out_maxsize){
   af_stream_t* afs=sh_audio->afilter;
   if(!afs){
@@ -315,21 +322,21 @@ int init_audio_filters(sh_audio_t *sh_audio,
   // input format: same as codec's output format:
   afs->input.rate   = in_samplerate;
   afs->input.nch    = in_channels;
-  afs->input.format = af_format_decode(in_format);
-  afs->input.bps    = in_bps;
+  afs->input.format = in_format;
+  af_fix_parameters(&(afs->input));
 
   // output format: same as ao driver's input format (if missing, fallback to input)
   afs->output.rate   = out_samplerate ? out_samplerate : afs->input.rate;
   afs->output.nch    = out_channels ? out_channels : afs->input.nch;
-  afs->output.format = af_format_decode(out_format ? out_format : afs->input.format);
-  afs->output.bps    = out_bps ? out_bps : afs->input.bps;
+  afs->output.format = out_format ? out_format : afs->input.format;
+  af_fix_parameters(&(afs->output));
 
   // filter config:  
   memcpy(&afs->cfg,&af_cfg,sizeof(af_cfg_t));
   
-  mp_msg(MSGT_DECAUDIO, MSGL_INFO, "Building audio filter chain for %dHz/%dch/%dbit -> %dHz/%dch/%dbit...\n",
-      afs->input.rate,afs->input.nch,afs->input.bps*8,
-      afs->output.rate,afs->output.nch,afs->output.bps*8);
+  mp_msg(MSGT_DECAUDIO, MSGL_INFO, "Building audio filter chain for %dHz/%dch/%s -> %dHz/%dch/%s...\n",
+      afs->input.rate,afs->input.nch,af_fmt2str_short(afs->input.format),
+      afs->output.rate,afs->output.nch,af_fmt2str_short(afs->output.format));
   
   // let's autoprobe it!
   if(0 != af_init(afs,1)){
@@ -357,6 +364,7 @@ int decode_audio(sh_audio_t *sh_audio,unsigned char *buf,int minlen,int maxlen)
   int declen;
   af_data_t  afd;  // filter input
   af_data_t* pafd; // filter output
+  ad_functions_t* mpadec = sh_audio->ad_driver;
 
   if(!sh_audio->inited) return -1; // no codec
   if(!sh_audio->afilter){
@@ -404,8 +412,8 @@ int decode_audio(sh_audio_t *sh_audio,unsigned char *buf,int minlen,int maxlen)
   afd.len=declen;
   afd.rate=sh_audio->samplerate;
   afd.nch=sh_audio->channels;
-  afd.format=af_format_decode(sh_audio->sample_format);
-  afd.bps=sh_audio->samplesize;
+  afd.format=sh_audio->sample_format;
+  af_fix_parameters(&afd);
   //pafd=&afd;
 //  printf("\nAF: %d --> ",declen);
   pafd=af_play(sh_audio->afilter,&afd);
@@ -437,13 +445,17 @@ void resync_audio_stream(sh_audio_t *sh_audio)
 {
   sh_audio->a_in_buffer_len=0;        // clear audio input buffer
   if(!sh_audio->inited) return;
-  mpadec->control(sh_audio,ADCTRL_RESYNC_STREAM,NULL);
+  sh_audio->ad_driver->control(sh_audio,ADCTRL_RESYNC_STREAM,NULL);
 }
 
 void skip_audio_frame(sh_audio_t *sh_audio)
 {
   if(!sh_audio->inited) return;
-  if(mpadec->control(sh_audio,ADCTRL_SKIP_FRAME,NULL)==CONTROL_TRUE) return;
+  if(sh_audio->ad_driver->control(sh_audio,ADCTRL_SKIP_FRAME,NULL)==CONTROL_TRUE) return;
   // default skip code:
   ds_fill_buffer(sh_audio->ds);  // skip block
+}
+
+void adjust_volume()
+{
 }

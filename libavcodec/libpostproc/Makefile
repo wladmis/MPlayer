@@ -1,6 +1,8 @@
 
 include ../../config.mak
 
+VPATH=$(SRC_PATH)/libavcodec/libpostproc
+
 ifeq ($(SHARED_PP),yes)
 SPPLIB = $(SLIBPREF)postproc$(SLIBSUF)
 SPPVERSION = 0.0.1
@@ -18,7 +20,7 @@ CFLAGS  = $(OPTFLAGS) $(MLIB_INC) -I. -I.. $(EXTRA_INC)
 # .PHONY: all clean
 
 .c.o:
-	$(CC) -c $(CFLAGS) -I.. -I../.. -o $@ $<
+	$(CC) -c $(CFLAGS) -I$(SRC_PATH)/libavcodec -I../.. -o $@ $<
 
 all:    $(SWSLIB) $(PPLIB) $(SPPLIB)
 
@@ -50,11 +52,11 @@ $(PPLIB): $(PPOBJS)
 install: all
 ifeq ($(SHARED_PP),yes)
 ifeq ($(CONFIG_WIN32),yes)
-       install $(INSTALLSTRIP) -m 755 $(SPPLIB) "$(prefix)"
+	install $(INSTALLSTRIP) -m 755 $(SPPLIB) "$(prefix)"
 else
-	install -d $(prefix)/lib
-	install $(INSTALLSTRIP) -m 755 $(SPPLIB) $(prefix)/lib/$(SPPLIB).$(SPPVERSION)
-	ln -sf $(SPPLIB).$(SPPVERSION) $(prefix)/lib/$(SPPLIB)
+	install -d $(libdir)
+	install $(INSTALLSTRIP) -m 755 $(SPPLIB) $(libdir)/$(SPPLIB).$(SPPVERSION)
+	ln -sf $(SPPLIB).$(SPPVERSION) $(libdir)/$(SPPLIB)
 	ldconfig || true
 endif
 endif

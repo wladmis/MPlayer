@@ -6,21 +6,15 @@
 
 #include "mp_msg.h"
 #include "config.h"
+#include "subopt-helper.h"
 #include "video_out.h"
 #include "video_out_internal.h"
 #include "font_load.h"
 #include "sub.h"
 
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-//#include <X11/keysym.h>
-#include <GL/glx.h>
 #include <errno.h>
 
-#include <GL/gl.h>
-
 #include "gl_common.h"
-#include "x11_common.h"
 #include "aspect.h"
 #ifdef HAVE_NEW_GUI
 #include "Gui/interface.h"
@@ -47,12 +41,17 @@ static int                  wsGLXAttrib[] = { GLX_RGBA,
 
 static int use_osd;
 static int scaled_osd;
+//! How many parts the OSD may consist of at most
 #define MAX_OSD_PARTS 20
+//! Textures for OSD
 static GLuint osdtex[MAX_OSD_PARTS];
 #ifndef FAST_OSD
+//! Alpha textures for OSD
 static GLuint osdatex[MAX_OSD_PARTS];
 #endif
+//! Display lists that draw the OSD parts
 static GLuint osdDispList[MAX_OSD_PARTS];
+//! How many parts the OSD currently consists of
 static int osdtexCnt = 0;
 
 static int use_aspect;
@@ -153,6 +152,7 @@ config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uin
 	glFindFormat(format, &image_bytes, &gl_texfmt, &gl_format, &gl_type);
 	image_bytes = (image_bytes + 7) / 8;
 
+  if (use_osd)
   sub_bg_alpha = 255; // We need alpha = 255 for invisible part of the OSD
 	int_pause = 0;
 
@@ -465,63 +465,24 @@ uninit(void)
   vo_x11_uninit();
 }
 
+static opt_t subopts[] = {
+  {"manyfmts",     OPT_ARG_BOOL, &many_fmts,    NULL},
+  {"osd",          OPT_ARG_BOOL, &use_osd,      NULL},
+  {"scaled-osd",   OPT_ARG_BOOL, &scaled_osd,   NULL},
+  {"aspect",       OPT_ARG_BOOL, &use_aspect,   NULL},
+  {"slice-height", OPT_ARG_INT,  &slice_height, (opt_test_f)int_non_neg},
+  {NULL}
+};
+
 static uint32_t preinit(const char *arg)
 {
-    int parse_err = 0;
-    unsigned int parse_pos = 0;
+    // set defaults
     many_fmts = 0;
     use_osd = 1;
     scaled_osd = 0;
     use_aspect = 1;
     slice_height = 4;
-    if(arg) 
-    {
-        while (arg[parse_pos] && !parse_err) {
-            if (strncmp (&arg[parse_pos], "manyfmts", 8) == 0) {
-                parse_pos += 8;
-                many_fmts = 1;
-            } else if (strncmp (&arg[parse_pos], "nomanyfmts", 10) == 0) {
-                parse_pos += 10;
-                many_fmts = 0;
-            } else if (strncmp (&arg[parse_pos], "osd", 3) == 0) {
-                parse_pos += 3;
-                use_osd = 1;
-            } else if (strncmp (&arg[parse_pos], "noosd", 5) == 0) {
-                parse_pos += 5;
-                use_osd = 0;
-            } else if (strncmp (&arg[parse_pos], "scaled-osd", 10) == 0) {
-                parse_pos += 10;
-                scaled_osd = 1;
-            } else if (strncmp (&arg[parse_pos], "noscaled-osd", 12) == 0) {
-                parse_pos += 12;
-                scaled_osd = 0;
-            } else if (strncmp (&arg[parse_pos], "aspect", 6) == 0) {
-                parse_pos += 6;
-                use_aspect = 1;
-            } else if (strncmp (&arg[parse_pos], "noaspect", 8) == 0) {
-                parse_pos += 8;
-                use_aspect = 0;
-            } else if (strncmp (&arg[parse_pos], "slice-height=", 13) == 0) {
-                int val;
-                char *end;
-                parse_pos += 13;
-                val = strtol(&arg[parse_pos], &end, 0);
-                if (val < 0) parse_err = 1;
-                else {
-                  slice_height = val;
-                  parse_pos = end - arg;
-                }
-            }
-            if (arg[parse_pos] == ':') parse_pos++;
-            else if (arg[parse_pos]) parse_err = 1;
-        }
-    }
-    if (parse_err) {
-      unsigned int i;
-      mp_msg(MSGT_VO, MSGL_FATAL, "Could not parse arguments:\n%s\n", arg);
-      for (i = 0; i < parse_pos; i++)
-        mp_msg(MSGT_VO, MSGL_FATAL, " ");
-      mp_msg(MSGT_VO, MSGL_FATAL, "^\n");
+    if (subopt_parse(arg, subopts) != 0) {
       mp_msg(MSGT_VO, MSGL_FATAL,
               "\n-vo gl command line help:\n"
               "Example: mplayer -vo gl:slice-height=4\n"

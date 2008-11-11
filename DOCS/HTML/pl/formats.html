@@ -3,27 +3,28 @@ Na pocz&#261;tek wa&#380;ne jest wyja&#347;nienie pewnego cz&#281;sto pope&#322;
 Kiedy ludzie widz&#261; plik o rozszerzeniu <tt class="filename">.AVI</tt>,
 automatycznie stwierdzaj&#261;, &#380;e to nie jest plik MPEG. Nie jest to prawda.
 Przynajmniej niezupe&#322;nie. W przeciwie&#324;stwie do popularnego stwierdzenia,
-plik taki <span class="emphasis"><i>mo&#380;e</i></span> zawiera&#263; video MPEG1.
+plik taki <span class="emphasis"><i>mo&#380;e</i></span> zawiera&#263; video MPEG-1.
 </p><p>
 Widzisz, <span class="bold"><b>kodek</b></span> to nie to samo, co
 <span class="bold"><b>format pliku</b></span>.
-Przyk&#322;ady <span class="bold"><b>kodeków</b></span> video: MPEG1, MPEG2, DivX, Indeo5, 3vix.
+Przyk&#322;ady <span class="bold"><b>kodeków</b></span> video: MPEG-1, MPEG-2,
+MPEG-4 (DivX), Indeo5, 3vix.
 Przyk&#322;ady <span class="bold"><b>formatów</b></span> plików: MPG, AVI, ASF.
 </p><p>
 W teorii, mo&#380;esz umie&#347;ci&#263; video OpenDivX i d&#378;wi&#281;k MP3 w
 <span class="bold"><b>pliku MPG</b></span>. Wi&#281;kszo&#347;&#263; odtwarzaczy
-nie b&#281;dzie jednak w stanie go odtworzy&#263;, gdy&#380; spodziewaj&#261; si&#281; obrazu MPEG1 i
+nie b&#281;dzie jednak w stanie go odtworzy&#263;, gdy&#380; spodziewaj&#261; si&#281; obrazu MPEG-1 i
 d&#378;wi&#281;ku MP2 (w przeciwie&#324;stwie do <span class="bold"><b>AVI</b></span>,
 <span class="bold"><b>MPG</b></span> nie ma odpowiednich pól do opisu jego
-strumieni audio i video). Mo&#380;esz równie&#380; umie&#347;ci&#263; video MPEG1 w pliku
-AVI. <a href="http://ffmpeg.sourceforge.net/" target="_top">FFmpeg</a> i
+strumieni audio i video). Mo&#380;esz równie&#380; umie&#347;ci&#263; video MPEG-1 w pliku
+AVI. <a href="http://ffmpeg.org/" target="_top">FFmpeg</a> i
 <a href="mencoder.html" title="Rozdzia&#322; 7. Kodowanie z MEncoderem"><span class="application">MEncoder</span></a> potrafi&#261;
 tworzy&#263; takie pliki.
 </p><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="video-formats"></a>2.1.1. Formaty video</h3></div></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="mpg-vob-dat"></a>2.1.1.1. Pliki MPEG</h4></div></div><p>
 Pliki MPEG spotykamy w ró&#380;nych kszta&#322;tach:
 </p><div class="itemizedlist"><ul type="disc"><li>
   MPG: To jest najbardziej <span class="bold"><b>podstawowa</b></span> forma
-  plików MPEG. Zawiera video MPEG1 i audio MP2 (MPEG-1 warstwa 2) lub rzadziej
+  plików MPEG. Zawiera video MPEG-1 i audio MP2 (MPEG-1 warstwa 2) lub rzadziej
   MP1.
   </li><li>
   DAT: To dok&#322;adnie ten sam format, co MPG, tylko z innym rozszerzeniem. Jest
@@ -34,9 +35,16 @@ Pliki MPEG spotykamy w ró&#380;nych kszta&#322;tach:
   </li><li>
   VOB: To format pliku MPEG na p&#322;ytach <span class="bold"><b>DVD</b></span>.
   Jest to to samo, co MPG, plus mo&#380;liwo&#347;&#263; umieszczenia w nim napisów lub
-  d&#378;wi&#281;ku nie-MPEG (AC3). Zawiera zakodowany strumie&#324; obrazu MPEG2 i przewa&#380;nie
+  d&#378;wi&#281;ku nie-MPEG (AC3). Zawiera zakodowany strumie&#324; obrazu MPEG-2 i przewa&#380;nie
   d&#378;wi&#281;k AC3, lecz dozwolone s&#261; tak&#380;e DTS, MP2 i nieskompresowane LPCM.
   <span class="bold"><b>Przejrzyj sekcj&#281; <a href="dvd.html" title="5.2. Odtwarzanie DVD">DVD</a></b></span>!
+  </li><li>
+  TY: To jest strumie&#324; TiVo MPEG. Zawiera on dane MPEG PES strumieni audio
+  i video, oraz dodatkowe informacje jak napisy Closed Caption. Ten format nie
+  jest strumieniem programu MPEG, ale zamkni&#281;tym formatem stworzonym przez
+  TiVo. Wi&#281;cej informacji o formacie strumienia TiVo mo&#380;na uzyska&#263; na
+  <a href="http://dvd-create.sourceforge.net/tystudio/tystream.shtml" target="_top">
+  stronie TyStudio</a>.
   </li></ul></div><p>
 Serie klatek tworz&#261; niezale&#380;ne grupy w plikach MPEG. To oznacza, &#380;e mo&#380;esz
 ci&#261;&#263;/&#322;&#261;czy&#263; plik MPEG za pomoc&#261; zwyk&#322;ych narz&#281;dzi plikowych (typu
@@ -51,7 +59,7 @@ skalowane w trakcie kodowania lub odtwarzane z opcj&#261; <tt class="option">-as
 </p></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="avi"></a>2.1.1.2. Pliki AVI</h4></div></div><p>
 Zaprojektowane przez Microsoft <span class="bold"><b>pliki AVI
 (Audio Video Interleaved)</b></span> to szeroko stosowany wielofunkcyjny format
-aktualnie u&#380;ywany g&#322;ównie dla video DivX i DivX4. Posiada wiele wad i
+aktualnie u&#380;ywany g&#322;ównie dla video MPEG-4 (DivX i DivX4). Posiada wiele wad i
 niedoci&#261;gni&#281;&#263; (np. przy strumieniowaniu). Obs&#322;uguje jeden strumie&#324; video i od 0
 do 99 strumieni audio i mo&#380;e mie&#263; co najwy&#380;ej 2 GB, lecz istnieje rozszerzenie,
 które pozwala na osi&#261;gni&#281;cie wi&#281;kszych plików, zwane
@@ -93,7 +101,7 @@ dla plików AVI:
   <span class="bold"><b>oparte na bps (bitach na sekund&#281;):</b></span> Oparta
   jest na liczbie bitów/próbek na sekund&#281; strumieni audio/video. Metoda ta jest
   stosowana przez wi&#281;kszo&#347;&#263; odtwarzaczy, w&#322;&#261;czaj&#261;c w to
-  <a href="http://avifile.sourceforge.net" target="_top">avifile</a> oraz
+  <a href="http://avifile.sf.net" target="_top">avifile</a> oraz
   <span class="application">Windows Media Player</span>. Pliki z uszkodzonymi
   nag&#322;ówkami i pliki z d&#378;wi&#281;kiem VBR (Variable Bitrate - zmienne
   tempo bitowe) utworzone za pomoc&#261; niekompatybilnego z VBR programu koduj&#261;cego
@@ -125,11 +133,11 @@ nie ma pomi&#281;dzy nimi &#380;adnej kompatybilno&#347;ci (kolejna zagrywka leg
 <span class="application">MPlayer</span> obs&#322;uguje jedynie v1.0, gdy&#380; nikt jeszcze nie
 widzia&#322; &#380;adnego pliku v2.0 :). Zauwa&#380;, &#380;e dzisiejsze pliki ASF maj&#261; rozszerzenia
 <tt class="filename">.WMA</tt> lub <tt class="filename">.WMV</tt>.
-</p></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="qt-mov"></a>2.1.1.4. Pliki QuickTime/MOV</h4></div></div><p>
+</p></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="mov"></a>2.1.1.4. Pliki QuickTime/MOV</h4></div></div><p>
 Formaty te zosta&#322;y zaprojektowane przez Apple i mog&#261; zawiera&#263; dowolny kodek,
 CBR lub VBR. Maj&#261; przewa&#380;nie rozszerzenie <tt class="filename">.QT</tt> lub
-<tt class="filename">.MOV</tt>. Warto zauwa&#380;y&#263;, &#380;e grupa MPEG4 wybra&#322;a QuickTime
-jako zalecany format pliku dla MPEG4, a ich pliki MOV maj&#261; rozszerzenie
+<tt class="filename">.MOV</tt>. Warto zauwa&#380;y&#263;, &#380;e grupa MPEG-4 wybra&#322;a QuickTime
+jako zalecany format pliku dla MPEG-4, a ich pliki MOV maj&#261; rozszerzenie
 <tt class="filename">.MPG</tt> lub <tt class="filename">.MP4</tt> (interesuj&#261;ce jest to, &#380;e
 strumienie w tych plikach to w rzeczywisto&#347;ci pliki MPG i AAC. Mo&#380;esz nawet je
 wyci&#261;gn&#261;&#263; za pomoc&#261; opcji <tt class="option">-dumpvideo</tt> oraz
@@ -167,16 +175,17 @@ pliki RealMedia (<tt class="filename">.rm</tt>).
 Tu znajdziesz list&#281; obs&#322;ugiwanych kodeków <a href="codecs.html#realvideo" title="2.2.1.7. RealVideo">RealVideo</a>
 i <a href="codecs.html#realaudio" title="2.2.2.5. RealAudio">RealAudio</a>.
 </p></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="nuppelvideo"></a>2.1.1.8. Pliki NuppelVideo</h4></div></div><p>
-<a href="http://mars.tuwien.ac.at/~roman/nuppelvideo" target="_top">NuppelVideo</a>
+<a href="http://frost.htu.tuwien.ac.at/~roman/nuppelvideo/" target="_top">NuppelVideo</a>
 jest narz&#281;dziem do zgrywania TV (AFAIK :). <span class="application">MPlayer</span>
 potrafi czyta&#263; jego pliki <tt class="filename">.NUV</tt> (tylko NuppelVideo 5.0).
 Pliki te mog&#261; zawiera&#263; klatki: nieskompresowane YV12, skompresowane YV12+RTJpeg,
 skompresowane YV12 RTJpeg+lzo i skompresowane YV12+lzo.
 <span class="application">MPlayer</span> dekoduje je (a nawet
 <span class="bold"><b>koduje</b></span> za pomoc&#261;
-<span class="application">MEncodera</span>) wszystkie. Dzia&#322;aj&#261; równie&#380; skoki.
+<span class="application">MEncodera</span> do MPEG-4 (DivX) itp!) wszystkie.
+Dzia&#322;aj&#261; równie&#380; skoki.
 </p></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="yuv4mpeg"></a>2.1.1.9. pliki yuv4mpeg</h4></div></div><p>
-<a href="http://mjpeg.sourceforge.net" target="_top">yuv4mpeg / yuv4mpeg2</a>
+<a href="http://mjpeg.sf.net" target="_top">yuv4mpeg / yuv4mpeg2</a>
 to format plików stosowany przez
 <a href="http://mjpeg.sf.net" target="_top">programy mjpegtools</a>.
 Mo&#380;esz zgrywa&#263;, produkowa&#263;, filtrowa&#263; lub kodowa&#263; video w tym formacie za pomoc&#261;
@@ -201,9 +210,6 @@ format IETF dla opisu strumieni RTP audio i/lub video.
 PVA to format MPEGo-podobny u&#380;ywany przez oprogramowanie kart DVB (np.:
 <span class="application">MultiDec</span> lub <span class="application">WinTV</span> pod
 Windows).
-</p><p>
-Specyfikacje PVA s&#261; do pobrania pod nast&#281;puj&#261;cym adresem:
-<a href="http://www.technotrend.de/download/av_format_v1.pdf" target="_top">http://www.technotrend.de/download/av_format_v1.pdf</a>
 </p></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="nsv"></a>2.1.1.15. Pliki NSV</h4></div></div><p>
 NSV (NullSoft Video) jest formatem plików u&#380;ywanym przez odtwarzacz
 <span class="application">Winamp</span> do strumieniowania audio i video.
@@ -240,7 +246,7 @@ patentowych w zwi&#261;zku z kompresj&#261; LZW.
 </p><p>
 Je&#347;li Twoja dystrybucja nie zawiera biblioteki <tt>libungif</tt>,
 pobierz j&#261; ze
-<a href="http://prtr-13.ucsc.edu/~badger/software/libungif/index.shtml" target="_top">strony domowej libungif</a>.
+<a href="http://sourceforge.net/projects/libungif" target="_top">strony domowej libungif</a>.
 By uzyska&#263; szczegó&#322;owe informacje techniczne, zajrzyj do
 <a href="http://www.w3.org/Graphics/GIF/spec-gif89a.txt" target="_top">specyfikacji GIF89a</a>.
 </p></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="audio-formats"></a>2.1.2. Formaty audio</h3></div></div><p>
@@ -277,7 +283,7 @@ zosta&#263; wykorzystana do przekazania opcji do programu
 programu <span class="application">XMMS</span> do odtwarzania wielu formatów. Istniej&#261;
 wtyczki do muzyczek z gier na SNES, muzyczek SID (z Commodore 64), wielu
 formatów Amigi, .xm, .it, VQF, musepack, Bonk, shorten i wielu innych. Mo&#380;esz
-znale&#378;&#263; je na <a href="http://www.xmms.org/plugins_input.html" target="_top">Stronie
+znale&#378;&#263; je na <a href="http://www.xmms.org/plugins.php?category=input" target="_top">Stronie
 wtyczek wej&#347;ciowych do XMMS</a>.
 </p><p>
 Do obs&#322;ugi tej mo&#380;liwo&#347;ci musisz mie&#263; <span class="application">XMMSa</span> i
