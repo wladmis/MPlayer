@@ -15,7 +15,7 @@ CpuCaps gCpuCaps;
 #include <string.h>
 #include "osdep/timer.h"
 
-#ifdef __NetBSD__
+#if defined (__NetBSD__) || defined(__OpenBSD__)
 #include <sys/param.h>
 #include <sys/sysctl.h>
 #include <machine/cpu.h>
@@ -170,7 +170,7 @@ void GetCpuCaps( CpuCaps *caps)
 #endif
 
 		/* FIXME: Does SSE2 need more OS support, too? */
-#if defined(__linux__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__CYGWIN__)
+#if defined(__linux__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__CYGWIN__) || defined(__MINGW32__) || defined(__OpenBSD__)
 		if (caps->hasSSE)
 			check_os_katmai_support();
 		if (!caps->hasSSE)
@@ -366,8 +366,8 @@ static void check_os_katmai_support( void )
    if (ret || !has_sse)
       gCpuCaps.hasSSE=0;
 
-#elif defined(__NetBSD__)
-#if __NetBSD_Version__ >= 105250000
+#elif defined(__NetBSD__) || defined (__OpenBSD__)
+#if __NetBSD_Version__ >= 105250000 || (defined __OpenBSD__)
    int has_sse, has_sse2, ret, mib[2];
    size_t varlen;
 
@@ -569,5 +569,49 @@ void GetCpuCaps( CpuCaps *caps)
 #endif /* SYS_DARWIN */
         mp_msg(MSGT_CPUDETECT,MSGL_INFO,"AltiVec %sfound\n", (caps->hasAltiVec ? "" : "not "));
 #endif /* HAVE_ALTIVEC */
+
+#ifdef ARCH_IA64
+	mp_msg(MSGT_CPUDETECT,MSGL_INFO,"CPU: Intel Itanium\n");
+#endif
+
+#ifdef ARCH_X86_64
+	mp_msg(MSGT_CPUDETECT,MSGL_INFO,"CPU: Advanced Micro Devices 64-bit CPU\n");
+#endif
+
+#ifdef ARCH_SPARC
+	mp_msg(MSGT_CPUDETECT,MSGL_INFO,"CPU: Sun Sparc\n");
+#endif
+
+#ifdef ARCH_ARMV4L
+	mp_msg(MSGT_CPUDETECT,MSGL_INFO,"CPU: ARM\n");
+#endif
+
+#ifdef ARCH_POWERPC
+	mp_msg(MSGT_CPUDETECT,MSGL_INFO,"CPU: PowerPC\n");
+#endif
+
+#ifdef ARCH_ALPHA
+	mp_msg(MSGT_CPUDETECT,MSGL_INFO,"CPU: Digital Alpha\n");
+#endif
+
+#ifdef ARCH_SGI_MIPS
+	mp_msg(MSGT_CPUDETECT,MSGL_INFO,"CPU: SGI MIPS\n");
+#endif
+
+#ifdef ARCH_PA_RISC
+	mp_msg(MSGT_CPUDETECT,MSGL_INFO,"CPU: Hewlett-Packard PA-RISC\n");
+#endif
+
+#ifdef ARCH_S390
+	mp_msg(MSGT_CPUDETECT,MSGL_INFO,"CPU: IBM S/390\n");
+#endif
+
+#ifdef ARCH_S390X
+	mp_msg(MSGT_CPUDETECT,MSGL_INFO,"CPU: IBM S/390X\n");
+#endif
+
+#ifdef ARCH_VAX
+	mp_msg(MSGT_CPUDETECT,MSGL_INFO, "CPU: Digital VAX\n" );
+#endif
 }
 #endif /* !ARCH_X86 */

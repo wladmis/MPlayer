@@ -1,11 +1,10 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html><head><meta content="text/html; charset=ISO-8859-1" http-equiv="Content-Type"><title>5.2. DVD playback</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.50.0"><link rel="home" href="index.html" title="MPlayer - The Movie Player for LINUX"><link rel="up" href="cd-dvd.html" title="Chapter 5. CD/DVD usage"><link rel="previous" href="drives.html" title="5.1. CD/DVD drives"><link rel="next" href="vcd.html" title="5.3. VCD playback"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">5.2. DVD playback</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="drives.html">Prev</a> </td><th width="60%" align="center">Chapter 5. CD/DVD usage</th><td width="20%" align="right"> <a accesskey="n" href="vcd.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="dvd"></a>5.2. DVD playback</h2></div></div><p>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>5.2. DVD playback</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - The Movie Player for LINUX"><link rel="up" href="cd-dvd.html" title="Chapter 5. CD/DVD usage"><link rel="previous" href="drives.html" title="5.1. CD/DVD drives"><link rel="next" href="vcd.html" title="5.3. VCD playback"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">5.2. DVD playback</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="drives.html">Prev</a> </td><th width="60%" align="center">Chapter 5. CD/DVD usage</th><td width="20%" align="right"> <a accesskey="n" href="vcd.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="dvd"></a>5.2. DVD playback</h2></div></div><p>
 For the complete list of available options, please read the man page.
 The Syntax for a standard Digital Versatile Disc (DVD) is as follows:
 <pre class="screen">mplayer dvd://<i><tt>&lt;track&gt;</tt></i> [-dvd-device <i><tt>&lt;device&gt;</tt></i>]</pre>
 </p><p>
 Example:
-<pre class="screen">mplayer dvd://1 -dvd-device /dev/hdc</pre>
+<pre class="screen">mplayer dvd://<i><tt>1</tt></i> -dvd-device <i><tt>/dev/hdc</tt></i></pre>
 </p><p>
 The default DVD device is <tt class="filename">/dev/dvd</tt>. If your setup
 differs, make a symlink or specify the correct device on the command
@@ -94,7 +93,7 @@ table) to store temporary data. This method should always work (slow).
 </p></li><li><p>
 <span class="bold"><b>title request</b></span>: With the disk key
 <span class="application">MPlayer</span> requests the crypted title keys,
-which are inside <span class="emphasis"><em>hidden sectors</em></span> using <tt>ioctl()</tt>.
+which are inside <span class="emphasis"><i>hidden sectors</i></span> using <tt>ioctl()</tt>.
 The region protection of RPC-2 drives is performed in this step and may fail on such drives.
 If it succeeds, the title keys will be decrypted with the bus and disk key.
 </p></li><li><p>
@@ -103,8 +102,8 @@ request failed and does not rely on any key exchange with the DVD drive.
 It uses a crypto attack to guess the title key directly (by finding a
 repeating pattern in the decrypted VOB content and guessing that the
 plain text corresponding to the first encrypted bytes is a continuation
-of that pattern). The method is also known as &quot;known plaintext attack&quot;
-or &quot;DeCSSPlus&quot;. In rare cases this may fail because there is not
+of that pattern). The method is also known as "known plaintext attack"
+or "DeCSSPlus". In rare cases this may fail because there is not
 enough encrypted data on the disk to perform a statistical attack or because
 the key changes in the middle of a title. This method is the only way to
 decrypt a DVD stored on a hard disk or a DVD with the wrong region on an

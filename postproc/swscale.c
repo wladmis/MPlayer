@@ -61,6 +61,9 @@ untested special converters
 #else
 #include <stdlib.h>
 #endif
+#ifdef HAVE_ALTIVEC_H
+#include <altivec.h>
+#endif
 #include "swscale.h"
 #include "swscale_internal.h"
 #include "../cpudetect.h"
@@ -146,19 +149,19 @@ write special BGR->BGR scaler
 #define MAX(a,b) ((a) < (b) ? (b) : (a))
 
 #ifdef ARCH_X86
-static uint64_t __attribute__((aligned(8))) bF8=       0xF8F8F8F8F8F8F8F8LL;
-static uint64_t __attribute__((aligned(8))) bFC=       0xFCFCFCFCFCFCFCFCLL;
+static uint64_t attribute_used __attribute__((aligned(8))) bF8=       0xF8F8F8F8F8F8F8F8LL;
+static uint64_t attribute_used __attribute__((aligned(8))) bFC=       0xFCFCFCFCFCFCFCFCLL;
 static uint64_t __attribute__((aligned(8))) w10=       0x0010001000100010LL;
-static uint64_t __attribute__((aligned(8))) w02=       0x0002000200020002LL;
-static uint64_t __attribute__((aligned(8))) bm00001111=0x00000000FFFFFFFFLL;
-static uint64_t __attribute__((aligned(8))) bm00000111=0x0000000000FFFFFFLL;
-static uint64_t __attribute__((aligned(8))) bm11111000=0xFFFFFFFFFF000000LL;
-static uint64_t __attribute__((aligned(8))) bm01010101=0x00FF00FF00FF00FFLL;
+static uint64_t attribute_used __attribute__((aligned(8))) w02=       0x0002000200020002LL;
+static uint64_t attribute_used __attribute__((aligned(8))) bm00001111=0x00000000FFFFFFFFLL;
+static uint64_t attribute_used __attribute__((aligned(8))) bm00000111=0x0000000000FFFFFFLL;
+static uint64_t attribute_used __attribute__((aligned(8))) bm11111000=0xFFFFFFFFFF000000LL;
+static uint64_t attribute_used __attribute__((aligned(8))) bm01010101=0x00FF00FF00FF00FFLL;
 
-static volatile uint64_t __attribute__((aligned(8))) b5Dither;
-static volatile uint64_t __attribute__((aligned(8))) g5Dither;
-static volatile uint64_t __attribute__((aligned(8))) g6Dither;
-static volatile uint64_t __attribute__((aligned(8))) r5Dither;
+static volatile uint64_t attribute_used __attribute__((aligned(8))) b5Dither;
+static volatile uint64_t attribute_used __attribute__((aligned(8))) g5Dither;
+static volatile uint64_t attribute_used __attribute__((aligned(8))) g6Dither;
+static volatile uint64_t attribute_used __attribute__((aligned(8))) r5Dither;
 
 static uint64_t __attribute__((aligned(8))) dither4[2]={
 	0x0103010301030103LL,
@@ -169,28 +172,28 @@ static uint64_t __attribute__((aligned(8))) dither8[2]={
 	0x0004000400040004LL,};
 
 static uint64_t __attribute__((aligned(8))) b16Mask=   0x001F001F001F001FLL;
-static uint64_t __attribute__((aligned(8))) g16Mask=   0x07E007E007E007E0LL;
-static uint64_t __attribute__((aligned(8))) r16Mask=   0xF800F800F800F800LL;
+static uint64_t attribute_used __attribute__((aligned(8))) g16Mask=   0x07E007E007E007E0LL;
+static uint64_t attribute_used __attribute__((aligned(8))) r16Mask=   0xF800F800F800F800LL;
 static uint64_t __attribute__((aligned(8))) b15Mask=   0x001F001F001F001FLL;
-static uint64_t __attribute__((aligned(8))) g15Mask=   0x03E003E003E003E0LL;
-static uint64_t __attribute__((aligned(8))) r15Mask=   0x7C007C007C007C00LL;
+static uint64_t attribute_used __attribute__((aligned(8))) g15Mask=   0x03E003E003E003E0LL;
+static uint64_t attribute_used __attribute__((aligned(8))) r15Mask=   0x7C007C007C007C00LL;
 
-static uint64_t __attribute__((aligned(8))) M24A=   0x00FF0000FF0000FFLL;
-static uint64_t __attribute__((aligned(8))) M24B=   0xFF0000FF0000FF00LL;
-static uint64_t __attribute__((aligned(8))) M24C=   0x0000FF0000FF0000LL;
+static uint64_t attribute_used __attribute__((aligned(8))) M24A=   0x00FF0000FF0000FFLL;
+static uint64_t attribute_used __attribute__((aligned(8))) M24B=   0xFF0000FF0000FF00LL;
+static uint64_t attribute_used __attribute__((aligned(8))) M24C=   0x0000FF0000FF0000LL;
 
 #ifdef FAST_BGR2YV12
-static const uint64_t bgr2YCoeff  __attribute__((aligned(8))) = 0x000000210041000DULL;
-static const uint64_t bgr2UCoeff  __attribute__((aligned(8))) = 0x0000FFEEFFDC0038ULL;
-static const uint64_t bgr2VCoeff  __attribute__((aligned(8))) = 0x00000038FFD2FFF8ULL;
+static const uint64_t bgr2YCoeff  attribute_used __attribute__((aligned(8))) = 0x000000210041000DULL;
+static const uint64_t bgr2UCoeff  attribute_used __attribute__((aligned(8))) = 0x0000FFEEFFDC0038ULL;
+static const uint64_t bgr2VCoeff  attribute_used __attribute__((aligned(8))) = 0x00000038FFD2FFF8ULL;
 #else
-static const uint64_t bgr2YCoeff  __attribute__((aligned(8))) = 0x000020E540830C8BULL;
-static const uint64_t bgr2UCoeff  __attribute__((aligned(8))) = 0x0000ED0FDAC23831ULL;
-static const uint64_t bgr2VCoeff  __attribute__((aligned(8))) = 0x00003831D0E6F6EAULL;
+static const uint64_t bgr2YCoeff  attribute_used __attribute__((aligned(8))) = 0x000020E540830C8BULL;
+static const uint64_t bgr2UCoeff  attribute_used __attribute__((aligned(8))) = 0x0000ED0FDAC23831ULL;
+static const uint64_t bgr2VCoeff  attribute_used __attribute__((aligned(8))) = 0x00003831D0E6F6EAULL;
 #endif
-static const uint64_t bgr2YOffset __attribute__((aligned(8))) = 0x1010101010101010ULL;
-static const uint64_t bgr2UVOffset __attribute__((aligned(8)))= 0x8080808080808080ULL;
-static const uint64_t w1111       __attribute__((aligned(8))) = 0x0001000100010001ULL;
+static const uint64_t bgr2YOffset attribute_used __attribute__((aligned(8))) = 0x1010101010101010ULL;
+static const uint64_t bgr2UVOffset attribute_used __attribute__((aligned(8)))= 0x8080808080808080ULL;
+static const uint64_t w1111       attribute_used __attribute__((aligned(8))) = 0x0001000100010001ULL;
 #endif
 
 // clipping helper table for C implementations:
@@ -673,6 +676,12 @@ static inline void yuv2packedXinC(SwsContext *c, int16_t *lumFilter, int16_t **l
 #define COMPILE_C
 #endif
 
+#ifdef ARCH_POWERPC
+#ifdef HAVE_ALTIVEC
+#define COMPILE_ALTIVEC
+#endif //HAVE_ALTIVEC
+#endif //ARCH_POWERPC
+
 #ifdef ARCH_X86
 
 #if (defined (HAVE_MMX) && !defined (HAVE_3DNOW) && !defined (HAVE_MMX2)) || defined (RUNTIME_CPUDETECT)
@@ -696,9 +705,19 @@ static inline void yuv2packedXinC(SwsContext *c, int16_t *lumFilter, int16_t **l
 #undef HAVE_MMX
 #undef HAVE_MMX2
 #undef HAVE_3DNOW
+#undef HAVE_ALTIVEC
 #define RENAME(a) a ## _C
 #include "swscale_template.c"
 #endif
+
+#ifdef ARCH_POWERPC
+#ifdef COMPILE_ALTIVEC
+#undef RENAME
+#define HAVE_ALTIVEC
+#define RENAME(a) a ## _altivec
+#include "swscale_template.c"
+#endif
+#endif //ARCH_POWERPC
 
 #ifdef ARCH_X86
 
@@ -1022,6 +1041,21 @@ static inline void initFilter(int16_t **outFilter, int16_t **filterPos, int *out
 		if(min>minFilterSize) minFilterSize= min;
 	}
 
+        if (flags & SWS_CPU_CAPS_ALTIVEC) {
+          // we can handle the special case 4,
+          // so we don't want to go to the full 8
+          if (minFilterSize < 5)
+            filterAlign = 4;
+
+          // we really don't want to waste our time
+          // doing useless computation, so fall-back on
+          // the scalar C code for very small filter.
+          // vectorizing is worth it only if you have
+          // decent-sized vector.
+          if (minFilterSize < 3)
+            filterAlign = 1;
+        }
+
 	ASSERT(minFilterSize > 0)
 	filterSize= (minFilterSize +(filterAlign-1)) & (~(filterAlign-1));
 	ASSERT(filterSize > 0)
@@ -1309,6 +1343,12 @@ static SwsFunc getSwsFunc(int flags){
 		return swScale_C;
 
 #else
+#ifdef ARCH_POWERPC
+	if(flags & SWS_CPU_CAPS_ALTIVEC)
+	  return swScale_altivec;
+	else
+	  return swScale_C;
+#endif
 	return swScale_C;
 #endif
 #else //RUNTIME_CPUDETECT
@@ -1318,6 +1358,8 @@ static SwsFunc getSwsFunc(int flags){
 	return swScale_3DNow;
 #elif defined (HAVE_MMX)
 	return swScale_MMX;
+#elif defined (HAVE_ALTIVEC)
+	return swScale_altivec;
 #else
 	return swScale_C;
 #endif
@@ -1720,13 +1762,15 @@ SwsContext *sws_getContext(int srcW, int srcH, int origSrcFormat, int dstW, int 
 #endif
 
 #ifndef RUNTIME_CPUDETECT //ensure that the flags match the compiled variant if cpudetect is off
-	flags &= ~(SWS_CPU_CAPS_MMX|SWS_CPU_CAPS_MMX2|SWS_CPU_CAPS_3DNOW);
+	flags &= ~(SWS_CPU_CAPS_MMX|SWS_CPU_CAPS_MMX2|SWS_CPU_CAPS_3DNOW|SWS_CPU_CAPS_ALTIVEC);
 #ifdef HAVE_MMX2
 	flags |= SWS_CPU_CAPS_MMX|SWS_CPU_CAPS_MMX2;
 #elif defined (HAVE_3DNOW)
 	flags |= SWS_CPU_CAPS_MMX|SWS_CPU_CAPS_3DNOW;
 #elif defined (HAVE_MMX)
 	flags |= SWS_CPU_CAPS_MMX;
+#elif defined (HAVE_ALTIVEC)
+	flags |= SWS_CPU_CAPS_ALTIVEC;
 #endif
 #endif
 	if(clip_table[512] != 255) globalInit();
@@ -1918,7 +1962,10 @@ SwsContext *sws_getContext(int srcW, int srcH, int origSrcFormat, int dstW, int 
 
 	/* precalculate horizontal scaler filter coefficients */
 	{
-		const int filterAlign= (flags & SWS_CPU_CAPS_MMX) ? 4 : 1;
+		const int filterAlign=
+		  (flags & SWS_CPU_CAPS_MMX) ? 4 :
+		  (flags & SWS_CPU_CAPS_ALTIVEC) ? 8 :
+		  1;
 
 		initFilter(&c->hLumFilter, &c->hLumFilterPos, &c->hLumFilterSize, c->lumXInc,
 				 srcW      ,       dstW, filterAlign, 1<<14,
@@ -1947,14 +1994,20 @@ SwsContext *sws_getContext(int srcW, int srcH, int origSrcFormat, int dstW, int 
 
 
 	/* precalculate vertical scaler filter coefficients */
-	initFilter(&c->vLumFilter, &c->vLumFilterPos, &c->vLumFilterSize, c->lumYInc,
-			srcH      ,        dstH, 1, (1<<12)-4,
-			(flags&SWS_BICUBLIN) ? (flags|SWS_BICUBIC)  : flags,
-			srcFilter->lumV, dstFilter->lumV);
-	initFilter(&c->vChrFilter, &c->vChrFilterPos, &c->vChrFilterSize, c->chrYInc,
-			c->chrSrcH, c->chrDstH, 1, (1<<12)-4,
-			(flags&SWS_BICUBLIN) ? (flags|SWS_BILINEAR) : flags,
-			srcFilter->chrV, dstFilter->chrV);
+	{
+		const int filterAlign=
+		  (flags & SWS_CPU_CAPS_ALTIVEC) ? 8 :
+		  1;
+
+		initFilter(&c->vLumFilter, &c->vLumFilterPos, &c->vLumFilterSize, c->lumYInc,
+				srcH      ,        dstH, filterAlign, (1<<12)-4,
+				(flags&SWS_BICUBLIN) ? (flags|SWS_BICUBIC)  : flags,
+				srcFilter->lumV, dstFilter->lumV);
+		initFilter(&c->vChrFilter, &c->vChrFilterPos, &c->vChrFilterSize, c->chrYInc,
+				c->chrSrcH, c->chrDstH, filterAlign, (1<<12)-4,
+				(flags&SWS_BICUBLIN) ? (flags|SWS_BILINEAR) : flags,
+				srcFilter->chrV, dstFilter->chrV);
+	}
 
 	// Calculate Buffer Sizes so that they won't run out while handling these damn slices
 	c->vLumBufSize= c->vLumFilterSize;
@@ -2033,7 +2086,9 @@ SwsContext *sws_getContext(int srcW, int srcH, int origSrcFormat, int dstW, int 
 			MSG_INFO("using 3DNOW\n");
 		else if(flags & SWS_CPU_CAPS_MMX)
 			MSG_INFO("using MMX\n");
-		else
+		else if(flags & SWS_CPU_CAPS_ALTIVEC)
+			MSG_INFO("using AltiVec\n");
+		else 
 			MSG_INFO("using C\n");
 	}
 

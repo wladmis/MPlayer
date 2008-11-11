@@ -114,6 +114,12 @@ static int preinit(sh_audio_t *sh_audio)
     acmStreamSize(priv->handle, srcsize, &srcsize, ACM_STREAMSIZEF_DESTINATION);
 //    if(srcsize<in_fmt->nBlockAlign) srcsize=in_fmt->nBlockAlign;
 
+    if (!srcsize)
+    {
+	mp_msg(MSGT_WIN32, MSGL_WARN, "Warning! ACM codec reports srcsize=0\n");
+	srcsize = 2*in_fmt->nBlockAlign;
+    }
+
     mp_msg(MSGT_WIN32,MSGL_V,"Audio ACM input buffer min. size: %ld\n",srcsize);
 
     sh_audio->audio_in_minsize=2*srcsize; // audio input min. size
@@ -145,7 +151,7 @@ static void uninit(sh_audio_t *sh)
 	case ACMERR_NOTPOSSIBLE:
 	    return;
 	default:
-	    mp_msg(MSGT_WIN32, MSGL_WARN, "ACM_Decoder: unknown error occured: %d\n", ret);
+	    mp_msg(MSGT_WIN32, MSGL_WARN, "ACM_Decoder: unknown error occurred: %d\n", ret);
 	    return;
     }
     

@@ -1,5 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html><head><meta content="text/html; charset=ISO-8859-1" http-equiv="Content-Type"><title>1.2. Installation</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.50.0"><link rel="home" href="index.html" title="MPlayer - The Movie Player for LINUX"><link rel="up" href="intro.html" title="Chapter 1. Introduction"><link rel="previous" href="history.html" title="1.1. History"><link rel="next" href="gui.html" title="1.3. What about the GUI?"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">1.2. Installation</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="history.html">Prev</a> </td><th width="60%" align="center">Chapter 1. Introduction</th><td width="20%" align="right"> <a accesskey="n" href="gui.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="install"></a>1.2. Installation</h2></div></div><p>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>1.2. Installation</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - The Movie Player for LINUX"><link rel="up" href="intro.html" title="Chapter 1. Introduction"><link rel="previous" href="history.html" title="1.1. History"><link rel="next" href="gui.html" title="1.3. What about the GUI?"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">1.2. Installation</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="history.html">Prev</a> </td><th width="60%" align="center">Chapter 1. Introduction</th><td width="20%" align="right"> <a accesskey="n" href="gui.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="install"></a>1.2. Installation</h2></div></div><p>
 A quick installation guide can be found in the <tt class="filename">README</tt>
 file. Please read it first and then come back here for the rest of the gory
 details.
@@ -61,7 +60,7 @@ You need a fairly recent system. On Linux, 2.4.x kernels are recommended.
   </p></li><li><p>
   <span class="bold"><b>lame</b></span> - recommended, needed for encoding MP3 audio with
   <span class="application">MEncoder</span>, suggested version is
-  <span class="emphasis"><em>always the newest</em></span> (at least 3.90).
+  <span class="emphasis"><i>always the newest</i></span> (at least 3.90).
   </p></li><li><p>
   <span class="bold"><b>zlib</b></span> - recommended, necessary for compressed
   MOV header and PNG support.
@@ -85,8 +84,9 @@ You need a fairly recent system. On Linux, 2.4.x kernels are recommended.
   support. At least 1.2.7 is required.
   </p></li><li><p>
   <span class="bold"><b>libsmb</b></span> - optional, for Samba support.
-  </p></li></ul></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="id2831107"></a>1.2.2. Codecs</h3></div></div><div class="itemizedlist"><ul type="disc"><li><p>
-  <span class="bold"><b>libavcodec</b></span>: This codec package is capable
+  </p></li></ul></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="id2835111"></a>1.2.2. Codecs</h3></div></div><div class="itemizedlist"><ul type="disc"><li><p>
+  <span class="bold"><b><tt>libavcodec</tt></b></span>:
+  This codec package is capable
   of decoding H263/MJPEG/RV10/DivX3/DivX4/DivX5/MP41/MP42/WMV1/WMV2/SVQ1/SVQ3 encoded video
   streams and WMA (Windows Media Audio) v1/v2 audio streams, on multiple
   platforms. It is also known to be the fastest for this task. See
@@ -120,7 +120,9 @@ You need a fairly recent system. On Linux, 2.4.x kernels are recommended.
    </li><li>
     Not needed for old ASF's with MP41 or MP42 video (though VoxWare audio is
     frequent for these files - it's done by the Win32 codec), or WMV7. Also not
-    needed for WMA (Windows Media Audio), libavcodec has opensource decoder for that.
+    needed for WMA (Windows Media Audio),
+    <tt>libavcodec</tt> has open source decoder
+    for that.
     </li></ul></div><p>
   </p></li><li><p>
   <span class="bold"><b>QuickTime codecs</b></span>: on x86 platforms these
@@ -130,28 +132,30 @@ You need a fairly recent system. On Linux, 2.4.x kernels are recommended.
   </p></li><li><p>
   <span class="bold"><b>DivX4/DivX5</b></span>: information about this codec is
   available in the <a href="codecs.html#divx4-5" title="2.2.1.1. DivX4/DivX5">DivX4/DivX5</a> section. You possibly
-  don't want this codec as <span class="bold"><b>libavcodec</b></span> (see
-  above) is much faster and has better quality than this, for both decoding
+  don't want this codec as
+  <span class="bold"><b><tt>libavcodec</tt></b></span>
+  (see above) is much faster and has better quality than this, for both decoding
   and encoding. Features:
   </p><div class="itemizedlist"><ul type="round"><li>
     1 pass or 2 pass encoding with
     <a href="mencoder.html" title="Chapter 7. Encoding with MEncoder"><span class="application">MEncoder</span></a>
     </li><li>
     can play old <span class="bold"><b>DivX3</b></span> movies much faster than
-    the Win32 DLL but slower than <span class="bold"><b>libavcodec</b></span>!
+    the Win32 DLL but slower than
+    <span class="bold"><b><tt>libavcodec</tt></b></span>!
     </li><li>
     it's closed-source, and only a x86 version is available.
     </li></ul></div><p>
   </p></li><li><p>
   <span class="bold"><b>XviD</b></span>: Open source encoding alternative to
-  Divx4Linux. Features:
+  DivX4Linux. Features:
   </p><div class="itemizedlist"><ul type="round"><li>
     1 pass or 2 pass encoding with
     <a href="mencoder.html" title="Chapter 7. Encoding with MEncoder"><span class="application">MEncoder</span></a>
     </li><li>
     it's open-source, so it's multiplatform.
     </li><li>
-    it's about 2 times faster than divx4 when encoding - about the same
+    it's about 2 times faster than divX4 when encoding - about the same
     quality
     </li></ul></div><p>
   </p></li><li><p>
@@ -183,15 +187,15 @@ zooming), thus fullscreen is nice and very fast.
   
 </p><div class="itemizedlist"><ul type="disc"><li><p>
   <span class="bold"><b>Matrox G200/G400/G450/G550 cards</b></span>: although a
-  <a href="devices.html#vidix" title="2.3.1.2.12. VIDIX">Vidix driver</a> is provided, it is recommended to
+  <a href="devices.html#vidix" title="2.3.1.2.13. VIDIX">Vidix driver</a> is provided, it is recommended to
   use the mga_vid module instead, for it works much better.
   Please see the <a href="devices.html#mga_vid" title="2.3.1.2.6. Matrox framebuffer (mga_vid)">mga_vid</a> section about its
   installation and usage. It is important to do these steps
-  <span class="emphasis"><em>before</em></span> compiling <span class="application">MPlayer</span>,
+  <span class="emphasis"><i>before</i></span> compiling <span class="application">MPlayer</span>,
   otherwise no mga_vid support will be built. Also check out the
   <a href="devices.html#tvout-mga-g400" title="2.3.1.5.1. Matrox G400 cards">Matrox TV-out</a> section.
   <span class="bold"><b> If you don't use Linux</b></span>, your only
-  possibility is the VIDIX driver: read the <a href="devices.html#vidix" title="2.3.1.2.12. VIDIX">VIDIX</a> section.
+  possibility is the VIDIX driver: read the <a href="devices.html#vidix" title="2.3.1.2.13. VIDIX">VIDIX</a> section.
   </p></li><li><p>
   <span class="bold"><b>3Dfx Voodoo3/Banshee cards</b></span>: please see
   <a href="devices.html#tdfxfb" title="2.3.1.2.7. 3Dfx YUV support">tdfxfb</a> section in order to gain big speedup.
@@ -201,7 +205,7 @@ zooming), thus fullscreen is nice and very fast.
   If you use X, use at least <span class="bold"><b>4.2.0</b></span>, as 3dfx Xv
   driver was broken in 4.1.0, and earlier releases.
   </p></li><li><p>
-  <span class="bold"><b>ATI cards</b></span>: <a href="devices.html#vidix" title="2.3.1.2.12. VIDIX">VIDIX</a>
+  <span class="bold"><b>ATI cards</b></span>: <a href="devices.html#vidix" title="2.3.1.2.13. VIDIX">VIDIX</a>
   driver is provided for the following cards:
   <span class="bold"><b>Radeon, Rage128, Mach64</b></span> (Rage XL/Mobility, Xpert98).
   Also see the <a href="devices.html#tvout-ati" title="2.3.1.5.3. ATI cards">ATI cards</a> section of the TV-out documentation,
@@ -222,7 +226,7 @@ zooming), thus fullscreen is nice and very fast.
   use a TV.
   </p></li><li><p>
   <span class="bold"><b>3DLabs GLINT R3 and Permedia3</b></span>: a VIDIX driver
-  is provided (pm3_vid). Please see the <a href="devices.html#vidix" title="2.3.1.2.12. VIDIX">VIDIX</a> section
+  is provided (pm3_vid). Please see the <a href="devices.html#vidix" title="2.3.1.2.13. VIDIX">VIDIX</a> section
   for details.
   </p></li><li><p>
   <span class="bold"><b>Other cards</b></span>: none of the above?
@@ -247,12 +251,12 @@ Video mode switching can be enabled by using the <tt class="option">-vm</tt> opt
 it works with the following drivers:
 </p><div class="itemizedlist"><ul type="disc"><li>
   <span class="bold"><b>using</b></span> XFree86: see details in <a href="devices.html#dga" title="2.3.1.2.2. DGA">DGA driver</a> and
-  <a href="devices.html#x11" title="2.3.1.2.11. X11">X11 driver</a> sections. DGA is recommended! Also
+  <a href="devices.html#x11" title="2.3.1.2.12. X11">X11 driver</a> sections. DGA is recommended! Also
   try DGA via SDL, sometimes it's better.
   </li><li>
   <span class="bold"><b>not using</b></span> XFree86: try the drivers in the
   following order:
-  <a href="devices.html#vesa" title="2.3.1.2.10. VESA - output to VESA BIOS">vesa</a>,
+  <a href="devices.html#vesa" title="2.3.1.2.11. VESA - output to VESA BIOS">vesa</a>,
   <a href="devices.html#fbdev" title="2.3.1.2.5. Framebuffer output (FBdev)">fbdev</a>,
   <a href="devices.html#svgalib" title="2.3.1.2.4. SVGAlib">svgalib</a>,
   <a href="devices.html#aalib" title="2.3.1.2.9. AAlib - text mode displaying">aalib</a>.
@@ -289,7 +293,7 @@ it works with the following drivers:
   Features of <span class="bold"><b>other cards</b></span> aren't supported by
   <span class="application">MPlayer</span>. <span class="bold"><b>It's very recommended
   to read the <a href="devices.html#audio-dev" title="2.3.2. Audio output devices">sound card</a> section!</b></span>
-  </li></ul></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="id2832267"></a>1.2.5. Features</h3></div></div><div class="itemizedlist"><ul type="disc"><li><p>
+  </li></ul></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="id2836668"></a>1.2.5. Features</h3></div></div><div class="itemizedlist"><ul type="disc"><li><p>
   Decide if you need GUI. If you do, see the <a href="gui.html" title="1.3. What about the GUI?">GUI</a>
   section before compiling.
   </p></li><li><p>

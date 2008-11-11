@@ -3,13 +3,12 @@
 // real codecs:
 #define VCODEC_DIVX4 2
 #define VCODEC_LIBAVCODEC 4
-#define VCODEC_RAWRGB 6
 #define VCODEC_VFW 7
 #define VCODEC_LIBDV 8
 #define VCODEC_XVID 9
 #define VCODEC_QTVIDEO 10
 #define VCODEC_NUV 11
-#define VCODEC_RAWYUV 12
+#define VCODEC_RAW 12
 
 #define ACODEC_COPY 0
 #define ACODEC_PCM 1
@@ -129,6 +128,7 @@ int out_file_format=MUXER_TYPE_AVI;	// default to AVI
 //void resync_audio_stream(sh_audio_t *sh_audio){}
 
 int verbose=0; // must be global!
+int quiet=0;
 double video_time_usage=0;
 double vout_time_usage=0;
 double max_video_time_usage=0;
@@ -216,6 +216,9 @@ int lame_param_padding=-1; // unset
 int lame_param_br=-1; // unset
 int lame_param_ratio=-1; // unset
 float lame_param_scale=-1; // unset
+int lame_param_lowpassfreq = 0; //auto
+int lame_param_highpassfreq = 0; //auto
+
 #if HAVE_MP3LAME >= 392
 int lame_param_fast=0; // unset
 static char* lame_param_preset=NULL; // unset
@@ -314,7 +317,7 @@ static double end_at;
 
 static void exit_sighandler(int x){
     at_eof=1;
-    interrupted=1;
+    interrupted=2; /* 1 means error */
 }
 
 static muxer_t* muxer=NULL;
@@ -334,7 +337,7 @@ demux_stream_t *d_dvdsub=NULL;
 sh_audio_t *sh_audio=NULL;
 sh_video_t *sh_video=NULL;
 int file_format=DEMUXER_TYPE_UNKNOWN;
-int i;
+int i=DEMUXER_TYPE_UNKNOWN;
 void *vobsub_writer=NULL;
 
 uint32_t ptimer_start;
@@ -368,7 +371,7 @@ unsigned int timer_start;
 
   mp_msg_init();
   mp_msg_set_level(MSGL_STATUS);
-  mp_msg(MSGT_CPLAYER,MSGL_INFO, "MEncoder " VERSION " (C) 2000-2003 MPlayer Team\n\n");
+  mp_msg(MSGT_CPLAYER,MSGL_INFO, "MEncoder " VERSION " (C) 2000-2004 MPlayer Team\n\n");
 
   /* Test for cpu capabilities (and corresponding OS support) for optimizing */
   GetCpuCaps(&gCpuCaps);
@@ -406,13 +409,15 @@ unsigned int timer_start;
   InitTimer();
 
 // check codec.conf
-if(!parse_codec_cfg(get_path("codecs.conf"))){
-  if(!parse_codec_cfg(MPLAYER_CONFDIR "/codecs.conf")){
-    if(!parse_codec_cfg(NULL)){
-      mp_msg(MSGT_MENCODER,MSGL_HINT,MSGTR_CopyCodecsConf);
-      mencoder_exit(1,NULL);
+if(!codecs_file || !parse_codec_cfg(codecs_file)){
+  if(!parse_codec_cfg(get_path("codecs.conf"))){
+    if(!parse_codec_cfg(MPLAYER_CONFDIR "/codecs.conf")){
+      if(!parse_codec_cfg(NULL)){
+	mp_msg(MSGT_MENCODER,MSGL_HINT,MSGTR_CopyCodecsConf);
+	mencoder_exit(1,NULL);
+      }
+      mp_msg(MSGT_MENCODER,MSGL_INFO,MSGTR_BuiltinCodecsConf);
     }
-    mp_msg(MSGT_MENCODER,MSGL_INFO,MSGTR_BuiltinCodecsConf);
   }
 }
 
@@ -522,6 +527,10 @@ sh_video=d_video->sh;
     mp_msg(MSGT_MENCODER,MSGL_INFO,"input fps will be interpreted as %5.2f instead\n", sh_video->fps);
   }
 
+  if(sh_audio && out_file_format==MUXER_TYPE_RAWVIDEO){
+      mp_msg(MSGT_MENCODER,MSGL_ERR,"Output file format RAWVIDEO does not support audio - disabling audio\n");
+      sh_audio=NULL;
+  }
   if(sh_audio && out_audio_codec<0){
     if(audio_id==-2)
 	mp_msg(MSGT_MENCODER,MSGL_ERR,"This demuxer doesn't support -nosound yet.\n");
@@ -621,8 +630,16 @@ mux_v->buffer=malloc(mux_v->buffer_size);
 mux_v->source=sh_video;
 
 mux_v->h.dwSampleSize=0; // VBR
+#ifdef USE_LIBAVCODEC
+{
+    AVRational q= av_d2q(force_ofps?force_ofps:sh_video->fps, 30000); 
+    mux_v->h.dwScale= q.den;
+    mux_v->h.dwRate = q.num;
+}
+#else
 mux_v->h.dwScale=10000;
 mux_v->h.dwRate=mux_v->h.dwScale*(force_ofps?force_ofps:sh_video->fps);
+#endif
 
 mux_v->codec=out_video_codec;
 
@@ -667,10 +684,8 @@ default:
 	sh_video->vfilter=vf_open_encoder(NULL,"divx4",(char *)mux_v); break;
     case VCODEC_LIBAVCODEC:
         sh_video->vfilter=vf_open_encoder(NULL,"lavc",(char *)mux_v); break;
-    case VCODEC_RAWRGB:
-        sh_video->vfilter=vf_open_encoder(NULL,"rawrgb",(char *)mux_v); break;
-    case VCODEC_RAWYUV:
-        sh_video->vfilter=vf_open_encoder(NULL,"rawyuv",(char *)mux_v); break;
+    case VCODEC_RAW:
+        sh_video->vfilter=vf_open_encoder(NULL,"raw",(char *)mux_v); break;
     case VCODEC_VFW:
         sh_video->vfilter=vf_open_encoder(NULL,"vfw",(char *)mux_v); break;
     case VCODEC_LIBDV:
@@ -719,6 +734,8 @@ mux_a=muxer_new_stream(muxer,MUXER_TYPE_AUDIO);
 
 mux_a->buffer_size=0x100000; //16384;
 mux_a->buffer=malloc(mux_a->buffer_size);
+if (!mux_a->buffer)
+    mencoder_exit(1,"memory allocation failed");
 
 mux_a->source=sh_audio;
 
@@ -883,10 +900,7 @@ case ACODEC_LAVC:
 	exit(1);
     }
 
-    if (sizeof(MPEGLAYER3WAVEFORMAT) != 30)  // should be 30
-	broken_c_compiler___size_of_MPEGLAYER3WAVEFORMAT_not_30();
-
-    mux_a->wf = malloc(sizeof(MPEGLAYER3WAVEFORMAT));
+    mux_a->wf = malloc(sizeof(WAVEFORMATEX)+lavc_actx->extradata_size+256);
     mux_a->wf->wFormatTag = lavc_param_atag;
     mux_a->wf->nChannels = lavc_actx->channels;
     mux_a->wf->nSamplesPerSec = lavc_actx->sample_rate;
@@ -914,12 +928,8 @@ case ACODEC_LAVC:
     case 0x11: /* imaadpcm */
 	mux_a->wf->wBitsPerSample = 4;
 	mux_a->wf->cbSize = 2;
-	/*
-	 * Magic imaadpcm values, currently probably only valid
-	 * for 48KHz Stereo
-	 */
-	((unsigned char*)mux_a->wf)[sizeof(WAVEFORMATEX)] = 0xf9;
-	((unsigned char*)mux_a->wf)[sizeof(WAVEFORMATEX)+1] = 0x07;
+	((uint16_t*)mux_a->wf)[sizeof(WAVEFORMATEX)] = 
+	    ((lavc_actx->block_align - 4 * lavc_actx->channels) / (4 * lavc_actx->channels)) * 8 + 1;
 	break;
     case 0x55: /* mp3 */
 	mux_a->wf->cbSize = 12;
@@ -931,10 +941,20 @@ case ACODEC_LAVC:
 	((MPEGLAYER3WAVEFORMAT *) (mux_a->wf))->nCodecDelay = 0;
 	break;
     default:
-	mux_a->wf->cbSize = 0;
 	mux_a->wf->wBitsPerSample = 0; /* Unknown */
+	if (lavc_actx->extradata && (lavc_actx->extradata_size > 0))
+	{
+	    memcpy(mux_a->wf+sizeof(WAVEFORMATEX), lavc_actx->extradata,
+		    lavc_actx->extradata_size);
+	    mux_a->wf->cbSize = lavc_actx->extradata_size;
+	}
+	else
+	    mux_a->wf->cbSize = 0;
 	break;
     }
+
+    // Fix allocation    
+    mux_a->wf = realloc(mux_a->wf, sizeof(WAVEFORMATEX)+mux_a->wf->cbSize);
 
     // setup filter:
     if (!init_audio_filters(
@@ -983,7 +1003,7 @@ lame_set_out_samplerate(lame,mux_a->wf->nSamplesPerSec);
 lame_set_quality(lame,lame_param_algqual); // 0 = best q
 if(lame_param_vbr){  // VBR:
     lame_set_VBR(lame,lame_param_vbr); // vbr mode
-    lame_set_VBR_q(lame,lame_param_quality+1); // 1 = best vbr q  6=~128k
+    lame_set_VBR_q(lame,lame_param_quality); // 0 = best vbr q  5=~128k
     if(lame_param_br>0) lame_set_VBR_mean_bitrate_kbps(lame,lame_param_br);
 } else {    // CBR:
     if(lame_param_br>0) lame_set_brate(lame,lame_param_br);
@@ -994,6 +1014,8 @@ if(lame_param_scale>0) {
     printf("Setting audio input gain to %f\n", lame_param_scale);
     lame_set_scale(lame,lame_param_scale);
 }
+if(lame_param_lowpassfreq>=-1) lame_set_lowpassfreq(lame,lame_param_lowpassfreq);
+if(lame_param_highpassfreq>=-1) lame_set_highpassfreq(lame,lame_param_highpassfreq);
 #if HAVE_MP3LAME >= 392
 if(lame_param_preset != NULL){
   printf ("\npreset=%s\n\n",lame_param_preset);
@@ -1369,6 +1391,7 @@ if(sh_audio && !demuxer2){
 	    (int)demuxer->filepos,
 	    (int)demuxer->movi_end);
 #else
+      if(!quiet) {
 	if(verbose>0) {
 		mp_msg(MSGT_AVSYNC,MSGL_STATUS,"Pos:%6.1fs %6df (%2d%%) %3dfps Trem:%4dmin %3dmb  A-V:%5.3f [%d:%d] A/Vms %d/%d D/B/S %d/%d/%d \r",
 	    	mux_v->timer, decoded_frameno, (int)(p*100),
@@ -1391,6 +1414,7 @@ if(sh_audio && !demuxer2){
 	    (mux_v->timer>1) ? (int)(mux_v->size/mux_v->timer/125) : 0,
 	    (mux_a && mux_a->timer>1) ? (int)(mux_a->size/mux_a->timer/125) : 0
 	);
+      }
 #endif
     }
         fflush(stdout);
@@ -1811,6 +1835,9 @@ static uint32_t lavc_find_atag(char *codec)
 
     if(! strcasecmp(codec, "adpcm_ima_wav"))
        return 0x11;
+
+    if(! strncasecmp(codec, "bonk", 4))
+       return 0x2048;
 
     return 0;
 }

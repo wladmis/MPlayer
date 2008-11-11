@@ -119,7 +119,8 @@ static char* openURL_sip(SIPClient* client, char const* url) {
 
 int rtspStreamOverTCP = 0; 
 
-extern "C" void demux_open_rtp(demuxer_t* demuxer) {
+extern "C" demuxer_t* demux_open_rtp(demuxer_t* demuxer) {
+  Boolean success = False;
   do {
     TaskScheduler* scheduler = BasicTaskScheduler::createNew();
     if (scheduler == NULL) break;
@@ -253,7 +254,20 @@ extern "C" void demux_open_rtp(demuxer_t* demuxer) {
       }
       rtpState->flags |= flags;
     }
+    success = True;
   } while (0);
+  if (!success) return NULL; // an error occurred
+
+  // Hack: If audio and video are demuxed together on a single RTP stream,
+  // then create a new "demuxer_t" structure to allow the higher-level
+  // code to recognize this:
+  if (demux_is_multiplexed_rtp_stream(demuxer)) {
+    stream_t* s = new_ds_stream(demuxer->video);
+    demuxer_t* od = demux_open(s, DEMUXER_TYPE_UNKNOWN, -1, -1, -1, NULL);
+    demuxer = new_demuxers_demuxer(od, od, od);
+  }
+
+  return demuxer;
 }
 
 extern "C" int demux_is_mpeg_rtp_stream(demuxer_t* demuxer) {
@@ -294,8 +308,14 @@ extern "C" int demux_rtp_fill_buffer(demuxer_t* demuxer, demux_stream_t* ds) {
     // audio and video streams get this far apart.)
     // (We don't do this when streaming over TCP, because then the audio and
     // video streams are interleaved.)
+    // (Also, if the stream is *excessively* far behind, then we allow
+    // the packet, because in this case it probably means that there was
+    // an error in the source's timestamp synchronization.)
     const float ptsBehindThreshold = 1.0; // seconds
-    if (ptsBehind < ptsBehindThreshold || rtspStreamOverTCP) { // packet's OK
+    const float ptsBehindLimit = 60.0; // seconds
+    if (ptsBehind < ptsBehindThreshold ||
+	ptsBehind > ptsBehindLimit ||
+	rtspStreamOverTCP) { // packet's OK
       ds_add_packet(ds, dp);
       break;
     }
@@ -390,7 +410,9 @@ extern "C" void demux_close_rtp(demuxer_t* demuxer) {
     // >= the largest conceivable frame composed from one or more RTP packets
 
 static void afterReading(void* clientData, unsigned frameSize,
-			 struct timeval presentationTime) {
+			 unsigned /*numTruncatedBytes*/,
+			 struct timeval presentationTime,
+			 unsigned /*durationInMicroseconds*/) {
   if (frameSize >= MAX_RTP_FRAME_SIZE) {
     fprintf(stderr, "Saw an input frame too large (>=%d).  Increase MAX_RTP_FRAME_SIZE in \"demux_rtp.cpp\".\n",
 	    MAX_RTP_FRAME_SIZE);

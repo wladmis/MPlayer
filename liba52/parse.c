@@ -31,6 +31,7 @@
 #include "a52_internal.h"
 #include "bitstream.h"
 #include "tables.h"
+#include "mm_accel.h"
 
 #ifdef HAVE_MEMALIGN
 /* some systems have memalign() but no declaration for it */
@@ -53,13 +54,28 @@ sample_t * a52_init (uint32_t mm_accel)
     sample_t * samples;
     int i;
 
+    samples = memalign (16, 256 * 12 * sizeof (sample_t));
+#if defined(__MINGW32__) && defined(HAVE_SSE) 
+    for(i=0;i<10;i++){
+      if((int)samples%16){
+        sample_t* samplestmp=malloc(256 * 12 * sizeof (sample_t));   
+        free(samples);
+        samples = samplestmp;    
+      }
+      else break;
+    }
+#endif
+    if(((int)samples%16) && (mm_accel&MM_ACCEL_X86_SSE)){
+      mm_accel &=~MM_ACCEL_X86_SSE;
+      printf("liba52: unable to get 16 byte aligned memory disabling usage of SSE instructions\n");
+    }   
+    
+    if (samples == NULL)
+	return NULL;    
+    
     imdct_init (mm_accel);
     downmix_accel_init(mm_accel);
-
-    samples = memalign (16, 256 * 12 * sizeof (sample_t));
-    if (samples == NULL)
-	return NULL;
-
+    
     for (i = 0; i < 256 * 12; i++)
 	samples[i] = 0;
 

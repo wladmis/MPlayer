@@ -1,5 +1,5 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html><head><meta content="text/html; charset=ISO-8859-1" http-equiv="Content-Type"><title>1.2. Instalación</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.50.0"><link rel="home" href="index.html" title="MPlayer - El reproductor de Películas para LINUX"><link rel="up" href="intro.html" title="Capítulo 1. Introducción"><link rel="previous" href="history.html" title="1.1. Historia"><link rel="next" href="gui.html" title="1.3. ¿Qué hay acerca de la GUI?"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">1.2. Instalación</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="history.html">Anterior</a> </td><th width="60%" align="center">Capítulo 1. Introducción</th><td width="20%" align="right"> <a accesskey="n" href="gui.html">Siguiente</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="install"></a>1.2. Instalación</h2></div></div><p>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>1.2. Instalación</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - El reproductor de Películas
+para LINUX"><link rel="up" href="intro.html" title="Capítulo 1. Introducción"><link rel="previous" href="history.html" title="1.1. Historia"><link rel="next" href="gui.html" title="1.3. ¿Qué hay acerca de la GUI?"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">1.2. Instalación</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="history.html">Anterior</a> </td><th width="60%" align="center">Capítulo 1. Introducción</th><td width="20%" align="right"> <a accesskey="n" href="gui.html">Siguiente</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="install"></a>1.2. Instalación</h2></div></div><p>
 Una guía de instalación rápida puede encontrarse en el archivo
 <tt class="filename">README</tt>. Por favor, léala primero y luego vuelva
 aquí para obtener el resto de detalles sanguinolientos.
@@ -62,7 +62,7 @@ núcleo 2.4.x es recomendado.
   </p></li><li><p>
   <span class="bold"><b>lame</b></span> - recomendado, necesario para codificar audio en  MP3 audio con
   <span class="application">MEncoder</span>, la versión recomendada es
-  <span class="emphasis"><em>siempre la más nueva</em></span> (por lo menos 3.90).
+  <span class="emphasis"><i>siempre la más nueva</i></span> (por lo menos 3.90).
   </p></li><li><p>
   <span class="bold"><b>libogg</b></span> - opcional, necesaria para reproducir archivos con formato OGG.
   </p></li><li><p>
@@ -83,9 +83,9 @@ núcleo 2.4.x es recomendado.
   La versión mínima necesaria es 1.2.7.
   </p></li><li><p>
   <span class="bold"><b>libsmb</b></span> - opcional, para soporte Samba.
-  </p></li></ul></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="id2831067"></a>1.2.2. Codecs</h3></div></div><div class="itemizedlist"><ul type="disc"><li><p>
-  <span class="bold"><b>libavcodec</b></span>: Este paquete de codecs es capaz de
-  decodificar flujos de vídeo codificado en 
+  </p></li></ul></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="id2835200"></a>1.2.2. Codecs</h3></div></div><div class="itemizedlist"><ul type="disc"><li><p>
+  <span class="bold"><b><tt>libavcodec</tt></b></span>:
+  Este paquete de codecs es capaz de decodificar flujos de vídeo codificado en 
   H263/MJPEG/RV10/DivX3/DivX4/DivX5/MP41/MP42/WMV1/WMV2/SVQ1/SVQ3
   y decodificar flujo de audio WMA (Windows Media Audio) v1/v2, en múltiples
   plataformas. Es también reconocido como el más rápido para esta tarea. Vea
@@ -103,7 +103,7 @@ núcleo 2.4.x es recomendado.
   <span class="application">MPlayer</span> en arquitecturas x86, probablemente las
   necesite. Descargue los codecs de Win32 desde nuestra
   <a href="http://www.mplayerhq.hu/MPlayer/releases/codecs/" target="_top">página de codecs</a>
-  e instalelos en <tt class="filename">/usr/lib/win32</tt>
+  e instalelos en <tt class="filename">/usr/lib/codecs</tt>
   <span class="bold"><b>ANTES</b></span> de compilar <span class="application">MPlayer</span>,
   de otra forma no se compilará soporte para Win32.
   </p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Nota</h3><p>El proyecto avifile tiene una página similar de codecs, pero
@@ -120,8 +120,9 @@ núcleo 2.4.x es recomendado.
    </li><li>
     No es necesaria para el viejo formato AFS con vídeo MP41 o MP42 (aunque el
     audio VoxWare es frecuente en éstos archivos - que usa un codec de Win32), o
-    WMV7. Tampoco se necesita para WMA (Windows Media Audio), libavcodec tiene
-    un decodificador de fuente abierta para eso.
+    WMV7. Tampoco se necesita para WMA (Windows Media Audio),
+    <tt>libavcodec</tt> tiene un decodificador
+    de fuente abierta para eso.
     </li></ul></div><p>
   </p></li><li><p>
   <span class="bold"><b>codecs de QuickTime</b></span>: en plataformas x86 estos
@@ -131,27 +132,30 @@ núcleo 2.4.x es recomendado.
   </p></li><li><p>
   <span class="bold"><b>DivX4/DivX5</b></span>: información acerca de este codec
   está disponible en la sección <a href="codecs.html#divx4-5" title="2.2.1.1. DivX4/DivX5">DivX4/DivX5</a>. 
-  Posiblemente no quiera este codec ya que <span class="bold"><b>libavcodec</b></span>
+  Posiblemente no quiera este codec ya que
+  <span class="bold"><b><tt>libavcodec</tt></b></span>
   (ver más arriba) es más rápido y tiene mejor calidad que este, tanto para codificar
   como para decodificar. Características:
   </p><div class="itemizedlist"><ul type="round"><li>
-    codificación en 1 o 2 pasadas con<a href="mencoder.html" title="Capítulo 7. Codificando con MEncoder">MEncoder</a>
+    codificación en 1 o 2 pasadas con
+    <a href="mencoder.html" title="Capítulo 7. Codificando con MEncoder"><span class="application">MEncoder</span></a>
     </li><li>
     puede reproducir películas viejas en <span class="bold"><b>DivX3</b></span>
     mucho más rápido que la DLL de Win32 ¡pero más lento que <span class="bold"><b>
-    libavcodec</b></span>!
+    <tt>libavcodec</tt></b></span>!
     </li><li>
     es de código cerrado, y solo la versión para x86 esta disponible.
     </li></ul></div><p>
   </p></li><li><p>
   <span class="bold"><b>XviD</b></span>: Alternativa de código abierto a la codificación de
-  Divx4Linux. Características:
+  DivX4Linux. Características:
   </p><div class="itemizedlist"><ul type="round"><li>
-    codificación en 1 o 2 pasadas con <a href="mencoder.html" title="Capítulo 7. Codificando con MEncoder">MEncoder</a>
+    codificación en 1 o 2 pasadas con
+    <a href="mencoder.html" title="Capítulo 7. Codificando con MEncoder"><span class="application">MEncoder</span></a>
     </li><li>
     es de código abierto, entonces es multiplataforma.
     </li><li>
-    es aproximadamente 2 veces más rápido que divx4 para codificar - la 
+    es aproximadamente 2 veces más rápido que DivX4 para codificar - la 
     misma calidad
     </li></ul></div><p>
   </p></li><li><p>
@@ -187,7 +191,7 @@ cuando hagan zoom), por lo tanto la pantalla completa es agradable y muy rápida.
   que se provee un <a href="devices.html#vidix" title="2.3.1.2.12. VIDIX">controlador Vidix</a>, es recomendado
   usar el módulo mga_vid en su lugar, porque funciona mucho mejor.
   Por favor vea la sección <a href="devices.html#mga_vid" title="2.3.1.2.6. Framebuffer de Matrox (mga_vid)">mga_vid</a> acerca de su
-  instalación y uso. Es muy importante hacer estos pasos <span class="emphasis"><em>antes</em></span>
+  instalación y uso. Es muy importante hacer estos pasos <span class="emphasis"><i>antes</i></span>
   de compilar <span class="application">MPlayer</span>, de otro modo no se dará soporte
   para mga_vid. También revise la sección 
   <a href="devices.html#tvout-mga-g400" title="2.3.1.5.1. Tarjetas Matrox G400">Salida de TV Matrox</a>.
@@ -296,12 +300,13 @@ funciona con los siguientes controladores:
   Las características de <span class="bold"><b>otras placas</b></span> no están soportadas
   en <span class="application">MPlayer</span>. <span class="bold"><b>¡Es muy recomendado leer la
   sección de <a href="devices.html#audio-dev" title="2.3.2. Dispositivos de salida de audio">placas de sonido</a>!</b></span>.
-  </li></ul></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="id2832381"></a>1.2.5. Características</h3></div></div><div class="itemizedlist"><ul type="disc"><li><p>
+  </li></ul></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="id2836922"></a>1.2.5. Características</h3></div></div><div class="itemizedlist"><ul type="disc"><li><p>
   Decida si necesita GUI (interfaz gráfica de usuario). Si lo necesita, vea la sección
   <a href="gui.html" title="1.3. ¿Qué hay acerca de la GUI?">GUI</a> antes de compilar.
   </p></li><li><p>
   Si desea instalar <span class="application">MEncoder</span> (nuestro gran codificador
-  multiproposito), vea la sección <a href="mencoder.html" title="Capítulo 7. Codificando con MEncoder">MEncoder</a>.
+  multiproposito), vea la sección
+  <a href="mencoder.html" title="Capítulo 7. Codificando con MEncoder"><span class="application">MEncoder</span></a>.
   </p></li><li><p>
   Si tiene una placa <span class="bold"><b>sintonizadora de TV</b></span> compatible con
   V4L, y desea usarla para ver/capturar y codificar películas con <span class="application">MPlayer</span>,
@@ -325,14 +330,15 @@ ejecutable principal contiene una copia interna del mismo. Revise si tiene
 el archivo <tt class="filename">codecs.conf</tt> en su directorio de inicio
 (<tt class="filename">~/.mplayer/codecs.conf</tt>) olvidado de alguna instalación
 previa de <span class="application">MPlayer</span> y borrela.
-</p><p>Note qeu si tiene un <tt class="filename">codecs.conf</tt> en
+</p><p>Note que si tiene un <tt class="filename">codecs.conf</tt> en
 <tt class="filename">~/.mplayer/</tt>, el <tt class="filename">codecs.conf</tt>
 interno y el de sistema serán ignorados por completo.
 No use esto a menos que quiera trapichear con las cosas internas
-de MPlayer lo que puede ocasionarle problemas. Si quiere cambiar el órden
-de búsqueda de los codecs, use la opción <tt class="option">-vc</tt>,
-<tt class="option">-ac</tt>, <tt class="option">-vfm</tt>, o <tt class="option">-afm</tt> en la
-línea de órdenes o en su archivo de configuración (vea la página de manual).
+de <span class="application">MPlayer</span> lo que puede ocasionarle problemas.
+Si quiere cambiar el órden de búsqueda de los codecs, use la opción
+<tt class="option">-vc</tt>, <tt class="option">-ac</tt>, <tt class="option">-vfm</tt>,
+o <tt class="option">-afm</tt> en la línea de órdenes o en su archivo de
+configuración (vea la página de manual).
 </p><p>
 Los usuarios de Debian pueden construir un paquete .deb, es muy simple.
 Simplemente ejecute 
@@ -354,6 +360,7 @@ normalmente dice que falta.
 </p><p>
 Aunque no es obligatorio, las fuentes deberían ser instaladas para poder usar
 el texto en pantalla (OSD) y los subtítulos. El método recomendado es instalar
-una fuente TTF y avisarle a MPlayer que lo use. Vea la sección <a href="subosd.html" title="1.4. Subtítulos y OSD">
-Subtítulos y OSD</a> para más detalles.
+una fuente TTF y avisarle a <span class="application">MPlayer</span>
+que lo use. Vea la sección <a href="subosd.html" title="1.4. Subtítulos y OSD">Subtítulos y OSD</a>
+para más detalles.
 </p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="history.html">Anterior</a> </td><td width="20%" align="center"><a accesskey="u" href="intro.html">Subir</a></td><td width="40%" align="right"> <a accesskey="n" href="gui.html">Siguiente</a></td></tr><tr><td width="40%" align="left" valign="top">1.1. Historia </td><td width="20%" align="center"><a accesskey="h" href="index.html">Inicio</a></td><td width="40%" align="right" valign="top"> 1.3. ¿Qué hay acerca de la GUI?</td></tr></table></div></body></html>

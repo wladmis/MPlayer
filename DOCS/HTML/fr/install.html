@@ -1,5 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html><head><meta content="text/html; charset=ISO-8859-1" http-equiv="Content-Type"><title>1.2. Installation</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.50.0"><link rel="home" href="index.html" title="MPlayer - Le lecteur vidéo pour LINUX"><link rel="up" href="intro.html" title="Chapitre 1. Introduction"><link rel="previous" href="history.html" title="1.1. Histoire"><link rel="next" href="gui.html" title="1.3. À propos de l'interface graphique ?"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">1.2. Installation</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="history.html">Précédent</a> </td><th width="60%" align="center">Chapitre 1. Introduction</th><td width="20%" align="right"> <a accesskey="n" href="gui.html">Suivant</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="install"></a>1.2. Installation</h2></div></div><p>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>1.2. Installation</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - Le lecteur vidéo pour LINUX"><link rel="up" href="intro.html" title="Chapitre 1. Introduction"><link rel="previous" href="history.html" title="1.1. Histoire"><link rel="next" href="gui.html" title="1.3. À propos de l'interface graphique ?"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">1.2. Installation</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="history.html">Précédent</a> </td><th width="60%" align="center">Chapitre 1. Introduction</th><td width="20%" align="right"> <a accesskey="n" href="gui.html">Suivant</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="install"></a>1.2. Installation</h2></div></div><p>
 Un guide d'installation rapide peut être trouvé dans le fichier <tt class="filename">README</tt>.
 Veuillez le lire d'abord et revenir ensuite ici pour le reste des détails.
 </p><p>
@@ -8,7 +7,7 @@ et la configuration de MPlayer. Ce n'est pas facile, mais pas vraiment difficile
 non plus. Si vous rencontrez un comportement différent de celui de mes explications,
 cherchez dans la doc et vous trouverez les réponses. Si vous voyez des liens, suivez-les
 et lisez attentivement ce qu'ils contiennent. Cela prendra du temps, mais ça en vaut
-VRAIMENT le coup.
+VRAIMENT la peine.
 </p><p>
 Vous aurez besoin d'un système relativement récent. Sous Linux, les noyaux 2.4.x sont
 recommandés.
@@ -47,7 +46,7 @@ recommandés.
   Ceci n'est en général pas très important.
   </p></li><li><p>
   <span class="bold"><b>SDL</b></span> - pas obligatoire, mais peut aider dans certains cas (mauvaise sortie audio,
-    cartes vidéo qui rament avec le pilote xv). Utilisez toujours la plus récente
+    cartes vidéo qui rament avec le pilote xv). Utilisez toujours la plus récente version
     (à partir de 1.2.x).
   </p></li><li><p>
   <span class="bold"><b>libjpeg</b></span> - décodeur JPEG optionnel, utilisé par
@@ -55,13 +54,13 @@ recommandés.
     Utile pour <span class="application">MPlayer</span> et <span class="application">MEncoder</span>
     si vous prévoyez de travailler avec des fichiers jpeg.
   </p></li><li><p>
-  <span class="bold"><b>libpng</b></span> - recommendé et décodeur (M)PNG par défaut.
+  <span class="bold"><b>libpng</b></span> - Décodeur (M)PNG par défaut, recommandé.
   Requis pour la GUI.
   Utile pour <span class="application">MPlayer</span> et <span class="application">MEncoder</span>.
   </p></li><li><p>
   <span class="bold"><b>lame</b></span> - recommandé, requis pour l'encodage MP3 audio avec
   <span class="application">MEncoder</span>, version conseillée :
-  <span class="emphasis"><em>toujours la plus récente</em></span> (au moins 3.90).
+  <span class="emphasis"><i>toujours la plus récente</i></span> (au moins 3.90).
   </p></li><li><p>
   <span class="bold"><b>zlib</b></span> - recommandé, nécessaire pour les
   entêtes MOV compressées et le support PNG.
@@ -85,8 +84,8 @@ recommandés.
   d'entrée de XMMS. Au moins 1.2.7 est requis.
   </p></li><li><p>
   <span class="bold"><b>libsmb</b></span> - optionnel, pour le support Samba.
-  </p></li></ul></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="id2831071"></a>1.2.2. Codecs</h3></div></div><div class="itemizedlist"><ul type="disc"><li><p>
-  <span class="bold"><b>libavcodec</b></span>: Ce paquet de codecs est capable de
+  </p></li></ul></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="id2835054"></a>1.2.2. Codecs</h3></div></div><div class="itemizedlist"><ul type="disc"><li><p>
+  <span class="bold"><b><tt>libavcodec</tt></b></span>: Ce paquet de codecs est capable de
   décoder les flux encodés en H263/MJPEG/RV10/DivX3/DivX4/DivX5/MP41/MP42/WMV1/WMV2/SVQ1/SVQ3
   et les flux audio WMA (Windows Media Audio) v1/v2, sur
   plusieurs plateformes. Il est également considéré comme le plus rapide pour cette
@@ -109,19 +108,19 @@ recommandés.
   <span class="bold"><b>AVANT</b></span> de compiler <span class="application">MPlayer</span>,
   sinon aucun support Win32 ne sera compilé!
   </p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>Le projet avifile a un paquet de codecs similaire, mais qui diffère
-    du notre. Si vous voulez avoir tous les codecs supportés, alors installez notre paquet
+    du nôtre. Si vous voulez avoir tous les codecs supportés, alors installez notre paquet
     (ne vous inquiétez pas, avifile fonctionne avec sans problèmes).</p></div><p>
   Fonctionnalités:
   </p><div class="itemizedlist"><ul type="round"><li>
-    vous en aurez besoin si vous voulez lire ou encoder par exemple des films enregistrés
-    avec des compresseurs matériels divers, comme des cartes tune ou des caméras numériques
+    Vous en aurez besoin si vous voulez lire ou encoder par exemple des films enregistrés
+    avec des compresseurs matériels divers, comme des cartes tuner ou des caméras numériques
    (exemple: DV, ATI VCR, MJPEG)
     </li><li>
-    requis si vous voulez lire des <span class="bold"><b>films WMV9/WMA9</b></span>.
+    Requis si vous voulez lire des <span class="bold"><b>films WMV9/WMA9</b></span>.
    </li><li>
   Non requis pour les vieux ASF avec vidéo MP41 ou MP42 (bien que VoxWare audio soit
   fréquent pour ces fichiers - ceci est géré par les codecs Win32), ou WMV7.
-  Requis également pour WMA (Windows Media Audio), libavcodec possède un décodeur
+  Requis également pour WMA (Windows Media Audio), <tt>libavcodec</tt> possède un décodeur
   opensource pour cela.
     </li></ul></div><p>
   </p></li><li><p>
@@ -133,7 +132,7 @@ recommandés.
   </p></li><li><p>
   <span class="bold"><b>DivX4/DivX5</b></span>: information sur ce codec disponible
   dans la section <a href="codecs.html#divx4-5" title="2.2.1.1. DivX4/DivX5">DivX4/DivX5</a>. Vous ne voudrez
-  probablement pas de ce codec car <span class="bold"><b>libavcodec</b></span> (voir
+  probablement pas de ce codec car <span class="bold"><b><tt>libavcodec</tt></b></span> (voir
   plus haut) est bien plus rapide et de meilleur qualité, tant pour le décodage que
   l'encodage.
   Fonctionnalités:
@@ -142,12 +141,12 @@ recommandés.
     </li><li>
     peut lire les films au vieux format <span class="bold"><b>DivX3</b></span>
     bien plus rapidement que les DLL Win32 mais plus lentement que
-    <span class="bold"><b>libavcodec</b></span>!
+    <span class="bold"><b><tt>libavcodec</tt></b></span>!
     </li><li>
     les sources sont fermées, et seule une version x86 est disponible.
     </li></ul></div><p>
   </p></li><li><p>
-  <span class="bold"><b>XviD</b></span>: Encodage libre alternatif à Divx4Linux
+  <span class="bold"><b>XviD</b></span>: Encodage libre alternatif à DivX4Linux
   Caractéristiques:
   </p><div class="itemizedlist"><ul type="round"><li>
     encodage 1 passe ou 2 passes avec <a href="mencoder.html" title="Chapitre 7. Encodage avec MEncoder">MEncoder</a>
@@ -189,7 +188,7 @@ taille qui tient dans leur mémoire, avec <span class="bold"><b>peu d'utilisation
   d'utiliser le module noyau mga_vid à la place, il fonctionne bien mieux.
   Voir la section <a href="devices.html#mga_vid" title="2.3.1.2.6. Framebuffer Matrox (mga_vid)">mga_vid</a> pour son
   installation et son utilisation. Il est important de faire cela 
-  <span class="emphasis"><em>avant</em></span> la compilation de <span class="application">MPlayer</span>,
+  <span class="emphasis"><i>avant</i></span> la compilation de <span class="application">MPlayer</span>,
   sinon aucun support mga_vid ne sera construit. Voir aussi la section
   <a href="devices.html#tvout-mga-g400" title="2.3.1.5.1. Cartes Matrox G400">Matrox TV-out</a>.
   <span class="bold"><b>Si vous n'utilisez pas Linux</b></span>, votre seule possibilité
@@ -281,13 +280,13 @@ n'avez pas d'accélération YUV, cette dernière méthode est recommandée. Le change
   <a href="codecs.html#swac3" title="2.2.2.1. Décodage AC3 logiciel">Décodage AC3 logiciel</a>. Pour le transfert AC3 matériel vous 
   <span class="bold"><b>devez</b></span> utiliser ALSA 0.9 avec l'émulation OSS!
   </li><li>
-  <span class="bold"><b>C-Media avec sortie SP/DIF</b></span>: e transfert AC3 matériel est possible
+  <span class="bold"><b>C-Media avec sortie SP/DIF</b></span>: Le transfert AC3 matériel est possible
     avec ces cartes, voir la section <a href="codecs.html#hwac3" title="2.2.2.2. Décodage AC3 matériel">Décodage AC3 matériel</a>.
   </li><li>
   Les Fonctions des <span class="bold"><b>autres cartes</b></span> ne sont pas supportées par
   <span class="application">MPlayer</span>. <span class="bold"><b>Il est fortement recommandé de lire
   la section <a href="devices.html#audio-dev" title="2.3.2. Périphériques de sortie audio">cartes son</a> !</b></span>
-  </li></ul></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="id2832368"></a>1.2.5. Fonctions</h3></div></div><div class="itemizedlist"><ul type="disc"><li><p>
+  </li></ul></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="id2836749"></a>1.2.5. Fonctions</h3></div></div><div class="itemizedlist"><ul type="disc"><li><p>
   Décidez si vous avez besoin d'une GUI (interface graphique). Si c'est le cas,
   voir la section <a href="gui.html" title="1.3. À propos de l'interface graphique ?">GUI</a> avant de compiler.
   </p></li><li><p>

@@ -403,7 +403,7 @@ static int my_release(void* memory)
 
     if (header->deadbeef != (long) 0xdeadbeef)
     {
-	printf("FATAL releasing corrupted memory! %p  0x%lx  (%d)\n", header, header->deadbeef, alccnt);
+	dbgprintf("FATAL releasing corrupted memory! %p  0x%lx  (%d)\n", header, header->deadbeef, alccnt);
 	return 0;
     }
 
@@ -496,6 +496,37 @@ static int WINAPI ext_unknown()
     printf("Unknown func called\n");
     return 0;
 }
+
+static int  WINAPI expGetVolumeInformationA( const char *root, char *label,
+                                       unsigned int label_len, unsigned int *serial,
+                                       unsigned int *filename_len,unsigned int *flags,
+                                       char *fsname, unsigned int fsname_len )
+{
+dbgprintf("GetVolumeInformationA( %s, 0x%x, %ld, 0x%x, 0x%x, 0x%x, 0x%x, %ld) => 1\n",
+		      root,label,label_len,serial,filename_len,flags,fsname,fsname_len);
+//hack Do not return any real data - do nothing
+return 1;
+}
+
+static unsigned int WINAPI expGetDriveTypeA( const char *root )
+{
+ dbgprintf("GetDriveTypeA( %s ) => %d\n",root,DRIVE_FIXED);
+ // hack return as Fixed Drive Type
+ return DRIVE_FIXED;
+}
+
+static unsigned int WINAPI expGetLogicalDriveStringsA( unsigned int len, char *buffer )
+{
+ dbgprintf("GetLogicalDriveStringsA(%d, 0x%x) => 4\n",len,buffer);
+ // hack only have one drive c:\ in this hack
+  *buffer++='c';
+  *buffer++=':';
+  *buffer++='\\';
+  *buffer++='\0';
+  *buffer= '\0';
+return 4; // 1 drive * 4 bytes (includes null)
+}
+
 
 static int WINAPI expIsBadWritePtr(void* ptr, unsigned int count)
 {
@@ -1350,7 +1381,7 @@ static void WINAPI expEnterCriticalSection(CRITICAL_SECTION* c)
 #else
 	cs = (*(struct CRITSECT**)c);
 #endif
-	printf("Win32 Warning: Accessed uninitialized Critical Section (%p)!\n", c);
+	dbgprintf("Win32 Warning: Accessed uninitialized Critical Section (%p)!\n", c);
     }
     if(cs->locked)
 	if(cs->id==pthread_self())
@@ -1371,11 +1402,16 @@ static void WINAPI expLeaveCriticalSection(CRITICAL_SECTION* c)
     dbgprintf("LeaveCriticalSection(0x%x) 0x%x\n",c, cs);
     if (!cs)
     {
-	printf("Win32 Warning: Leaving uninitialized Critical Section %p!!\n", c);
+	dbgprintf("Win32 Warning: Leaving uninitialized Critical Section %p!!\n", c);
 	return;
     }
-    cs->locked=0;
-    pthread_mutex_unlock(&(cs->mutex));
+    if (cs->locked)
+    {
+	cs->locked=0;
+	pthread_mutex_unlock(&(cs->mutex));
+    }
+    else
+	dbgprintf("Win32 Warning: Unlocking unlocked Critical Section %p!!\n", c);
     return;
 }
 
@@ -1390,6 +1426,18 @@ static void WINAPI expDeleteCriticalSection(CRITICAL_SECTION *c)
 #endif
     //    struct CRITSECT* cs=(struct CRITSECT*)c;
     dbgprintf("DeleteCriticalSection(0x%x)\n",c);
+
+    if (!cs)
+    {
+	dbgprintf("Win32 Warning: Deleting uninitialized Critical Section %p!!\n", c);
+	return;
+    }
+    
+    if (cs->locked)
+    {
+	dbgprintf("Win32 Warning: Deleting unlocked Critical Section %p!!\n", c);
+	pthread_mutex_unlock(&(cs->mutex));
+    }
 
 #ifndef GARBAGE
     pthread_mutex_destroy(&(cs->mutex));
@@ -1615,7 +1663,7 @@ static int WINAPI expGlobalSize(void* amem)
     {
 	if (header->deadbeef != 0xdeadbeef)
 	{
-	    printf("FATAL found corrupted memory! %p  0x%lx  (%d)\n", header, header->deadbeef, alccnt);
+	    dbgprintf("FATAL found corrupted memory! %p  0x%lx  (%d)\n", header, header->deadbeef, alccnt);
 	    break;
 	}
 
@@ -1633,6 +1681,13 @@ static int WINAPI expGlobalSize(void* amem)
     dbgprintf("GlobalSize(0x%x)\n", amem);
     return size;
 }
+
+static int WINAPI expLoadIconA( long hinstance, char *name )
+{
+ dbgprintf("LoadIconA( %ld, 0x%x ) => 1\n",hinstance,name);
+ return 1;
+}
+
 static int WINAPI expLoadStringA(long instance, long  id, void* buf, long size)
 {
     int result=LoadStringA(instance, id, buf, size);
@@ -1820,6 +1875,15 @@ static long WINAPI expRegQueryValueExA(long key, const char* value, int* reserve
     if(data && count)dbgprintf("  read %d bytes: '%s'\n", *count, data);
     return result;
 }
+
+//from wine source dlls/advapi32/registry.c
+static long WINAPI expRegCreateKeyA(long hkey, const char* name, int *retkey)
+{
+    dbgprintf("RegCreateKeyA(key 0x%x, name 0x%x='%s',newkey=0x%x)\n",hkey,name,retkey);
+    return RegCreateKeyExA( hkey, name, 0, NULL,REG_OPTION_NON_VOLATILE,
+                            KEY_ALL_ACCESS , NULL, retkey, NULL );
+}
+
 static long WINAPI expRegCreateKeyExA(long key, const char* name, long reserved,
 				      void* classs, long options, long security,
 				      void* sec_attr, int* newkey, int* status)
@@ -3904,6 +3968,16 @@ static HRESULT WINAPI expMoDeleteMediaType(MY_MEDIA_TYPE* dest)
     return S_OK;
 }
 
+static int exp_snprintf( char *str, int size, const char *format, ... )
+{
+      int x;
+      va_list va;
+      va_start(va, format);
+      x=snprintf(str,size,format,va);
+      dbgprintf("_snprintf( 0x%x, %d, %s, ... ) => %d\n",str,size,format,x);
+      va_end(va);
+      return x;
+}
 
 #if 0
 static int exp_initterm(int v1, int v2)
@@ -3956,7 +4030,7 @@ static void* exp__dllonexit()
     return NULL;
 }
 
-static int expwsprintfA(char* string, char* format, ...)
+static int expwsprintfA(char* string, const char* format, ...)
 {
     va_list va;
     int result;
@@ -3971,7 +4045,7 @@ static int expsprintf(char* str, const char* format, ...)
 {
     va_list args;
     int r;
-    dbgprintf("sprintf(%s, %s)\n", str, format);
+    dbgprintf("sprintf(0x%x, %s)\n", str, format);
     va_start(args, format);
     r = vsprintf(str, format, args);
     va_end(args);
@@ -4487,13 +4561,13 @@ static void WINAPI expVariantInit(void* p)
     return;
 }
 
-int expRegisterClassA(const void/*WNDCLASSA*/ *wc)
+static int WINAPI expRegisterClassA(const void/*WNDCLASSA*/ *wc)
 {
     dbgprintf("RegisterClassA(%p) => random id\n", wc);
     return time(NULL); /* be precise ! */
 }
 
-int expUnregisterClassA(const char *className, HINSTANCE hInstance)
+static int WINAPI expUnregisterClassA(const char *className, HINSTANCE hInstance)
 {
     dbgprintf("UnregisterClassA(%s, %p) => 0\n", className, hInstance);
     return 0;
@@ -4630,6 +4704,9 @@ struct libs
 
 struct exports exp_kernel32[]=
 {
+    FF(GetVolumeInformationA,-1)
+    FF(GetDriveTypeA,-1)
+    FF(GetLogicalDriveStringsA,-1)
     FF(IsBadWritePtr, 357)
     FF(IsBadReadPtr, 354)
     FF(IsBadStringPtrW, -1)
@@ -4785,6 +4862,7 @@ struct exports exp_msvcrt[]={
     FF(malloc, -1)
     FF(_initterm, -1)
     FF(__dllonexit, -1)
+    FF(_snprintf,-1)
     FF(free, -1)
     {"??3@YAXPAX@Z", -1, expdelete},
     {"??2@YAPAXI@Z", -1, expnew},
@@ -4852,6 +4930,7 @@ struct exports exp_winmm[]={
 #endif
 };
 struct exports exp_user32[]={
+    FF(LoadIconA,-1)
     FF(LoadStringA, -1)
     FF(wsprintfA, -1)
     FF(GetDC, -1)
@@ -4897,6 +4976,7 @@ struct exports exp_user32[]={
 };
 struct exports exp_advapi32[]={
     FF(RegCloseKey, -1)
+    FF(RegCreateKeyA, -1)
     FF(RegCreateKeyExA, -1)
     FF(RegEnumKeyExA, -1)
     FF(RegEnumValueA, -1)
@@ -5132,7 +5212,7 @@ void* LookupExternal(const char* library, int ordinal)
 
 #ifndef LOADLIB_TRY_NATIVE
   /* hack for truespeech and vssh264*/
-  if (!strcmp(library, "tsd32.dll") || !strcmp(library,"vssh264dec.dll"))
+  if (!strcmp(library, "tsd32.dll") || !strcmp(library,"vssh264dec.dll") || !strcmp(library,"LCMW2.dll"))
 #endif
     /* ok, this is a hack, and a big memory leak. should be fixed. - alex */
     {
@@ -5252,7 +5332,7 @@ void my_garbagecollection(void)
 	    if (--max_fatal < 0)
 		break;
     }
-    printf("Total Unfree %d bytes cnt %d [%p,%d]\n",unfree, unfreecnt, last_alloc, alccnt);
+    dbgprintf("Total Unfree %d bytes cnt %d [%p,%d]\n",unfree, unfreecnt, last_alloc, alccnt);
 #endif
     g_tls = NULL;
     list = NULL;

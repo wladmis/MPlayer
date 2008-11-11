@@ -1,5 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html><head><meta content="text/html; charset=ISO-8859-1" http-equiv="Content-Type"><title>1.5. RTC</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.50.0"><link rel="home" href="index.html" title="MPlayer - The Movie Player for LINUX"><link rel="up" href="intro.html" title="Chapter 1. Introduction"><link rel="previous" href="subosd.html" title="1.4. Subtitles and OSD"><link rel="next" href="features.html" title="Chapter 2. Features"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">1.5. RTC</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="subosd.html">Prev</a> </td><th width="60%" align="center">Chapter 1. Introduction</th><td width="20%" align="right"> <a accesskey="n" href="features.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="rtc"></a>1.5. RTC</h2></div></div><p>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>1.5. RTC</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - The Movie Player for LINUX"><link rel="up" href="intro.html" title="Chapter 1. Introduction"><link rel="previous" href="subosd.html" title="1.4. Subtitles and OSD"><link rel="next" href="features.html" title="Chapter 2. Features"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">1.5. RTC</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="subosd.html">Prev</a> </td><th width="60%" align="center">Chapter 1. Introduction</th><td width="20%" align="right"> <a accesskey="n" href="features.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="rtc"></a>1.5. RTC</h2></div></div><p>
 There are three timing methods in <span class="application">MPlayer</span>.
 
 </p><div class="itemizedlist"><ul type="disc"><li>
@@ -10,10 +9,11 @@ There are three timing methods in <span class="application">MPlayer</span>.
   </li><li><p>
 <span class="bold"><b>The new timer</b></span> code uses PC's RTC (Real Time Clock)
   for this task, because it has precise 1ms timers. It is automagically enabled
-  when available, but requires root privileges, a <span class="emphasis"><em>setuid root</em></span>
+  when available, but requires root privileges, a <span class="emphasis"><i>setuid root</i></span>
   <span class="application">MPlayer</span> binary or a properly set up kernel.
   If you are running kernel 2.4.19pre8 or later you can adjust the maximum RTC
-  frequency for normal users through the /proc filesystem. Use this command to
+  frequency for normal users through the <tt>/proc
+  </tt> filesystem. Use this command to
   enable RTC for normal users:
   <pre class="screen">echo 1024 &gt; /proc/sys/dev/rtc/max-user-freq</pre>
   If you do not have such a new kernel, you can also change one line in

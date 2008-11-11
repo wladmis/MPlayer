@@ -697,8 +697,10 @@ static int svq3_decode_slice_header (H264Context *h) {
 
     h->next_slice_index = s->gb.index + 8*show_bits (&s->gb, 8*length) + 8*length;
 
-    if (h->next_slice_index > s->gb.size_in_bits)
+    if (h->next_slice_index > s->gb.size_in_bits){
+      av_log(h->s.avctx, AV_LOG_ERROR, "slice after bitstream end\n");
       return -1;
+    }
 
     s->gb.size_in_bits = h->next_slice_index - 8*(length - 1);
     s->gb.index += 8;
@@ -709,8 +711,10 @@ static int svq3_decode_slice_header (H264Context *h) {
     }
   }
 
-  if ((i = svq3_get_ue_golomb (&s->gb)) == INVALID_VLC || i >= 3)
+  if ((i = svq3_get_ue_golomb (&s->gb)) == INVALID_VLC || i >= 3){
+    av_log(h->s.avctx, AV_LOG_ERROR, "illegal slice type %d \n", i);
     return -1;
+  }
 
   h->slice_type = golomb_to_pict_type[i];
 
@@ -762,11 +766,15 @@ static int svq3_decode_frame (AVCodecContext *avctx,
   MpegEncContext *const s = avctx->priv_data;
   H264Context *const h = avctx->priv_data;
   int m, mb_type;
+  unsigned char *extradata;
+  unsigned int size;
 
   *data_size = 0;
 
   s->flags = avctx->flags;
-  
+  s->flags2 = avctx->flags2;
+  s->unrestricted_mv = 1;
+
   if (!s->context_initialized) {
     s->width = avctx->width;
     s->height = avctx->height;
@@ -784,13 +792,21 @@ static int svq3_decode_frame (AVCodecContext *avctx,
 
     alloc_tables (h);
 
-    if (avctx->extradata && avctx->extradata_size >= 0x64
-	&& !memcmp (avctx->extradata, "SVQ3", 4)) {
+    /* prowl for the "SEQH" marker in the extradata */
+    extradata = (unsigned char *)avctx->extradata;
+    for (m = 0; m < avctx->extradata_size; m++) {
+      if (!memcmp (extradata, "SEQH", 4))
+        break;
+      extradata++;
+    }
+
+    /* if a match was found, parse the extra data */
+    if (!memcmp (extradata, "SEQH", 4)) {
 
       GetBitContext gb;
 
-      init_get_bits (&gb, (uint8_t *) avctx->extradata + 0x62,
-		     8*(avctx->extradata_size - 0x62));
+      size = BE_32(&extradata[4]);
+      init_get_bits (&gb, extradata + 8, size);
 
       /* 'frame size code' and optional 'width, height' */
       if (get_bits (&gb, 3) == 7) {

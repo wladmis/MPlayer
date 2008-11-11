@@ -1,5 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html><head><meta content="text/html; charset=ISO-8859-1" http-equiv="Content-Type"><title>2.4. TV input</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.50.0"><link rel="home" href="index.html" title="MPlayer - The Movie Player for LINUX"><link rel="up" href="features.html" title="Chapter 2. Features"><link rel="previous" href="devices.html" title="2.3. Output devices"><link rel="next" href="edl.html" title="2.5. Edit Decision Lists (EDL)"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">2.4. TV input</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="devices.html">Prev</a> </td><th width="60%" align="center">Chapter 2. Features</th><td width="20%" align="right"> <a accesskey="n" href="edl.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="tv-input"></a>2.4. TV input</h2></div></div><p>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>2.4. TV input</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - The Movie Player for LINUX"><link rel="up" href="features.html" title="Chapter 2. Features"><link rel="previous" href="devices.html" title="2.3. Output devices"><link rel="next" href="usage.html" title="Chapter 3. Usage"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">2.4. TV input</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="devices.html">Prev</a> </td><th width="60%" align="center">Chapter 2. Features</th><td width="20%" align="right"> <a accesskey="n" href="usage.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="tv-input"></a>2.4. TV input</h2></div></div><p>
 This section is about how to enable <span class="bold"><b>watching/grabbing
 from V4L compatible TV tuner</b></span>. See the man page for a description
 of TV options and keyboard controls.
@@ -20,7 +19,7 @@ Use the <tt class="option">channels</tt> option. An example:
 Explanation: using this option, only the 26 and 23 channels will be usable,
 and there will be a nice OSD text upon channel switching, displaying the
 channel's name. Spaces in the channel name must be replaced by the
-&quot;_&quot; character.
+"_" character.
 </p></li><li><p>
 Choose some sane image dimensions. The dimensions of the resulting image should
 be divisible by 16.
@@ -62,7 +61,8 @@ In the older versions of <span class="application">MPlayer</span>/
 <span class="application">MEncoder</span> it was necessary to specify the output
 format. This issue should be fixed in the current releases and <tt class="option">outfmt</tt>
 isn't required anymore, and the default suits the most purposes. For example,
-if you are capturing into DivX using libavcodec and specify
+if you are capturing into DivX using
+<tt>libavcodec</tt> and specify
 <tt class="option">outfmt=RGB24</tt> in order to increase the quality of the captured
 images, the captured image will be actually later converted back into YV12 so
 the only thing you achieve is a massive waste of CPU power.
@@ -83,7 +83,7 @@ If <span class="application">MEncoder</span> cannot open the audio device, make
 sure that it is really available. There can be some trouble with the sound
 servers like arts (KDE) or esd (GNOME). If you have a full duplex soundcard
 (almost any decent card supports it today), and you are using KDE, try to
-check the &quot;full duplex&quot; option in the sound server preference menu.
+check the "full duplex" option in the sound server preference menu.
 </p></li></ul></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="tv-examples"></a>2.4.3. Examples</h3></div></div><div class="informalexample"><p>
 Dummy output, to AAlib :)
 <pre class="screen">
@@ -101,7 +101,7 @@ of 64kbps, using LAME codec. This setup is suitable for capturing movies.
      mencoder -tv driver=v4l:width=768:height=576 \
      -ovc lavc -lavcopts vcodec=mpeg4:vbitrate=900 \
      -oac mp3lame -lameopts cbr:br=64 \
-     -vf crop=720:544:24:16,pp=lb -o output.avi tv://
+     -vf crop=720:544:24:16,pp=lb -o <i><tt>output.avi</tt></i> tv://
 </pre>
 </p></div><div class="informalexample"><p>
 This will additionally rescale the image to 384x288 and compresses the
@@ -113,10 +113,10 @@ capturing long TV series, where the video quality isn't so important.
      mencoder -tv driver=v4l:width=768:height=576 \
      -ovc lavc -lavcopts vcodec=mpeg4:vbitrate=350:vhq:vqmax=31:keyint=300 \
      -oac mp3lame -lameopts cbr:br=48 \
-     -vf crop=720:540:24:18,pp=tn/lb,scale=384:288 -sws 1 -o output.avi tv://
+     -vf crop=720:540:24:18,pp=tn/lb,scale=384:288 -sws 1 -o <i><tt>output.avi</tt></i> tv://
 </pre>
 It's also possible to specify smaller image dimensions in the <tt class="option">-tv</tt>
 option and omit the software scaling but this approach uses the maximum available
 information and is a little more resistant to noise. The bt8x8 chips can do the
 pixel averaging only in the horizontal direction due to a hardware limitation.
-</p></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="devices.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="features.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="edl.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">2.3. Output devices </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 2.5. Edit Decision Lists (EDL)</td></tr></table></div></body></html>
+</p></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="devices.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="features.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="usage.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">2.3. Output devices </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Chapter 3. Usage</td></tr></table></div></body></html>

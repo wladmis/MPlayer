@@ -95,7 +95,7 @@ static mp_cmd_t mp_cmds[] = {
 #endif
   { MP_CMD_SUB_FORCED_ONLY, "forced_subs_only",  0, { {-1,{0}} } },
 #ifdef HAS_DVBIN_SUPPORT
-  { MP_CMD_DVB_SET_CHANNEL, "dvb_set_channel", 1, { { MP_CMD_ARG_INT, {0}}, {-1,{0}}  }},
+  { MP_CMD_DVB_SET_CHANNEL, "dvb_set_channel", 2, { {MP_CMD_ARG_INT,{0}}, {MP_CMD_ARG_INT,{0}}, {-1,{0}}}},
 #endif
   { MP_CMD_VO_FULLSCREEN, "vo_fullscreen", 0, { {-1,{0}} } },
   { MP_CMD_VO_ONTOP, "vo_ontop", 0, { {-1,{0}} } },
@@ -166,6 +166,8 @@ static mp_key_name_t key_names[] = {
   { KEY_F+8, "F8" },
   { KEY_F+9, "F9" },
   { KEY_F+10, "F10" },
+  { KEY_F+11, "F11" },
+  { KEY_F+12, "F12" },
   { KEY_KP0, "KP0" },
   { KEY_KP1, "KP1" },
   { KEY_KP2, "KP2" },

@@ -1,5 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html><head><meta content="text/html; charset=ISO-8859-1" http-equiv="Content-Type"><title>D.3. Polices</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.50.0"><link rel="home" href="index.html" title="MPlayer - Le lecteur vidéo pour LINUX"><link rel="up" href="skin.html" title="Annexe D. Format de skins MPlayer"><link rel="previous" href="skin-file.html" title="D.2. Le fichier skin"><link rel="next" href="skin-gui.html" title="D.4. Messages de la GUI"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">D.3. Polices</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="skin-file.html">Précédent</a> </td><th width="60%" align="center">Annexe D. Format de skins MPlayer</th><td width="20%" align="right"> <a accesskey="n" href="skin-gui.html">Suivant</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="skin-fonts"></a>D.3. Polices</h2></div></div><p>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>D.3. Polices</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - Le lecteur vidéo pour LINUX"><link rel="up" href="skin.html" title="Annexe D. Format de skins MPlayer"><link rel="previous" href="skin-file.html" title="D.2. Le fichier skin"><link rel="next" href="skin-gui.html" title="D.4. Messages de la GUI"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">D.3. Polices</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="skin-file.html">Précédent</a> </td><th width="60%" align="center">Annexe D. Format de skins MPlayer</th><td width="20%" align="right"> <a accesskey="n" href="skin-gui.html">Suivant</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="skin-fonts"></a>D.3. Polices</h2></div></div><p>
 Comme mentionné dans la section sur les parties de la skin, une police est définie
 par une image et un fichier de description. Vous pouvez placer les caractères
 n'importe ou sur l'image, mais vous devez vous assurer que leur position et taille
@@ -13,7 +12,7 @@ Le fichier doit avoir une ligne du type
 Où <tt><i><tt>image</tt></i></tt> est le nom de l'image qui
 sera utilisée pour la police (vous n'avez pas à définir d'extension).
 <a name="skin-font-char"></a>
-<pre class="programlisting">&quot;char&quot; = X, Y, largeur, hauteur</pre>
+<pre class="programlisting">"char" = X, Y, largeur, hauteur</pre>
 Ici <tt>X</tt> et <tt>Y</tt> précisent la position du caractère
 <tt>char</tt> dans l'image (<tt>0,0</tt> est le coin supérieur
 gauche). <tt>largeur</tt> et <tt>hauteur</tt> sont les
@@ -21,13 +20,13 @@ dimensions du caractère en pixels.
 </p><p>
 Voici un exemple définissant les caractères A, B, C utilisant la police <tt class="filename">font.png</tt>.
 <pre class="programlisting">
-; Peut être &quot;font&quot; au lieu de &quot;font.png&quot;.
+; Peut être "font" au lieu de "font.png".
 image = font.png
 
 ; Trois caractères suffisent pour une démonstration. :-)
-&quot;A&quot; =  0,0, 7,13
-&quot;B&quot; =  7,0, 7,13
-&quot;C&quot; = 14,0, 7,13
+"A" =  0,0, 7,13
+"B" =  7,0, 7,13
+"C" = 14,0, 7,13
 </pre>
 </p><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="skin-fonts-symbols"></a>D.3.1. Symboles</h3></div></div><p>
 Certains caractères ont une signification spéciale quand ils sont retournés par des

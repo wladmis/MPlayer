@@ -69,6 +69,7 @@ darwin()  { issystem "Darwin"  ; return "$?" ; }
 gnu()     { issystem "GNU"     ; return "$?" ; }
 mingw32() { issystem "MINGW32" ; return "$?" ; }
 morphos() { issystem "MorphOS" ; return "$?" ; }
+win32()   { cygwin || mingw32  ; return "$?" ; }
 
 # arch test boolean functions
 # x86/x86pc is used by QNX
@@ -152,9 +153,7 @@ Optional features:
   --enable-largefiles    enable support for files > 2 GBytes [disable]
   --enable-linux-devfs   set default devices to devfs ones [disable]
   --enable-termcap       use termcap database for key codes [autodetect]
-  --with-termcaplib=NAME name of library with termcap functionality
-                         name shuld be given without leading "lib"
-                         checks for "termcap" and "tinfo"
+  --enable-termios       use termios database for key codes [autodetect]
   --disable-iconv        do not use iconv(3) function [autodetect]
   --disable-setlocale    disable setlocale using in mplayer [autodetect]
   --enable-lirc          enable LIRC (remote control) support [autodetect]
@@ -199,18 +198,21 @@ Codecs:
   --disable-divx4linux   disable DivX4linux/Divx5linux codec [autodetect]
   --enable-opendivx      enable _old_ OpenDivx codec [disable]
   --disable-libavcodec   disable libavcodec [autodetect]
+  --disable-libavformat  disable libavformat [autodetect]
   --enable-libfame       enable libfame realtime encoder [autodetect]
   --enable-vorbis        build with OggVorbis support [autodetect]
   --enable-tremor        build with integer-only OggVorbis support [disabled]
   --enable-theora        build with OggTheora support [autodetect]
-  --enable-matroska      build with Matroska support [autodetect]
+  --enable-external-matroska  build with external Matroska support [autodetect]
+  --disable-internal-matroska disable internal Matroska support [enabled]
   --enable-external-faad build with external FAAD2 (AAC) support [autodetect]
   --disable-internal-faad disable internal FAAD2 (AAC) support [autodetect]
   --disable-libdv        disable libdv 0.9.5 en/decoding support [autodetect]
   --disable-mad          disable libmad (MPEG audio) support [autodetect]
   --enable-xmms          build with XMMS inputplugin support [disabled]
-  --enable-flac          build with FLAC support [autodetect]
-  --enable-external-flac build with external libFLAC [disable]
+  --disable-mp3lib       disable builtin mp3lib [enabled]
+  --disable-liba52       disable builtin liba52 [enabled]
+  --disable-libmpeg2     disable builtin libmpeg2 [enabled]
   
 Video output:
   --disable-vidix        disable VIDIX [enable on x86 *nix]
@@ -220,6 +222,7 @@ Video output:
   --enable-svga          build with SVGAlib support [autodetect]
   --enable-sdl           build with SDL render support [autodetect]
   --enable-aa            build with AAlib render support [autodetect]
+  --enable-caca          build with CACA render support [autodetect]
   --enable-ggi           build with GGI render support [autodetect]
   --enable-directx       build with DirectX support [autodetect]
   --enable-dxr2          build with DXR2 render support [autodetect]
@@ -246,18 +249,20 @@ Video output:
   --disable-tga          disable targa output support [enable]
   
 Audio output:
+  --disable-alsa         disable ALSA sound support [autodetect]
   --disable-ossaudio     disable OSS sound support [autodetect]
   --disable-arts         disable aRts sound support [autodetect]
   --disable-esd          disable esd sound support [autodetect]
-  --disable-alsa         disable alsa sound support [autodetect]
-  --disable-sunaudio     disable Sun sound support [autodetect]
   --disable-nas          disable NAS sound support [autodetect]
+  --disable-sgiaudio     disable SGI sound support [autodetect]
+  --disable-sunaudio     disable Sun sound support [autodetect]
   --disable-win32waveout disable Windows waveout sound support [autodetect]
   --disable-select       disable using select() on audio device [enable]
 
 Miscellaneous options:
   --enable-runtime-cpudetection    Enable runtime CPU detection [disable]
   --cc=COMPILER          use this C compiler to build MPlayer [gcc]
+  --as=ASSEMBLER         use this assembler to build MPlayer [as]
   --target=PLATFORM      target platform (i386-linux, arm-linux, etc)
   --enable-static        build a statically linked binary. Set further linking
                          options with --enable-static="-lslang -lncurses"
@@ -282,6 +287,7 @@ Advanced options:
   --enable-3dnowex       build with extended 3DNow! support [autodetect]
   --enable-sse           build with SSE support [autodetect]
   --enable-sse2          build with SSE2 support [autodetect]
+  --enable-shm           build with shm support [autodetect]
   --enable-altivec       build with Altivec support (PowerPC) [autodetect]
   --disable-fastmemcpy   disable 3DNow!/SSE/MMX optimized memcpy() [enable]
   --enable-big-endian    Force byte order to big endian [autodetect]
@@ -310,20 +316,22 @@ Use these options if autodetection fails:
   --with-xvmclib=PATH      path to adapter specific XvMCxxxxx.so (e.g. NVIDIA)
   --with-xvidlibdir=DIR    libxvidcore (XviD) in DIR 
   --with-xvidincdir=DIR    XviD header in DIR
-  
-  --with-sdl-config=PATH   path to sdl*-config (e.g. /opt/bin/sdl-config)
-  --with-freetype-config=PATH  path to freetype-config
-                               (e.g. /opt/bin/freetype-config)
-  --with-gtk-config=PATH   path to gtk*-config (e.g. /opt/bin/gtk-config)
-  --with-glib-config=PATH  path to glib*-config (e.g. /opt/bin/glib-config)
   --with-livelibdir=DIR    path to LIVE.COM Streaming Media libraries
   --with-xmmsplugindir=DIR path to XMMS plugins
   --with-xmmslibdir=DIR    path to libxmms.so.1
   --with-cdparanoiaincdir=DIR  cdparanoia headers in DIR
   --with-cdparanoialibdir=DIR  cdparanoia libraries (libcdda_*) in DIR
+  --with-termcaplib=NAME   name of library with termcap functionality
+                           name should be given without leading "lib"
+                           checks for "termcap" and "tinfo"
+  
+  --with-freetype-config=PATH path to freetype-config
+                              (e.g. /opt/bin/freetype-config)
   --with-fribidi-config=PATH  path to fribidi-config
                               (e.g. /opt/bin/fribidi-config)
-
+  --with-glib-config=PATH  path to glib*-config (e.g. /opt/bin/glib-config)
+  --with-gtk-config=PATH   path to gtk*-config (e.g. /opt/bin/gtk-config)
+  --with-sdl-config=PATH   path to sdl*-config (e.g. /opt/bin/sdl-config)
 EOF
     exit 0
   fi
@@ -416,7 +424,7 @@ if test -z "$_target" ; then
   # host's CPU/instruction set
    host_arch=`( uname -p ) 2>&1`
    case "$host_arch" in
-   i386|sparc|ppc|alpha|arm|mips)
+   i386|sparc|ppc|alpha|arm|mips|vax)
      ;;
    powerpc) # Darwin returns 'powerpc'
      host_arch=ppc
@@ -431,11 +439,11 @@ if test -z "$_target" ; then
       case "`( uname -m ) 2>&1`" in
       i[3-9]86*|x86|x86pc|k5|k6|k6_2|k6_3|k6-2|k6-3|pentium*|athlon*|i586_i686|i586-i686) host_arch=i386 ;;
       ia64) host_arch=ia64 ;;
-      x86_64) host_arch=x86_64 ;;
+      x86_64|amd64) host_arch=x86_64 ;;
       ppc) host_arch=ppc ;;
       alpha) host_arch=alpha ;;
       sparc*) host_arch=sparc ;;
-      9000*) host_arch=hppa ;;
+      parisc*|hppa*|9000*) host_arch=hppa ;;
       arm*) host_arch=arm ;;
       s390) host_arch=s390 ;;
       s390x) host_arch=s390x ;;
@@ -875,6 +883,18 @@ EOF
 	    _altivec=yes
 	fi
     fi
+    # only gcc 3.4 works reliably with altivec code under netbsd 
+    if netbsd ; then
+	case $cc_version in
+	    2*|3.0*|3.1*|3.2*|3.3*)
+		;;
+	    *)
+		if [ `sysctl -n machdep.altivec` -eq 1 ]; then
+		    _altivec=yes
+		fi
+		;;
+	esac
+    fi
     if test "$_altivec" = yes; then
         echores "$proc altivec"
     else
@@ -898,6 +918,13 @@ EOF
 	    case "$proc" in
 		7400*|7410*) _march='-mcpu=7400' _mcpu='-mtune=7400' ;;
 		7450*|7455*) _march='-mcpu=7450' _mcpu='-mtune=7450' ;;
+    		*) ;;
+    	    esac
+	fi
+	# gcc 3.2 and up supports 970
+	if test "$_cc_major" -ge "3" && test "$_cc_minor" -ge "3"; then
+	    case "$proc" in
+		970*) _march='-mcpu=970' _mcpu='-mtune=970' ;;
     		*) ;;
     	    esac
 	fi
@@ -971,6 +998,21 @@ EOF
     _march=''
     _mcpu=''
     _optimizing=''
+
+    if irix ; then
+	echocheck "CPU type"
+	proc=`hinv -c processor | grep CPU | cut -d " " -f3`
+	case "`echo $proc`" in
+	    R3000) _march='-mips1' _mcpu='-mtune=r2000' ;;
+	    R4000) _march='-mips3' _mcpu='-mtune=r4000' ;;
+	    R4400) _march='-mips3' _mcpu='-mtune=r4400' ;;
+	    R4600) _march='-mips3' _mcpu='-mtune=r4600' ;;
+	    R5000) _march='-mips4' _mcpu='-mtune=r5000' ;;
+	    R8000|R10000|R12000|R14000|R16000) _march='-mips4' _mcpu='-mtune=r8000' ;;
+	esac
+        echores "$proc"
+    fi
+
     ;;
 
   hppa)
@@ -997,6 +1039,16 @@ EOF
     _def_arch='#define ARCH_S390X 1'
     _target_arch='TARGET_ARCH_S390X = yes'
     iproc='390x'
+    proc=''
+    _march=''
+    _mcpu=''
+    _optimizing=''
+    ;;
+
+  vax)
+    _def_arch='#define ARCH_VAX 1'
+    _target_arch='TARGET_ARCH_VAX = yes'
+    iproc='vax'
     proc=''
     _march=''
     _mcpu=''
@@ -1086,6 +1138,7 @@ _xvmclib="XvMCNVIDIA"
 # If autodetection is available then the third state is: auto
 _libavcodec=auto
 _libavcodecso=auto 
+_libavformat=auto
 _fame=auto
 _mp1e=no
 _mencoder=yes
@@ -1103,6 +1156,7 @@ _gif=auto
 _gl=auto
 _ggi=auto
 _aa=auto
+_caca=auto
 _svga=auto
 _vesa=auto
 _fbdev=auto
@@ -1119,13 +1173,15 @@ _liblzo=auto
 _mad=auto
 _vorbis=auto
 _theora=auto
-_matroska=auto
+_mp3lib=yes
+_liba52=yes
+_libmpeg2=yes
+_matroska_internal=yes
+_matroska_external=auto
 _tremor=no
 _faad_internal=auto
 _faad_external=auto
 _xmms=no
-_flac=auto
-_external_flac=auto
 # dvdnav disabled, it does not work
 #_dvdnav=no
 _dvdread=auto
@@ -1247,6 +1303,8 @@ for ac_option do
   --disable-ggi)	_ggi=no		;;
   --enable-aa)		_aa=yes		;;
   --disable-aa)		_aa=no		;;
+  --enable-caca)	_caca=yes	;;
+  --disable-caca)	_caca=no	;;
   --enable-svga)	_svga=yes	;;
   --disable-svga)	_svga=no	;;
   --enable-vesa)	_vesa=yes	;;
@@ -1285,17 +1343,22 @@ for ac_option do
   --disable-tremor)	_tremor=no	;;
   --enable-theora)	_theora=yes	;;
   --disable-theora)	_theora=no	;;
-  --enable-matroska)    _matroska=yes   ;;
-  --disable-matroska)   _matroska=no    ;;
+  --enable-mp3lib)	_mp3lib=yes	;;
+  --disable-mp3lib)	_mp3lib=no	;;
+  --enable-liba52)	_liba52=yes	;;
+  --disable-liba52)	_liba52=no	;;
+  --enable-libmpeg2)	_libmpeg2=yes	;;
+  --disable-libmpeg2)	_libmpeg2=no	;;
+  --enable-internal-matroska)  _matroska_internal=yes _matroska_external=no ;;
+  --disable-internal-matroska) _matroska_internal=no ;;
+  --enable-external-matroska)  _matroska_internal=no  _matroska_external=yes ;;
+  --disable-external-matroska) _matroska_external=no ;;
   --enable-internal-faad)	_faad_internal=yes	_faad_external=no	;;
   --disable-internal-faad)	_faad_internal=no	;;
   --enable-external-faad)	_faad_external=yes	_faad_internal=no	;;
   --disable-external-faad)	_faad_external=no	;;
   --enable-xmms)	_xmms=yes	;;
-  --enable-flac)	_flac=yes	;;
-  --disable-flac)	_flac=no	;;
-  --enable-external-flac)	_external_flac=yes	;;
-  --disable-external-flac)	_external_flac=no	;;
+  --disable-xmms)	_xmms=no	;;
   --enable-dvdread)	_dvdread=yes	;;
   --disable-dvdread)	_dvdread=no	;;
   --enable-mpdvdkit)	_dvdkit=yes	;;
@@ -1355,6 +1418,8 @@ for ac_option do
   --disable-opendivx)	_opendivx=no	;;
   --enable-libavcodec)	_libavcodec=yes	;;
   --disable-libavcodec)	_libavcodec=no	;;
+  --enable-libavformat)	_libavformat=yes;;
+  --disable-libavformat)	_libavformat=no	;;
   --enable-libfame)	_fame=yes	;;
   --disable-libfame)	_fame=no	;;
   --enable-lirc)	_lirc=yes	;;
@@ -1475,17 +1540,23 @@ for ac_option do
     _xmmsplugindir=`echo $ac_option | cut -d '=' -f 2`
     ;;
     
-  --disable-profile)
-    _profile=
-    ;;
   --enable-profile)
     _profile='-p'
+    ;;
+  --disable-profile)
+    _profile=
     ;;
   --enable-debug)
     _debug='-g'
     ;;
   --enable-debug=*)
     _debug=`echo $_echo_n '-g'$_echo_c; echo $ac_option | cut -d '=' -f 2`
+    ;;
+  --disable-debug)
+    _debug=
+    ;;
+  --enable-sighandler)
+    _sighandler=yes
     ;;
   --disable-sighandler)
     _sighandler=no
@@ -1778,8 +1849,7 @@ if test "$_vidix" = auto ; then
   x86 && _vidix=yes
   ppc && linux && _vidix=yes
   alpha && linux && _vidix=yes
-  cygwin && _vidix=no
-  mingw32 && _vidix=no
+  win32 && _vidix=no
   qnx && _vidix=no
   sunos && _vidix=no
 fi
@@ -2112,9 +2182,9 @@ EOF
   _inttypes=no
   cc_check && _inttypes=yes
   if test "$_inttypes" = yes ; then
-    die "you don't have inttypes.h, but sys/bitypes.h is present. Please copy etc/inttypes.h.link into the include path, rename it to inttypes.h and re-run configure."
+    die "You don't have inttypes.h, but sys/bitypes.h is present. Please copy etc/inttypes.h into the include path, and re-run configure."
   else
-    die "cannot find header either inttypes.h or bitypes.h (see DOCS/HTML/en/faq.html)"
+    die "Cannot find header either inttypes.h or bitypes.h (see DOCS/HTML/en/faq.html)."
   fi
 fi
 echores "$_inttypes"
@@ -2304,16 +2374,19 @@ else
      _ld_pthread='-pthread'
     else
       echores "no static pthread found (v4l, vo_gl, ao_alsa, ao_nas, ao_macosx, Win32 loader disabled)"
-      _ld_pthread='' ; _nas=no ; _tv_v4l=no ; _tv_v4l=no ; _macosx=no ; _win32=no
+      _ld_pthread='' ; _nas=no ; _tv_v4l=no ; _macosx=no ; _win32=no
     fi
   else
     echores "no (v4l, vo_gl, ao_alsa, ao_nas, ao_macosx, win32 loader disabled)"
-    _ld_pthread='' ; _nas=no ; _tv_v4l=no ; _tv_v4l=no ; _macosx=no ; _win32=no
+    _ld_pthread='' ; _nas=no ; _tv_v4l=no ; _macosx=no ; _win32=no
   fi
 fi
 if test "$_ld_pthread" != '' ; then
   echores "yes (using $_ld_pthread)"
+else
+  echores "no"
 fi
+
 
 echocheck "sys/soundcard.h"
 cat > $TMPC << EOF
@@ -2576,6 +2649,33 @@ else
 fi
 echores "$_strsep"
 
+echocheck "fseeko()"
+cat > $TMPC << EOF
+#include <stdio.h>
+int main (void) { int i; i = fseeko(stdin, 0, 0); return 0; }
+EOF
+_fseeko=no
+cc_check && _fseeko=yes
+if test "$_fseeko" = yes ; then
+ _def_fseeko='#define HAVE_FSEEKO 1'
+else
+ _def_fseeko='#undef HAVE_FSEEKO'
+fi
+echores "$_fseeko"
+
+echocheck "localtime_r()"
+cat > $TMPC << EOF
+#include <time.h>
+int main( void ) { localtime_r(NULL, NULL); }
+EOF
+_localtime_r=no
+cc_check && _localtime_r=yes
+if test "$_localtime_r" = yes ; then
+ _def_localtime_r='#define HAVE_LOCALTIME_R 1'
+else
+ _def_localtime_r='#undef HAVE_LOCALTIME_R'
+fi
+echores "$_localtime_r"
 
 echocheck "vsscanf()"
 cat > $TMPC << EOF
@@ -2672,6 +2772,7 @@ if test "$_macosx" = auto ; then
 	_macosx=no
 	_def_macosx='#undef MACOSX'
 	_noaomodules="macosx $_noaomodules"
+	_novomodules="quartz $_novomodules"
     fi
 fi
 if test "$_macosx" = yes ; then
@@ -2691,10 +2792,13 @@ EOF
     _def_macosx='#define MACOSX 1'
     _aosrc="$_aosrc ao_macosx.c"
     _aomodules="macosx $_aomodules"
+    _vosrc="$_vosrc vo_quartz.c"
+    _vomodules="quartz $_vomodules"
   else
     _macosx=no
     _def_macosx='#undef MACOSX'
     _noaomodules="macosx $_noaomodules"
+    _novomodules="quartz $_novomodules"
   fi
 fi
 echores "$_macosx"
@@ -3106,7 +3210,7 @@ fi
 
 echocheck "OpenGL"
 #Note: this test is run even with --enable-gl since we autodetect $_ld_gl
-if (test "$_x11" = yes || mingw32 || cygwin) && test "$_gl" != no ; then
+if (test "$_x11" = yes || win32) && test "$_gl" != no ; then
   cat > $TMPC << EOF
 #include <GL/gl.h>
 int main(void) { return 0; }
@@ -3231,6 +3335,29 @@ else
   _novomodules="aa $_novomodules"
 fi
 echores "$_aa"
+
+
+echocheck "CACA"
+if test "$_caca" = auto ; then
+  _caca=no
+  if ( caca-config --version ) >> "$TMPLOG" 2>&1 ; then
+  cat > $TMPC << EOF
+#include <caca.h>
+int main(void) { (void) caca_init(); return 0; }
+EOF
+  cc_check `caca-config --libs` && _caca=yes
+  fi
+fi
+if test "$_caca" = yes ; then
+  _def_caca='#define HAVE_CACA 1'
+  _ld_caca=`caca-config --libs`
+  _vosrc="$_vosrc vo_caca.c"
+  _vomodules="caca $_vomodules"
+else
+  _def_caca='#undef HAVE_CACA'
+  _novomodules="caca $_novomodules"
+fi
+echores "$_caca"
 
 
 echocheck "SVGAlib"
@@ -3366,6 +3493,7 @@ if test "$_dvb" = yes || test "$_dvbhead" = yes ; then
     _inputmodules="dvb $_inputmodules"
 else
     _dvbin=no
+    _noinputmodules="dvb $_noinputmodules"
 fi
 
 echocheck "PNG support"
@@ -3589,6 +3717,9 @@ if test "$_sdl" = yes ; then
   if cygwin ; then
     _ld_sdl=`$_sdlconfig --libs | cut -d " " -f 1,4,6 | sed s/no-cygwin/cygwin/`
     _inc_sdl=`$_sdlconfig --cflags | cut -d " " -f 1,5,6 | sed s/no-cygwin/cygwin/`
+  elif mingw32 ; then
+    _ld_sdl=`$_sdlconfig --libs | sed s/-mwindows//`
+    _inc_sdl=`$_sdlconfig --cflags | sed s/-Dmain=SDL_main//`
   else
     _ld_sdl=`$_sdlconfig --libs`
     _inc_sdl=`$_sdlconfig --cflags`
@@ -3911,6 +4042,7 @@ EOF
 fi
 _def_alsa5='#undef HAVE_ALSA5'
 _def_alsa9='#undef HAVE_ALSA9'
+_def_alsa1x='#undef HAVE_ALSA1X'
 _def_sys_asoundlib_h='#undef HAVE_SYS_ASOUNDLIB_H'
 _def_alsa_asoundlib_h='#undef HAVE_ALSA_ASOUNDLIB_H'
 if test "$_alsaver" ; then
@@ -3933,19 +4065,15 @@ if test "$_alsaver" ; then
     _def_alsa_asoundlib_h='#define HAVE_ALSA_ASOUNDLIB_H 1'
     echores "yes (using alsa 0.9.x and alsa/asoundlib.h)"
   elif test "$_alsaver" = '1.0.x-sys' ; then
-    _aosrc="$_aosrc ao_alsa9.c"
-    _aomodules="alsa9 $_aomodules"
-    _def_alsa9="#define ALSA_PCM_OLD_HW_PARAMS_API 1
-#define ALSA_PCM_OLD_SW_PARAMS_API 1
-#define HAVE_ALSA9 1"
+    _aosrc="$_aosrc ao_alsa1x.c"
+    _aomodules="alsa1x $_aomodules"
+    _def_alsa1x="#define HAVE_ALSA1X 1"
     _def_alsa_asoundlib_h='#define HAVE_SYS_ASOUNDLIB_H 1'
     echores "yes (using alsa 1.0.x and sys/asoundlib.h)"
   elif test "$_alsaver" = '1.0.x-alsa' ; then
-    _aosrc="$_aosrc ao_alsa9.c"
-    _aomodules="alsa9 $_aomodules"
-    _def_alsa9="#define ALSA_PCM_OLD_HW_PARAMS_API 1
-#define ALSA_PCM_OLD_SW_PARAMS_API 1
-#define HAVE_ALSA9 1"
+    _aosrc="$_aosrc ao_alsa1x.c"
+    _aomodules="alsa1x $_aomodules"
+    _def_alsa1x="#define HAVE_ALSA1X 1"
     _def_alsa_asoundlib_h='#define HAVE_ALSA_ASOUNDLIB_H 1'
     echores "yes (using alsa 1.0.x and alsa/asoundlib.h)"
   fi
@@ -4033,13 +4161,13 @@ fi
 echocheck "DVD support (libmpdvdkit)"
 if test "$_dvdkit" = auto ; then
  _dvdkit=no
- if linux || freebsd || netbsd || darwin || cygwin || mingw32 || openbsd || sunos || hpux; then
+ if linux || freebsd || netbsd || darwin || openbsd || win32 || sunos || hpux; then
   test -f "./libmpdvdkit2/Makefile" && _dvdkit=yes
   test -f "./libmpdvdkit/Makefile" && _dvdkit=yes
  fi
 fi
 if test "$_dvdkit" = yes ; then
-  if test "$_dvd" = yes || test "$_cdrom" = yes || test "$_cdio" = yes || test "$_dvdio" = yes || test "$_bsdi_dvd" = yes || test "$_hpux_scsi_h" = yes || darwin || cygwin || mingw32 ; then
+  if test "$_dvd" = yes || test "$_cdrom" = yes || test "$_cdio" = yes || test "$_dvdio" = yes || test "$_bsdi_dvd" = yes || test "$_hpux_scsi_h" = yes || darwin || win32 ; then
    if test -f "./libmpdvdkit2/Makefile" ; then
     _inputmodules="mpdvdkit2 $_inputmodules"
     _dvdread=libmpdvdkit2
@@ -4252,7 +4380,7 @@ if test "$_freetype" = no ; then
 fi
 echocheck "fontconfig"
 if test "$_fontconfig" = auto ; then
-    if ( pkg-config fontconfig --modversion) > /dev/null 2>&1 ; then
+    if ( pkg-config --modversion fontconfig) > /dev/null 2>&1 ; then
         cat > $TMPC << EOF
 #include <stdio.h>
 #include <fontconfig/fontconfig.h>
@@ -4268,15 +4396,15 @@ int main()
 }
 EOF
         _fontconfig=no
-        cc_check `pkg-config fontconfig --cflags --libs` && ( $TMPO >> "$TMPLOG" ) && _fontconfig=yes
+        cc_check `pkg-config --cflags --libs fontconfig` && ( $TMPO >> "$TMPLOG" ) && _fontconfig=yes
     else
         _fontconfig=no
     fi
 fi
 if test "$_fontconfig" = yes ; then
     _def_fontconfig='#define HAVE_FONTCONFIG'
-    _inc_fontconfig=`pkg-config fontconfig --cflags`
-    _ld_fontconfig=`pkg-config fontconfig --libs`
+    _inc_fontconfig=`pkg-config --cflags fontconfig`
+    _ld_fontconfig=`pkg-config --libs fontconfig`
 else
     _def_fontconfig='#undef HAVE_FONTCONFIG'
 fi
@@ -4471,10 +4599,44 @@ else
 fi
 echores "$_theora"
 
+echocheck "mp3lib support"
+if test "$_mp3lib" = yes ; then
+  _def_mp3lib='#define USE_MP3LIB 1'
+  _codecmodules="mp3lib $_codecmodules"
+else
+  _def_mp3lib='#undef USE_MP3LIB'
+  _nocodecmodules="mp3lib $_nocodecmodules"
+fi
+echores "$_mp3lib"
 
-echocheck "Matroska support (0.6.0 or later)"
-if test "$_matroska" != no ; then
-  _matroska=no
+echocheck "liba52 support"
+if test "$_liba52" = yes ; then
+  _def_liba52='#define USE_LIBA52 1'
+  _codecmodules="liba52 $_codecmodules"
+else
+  _def_liba52'#undef USE_LIBA52'
+  _nocodecmodules="liba52 $_nocodecmodules"
+fi
+echores "$_liba52"
+
+echocheck "libmpeg2 support"
+if test "$_libmpeg2" = yes ; then
+  _def_libmpeg2='#define USE_LIBMPEG2 1'
+  _codecmodules="libmpeg2 $_codecmodules"
+else
+  _def_libmpeg2'#undef USE_LIBMPEG2'
+  _nocodecmodules="libmpeg2 $_nocodecmodules"
+fi
+echores "$_libmpeg2"
+echocheck "Matroska support (external 0.6.0 or later OR internal)"
+_matroska_result="no"
+if test "$_matroska_internal" = yes ; then
+  _matroska_external=no
+  _inputmodules="matroska(internal) $_inputmodules"
+  _matroska_result="yes, internal"
+fi
+if test "$_matroska_external" != no ; then
+  _matroska_external=no
   _TMPC=$TMPC
   TMPC=${TMPC}pp
   cat > $TMPC << EOF
@@ -4491,27 +4653,30 @@ if test "$_matroska" != no ; then
 
 int main(void) { return 0; }
 EOF
-  cc_check -lmatroska -lebml -lstdc++ && _matroska=yes
-  if test "$_matroska" = no ; then
+  cc_check -lmatroska -lebml -lstdc++ && _matroska_external=yes
+  if test "$_matroska_external" = no ; then
     _saved_inc_extra=$_inc_extra
     _inc_extra="$_inc_extra -I/usr/local/include"
-    cc_check -lmatroska -lebml -lstdc++ && _matroska=yes
-    if test "$_matroska" = no ; then
+    cc_check -lmatroska -lebml -lstdc++ && _matroska_external=yes
+    if test "$_matroska_external" = no ; then
       _inc_extra=$_saved_inc_extra
     fi
   fi
   rm ${TMPC} > /dev/null 2> /dev/null
   TMPC=$_TMPC
+  if test "$_matroska_external" = yes ; then
+    _ld_matroska="-lmatroska -lebml -lstdc++"
+    _inputmodules="matroska(external) $_inputmodules"
+    _matroska_result="yes, external"
+  fi
 fi
-if test "$_matroska" = yes ; then
+echores "$_matroska_result"
+if test "$_matroska_internal" != no -o "$_matroska_external" != no ; then
   _def_matroska='#define HAVE_MATROSKA 1'
-  _inputmodules="matroska $_inputmodules"
-  _ld_matroska="-lmatroska -lebml -lstdc++"
 else
   _def_matroska='#undef HAVE_MATROSKA'
   _noinputmodules="matroska $_noinputmodules"
 fi
-echores "$_matroska"
 
 
 
@@ -4637,7 +4802,7 @@ fi
 if test "$_win32" != no ; then
   _def_win32_loader='#undef WIN32_LOADER'
   echocheck "Win32 loader support"
-  if not cygwin && not mingw32 ; then
+  if not win32 ; then
     _ld_win32='loader/libloader.a'
     _dep_win32='loader/libloader.a'
     _codecmodules="win32 $_codecmodules"
@@ -4748,7 +4913,7 @@ if test "$_real" = auto ; then
   _real=no
   if test "$_dl" = yes || test "$_win32" = yes ; then
 #  if test "$_dl" = yes  ; then
-    if linux || freebsd || netbsd || cygwin || mingw32 ; then
+    if linux || freebsd || netbsd || win32 ; then
       _real=yes
     else
       echores "no (tested only on Linux/FreeBSD/NetBSD/Cygwin/MinGW)"
@@ -4894,6 +5059,20 @@ else
   echores "$_libavcodec"
 fi
 
+echocheck "FFmpeg libavformatc (static)"
+if test "$_libavformat" = auto ; then
+  # Note: static linking is preferred to dynamic linking
+  _libavformat=no
+  if test -d libavformat && test -f libavformat/utils.c ; then
+    _libavformat=yes
+    echores "yes"
+  else
+    echores "no"
+  fi
+else
+  echores "$_libavformat"
+fi
+
 _def_haveffpostprocess='no'
 if test -d libavcodec && test -f libavcodec/libpostproc/postprocess.h ; then
    _def_haveffpostprocess='yes'
@@ -4939,6 +5118,17 @@ elif test "$_libavcodecso" = yes ; then
   _codecmodules="libavcodec.so $_codecmodules"
 else
   _nocodecmodules="libavcodec $_nocodecmodules"
+fi
+
+_def_libavformat='#undef USE_LIBAVFORMAT'
+_def_libavformat_win32='#undef CONFIG_WIN32'
+if test "$_libavformat" = yes ; then
+  _def_libavformat='#define USE_LIBAVFORMAT 1'
+  _ld_libavformat='libavformat/libavformat.a'
+  _dep_libavformat='libavformat/libavformat.a'
+  if win32 ; then
+    _def_libavformat_win32='#define CONFIG_WIN32 1'
+  fi
 fi
 
 echocheck "libdv-0.9.5+"
@@ -5398,63 +5588,6 @@ else
 fi
 echores "$_xmms"
 
-echocheck "FLAC support"
-if ! test "$_flac" = "no" ; then
-  if ! test -f libmpflac/dither.c ; then
-    _flac=no
-    echores "no (necessary files missing)"
-    break
-  fi
-  if ! test -f libmpflac/stream_decoder.c ; then
-    _external_flac=yes
-  fi
-  if test "$_external_flac" = "yes" ; then
-    cat > $TMPC << EOF
-#include <FLAC/stream_decoder.h>
-#include <stdlib.h>
-
-int main()
-{
-  FLAC__StreamDecoder *fdec = FLAC__stream_decoder_new();
-  return fdec != NULL;
-}
-EOF
-    _flac=no
-    if cc_check -lFLAC -lm ; then
-      _flac=external
-    fi
-  else
-    _flac=yes
-  fi
-fi
-
-if test "$_flac" = external ; then
-  _def_flac='#define HAVE_FLAC 1'
-  #Still use dither.c & replay_gain from libmpflac
-  _def_mpflac='#undef USE_MPFLAC_DECODER'
-  _mpflac='process'
-  _ld_flac='-lFLAC -lm -Llibmpflac -lmpflac'
-  _codecmodules="flac(external) $_codecmodules"
-  echores "yes (using external libFLAC)"
-else
-  if test "$_flac" = yes ; then
-    _def_flac='#define HAVE_FLAC 1'
-    #use decoder, dither.c & replay_gain from libmpflac
-    _def_mpflac='#define USE_MPFLAC_DECODER 1'
-    _mpflac='full'
-    _ld_flac='-Llibmpflac -lmpflac'
-    _codecmodules="flac(internal) $_codecmodules"
-    echores "yes (using internal libmpflac)"
-  else
-    _def_flac='#undef HAVE_FLAC'
-    _def_mpflac='#undef USE_MPFLAC_DECODER'
-    _mpflac='none'
-    _ld_flac=''
-    _nocodecmodules="flac $_nocodecmodules"
-    echores "no"
-  fi
-fi
-
 echocheck "inet6"
 if test "$_inet6" = auto ; then
   cat > $TMPC << EOF
@@ -5651,9 +5784,10 @@ if test "$_largefiles" = yes || freebsd ; then
 fi
 
 echocheck "ftello()"
-# if we don't have ftello map it to ftell
+# if we don't have ftello use the osdep/ compatibility module
 cat > $TMPC << EOF
 #include <stdio.h>
+#include <sys/types.h>
 int main (void) { ftello(stdin); return 0; }
 EOF
 _ftello=no
@@ -5682,12 +5816,19 @@ else
   _confmingw32='TARGET_MINGW32 = no'
 fi
 
+if win32 ; then
+  _confwin32='TARGET_WIN32 = yes'
+else
+  _confwin32='TARGET_WIN32 = no'
+fi
+
 # Dynamic linking flags 
 # (FIXME: 'echocheck "dynamic linking"' above and modify here accordingly)
 _ld_dl_dynamic=''
 bsd && _ld_dl_dynamic='-rdynamic'
-test "$_xanim" = yes && _ld_dl_dynamic='-rdynamic'
-test "$_real" = yes && _ld_dl_dynamic='-rdynamic'
+if test "$_real" = yes || test "$_xanim" = yes && not win32 && not qnx  ; then
+  _ld_dl_dynamic='-rdynamic'
+fi
 
 _ld_arch="$_ld_arch $_ld_pthread $_ld_dl $_ld_dl_dynamic"
 bsdos && _ld_arch="$_ld_arch -ldvd"
@@ -5710,7 +5851,7 @@ if test "$_vidix" = yes; then
 else
   _novomodules="cvidix $_novomodules"
 fi
-if test "$_vidix" = yes && (cygwin || mingw32); then
+if test "$_vidix" = yes && (win32); then
   _vosrc="$_vosrc vo_winvidix.c"
   _vomodules="winvidix $_vomodules"
 else
@@ -5793,7 +5934,7 @@ RANLIB = $_ranlib
 INSTALL = $_install
 # OPTFLAGS = -O4 $_profile $_debug $_march $_mcpu -pipe -fomit-frame-pointer -ffast-math
 EXTRA_INC = $_inc_extra $_inc_gtk
-OPTFLAGS = $CFLAGS \$(EXTRA_INC)
+OPTFLAGS = -I../libvo/ -I../../libvo $CFLAGS \$(EXTRA_INC)
 STRIPBINARIES = $_stripbinaries
 
 $_live_libs_def
@@ -5809,7 +5950,8 @@ CONFIG_RISKY = yes
 CONFIG_MP3LAME = $_mp3lame
 LIBMENU = $_menu
 I18NLIBS = $_i18n_libs
-MATROSKA = $_matroska
+MATROSKA_INTERNAL = $_matroska_internal
+MATROSKA_EXTERNAL = $_matroska_external
 MATROSKA_LIB = $_ld_matroska
 
 OPENDIVX = $_opendivx
@@ -5832,7 +5974,7 @@ X11DIR = $_ld_x11
 HAVE_XVMC_ACCEL = $_xvmc
 
 # for libavcodec:
-SRC_PATH=.
+SRC_PATH=..
 LIBPREF=lib
 LIBSUF=.a
 SLIBPREF=lib
@@ -5851,6 +5993,7 @@ GIF_LIB = $_ld_gif
 SDL_LIB = $_ld_sdl
 SVGA_LIB = $_ld_svga
 AA_LIB = $_ld_aa
+CACA_LIB = $_ld_caca
 
 # audio output
 ALSA_LIB = $_ld_alsa
@@ -5874,8 +6017,10 @@ W32_DEP = $_dep_win32
 W32_LIB = $_ld_win32
 DS_DEP = $_dep_dshow
 DS_LIB = $_ld_dshow
-AV_DEP = $_dep_libavcodec
-AV_LIB = $_ld_libavcodec
+AV_DEP = $_dep_libavcodec $_dep_libavformat
+AV_LIB = $_ld_libavcodec $_ld_libavformat
+CONFIG_LIBAVFORMAT = $_libavformat
+ZORAN = $_zr
 FAME = $_fame
 FAME_LIB = $_ld_fame
 MP1E_DEP = $_dep_mp1e
@@ -5908,11 +6053,10 @@ XMMS_PLUGINS = $_xmms
 XMMS_LIB = $_xmms_lib
 MACOSX = $_macosx
 MACOSX_FRAMEWORKS = $_macosx_frameworks
-FLAC_LIB = $_ld_flac
-MPFLAC = $_mpflac
 
 # --- Some stuff for autoconfigure ----
 $_target_arch
+$_confwin32
 $_confcygwin
 $_confmingw32
 TARGET_CPU=$iproc
@@ -5962,10 +6106,14 @@ $_def_dynamic_plugins
 /* "restrict" keyword */
 #define restrict $_def_restrict_keyword
 
-#define PREFIX "$_prefix"
+/* attribute(used) as needed by some compilers */
+#if (__GNUC__ * 100 + __GNUC_MINOR__ >= 300)
+# define attribute_used __attribute__((used))
+#else
+# define attribute_used
+#endif
 
-/* define this to use simple idct with patched libavcodec */
-#define SIMPLE_IDCT 1
+#define PREFIX "$_prefix"
 
 #define USE_OSD 1
 #define USE_SUB 1
@@ -6078,11 +6226,14 @@ $_def_soundcard
 /* Define this if your system has the sysinfo header */
 $_def_sys_sysinfo
 
-/* Define this if your system uses ftello() for off_t seeking */
+/* Define this if your system has ftello() */
 
 $_def_ftello
 #ifndef HAVE_FTELLO
-# define ftello(a) ftell(a)
+/* Need these for FILE and off_t an config.h is usually before other includes*/
+#include <stdio.h>
+#include <sys/types.h>
+off_t ftello(FILE *);
 #endif
 
 /* Define this if your system has the "malloc.h" header file */
@@ -6108,6 +6259,9 @@ $_def_kstat
 
 /* Define this if you have zlib */
 $_def_zlib
+#ifdef HAVE_ZLIB
+#define CONFIG_ZLIB 1
+#endif
 
 /* Define this if you have shm support */
 $_def_shm
@@ -6117,6 +6271,17 @@ $_def_scandir
 
 /* Define this if your system has strsep */
 $_def_strsep
+
+/* Define this if your system has fseeko */
+$_def_fseeko
+#ifndef HAVE_FSEEKO
+/* Need these for FILE and off_t an config.h is usually before other includes*/
+#include <stdio.h>
+#include <sys/types.h>
+int fseeko(FILE *, off_t, int);
+#endif
+
+$_def_localtime_r
 
 /* Define this if your system has vsscanf */
 $_def_vsscanf
@@ -6138,12 +6303,6 @@ $_def_lirc
  * See http://www.dolda2000.cjb.net/~fredrik/lirccd/
  */
 $_def_lircc
-
-/*
- * FLAC decoding
- */
-$_def_flac
-$_def_mpflac
 
 /* DVD navigation support using libdvdnav */
 $_def_dvdnav
@@ -6175,6 +6334,10 @@ $_def_win32_loader
 $_def_libavcodec
 $_def_libavcodecso
 
+/* ffmpeg's libavformat support (requires libavformat source) */
+$_def_libavformat
+$_def_libavformat_win32
+
 /* risky codecs */
 #define CONFIG_RISKY 1
 
@@ -6183,15 +6346,12 @@ $_def_libavcodecso
 /* Use libavcodec's encoders */
 #define CONFIG_ENCODERS 1
 
-/* Use codec libs included in mplayer CVS / source dist: */
-#define USE_MP3LIB
-#define USE_LIBA52
-#define USE_LIBMPEG2
+#define CONFIG_MPEGAUDIO_HP 1
 
-/* Use the SVQ1 decoder in libmpcodecs - we don't want/need it with libavcodec */
-#ifndef USE_LIBAVCODEC
-#define USE_SVQ1
-#endif
+/* Use codec libs included in mplayer CVS / source dist: */
+$_def_mp3lib
+$_def_liba52
+$_def_libmpeg2
 
 /* Use libfame encoder filter */
 $_def_fame
@@ -6224,6 +6384,7 @@ $_def_ossaudio_devdsp
 $_def_ossaudio_devmixer
 $_def_alsa5
 $_def_alsa9
+$_def_alsa1x
 $_def_arts
 $_def_esd
 $_def_esd_latency
@@ -6314,6 +6475,9 @@ $_def_vcd
 
 /* C99 lrintf function available */
 $_def_lrintf
+
+/* yes, we have inttypes.h */
+#define HAVE_INTTYPES_H 1
 
 /* int_fastXY_t emulation */
 $_def_fast_inttypes
@@ -6424,10 +6588,6 @@ $_def_sse	// only define if you have SSE (Intel Pentium III/4 or Celeron II)
 $_def_sse2	// only define if you have SSE2 (Intel Pentium 4)
 $_def_altivec	// only define if you have Altivec (G4)
 
-#ifdef HAVE_MMX
-#define USE_MMX_IDCT 1
-#endif
-
 $_def_altivec_h	// enables usage of altivec.h
 
 
@@ -6474,6 +6634,7 @@ $_def_svga
 $_def_vesa
 $_def_xdpms
 $_def_aa
+$_def_caca
 $_def_tga
 
 /* used by GUI: */

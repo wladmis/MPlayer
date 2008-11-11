@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2002 Brian Foley
  * Copyright (c) 2002 Dieter Shirley
+ * Copyright (c) 2003-2004 Romain Dolbeau <romain@dolbeau.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -46,7 +47,7 @@ int mm_support(void)
 unsigned long long perfdata[POWERPC_NUM_PMC_ENABLED][powerpc_perf_total][powerpc_data_total];
 /* list below must match enum in dsputil_ppc.h */
 static unsigned char* perfname[] = {
-  "fft_calc_altivec",
+  "ff_fft_calc_altivec",
   "gmc1_altivec",
   "dct_unquantize_h263_altivec",
   "fdct_altivec",
@@ -59,6 +60,8 @@ static unsigned char* perfname[] = {
   "put_no_rnd_pixels8_xy2_altivec",
   "put_pixels16_xy2_altivec",
   "put_no_rnd_pixels16_xy2_altivec",
+  "hadamard8_diff8x8_altivec",
+  "hadamard8_diff16_altivec",
   "clear_blocks_dcbz32_ppc",
   "clear_blocks_dcbz128_ppc"
 };
@@ -69,13 +72,13 @@ static unsigned char* perfname[] = {
 void powerpc_display_perf_report(void)
 {
   int i, j;
-  fprintf(stderr, "PowerPC performance report\n Values are from the PMC registers, and represent whatever the registers are set to record.\n");
+  av_log(NULL, AV_LOG_INFO, "PowerPC performance report\n Values are from the PMC registers, and represent whatever the registers are set to record.\n");
   for(i = 0 ; i < powerpc_perf_total ; i++)
   {
     for (j = 0; j < POWERPC_NUM_PMC_ENABLED ; j++)
       {
 	if (perfdata[j][i][powerpc_data_num] != (unsigned long long)0)
-	  fprintf(stderr,
+	  av_log(NULL, AV_LOG_INFO,
 		  " Function \"%s\" (pmc%d):\n\tmin: %llu\n\tmax: %llu\n\tavg: %1.2lf (%llu)\n",
 		  perfname[i],
 		  j+1,
@@ -129,7 +132,11 @@ POWERPC_PERF_START_COUNT(powerpc_clear_blocks_dcbz32, 1);
       i += 16;
     }
     for ( ; i < sizeof(DCTELEM)*6*64 ; i += 32) {
+#ifndef __MWERKS__
       asm volatile("dcbz %0,%1" : : "b" (blocks), "r" (i) : "memory");
+#else
+      __dcbz( blocks, i );
+#endif
     }
     if (misal) {
       ((unsigned long*)blocks)[188] = 0L;
@@ -240,13 +247,13 @@ void dsputil_init_ppc(DSPContext* c, AVCodecContext *avctx)
         mm_flags |= MM_ALTIVEC;
         
         // Altivec specific optimisations
-        c->pix_abs16x16_x2 = pix_abs16x16_x2_altivec;
-        c->pix_abs16x16_y2 = pix_abs16x16_y2_altivec;
-        c->pix_abs16x16_xy2 = pix_abs16x16_xy2_altivec;
-        c->pix_abs16x16 = pix_abs16x16_altivec;
-        c->pix_abs8x8 = pix_abs8x8_altivec;
-        c->sad[0]= sad16x16_altivec;
-        c->sad[1]= sad8x8_altivec;
+        c->pix_abs[0][1] = sad16_x2_altivec;
+        c->pix_abs[0][2] = sad16_y2_altivec;
+        c->pix_abs[0][3] = sad16_xy2_altivec;
+        c->pix_abs[0][0] = sad16_altivec;
+        c->pix_abs[1][0] = sad8_altivec;
+        c->sad[0]= sad16_altivec;
+        c->sad[1]= sad8_altivec;
         c->pix_norm1 = pix_norm1_altivec;
         c->sse[1]= sse8_altivec;
         c->sse[0]= sse16_altivec;
@@ -258,7 +265,7 @@ void dsputil_init_ppc(DSPContext* c, AVCodecContext *avctx)
         c->add_bytes= add_bytes_altivec;
 #endif /* 0 */
         c->put_pixels_tab[0][0] = put_pixels16_altivec;
-        /* the tow functions do the same thing, so use the same code */
+        /* the two functions do the same thing, so use the same code */
         c->put_no_rnd_pixels_tab[0][0] = put_pixels16_altivec;
         c->avg_pixels_tab[0][0] = avg_pixels16_altivec;
 // next one disabled as it's untested.
@@ -271,6 +278,11 @@ void dsputil_init_ppc(DSPContext* c, AVCodecContext *avctx)
         c->put_no_rnd_pixels_tab[0][3] = put_no_rnd_pixels16_xy2_altivec;
         
 	c->gmc1 = gmc1_altivec;
+
+#if (__GNUC__ * 100 + __GNUC_MINOR__ >= 330)
+	c->hadamard8_diff[0] = hadamard8_diff16_altivec;
+	c->hadamard8_diff[1] = hadamard8_diff8x8_altivec;
+#endif
 
 #ifdef CONFIG_ENCODERS
 	if (avctx->dct_algo == FF_DCT_AUTO ||

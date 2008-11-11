@@ -55,6 +55,7 @@ static int config(struct vf_instance_s* vf,
     mux_v->bih->biWidth=width;
     mux_v->bih->biHeight=height;
     mux_v->bih->biSizeImage=mux_v->bih->biWidth*mux_v->bih->biHeight*(mux_v->bih->biBitCount/8);
+    mux_v->aspect = (float)d_width/d_height;
 
     return 1;
 }
@@ -91,7 +92,7 @@ static int vf_open(vf_instance_t *vf, char* args){
     memset(vf->priv,0,sizeof(struct vf_priv_s));
     vf->priv->mux=(muxer_stream_t*)args;
     
-    vf->priv->enc=dv_encoder_new(1,1,1); // FIXME, parse some options!
+    vf->priv->enc=dv_encoder_new(0,1,1); // FIXME, parse some options!
     if(!vf->priv->enc) return 0;
     
     mux_v->bih=malloc(sizeof(BITMAPINFOHEADER));

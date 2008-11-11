@@ -60,7 +60,7 @@ char **tv_param_channels = NULL;
 int tv_param_audio_id = 0;
 #if defined(HAVE_TV_V4L) || defined(HAVE_TV_V4L2)
 int tv_param_amode = -1;
-int tv_param_volume = 60000;
+int tv_param_volume = -1;
 int tv_param_bass = -1;
 int tv_param_treble = -1;
 int tv_param_balance = -1;
@@ -70,7 +70,7 @@ int tv_param_buffer_size = -1;
 int tv_param_mjpeg = 0;
 int tv_param_decimation = 2;
 int tv_param_quality = 90;
-#ifdef HAVE_ALSA9
+#if defined(HAVE_ALSA9) || defined(HAVE_ALSA1X)
 int tv_param_alsa = 0;
 #endif
 char* tv_param_adevice = NULL;
@@ -103,6 +103,7 @@ int demux_tv_fill_buffer(demuxer_t *demux, demux_stream_t *ds)
         len = tvh->functions->get_audio_framesize(tvh->priv);
 
         dp=new_demux_packet(len);
+        dp->flags|=1; /* Keyframe */
         dp->pts=tvh->functions->grab_audio_frame(tvh->priv, dp->buffer,len);
         ds_add_packet(demux->audio,dp);
         }
@@ -114,6 +115,7 @@ int demux_tv_fill_buffer(demuxer_t *demux, demux_stream_t *ds)
         {
 		len = tvh->functions->get_video_framesize(tvh->priv);
        	dp=new_demux_packet(len);
+		dp->flags|=1; /* Keyframe */
   		dp->pts=tvh->functions->grab_video_frame(tvh->priv, dp->buffer, len);
    		ds_add_packet(demux->video,dp);
 	 }

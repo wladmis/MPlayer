@@ -1,5 +1,12 @@
 #ifdef MAIN_CONF /* this will be included in conf[] */
 
+// ------------------------- common options --------------------
+	{"quiet", &quiet, CONF_TYPE_FLAG, CONF_GLOBAL, 0, 1, NULL},
+	{"noquiet", &quiet, CONF_TYPE_FLAG, CONF_GLOBAL, 1, 0, NULL},
+	{"verbose", &verbose, CONF_TYPE_INT, CONF_RANGE|CONF_GLOBAL, 0, 100, NULL},
+	{"v", cfg_inc_verbose, CONF_TYPE_FUNC, CONF_GLOBAL|CONF_NOSAVE, 0, 0, NULL},
+	{"include", cfg_include, CONF_TYPE_FUNC_PARAM, CONF_NOSAVE, 0, 0, NULL},
+
 // ------------------------- stream options --------------------
 
 #ifdef USE_STREAM_CACHE
@@ -112,7 +119,6 @@
 	{"dvbin", dvbin_opts_conf, CONF_TYPE_SUBCONFIG, 0, 0, 0, NULL},
 #endif
 
-
 // ------------------------- a-v sync options --------------------
 
 	// AVI specific: A-V sync mode (bps vs. interleaving)
@@ -127,6 +133,8 @@
 	{"srate", &force_srate, CONF_TYPE_INT, CONF_RANGE, 1000, 8*48000, NULL},
 	{"channels", &audio_output_channels, CONF_TYPE_INT, CONF_RANGE, 1, 6, NULL},
 	{"format", &audio_output_format, CONF_TYPE_INT, CONF_RANGE, 0, 0x00002000, NULL},
+
+        {"a52drc", &a52_drc_level, CONF_TYPE_FLOAT, CONF_RANGE, 0, 1, NULL},
 
 // ------------------------- codec/vfilter options --------------------
 
@@ -198,6 +206,7 @@
 #if defined(HAVE_XVID3) || defined(HAVE_XVID4)
 	{"xvidopts", xvid_dec_opts, CONF_TYPE_SUBCONFIG, 0, 0, 0, NULL},
 #endif
+	{"codecs-file", &codecs_file, CONF_TYPE_STRING, 0, 0, 0, NULL},
 // ------------------------- subtitles options --------------------
 
 #ifdef USE_SUB
@@ -265,6 +274,9 @@
 
 #include "config.h"
 
+extern int quiet;
+extern int verbose;
+
 // codec/filter opts: (defiend at libmpcodecs/vd.c)
 extern float screen_size_xy;
 extern float movie_aspect;
@@ -272,6 +284,9 @@ extern int softzoom;
 extern int flip;
 extern int vd_use_slices;
 extern int divx_quality;
+
+/* defined in codec-cfg.c */
+extern char * codecs_file;
 
 /* from dec_audio, currently used for ac3surround decoder only */
 extern int audio_output_channels;
@@ -289,6 +304,8 @@ extern int network_prefer_ipv4;
 extern int network_ipv4_only_proxy;
 
 #endif
+
+extern float a52_drc_level;
 
 /* defined in libmpdemux: */
 extern int hr_mp3_seek;
@@ -347,7 +364,7 @@ m_option_t tvopts_conf[]={
 	{"mjpeg", &tv_param_mjpeg, CONF_TYPE_FLAG, 0, 0, 1, NULL},
 	{"decimation", &tv_param_decimation, CONF_TYPE_INT, CONF_RANGE, 1, 4, NULL},
 	{"quality", &tv_param_quality, CONF_TYPE_INT, CONF_RANGE, 0, 100, NULL},
-#ifdef HAVE_ALSA9
+#if defined(HAVE_ALSA9) || defined(HAVE_ALSA1X)
 	{"alsa", &tv_param_alsa, CONF_TYPE_FLAG, 0, 0, 1, NULL},
 #endif
 	{"adevice", &tv_param_adevice, CONF_TYPE_STRING, 0, 0, 0, NULL},

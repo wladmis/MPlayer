@@ -1,5 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html><head><meta content="text/html; charset=ISO-8859-1" http-equiv="Content-Type"><title>3.2. Contrôles</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.50.0"><link rel="home" href="index.html" title="MPlayer - Le lecteur vidéo pour LINUX"><link rel="up" href="usage.html" title="Chapitre 3. Utilisation"><link rel="previous" href="commandline.html" title="3.1. Ligne de commande"><link rel="next" href="streaming.html" title="3.3. Streaming depuis le réseau ou les pipes"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">3.2. Contrôles</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="commandline.html">Précédent</a> </td><th width="60%" align="center">Chapitre 3. Utilisation</th><td width="20%" align="right"> <a accesskey="n" href="streaming.html">Suivant</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="control"></a>3.2. Contrôles</h2></div></div><p>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>3.2. Contrôles</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - Le lecteur vidéo pour LINUX"><link rel="up" href="usage.html" title="Chapitre 3. Utilisation"><link rel="previous" href="commandline.html" title="3.1. Ligne de commande"><link rel="next" href="streaming.html" title="3.3. Streaming depuis le réseau ou les pipes"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">3.2. Contrôles</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="commandline.html">Précédent</a> </td><th width="60%" align="center">Chapitre 3. Utilisation</th><td width="20%" align="right"> <a accesskey="n" href="streaming.html">Suivant</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="control"></a>3.2. Contrôles</h2></div></div><p>
 <span class="application">MPlayer</span> dispose d'une couche de contrôle pleinement
 configurable, qui vous permet de contrôler <span class="application">MPlayer</span>
 avec le clavier, la souris, le joystick ou une télécommande (en utilisant LIRC).
@@ -11,7 +10,7 @@ de config. La syntaxe consiste un nom de touche suivi d'une commande. Le fichier
 de config par défaut est <tt class="filename">$HOME/.mplayer/input.conf</tt> mais cela
 peut être outrepassé en utilisant l'option <tt class="option">-input <i><tt>conf</tt></i></tt>
 (les chemins relatifs le sont par rapport à <tt class="filename">$HOME/.mplayer</tt>).
-</p><div class="example"><p class="title"><b>Exemple 3.1. Un simple fichier de contrôles</b></p><pre class="programlisting">
+</p><div class="example"><p><b>Exemple 3.1. Un simple fichier de contrôles</b></p><pre class="programlisting">
 ##
 ## MPlayer input control file
 ##
@@ -26,12 +25,12 @@ q quit
 ENTER pt_step 1 1</pre></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="ctrl-cfg-keys"></a>3.2.1.1. Noms des touches</h4></div></div><p>
 Vous pouvez obtenir la liste complète en exécutant
 <b>mplayer -input keylist</b>.
-</p><div class="itemizedlist"><p class="title"><b>Keyboard</b></p><ul type="disc"><li>N'importe quel caractère imprimable</li><li><tt>SPACE</tt></li><li><tt>ENTER</tt></li><li><tt>TAB</tt></li><li><tt>CTRL</tt></li><li><tt>BS</tt></li><li><tt>DEL</tt></li><li><tt>INS</tt></li><li><tt>HOME</tt></li><li><tt>END</tt></li><li><tt>PGUP</tt></li><li><tt>PGDWN</tt></li><li><tt>ESC</tt></li><li><tt>RIGHT</tt></li><li><tt>LEFT</tt></li><li><tt>UP</tt></li><li><tt>DOWN</tt></li></ul></div><div class="itemizedlist"><p class="title"><b>Souris (uniquement sous X)</b></p><ul type="disc"><li>
+</p><div class="itemizedlist"><p><b>Keyboard</b></p><ul type="disc"><li>N'importe quel caractère imprimable</li><li><tt>SPACE</tt></li><li><tt>ENTER</tt></li><li><tt>TAB</tt></li><li><tt>CTRL</tt></li><li><tt>BS</tt></li><li><tt>DEL</tt></li><li><tt>INS</tt></li><li><tt>HOME</tt></li><li><tt>END</tt></li><li><tt>PGUP</tt></li><li><tt>PGDWN</tt></li><li><tt>ESC</tt></li><li><tt>RIGHT</tt></li><li><tt>LEFT</tt></li><li><tt>UP</tt></li><li><tt>DOWN</tt></li></ul></div><div class="itemizedlist"><p><b>Souris (uniquement sous X)</b></p><ul type="disc"><li>
   <tt>MOUSE_BTN0</tt> (Bouton gauche)</li><li>
   <tt>MOUSE_BTN1</tt> (Bouton droit)</li><li>
   <tt>MOUSE_BTN2</tt> (Bouton du milieu)</li><li>
   <tt>MOUSE_BTN3</tt> (molette)</li><li>
-  <tt>MOUSE_BTN4</tt> (molette)</li><li>...</li><li><tt>MOUSE_BTN9</tt></li></ul></div><div class="itemizedlist"><p class="title"><b>Joystick (son support doit avoir été activé à la compilation)</b></p><ul type="disc"><li>
+  <tt>MOUSE_BTN4</tt> (molette)</li><li>...</li><li><tt>MOUSE_BTN9</tt></li></ul></div><div class="itemizedlist"><p><b>Joystick (son support doit avoir été activé à la compilation)</b></p><ul type="disc"><li>
   <tt>JOY_RIGHT</tt> ou
   <tt>JOY_AXIS0_PLUS</tt></li><li>
   <tt>JOY_LEFT</tt> ou
@@ -100,7 +99,7 @@ sur <a href="http://www.lirc.org" target="_top">www.lirc.org</a>.
 </p><p>
 Si vous avez installé le paquetage lirc, configure le détectera automatiquement. Si
 tout c'est bien passé, <span class="application">MPlayer</span> affichera un
-message du genre &quot;<tt>Setting up lirc support...</tt>&quot;
+message du genre "<tt>Setting up lirc support...</tt>"
 au démarrage. Si une erreur se produit il vous le dira. Si il ne vous dit
 rien à propos de LIRC c'est que son support n'est pas compilé. C'est tout :-)
 </p><p>

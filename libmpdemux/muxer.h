@@ -6,6 +6,7 @@
 
 #define MUXER_TYPE_AVI 0
 #define MUXER_TYPE_MPEG 1
+#define MUXER_TYPE_RAWVIDEO 2
 
 #define MUXER_MPEG_BLOCKSIZE 2048	// 2048 or 2324 - ?
 
@@ -16,6 +17,7 @@ typedef struct {
   uint32_t ckid; // chunk id (00dc 01wb etc)
   double timer;
   off_t size;
+  float aspect; // aspect ratio of this stream (set by ve_*.c)
   // buffering:
   unsigned char *buffer;
   unsigned int buffer_size;
@@ -47,9 +49,9 @@ typedef struct {
 typedef struct muxer_t{
   // encoding:
   MainAVIHeader avih;
-  unsigned int movi_start;
-  unsigned int movi_end;
-  unsigned int file_end; // for MPEG it's system timestamp in 1/90000 s
+  off_t movi_start;
+  off_t movi_end;
+  off_t file_end; // for MPEG it's system timestamp in 1/90000 s
   // index:
   AVIINDEXENTRY *idx;
   int idx_pos;
@@ -75,4 +77,4 @@ muxer_t *muxer_new_muxer(int type,FILE *);
 
 void muxer_init_muxer_avi(muxer_t *);
 void muxer_init_muxer_mpeg(muxer_t *);
-
+void muxer_init_muxer_rawvideo(muxer_t *);

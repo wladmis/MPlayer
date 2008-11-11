@@ -1,5 +1,5 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html><head><meta content="text/html; charset=ISO-8859-1" http-equiv="Content-Type"><title>E.1. GCC 2.96</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.50.0"><link rel="home" href="index.html" title="MPlayer - El reproductor de Películas para LINUX"><link rel="up" href="users-vs-dev.html" title="Apéndice E. Lloriqueos de desarrolladores"><link rel="previous" href="users-vs-dev.html" title="Apéndice E. Lloriqueos de desarrolladores"><link rel="next" href="mplayer-binary.html" title="E.2. Distribución binaria"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">E.1. GCC 2.96</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="users-vs-dev.html">Anterior</a> </td><th width="60%" align="center">Apéndice E. Lloriqueos de desarrolladores</th><td width="20%" align="right"> <a accesskey="n" href="mplayer-binary.html">Siguiente</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="gcc-296"></a>E.1. GCC 2.96</h2></div></div><p><b>El escenario: </b>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>E.1. GCC 2.96</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - El reproductor de Películas
+para LINUX"><link rel="up" href="users-vs-dev.html" title="Apéndice E. Lloriqueos de desarrolladores"><link rel="previous" href="users-vs-dev.html" title="Apéndice E. Lloriqueos de desarrolladores"><link rel="next" href="mplayer-binary.html" title="E.2. Distribución binaria"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">E.1. GCC 2.96</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="users-vs-dev.html">Anterior</a> </td><th width="60%" align="center">Apéndice E. Lloriqueos de desarrolladores</th><td width="20%" align="right"> <a accesskey="n" href="mplayer-binary.html">Siguiente</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="gcc-296"></a>E.1. GCC 2.96</h2></div></div><p><b>El escenario: </b>
 La serie <span class="bold"><b>2.95</b></span> de GCC es una liberación oficial
 de GNU y la verseión 2.95.3 de GCC es la serie más libre de errores que existe.
 Nunca se han tenido problemas de compilación derivados de gcc-2.95.3. Comenzando
@@ -33,7 +33,7 @@ algunos arreglos pueden implicar pérdidas de rendimiento.
 GCC 2.96 no permite caracteres <tt>|</tt> (tuberías) en comentarios
 en ensamblador porque esto lo hace Intel igual que la sintaxis de AT&amp;T y
 el caracter <tt>|</tt> es un símbolo en la variante Intel. El problema
-es que <span class="emphasis"><em>silenciosamente</em></span> ignora el bloque de ensamblador
+es que <span class="emphasis"><i>silenciosamente</i></span> ignora el bloque de ensamblador
 por completo. Esto es supuestamente corregible ahora, GCC imprime un mensaje
 de advertencia en lugar de saltarse el bloque.
 </p><p><b>El presente: </b>
@@ -51,9 +51,9 @@ Si tiene problemas con GCC 2.96, puede obtener los paquetes 2.96-85 del
 <a href="ftp://updates.redhat.com" target="_top">servidor ftp</a> de Red Hat, o
 vaya directamente a por los <a href="ftp://people.redhat.com/jakub/gcc/3.2.3-11/" target="_top">
 paquetes gcc-3.2.3-11</a> (no oficiales, pero funcionan bien) y puede instalarlos junto
-con gcc-2.96 si ya lo tiene. MPlayer detectará y usará 3.2 en lugar de 2.96. Si no desea
-o no puede usar los paquetes binarios, aquí tiene cómo compilar GCC 3 desde el código
-fuente:
+con gcc-2.96 si ya lo tiene. <span class="application">MPlayer</span> detectará
+y usará 3.2 en lugar de 2.96. Si no desea o no puede usar los paquetes
+binarios, aquí tiene cómo compilar GCC 3 desde el código fuente:
 </p><div class="procedure"><ol type="1"><li><p>
   Vaya a 
   <a href="http://gcc.gnu.org/mirrors.html" target="_top">la web de sitios espejo de GCC</a>

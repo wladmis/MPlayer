@@ -1,5 +1,5 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html><head><meta content="text/html; charset=ISO-8859-1" http-equiv="Content-Type"><title>3.2. Control</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.50.0"><link rel="home" href="index.html" title="MPlayer - El reproductor de Películas para LINUX"><link rel="up" href="usage.html" title="Capítulo 3. Uso"><link rel="previous" href="commandline.html" title="3.1. Línea de órdenes"><link rel="next" href="streaming.html" title="3.3. Streaming desde la red o tuberías"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">3.2. Control</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="commandline.html">Anterior</a> </td><th width="60%" align="center">Capítulo 3. Uso</th><td width="20%" align="right"> <a accesskey="n" href="streaming.html">Siguiente</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="control"></a>3.2. Control</h2></div></div><p>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>3.2. Control</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - El reproductor de Películas
+para LINUX"><link rel="up" href="usage.html" title="Capítulo 3. Uso"><link rel="previous" href="commandline.html" title="3.1. Línea de órdenes"><link rel="next" href="streaming.html" title="3.3. Streaming desde la red o tuberías"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">3.2. Control</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="commandline.html">Anterior</a> </td><th width="60%" align="center">Capítulo 3. Uso</th><td width="20%" align="right"> <a accesskey="n" href="streaming.html">Siguiente</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="control"></a>3.2. Control</h2></div></div><p>
 <span class="application">MPlayer</span> tiene una capa de control completamente
 configurable, dada por órdenes, que le permite controlar
 <span class="application">MPlayer</span> con el teclado, el ratón, la palanca
@@ -13,9 +13,9 @@ por la órden. El archivo de configuración por defecto es
 <tt class="filename">$HOME/.mplayer/input.conf</tt> pero puede ser cambiado
 usando la opción <tt class="option">-input <i><tt>conf</tt></i></tt>
 (ruta relativa a <tt class="filename">$HOME/.mplayer</tt>).
-</p><div class="example"><p class="title"><b>Ejemplo 3.1. Un archivo de control simple</b></p><pre class="programlisting">
+</p><div class="example"><p><b>Ejemplo 3.1. Un archivo de control simple</b></p><pre class="programlisting">
 ##
-## Archivo de control de entrada de MPlayer
+## Archivo de control de entrada de <span class="application">MPlayer</span>
 ##
 
 RIGHT seek +10
@@ -28,12 +28,12 @@ q quit
 ENTER pt_step 1 1</pre></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="ctrl-cfg-keys"></a>3.2.1.1. Nombres clave</h4></div></div><p>
 Puede obtener una lista completa ejecutando
 <b>mplayer -input keylist</b>.
-</p><div class="itemizedlist"><p class="title"><b>Teclado</b></p><ul type="disc"><li>Cualquier caracter imprimible</li><li><tt>SPACE</tt></li><li><tt>ENTER</tt></li><li><tt>TAB</tt></li><li><tt>CTRL</tt></li><li><tt>BS</tt></li><li><tt>DEL</tt></li><li><tt>INS</tt></li><li><tt>HOME</tt></li><li><tt>END</tt></li><li><tt>PGUP</tt></li><li><tt>PGDWN</tt></li><li><tt>ESC</tt></li><li><tt>RIGHT</tt></li><li><tt>LEFT</tt></li><li><tt>UP</tt></li><li><tt>DOWN</tt></li></ul></div><div class="itemizedlist"><p class="title"><b>Ratón (solo funciona bajo X)</b></p><ul type="disc"><li>
+</p><div class="itemizedlist"><p><b>Teclado</b></p><ul type="disc"><li>Cualquier caracter imprimible</li><li><tt>SPACE</tt></li><li><tt>ENTER</tt></li><li><tt>TAB</tt></li><li><tt>CTRL</tt></li><li><tt>BS</tt></li><li><tt>DEL</tt></li><li><tt>INS</tt></li><li><tt>HOME</tt></li><li><tt>END</tt></li><li><tt>PGUP</tt></li><li><tt>PGDWN</tt></li><li><tt>ESC</tt></li><li><tt>RIGHT</tt></li><li><tt>LEFT</tt></li><li><tt>UP</tt></li><li><tt>DOWN</tt></li></ul></div><div class="itemizedlist"><p><b>Ratón (solo funciona bajo X)</b></p><ul type="disc"><li>
   <tt>MOUSE_BTN0</tt> (Botón izquierdo)</li><li>
   <tt>MOUSE_BTN1</tt> (Botón derecho)</li><li>
   <tt>MOUSE_BTN2</tt> (Botón central)</li><li>
   <tt>MOUSE_BTN3</tt> (Rueda)</li><li>
-  <tt>MOUSE_BTN4</tt> (Rueda)</li><li>...</li><li><tt>MOUSE_BTN9</tt></li></ul></div><div class="itemizedlist"><p class="title"><b>Palanca de juegos (para que funcione debe habilitarse durante la compilación)</b></p><ul type="disc"><li>
+  <tt>MOUSE_BTN4</tt> (Rueda)</li><li>...</li><li><tt>MOUSE_BTN9</tt></li></ul></div><div class="itemizedlist"><p><b>Palanca de juegos (para que funcione debe habilitarse durante la compilación)</b></p><ul type="disc"><li>
   <tt>JOY_RIGHT</tt> o
   <tt>JOY_AXIS0_PLUS</tt></li><li>
   <tt>JOY_LEFT</tt> o
@@ -106,14 +106,15 @@ su linux con él! Más acerca de esto en
 </p><p>
 Si tiene instalado el paquete-lirc, configure lo autodetectará. Si todo
 va bien, <span class="application">MPlayer</span> escribirá un mensaje como
-&quot;<tt>Setting up lirc support...</tt>&quot;
+"<tt>Setting up lirc support...</tt>"
 durante su inicio. Si ocurre algún error le informará de ello. Si no le
 dice nada acerca de LIRC es porque se ha compilado sin tenerlo en cuenta.
 Eso es todo :-)
 </p><p>
 El nombre de la aplicación para <span class="application">MPlayer</span> es - oh
 que maravilla - <tt class="filename">mplayer</tt>. Puede usar las órdenes de
-mplayer e incluso pasar más de una órden separándolas con <tt>\n</tt>.
+<span class="application">MPlayer</span> e incluso pasar más de una órden
+separándolas con <tt>\n</tt>.
 No olvide activar el marcador repeat en <tt class="filename">.lircrc</tt> cuando
 tenga sentido (posición, volumen, etc). Aquí hay un extracto de mi
 <tt class="filename">.lircrc</tt>:

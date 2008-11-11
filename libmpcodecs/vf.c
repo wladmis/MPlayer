@@ -34,6 +34,7 @@ extern vf_info_t vf_info_scale;
 extern vf_info_t vf_info_fame;
 #endif
 extern vf_info_t vf_info_format;
+extern vf_info_t vf_info_noformat;
 extern vf_info_t vf_info_yuy2;
 extern vf_info_t vf_info_flip;
 extern vf_info_t vf_info_rgb2bgr;
@@ -41,6 +42,7 @@ extern vf_info_t vf_info_rotate;
 extern vf_info_t vf_info_mirror;
 extern vf_info_t vf_info_palette;
 extern vf_info_t vf_info_lavc;
+extern vf_info_t vf_info_zrmjpeg;
 extern vf_info_t vf_info_dvbscale;
 extern vf_info_t vf_info_cropdetect;
 extern vf_info_t vf_info_test;
@@ -82,6 +84,11 @@ extern vf_info_t vf_info_delogo;
 extern vf_info_t vf_info_hue;
 extern vf_info_t vf_info_spp;
 extern vf_info_t vf_info_yuvcsp;
+extern vf_info_t vf_info_kerndeint;
+extern vf_info_t vf_info_rgbtest;
+extern vf_info_t vf_info_qp;
+extern vf_info_t vf_info_phase;
+extern vf_info_t vf_info_divtc;
 
 // list of available filters:
 static vf_info_t* filter_list[]={
@@ -101,6 +108,7 @@ static vf_info_t* filter_list[]={
     &vf_info_fame,
 #endif
     &vf_info_format,
+    &vf_info_noformat,
     &vf_info_yuy2,
     &vf_info_flip,
     &vf_info_rgb2bgr,
@@ -110,6 +118,9 @@ static vf_info_t* filter_list[]={
 #ifdef USE_LIBAVCODEC
     &vf_info_lavc,
     &vf_info_lavcdeint,
+#endif
+#ifdef HAVE_ZR
+    &vf_info_zrmjpeg,
 #endif
     &vf_info_dvbscale,
     &vf_info_cropdetect,
@@ -153,6 +164,13 @@ static vf_info_t* filter_list[]={
     &vf_info_spp,
 #endif
     &vf_info_yuvcsp,
+    &vf_info_kerndeint,
+    &vf_info_rgbtest,
+#ifdef USE_LIBAVCODEC
+    &vf_info_qp,
+#endif
+    &vf_info_phase,
+    &vf_info_divtc,
     NULL
 };
 

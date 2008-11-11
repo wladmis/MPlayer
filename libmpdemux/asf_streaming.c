@@ -85,6 +85,9 @@ asf_streaming_start( stream_t *stream, int *demuxer_type) {
 		if( fd==-2 ) return -1;
 	}
 
+        if (!strncasecmp( proto_s, "mms", 3) ||  !strncasecmp( proto_s, "http", 4) || !strncasecmp( proto_s, "mmst", 4) || !strncasecmp( proto_s, "http_proxy", 10) )
+        mp_msg(MSGT_NETWORK,MSGL_ERR,"Used protocol %s\n",proto_s );
+	else
 	mp_msg(MSGT_NETWORK,MSGL_ERR,"Unknown protocol: %s\n", proto_s );
 	return -1;
 }
@@ -526,7 +529,7 @@ asf_http_request(streaming_ctrl_t *streaming_ctrl) {
 			if(asf_http_ctrl->n_audio > 0) {
 				for( i=0; i<asf_http_ctrl->n_audio ; i++ ) {
 					stream_id = asf_http_ctrl->audio_streams[i];
-					if(stream_id == asf_http_ctrl->audio_id) {
+					if(stream_id == asf_http_ctrl->audio_id || !asf_http_ctrl->audio_id) {
 						enable = 0;
 					} else {
 						enable = 2;

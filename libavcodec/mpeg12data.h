@@ -25,29 +25,6 @@ const int16_t ff_mpeg1_default_non_intra_matrix[64] = {
     16, 16, 16, 16, 16, 16, 16, 16,
 };
 
-static const unsigned char vlc_dc_table[256] = {
-    0, 1, 2, 2,
-    3, 3, 3, 3,
-    4, 4, 4, 4, 4, 4, 4, 4,
-    5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
-    6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-    6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-
-    7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-    7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-    7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-    7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-
-    8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
-    8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
-    8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
-    8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
-    8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
-    8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
-    8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
-    8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
-};
-
 static const uint16_t vlc_dc_lum_code[12] = {
     0x4, 0x0, 0x1, 0x5, 0x6, 0xe, 0x1e, 0x3e, 0x7e, 0xfe, 0x1fe, 0x1ff,
 };
@@ -217,7 +194,8 @@ static const uint8_t mbAddrIncrTable[36][2] = {
     {0x0, 8}, /* end (and 15 more 0 bits should follow) */
 };
 
-static const uint8_t mbPatTable[63][2] = {
+static const uint8_t mbPatTable[64][2] = {
+    {0x1, 9},
     {0xb, 5},
     {0x9, 5},
     {0xd, 6},
@@ -354,28 +332,24 @@ static const uint8_t mbMotionVectorTable[17][2] = {
 { 0xc, 10 },
 };
 
-#define MPEG1_FRAME_RATE_BASE 1001
-
-static const int frame_rate_tab[16] = {
-        0,        
-    24000,
-    24024,
-    25025,
-    30000,
-    30030,
-    50050,
-    60000,
-    60060,
+static const AVRational frame_rate_tab[] = {
+    {    0,    0},
+    {24000, 1001},
+    {   24,    1},
+    {   25,    1},
+    {30000, 1001},
+    {   30,    1},
+    {   50,    1},
+    {60000, 1001},
+    {   60,    1},
   // Xing's 15fps: (9)
-    15015,
+    {   15,    1},
   // libmpeg3's "Unofficial economy rates": (10-13)
-     5005,
-    10010,
-    12012,
-    15015,
-  // random, just to avoid segfault !never encode these
-    25025,
-    25025,
+    {    5,    1},
+    {   10,    1},
+    {   12,    1},
+    {   15,    1},
+    {    0,    0},
 };
 
 static const uint8_t non_linear_qscale[32] = {
@@ -433,3 +407,10 @@ static const AVRational mpeg2_aspect[16]={
     {0,1},
 };
 
+static const uint8_t svcd_scan_offset_placeholder[14]={
+    0x10, 0x0E,
+    0x00, 0x80, 0x81,
+    0x00, 0x80, 0x81,
+    0xff, 0xff, 0xff,
+    0xff, 0xff, 0xff,
+};

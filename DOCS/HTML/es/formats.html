@@ -1,10 +1,10 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html><head><meta content="text/html; charset=ISO-8859-1" http-equiv="Content-Type"><title>2.1. Formatos soportados</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.50.0"><link rel="home" href="index.html" title="MPlayer - El reproductor de Películas para LINUX"><link rel="up" href="features.html" title="Capítulo 2. Características"><link rel="previous" href="features.html" title="Capítulo 2. Características"><link rel="next" href="codecs.html" title="2.2. Codecs soportados"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">2.1. Formatos soportados</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="features.html">Anterior</a> </td><th width="60%" align="center">Capítulo 2. Características</th><td width="20%" align="right"> <a accesskey="n" href="codecs.html">Siguiente</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="formats"></a>2.1. Formatos soportados</h2></div></div><p>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>2.1. Formatos soportados</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - El reproductor de Películas
+para LINUX"><link rel="up" href="features.html" title="Capítulo 2. Características"><link rel="previous" href="features.html" title="Capítulo 2. Características"><link rel="next" href="codecs.html" title="2.2. Codecs soportados"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">2.1. Formatos soportados</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="features.html">Anterior</a> </td><th width="60%" align="center">Capítulo 2. Características</th><td width="20%" align="right"> <a accesskey="n" href="codecs.html">Siguiente</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="formats"></a>2.1. Formatos soportados</h2></div></div><p>
 Es importante aclarar un error común. Cuando la gente ve un archivo con una
 extensión <tt class="filename">.AVI</tt>, inmediatamente llega a la conclusión
 de que no es un archivo MPEG. Esto no es cierto. Al menos no completamente.
 Contrariamente a lo que la gente cree, este tipo de archivo
-<span class="emphasis"><em>puede</em></span> contener video MPEG1.
+<span class="emphasis"><i>puede</i></span> contener video MPEG1.
 </p><p>
 Dése cuenta de que un <span class="bold"><b>codec</b></span> no es lo mismo
 que un <span class="bold"><b>formato de archivo</b></span>.
@@ -20,7 +20,8 @@ los <span class="bold"><b>MPG</b></span> no tienen los campos necesarios para
 describir sus flujos de video y audio).
 O puede también poner video MPEG1 dentro de un archivo AVI.
 <a href="http://ffmpeg.sourceforge.net/" target="_top">FFmpeg</a> y
-<a href="mencoder.html" title="Capítulo 7. Codificando con MEncoder">MEncoder</a> pueden crear estos archivos.
+<a href="mencoder.html" title="Capítulo 7. Codificando con MEncoder"><span class="application">MEncoder</span></a> pueden
+crear estos archivos.
 </p><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="video-formats"></a>2.1.1. Formatos de video</h3></div></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="mpg-vob-dat"></a>2.1.1.1. Archivos MPEG</h4></div></div><p>
 Los archivos MPEG vienen en diferentes formas:
 </p><div class="itemizedlist"><ul type="disc"><li>
@@ -119,7 +120,8 @@ reproductores esperan audio en CBR, y por eso fallan con VBR. VBR no es
 muy común y los AVI de Microsoft solo describen audio CBR. También he
 notado que la mayoría de los codificadores/multiplexores de AVI crean
 archivos mal cuando usan audio VBR. Solo hay dos excepciones:
-<span class="application">NanDub</span> y <a href="mencoder.html" title="Capítulo 7. Codificando con MEncoder">MEncoder</a>.
+<span class="application">NanDub</span> y
+<a href="mencoder.html" title="Capítulo 7. Codificando con MEncoder"><span class="application">MEncoder</span></a>.
 </p></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="asf-wmv"></a>2.1.1.3. Archivos ASF/WMV</h4></div></div><p>
 ASF (Active Streaming Format) viene de Microsoft. Han desarrollado dos
 variantes de ASF, v1.0 y v2.0. v1.0 se usa por sus herramientas de medios
@@ -209,7 +211,7 @@ de compilar <span class="application">MPlayer</span> para poder reproducirlos.
 </p></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="sdp"></a>2.1.1.13. Archivos SDP</h4></div></div><p>
 <a href="ftp://ftp.rfc-editor.org/in-notes/rfc2327.txt" target="_top">SDP</a> es un
 formato estándar IETF para describir flujos de video y/o audio RTP.
-(Se requiere &quot;<a href="http://www.live.com/mplayer/" target="_top">LIVE.COM Streaming Media</a>&quot;.)
+(Se requiere "<a href="http://www.live.com/mplayer/" target="_top">LIVE.COM Streaming Media</a>".)
 </p></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="pva"></a>2.1.1.14. Archivos PVA</h4></div></div><p>
 PVA es un formato como-MPEG usado por programas de tarjetas de TV DVB (p.e.:
 <span class="application">MultiDec</span>, <span class="application">WinTV</span> bajo
@@ -220,9 +222,10 @@ Las especificaciones de PVA pueden descargarse desde la siguiente dirección:
 </p></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="gif"></a>2.1.1.15. Archivos GIF</h4></div></div><p>
 El formato <span class="bold"><b>GIF</b></span> es un formato común para
 gráficos para la web. Hay dos versiones de la especificación GIF, GIF87a y
-GIF89a. La principal diferencia es que GIF89a permite animación. MPlayer
-soporta ambos formatos usando <tt>libungif</tt>
-u otra biblioteca compatible con libgif. Los GIFs no animagos son mostrados
+GIF89a. La principal diferencia es que GIF89a permite animación.
+<span class="application">MPlayer</span> soporta ambos formatos usando
+<tt>libungif</tt> u otra biblioteca
+compatible con libgif. Los GIFs no animagos son mostrados
 como marcos de video simples. (Use las opciones <tt class="option">-loop</tt> y
 <tt class="option">-fixed-vo</tt> para mostrarlas durante más tiempo.)
 </p><p>
@@ -267,7 +270,7 @@ Requiere
 <tt>libogg</tt> 
 <tt>libvorbis</tt> bien instalados.
 </p></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="wma-asf"></a>2.1.2.4. Archivos WMA/ASF</h4></div></div><p>
-</p></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="mp4"></a>2.1.2.5. Archivos MP4</h4></div></div><p></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="cdda"></a>2.1.2.6. CD de audio</h4></div></div><p>
+</p></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="mp4"></a>2.1.2.5. Archivos MP4</h4></div></div><p></p></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="cdda"></a>2.1.2.6. CD de audio</h4></div></div><p>
 <span class="application">MPlayer</span> puede usar <span class="application">cdparanoia</span>
 para reproducir CDDA (Audio CD). El objetivo de esta sección no es hacer una
 enumeración de las características de <span class="application">cdparanoia</span>.

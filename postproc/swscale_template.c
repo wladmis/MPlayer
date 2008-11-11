@@ -59,6 +59,10 @@
 #define MOVNTQ(a,b) "movq " #a ", " #b " \n\t"
 #endif
 
+#ifdef HAVE_ALTIVEC
+#include "swscale_altivec_template.c"
+#endif
+
 #define YSCALEYUV2YV12X(x, offset) \
 			"xorl %%eax, %%eax		\n\t"\
 			"movq "VROUNDER_OFFSET"(%0), %%mm3\n\t"\
@@ -766,9 +770,15 @@ static inline void RENAME(yuv2yuvX)(SwsContext *c, int16_t *lumFilter, int16_t *
 			: "%eax", "%edx", "%esi"
 		);
 #else
+#ifdef HAVE_ALTIVEC
+yuv2yuvX_altivec_real(lumFilter, lumSrc, lumFilterSize,
+		      chrFilter, chrSrc, chrFilterSize,
+		      dest, uDest, vDest, dstW, chrDstW);
+#else //HAVE_ALTIVEC
 yuv2yuvXinC(lumFilter, lumSrc, lumFilterSize,
 	    chrFilter, chrSrc, chrFilterSize,
 	    dest, uDest, vDest, dstW, chrDstW);
+#endif //!HAVE_ALTIVEC
 #endif
 }
 
@@ -2144,6 +2154,9 @@ static inline void RENAME(hScale)(int16_t *dst, int dstW, uint8_t *src, int srcW
 		);
 	}
 #else
+#ifdef HAVE_ALTIVEC
+	hScale_altivec_real(dst, dstW, src, srcW, xInc, filter, filterPos, filterSize);
+#else
 	int i;
 	for(i=0; i<dstW; i++)
 	{
@@ -2160,6 +2173,7 @@ static inline void RENAME(hScale)(int16_t *dst, int dstW, uint8_t *src, int srcW
 		dst[i] = MIN(MAX(0, val>>7), (1<<15)-1); // the cubic equation does overflow ...
 //		dst[i] = val>>7;
 	}
+#endif
 #endif
 }
       // *** horizontal scale Y line to temp buffer

@@ -153,7 +153,7 @@ static int initTextures()
 
     if (format != gl_internal_format)
     {
-      fprintf (stderr, "[gl2] Needed texture [%dx%d] too big, trying ",
+      mp_msg (MSGT_VO, MSGL_V, "[gl2] Needed texture [%dx%d] too big, trying ",
 		texture_height, texture_width);
 
       if (texture_width > texture_height)
@@ -171,11 +171,11 @@ static int initTextures()
 	  texture_height *= 2;
       }
 
-      fprintf (stderr, "[%dx%d] !\n", texture_height, texture_width);
+      mp_msg (MSGT_VO, MSGL_V, "[%dx%d] !\n", texture_height, texture_width);
 
       if(texture_width < 64 || texture_height < 64)
       {
-      	fprintf (stderr, "GLERROR: Give up .. usable texture size not avaiable, or texture config error !\n");
+      	mp_msg (MSGT_VO, MSGL_FATAL, "[gl2] Give up .. usable texture size not avaiable, or texture config error !\n");
 	return -1;
       }
     }
@@ -190,7 +190,7 @@ static int initTextures()
   if ((image_height % texture_height) > 0)
     texnumy++;
 
-  printf("[gl2] Creating %dx%d textures of size %dx%d ...\n",
+  mp_msg(MSGT_VO, MSGL_V, "[gl2] Creating %dx%d textures of size %dx%d ...\n",
 	texnumx, texnumy, texture_width,texture_height);
 
   /* Allocate the texture memory */
@@ -215,11 +215,9 @@ static int initTextures()
 
   memory_x_len = raw_line_len / image_bytes;
 
-#ifndef NDEBUG
-  fprintf (stderr, "[gl2] texture-usage %d*width=%d, %d*height=%d\n",
+  mp_msg (MSGT_VO, MSGL_DBG2, "[gl2] texture-usage %d*width=%d, %d*height=%d\n",
 		 (int) texnumx, (int) texture_width, (int) texnumy,
 		 (int) texture_height);
-#endif
 
   for (y = 0; y < texnumy; y++)
   {
@@ -265,12 +263,12 @@ static int initTextures()
       err = glGetError ();
       if(err==GL_INVALID_ENUM)
       {
-	fprintf (stderr, "GLERROR glBindTexture (glGenText) := GL_INVALID_ENUM, texnum x=%d, y=%d, texture=%d\n", x, y, tsq->texobj);
+	mp_msg (MSGT_VO, MSGL_ERR, "GLERROR glBindTexture (glGenText) := GL_INVALID_ENUM, texnum x=%d, y=%d, texture=%d\n", x, y, tsq->texobj);
       } 
 
       if(glIsTexture(tsq->texobj) == GL_FALSE)
       {
-	fprintf (stderr, "GLERROR ain't a texture (glGenText): texnum x=%d, y=%d, texture=%d\n",
+	mp_msg (MSGT_VO, MSGL_ERR, "GLERROR ain't a texture (glGenText): texnum x=%d, y=%d, texture=%d\n",
 		x, y, tsq->texobj);
       } else {
         tsq->isTexture=GL_TRUE;
@@ -422,33 +420,32 @@ static void gl_set_bilinear (int val)
 				GL_NEAREST);
 			glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, 
 				GL_NEAREST);
-			printf("[gl2] bilinear off\n");
+			mp_msg(MSGT_VO, MSGL_INFO, "[gl2] bilinear off\n");
 			break;
 		case 1:
 			glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, 
 				GL_LINEAR);
 			glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, 
 				GL_LINEAR);
-			printf("[gl2] bilinear linear\n");
+			mp_msg(MSGT_VO, MSGL_INFO, "[gl2] bilinear linear\n");
 			break;
 		case 2:
 			glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, 
 				GL_LINEAR_MIPMAP_NEAREST);
 			glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, 
 				GL_LINEAR_MIPMAP_NEAREST);
-			printf("[gl2] bilinear mipmap nearest\n");
+			mp_msg(MSGT_VO, MSGL_INFO, "[gl2] bilinear mipmap nearest\n");
 			break;
 		case 3:
 			glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, 
 				GL_LINEAR_MIPMAP_LINEAR);
 			glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, 
 				GL_LINEAR_MIPMAP_LINEAR);
-			printf("[gl2] bilinear mipmap linear\n");
+			mp_msg(MSGT_VO, MSGL_INFO, "[gl2] bilinear mipmap linear\n");
 			break;
         }
       }
   }
-  fflush(0);
 }
 
 static void gl_set_antialias (int val)
@@ -461,7 +458,7 @@ static void gl_set_antialias (int val)
     glEnable (GL_POLYGON_SMOOTH);
     glEnable (GL_LINE_SMOOTH);
     glEnable (GL_POINT_SMOOTH);
-    printf("[gl2] antialiasing on\n");
+    mp_msg(MSGT_VO, MSGL_INFO, "[gl2] antialiasing on\n");
   }
   else
   {
@@ -469,9 +466,8 @@ static void gl_set_antialias (int val)
     glDisable (GL_POLYGON_SMOOTH);
     glDisable (GL_LINE_SMOOTH);
     glDisable (GL_POINT_SMOOTH);
-    printf("[gl2] antialiasing off\n");
+    mp_msg(MSGT_VO, MSGL_INFO, "[gl2] antialiasing off\n");
   }
-  fflush(0);
 }
 
 
@@ -491,10 +487,8 @@ static void drawTextureDisplay ()
 
       if(square->isTexture==GL_FALSE)
       {
-	#ifndef NDEBUG
-	  fprintf (stderr, "[gl2] ain't a texture(update): texnum x=%d, y=%d, texture=%d\n",
+        mp_msg (MSGT_VO, MSGL_V, "[gl2] ain't a texture(update): texnum x=%d, y=%d, texture=%d\n",
 	  	x, y, square->texobj);
-	#endif
       	continue;
       }
 
@@ -502,18 +496,16 @@ static void drawTextureDisplay ()
       err = glGetError ();
       if(err==GL_INVALID_ENUM)
       {
-	fprintf (stderr, "GLERROR glBindTexture := GL_INVALID_ENUM, texnum x=%d, y=%d, texture=%d\n", x, y, square->texobj);
+	mp_msg (MSGT_VO, MSGL_ERR, "GLERROR glBindTexture := GL_INVALID_ENUM, texnum x=%d, y=%d, texture=%d\n", x, y, square->texobj);
       }
-      #ifndef NDEBUG
 	      else if(err==GL_INVALID_OPERATION) {
-		fprintf (stderr, "GLERROR glBindTexture := GL_INVALID_OPERATION, texnum x=%d, y=%d, texture=%d\n", x, y, square->texobj);
+		mp_msg (MSGT_VO, MSGL_V, "GLERROR glBindTexture := GL_INVALID_OPERATION, texnum x=%d, y=%d, texture=%d\n", x, y, square->texobj);
 	      }
-      #endif
 
       if(glIsTexture(square->texobj) == GL_FALSE)
       {
         square->isTexture=GL_FALSE;
-	fprintf (stderr, "GLERROR ain't a texture(update): texnum x=%d, y=%d, texture=%d\n",
+	mp_msg (MSGT_VO, MSGL_ERR, "GLERROR ain't a texture(update): texnum x=%d, y=%d, texture=%d\n",
 		x, y, square->texobj);
       }
 
@@ -528,10 +520,8 @@ static void drawTextureDisplay ()
         square->dirtyXoff=0; square->dirtyYoff=0; square->dirtyWidth=-1; square->dirtyHeight=-1;
       }
 
-#ifndef NDEBUG
-        fprintf (stdout, "[gl2] glTexSubImage2D texnum x=%d, y=%d, %d/%d - %d/%d\n", 
+        mp_msg (MSGT_VO, MSGL_DBG2, "[gl2] glTexSubImage2D texnum x=%d, y=%d, %d/%d - %d/%d\n", 
 		x, y, square->dirtyXoff, square->dirtyYoff, square->dirtyWidth, square->dirtyHeight);
-#endif
 
 	glBegin(GL_QUADS);
 
@@ -687,23 +677,11 @@ static uint32_t config_glx(uint32_t width, uint32_t height, uint32_t d_width, ui
 	XVisualInfo *vinfo, vinfo_buf;
 	XEvent xev;
 
-        if( flags&0x01 )
-        {
-	        vo_fs = VO_TRUE;
-                aspect(&d_width,&d_height,A_ZOOM);
-		hint.x = 0;
-		hint.y = 0;
-		hint.width = vo_screenwidth;
-		hint.height = vo_screenheight;
-		hint.flags = PPosition | PSize;
-        } else {
-		vo_fs = VO_FALSE;
 		hint.x = 0;
 		hint.y = 0;
 		hint.width = d_width;
 		hint.height = d_height;
 		hint.flags = PPosition | PSize;
-        }
 
 	/* Make the window */
 
@@ -713,15 +691,15 @@ static uint32_t config_glx(uint32_t width, uint32_t height, uint32_t d_width, ui
   vinfo = choose_glx_visual(mDisplay,mScreen,&vinfo_buf) < 0 ? NULL : &vinfo_buf;
   if (vinfo == NULL)
   {
-    printf("[gl2] no GLX support present\n");
+    mp_msg(MSGT_VO, MSGL_FATAL, "[gl2] no GLX support present\n");
     return -1;
   }
 
   if ( vo_window == None ) 
    {
+    vo_fs = VO_FALSE;
     vo_window = vo_x11_create_smooth_window(mDisplay, RootWindow(mDisplay,mScreen), 
 		                            vinfo->visual, hint.x, hint.y, hint.width, hint.height, vinfo->depth, vo_x11_create_colormap(vinfo));
-  if ( flags&0x01 ) vo_x11_decoration( mDisplay,vo_window,0 );
 
 	XSelectInput(mDisplay, vo_window, StructureNotifyMask);
 
@@ -743,14 +721,25 @@ static uint32_t config_glx(uint32_t width, uint32_t height, uint32_t d_width, ui
 		XNextEvent(mDisplay, &xev);
 	}
 	while (xev.type != MapNotify || xev.xmap.event != vo_window);
-
-	XSelectInput(mDisplay, vo_window, NoEventMask);
-
    }
    else {
    	vo_x11_sizehint( hint.x, hint.y, hint.width, hint.height,0 );
-   	if ( !(flags&1) ) XMoveResizeWindow( mDisplay,vo_window,hint.x,hint.y,hint.width,hint.height );
+   	// for changing from fullscreen to fullscreen we do fullscreen to
+   	// window and back to fullscreen, so that vo_x11_fullscreen saves
+   	// the correct size for _this_ video (and doesn't take the values from
+   	// the previous one)
+   	if (vo_fs)
+   	 vo_x11_fullscreen ();
+   	XMoveResizeWindow( mDisplay,vo_window,hint.x,hint.y,hint.width,hint.height );
    }
+
+  // these would normally be set by the event handler, but here we have to
+  // do it manually
+  vo_dwidth = d_width;
+  vo_dheight = d_height;
+
+  if (flags & VOFLAG_FULLSCREEN)
+   vo_x11_fullscreen();
 
   vo_x11_classhint( mDisplay,vo_window,"gl2" );
   vo_hidecursor(mDisplay,vo_window);
@@ -824,7 +813,7 @@ static int initGl(uint32_t d_width, uint32_t d_height)
   
   drawTextureDisplay ();
 
-  printf("[gl2] Using image_bpp=%d, image_bytes=%d, isBGR=%d, \n\tgl_bitmap_format=%s, gl_bitmap_type=%s, \n\tgl_alignment=%d, rgb_size=%d (%d,%d,%d), a_sz=%d, \n\tgl_internal_format=%s\n",
+  mp_msg(MSGT_VO, MSGL_V, "[gl2] Using image_bpp=%d, image_bytes=%d, isBGR=%d, \n\tgl_bitmap_format=%s, gl_bitmap_type=%s, \n\tgl_alignment=%d, rgb_size=%d (%d,%d,%d), a_sz=%d, \n\tgl_internal_format=%s\n",
   	image_bpp, image_bytes, image_mode==MODE_BGR, 
         gl_bitmap_format_s, gl_bitmap_type_s, gl_alignment,
 	rgb_sz, r_sz, g_sz, b_sz, a_sz, gl_internal_format_s);
@@ -847,8 +836,6 @@ config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uin
 
 	image_height = height;
 	image_width = width;
-    vo_dwidth = d_width;
-    vo_dheight = d_height;
 	image_format = format;
 
 	int_pause = 0;
@@ -868,8 +855,8 @@ config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uin
 	
   glVersion = glGetString(GL_VERSION);
 
-  printf("[gl2] OpenGL Driver Information:\n");
-  printf("\tvendor: %s,\n\trenderer %s,\n\tversion %s\n", 
+  mp_msg(MSGT_VO, MSGL_V, "[gl2] OpenGL Driver Information:\n");
+  mp_msg(MSGT_VO, MSGL_V, "\tvendor: %s,\n\trenderer %s,\n\tversion %s\n", 
   	glGetString(GL_VENDOR), 
 	glGetString(GL_RENDERER),
 	glVersion);
@@ -882,9 +869,9 @@ config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uin
 
   if(isGL12)
   {
-	printf("[gl2] You have OpenGL >= 1.2 capable drivers, GOOD (16bpp and BGR is ok!)\n");
+	mp_msg(MSGT_VO, MSGL_INFO, "[gl2] You have OpenGL >= 1.2 capable drivers, GOOD (16bpp and BGR is ok!)\n");
   } else {
-	printf("[gl2] You have OpenGL < 1.2 drivers, BAD (16bpp and BGR may be damaged!)\n");
+	mp_msg(MSGT_VO, MSGL_INFO, "[gl2] You have OpenGL < 1.2 drivers, BAD (16bpp and BGR may be damaged!)\n");
   }
 
   rgb_sz=r_sz+g_sz+b_sz;
@@ -1159,7 +1146,7 @@ static uint32_t preinit(const char *arg)
 {
     if(arg) 
     {
-	printf("[gl2] Unknown subdevice: %s\n",arg);
+	mp_msg(MSGT_VO, MSGL_FATAL, "[gl2] Unknown subdevice: %s\n",arg);
 	return ENOSYS;
     }
     if( !vo_init() ) return -1; // Can't open X11

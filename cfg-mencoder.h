@@ -32,6 +32,8 @@ m_option_t lameopts_conf[]={
 	{"br", &lame_param_br, CONF_TYPE_INT, CONF_RANGE, 0, 1024, NULL},
 	{"ratio", &lame_param_ratio, CONF_TYPE_INT, CONF_RANGE, 0, 100, NULL},
 	{"vol", &lame_param_scale, CONF_TYPE_FLOAT, CONF_RANGE, 0, 10, NULL},
+	{"lowpassfreq",&lame_param_lowpassfreq, CONF_TYPE_INT, CONF_RANGE, -1, 48000,0},
+	{"highpassfreq",&lame_param_highpassfreq, CONF_TYPE_INT, CONF_RANGE, -1, 48000,0},
 #if HAVE_MP3LAME >= 392
 	{"fast", &lame_param_fast, CONF_TYPE_FLAG, 0, 0, 1, NULL},
 	{"preset", &lame_param_preset, CONF_TYPE_STRING, 0, 0, 0, NULL},
@@ -65,8 +67,7 @@ m_option_t ovc_conf[]={
 //	{"raw", &out_video_codec, CONF_TYPE_FLAG, 0, 0, VCODEC_RAW, NULL},
 	{"lavc", &out_video_codec, CONF_TYPE_FLAG, 0, 0, VCODEC_LIBAVCODEC, NULL},
 //	{"null", &out_video_codec, CONF_TYPE_FLAG, 0, 0, VCODEC_NULL, NULL},
-	{"rawrgb", &out_video_codec, CONF_TYPE_FLAG, 0, 0, VCODEC_RAWRGB, NULL},
-	{"rawyuv", &out_video_codec, CONF_TYPE_FLAG, 0, 0, VCODEC_RAWYUV, NULL},
+	{"raw", &out_video_codec, CONF_TYPE_FLAG, 0, 0, VCODEC_RAW, NULL},
 	{"vfw", &out_video_codec, CONF_TYPE_FLAG, 0, 0, VCODEC_VFW, NULL},
 	{"libdv", &out_video_codec, CONF_TYPE_FLAG, 0, 0, VCODEC_LIBDV, NULL},
 	{"xvid", &out_video_codec, CONF_TYPE_FLAG, 0, 0, VCODEC_XVID, NULL},
@@ -75,8 +76,7 @@ m_option_t ovc_conf[]={
 	{"help", "\nAvailable codecs:\n"
 	"   copy     - frame copy, without re-encoding. doesn't work with filters!\n"
 	"   frameno  - special audio-only file for 3-pass encoding, see DOCS!\n"
-	"   rawrgb   - uncompressed RGB 24bpp video\n"
-	"   rawyuv   - uncompressed 4:2:0 YUV (I420) 12bpp video\n"
+	"   raw      - uncompressed video. Use fourcc option to set format explicitly.\n"
 	"   nuv      - nuppel video\n"
 #ifdef HAVE_DIVX4ENCORE
 #ifdef ENCORE_XVID
@@ -151,16 +151,19 @@ m_option_t info_conf[]={
 m_option_t of_conf[]={
 	{"avi", &out_file_format, CONF_TYPE_FLAG, 0, 0, MUXER_TYPE_AVI, NULL},
 	{"mpeg", &out_file_format, CONF_TYPE_FLAG, 0, 0, MUXER_TYPE_MPEG, NULL},
+	{"rawvideo", &out_file_format, CONF_TYPE_FLAG, 0, 0, MUXER_TYPE_RAWVIDEO, NULL},
 	{"help", "\nAvailable output formats:\n"
 	"   avi      - Microsoft Audio/Video Interleaved\n"
 	"   mpeg     - MPEG-1 system stream format\n"
+	"   rawvideo - (video only, one stream only) raw stream, no muxing\n"
 	"\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
 	{NULL, NULL, 0, 0, 0, 0, NULL}
 };
 
+extern float avi_aspect_override; /* defined in libmpdemux/muxer_avi.c */
+
 m_option_t mencoder_opts[]={
 	/* name, pointer, type, flags, min, max */
-	{"include", cfg_include, CONF_TYPE_FUNC_PARAM, CONF_NOSAVE, 0, 0, NULL}, /* this must be the first!!! */
 
 	{"endpos", parse_end_at, CONF_TYPE_FUNC_PARAM, 0, 0, 0, NULL},
 
@@ -190,6 +193,9 @@ m_option_t mencoder_opts[]={
 
 	// override FOURCC in output file
 	{"ffourcc", &force_fourcc, CONF_TYPE_STRING, 0, 4, 4, NULL},
+
+	// override avi aspect autodetection
+	{"force-avi-aspect", &avi_aspect_override, CONF_TYPE_FLOAT, CONF_RANGE, 0.2, 3.0, NULL},
 
 	{"pass", "The -pass option is obsolete. Use -lavcopts vpass=n or -divx4opts pass=n!\nRTFM!\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
 	{"passlogfile", &passtmpfile, CONF_TYPE_STRING, 0, 0, 0, NULL},
@@ -228,9 +234,6 @@ m_option_t mencoder_opts[]={
 #include "cfg-common.h"
 #undef MAIN_CONF
 
-//	{"quiet", &quiet, CONF_TYPE_FLAG, 0, 0, 1, NULL},
-	{"verbose", &verbose, CONF_TYPE_INT, CONF_RANGE|CONF_GLOBAL, 0, 100, NULL},
-	{"v", cfg_inc_verbose, CONF_TYPE_FUNC, CONF_GLOBAL, 0, 0, NULL},
 //	{"-help", help_text, CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
 //	{"help", help_text, CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
 //	{"h", help_text, CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},

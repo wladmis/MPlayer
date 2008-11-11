@@ -378,7 +378,7 @@ static void jpeg_put_comments(MpegEncContext *s)
     /* JFIF header */
     put_marker(p, APP0);
     put_bits(p, 16, 16);
-    put_string(p, "JFIF"); /* this puts the trailing zero-byte too */
+    put_string(p, "JFIF", 1); /* this puts the trailing zero-byte too */
     put_bits(p, 16, 0x0201); /* v 1.02 */
     put_bits(p, 8, 0); /* units type: 0 - aspect ratio */
     put_bits(p, 16, s->avctx->sample_aspect_ratio.num);
@@ -393,7 +393,7 @@ static void jpeg_put_comments(MpegEncContext *s)
         flush_put_bits(p);
         ptr = pbBufPtr(p);
         put_bits(p, 16, 0); /* patched later */
-        put_string(p, LIBAVCODEC_IDENT);
+        put_string(p, LIBAVCODEC_IDENT, 1);
         size = strlen(LIBAVCODEC_IDENT)+3;
         ptr[0] = size >> 8;
         ptr[1] = size;
@@ -477,7 +477,7 @@ void mjpeg_picture_header(MpegEncContext *s)
 
 static void escape_FF(MpegEncContext *s, int start)
 {
-    int size= get_bit_count(&s->pb) - start*8;
+    int size= put_bits_count(&s->pb) - start*8;
     int i, ff_count;
     uint8_t *buf= s->pb.buf + start;
     int align= (-(size_t)(buf))&3;
@@ -531,11 +531,16 @@ static void escape_FF(MpegEncContext *s, int start)
     }
 }
 
+void ff_mjpeg_stuffing(PutBitContext * pbc)
+{
+    int length;
+    length= (-put_bits_count(pbc))&7;
+    if(length) put_bits(pbc, length, (1<<length)-1);
+}
+
 void mjpeg_picture_trailer(MpegEncContext *s)
 {
-    int pad= (-get_bit_count(&s->pb))&7;
-    
-    put_bits(&s->pb, pad,0xFF>>(8-pad));
+    ff_mjpeg_stuffing(&s->pb);
     flush_put_bits(&s->pb);
 
     assert((s->header_bits&7)==0);
@@ -651,7 +656,7 @@ static int encode_picture_lossless(AVCodecContext *avctx, unsigned char *buf, in
     
     mjpeg_picture_header(s);
 
-    s->header_bits= get_bit_count(&s->pb);
+    s->header_bits= put_bits_count(&s->pb);
 
     if(avctx->pix_fmt == PIX_FMT_RGBA32){
         int x, y, i;
@@ -770,7 +775,7 @@ static int encode_picture_lossless(AVCodecContext *avctx, unsigned char *buf, in
 
     flush_put_bits(&s->pb);
     return pbBufPtr(&s->pb) - s->pb.buf;
-//    return (get_bit_count(&f->pb)+7)/8;
+//    return (put_bits_count(&f->pb)+7)/8;
 }
 
 #endif //CONFIG_ENCODERS
@@ -793,7 +798,7 @@ typedef struct MJpegDecodeContext {
     VLC vlcs[2][4];
     int qscale[4];      ///< quantizer scale calculated from quant_matrixes
 
-    int org_width, org_height;  /* size given at codec init */
+    int org_height;  /* size given at codec init */
     int first_picture;    /* true if decoding first picture */
     int interlaced;     /* true if interlaced */
     int bottom_field;   /* true if bottom field */
@@ -855,16 +860,13 @@ static int mjpeg_decode_init(AVCodecContext *avctx)
 
     /* ugly way to get the idct & scantable FIXME */
     memset(&s2, 0, sizeof(MpegEncContext));
-    s2.flags= avctx->flags;
     s2.avctx= avctx;
 //    s2->out_format = FMT_MJPEG;
-    s2.width = 8;
-    s2.height = 8;
-    if (MPV_common_init(&s2) < 0)
-       return -1;
+    dsputil_init(&s2.dsp, avctx);
+    DCT_common_init(&s2);
+
     s->scantable= s2.intra_scantable;
     s->idct_put= s2.dsp.idct_put;
-    MPV_common_end(&s2);
 
     s->mpeg_enc_ctx_allocated = 0;
     s->buffer_size = 102400; /* smaller buffer should be enough,
@@ -874,7 +876,6 @@ static int mjpeg_decode_init(AVCodecContext *avctx)
 	return -1;
     s->start_code = -1;
     s->first_picture = 1;
-    s->org_width = avctx->width;
     s->org_height = avctx->height;
     
     build_vlc(&s->vlcs[0][0], bits_dc_luminance, val_dc_luminance, 12);
@@ -1027,13 +1028,17 @@ static int mjpeg_decode_sof(MJpegDecodeContext *s)
             
         s->width = width;
         s->height = height;
+        s->avctx->width = s->width;
+        s->avctx->height = s->height;
+
         /* test interlaced mode */
         if (s->first_picture &&
             s->org_height != 0 &&
             s->height < ((s->org_height * 3) / 4)) {
             s->interlaced = 1;
 //	    s->bottom_field = (s->interlace_polarity) ? 1 : 0;
-	    s->bottom_field = 0;
+            s->bottom_field = 0;
+            s->avctx->height *= 2;
         }
 
         s->qscale_table= av_mallocz((s->width+15)/16);
@@ -1049,8 +1054,10 @@ static int mjpeg_decode_sof(MJpegDecodeContext *s)
     case 0x11:
         if(s->rgb){
             s->avctx->pix_fmt = PIX_FMT_RGBA32;
-        }else
+        }else if(s->nb_components==3)
             s->avctx->pix_fmt = PIX_FMT_YUV444P;
+        else
+            s->avctx->pix_fmt = PIX_FMT_GRAY8;
         break;
     case 0x21:
         s->avctx->pix_fmt = PIX_FMT_YUV422P;
@@ -1369,7 +1376,7 @@ static int mjpeg_decode_sos(MJpegDecodeContext *s)
 	return -1;
     }
     /* XXX: only interleaved scan accepted */
-    if (nb_components != 3)
+    if (nb_components != s->nb_components)
     {
 	dprintf("decode_sos: components(%d) mismatch\n", nb_components);
         return -1;
@@ -1523,14 +1530,21 @@ static int mjpeg_decode_app(MJpegDecodeContext *s)
     
     if (id == ff_get_fourcc("JFIF"))
     {
-	int t_w, t_h;
+	int t_w, t_h, v1, v2;
 	skip_bits(&s->gb, 8); /* the trailing zero-byte */
-	av_log(s->avctx, AV_LOG_INFO, "mjpeg: JFIF header found (version: %x.%x)\n",
-	    get_bits(&s->gb, 8), get_bits(&s->gb, 8));
+	v1= get_bits(&s->gb, 8);
+        v2= get_bits(&s->gb, 8);
         skip_bits(&s->gb, 8);
 
         s->avctx->sample_aspect_ratio.num= get_bits(&s->gb, 16);
         s->avctx->sample_aspect_ratio.den= get_bits(&s->gb, 16);
+
+        if (s->avctx->debug & FF_DEBUG_PICT_INFO)
+            av_log(s->avctx, AV_LOG_INFO, "mjpeg: JFIF header found (version: %x.%x) SAR=%d/%d\n",
+                v1, v2,
+                s->avctx->sample_aspect_ratio.num,
+                s->avctx->sample_aspect_ratio.den
+            );
 
 	t_w = get_bits(&s->gb, 8);
 	t_h = get_bits(&s->gb, 8);
@@ -1546,7 +1560,8 @@ static int mjpeg_decode_app(MJpegDecodeContext *s)
     
     if (id == ff_get_fourcc("Adob") && (get_bits(&s->gb, 8) == 'e'))
     {
-	av_log(s->avctx, AV_LOG_INFO, "mjpeg: Adobe header found\n");
+        if (s->avctx->debug & FF_DEBUG_PICT_INFO)
+            av_log(s->avctx, AV_LOG_INFO, "mjpeg: Adobe header found\n");
 	skip_bits(&s->gb, 16); /* version */
 	skip_bits(&s->gb, 16); /* flags0 */
 	skip_bits(&s->gb, 16); /* flags1 */
@@ -1556,7 +1571,8 @@ static int mjpeg_decode_app(MJpegDecodeContext *s)
     }
 
     if (id == ff_get_fourcc("LJIF")){
-        av_log(s->avctx, AV_LOG_INFO, "Pegasus lossless jpeg header found\n");
+        if (s->avctx->debug & FF_DEBUG_PICT_INFO)
+            av_log(s->avctx, AV_LOG_INFO, "Pegasus lossless jpeg header found\n");
 	skip_bits(&s->gb, 16); /* version ? */
 	skip_bits(&s->gb, 16); /* unknwon always 0? */
 	skip_bits(&s->gb, 16); /* unknwon always 0? */
@@ -1595,7 +1611,7 @@ static int mjpeg_decode_app(MJpegDecodeContext *s)
 	    skip_bits(&s->gb, 32); /* scan off */
 	    skip_bits(&s->gb, 32); /* data off */
 #endif
-	    if (s->first_picture)
+            if (s->avctx->debug & FF_DEBUG_PICT_INFO)
 		av_log(s->avctx, AV_LOG_INFO, "mjpeg: Apple MJPEG-A header found\n");
 	}
     }
@@ -1626,7 +1642,8 @@ static int mjpeg_decode_com(MJpegDecodeContext *s)
 	    else
 		cbuf[i] = 0;
 
-	    av_log(s->avctx, AV_LOG_INFO, "mjpeg comment: '%s'\n", cbuf);
+            if(s->avctx->debug & FF_DEBUG_PICT_INFO)
+                av_log(s->avctx, AV_LOG_INFO, "mjpeg comment: '%s'\n", cbuf);
 
 	    /* buggy avid, it puts EOI only at every 10th frame */
 	    if (!strcmp(cbuf, "AVID"))
@@ -1772,13 +1789,12 @@ static int mjpeg_decode_frame(AVCodecContext *avctx,
 		/* process markers */
 		if (start_code >= 0xd0 && start_code <= 0xd7) {
 		    dprintf("restart marker: %d\n", start_code&0x0f);
-		} else if (s->first_picture) {
 		    /* APP fields */
-		    if (start_code >= 0xe0 && start_code <= 0xef)
-			mjpeg_decode_app(s);
+		} else if (start_code >= APP0 && start_code <= APP15) {
+		    mjpeg_decode_app(s);
 		    /* Comment */
-		    else if (start_code == COM)
-			mjpeg_decode_com(s);
+		} else if (start_code == COM){
+		    mjpeg_decode_com(s);
 		}
 
                 switch(start_code) {
@@ -1818,10 +1834,6 @@ eoi_parser:
                         }
                         *picture = s->picture;
                         *data_size = sizeof(AVFrame);
-                        avctx->height = s->height;
-                        if (s->interlaced)
-                            avctx->height *= 2;
-                        avctx->width = s->width;
 
                         if(!s->lossless){
                             picture->quality= FFMAX(FFMAX(s->qscale[0], s->qscale[1]), s->qscale[2]); 
@@ -1976,10 +1988,6 @@ read_header:
 
     *picture= s->picture;
     *data_size = sizeof(AVFrame);
-    avctx->height = s->height;
-    if (s->interlaced)
-        avctx->height *= 2;
-    avctx->width = s->width;
     
     if(!s->lossless){
         picture->quality= FFMAX(FFMAX(s->qscale[0], s->qscale[1]), s->qscale[2]); 

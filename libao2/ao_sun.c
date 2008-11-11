@@ -615,10 +615,11 @@ static int init(int rate,int channels,int format,int flags){
 }
 
 // close audio device
-static void uninit(){
+static void uninit(int immed){
 #ifdef	__svr4__
     // throw away buffered data in the audio driver's STREAMS queue
-    ioctl(audio_fd, I_FLUSH, FLUSHW);
+    if (immed)
+	ioctl(audio_fd, I_FLUSH, FLUSHW);
 #endif
     close(audio_fd);
 }
@@ -627,7 +628,7 @@ static void uninit(){
 static void reset(){
     audio_info_t info;
 
-    uninit();
+    uninit(1);
     audio_fd=open(audio_dev, O_WRONLY);
     if(audio_fd<0){
 	printf("\nFatal error: *** CANNOT RE-OPEN / RESET AUDIO DEVICE (%s) ***\n", strerror(errno));

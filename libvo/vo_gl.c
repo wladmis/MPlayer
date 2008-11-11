@@ -6,6 +6,7 @@
 #include <math.h>
 #include <errno.h>
 
+#include "mp_msg.h"
 #include "config.h"
 #include "video_out.h"
 #include "video_out_internal.h"
@@ -46,6 +47,9 @@ static int                  wsGLXAttrib[] = { GLX_RGBA,
 static uint32_t image_width;
 static uint32_t image_height;
 static uint32_t image_bytes;
+static int many_fmts;
+static GLenum gl_format;
+static GLenum gl_type;
 
 static int int_pause;
 
@@ -55,7 +59,7 @@ static uint32_t texture_height;
 static int slice_height=1;
 
 static void resize(int x,int y){
-  printf("[gl] Resize: %dx%d\n",x,y);
+  mp_msg(MSGT_VO, MSGL_V, "[gl] Resize: %dx%d\n",x,y);
   glViewport( 0, 0, x, y );
 
   glMatrixMode(GL_PROJECTION);
@@ -64,6 +68,68 @@ static void resize(int x,int y){
 
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
+}
+
+static int find_gl_format (uint32_t format)
+{
+  switch (format) {
+    case IMGFMT_RGB24:
+      gl_format = GL_RGB;
+      gl_type = GL_UNSIGNED_BYTE;
+      break;
+    case IMGFMT_RGB32:
+      gl_format = GL_RGBA;
+      gl_type = GL_UNSIGNED_BYTE;
+      break;
+    case IMGFMT_Y800:
+    case IMGFMT_Y8:
+      gl_format = GL_LUMINANCE;
+      gl_type = GL_UNSIGNED_BYTE;
+      break;
+#ifdef GL_VERSION_1_2
+    case IMGFMT_RGB8:
+      gl_format = GL_RGB;
+      gl_type = GL_UNSIGNED_BYTE_3_3_2;
+      break;
+    case IMGFMT_RGB15:
+      gl_format = GL_RGBA;
+      gl_type = GL_UNSIGNED_SHORT_5_5_5_1;
+      break;
+    case IMGFMT_RGB16:
+      gl_format = GL_RGB;
+      gl_type = GL_UNSIGNED_SHORT_5_6_5;
+      break;
+    case IMGFMT_BGR8:
+      // special case as red and blue have a differen number of bits.
+      // GL_BGR and GL_UNSIGNED_BYTE_3_3_2 isn't supported at least
+      // by nVidia drivers, and in addition would give more bits to
+      // blue than to red, which isn't wanted
+      gl_format = GL_RGB;
+      gl_type = GL_UNSIGNED_BYTE_2_3_3_REV;
+      break;
+    case IMGFMT_BGR15:
+      gl_format = GL_BGRA;
+      gl_type = GL_UNSIGNED_SHORT_5_5_5_1;
+      break;
+    case IMGFMT_BGR16:
+      gl_format = GL_RGB;
+      gl_type = GL_UNSIGNED_SHORT_5_6_5_REV;
+      break;
+    case IMGFMT_BGR24:
+      gl_format = GL_BGR;
+      gl_type = GL_UNSIGNED_BYTE;
+      break;
+    case IMGFMT_BGR32:
+      gl_format = GL_BGRA;
+      gl_type = GL_UNSIGNED_BYTE;
+      break;
+#endif
+    default:
+      gl_format = GL_RGBA;
+      gl_type = GL_UNSIGNED_BYTE;
+      return 0;
+  }
+  return 1;
 }
 
 /* connect to server, create and map window,
@@ -82,6 +148,7 @@ config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uin
 
 	image_height = height;
 	image_width = width;
+	find_gl_format (format);
     vo_dwidth = d_width;
     vo_dheight = d_height;
 
@@ -113,7 +180,7 @@ config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uin
   vinfo=glXChooseVisual( mDisplay,mScreen,wsGLXAttrib );
   if (vinfo == NULL)
   {
-    printf("[gl] no GLX support present\n");
+    mp_msg(MSGT_VO, MSGL_ERR, "[gl] no GLX support present\n");
     return -1;
   }
 
@@ -176,7 +243,7 @@ config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uin
 
   glEnable(GL_TEXTURE_2D);
 
-  printf("[gl] Creating %dx%d texture...\n",texture_width,texture_height);
+  mp_msg(MSGT_VO, MSGL_V, "[gl] Creating %dx%d texture...\n",texture_width,texture_height);
 
 #if 1
 //  glBindTexture(GL_TEXTURE_2D, texture_id);
@@ -257,6 +324,10 @@ draw_frame(uint8_t *src[])
 int i;
 uint8_t *ImageData=src[0];
 
+  if (slice_height == 0)
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image_width, image_height,
+		    gl_format, gl_type, ImageData);
+  else
     for(i=0;i<image_height;i+=slice_height){
       glTexSubImage2D( GL_TEXTURE_2D,  // target
 		       0,              // level
@@ -265,8 +336,8 @@ uint8_t *ImageData=src[0];
 		       i,  // y offset
 		       image_width,    // width
 		       (i+slice_height<=image_height)?slice_height:image_height-i,              // height
-		       (image_bytes==4)?GL_RGBA:GL_RGB,        // format
-		       GL_UNSIGNED_BYTE, // type
+		       gl_format,
+		       gl_type,
 		       ImageData+i*image_bytes*image_width );        // *pixels
     }
 
@@ -277,6 +348,8 @@ static uint32_t
 query_format(uint32_t format)
 {
     if ((format == IMGFMT_RGB24) || (format == IMGFMT_RGB32))
+        return VFCAP_CSP_SUPPORTED | VFCAP_CSP_SUPPORTED_BY_HW;
+    if (many_fmts && find_gl_format(format))
         return VFCAP_CSP_SUPPORTED | VFCAP_CSP_SUPPORTED_BY_HW;
     return 0;
 }
@@ -292,18 +365,43 @@ uninit(void)
 
 static uint32_t preinit(const char *arg)
 {
+    int parse_err = 0;
+    many_fmts = 0;
+    slice_height = 4;
     if(arg) 
     {
-	    slice_height = atoi(arg);
-	    if (slice_height <= 0)
-		    slice_height = 65536;
+        char *parse_pos = &arg[0];
+        while (parse_pos[0] && !parse_err) {
+            if (strncmp (parse_pos, "manyfmts", 8) == 0) {
+                parse_pos = &parse_pos[8];
+                many_fmts = 1;
+            } else if (strncmp (parse_pos, "slice-height=", 13) == 0) {
+                parse_pos = &parse_pos[13];
+                slice_height = strtol(parse_pos, &parse_pos, 0);
+                if (slice_height < 0) parse_err = 1;
+            }
+            if (parse_pos[0] == ':') parse_pos = &parse_pos[1];
+            else if (parse_pos[0]) parse_err = 1;
+        }
     }
-    else
-    {
-	    slice_height = 4;
+    if (parse_err) {
+      mp_msg(MSGT_VO, MSGL_ERR,
+              "\n-vo gl command line help:\n"
+              "Example: mplayer -vo gl:slice-height=4\n"
+              "\nOptions:\n"
+              "  manyfmts\n"
+              "    Enable extended color formats for OpenGL 1.2 and later\n"
+              "  slice-height=<0-...>\n"
+              "    Slice size for texture transfer, 0 for whole image\n"
+              "\n" );
+      return -1;
     }
-    printf("[vo_gl] Using %d as slice_height (0 means image_height).\n", slice_height);
-
+    if (many_fmts)
+      mp_msg (MSGT_VO, MSGL_WARN, "[gl] using extended formats.\n"
+               "Make sure you have OpenGL >= 1.2 and used corresponding "
+               "headers for compiling!\n");
+    mp_msg (MSGT_VO, MSGL_INFO, "[gl] Using %d as slice height "
+             "(0 means image height).\n", slice_height);
     if( !vo_init() ) return -1; // Can't open X11
 
     return 0;

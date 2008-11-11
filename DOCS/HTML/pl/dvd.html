@@ -1,11 +1,11 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html><head><meta content="text/html; charset=ISO-8859-1" http-equiv="Content-Type"><title>5.2. Odtwarzanie DVD</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.50.0"><link rel="home" href="index.html" title="MPlayer - Odtwarzacz filmów dla LINUKSA"><link rel="up" href="cd-dvd.html" title="Rozdzia&#322; 5. U&#380;ywanie CD/DVD"><link rel="previous" href="drives.html" title="5.1. Nap&#281;dy CD/DVD"><link rel="next" href="vcd.html" title="5.3. Odtwarzanie VCD"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">5.2. Odtwarzanie DVD</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="drives.html">Poprzedni</a> </td><th width="60%" align="center">Rozdzia&#322; 5. U&#380;ywanie CD/DVD</th><td width="20%" align="right"> <a accesskey="n" href="vcd.html">Nast&#281;pny</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="dvd"></a>5.2. Odtwarzanie DVD</h2></div></div><p>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>5.2. Odtwarzanie DVD</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - Odtwarzacz filmów dla LINUKSA"><link rel="up" href="cd-dvd.html" title="Rozdzia&#322; 5. U&#380;ywanie CD/DVD"><link rel="previous" href="drives.html" title="5.1. Nap&#281;dy CD/DVD"><link rel="next" href="vcd.html" title="5.3. Odtwarzanie VCD"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">5.2. Odtwarzanie DVD</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="drives.html">Poprzedni</a> </td><th width="60%" align="center">Rozdzia&#322; 5. U&#380;ywanie CD/DVD</th><td width="20%" align="right"> <a accesskey="n" href="vcd.html">Nast&#281;pny</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="dvd"></a>5.2. Odtwarzanie DVD</h2></div></div><p>
 Aby pozna&#263; pe&#322;n&#261; list&#281; dost&#281;pnych opcji, prosz&#281; przeczyta&#263; odpowiednie strony
 man. Sk&#322;adnia dla standardowego DVD (Digital Versatile Disc) jest nast&#281;puj&#261;ca:
 <pre class="screen">mplayer dvd://<i><tt>&lt;&#347;cie&#380;ka&gt;</tt></i> [-dvd-device <i><tt>&lt;urz&#261;dzenie&gt;</tt></i>]</pre>
 </p><p>
 Przyk&#322;ad:
-<pre class="screen">mplayer dvd://1 -dvd-device /dev/hdc</pre>
+<pre class="screen">mplayer dvd://<i><tt>1</tt></i> -dvd-device <i><tt>/dev/hdc</tt></i></pre>
+
 </p><p>
 Domy&#347;lnym urz&#261;dzeniem (device) DVD jest <tt class="filename">/dev/dvd</tt>. Je&#380;eli
 Twoje ustawienia s&#261; inne, stwórz odpowiedni symlink lub ustaw odpowiednie
@@ -30,16 +30,10 @@ inne tego typu us&#322;ugi.
 oraz <tt>libdvdcss</tt>, ale to rozwi&#261;zanie jest
 <span class="bold"><b>nie</b></span> zalecane, gdy&#380; mo&#380;e powodowa&#263; b&#322;&#281;dy,
 niekompatybilno&#347;ci bibliotek oraz zmniejszenie pr&#281;dko&#347;ci.
-</p><p><b>Obs&#322;uga DVD - stary sposób - OPCJONALNE. </b>
-U&#380;yteczne, je&#380;eli chcesz odtwarza&#263; zakodowane pliki VOB z
-<span class="bold"><b>twardego dysku</b></span>.
-W tym celu skompiluj i zainstaluj <span class="bold"><b>libcss</b></span> 0.0.1
-(nie nowsze) (Je&#380;eli MPlayer nie radzi sobie, u&#380;yj opcji
-<tt class="option">-csslib /&#347;cie&#380;ka/do/libcss.so</tt>). Aby u&#380;y&#263; tej metody musisz mie&#263;
-uprawnienia roota, binarka <span class="application">MPlayer</span> musi miec suid lub
-pozwól <span class="application">MPlayerowi</span> na uruchamianie owijacza (wrapper)
-fibmap_mplayer z suid-root.
-</p><p><b>Struktura dysku DVD. </b>
+</p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Notatka</h3><p>
+W przypadku problemów z dekodowaniem DVD, spróbuj wy&#322;&#261;czy&#263; supermount, b&#261;d&#378;
+inne tego typu udogodnienia.
+</p></div><p><b>Struktura dysku DVD. </b>
 Dyski DVD maj&#261; po 2048 bajtów na sektor z ECC/CRC. Zwykle posiadaj&#261; system
 plików UDF na pojedynczej &#347;cie&#380;ce zawieraj&#261;cej ró&#380;norakie pliki (ma&#322;e pliki .IFO
 i .BUK oraz du&#380;e (1GB) pliki .VOB).
@@ -97,10 +91,10 @@ Metoda autoryzacji i rozszyfrowywania u&#380;ywana gdy korzystamy z DVD przy u&#
 nowego sposobu polega na korzystaniu ze zmodyfikowanej biblioteki
 <tt>libdvdcss</tt> (patrz wy&#380;ej). Ta metoda mo&#380;e by&#263; okre&#347;lona
 poprzez zmienna &#347;rodowiskow&#261; <tt>DVDCSS_METHOD</tt>, która mo&#380;e by&#263;
-ustawiona na &quot;key&quot;, &quot;disk&quot; albo &quot;title&quot;.
+ustawiona na "key", "disk" albo "title".
 </p><p>
 Je&#380;eli &#380;adna warto&#347;&#263; nie jest ustawiona, próbowane s&#261; nast&#281;puj&#261;ce metody
-(domy&#347;lnie: &quot;key&quot;, &quot;title request&quot;):
+(domy&#347;lnie: "key", "title request"):
 </p><div class="orderedlist"><ol type="1"><li><p>
 <span class="bold"><b>bus key</b></span>: Ten klucz jest ustalany podczas
 autoryzacji (d&#322;uga mieszanina ioctl'i i rozmaite wymiany kluczy, bajery
@@ -117,7 +111,7 @@ wyszukuje ju&#380; z&#322;amane klucze tytu&#322;ów, które s&#261; przechowywane
 dost&#281;pny, <span class="application">MPlayer</span> próbuje rozszyfrowa&#263; klucz dyskowy
 korzystaj&#261;c z gar&#347;ci kluczy zaszytych w odtwarzaczu.
 </p></li><li><p>
-<span class="bold"><b>disk</b></span>: Je&#380;eli metoda &quot;key&quot; zawodzi (np. brak
+<span class="bold"><b>disk</b></span>: Je&#380;eli metoda "key" zawodzi (np. brak
 kluczy zaszytych w odtwarzaczu), <span class="application">MPlayer</span> z&#322;amie klucz
 dyskowy u&#380;ywaj&#261;c algorytmu ataku brutalnego. Proces ten jest bardzo
 procesoroch&#322;onny i wymaga 64 MB pami&#281;ci (16777216 (16*2^20) 32-bitowych pól
@@ -126,8 +120,8 @@ zawsze (niestety jest wolna).
 </p></li><li><p>
 <span class="bold"><b>title request</b></span>: Maj&#261;c klucz dyskowy
 <span class="application">MPlayer</span> pobiera zaszyfrowane klucze tytu&#322;owe (title
-key), które s&#261; zawarte w <span class="emphasis"><em>ukrytych sektorach (hidden
-sectors)</em></span> u&#380;ywaj&#261;c <tt>ioctl()</tt>. Ochrona
+key), które s&#261; zawarte w <span class="emphasis"><i>ukrytych sektorach (hidden
+sectors)</i></span> u&#380;ywaj&#261;c <tt>ioctl()</tt>. Ochrona
 regionalna w nap&#281;dach RPC-2 jest realizowana w tym kroku i mo&#380;e si&#281; nie uda&#263; na
 tych nap&#281;dach. Je&#347;li jednak si&#281; uda, klucze tytu&#322;owe zostaj&#261; rozszyfrowane przy
 u&#380;yciu magistrali i klucza dyskowego.
@@ -138,8 +132,8 @@ kluczy z nap&#281;dem DVD. U&#380;ywa ona ataku kryptograficznego w celu odgadni
 klucza tytu&#322;owego (title key) wprost (poprzez szukanie powtarzaj&#261;cego si&#281; ci&#261;gu
 znaków (wzoru) w rozszyfrowanej zawarto&#347;ci pliku VOB oraz poprzez zgadywanie, &#380;e
 czysty tekst odpowiadaj&#261;cy pierwszym zaszyfrowanym bajtom jest kontynuacj&#261;
-wzoru). Metoda ta jest tak&#380;e znana jako &quot;znany czysto-tekstowy atak (known
-plaintext attack)&quot; b&#261;d&#378; &quot;DeCSSPlus&quot;. Rzadko zdarza si&#281;, ale si&#281;
+wzoru). Metoda ta jest tak&#380;e znana jako "znany czysto-tekstowy atak (known
+plaintext attack)" b&#261;d&#378; "DeCSSPlus". Rzadko zdarza si&#281;, ale si&#281;
 zdarza, &#380;e metoda ta mo&#380;e zawie&#347;&#263; poniewa&#380; jest niewystarczaj&#261;co du&#380;o
 zaszyfrowanych danych na dysku aby spe&#322;ni&#263; za&#322;o&#380;enia statystycznego ataku lub
 poniewa&#380; klucz zmienia si&#281; w trakcie tytu&#322;u. Jest to jedyna metoda, aby

@@ -4,7 +4,8 @@ Sending patches:
 Note: We know our rules place a burden on you, but rest assured that
 maintaining a big and complex software project is even harder, so please
 accept our rules. We cannot afford to spend our time fixing buggy, broken or
-outdated patches.
+outdated patches. The closer you follow our rules the higher is the probability
+that your patch will be included.
 
 0. Do not send complete files. These need to be diffed by hand to see the
    changes, which makes reviews harder and less likely to occur. Besides as
@@ -31,8 +32,8 @@ outdated patches.
    the behavior of existing features, please do not forget to also update the
    documentation. The documentation maintainers will assist you in doing this.
    Updating the English documentation is enough. If you speak several languages
-   you are of course welcome to update others as well.
-   
+   you are of course welcome to update some of the translations as well.
+
 7. Send your patch to the mplayer-dev-eng mailing list as a base64-encoded
    attachment (use gzip or bzip2 *only* if it's bigger than 80k or if you know
    that your mailer messes up (reformats) text attachments) with the subject
@@ -64,5 +65,8 @@ outdated patches.
 
 11. If you made a nontrivial contribution and wish to be mentioned in the
     AUTHORS file, include that in your patch.
-   
+
+12. Do not compress your patch unless it is very large. It only makes handling
+    the patch more difficult.
+
 Thank you!

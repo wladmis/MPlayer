@@ -113,9 +113,15 @@ static void smb_auth_fn(const char *server, const char *share,
 
 stream_t* open_stream(char* filename,char** options, int* file_format){
 stream_t* stream=NULL;
+char *escfilename=NULL;
 int f=-1;
 off_t len;
-*file_format = DEMUXER_TYPE_UNKNOWN;
+
+  // Check if playlist or unknown 
+  if (*file_format != DEMUXER_TYPE_PLAYLIST){
+    *file_format=DEMUXER_TYPE_UNKNOWN;
+  }
+
 if(!filename) {
    mp_msg(MSGT_OPEN,MSGL_ERR,"NULL filename, report this bug\n");
    return NULL;
@@ -479,8 +485,13 @@ if(strncmp("dvd://",filename,6) == 0){
   if (strncmp("tv://", filename, 5) && strncmp("mf://", filename, 5) &&
     strncmp("vcd://", filename, 6) && strncmp("dvb://", filename, 6) &&
     strncmp("cdda://", filename, 7) && strncmp("cddb://", filename, 7) &&
-    strstr(filename, "://"))
-    url = url_new(filename);
+    strstr(filename, "://")) {
+     //fix filenames with special characters 
+     escfilename = malloc(strlen(filename)*4);
+     url_escape_string(escfilename,filename);
+     mp_msg(MSGT_OPEN,MSGL_V,"Filename for url is now %s\n",escfilename);
+     url = url_new(escfilename);
+    }
   if(url) {
 	if (strcmp(url->protocol, "smb")==0){
 #ifdef LIBSMBCLIENT
@@ -522,8 +533,8 @@ if(strncmp("dvd://",filename,6) == 0){
         stream=new_stream(f,STREAMTYPE_STREAM);
 	if( streaming_start( stream, file_format, url )<0){
           mp_msg(MSGT_OPEN,MSGL_ERR,MSGTR_UnableOpenURL, filename);
-	  //url_free(url);
-	  //return NULL;
+	  url_free(url);
+	  return NULL;
 	} else {
         mp_msg(MSGT_OPEN,MSGL_INFO,MSGTR_ConnToServer, url->hostname );
 	url_free(url);

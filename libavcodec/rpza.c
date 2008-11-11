@@ -53,12 +53,6 @@ typedef struct RpzaContext {
 
 } RpzaContext;
 
-#define BE_16(x)  ((((uint8_t*)(x))[0] << 8) | ((uint8_t*)(x))[1])
-#define BE_32(x)  ((((uint8_t*)(x))[0] << 24) | \
-                   (((uint8_t*)(x))[1] << 16) | \
-                   (((uint8_t*)(x))[2] << 8) | \
-                    ((uint8_t*)(x))[3])
-
 #define ADVANCE_BLOCK() \
 { \
     pixel_ptr += 4; \
@@ -254,15 +248,15 @@ static int rpza_decode_frame(AVCodecContext *avctx,
 {
     RpzaContext *s = (RpzaContext *)avctx->priv_data;
 
-	/* no supplementary picture */
-	if (buf_size == 0)
-		return 0;
+    /* no supplementary picture */
+    if (buf_size == 0)
+        return 0;
 
     s->buf = buf;
     s->size = buf_size;
 
     s->frame.reference = 1;
-	s->frame.buffer_hints = FF_BUFFER_HINTS_VALID | FF_BUFFER_HINTS_PRESERVE | FF_BUFFER_HINTS_REUSABLE;
+    s->frame.buffer_hints = FF_BUFFER_HINTS_VALID | FF_BUFFER_HINTS_PRESERVE | FF_BUFFER_HINTS_REUSABLE;
     if (avctx->reget_buffer(avctx, &s->frame)) {
         av_log(avctx, AV_LOG_ERROR, "reget_buffer() failed\n");
         return -1;

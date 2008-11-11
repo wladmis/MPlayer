@@ -1,6 +1,7 @@
 /*
  * Common bit i/o utils
  * Copyright (c) 2000, 2001 Fabrice Bellard.
+ * Copyright (c) 2002-2004 Michael Niedermayer <michaelni@gmx.at>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -44,33 +45,6 @@ const uint8_t ff_log2_tab[256]={
         7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7
 };
 
-void init_put_bits(PutBitContext *s, uint8_t *buffer, int buffer_size)
-{
-    s->buf = buffer;
-    s->buf_end = s->buf + buffer_size;
-#ifdef ALT_BITSTREAM_WRITER
-    s->index=0;
-    ((uint32_t*)(s->buf))[0]=0;
-//    memset(buffer, 0, buffer_size);
-#else
-    s->buf_ptr = s->buf;
-    s->bit_left=32;
-    s->bit_buf=0;
-#endif
-}
-
-#ifdef CONFIG_ENCODERS
-
-/* return the number of bits output */
-int get_bit_count(PutBitContext *s)
-{
-#ifdef ALT_BITSTREAM_WRITER
-    return s->index;
-#else
-    return (s->buf_ptr - s->buf) * 8 + 32 - s->bit_left;
-#endif
-}
-
 void align_put_bits(PutBitContext *s)
 {
 #ifdef ALT_BITSTREAM_WRITER
@@ -80,87 +54,17 @@ void align_put_bits(PutBitContext *s)
 #endif
 }
 
-#endif //CONFIG_ENCODERS
-
-/* pad the end of the output stream with zeros */
-void flush_put_bits(PutBitContext *s)
-{
-#ifdef ALT_BITSTREAM_WRITER
-    align_put_bits(s);
-#else
-    s->bit_buf<<= s->bit_left;
-    while (s->bit_left < 32) {
-        /* XXX: should test end of buffer */
-        *s->buf_ptr++=s->bit_buf >> 24;
-        s->bit_buf<<=8;
-        s->bit_left+=8;
-    }
-    s->bit_left=32;
-    s->bit_buf=0;
-#endif
-}
-
-#ifdef CONFIG_ENCODERS
-
-void put_string(PutBitContext * pbc, char *s)
+void put_string(PutBitContext * pbc, char *s, int put_zero)
 {
     while(*s){
         put_bits(pbc, 8, *s);
         s++;
     }
-    put_bits(pbc, 8, 0);
+    if(put_zero)
+        put_bits(pbc, 8, 0);
 }
 
 /* bit input functions */
-
-#endif //CONFIG_ENCODERS
-
-/**
- * init GetBitContext.
- * @param buffer bitstream buffer, must be FF_INPUT_BUFFER_PADDING_SIZE bytes larger then the actual read bits
- * because some optimized bitstream readers read 32 or 64 bit at once and could read over the end
- * @param bit_size the size of the buffer in bits
- */
-void init_get_bits(GetBitContext *s,
-                   const uint8_t *buffer, int bit_size)
-{
-    const int buffer_size= (bit_size+7)>>3;
-
-    s->buffer= buffer;
-    s->size_in_bits= bit_size;
-    s->buffer_end= buffer + buffer_size;
-#ifdef ALT_BITSTREAM_READER
-    s->index=0;
-#elif defined LIBMPEG2_BITSTREAM_READER
-#ifdef LIBMPEG2_BITSTREAM_READER_HACK
-  if ((int)buffer&1) {
-     /* word alignment */
-    s->cache = (*buffer++)<<24;
-    s->buffer_ptr = buffer;
-    s->bit_count = 16-8;
-  } else
-#endif
-  {
-    s->buffer_ptr = buffer;
-    s->bit_count = 16;
-    s->cache = 0;
-  }
-#elif defined A32_BITSTREAM_READER
-    s->buffer_ptr = (uint32_t*)buffer;
-    s->bit_count = 32;
-    s->cache0 = 0;
-    s->cache1 = 0;
-#endif
-    {
-        OPEN_READER(re, s)
-        UPDATE_CACHE(re, s)
-        UPDATE_CACHE(re, s)
-        CLOSE_READER(re, s)
-    }
-#ifdef A32_BITSTREAM_READER
-    s->cache1 = 0;
-#endif
-}
 
 /** 
  * reads 0-32 bits.

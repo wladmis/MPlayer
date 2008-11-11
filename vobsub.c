@@ -1224,7 +1224,7 @@ vobsub_set_from_lang(void *vobhandle, unsigned char * lang)
 	  }
       lang+=2;while (lang[0]==',' || lang[0]==' ') ++lang;
     }
-    mp_msg(MSGT_VOBSUB, MSGL_WARN, "No matching VOBSUB languge found!\n");
+    mp_msg(MSGT_VOBSUB, MSGL_WARN, "No matching VOBSUB language found!\n");
     return -1;
 }
     
@@ -1274,6 +1274,9 @@ void vobsub_seek(void * vobhandle, float pts)
   int seek_pts100 = (int)pts * 90000;
 
   if (vob->spu_streams && 0 <= vobsub_id && (unsigned) vobsub_id < vob->spu_streams_size) {
+    /* do not seek if we don't know the id */
+    if (vobsub_get_id(vob, vobsub_id) == NULL)
+	    return;
     queue = vob->spu_streams + vobsub_id;
     queue->current_index = 0;
     while ((queue->packets + queue->current_index)->pts100 < seek_pts100)

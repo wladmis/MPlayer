@@ -1,5 +1,5 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html><head><meta content="text/html; charset=ISO-8859-1" http-equiv="Content-Type"><title>D.2. El archivo de skin</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.50.0"><link rel="home" href="index.html" title="MPlayer - El reproductor de Películas para LINUX"><link rel="up" href="skin.html" title="Apéndice D. Formato del skin de MPlayer"><link rel="previous" href="skin-overview.html" title="D.1. Visión general"><link rel="next" href="skin-fonts.html" title="D.3. Tipografías"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">D.2. El archivo de skin</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="skin-overview.html">Anterior</a> </td><th width="60%" align="center">Apéndice D. Formato del skin de MPlayer</th><td width="20%" align="right"> <a accesskey="n" href="skin-fonts.html">Siguiente</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="skin-file"></a>D.2. El archivo de skin</h2></div></div><p>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>D.2. El archivo de skin</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - El reproductor de Películas
+para LINUX"><link rel="up" href="skin.html" title="Apéndice D. Formato del skin de MPlayer"><link rel="previous" href="skin-overview.html" title="D.1. Visión general"><link rel="next" href="skin-fonts.html" title="D.3. Tipografías"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">D.2. El archivo de skin</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="skin-overview.html">Anterior</a> </td><th width="60%" align="center">Apéndice D. Formato del skin de MPlayer</th><td width="20%" align="right"> <a accesskey="n" href="skin-fonts.html">Siguiente</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="skin-file"></a>D.2. El archivo de skin</h2></div></div><p>
 Como se menciona más arriba, este es el archivo de configuración del skin.
 Su orientación en lineal; las líneas que son comentarios comienzan por
 un caracter '<tt>;</tt>' al principio de la línea (solo espacios
@@ -65,7 +65,8 @@ end
 El nombre de un archivo de imagen se debe dar sin los directorios - las imágenes
 se buscan en el directorio <tt class="filename">Skin</tt>.
 También puede (pero necesita ser root) especificar la extensión del archivo. Si
-el archivo no existe, MPlayer intentará cargar el archivo
+el archivo no existe, <span class="application">MPlayer</span> intentará cargar el
+archivo
 <tt class="filename">&lt;filename&gt;.&lt;ext&gt;</tt>, donde <tt>png</tt>
 y <tt>PNG</tt> son probados para <tt class="filename">&lt;ext&gt;</tt>
 (en ese orden). El primer nombre de archivo que coincida será el que se use.
@@ -87,7 +88,8 @@ es a la derecha o abajo, como se muestra en la ilustracion:
 Aquí tiene un ejemplo para clarificar esto. Suponga que tiene una imagen llamada
 <tt class="filename">main.png</tt> que usa para la ventana principal:
 <pre class="programlisting">base = main, -1, -1</pre>
-MPlayer intentará cargar los archivos <tt class="filename">main</tt>, <tt class="filename">main.png</tt>,
+<span class="application">MPlayer</span> intentará cargar los archivos
+<tt class="filename">main</tt>, <tt class="filename">main.png</tt>,
 <tt class="filename">main.PNG</tt>.
 </p><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="skin-file-main"></a>D.2.1. Ventana principal y barra de reproducción</h3></div></div><p>
 Más abajo tiene la lista de entradas que pueden usarse en los bloques
@@ -182,15 +184,15 @@ la extensión aquí). <tt>fontid</tt> es usado para referirse a la tipografía
 (vea <a href="skin-file.html#skin-dlabel">dlabel</a> y <a href="skin-file.html#skin-slabel">slabel</a>).
 Pueden definirse hasta 25 tipografías.
     </p></dd><dt><span class="term"><tt>
-  <a name="skin-slabel"></a>slabel = X, Y, fontid, &quot;text&quot;
+  <a name="skin-slabel"></a>slabel = X, Y, fontid, "text"
   </tt></span></dt><dd><p>
 Coloca una etiqueta estática en la posición <tt>X,Y</tt>. <tt>text</tt>
 se muestra usando la tipografía identificada con <tt>fontid</tt>. El texto es
 una cadena de texto en crudo (variables como <tt>$x</tt> no funcionarán) que debe
-ser encerrada entre comillas dobles (el caracter &quot; no puede ser parte del texto).
+ser encerrada entre comillas dobles (el caracter " no puede ser parte del texto).
 La etiqueta es mostrada usando la tipografía identificada por <tt>fontid</tt>.
     </p></dd><dt><span class="term"><tt>
-  <a name="skin-dlabel"></a>dlabel = X, Y, length, align, fontid, &quot;text&quot;
+  <a name="skin-dlabel"></a>dlabel = X, Y, length, align, fontid, "text"
   </tt></span></dt><dd><p>
 Coloca una etiqueta dinámica en la posición <tt>X,Y</tt>. La etiqueta se
 llama dinámica porque su texto es refrescado periódicamente. La longitud máxima de la
@@ -201,10 +203,10 @@ si no será alineado dentro del espacio especificado por el valor del parámetro
 <tt>1</tt> para centrado, <tt>2</tt> para izquierda.
 </p><p>
 El texto que ha de ser mostrado viene dado por <tt>text</tt>: Debe ser
-escrito entre comillas dobles (por eso el caracter &quot; no puede ser parte del
+escrito entre comillas dobles (por eso el caracter " no puede ser parte del
 texto). La etiqueta es mostrada usando la tipografía identificada por
 <tt>fontid</tt>. Puede usar las siguientes variables en el texto:
-</p><div class="informaltable"><table border="1"><colgroup><col><col></colgroup><thead><tr><th>Variable</th><th>Significado</th></tr></thead><tbody><tr><td>$1</td><td>tiempo de reproducción en formato <span class="emphasis"><em>hh:mm:ss</em></span></td></tr><tr><td>$2</td><td>tiempo de reproducción en formato <span class="emphasis"><em>mmmm:ss</em></span></td></tr><tr><td>$3</td><td>tiempo de reproducción en formato <span class="emphasis"><em>hh</em></span> (horas)</td></tr><tr><td>$4</td><td>tiempo de reproducción en formato<span class="emphasis"><em>mm</em></span> (minutos)</td></tr><tr><td>$5</td><td>tiempo de reproducción en formato <span class="emphasis"><em>ss</em></span> (segundos)</td></tr><tr><td>$6</td><td>longitud de película en formato <span class="emphasis"><em>hh:mm:ss</em></span></td></tr><tr><td>$7</td><td>longitud de película en formato <span class="emphasis"><em>mmmm:ss</em></span></td></tr><tr><td>$8</td><td>tiempo de reproducción en formato <span class="emphasis"><em>h:mm:ss</em></span></td></tr><tr><td>$v</td><td>volumen en formato <span class="emphasis"><em>xxx.xx</em></span>%</td></tr><tr><td>$V</td><td>volumen en formato <span class="emphasis"><em>xxx.xx</em></span></td></tr><tr><td>$b</td><td>balance en formato <span class="emphasis"><em>xxx.xx</em></span>%</td></tr><tr><td>$B</td><td>balance en formato <span class="emphasis"><em>xxx.xx</em></span></td></tr><tr><td>$$</td><td>el caracter $</td></tr><tr><td>$a</td><td>un caracter de acuerdo con el tipo de audio (ninguno: <tt>n</tt>,
+</p><div class="informaltable"><table border="1"><colgroup><col><col></colgroup><thead><tr><th>Variable</th><th>Significado</th></tr></thead><tbody><tr><td>$1</td><td>tiempo de reproducción en formato <span class="emphasis"><i>hh:mm:ss</i></span></td></tr><tr><td>$2</td><td>tiempo de reproducción en formato <span class="emphasis"><i>mmmm:ss</i></span></td></tr><tr><td>$3</td><td>tiempo de reproducción en formato <span class="emphasis"><i>hh</i></span> (horas)</td></tr><tr><td>$4</td><td>tiempo de reproducción en formato<span class="emphasis"><i>mm</i></span> (minutos)</td></tr><tr><td>$5</td><td>tiempo de reproducción en formato <span class="emphasis"><i>ss</i></span> (segundos)</td></tr><tr><td>$6</td><td>longitud de película en formato <span class="emphasis"><i>hh:mm:ss</i></span></td></tr><tr><td>$7</td><td>longitud de película en formato <span class="emphasis"><i>mmmm:ss</i></span></td></tr><tr><td>$8</td><td>tiempo de reproducción en formato <span class="emphasis"><i>h:mm:ss</i></span></td></tr><tr><td>$v</td><td>volumen en formato <span class="emphasis"><i>xxx.xx</i></span>%</td></tr><tr><td>$V</td><td>volumen en formato <span class="emphasis"><i>xxx.xx</i></span></td></tr><tr><td>$b</td><td>balance en formato <span class="emphasis"><i>xxx.xx</i></span>%</td></tr><tr><td>$B</td><td>balance en formato <span class="emphasis"><i>xxx.xx</i></span></td></tr><tr><td>$$</td><td>el caracter $</td></tr><tr><td>$a</td><td>un caracter de acuerdo con el tipo de audio (ninguno: <tt>n</tt>,
 mono: <tt>m</tt>, estéreo: <tt>t</tt>)</td></tr><tr><td>$t</td><td>número de pista (en lista de reproducción)</td></tr><tr><td>$o</td><td>nombre del archivo</td></tr><tr><td>$f</td><td>nombre del archivo en minúsculas</td></tr><tr><td>$F</td><td>nombre del archivo en mayúsculas</td></tr><tr><td>$T</td><td>un caracter en función del tipo de flujo (archivo: <tt>f</tt>,
 Video CD: <tt>v</tt>, DVD: <tt>d</tt>, URL: <tt>u</tt>)</td></tr><tr><td>$p</td><td>el caracter <span class="keycap"><b>p</b></span> (si una película está siendo mostrada y la
 tipografía tiene el caracter <span class="keycap"><b>p</b></span></td></tr><tr><td>$s</td><td>el caracter <span class="keycap"><b>s</b></span> (si la película ha sido detenida y la

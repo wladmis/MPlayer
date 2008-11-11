@@ -17,7 +17,9 @@
 
 #include "video_out.h"
 #include "aspect.h"
+#include "geometry.h"
 #include "help_mp.h"
+#include "../osdep/timer.h"
 
 #include <X11/Xmd.h>
 #include <X11/Xlib.h>
@@ -57,6 +59,7 @@
  
 int fs_layer=WIN_LAYER_ABOVE_DOCK;
 static int orig_layer=0;
+static int old_gravity = NorthWestGravity;
 
 int stop_xscreensaver=0;
 
@@ -75,6 +78,7 @@ int WinID=-1;
 int vo_mouse_autohide = 0;
 int vo_wm_type = 0;
 static int vo_fs_type = 0;
+static int vo_fs_flip = 0;
 char** vo_fstype_list;
 
 /* if equal to 1 means that WM is a metacity (broken as hell) */
@@ -479,6 +483,8 @@ void vo_x11_putkey(int key){
    case wsF8:        mplayer_put_key(KEY_F+8); break;
    case wsF9:        mplayer_put_key(KEY_F+9); break;
    case wsF10:       mplayer_put_key(KEY_F+10); break;
+   case wsF11:       mplayer_put_key(KEY_F+11); break;
+   case wsF12:       mplayer_put_key(KEY_F+12); break;
    case wsq:
    case wsQ:         mplayer_put_key('q'); break;
    case wsp:
@@ -604,18 +610,14 @@ extern int          vo_screenheight;
 static MotifWmHints   vo_MotifWmHints;
 static Atom           vo_MotifHints  = None;
 
-// Note: always d==0 !
 void vo_x11_decoration( Display * vo_Display,Window w,int d )
 {
-
+	static unsigned int olddecor = MWM_DECOR_ALL;
+	static unsigned int oldfuncs = MWM_FUNC_MOVE | MWM_FUNC_CLOSE | MWM_FUNC_MINIMIZE | MWM_FUNC_MAXIMIZE | MWM_FUNC_RESIZE;
+	Atom mtype;
+	int  mformat;
+	unsigned long mn,mb;
   if ( !WinID ) return;
-
-  if(vo_fsmode&1){
-    XSetWindowAttributes attr;
-    attr.override_redirect = (!d) ? True : False;
-    XChangeWindowAttributes(vo_Display, w, CWOverrideRedirect, &attr);
-//    XMapWindow(vo_Display, w);
-  }
 
   if(vo_fsmode&8){
     XSetTransientForHint (vo_Display, w, RootWindow(vo_Display,mScreen));
@@ -624,12 +626,26 @@ void vo_x11_decoration( Display * vo_Display,Window w,int d )
  vo_MotifHints=XInternAtom( vo_Display,"_MOTIF_WM_HINTS",0 );
  if ( vo_MotifHints != None )
   {
+	  if (!d) {
+		  MotifWmHints *mhints=NULL;
+		  XGetWindowProperty(vo_Display,w, vo_MotifHints, 0, 20, False,
+				  vo_MotifHints, &mtype, &mformat, &mn,
+				  &mb, (unsigned char **)&mhints) ;
+		  if (mhints){
+			  if (mhints->flags & MWM_HINTS_DECORATIONS)
+				  olddecor = mhints->decorations;
+			  if (mhints->flags & MWM_HINTS_FUNCTIONS)
+				  oldfuncs = mhints->functions;
+			  XFree (mhints);
+		  }
+	  }
+
    memset( &vo_MotifWmHints,0,sizeof( MotifWmHints ) );
    vo_MotifWmHints.flags=MWM_HINTS_FUNCTIONS | MWM_HINTS_DECORATIONS;
    if ( d )
     {
-     vo_MotifWmHints.functions=MWM_FUNC_MOVE | MWM_FUNC_CLOSE | MWM_FUNC_MINIMIZE | MWM_FUNC_MAXIMIZE | MWM_FUNC_RESIZE;
-     d=MWM_DECOR_ALL;
+     vo_MotifWmHints.functions= oldfuncs;
+     d=olddecor;
     }
 #if 0
    vo_MotifWmHints.decorations=d|((vo_fsmode&2)?0:MWM_DECOR_MENU);
@@ -796,6 +812,11 @@ int vo_x11_check_events(Display *mydisplay){
 	    XFree( name );
 	   }
 	   break;
+      case MapNotify:
+		vo_hint.win_gravity = old_gravity;
+		XSetWMNormalHints( mDisplay,vo_window,&vo_hint );
+		vo_fs_flip = 0;
+	   break;
      }
   }
   return ret;
@@ -819,6 +840,12 @@ void vo_x11_sizehint( int x, int y, int width, int height, int max )
    vo_hint.max_width=width; vo_hint.max_height=height;
    vo_hint.flags|=PMaxSize;
   } else { vo_hint.max_width=0; vo_hint.max_height=0; }
+
+ // set min height/width to 4 to avoid off by one errors
+ // and because mga_vid requires a minial size of 4 pixel
+ vo_hint.min_width = vo_hint.min_height = 4; 
+ vo_hint.flags |= PMinSize;
+
  vo_hint.win_gravity=StaticGravity;
  XSetWMNormalHints( mDisplay,vo_window,&vo_hint );
 }
@@ -1031,7 +1058,7 @@ void vo_x11_fullscreen( void )
 {
  int x,y,w,h;
 
- if ( WinID >= 0 ) return;
+ if ( WinID >= 0 || vo_fs_flip) return;
 
  if ( vo_fs ){
    // fs->win
@@ -1046,16 +1073,28 @@ void vo_x11_fullscreen( void )
    vo_fs=VO_TRUE;
    vo_old_x=vo_dx; vo_old_y=vo_dy; vo_old_width=vo_dwidth; vo_old_height=vo_dheight;
    x=0; y=0; w=vo_screenwidth; h=vo_screenheight;
+ 
  }
+ {
+	long dummy;
+	XGetWMNormalHints(mDisplay, vo_window, &vo_hint, &dummy);
+	if (!(vo_hint.flags & PWinGravity))
+		old_gravity = NorthWestGravity;
+	else
+		old_gravity = vo_hint.win_gravity;
+ }
+ if(vo_wm_type==0 && !(vo_fsmode&16)) {
+    XUnmapWindow( mDisplay,vo_window );  // required for MWM
+    XWithdrawWindow(mDisplay,vo_window,mScreen);
+    vo_fs_flip = 1;
+ }
+
  vo_x11_decoration( mDisplay,vo_window,(vo_fs) ? 0 : 1 );
  vo_x11_sizehint( x,y,w,h,0 );
  vo_x11_setlayer( mDisplay,vo_window,vo_fs );
 
  if ((!(vo_fs)) & vo_ontop) vo_x11_setlayer(mDisplay, vo_window,vo_ontop);
 
- if(vo_wm_type==0 && !(vo_fsmode&16))
-//    XUnmapWindow( mDisplay,vo_window );  // required for MWM
-      XWithdrawWindow(mDisplay,vo_window,mScreen);
  XMoveResizeWindow( mDisplay,vo_window,x,y,w,h );
 #ifdef HAVE_XINERAMA
  vo_x11_xinerama_move(mDisplay,vo_window);
@@ -1134,14 +1173,15 @@ static Window xs_windowid = 0;
 static Atom deactivate;
 static Atom screensaver;
 
-static float time_last;
+static unsigned int time_last;
 
-void xscreensaver_heartbeat(float time)
+void xscreensaver_heartbeat(void)
 {
+    unsigned int time = GetTimerMS();
     XEvent ev;
 
     if (mDisplay && xs_windowid &&
-	((time - time_last)>30 ||
+	((time - time_last)>30000 ||
 	 (time - time_last)<0)) {
 	time_last = time;
 
@@ -1303,7 +1343,7 @@ void vo_x11_selectinput_witherr(Display *display, Window w, long event_mask)
 #ifdef HAVE_XINERAMA
 void vo_x11_xinerama_move(Display *dsp, Window w)
 {
-	if(XineramaIsActive(dsp))
+	if(XineramaIsActive(dsp) && ! geometry_xy_changed)
 	{
 		 /* printf("XXXX Xinerama screen: x: %hd y: %hd\n",xinerama_x,xinerama_y); */
 		XMoveWindow(dsp,w,xinerama_x,xinerama_y);

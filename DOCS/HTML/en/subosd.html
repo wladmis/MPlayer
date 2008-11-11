@@ -1,13 +1,12 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html><head><meta content="text/html; charset=ISO-8859-1" http-equiv="Content-Type"><title>1.4. Subtitles and OSD</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.50.0"><link rel="home" href="index.html" title="MPlayer - The Movie Player for LINUX"><link rel="up" href="intro.html" title="Chapter 1. Introduction"><link rel="previous" href="gui.html" title="1.3. What about the GUI?"><link rel="next" href="rtc.html" title="1.5. RTC"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">1.4. Subtitles and OSD</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="gui.html">Prev</a> </td><th width="60%" align="center">Chapter 1. Introduction</th><td width="20%" align="right"> <a accesskey="n" href="rtc.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="subosd"></a>1.4. Subtitles and OSD</h2></div></div><p>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>1.4. Subtitles and OSD</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - The Movie Player for LINUX"><link rel="up" href="intro.html" title="Chapter 1. Introduction"><link rel="previous" href="gui.html" title="1.3. What about the GUI?"><link rel="next" href="rtc.html" title="1.5. RTC"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">1.4. Subtitles and OSD</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="gui.html">Prev</a> </td><th width="60%" align="center">Chapter 1. Introduction</th><td width="20%" align="right"> <a accesskey="n" href="rtc.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="subosd"></a>1.4. Subtitles and OSD</h2></div></div><p>
 <span class="application">MPlayer</span> can display subtitles along with movie files.
 Currently the following formats are supported:
-</p><div class="itemizedlist"><ul type="disc"><li><p>VobSub</p></li><li><p>OGM</p></li><li><p>CC (closed caption)</p></li><li><p>Microdvd</p></li><li><p>SubRip</p></li><li><p>SubViewer</p></li><li><p>Sami</p></li><li><p>VPlayer</p></li><li><p>RT</p></li><li><p>SSA</p></li><li><p><a href="subosd.html#mpsub" title="1.4.1. MPlayer's own subtitle format (MPsub)">MPsub</a></p></li><li><p>AQTitle</p></li><li><p><a href="http://unicorn.us.com/jacosub/" target="_top">JACOsub</a></p></li></ul></div><p>
+</p><div class="itemizedlist"><ul type="disc"><li><p>VobSub</p></li><li><p>OGM</p></li><li><p>CC (closed caption)</p></li><li><p>MicroDVD</p></li><li><p>SubRip</p></li><li><p>SubViewer</p></li><li><p>Sami</p></li><li><p>VPlayer</p></li><li><p>RT</p></li><li><p>SSA</p></li><li><p>PJS (Phoenix Japanimation Society)</p></li><li><p><a href="subosd.html#mpsub" title="1.4.1. MPlayer's own subtitle format (MPsub)">MPsub</a></p></li><li><p>AQTitle</p></li><li><p><a href="http://unicorn.us.com/jacosub/" target="_top">JACOsub</a></p></li></ul></div><p>
 </p><p>
 <span class="application">MPlayer</span> can dump the previously listed subtitle formats
 (<span class="bold"><b>except the three first</b></span>) into the following
 destination formats, with the given options:
-</p><div class="itemizedlist"><ul type="disc"><li><p>MPsub: <tt class="option">-dumpmpsub</tt></p></li><li><p>SubRip: <tt class="option">-dumpsrtsub</tt></p></li><li><p>Microdvd: <tt class="option">-dumpmicrodvdsub</tt></p></li><li><p>JACOsub: <tt class="option">-dumpjacosub</tt></p></li><li><p>Sami: <tt class="option">-dumpsami</tt></p></li></ul></div><p>
+</p><div class="itemizedlist"><ul type="disc"><li><p>MPsub: <tt class="option">-dumpmpsub</tt></p></li><li><p>SubRip: <tt class="option">-dumpsrtsub</tt></p></li><li><p>MicroDVD: <tt class="option">-dumpmicrodvdsub</tt></p></li><li><p>JACOsub: <tt class="option">-dumpjacosub</tt></p></li><li><p>Sami: <tt class="option">-dumpsami</tt></p></li></ul></div><p>
 </p><p>
 <span class="application">MEncoder</span> can dump DVD subtitles into
 <a href="menc-feat-extractsub.html" title="7.8. Extracting DVD subtitles to Vobsub file">VobSub</a> format.
@@ -16,10 +15,12 @@ The command line options differ slightly for the different formats:
 </p><p><b>VobSub subtitles. </b>
 VobSub subtitles consist of a big (some megabytes) <tt class="filename">.SUB</tt> file,
 and optional <tt class="filename">.IDX</tt> and/or <tt class="filename">.IFO</tt>
-files.  If you have files like <tt class="filename">sample.sub</tt>,
-<tt class="filename">sample.ifo</tt> (optional), <tt class="filename">sample.idx</tt> -
-you have to pass <span class="application">MPlayer</span> the
-<tt class="option">-vobsub sample [-vobsubid <i><tt>id</tt></i>]</tt> options
+files.  If you have files like
+<tt class="filename"><i><tt>sample.sub</tt></i></tt>,
+<tt class="filename"><i><tt>sample.ifo</tt></i></tt> (optional),
+<tt class="filename"><i><tt>sample.idx</tt></i></tt> - you have to pass
+<span class="application">MPlayer</span> the <tt class="option">-vobsub sample
+[-vobsubid <i><tt>id</tt></i>]</tt> options
 (full path optional). The <tt class="option">-vobsubid</tt> option is like
 <tt class="option">-sid</tt> for DVDs, you can choose between subtitle tracks
 (languages) with it. In case that <tt class="option">-vobsubid</tt> is omitted,
@@ -30,9 +31,10 @@ there will be no subtitles.
 </p><p><b>Other subtitles. </b>
 The other formats consist of a single text file containing timing,
 placement and text information. Usage: If you have a file like
-<tt class="filename">sample.txt</tt>, you have to pass the option <tt class="option">-sub
-sample.txt</tt> (full path optional).
-</p><div class="variablelist"><p class="title"><b>Adjusting subtitle timing and placement:</b></p><dl><dt><span class="term"><tt class="option">-subdelay <i><tt>sec</tt></i></tt></span></dt><dd>
+<tt class="filename"><i><tt>sample.txt</tt></i></tt>,
+you have to pass the option <tt class="option">-sub
+<i><tt>sample.txt</tt></i></tt> (full path optional).
+</p><div class="variablelist"><p><b>Adjusting subtitle timing and placement:</b></p><dl><dt><span class="term"><tt class="option">-subdelay <i><tt>sec</tt></i></tt></span></dt><dd>
     Delays subtitles by <tt class="option"><i><tt>sec</tt></i></tt> seconds.
     Can be negative.
     </dd><dt><span class="term"><tt class="option">-subfps <i><tt>RATE</tt></i></tt></span></dt><dd>
@@ -55,7 +57,7 @@ About DVD subtitles, read the <a href="dvd.html" title="5.2. DVD playback">DVD</
 </p><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="mpsub"></a>1.4.1. <span class="application">MPlayer's</span> own subtitle format (MPsub)</h3></div></div><p>
 <span class="application">MPlayer</span> introduces a new subtitle format called
 <span class="bold"><b>MPsub</b></span>. It was designed by Gabucino. Basically
-its main feature is being <span class="emphasis"><em>dynamically</em></span> time-based (although
+its main feature is being <span class="emphasis"><i>dynamically</i></span> time-based (although
 it has frame-based mode too).  Example (from <a href="../../tech/mpsub.sub" target="_top">DOCS/tech/mpsub.sub</a>):
 <pre class="programlisting">
 FORMAT=TIME
@@ -75,7 +77,7 @@ So you see, the main goal was to <span class="bold"><b>make subtitle
 editing/timing/joining/cutting easy</b></span>. And, if you - say - get an
 SSA subtitle but it's badly timed/delayed to your version of the movie, you
 simply do a
-<pre class="screen">mplayer dummy.avi -sub source.ssa -dumpmpsub</pre>
+<pre class="screen">mplayer <i><tt>dummy.avi</tt></i> -sub source.ssa -dumpmpsub</pre>
 A <tt class="filename">dump.mpsub</tt> file will be created in the
 current directory, which will contain the source subtitle's text, but in
 <span class="bold"><b>MPsub</b></span> format. Then you can freely add/subtract
@@ -92,23 +94,26 @@ OSD/SUB feature. There are many ways to get it:
   convert from TTF/Type1/etc font to mplayer font pkg (read
   <tt class="filename">TOOLS/subfont-c/README</tt> for details).
   </p></li><li><p>
-  Use the font generator GIMP plugin at <tt class="filename">TOOLS/subfont-GIMP</tt> (note: you must have HSI
-  RAW plugin too, see URL below).
-  
+  Use the font generator <span class="application">GIMP</span> plugin at <tt class="filename">TOOLS/subfont-GIMP</tt> (note: you must have HSI
+  RAW plugin too, see <a href="http://realtime.ssu.ac.kr/~lethean/mplayer/" target="_top">http://realtime.ssu.ac.kr/~lethean/mplayer/</a>).
  </p></li><li><p>
   using a TrueType (TTF) font, by the means of the <tt>freetype</tt>
   library. Version 2.0.9 or greater is mandatory! Then you have two methods:
   </p><div class="itemizedlist"><ul type="round"><li><p>
-      use the <tt class="option">-font /path/to/arial.ttf</tt> option to specify a
-      TrueType font file on every occasion
+      use the <tt class="option">-font <i><tt>/path/to/sample_font.ttf</tt></i></tt>
+      option to specify a TrueType font file on every occasion
       </p></li><li><p>
-      create a symlink:<pre class="screen">ln -s /path/to/arial.ttf ~/.mplayer/subfont.ttf</pre>
+      create a symlink:
+      <pre class="screen">ln -s <i><tt>/path/to/sample_font.ttf</tt></i> ~/.mplayer/subfont.ttf</pre>
       </p></li></ul></div><p>
   If <span class="application">MPlayer</span> was compiled with
   <tt>fontconfig</tt> support, the above methods
-  won't work, instead the <tt class="option">-font</tt> expects a fontconfig font name
-  and defaults to the sans-serif font. To get a list of fonts known to fontconfig,
-  use <b>fc-list</b>. Example: <tt class="option">-font 'Bitstream Vera Sans'</tt>
+  won't work, instead the <tt class="option">-font</tt> expects a
+  <tt>fontconfig</tt> font name
+  and defaults to the sans-serif font. To get a list of fonts known to 
+  <tt>fontconfig</tt>,
+  use <b>fc-list</b>. Example: <tt class="option">-font
+  <i><tt>'Bitstream Vera Sans'</tt></i></tt>
   </p></li><li><p>
   Download ready-to-use font packages from <span class="application">MPlayer</span>
   site. Note: currently available fonts are limited for ISO 8859-1/2 support,
@@ -122,12 +127,10 @@ OSD/SUB feature. There are many ways to get it:
   use <tt class="option">-utf8</tt> option or just name the subtitles file
   <tt class="filename">&lt;video_name&gt;.utf</tt> and have it in the same dir
   as the video file. Recoding from different codepages to UTF8 could be
-  
-  done by using <b>konwert</b> (Debian) or
-  <b>iconv</b> (Red Hat) programs.
+  done by using <b>konwert</b> or <b>iconv</b> programs.
   </p><p>
   
-  </p><div class="table"><p class="title"><b>Table 1.1. Some URLs</b></p><table summary="Some URLs" border="1"><colgroup><col><col></colgroup><thead><tr><th>URL</th><th>Comment</th></tr></thead><tbody><tr><td><a href="ftp://ftp.mplayerhq.hu/MPlayer/releases/fonts/" target="_top">ftp://ftp.mplayerhq.hu/MPlayer/releases/fonts/</a></td><td>
+  </p><div class="table"><p><b>Table 1.1. Some URLs</b></p><table summary="Some URLs" border="1"><colgroup><col><col></colgroup><thead><tr><th>URL</th><th>Comment</th></tr></thead><tbody><tr><td><a href="ftp://ftp.mplayerhq.hu/MPlayer/releases/fonts/" target="_top">ftp://ftp.mplayerhq.hu/MPlayer/releases/fonts/</a></td><td>
     ISO fonts
     </td></tr><tr><td><a href="ftp://ftp.mplayerhq.hu/MPlayer/contrib/fonts/" target="_top">ftp://ftp.mplayerhq.hu/MPlayer/contrib/fonts/</a></td><td>
     various fonts by users
@@ -137,14 +140,15 @@ OSD/SUB feature. There are many ways to get it:
 
   </p></li></ul></div><p>
 If you chose non-TTF fonts, UNZIP the file you downloaded to <tt class="filename">~/.mplayer</tt> or <tt class="filename">$PREFIX/share/mplayer</tt>. Then rename or symlink
-one of the extracted directories to <tt class="filename">font</tt>, for example:
+one of the extracted directories to <tt class="filename">font</tt>,
+for example:
 
-<pre class="screen">ln -s ~/.mplayer/arial-24 ~/.mplayer/font</pre>
+<pre class="screen">ln -s <i><tt>~/.mplayer/arial-24</tt></i> ~/.mplayer/font</pre>
 
 Now you have to see a timer at the upper left corner of the movie (switch
 it off with the <span class="keycap"><b>o</b></span> key).
 </p><p>
-(subtitles are <span class="emphasis"><em>always enabled</em></span>, for disabling them please
+(subtitles are <span class="emphasis"><i>always enabled</i></span>, for disabling them please
 read the man page)
 </p><p>
 OSD has 4 states (switch with <span class="keycap"><b>o</b></span>):
@@ -166,7 +170,7 @@ variable in config file, or the <tt class="option">-osdlevel</tt> command line o
 <span class="application">MPlayer</span> has a completely user definiable OSD Menu interface.
 </p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
 the Preferences menu is currently UNIMPLEMENTED!
-</p></div><div class="orderedlist"><p class="title"><b>Installation</b></p><ol type="1"><li>
+</p></div><div class="orderedlist"><p><b>Installation</b></p><ol type="1"><li>
   compile <span class="application">MPlayer</span> by passing the <tt class="option">--enable-menu</tt>
   to <tt class="filename">./configure</tt>
   </li><li>
@@ -184,7 +188,7 @@ the Preferences menu is currently UNIMPLEMENTED!
   (it is described there).
   </li><li><p>
   start <span class="application">MPlayer</span> by the following example:
-  <pre class="screen">$ mplayer -menu file.avi</pre>
+  <pre class="screen">$ mplayer -menu <i><tt>file.avi</tt></i></pre>
   </p></li><li>
   push any menu key you defined
   </li></ol></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="gui.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="intro.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="rtc.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">1.3. What about the GUI? </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 1.5. RTC</td></tr></table></div></body></html>

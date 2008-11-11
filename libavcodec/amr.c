@@ -29,7 +29,7 @@
     The fixed-point (TS26.073) can be downloaded from:
     http://www.3gpp.org/ftp/Specs/archive/26_series/26.073/26073-510.zip
     Extract the soure into ffmpeg/libavcodec/amr
-    To use the fixed version run "./configure" with "--enable-amr-nb-fixed"
+    To use the fixed version run "./configure" with "--enable-amr_nb-fixed"
     
     The float version (default) can be downloaded from:
     http://www.3gpp.org/ftp/Specs/archive/26_series/26.104/26104-510.zip
@@ -43,7 +43,7 @@
     The reference code can be downloaded from:
     http://www.3gpp.org/ftp/Specs/archive/26_series/26.204/26204-510.zip
     It should be extracted to "libavcodec/amrwb_float". Enable it with
-    "--enable-amr-wb".
+    "--enable-amr_wb".
     
     The specification for amr-wb can be downloaded from:
     http://www.3gpp.org/ftp/Specs/archive/26_series/26.171/26171-500.zip
@@ -53,7 +53,6 @@
  
  */
 
-#include "../config.h"
 #include "avcodec.h"
 
 #ifdef AMR_NB_FIXED
@@ -141,7 +140,7 @@ static int amr_nb_decode_init(AVCodecContext * avctx)
     
     if(Speech_Decode_Frame_init(&s->speech_decoder_state, "Decoder"))
     {
-        printf("Speech_Decode_Frame_init error\n");
+        av_log(avctx, AV_LOG_ERROR, "Speech_Decode_Frame_init error\n");
         return -1;
     }
     return 0;
@@ -161,7 +160,7 @@ static int amr_nb_encode_init(AVCodecContext * avctx)
     {
         if(avctx->debug)
         {
-            fprintf(stderr, "Only 8000Hz sample rate supported\n");
+            av_log(avctx, AV_LOG_DEBUG, "Only 8000Hz sample rate supported\n");
         }
         return -1;
     }
@@ -170,7 +169,7 @@ static int amr_nb_encode_init(AVCodecContext * avctx)
     {
         if(avctx->debug)
         {
-            fprintf(stderr, "Only mono supported\n");
+            av_log(avctx, AV_LOG_DEBUG, "Only mono supported\n");
         }
         return -1;
     }
@@ -182,7 +181,7 @@ static int amr_nb_encode_init(AVCodecContext * avctx)
     {
         if(avctx->debug)
         {
-            fprintf(stderr, "Speech_Encode_Frame_init error\n");
+            av_log(avctx, AV_LOG_DEBUG, "Speech_Encode_Frame_init error\n");
         }
         return -1;
     }
@@ -344,7 +343,7 @@ static int amr_nb_decode_init(AVCodecContext * avctx)
     s->decState=Decoder_Interface_init();
     if(!s->decState)
     {
-        printf("Decoder_Interface_init error\r\n");
+        av_log(avctx, AV_LOG_ERROR, "Decoder_Interface_init error\r\n");
         return -1;
     }
     return 0;
@@ -359,7 +358,7 @@ static int amr_nb_encode_init(AVCodecContext * avctx)
     {
         if(avctx->debug)
         {
-            fprintf(stderr, "Only 8000Hz sample rate supported\n");
+            av_log(avctx, AV_LOG_DEBUG, "Only 8000Hz sample rate supported\n");
         }
         return -1;
     }
@@ -368,7 +367,7 @@ static int amr_nb_encode_init(AVCodecContext * avctx)
     {
         if(avctx->debug)
         {
-            fprintf(stderr, "Only mono supported\n");
+            av_log(avctx, AV_LOG_DEBUG, "Only mono supported\n");
         }
         return -1;
     }
@@ -381,7 +380,7 @@ static int amr_nb_encode_init(AVCodecContext * avctx)
     {
         if(avctx->debug)
         {
-            fprintf(stderr, "Encoder_Interface_init error\n");
+            av_log(avctx, AV_LOG_DEBUG, "Encoder_Interface_init error\n");
         }
         return -1;
     }
@@ -543,7 +542,7 @@ static int amr_wb_encode_init(AVCodecContext * avctx)
     {
         if(avctx->debug)
         {
-            fprintf(stderr, "Only 16000Hz sample rate supported\n");
+            av_log(avctx, AV_LOG_DEBUG, "Only 16000Hz sample rate supported\n");
         }
         return -1;
     }
@@ -552,7 +551,7 @@ static int amr_wb_encode_init(AVCodecContext * avctx)
     {
         if(avctx->debug)
         {
-            fprintf(stderr, "Only mono supported\n");
+            av_log(avctx, AV_LOG_DEBUG, "Only mono supported\n");
         }
         return -1;
     }

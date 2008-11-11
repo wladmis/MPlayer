@@ -82,6 +82,8 @@ typedef struct {
 
 static int get_buffer(AVCodecContext *avctx, AVFrame *pic);
 static void release_buffer(AVCodecContext *avctx, AVFrame *pic);
+static enum PixelFormat get_format(struct AVCodecContext * avctx, 
+                                   const enum PixelFormat * pix_fmt);
 
 #ifdef HAVE_XVMC
 static int mc_get_buffer(AVCodecContext *avctx, AVFrame *pic);
@@ -98,6 +100,7 @@ static int lavc_param_gray=0;
 static int lavc_param_vstats=0;
 static int lavc_param_idct_algo=0;
 static int lavc_param_debug=0;
+static int lavc_param_vismv=0;
 
 m_option_t lavc_decode_opts_conf[]={
 	{"bug", &lavc_param_workaround_bugs, CONF_TYPE_INT, CONF_RANGE, -1, 999999, NULL},
@@ -106,9 +109,8 @@ m_option_t lavc_decode_opts_conf[]={
 	{"idct", &lavc_param_idct_algo, CONF_TYPE_INT, CONF_RANGE, 0, 99, NULL},
 	{"ec", &lavc_param_error_concealment, CONF_TYPE_INT, CONF_RANGE, 0, 99, NULL},
 	{"vstats", &lavc_param_vstats, CONF_TYPE_FLAG, 0, 0, 1, NULL},
-#if LIBAVCODEC_BUILD >= 4642
 	{"debug", &lavc_param_debug, CONF_TYPE_INT, CONF_RANGE, 0, 9999999, NULL},
-#endif
+	{"vismv", &lavc_param_vismv, CONF_TYPE_INT, CONF_RANGE, 0, 9999999, NULL},
 	{NULL, NULL, 0, 0, 0, 0, NULL}
 };
 
@@ -137,7 +139,11 @@ static int control(sh_video_t *sh,int cmd,void* arg,...){
 #endif
 	}
         return CONTROL_FALSE;
-    }
+        }
+    break;
+    case VDCTRL_RESYNC_STREAM:
+        avcodec_flush_buffers(avctx);
+    return CONTROL_TRUE;
     }
     return CONTROL_UNKNOWN;
 }
@@ -147,6 +153,7 @@ static int init(sh_video_t *sh){
     AVCodecContext *avctx;
     vd_ffmpeg_ctx *ctx;
     AVCodec *lavc_codec;
+    int do_vis_debug= lavc_param_vismv || (lavc_param_debug&(FF_DEBUG_VIS_MB_TYPE|FF_DEBUG_VIS_QP));
 
     if(!avcodec_inited){
       avcodec_init();
@@ -165,10 +172,10 @@ static int init(sh_video_t *sh){
 	return 0;
     }
 
-    if(vd_use_slices && lavc_codec->capabilities&CODEC_CAP_DRAW_HORIZ_BAND)
+    if(vd_use_slices && (lavc_codec->capabilities&CODEC_CAP_DRAW_HORIZ_BAND) && !do_vis_debug)
 	ctx->do_slices=1;
  
-    if(lavc_codec->capabilities&CODEC_CAP_DR1)
+    if(lavc_codec->capabilities&CODEC_CAP_DR1 && !do_vis_debug)
 	ctx->do_dr1=1;
     ctx->b_age= ctx->ip_age[0]= ctx->ip_age[1]= 256*256*256*64;
     ctx->ip_count= ctx->b_count= 0;
@@ -187,11 +194,17 @@ static int init(sh_video_t *sh){
 #endif
 
 #ifdef HAVE_XVMC
+
+#ifdef CODEC_CAP_HWACCEL
+    if(lavc_codec->capabilities & CODEC_CAP_HWACCEL){
+#else
     if(lavc_codec->id == CODEC_ID_MPEG2VIDEO_XVMC){
-        printf("vd_ffmpeg: XVMC accelerated MPEG2\n");
+#endif
+        printf("vd_ffmpeg: XVMC accelerated codec\n");
         assert(ctx->do_dr1);//these are must to!
         assert(ctx->do_slices); //it is (vo_)ffmpeg bug if this fails
         avctx->flags|= CODEC_FLAG_EMU_EDGE;//do i need that??!!
+        avctx->get_format= get_format;//for now only this decoder will use it
         avctx->get_buffer= mc_get_buffer;
         avctx->release_buffer= mc_release_buffer;
         avctx->draw_horiz_band = mc_render_slice;
@@ -225,6 +238,9 @@ static int init(sh_video_t *sh){
 #if LIBAVCODEC_BUILD >= 4642
     avctx->debug= lavc_param_debug;
 #endif    
+#if LIBAVCODEC_BUILD >= 4698
+    avctx->debug_mv= lavc_param_vismv;
+#endif    
     mp_dbg(MSGT_DECVIDEO,MSGL_DBG2,"libavcodec.size: %d x %d\n",avctx->width,avctx->height);
     /* AVRn stores huffman table in AVI header */
     /* Pegasus MJPEG stores it also in AVI header, but it uses the common
@@ -253,6 +269,8 @@ static int init(sh_video_t *sh){
     if(   sh->format == mmioFOURCC('R', 'V', '1', '0')
        || sh->format == mmioFOURCC('R', 'V', '1', '3')
        || sh->format == mmioFOURCC('R', 'V', '2', '0')
+       || sh->format == mmioFOURCC('R', 'V', '3', '0')
+       || sh->format == mmioFOURCC('R', 'V', '4', '0')
        ){
         avctx->extradata_size= 8;
         avctx->extradata = malloc(avctx->extradata_size);
@@ -279,7 +297,11 @@ static int init(sh_video_t *sh){
 	 sh->format == mmioFOURCC('W','M','V','2') ||
 	 sh->format == mmioFOURCC('A','S','V','1') ||
 	 sh->format == mmioFOURCC('A','S','V','2') ||
-	 sh->format == mmioFOURCC('V','S','S','H')
+	 sh->format == mmioFOURCC('V','S','S','H') ||
+	 sh->format == mmioFOURCC('M','S','Z','H') ||
+	 sh->format == mmioFOURCC('Z','L','I','B') ||
+	 sh->format == mmioFOURCC('M','P','4','V') ||
+	 sh->format == mmioFOURCC('F','L','I','C')
          ))
     {
 	avctx->extradata_size = sh->bih->biSize-sizeof(BITMAPINFOHEADER);
@@ -410,7 +432,7 @@ static void draw_slice(struct AVCodecContext *s,
 }
 
 
-static int init_vo(sh_video_t *sh){
+static int init_vo(sh_video_t *sh, enum PixelFormat pix_fmt){
     vd_ffmpeg_ctx *ctx = sh->context;
     AVCodecContext *avctx = ctx->avctx;
 #if LIBAVCODEC_BUILD >= 4687
@@ -434,17 +456,18 @@ static int init_vo(sh_video_t *sh){
 	sh->disp_w = avctx->width;
 	sh->disp_h = avctx->height;
 	ctx->vo_inited=1;
-	switch(avctx->pix_fmt){
+	switch(pix_fmt){
 	case PIX_FMT_YUV410P: ctx->best_csp=IMGFMT_YVU9;break; //svq1
 	case PIX_FMT_YUV420P: ctx->best_csp=IMGFMT_YV12;break; //mpegs
 	case PIX_FMT_YUV422P: ctx->best_csp=IMGFMT_422P;break; //mjpeg / huffyuv
 	case PIX_FMT_YUV444P: ctx->best_csp=IMGFMT_444P;break; //photo jpeg
 	case PIX_FMT_YUV411P: ctx->best_csp=IMGFMT_411P;break; //dv ntsc
 	case PIX_FMT_YUV422:  ctx->best_csp=IMGFMT_YUY2;break; //huffyuv perhaps in the future
-	case PIX_FMT_RGB24 :  ctx->best_csp=IMGFMT_BGR24;break; //huffyuv
+	case PIX_FMT_RGB24 :  ctx->best_csp=IMGFMT_RGB24;break; //qtrle
 	case PIX_FMT_RGBA32:  ctx->best_csp=IMGFMT_BGR32;break; //huffyuv / mjpeg
 	case PIX_FMT_BGR24 :  ctx->best_csp=IMGFMT_BGR24;break; //8bps
 	case PIX_FMT_RGB555:  ctx->best_csp=IMGFMT_BGR15;break; //rpza,cram
+	case PIX_FMT_RGB565:  ctx->best_csp=IMGFMT_BGR16;break; //4xm
 	case PIX_FMT_PAL8:    ctx->best_csp=IMGFMT_BGR8;break; //8bps,mrle,cram
 #ifdef HAVE_XVMC
         case PIX_FMT_XVMC_MPEG2_MC:ctx->best_csp=IMGFMT_XVMC_MOCO_MPEG2;break;
@@ -504,7 +527,7 @@ static int get_buffer(AVCodecContext *avctx, AVFrame *pic){
   }
 #endif
 
-    if(init_vo(sh)<0){
+    if(init_vo(sh,avctx->pix_fmt) < 0){
         avctx->release_buffer= avcodec_default_release_buffer;
         avctx->get_buffer= avcodec_default_get_buffer;
         return avctx->get_buffer(avctx, pic);
@@ -658,10 +681,15 @@ static mp_image_t* decode(sh_video_t *sh,void* data,int len,int flags){
 
     if(len<=0) return NULL; // skipped frame
 
+#if LIBAVCODEC_BUILD < 4707
+
 #ifdef HAVE_XVMC
-// in fact if(!dr1) should be the only condition, but this way we hide an 
-//ffmpeg interlace (mpeg2) bug. use -noslices to avoid it.
-    if( !avctx->xvmc_acceleration )// && (!dr1) )
+    if( !avctx->xvmc_acceleration )
+#endif
+
+#else
+//ffmpeg interlace (mpeg2) bug have been fixed. no need of -noslices
+    if (!dr1)
 #endif
     avctx->draw_horiz_band=NULL;
     avctx->opaque=sh;
@@ -680,7 +708,9 @@ static mp_image_t* decode(sh_video_t *sh,void* data,int len,int flags){
 //    if(sh->ds->demuxer->type == DEMUXER_TYPE_REAL){
     if(   sh->format == mmioFOURCC('R', 'V', '1', '0')
        || sh->format == mmioFOURCC('R', 'V', '1', '3')
-       || sh->format == mmioFOURCC('R', 'V', '2', '0'))
+       || sh->format == mmioFOURCC('R', 'V', '2', '0')
+       || sh->format == mmioFOURCC('R', 'V', '3', '0')
+       || sh->format == mmioFOURCC('R', 'V', '4', '0'))
     if(sh->bih->biSize==sizeof(*sh->bih)+8){
         int i;
         dp_hdr_t *hdr= (dp_hdr_t*)data;
@@ -700,7 +730,6 @@ static mp_image_t* decode(sh_video_t *sh,void* data,int len,int flags){
     ret = avcodec_decode_video(avctx, pic,
 	     &got_picture, data, len);
     dr1= ctx->do_dr1;
-
     if(ret<0) mp_msg(MSGT_DECVIDEO,MSGL_WARN, "Error while decoding frame!\n");
 //printf("repeat: %d\n", pic->repeat_pict);
 //-- vstats generation
@@ -780,7 +809,7 @@ static mp_image_t* decode(sh_video_t *sh,void* data,int len,int flags){
 
     if(!got_picture) return NULL;	// skipped image
 
-    if(init_vo(sh)<0) return NULL;
+    if(init_vo(sh,avctx->pix_fmt) < 0) return NULL;
 
     if(dr1 && pic->opaque){
         mpi= (mp_image_t*)pic->opaque;
@@ -819,8 +848,40 @@ static mp_image_t* decode(sh_video_t *sh,void* data,int len,int flags){
 #if LIBAVCODEC_BUILD >= 4664
     mpi->qscale_type= pic->qscale_type;
 #endif
+#if LIBAVCODEC_BUILD >= 4697
+    mpi->fields = MP_IMGFIELD_ORDERED;
+    if(pic->interlaced_frame) mpi->fields |= MP_IMGFIELD_INTERLACED;
+    if(pic->top_field_first ) mpi->fields |= MP_IMGFIELD_TOP_FIRST;    
+    if(pic->repeat_pict == 1) mpi->fields |= MP_IMGFIELD_REPEAT_FIRST;
+#endif
     
     return mpi;
+}
+
+static enum PixelFormat get_format(struct AVCodecContext * avctx, 
+                                    const enum PixelFormat * fmt){
+sh_video_t * sh = avctx->opaque;
+vd_ffmpeg_ctx *ctx = sh->context;
+int i;
+
+#ifdef HAVE_XVMC
+    if(avctx->xvmc_acceleration){
+        avctx->get_buffer= mc_get_buffer;
+        avctx->release_buffer= mc_release_buffer;
+        avctx->draw_horiz_band = mc_render_slice;
+        printf("vd_ffmpeg: XVMC accelerated MPEG2\n");
+        assert(ctx->do_dr1);//these are must to!
+        assert(ctx->do_slices); //it is (vo_)ffmpeg bug if this fails
+        avctx->flags|= CODEC_FLAG_EMU_EDGE;//do i need that??!!
+        avctx->slice_flags=SLICE_FLAG_CODED_ORDER|SLICE_FLAG_ALLOW_FIELD;
+    }
+#endif
+    for(i=0;fmt[i]!=-1;i++){
+        printf("trying pixfmt=%d\n",i);
+        if( init_vo(sh,fmt[i]) >= 0)
+	    return fmt[i];
+    }
+    return fmt[0];
 }
 
 #ifdef HAVE_XVMC
@@ -844,7 +905,7 @@ static int mc_get_buffer(AVCodecContext *avctx, AVFrame *pic){
     if(verbose > 4)
         printf("vd_ffmpeg::mc_get_buffer\n");
 
-    if(init_vo(sh)<0){
+    if(init_vo(sh,avctx->pix_fmt) < 0){
         printf("vd_ffmpeg: Unexpected init_vo error\n");
         exit(1);
 //        return -1;//!!fixme check error conditions

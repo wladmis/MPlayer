@@ -41,6 +41,8 @@ int vo_fs = 0;
 int vo_fsmode = 0;
 float vo_panscan = 0.0f;
 int vo_ontop = 0;
+int vo_adapter_num=0;
+int vo_refresh_rate=0;
 
 int vo_pts=0; // for hw decoding
 float vo_fps=0; // for mp1e rte
@@ -81,6 +83,7 @@ extern vo_functions_t video_out_svga;
 extern vo_functions_t video_out_png;
 extern vo_functions_t video_out_ggi;
 extern vo_functions_t video_out_aa;
+extern vo_functions_t video_out_caca;
 extern vo_functions_t video_out_mpegpes;
 extern vo_functions_t video_out_yuv4mpeg;
 #ifdef HAVE_DIRECTX
@@ -115,6 +118,9 @@ extern vo_functions_t video_out_tdfx_vid;
 #endif
 #ifdef HAVE_TGA
 extern vo_functions_t video_out_tga;
+#endif
+#ifdef MACOSX
+extern vo_functions_t video_out_quartz;
 #endif
 
 vo_functions_t* video_out_drivers[] =
@@ -176,6 +182,9 @@ vo_functions_t* video_out_drivers[] =
 #ifdef HAVE_AA
 	&video_out_aa,
 #endif
+#ifdef HAVE_CACA
+	&video_out_caca,
+#endif
 #ifdef HAVE_DXR2
 	&video_out_dxr2,
 #endif
@@ -225,6 +234,9 @@ vo_functions_t* video_out_drivers[] =
 #endif
 #ifdef HAVE_TGA
         &video_out_tga,
+#endif
+#ifdef MACOSX
+	&video_out_quartz,
 #endif
         NULL
 };

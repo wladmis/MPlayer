@@ -14,9 +14,7 @@
  *
  *  This file is a video out driver using the SDL library (http://libsdl.org/),
  *  to be used with MPlayer [The Movie Player for Linux] project, further info
- *  from http://mplayer.sourceforge.net.
- *
- *  Current license is not decided yet, but we're heading for GPL.
+ *  from http://www.mplayerhq.hu
  *
  *  -- old disclaimer --
  *
@@ -141,8 +139,8 @@ LIBVO_EXTERN(sdl)
 #include <SDL.h>
 //#include <SDL/SDL_syswm.h>
 
-#if  defined(HPUX) || defined(sgi) || (defined(sun) && defined(__svr4__))
-/* setenv is missing on solaris, IRIX and HPUX */
+#if defined(__MINGW32__) || defined(HPUX) || defined(sgi) || (defined(sun) && defined(__svr4__))
+/* setenv is missing on win32, solaris, IRIX and HPUX */
 static void setenv(const char *name, const char *val, int _xx)
 {
     int len  = strlen(name) + strlen(val) + 2;
@@ -1273,6 +1271,8 @@ static void check_events (void)
  				case SDLK_F8: mplayer_put_key(KEY_F+8);break;
  				case SDLK_F9: mplayer_put_key(KEY_F+9);break;
  				case SDLK_F10: mplayer_put_key(KEY_F+10);break;
+ 				case SDLK_F11: mplayer_put_key(KEY_F+11);break;
+ 				case SDLK_F12: mplayer_put_key(KEY_F+12);break;
                                 /*case SDLK_o: mplayer_put_key('o');break;
                                 case SDLK_SPACE: mplayer_put_key(' ');break;
                                 case SDLK_p: mplayer_put_key('p');break;*/

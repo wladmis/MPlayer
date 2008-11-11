@@ -1,0 +1,128 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>7.11. Rippowanie DVD do wysokiej jako&#347;ci pliku MPEG4 ("DivX")</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - Odtwarzacz filmów dla LINUKSA"><link rel="up" href="mencoder.html" title="Rozdzia&#322; 7. Kodowanie z MEncoderem"><link rel="previous" href="custommatrices.html" title="7.10. Dowolne inter/intra matryce"><link rel="next" href="mailinglists.html" title="Dodatek A. Listy dyskusyjne"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">7.11. Rippowanie DVD do wysokiej jako&#347;ci pliku MPEG4 ("DivX")</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="custommatrices.html">Poprzedni</a> </td><th width="60%" align="center">Rozdzia&#322; 7. Kodowanie z MEncoderem</th><td width="20%" align="right"> <a accesskey="n" href="mailinglists.html">Nast&#281;pny</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="menc-feat-dvd-mpeg4"></a>7.11. Rippowanie DVD do wysokiej jako&#347;ci pliku MPEG4 ("DivX")</h2></div></div><p>
+  Na ripowanie DVD do pliku MPEG4 (DivX) wysokiej jako&#347;ci sk&#322;ada sie wiele czynników.
+  Poni&#380;ej znajduje si&#281; przyk&#322;ad tego procesu gdy nie ma &#380;adnego rozmiaru docelowego
+  pliku ko&#324;cowego (innego ni&#380; zmieszczenie rezultatu w 2GB).
+  <tt>Libavcodec</tt> zostanie u&#380;yte do zakodowania obrazu,
+  d&#378;wi&#281;k natomiast b&#281;dzie skopiowany bez zmian.
+</p><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="menc-feat-dvd-mpeg4-crop"></a>7.11.1. Kadrowanie</h3></div></div><p>
+  Odtwórz DVD i uruchom na nim filtr detekcji kadrowania (<tt class="option">-vf cropdetect</tt>).
+  Rezultatem bedzie prostok&#261;t kadrowania do u&#380;ycia przy kodowaniu. Powodem kadrowania
+  jest to, &#380;e wiele filmów nie zosta&#322;o nakr&#281;conych w standardowej dla DVD proporcji obrazu
+  (aspect ratio)(16/9 lub 4/3), lub, powodem mo&#380;e by&#263; cokolwiek,
+  obraz nie wype&#322;nia poprawnie ca&#322;ej ramki. A wi&#281;c chcesz wyci&#261;&#263; bezsensowne czarne
+  pasy podczas ripowania. To równie&#380; poprawia jako&#347;&#263; ripu w poniewa&#380; kodowanie ostrych kraw&#281;dzi
+  czarnych pasów zajmuje wiele bitów.
+  Powszechn&#261; proporcja obrazu jest 2.35, taka jak w kineskopie. Wi&#281;kszo&#347;&#263; du&#380;ych filmów-pogromców bloków
+  ma w&#322;asnie tak&#261; proporcje obrazu (aspect ratio).
+</p></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="menc-feat-dvd-mpeg4-quality"></a>7.11.2. Poziom jako&#347;&#263;</h3></div></div><p>
+  Nast&#281;pn&#261; rzecz&#261; jak&#261; musisz ustali&#263; to docelowy poziom jako&#347;ci. Gdy nie ma potrzeby
+  zmieszczenia pliku na p&#322;ycie/p&#322;ytach CD, u&#380;ycie sta&#322;ej kwantyzacji znanej
+  równie&#380; pod nazw&#261; sta&#322;ej jako&#347;ci b&#281;dzie dobrym wyborem. W ten sposób ka&#380;da ramka
+  zajmuje tyle bitów ile potrzebuje aby zachowa&#263; jako&#347;&#263; na wybranym poziomie,
+  za to wielokrotne kodowanie nie jest w tym wypadku potrzebne. W
+  <tt>libavcodec</tt>, otrzymasz sta&#322;&#261; jako&#347;&#263;
+  u&#380;ywaj&#261;c opcji <tt class="option">-lavcopts vqscale=<i><tt>N</tt></i></tt>.
+  <tt class="option">vqscale=3</tt> powinno da&#263; ko&#324;cowy rezultat poni&#380;ej 2GB, zale&#380;y to g&#322;ównie
+  od d&#322;ugo&#347;ci filmu i poziomu szumów obrazu (im wiecej szumów tym trudniej jest dany obraz skompresowa&#263;).
+</p></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="menc-feat-dvd-mpeg4-2gb"></a>7.11.3. Pliki powy&#380;ej 2GB</h3></div></div><p>
+  Je&#380;eli plik wynikowy z kodowania o sta&#322;ej jako&#347;ci jest wi&#281;kszy od 2GB
+  , b&#281;dziesz musia&#322; stworzy&#263; indeks aby móc ogl&#261;da&#263; go poprawnie.
+  Albo
+
+</p><div class="itemizedlist"><ul type="disc"><li><p>
+  odtwórz film z opcj&#261; <tt class="option">-forceidx</tt> aby stworzy&#263; index w locie albo
+  </p></li><li><p>
+  u&#380;yj <tt class="option">-saveidx</tt> aby zapisa&#263; indeks do pliku tylko raz i u&#380;y&#263; go potem przy odtwarzaniu
+  pliku u&#380;ywaj&#261;c opcji <tt class="option">-loadidx</tt>.
+  </p></li></ul></div><p>
+
+  Je&#347;li denerwuje Ci&#281; to, mo&#380;esz chcie&#263; utrzyma&#263; wielko&#347;&#263; pliku poni&#380;ej 2GB.
+</p><p>
+  S&#261; trzy sposoby aby unikn&#261;&#263; tego. Mo&#380;esz spróbowa&#263; zakodowa&#263; jeszcze raz u&#380;ywaj&#261;&#263;
+  <tt class="option">vqscale=4</tt> i zobaczy&#263; czy wielko&#347;&#263; i jako&#347;&#263; pliku wynikowego s&#261;
+  zadowalaj&#261;ce. Mo&#380;esz tak&#380;e spróbowa&#263;
+  <a href="menc-feat-divx4.html" title='7.1. Kodowanie 2 lub 3-przebiegowe MPEG-4 ("DivX")'>kodowania 2przebiegowego</a>.
+  Gdy b&#281;dziesz kopiowa&#322; scie&#380;k&#281; d&#378;wi&#281;kow&#261; automatycznie b&#281;dziesz zna&#322; jej
+  bitrate, znasz tak&#380;e d&#322;ugo&#347;&#263; filmu, mo&#380;esz wi&#281;c obliczy&#263; potrzebny bitrate
+  aby przekaza&#263; go opcji <tt class="option">-lavcopts vbitrate=<i><tt>bitrate</tt></i></tt>
+  bez u&#380;ywania <a href="menc-feat-divx4.html" title='7.1. Kodowanie 2 lub 3-przebiegowe MPEG-4 ("DivX")'>kodowania 3przebieowego</a>.
+</p><p>
+  Trzeci&#261; i prawdopodobnie najlepsz&#261; opcj&#261; b&#281;dzie lekkie zeskalowanie rozdzielczo&#347;ci.
+  Lekkie zmi&#281;kczenie obrazu i stracenie setali jest bardziej przyjazne dla oka ni&#380;
+  artefakty powodowane przez kompresj&#281; MPEG. Zeskalowywanie wydajnie redukuje szumy obrazy
+  ,co jest dobre, poniewa&#380; szumy si&#281; ci&#281;&#380;ko kompresuje.
+</p></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="menc-feat-dvd-mpeg4-deinterlacing"></a>7.11.4. Usuwanie przeplotu</h3></div></div><p>
+  Je&#380;eli film ma przeplot, mo&#380;esz chcie&#263; go zlikwidowa&#263; podczas ripowania.
+  Jest to kwestia dyskusyjna czy usuwanie przeplotu powinno by&#263; robione
+  na tym etapie. Zalet&#261; jest to &#380;e usuwanie przeplotu podczas konwertowania do
+  MPEG4 polepsza kompresje, u&#322;atwia ogl&#261;danie które jest mniej zasobo&#380;erne na
+  monitorach komputerowych. 
+</p><p>
+  Czy usuwanie przeplotu na etapie ripowania jest dobrym pomys&#322;em zale&#380;y od
+  DVD. Je&#380;eli DVD zosta&#322;o zrobione z filmu nakr&#281;conego w pr&#281;dko&#347;ci 24 fps (przyp. t&#322;um. ramek
+  na sekund&#281;), mo&#380;esz ze spokojem usun&#261;&#263; przeplot w czasie ripowania.
+  Jednak&#380;e je&#347;li pr&#281;dko&#347;&#263; orginlanego filmu wynosi&#322;a 50/60 fps, konwertowanie go
+  do video 23.976/25 fps bez przeplotu, nie b&#281;dzie dobry pomys&#322;em, poniewa&#380; skutkiem
+  takiego procesu b&#281;dzie strata informacji.  
+  If you do decide to interlace, you can further
+  experiment with different deinterlacing filters. See
+  <a href="http://www.wieser-web.de/MPlayer/" target="_top">http://www.wieser-web.de/MPlayer/</a>
+  for examples. A good starting point is <tt class="option">-vf pp=fd</tt>.
+</p><p>
+  Je&#380;eli naraz kadrujesz i usuwasz przeplot, to usu&#324; przeplot
+  <span class="emphasis"><i>przed</i></span> kadrowaniem. Aktualnie, nie jest to konieczne
+  gdy wertykalny offset kadrowania jest podzielny przez 2. Jednak&#380;e z innymi filtrami
+  ,takimi jak dering, kadrowanie powinno by&#263; ostatnie, dlatego jest to dobrym
+  przyzwyczajeniem aby ustawia&#263; kadrowanie jako ostatnie.
+</p></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="menc-feat-dvd-mpeg4-telecine"></a>7.11.5. Odwrócone telecine</h3></div></div><p>
+  Je&#347;li ripujesz DVD w formacie PAL, które jest 25 fps, nie musisz my&#347;le&#263; o fps'ach
+  (ramkach na sekunde - przyp. t&#322;um.). U&#380;yj poprostu 25 fps. Z drugiej strony DVD w
+  formacie NTSC s&#261; 29.97 fps (zakr&#261;glone zazwyczaj od 30 fps, ale to  nie jest prawda).
+  Je&#380;eli film by&#322; nakr&#281;cony dla TV, znów nie musisz dotyka&#263; si&#281; do fps'ów.
+  Ale je&#347;li film zosta&#322; nakr&#281;cony na ta&#347;mie, poci&#261;ga to sa sob&#261;, &#380;e mia&#322;
+  (dok&#322;adnie) 24 fps i zostal przekonwertowany podczas tworzenia DVD do 29.97 fps.
+  Konwersja, gdzie do ka&#380;dej z 24 ramek filmu dodaje sie 12 pól, nazywa sie telecine.
+  Aby wiecej sie dowiedzie&#263; o telecine zobacz
+  <a href="http://www.google.com/search?q=telecine+field+23.976" target="_top">
+  Wyniki szukania (Google) "telecine field 23.976"</a>.
+</p><p>
+  W przypadku gdy masz takie ztelecinowane DVD, b&#281;dziesz chcia&#322;
+  odwróci&#263; telecine, tzn. konwertowa&#263; film do 23.976 (29.97*4/5).
+  Inaczej panning kamery b&#281;dzie wygl&#261;da&#322; brzydko i g&#322;upio.
+  Do tego celu mo&#380;esz u&#380;y&#263; opcji <tt class="option">-ofps 23.976</tt>.
+  Wszystko co jest pokazywane w kinach jest nakr&#281;cone na ta&#347;mie i potrzebuje
+  odwróconego telecine, programy telewizyjne natomiast nie.
+</p></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="menc-feat-dvd-mpeg4-scaling"></a>7.11.6. Skalowanie i proporcje obrazu (aspect ratio)</h3></div></div><p>
+  Aby uzyska&#263; najlepsz&#261; jako&#347;&#263; nie skaluj podczas ripowania.
+  Zeskalowywanie w dó&#322; powoduje strate detali, a skalowanie w gór&#281;
+  skutkuje pojawieniem si&#281; artefaktów i zwi&#281;ksza rozmiar pliku.
+  Piksele w filmach DVD nie s&#261; kwadratowe, a wi&#281;c filmy DVD zawieraj&#261; informacje
+  o poprawnej proporcji obrazu. Jest mo&#380;liwe aby przechowywa&#263; t&#281; informacje w
+  nag&#322;ówku wynikowego pliku MPEG4. Wi&#281;kszo&#347;&#263; odtwarzaczy video ignoruje
+  t&#281; informacje, ale <span class="application">MPlayer</span> honoruje j&#261;.
+  Wi&#281;c je&#347;li zamierzasz u&#380;ywa&#263; tylko <span class="application">MPlayer</span>
+  do odtwarzania zripowanego pliku, nie musisz skalowa&#263; filmu, poprostu przeka&#380;
+  opcj&#281; <tt class="option">-lavcopts autoaspect</tt> do
+  <span class="application">MEncoder</span>a i wszystko automagiczne b&#281;dzie dzia&#322;a&#263;.
+  Je&#347;li musisz skalowa&#263;, b&#261;d&#378; ostro&#380;ny aby uzyska&#263; poprawny rozmiar obrazu szczególnie gdy kadrujesz.
+</p></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="menc-feat-dvd-mpeg4-summary"></a>7.11.7. Podsumowanie</h3></div></div><p>
+  Podsumowuj&#261;c wszystko, dobr&#261; koduj&#261;c&#261; komend&#261; mo&#380;e by&#263;:
+
+  <pre class="screen">
+mencoder dvd://1 -aid 128 -oac copy -ovc lavc -lavcopts vcodec=mpeg4:vqscale=3:vhq:v4mv:trell:autoaspect \
+  -ofps 23.976 -vf crop=720:364:0:56 -o Harry_Potter_2.avi
+  </pre>
+
+  <tt class="option">dvd://1</tt> wskazuje na tytu&#322; DVD do zripowania. Opcja
+  <tt class="option">-aid 128</tt> mówi aby u&#380;y&#263; 128ej scie&#380;ki audio, i
+  <tt class="option">-oac copy</tt> skopiowa&#263; j&#261; bez zmian. B&#281;dziesz musia&#322; u&#380;y&#263;
+  <span class="application">MPlayer</span>a aby znale&#378;&#263; poprawne warto&#347;ci do tych opcji.
+</p><p>
+  Opcje <tt class="option">vhq:v4mv:trell</tt> do
+  <tt class="option">-lavcopts</tt> poprawiaj&#261; jako&#347;&#263; vs. bitrate, ale przed&#322;u&#380;&#261;j&#261; kodowanie.
+  Szczególnie opcja <tt class="option">trell</tt> zwalnia kodowanie znacz&#261;co ale te&#380; zauwa&#380;alnie
+  poprawia jako&#347;&#263;. Je&#380;eli chcesz usun&#261;&#263; przeplot dodaj filtr <tt class="option">pp</tt> do
+  <tt class="option">-vf</tt>, na przyk&#322;ad:
+  <tt class="option">-vf pp=fd,crop=720:364:0:56</tt> (w takiej kolejno&#347;ci). Je&#347;li nie potrzebujesz
+  odwróconego telecine, zostaw <tt class="option">-ofps 23.976</tt>.
+</p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="custommatrices.html">Poprzedni</a> </td><td width="20%" align="center"><a accesskey="u" href="mencoder.html">Pocz&#261;tek rozdzia&#322;u</a></td><td width="40%" align="right"> <a accesskey="n" href="mailinglists.html">Nast&#281;pny</a></td></tr><tr><td width="40%" align="left" valign="top">7.10. Dowolne inter/intra matryce </td><td width="20%" align="center"><a accesskey="h" href="index.html">Spis tre&#347;ci</a></td><td width="40%" align="right" valign="top"> Dodatek A. Listy dyskusyjne</td></tr></table></div></body></html>

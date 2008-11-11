@@ -113,6 +113,7 @@ typedef struct ogg_stream {
   int vorbis;
   int theora;
   int flac;
+  int text;
 } ogg_stream_t;
 
 typedef struct ogg_demuxer {
@@ -139,6 +140,8 @@ typedef struct ogg_demuxer {
 #define PACKET_IS_SYNCPOINT  0x08
 
 extern int index_mode;
+
+extern char *dvdsub_lang, *audio_lang;
 
 //-------- subtitle support - should be moved to decoder layer, and queue
 //                          - subtitles up in demuxer buffer...
@@ -238,7 +241,7 @@ void demux_ogg_add_sub (ogg_stream_t* os,ogg_packet* pack) {
       if(pack->granulepos == -1)
         pack->granulepos = os->lastpos + os->lastsize;
       pts = (float)pack->granulepos/(float)os->samplerate;
-      clear_sub = 0.001 + pts + (float)duration/1000.0;
+      clear_sub = 1.0 + pts + (float)duration/1000.0;
     }
     while (1) {
       int c = packet[lcv++];
@@ -347,21 +350,22 @@ static unsigned char* demux_ogg_read_packet(ogg_stream_t* os,ogg_packet* pack,vo
 	decoder. */
      if (context != NULL && !(*data&0x80))
      {
-	theora_state *st;
-	int64_t usable_granulepos;
+        theora_info *thi = ((theora_struct_t*)context)->st.i;
+        int keyframe_granule_shift=_ilog(thi->keyframe_frequency_force-1);
+        int64_t iframemask = (1 << keyframe_granule_shift) - 1;
 
-	st = &((theora_struct_t*)context)->st;
-	*pts = theora_granule_time (st, pack->granulepos);
-	if (*pts >= 0)
+	if (pack->granulepos >= 0)
 	{
-	   usable_granulepos = (int64_t)ceil (*pts * os->samplerate - 0.5);
-	   os->lastpos = usable_granulepos;
+	   os->lastpos = pack->granulepos >> keyframe_granule_shift;
+	   os->lastpos += pack->granulepos & iframemask;
+	   *flags = ((pack->granulepos & iframemask) == 0);
 	}
 	else
 	{
 	   os->lastpos++;
-	   *pts = (double)os->lastpos / (double)os->samplerate;
 	}
+	pack->granulepos = os->lastpos;
+	*pts = (double)os->lastpos / (double)os->samplerate;
      }
 #endif /* HAVE_OGGTHEORA */
 # ifdef HAVE_FLAC
@@ -370,13 +374,16 @@ static unsigned char* demux_ogg_read_packet(ogg_stream_t* os,ogg_packet* pack,vo
      data = pack->packet;
 #endif /* HAVE_FLAC */
   } else {
+    if(*pack->packet & PACKET_TYPE_HEADER)
+      os->hdr_packets++;
+    else {
     // Find data start
     int16_t hdrlen = (*pack->packet & PACKET_LEN_BITS01)>>6;
     hdrlen |= (*pack->packet & PACKET_LEN_BITS2) <<1;
     data = pack->packet + 1 + hdrlen;
     // Calculate the timestamp
     if(pack->granulepos == -1)
-      pack->granulepos = os->lastpos + os->lastsize;
+      pack->granulepos = os->lastpos + (os->lastsize ? os->lastsize : 1);
     // If we alredy have a timestamp it can be a syncpoint
     if(*pack->packet & PACKET_IS_SYNCPOINT)
       *flags = 1;
@@ -390,12 +397,73 @@ static unsigned char* demux_ogg_read_packet(ogg_stream_t* os,ogg_packet* pack,vo
     }
     os->lastpos = pack->granulepos;
   }
+  }
   return data;
+}
+
+// check if clang has substring from comma separated langlist
+static int demux_ogg_check_lang(char *clang, char *langlist)
+{
+  char *c;
+
+  if (!langlist || !*langlist)
+    return 0;
+  while ((c = strchr(langlist, ',')))
+  {
+    if (!strncasecmp(clang, langlist, c - langlist))
+      return 1;
+    langlist = &c[1];
+  }
+  if (!strncasecmp(clang, langlist, strlen(langlist)))
+    return 1;
+  return 0;
+}
+
+/// Try to print out comments and also check for LANGUAGE= tag
+static void demux_ogg_check_comments(demuxer_t *d, ogg_stream_t *os, int id, vorbis_comment *vc)
+{
+  char *hdr, *val;
+  char **cmt = vc->user_comments;
+
+  while(*cmt)
+  {
+    hdr = NULL;
+    if (!strncasecmp(*cmt, "ENCODED_USING=", 14))
+    {
+      hdr = "Software";
+      val = *cmt + 14;
+    }
+    else if (!strncasecmp(*cmt, "LANGUAGE=", 9))
+    {
+      val = *cmt + 9;
+      // check for -slang if subs are uninitialized yet
+      if (os->text && d->sub->id == -1 && demux_ogg_check_lang(val, dvdsub_lang))
+      {
+	d->sub->id = id;
+	mp_msg(MSGT_DEMUX, MSGL_V, "Stream language matched -slang: %s\n", val);
+      }
+      else
+	hdr = "Language";
+    }
+    else if (!strncasecmp(*cmt, "ENCODER_URL=", 12))
+    {
+      hdr = "Encoder URL";
+      val = *cmt + 12;
+    }
+    else if (!strncasecmp(*cmt, "TITLE=", 6))
+    {
+      hdr = "Name";
+      val = *cmt + 6;
+    }
+    if (hdr)
+      mp_msg(MSGT_DEMUX, MSGL_V, " %s: %s\n", hdr, val);
+    cmt++;
+  }
 }
 
 /// Calculate the timestamp and add the packet to the demux stream
 // return 1 if the packet was added, 0 otherwise
-static int demux_ogg_add_packet(demux_stream_t* ds,ogg_stream_t* os,ogg_packet* pack) {
+static int demux_ogg_add_packet(demux_stream_t* ds,ogg_stream_t* os,int id,ogg_packet* pack) {
   demuxer_t* d = ds->demuxer;
   demux_packet_t* dp;
   unsigned char* data;
@@ -403,8 +471,23 @@ static int demux_ogg_add_packet(demux_stream_t* ds,ogg_stream_t* os,ogg_packet* 
   int flags = 0;
   void *context = NULL;
 
-  if (ds == d->sub) { // don't want to add subtitles to the demuxer for now
-    demux_ogg_add_sub(os,pack);
+  // If packet is an comment header then we try to get comments at first
+  if (pack->bytes >= 7 && !memcmp(pack->packet, "\003vorbis", 7))
+  {
+    vorbis_info vi;
+    vorbis_comment vc;
+
+    vorbis_info_init(&vi);
+    vorbis_comment_init(&vc);
+    vi.rate = 1L; // it's checked by vorbis_synthesis_headerin()
+    if(vorbis_synthesis_headerin(&vi, &vc, pack) == 0) // if no errors
+      demux_ogg_check_comments(d, os, id, &vc);
+    vorbis_comment_clear(&vc);
+    vorbis_info_clear(&vi);
+  }
+  if (os->text) {
+    if (id == d->sub->id) // don't want to add subtitles to the demuxer for now
+      demux_ogg_add_sub(os,pack);
     return 0;
   }
   // If packet is an header we jump it except for vorbis and theora
@@ -423,6 +506,8 @@ static int demux_ogg_add_packet(demux_stream_t* ds,ogg_stream_t* os,ogg_packet* 
   if (ds == d->video && ((sh_audio_t*)ds->sh)->format == 0xFFFC)
      context = ((sh_video_t *)ds->sh)->context;
   data = demux_ogg_read_packet(os,pack,context,&pts,&flags);
+  if(d->video->id < 0)
+      ((sh_audio_t*)ds->sh)->delay = pts;
 
   /// Clear subtitles if necessary (for broken files)
   if ((clear_sub > 0) && (pts >= clear_sub)) {
@@ -437,12 +522,13 @@ static int demux_ogg_add_packet(demux_stream_t* ds,ogg_stream_t* os,ogg_packet* 
   dp->pts = pts;
   dp->flags = flags;
   ds_add_packet(ds,dp);
-  if(verbose>1)printf("New dp: %p  ds=%p  pts=%5.3f  len=%d  flag=%d  \n",
+  mp_msg(MSGT_DEMUX,MSGL_DBG2,"New dp: %p  ds=%p  pts=%5.3f  len=%d  flag=%d  \n",
       dp, ds, pts, dp->len, flags);
   return 1;
 }
 
-/// Build a table of all syncpoints to make seeking easier
+/// if -forceidx build a table of all syncpoints to make seeking easier
+/// otherwise try to get at least the final_granulepos
 void demux_ogg_scan_stream(demuxer_t* demuxer) {
   ogg_demuxer_t* ogg_d = demuxer->priv;
   stream_t *s = demuxer->stream;
@@ -459,9 +545,9 @@ void demux_ogg_scan_stream(demuxer_t* demuxer) {
   // Reset the stream
   if(index_mode == 2) {
   stream_seek(s,demuxer->movi_start);
-  }
-  else {
-    stream_seek(s,demuxer->movi_end-20*BLOCK_SIZE);
+  } else {
+    //the 270000 are just a wild guess
+    stream_seek(s,max(ogg_d->pos,demuxer->movi_end-270000));
   }
   ogg_sync_reset(sync);
 
@@ -512,14 +598,12 @@ void demux_ogg_scan_stream(demuxer_t* demuxer) {
       float pts;
       int flags;
       demux_ogg_read_packet(os,&op,context,&pts,&flags);
-      if(flags || (os->vorbis && op.granulepos >= 0)) {
-        if(index_mode == 2) {
+      if(op.granulepos >= 0) ogg_d->final_granulepos = op.granulepos;
+      if(index_mode == 2 && (flags || (os->vorbis && op.granulepos >= 0))) {
 	ogg_d->syncpoints = (ogg_syncpoint_t*)realloc(ogg_d->syncpoints,(ogg_d->num_syncpoint+1)*sizeof(ogg_syncpoint_t));
 	ogg_d->syncpoints[ogg_d->num_syncpoint].granulepos = op.granulepos;
 	ogg_d->syncpoints[ogg_d->num_syncpoint].page_pos = (ogg_page_continued(page) && p == 0) ? last_pos : pos;
 	ogg_d->num_syncpoint++;
-      }
-        ogg_d->final_granulepos = op.granulepos;
       }
       p++;
     }
@@ -572,6 +656,7 @@ int demux_ogg_open(demuxer_t* demuxer) {
   stream_t *s;
   char* buf;
   int np,s_no, n_audio = 0, n_video = 0, n_text = 0;
+  int audio_id = -1, video_id = -1, text_id = -1;
   ogg_sync_state* sync;
   ogg_page* page;
   ogg_packet pack;
@@ -808,6 +893,9 @@ int demux_ogg_open(demuxer_t* demuxer) {
       } else if (strncmp(st->streamtype, "text", 4) == 0) {
           mp_msg(MSGT_DEMUX, MSGL_V, "OGG stream %d is text\n", ogg_d->num_sub);
 	  ogg_d->subs[ogg_d->num_sub].samplerate= get_uint64(&st->time_unit)/10;
+	  ogg_d->subs[ogg_d->num_sub].text = 1;
+          if (demuxer->sub->id == n_text)
+            text_id = ogg_d->num_sub;
           n_text++;
           demux_ogg_init_sub();
 	//// Unknown header type
@@ -822,48 +910,61 @@ int demux_ogg_open(demuxer_t* demuxer) {
       if(sh_a) {
 	// If the audio stream is not defined we took the first one
 	if(demuxer->audio->id == -1) {
-	  demuxer->audio->id = ogg_d->num_sub;
+	  demuxer->audio->id = n_audio - 1;
 //	  if(sh_a->wf) print_wave_header(sh_a->wf);
 	}
 	/// Is it the stream we want
-	if(demuxer->audio->id == ogg_d->num_sub) {
+	if(demuxer->audio->id == (n_audio - 1)) {
 	  demuxer->audio->sh = sh_a;
 	  sh_a->ds = demuxer->audio;
 	  ds = demuxer->audio;
+          audio_id = ogg_d->num_sub;
 	}
       }
       if(sh_v) {
 	/// Also for video
 	if(demuxer->video->id == -1) {
-	  demuxer->video->id = ogg_d->num_sub;
+	  demuxer->video->id = n_video - 1;
 //	  if(sh_v->bih) print_video_header(sh_v->bih);
 	}
-	if(demuxer->video->id == ogg_d->num_sub) {
+	if(demuxer->video->id == (n_video - 1)) {
 	  demuxer->video->sh = sh_v;
 	  sh_v->ds = demuxer->video;
 	  ds = demuxer->video;
+          video_id = ogg_d->num_sub;
 	}
       }
       /// Add the header packets if the stream isn't seekable
       if(ds && !s->end_pos) {
 	/// Finish the page, otherwise packets will be lost
 	do {
-	  demux_ogg_add_packet(ds,&ogg_d->subs[ogg_d->num_sub],&pack);
+	  demux_ogg_add_packet(ds,&ogg_d->subs[ogg_d->num_sub],ogg_d->num_sub,&pack);
 	} while(ogg_stream_packetout(&ogg_d->subs[ogg_d->num_sub].stream,&pack) == 1);
       }
     }
     ogg_d->num_sub++;      
   }
 
+  if(!n_video && !n_audio) {
+    free(ogg_d);
+    return 0;
+  }
+
   /// Finish to setup the demuxer
   demuxer->priv = ogg_d;
 
-  if(!n_video)
+  if(!n_video || (video_id < 0))
     demuxer->video->id = -2;
-  if(!n_audio)
+  else
+    demuxer->video->id = video_id;
+  if(!n_audio || (audio_id < 0))
     demuxer->audio->id = -2;
-  if(!n_text)
+  else
+    demuxer->audio->id = audio_id;
+  if(!n_text || (text_id < 0))
     demuxer->sub->id = -2;
+  else
+    demuxer->sub->id = text_id;
 
   ogg_d->final_granulepos=0;
   if(!s->end_pos)
@@ -952,11 +1053,11 @@ int demux_ogg_fill_buffer(demuxer_t *d) {
       ds = d->audio;
     else if(id == d->video->id)
       ds = d->video;
-    else if (id == d->sub->id)
+    else if (ogg_d->subs[id].text)
       ds = d->sub;
 
     if(ds) {
-      if(!demux_ogg_add_packet(ds,&ogg_d->subs[id],&pack))
+      if(!demux_ogg_add_packet(ds,&ogg_d->subs[id],id,&pack))
 	continue; /// Unuseful packet, get another
       d->filepos = ogg_d->pos;
       return 1;
@@ -1070,16 +1171,27 @@ void demux_ogg_seek(demuxer_t *demuxer,float rel_seek_secs,int flags) {
   sh_audio_t* sh_audio = demuxer->audio->sh;
   ogg_packet op;
   float rate;
-  int i,sp,first;
+  int i,sp,first,precision=1,do_seek=1;
   vorbis_info* vi = NULL;
-  int64_t gp = 0;
-  off_t pos;
+  int64_t gp = 0, old_gp;
+  void *context = NULL;
+  off_t pos, old_pos;
+  int np;
+  int is_gp_valid;
+  float pts;
+  int is_keyframe;
 
   if(demuxer->video->id >= 0) {
     ds = demuxer->video;
+    /* demux_ogg_read_packet needs decoder context for Theora streams */
+    if (((sh_video_t*)demuxer->video->sh)->format == 0xFFFC)
+      context = ((sh_video_t*)demuxer->video->sh)->context;
     rate = ogg_d->subs[ds->id].samplerate;
   } else {
     ds = demuxer->audio;
+    /* demux_ogg_read_packet needs decoder context for Vorbis streams */
+    if(((sh_audio_t*)demuxer->audio->sh)->format == 0xFFFE)
+      context = ((sh_audio_t*)demuxer->audio->sh)->context;
     vi = &((ov_struct_t*)((sh_audio_t*)ds->sh)->context)->vi;
     rate = (float)vi->rate;
   }
@@ -1087,39 +1199,52 @@ void demux_ogg_seek(demuxer_t *demuxer,float rel_seek_secs,int flags) {
   os = &ogg_d->subs[ds->id];
   oss = &os->stream;
 
-  if(ogg_d->syncpoints) {
-    float time_pos = flags & 1 ? 0 : os->lastpos/ rate;
-    if(flags & 2) {
-      if(ogg_d->syncpoints)
-	time_pos += ogg_d->syncpoints[ogg_d->num_syncpoint].granulepos / rate * rel_seek_secs;
-      else
-	time_pos += (demuxer->movi_end - demuxer->movi_start) * rel_seek_secs;
-    } else
-      time_pos += rel_seek_secs;
-    
-    gp = time_pos * rate;
+  old_gp = os->lastpos;
+  old_pos = ogg_d->pos;
 
+  //calculate the granulepos to seek to
+    gp = flags & 1 ? 0 : os->lastpos;
+  if(flags & 2) {
+    if (ogg_d->final_granulepos > 0)
+      gp += ogg_d->final_granulepos * rel_seek_secs;
+      else
+      gp += rel_seek_secs * (demuxer->movi_end - demuxer->movi_start) * os->lastpos / ogg_d->pos;
+  } else
+      gp += rel_seek_secs * rate;
+  if (gp < 0) gp = 0;
+
+  //calculate the filepos to seek to
+  if(ogg_d->syncpoints) {
     for(sp = 0; sp < ogg_d->num_syncpoint ; sp++) {
-      if(ogg_d->syncpoints[sp].granulepos >= gp)
-	break;
+      if(ogg_d->syncpoints[sp].granulepos >= gp) break;
     }
 
-    if(sp >= ogg_d->num_syncpoint)
-      return;
+    if(sp >= ogg_d->num_syncpoint) return;
+    if (sp > 0 && ogg_d->syncpoints[sp].granulepos - gp > gp - ogg_d->syncpoints[sp-1].granulepos)
+      sp--;
+    if (ogg_d->syncpoints[sp].granulepos == os->lastpos) {
+      if (sp > 0 && gp < os->lastpos) sp--;
+      if (sp < ogg_d->num_syncpoint-1 && gp > os->lastpos) sp++;
+    }
     pos = ogg_d->syncpoints[sp].page_pos;
-
+    precision = 0;
   } else {
     pos = flags & 1 ? 0 : ogg_d->pos;
     if(flags & 2)
       pos += (demuxer->movi_end - demuxer->movi_start) * rel_seek_secs;
-    else
+    else {
+      if (ogg_d->final_granulepos > 0) {
+        pos += rel_seek_secs * (demuxer->movi_end - demuxer->movi_start) / (ogg_d->final_granulepos / rate);
+      } else if (os->lastpos > 0) {
       pos += rel_seek_secs * ogg_d->pos / (os->lastpos / rate);
-    if (pos < 0)
-      pos = 0;
-    else if (pos > (demuxer->movi_end - demuxer->movi_start))
-      return;
+    }
   }
+    if (pos < 0) pos = 0;
+    if (pos > (demuxer->movi_end - demuxer->movi_start)) return;
+  } // if(ogg_d->syncpoints)
 
+  while(1) {
+    if (do_seek) {
   stream_seek(demuxer->stream,pos+demuxer->movi_start);
   ogg_sync_reset(sync);
   for(i = 0 ; i < ogg_d->num_sub ; i++) {
@@ -1128,10 +1253,12 @@ void demux_ogg_seek(demuxer_t *demuxer,float rel_seek_secs,int flags) {
   }
   ogg_d->pos = pos;
   ogg_d->last_size = 0;
-
-  first = 1;
-  while(1) {
-    int np;
+      /* we just guess that we reached correct granulepos, in case a
+         subsequent search occurs before we read a valid granulepos */
+      os->lastpos = gp;
+      first = !(ogg_d->syncpoints);
+      do_seek=0;
+    }
     ogg_d->pos += ogg_d->last_size;
     ogg_d->last_size = 0;
     np = ogg_sync_pageseek(sync,page);
@@ -1167,20 +1294,37 @@ void demux_ogg_seek(demuxer_t *demuxer,float rel_seek_secs,int flags) {
         first = 0;
         break;
       }
-      
-      /* the detection of keyframes for theora is somewhat a hack: granulepos
-       for theora packets is `keyframeNumber<<shift | iframeNumber'; `shift'
-       is *variable*, with its excact value encoded in the theora header.
-       This code just hopes that it is greater than 9 and that keyframes
-       distance will never overflow 512. */
-      if( (((*op.packet & PACKET_IS_SYNCPOINT) && !os->theora) || 
-	   os->vorbis || (os->theora && (op.granulepos&0x1FF) == 0)) &&
-	  (!ogg_d->syncpoints || op.granulepos >= gp) ) {
+      is_gp_valid = (op.granulepos >= 0);
+      demux_ogg_read_packet(os,&op,context,&pts,&is_keyframe);
+      if (precision && is_gp_valid) {
+        precision--;
+        if (abs(gp - op.granulepos) > rate && (op.granulepos != old_gp)) {
+          //prepare another seek because we are off by more than 1s
+          pos += (gp - op.granulepos) * (pos - old_pos) / (op.granulepos - old_gp);
+          if (pos < 0) pos = 0;
+          if (pos < (demuxer->movi_end - demuxer->movi_start)) {
+            do_seek=1;
+            break;
+          }
+        }
+      }
+      if (is_gp_valid && (pos > 0) && (old_gp > gp)
+          && (2 * (old_gp - op.granulepos) < old_gp - gp)) {
+        /* prepare another seek because looking for a syncpoint
+           destroyed the backward search */
+        pos = old_pos - 1.5 * (old_pos - pos);
+        if (pos < 0) pos = 0;
+        if (pos < (demuxer->movi_end - demuxer->movi_start)) {
+          do_seek=1;
+          break;
+        }
+      }
+      if(!precision && (is_keyframe || os->vorbis) ) {
         ogg_sub.lines = 0;
         vo_sub = &ogg_sub;
         vo_osd_changed(OSDTYPE_SUBTITLE);
         clear_sub = -1;
-	demux_ogg_add_packet(ds,os,&op);
+	demux_ogg_add_packet(ds,os,ds->id,&op);
 	if(sh_audio)
 	  resync_audio_stream(sh_audio); 
 	return;

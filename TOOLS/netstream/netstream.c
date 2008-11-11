@@ -41,11 +41,18 @@
 #endif
 
 #include <libmpdemux/stream.h>
+#include <libmpdemux/demuxer.h>
 #include <mp_msg.h>
 #include <bswap.h>
 
 /// Netstream packets def and some helpers
 #include <libmpdemux/netstream.h>
+
+
+//Set some standard variables
+char* dvdsub_lang=NULL;
+char* audio_lang=NULL;
+int sub_justify=0;
 
 static unsigned short int port = 10000;
 
@@ -63,7 +70,7 @@ static int write_error(int fd,char* msg) {
 }
 
 static int net_stream_open(client_t* cl,char* url) {
-  int file_format;
+  int file_format=DEMUXER_TYPE_UNKNOWN;
   mp_net_stream_opened_t ret;
 
   if(cl->stream) {

@@ -352,6 +352,9 @@ jpeg_enc_t *jpeg_enc_init(int w, int h, int y_psize, int y_rsize,
 	/* alloc bogus avctx to keep MPV_common_init from segfaulting */
 	j->s->avctx = calloc(sizeof(*j->s->avctx), 1);
 
+	/* make MPV_common_init allocate important buffers, like s->block */
+	j->s->avctx->thread_count = 1;
+
 	if (MPV_common_init(j->s) < 0) {
 		av_free(j->s);
 		av_free(j);
@@ -382,7 +385,7 @@ int jpeg_enc_frame(jpeg_enc_t *j, unsigned char *y_data,
 
 	mjpeg_picture_header(j->s);
 
-	j->s->header_bits = get_bit_count(&j->s->pb);
+	j->s->header_bits = put_bits_count(&j->s->pb);
 
 	j->s->last_dc[0] = 128; 
 	j->s->last_dc[1] = 128; 

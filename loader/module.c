@@ -20,7 +20,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/mman.h>
-#include <sys/types.h>
+#include <inttypes.h>
 
 #include "wine/windef.h"
 #include "wine/winerror.h"
@@ -40,8 +40,8 @@
 
 #ifdef EMU_QTX_API
 #include "wrapper.h"
-static int report_func(void *stack_base, int stack_size, reg386_t *reg, u_int32_t *flags);
-static int report_func_ret(void *stack_base, int stack_size, reg386_t *reg, u_int32_t *flags);
+static int report_func(void *stack_base, int stack_size, reg386_t *reg, uint32_t *flags);
+static int report_func_ret(void *stack_base, int stack_size, reg386_t *reg, uint32_t *flags);
 #endif
 
 //#undef TRACE
@@ -422,6 +422,39 @@ HMODULE WINAPI LoadLibraryExA(LPCSTR libname, HANDLE hfile, DWORD flags)
 	if (!wm)
 	    printf("Win32 LoadLibrary failed to load: %s\n", checked);
 
+        // remove a few divs in the VP codecs that make trouble
+        if (strstr(libname,"vp5vfw.dll") && wm)
+        {
+          int i;
+          if (PE_FindExportedFunction(wm, "DriverProc", TRUE)==(void*)0x10003930) {
+            for (i=0;i<3;i++) ((char*)0x10004e86)[i]=0x90;
+            for (i=0;i<3;i++) ((char*)0x10005a23)[i]=0x90;
+            for (i=0;i<3;i++) ((char*)0x10005bff)[i]=0x90;
+          } else {
+            fprintf(stderr, "Unsupported VP5 version\n");
+            return 0;
+          }
+        }
+
+        if (strstr(libname,"vp6vfw.dll") && wm)
+        {
+          int i;
+          if (PE_FindExportedFunction(wm, "DriverProc", TRUE)==(void*)0x10003ef0) {
+            // looks like VP 6.1.0.2
+            for (i=0;i<6;i++) ((char*)0x10007268)[i]=0x90;
+            for (i=0;i<6;i++) ((char*)0x10007e83)[i]=0x90;
+            for (i=0;i<6;i++) ((char*)0x1000806a)[i]=0x90;
+          } else if (PE_FindExportedFunction(wm, "DriverProc", TRUE)==(void*)0x10004120) {
+            // looks like VP 6.2.0.10
+            for (i=0;i<6;i++) ((char*)0x10007688)[i]=0x90;
+            for (i=0;i<6;i++) ((char*)0x100082c3)[i]=0x90;
+            for (i=0;i<6;i++) ((char*)0x100084aa)[i]=0x90;
+          } else {
+            fprintf(stderr, "Unsupported VP6 version\n");
+            return 0;
+          }
+        }
+
 	if (strstr(libname,"QuickTime.qts") && wm)
 	{
 	    void** ptr;
@@ -647,10 +680,10 @@ static int dump_component(char* name,int type,void* _orig, ComponentParameters *
 
 #ifdef EMU_QTX_API
 
-static u_int32_t ret_array[4096];
+static uint32_t ret_array[4096];
 static int ret_i=0;
 
-static int report_func(void *stack_base, int stack_size, reg386_t *reg, u_int32_t *flags)
+static int report_func(void *stack_base, int stack_size, reg386_t *reg, uint32_t *flags)
 {
 #ifdef DEBUG_QTX_API
   int i;
@@ -706,14 +739,14 @@ static int report_func(void *stack_base, int stack_size, reg386_t *reg, u_int32_
   printf("FUNC[%X/%s]: wrapper=%p  func=%p  len=%d\n",reg->eax,
       pname?pname:"???",pwrapper,pptr,plen);
 
-  printf("FUNC: caller=%p  ebx=%p\n",((u_int32_t *)stack_base)[0],reg->ebx);
+  printf("FUNC: caller=%p  ebx=%p\n",((uint32_t *)stack_base)[0],reg->ebx);
 
   if(pname)
       printf("%*sENTER(%d): %s(",ret_i*2,"",ret_i,pname);
   else
       printf("%*sENTER(%d): %X(",ret_i*2,"",ret_i,reg->eax);
   for (i=0;i<plen/4;i++){
-    unsigned int val=((u_int32_t *)stack_base)[1+i];
+    unsigned int val=((uint32_t *)stack_base)[1+i];
     unsigned char* fcc=&val;
     printf("%s0x%X", i?", ":"",val);
     if(fcc[0]>=0x20 && fcc[0]<128 &&
@@ -733,24 +766,24 @@ static int report_func(void *stack_base, int stack_size, reg386_t *reg, u_int32_
   // memory management:
   case 0x150011: //NewPtrClear
   case 0x150012: //NewPtrSysClear
-      reg->eax=(u_int32_t)malloc(((u_int32_t *)stack_base)[1]);
-      memset((void *)reg->eax,0,((u_int32_t *)stack_base)[1]);
+      reg->eax=(uint32_t)malloc(((uint32_t *)stack_base)[1]);
+      memset((void *)reg->eax,0,((uint32_t *)stack_base)[1]);
 #ifdef DEBUG_QTX_API
       printf("%*sLEAVE(%d): EMULATED! 0x%X\n",ret_i*2,"",ret_i, reg->eax);
 #endif
       return 1;
   case 0x15000F: //NewPtr
   case 0x150010: //NewPtrSys
-      reg->eax=(u_int32_t)malloc(((u_int32_t *)stack_base)[1]);
+      reg->eax=(uint32_t)malloc(((uint32_t *)stack_base)[1]);
 #ifdef DEBUG_QTX_API
       printf("%*sLEAVE(%d): EMULATED! 0x%X\n",ret_i*2,"",ret_i, reg->eax);
 #endif
       return 1;
   case 0x15002f: //DisposePtr
-      if(((u_int32_t *)stack_base)[1]>=0x60000000)
+      if(((uint32_t *)stack_base)[1]>=0x60000000)
           printf("WARNING! Invalid Ptr handle!\n");
       else
-          free((void *)((u_int32_t *)stack_base)[1]);
+          free((void *)((uint32_t *)stack_base)[1]);
       reg->eax=0;
 #ifdef DEBUG_QTX_API
       printf("%*sLEAVE(%d): EMULATED! 0x%X\n",ret_i*2,"",ret_i, reg->eax);
@@ -778,33 +811,33 @@ static int report_func(void *stack_base, int stack_size, reg386_t *reg, u_int32_
 #if 0
   switch(reg->eax){
 //  case 0x00010000:
-//      printf("FUNC: ImageCodecInitialize/ImageCodecGetCodecInfo(ci=%p,&icap=%p)\n",((u_int32_t *)stack_base)[1],((u_int32_t *)stack_base)[4]);
+//      printf("FUNC: ImageCodecInitialize/ImageCodecGetCodecInfo(ci=%p,&icap=%p)\n",((uint32_t *)stack_base)[1],((uint32_t *)stack_base)[4]);
 //      break;
   case 0x00010003:
-      printf("FUNC: CountComponents(&desc=%p)\n",((u_int32_t *)stack_base)[1]);
+      printf("FUNC: CountComponents(&desc=%p)\n",((uint32_t *)stack_base)[1]);
       break;
   case 0x00010004:
-      printf("FUNC: FindNextComponent(prev=%p,&desc=%p)\n",((u_int32_t *)stack_base)[1],((u_int32_t *)stack_base)[2]);
+      printf("FUNC: FindNextComponent(prev=%p,&desc=%p)\n",((uint32_t *)stack_base)[1],((uint32_t *)stack_base)[2]);
       break;
   case 0x00010007:
-      printf("FUNC: OpenComponent(prev=%p)\n",((u_int32_t *)stack_base)[1]);
+      printf("FUNC: OpenComponent(prev=%p)\n",((uint32_t *)stack_base)[1]);
       break;
   case 0x0003008b:
       printf("FUNC: QTNewGWorldFromPtr(&pts=%p,fourcc=%.4s,&rect=%p,x1=%p,x2=%p,x3=%p,plane=%p,stride=%d)\n",
-          ((u_int32_t *)stack_base)[1],
-          &(((u_int32_t *)stack_base)[2]),
-          ((u_int32_t *)stack_base)[3],
-          ((u_int32_t *)stack_base)[4],
-          ((u_int32_t *)stack_base)[5],
-          ((u_int32_t *)stack_base)[6],
-          ((u_int32_t *)stack_base)[7],
-          ((u_int32_t *)stack_base)[8]);
+          ((uint32_t *)stack_base)[1],
+          &(((uint32_t *)stack_base)[2]),
+          ((uint32_t *)stack_base)[3],
+          ((uint32_t *)stack_base)[4],
+          ((uint32_t *)stack_base)[5],
+          ((uint32_t *)stack_base)[6],
+          ((uint32_t *)stack_base)[7],
+          ((uint32_t *)stack_base)[8]);
       break;
   case 0x001c0018:
-      printf("FUNC: GetGWorldPixMap(gworld=%p)\n",((u_int32_t *)stack_base)[1]);
+      printf("FUNC: GetGWorldPixMap(gworld=%p)\n",((uint32_t *)stack_base)[1]);
       break;
   case 0x00110001:
-      printf("FUNC: Gestalt(fourcc=%.4s, &ret=%p)\n",&(((u_int32_t *)stack_base)[1]),((u_int32_t *)stack_base)[2]);
+      printf("FUNC: Gestalt(fourcc=%.4s, &ret=%p)\n",&(((uint32_t *)stack_base)[1]),((uint32_t *)stack_base)[2]);
       break;
   default: {
       int i;
@@ -829,34 +862,34 @@ static int report_func(void *stack_base, int stack_size, reg386_t *reg, u_int32_
 #endif
 
   // save ret addr:
-  ret_array[ret_i]=((u_int32_t *)stack_base)[0];
+  ret_array[ret_i]=((uint32_t *)stack_base)[0];
   ++ret_i;
 
 #if 0
   // print first 7 longs in the stack (return address, arg[1], arg[2] ... ) 
   printf("stack[] = { ");
   for (i=0;i<7;i++) {
-    printf("%08x ", ((u_int32_t *)stack_base)[i]);
+    printf("%08x ", ((uint32_t *)stack_base)[i]);
   }
   printf("}\n\n");
 #endif
   
 //  // mess with function parameters 
-//  ((u_int32_t *)stack_base)[1] = 0x66554433;
+//  ((uint32_t *)stack_base)[1] = 0x66554433;
 
 //  // mess with return address...
 //  reg->eax = 0x11223344;
     return 0;
 }
 
-static int report_func_ret(void *stack_base, int stack_size, reg386_t *reg, u_int32_t *flags)
+static int report_func_ret(void *stack_base, int stack_size, reg386_t *reg, uint32_t *flags)
 {
   int i;
   short err;
 
   // restore ret addr:
   --ret_i;
-  ((u_int32_t *)stack_base)[0]=ret_array[ret_i];
+  ((uint32_t *)stack_base)[0]=ret_array[ret_i];
 
 #ifdef DEBUG_QTX_API
 
@@ -882,7 +915,7 @@ static int report_func_ret(void *stack_base, int stack_size, reg386_t *reg, u_in
   // print first 7 longs in the stack (return address, arg[1], arg[2] ... ) 
   printf("stack[] = { ");
   for (i=0;i<7;i++) {
-    printf("%08x ", ((u_int32_t *)stack_base)[i]);
+    printf("%08x ", ((uint32_t *)stack_base)[i]);
   }
   printf("}\n\n");
 #endif
@@ -890,7 +923,7 @@ static int report_func_ret(void *stack_base, int stack_size, reg386_t *reg, u_in
 #endif
   
 //  // mess with function parameters 
-//  ((u_int32_t *)stack_base)[1] = 0x66554433;
+//  ((uint32_t *)stack_base)[1] = 0x66554433;
 
 //  // mess with return address...
 //  reg->eax = 0x11223344;

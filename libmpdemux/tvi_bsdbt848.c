@@ -39,8 +39,13 @@
 #include <signal.h>
 #include <string.h>
 
+#include <sys/param.h>
 #ifdef __NetBSD__
 #include <dev/ic/bt8xx.h>
+#include <sys/audioio.h>
+#elif __FreeBSD_version >= 502100
+#include <dev/bktr/ioctl_meteor.h>
+#include <dev/bktr/ioctl_bt848.h>
 #else
 #include <machine/ioctl_meteor.h>
 #include <machine/ioctl_bt848.h>
@@ -288,6 +293,7 @@ static int control(priv_t *priv, int cmd, void *arg)
     case TVI_CONTROL_TUN_SET_NORM:
         {
         int req_mode = (int)*(void **)arg;
+	u_short tmp_fps;
 
         priv->iformat = METEOR_FMT_AUTOMODE;
 
@@ -352,7 +358,8 @@ static int control(priv_t *priv, int cmd, void *arg)
             return(0);
             }
 
-        if(ioctl(priv->btfd, METEORSFPS, &priv->fps) < 0) 
+	tmp_fps = priv->fps;
+        if(ioctl(priv->btfd, METEORSFPS, &tmp_fps) < 0) 
             {
             perror("fps:ioctl");
             return(0);
@@ -461,6 +468,7 @@ static int init(priv_t *priv)
 {
 int marg;
 int count;
+u_short tmp_fps;
 
 G_private = priv; /* Oooh, sick */
 
@@ -505,8 +513,9 @@ if(priv->videoready == TRUE &&
     perror("SINPUT:ioctl");
     }
 
+tmp_fps = priv->fps;
 if(priv->videoready == TRUE &&
-   ioctl(priv->btfd, METEORSFPS, &priv->fps) < 0) 
+   ioctl(priv->btfd, METEORSFPS, &tmp_fps) < 0) 
     {
     perror("SFPS:ioctl");
     }
@@ -562,7 +571,11 @@ if(priv->tunerfd < 0)
 /* Audio Configuration */
 
 priv->dspready = TRUE;
+#ifdef __NetBSD__
+priv->dspdev = strdup("/dev/sound");
+#else
 priv->dspdev = strdup("/dev/dsp");
+#endif
 priv->dspsamplesize = 16;
 priv->dspstereo = 1;
 priv->dspspeed = 44100;
@@ -572,9 +585,9 @@ priv->dsprate = priv->dspspeed * priv->dspsamplesize/8*(priv->dspstereo+1);
 priv->dspframesize = priv->dspspeed*priv->dspsamplesize/8/priv->fps * 
                      (priv->dspstereo+1);
 
-if((priv->dspfd = open ("/dev/dsp", O_RDONLY, 0)) < 0)
+if((priv->dspfd = open (priv->dspdev, O_RDONLY, 0)) < 0)
     {
-    perror("/dev/dsp open");
+    perror("dsp open");
     priv->dspready = FALSE;
     } 
 
@@ -592,7 +605,7 @@ if((priv->dspready == TRUE) &&
    (ioctl(priv->dspfd, SNDCTL_DSP_SPEED, &priv->dspspeed) == -1) ||
    (ioctl(priv->dspfd, SNDCTL_DSP_SETFMT, &priv->dspfmt) == -1)))
     {
-    perror ("configuration of /dev/dsp failed");
+    perror ("configuration of dsp failed");
     close(priv->dspfd);
     priv->dspready = FALSE;
     }
@@ -785,14 +798,27 @@ return(priv->dspbytesread * 1.0 / priv->dsprate);
 static int get_audio_framesize(priv_t *priv)
 {
 int bytesavail;
+#ifdef __NetBSD__
+struct audio_info auinf;
+#endif
 
 if(priv->dspready == FALSE) return 0;
 
+#ifdef __NetBSD__
+if(ioctl(priv->dspfd, AUDIO_GETINFO, &auinf) < 0) 
+    {
+    perror("AUDIO_GETINFO");
+    return(TVI_CONTROL_FALSE);
+    }
+else
+    bytesavail = auinf.record.seek; /* *priv->dspsamplesize; */
+#else
 if(ioctl(priv->dspfd, FIONREAD, &bytesavail) < 0) 
     {
     perror("FIONREAD");
     return(TVI_CONTROL_FALSE);
     }
+#endif
 
 /* When mencoder wants audio data, it wants data..
    it won't go do anything else until it gets it :( */

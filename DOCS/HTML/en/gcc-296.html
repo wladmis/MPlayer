@@ -1,5 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html><head><meta content="text/html; charset=ISO-8859-1" http-equiv="Content-Type"><title>E.1. GCC 2.96</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.50.0"><link rel="home" href="index.html" title="MPlayer - The Movie Player for LINUX"><link rel="up" href="users-vs-dev.html" title="Appendix E. Developer cries"><link rel="previous" href="users-vs-dev.html" title="Appendix E. Developer cries"><link rel="next" href="mplayer-binary.html" title="E.2. Binary distribution"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">E.1. GCC 2.96</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="users-vs-dev.html">Prev</a> </td><th width="60%" align="center">Appendix E. Developer cries</th><td width="20%" align="right"> <a accesskey="n" href="mplayer-binary.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="gcc-296"></a>E.1. GCC 2.96</h2></div></div><p><b>The background: </b>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>E.1. GCC 2.96</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - The Movie Player for LINUX"><link rel="up" href="users-vs-dev.html" title="Appendix E. Developer cries"><link rel="previous" href="users-vs-dev.html" title="Appendix E. Developer cries"><link rel="next" href="mplayer-binary.html" title="E.2. Binary distribution"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">E.1. GCC 2.96</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="users-vs-dev.html">Prev</a> </td><th width="60%" align="center">Appendix E. Developer cries</th><td width="20%" align="right"> <a accesskey="n" href="mplayer-binary.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="gcc-296"></a>E.1. GCC 2.96</h2></div></div><p><b>The background: </b>
 The GCC <span class="bold"><b>2.95</b></span> series is an official GNU release and
 version 2.95.3 of GCC is the most bug-free in that series.  We have never
 noticed compilation problems that we could trace to gcc-2.95.3. Starting
@@ -19,7 +18,7 @@ GCC 2.96, and started recommending other compilers. Examples are
 <a href="http://www.mysql.com/downloads/mysql-3.23.html" target="_top">MySQL</a>,
 and
 <a href="http://avifile.sourceforge.net/news-old1.htm" target="_top">avifile</a>.
-Other interesting links are 
+Other interesting links are
 <a href="http://www.atnf.csiro.au/people/rgooch/linux/docs/kernel-newsflash.html" target="_top">
 Linux kernel news flash about kernel 2.4.17</a>
 and
@@ -33,7 +32,7 @@ may imply a performance penalty.
 GCC 2.96 does not allow <tt>|</tt> (pipe) characters in assembler
 comments because it supports Intel as well as AT&amp;T Syntax and the
 <tt>|</tt> character is a symbol in the Intel variant. The
-problem is that it <span class="emphasis"><em>silently</em></span> ignores the whole
+problem is that it <span class="emphasis"><i>silently</i></span> ignores the whole
 assembler block. This is supposedly fixed now, GCC prints a warning instead
 of skipping the block.
 </p><p><b>The present: </b>

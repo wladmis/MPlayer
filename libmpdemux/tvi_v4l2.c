@@ -175,6 +175,7 @@ static int fcc_mp2vl(int fcc)
     case IMGFMT_I420:	return V4L2_PIX_FMT_YUV420;
     case IMGFMT_YUY2:	return V4L2_PIX_FMT_YUYV;
     case IMGFMT_YV12:	return V4L2_PIX_FMT_YUV420;
+    case IMGFMT_UYVY:   return V4L2_PIX_FMT_UYVY;
     }
     return fcc;
 }
@@ -196,6 +197,7 @@ static int fcc_vl2mp(int fcc)
     case V4L2_PIX_FMT_YUV410:	return IMGFMT_IF09;
     case V4L2_PIX_FMT_YUV420:	return IMGFMT_I420;
     case V4L2_PIX_FMT_YUYV:		return IMGFMT_YUY2;
+    case V4L2_PIX_FMT_UYVY:     return IMGFMT_UYVY;
     }
     return fcc;
 }
@@ -573,6 +575,7 @@ static int control(priv_t *priv, int cmd, void *arg)
     case TVI_CONTROL_VID_SET_HEIGHT:
 	if (getfmt(priv) < 0) return TVI_CONTROL_FALSE;
 	priv->format.fmt.pix.height = *(int *)arg;
+	priv->format.fmt.pix.field = V4L2_FIELD_ANY;
 	mp_msg(MSGT_TV, MSGL_V, "%s: set height: %d\n", info.short_name,
 	       *(int *)arg);
 	if (ioctl(priv->video_fd, VIDIOC_S_FMT, &priv->format) < 0) {
@@ -783,14 +786,16 @@ static int uninit(priv_t *priv)
     int i, frames, dropped = 0;
 
     priv->shutdown = 1;
-    pthread_join(priv->audio_grabber_thread, NULL);
+    pthread_join(priv->video_grabber_thread, NULL);
     pthread_mutex_destroy(&priv->video_buffer_mutex);
 
     if (priv->streamon) {
 	struct v4l2_buffer buf;
 
 	/* get performance */
-	frames = 1 + (priv->curr_frame - priv->first_frame) *
+	frames = 1 + (priv->curr_frame - priv->first_frame +
+		      priv->standard.frameperiod.numerator * 500000 /
+		      priv->standard.frameperiod.denominator) *
 	    priv->standard.frameperiod.denominator /
 	    priv->standard.frameperiod.numerator / 1000000;
 	dropped = frames - priv->frames;
@@ -1045,7 +1050,7 @@ static int init(priv_t *priv)
     
     /* audio init */
     if (!tv_param_noaudio) {
-#ifdef HAVE_ALSA9
+#if defined(HAVE_ALSA9) || defined(HAVE_ALSA1X)
 	if (tv_param_alsa)
 	    audio_in_init(&priv->audio_in, AUDIO_IN_ALSA);
 	else

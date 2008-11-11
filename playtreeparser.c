@@ -11,10 +11,12 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <ctype.h>
 #include "m_config.h"
 #include "playtree.h"
 #include "playtreeparser.h"
 #include "libmpdemux/stream.h"
+#include "libmpdemux/demuxer.h"
 #include "mp_msg.h"
 
 
@@ -428,8 +430,124 @@ parse_m3u(play_tree_parser_t* p) {
 }
 
 play_tree_t*
+parse_smil(play_tree_parser_t* p) {
+  int entrymode=0;
+  char* line,source[512],*pos,*s_start,*s_end;
+  play_tree_t *list = NULL, *entry = NULL, *last_entry = NULL;
+
+  mp_msg(MSGT_PLAYTREE,MSGL_V,"Trying smil playlist...\n");
+
+  // Check if smil
+  while((line = play_tree_parser_get_line(p)) != NULL) {
+    strstrip(line);
+    if(line[0] == '\0') // Ignore empties
+      continue;
+    if (strncasecmp(line,"<smil",5)==0)
+      break; // smil header found
+    else
+      return NULL; //line not smil exit
+  }
+
+  mp_msg(MSGT_PLAYTREE,MSGL_V,"Detected smil playlist format\n");
+  play_tree_parser_stop_keeping(p);
+
+
+  //Get entries from smil 
+  while((line = play_tree_parser_get_line(p)) != NULL) {
+    strstrip(line);
+    if (line[0]=='\0')
+      continue;
+    if (!entrymode) { // all entries filled so far 
+      if (strncasecmp(line,"<video",6)==0  || strncasecmp(line,"<audio",6)==0) {
+        pos=strstr(line,"src=");   // Is source present on this line
+        if (pos !=NULL) {
+          s_start=pos+5;
+          s_end=strchr(s_start,'"');
+            if (s_end == NULL) {
+              mp_msg(MSGT_PLAYTREE,MSGL_V,"Error parsing this source line %s\n",line);
+              continue;   
+            }
+          if (s_end-s_start> 511) {
+            mp_msg(MSGT_PLAYTREE,MSGL_V,"Cannot store such a large source %s\n",line);
+            continue;
+          }
+          strncpy(source,s_start,s_end-s_start);
+          source[(s_end-s_start)]='\0'; // Null terminate
+          entry = play_tree_new();
+          play_tree_add_file(entry,source);
+          if(!list)  //Insert new entry
+            list = entry;
+          else
+            play_tree_append_entry(last_entry,entry);
+          last_entry = entry;
+        } else {
+          entrymode=1;
+        }
+      }
+    } else { //Entry found but not yet filled
+      pos = strstr(line,"src=");   // Is source present on this line
+      if (pos != NULL) {
+        entrymode=0;
+        s_start=pos+5;
+        s_end=strchr(s_start,'"');
+        if (s_end == NULL) {
+          mp_msg(MSGT_PLAYTREE,MSGL_V,"Error parsing this source line %s\n",line);
+          continue;
+        }
+        if (s_end-s_start> 511) {
+          mp_msg(MSGT_PLAYTREE,MSGL_V,"Cannot store such a large source %s\n",line);
+          continue;
+        }
+        strncpy(source,s_start,s_end-s_start);
+        source[(s_end-s_start)]='\0'; // Null terminate
+        entry = play_tree_new();
+        play_tree_add_file(entry,source);
+        if(!list)  //Insert new entry
+          list = entry;
+        else
+          play_tree_append_entry(last_entry,entry);
+        last_entry = entry;
+      }
+    }
+  }
+
+  if(!list) return NULL; // Nothing found
+
+  entry = play_tree_new();
+  play_tree_set_child(entry,list);
+  return entry;
+}
+
+play_tree_t*
+embedded_playlist_parse(char *line) {
+  int f=DEMUXER_TYPE_PLAYLIST;
+  stream_t* stream;
+  play_tree_parser_t* ptp;
+  play_tree_t* entry;
+
+  // Get stream opened to link
+  stream=open_stream(line,0,&f);
+  if(!stream) {
+    mp_msg(MSGT_PLAYTREE,MSGL_WARN,"Can't open playlist %s\n",line);
+    return NULL;
+  }
+
+  //add new playtree
+  mp_msg(MSGT_PLAYTREE,MSGL_V,"Adding playlist %s to element entryref\n",line);
+
+  ptp = play_tree_parser_new(stream,1);
+  entry = play_tree_parser_get_play_tree(ptp, 1);
+  play_tree_parser_free(ptp);
+  free_stream(stream);
+
+  return entry;
+}
+
+play_tree_t*
 parse_textplain(play_tree_parser_t* p) {
   char* line;
+  char *c;
+  int embedded;
   play_tree_t *list = NULL, *entry = NULL, *last_entry = NULL;
 
   mp_msg(MSGT_PLAYTREE,MSGL_V,"Trying plaintext playlist...\n");
@@ -439,13 +557,31 @@ parse_textplain(play_tree_parser_t* p) {
     strstrip(line);
     if(line[0] == '\0')
       continue;
-    entry = play_tree_new();
-    play_tree_add_file(entry,line);
-    if(!list)
-      list = entry;
-    else
-      play_tree_append_entry(last_entry,entry);
-    last_entry = entry;
+
+    //Special check for smil reference in file
+    embedded = 0;
+    if (strlen(line) > 5)
+      for(c = line; c[0]; c++ )
+        if((c[0] == '.') && (tolower(c[1]) == 's') && (tolower(c[2])== 'm') && 
+           (tolower(c[3]) == 'i') && (tolower(c[4]) == 'l') &&
+           (!c[5] || c[5] == '?' || c[5] == '&')) {
+          entry=embedded_playlist_parse(line);
+          embedded = 1;
+          break;
+        }
+
+    if (!embedded) {      //regular file link
+      entry = play_tree_new();
+      play_tree_add_file(entry,line);
+    }
+
+    if (entry != NULL) {
+      if(!list)
+        list = entry;
+      else
+        play_tree_append_entry(last_entry,entry);
+      last_entry = entry;
+    }
   }
    
   if(!list) return NULL;
@@ -521,7 +657,7 @@ play_tree_t*
 parse_playlist_file(char* file) {
   stream_t *stream;
   play_tree_t* ret;
-  int f;
+  int f=DEMUXER_TYPE_PLAYLIST;
 
   stream = open_stream(file,0,&f);
 
@@ -597,6 +733,10 @@ play_tree_parser_get_play_tree(play_tree_parser_t* p, int forced) {
     if(tree) break;
     play_tree_parser_reset(p);
 
+    tree = parse_smil(p);
+    if(tree) break;
+    play_tree_parser_reset(p);
+     
     // Here come the others formats ( textplain must stay the last one )
     if (forced)
     {

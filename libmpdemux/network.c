@@ -92,7 +92,9 @@ static struct {
 	// Real Media
 	{ "audio/x-pn-realaudio", DEMUXER_TYPE_REAL },
 	// OGG Streaming
-	{ "application/x-ogg", DEMUXER_TYPE_OGG }
+	{ "application/x-ogg", DEMUXER_TYPE_OGG },
+	// NullSoft Streaming Video
+	{ "video/nsv", DEMUXER_TYPE_NSV}
 
 };
 
@@ -428,7 +430,7 @@ check4proxies( URL_t *url ) {
 }
 
 int
-http_send_request( URL_t *url ) {
+http_send_request( URL_t *url, off_t pos ) {
 	HTTP_header_t *http_hdr;
 	URL_t *server_url;
 	char str[256];
@@ -455,6 +457,12 @@ http_send_request( URL_t *url ) {
 	}
 	else
 	    http_set_field( http_hdr, "User-Agent: MPlayer/"VERSION);
+
+	if(pos>0) { 
+	// Extend http_send_request with possibility to do partial content retrieval
+	    snprintf(str, 256, "Range: bytes=%d-", pos);
+	    http_set_field(http_hdr, str);
+	}
 	    
 	if (network_cookies_enabled) cookies_set( http_hdr, server_url->hostname, server_url->url );
 	
@@ -572,6 +580,50 @@ http_authenticate(HTTP_header_t *http_hdr, URL_t *url, int *auth_retry) {
 	return 0;
 }
 
+int
+http_seek( stream_t *stream, off_t pos ) {
+	HTTP_header_t *http_hdr = NULL;
+	int fd;
+	if( stream==NULL ) return 0;
+
+	if( stream->fd>0 ) closesocket(stream->fd); // need to reconnect to seek in http-stream
+	fd = http_send_request( stream->streaming_ctrl->url, pos ); 
+	if( fd<0 ) return 0;
+
+	http_hdr = http_read_response( fd );
+
+	if( http_hdr==NULL ) return 0;
+
+	switch( http_hdr->status_code ) {
+		case 200:
+		case 206: // OK
+			mp_msg(MSGT_NETWORK,MSGL_V,"Content-Type: [%s]\n", http_get_field(http_hdr, "Content-Type") );
+			mp_msg(MSGT_NETWORK,MSGL_V,"Content-Length: [%s]\n", http_get_field(http_hdr, "Content-Length") );
+			if( http_hdr->body_size>0 ) {
+				if( streaming_bufferize( stream->streaming_ctrl, http_hdr->body, http_hdr->body_size )<0 ) {
+					http_free( http_hdr );
+					return -1;
+				}
+			}
+			break;
+		default:
+			mp_msg(MSGT_NETWORK,MSGL_ERR,"Server return %d: %s\n", http_hdr->status_code, http_hdr->reason_phrase );
+			close( fd );
+			fd = -1;
+	}
+	stream->fd = fd;
+
+	if( http_hdr ) {
+		http_free( http_hdr );
+		stream->streaming_ctrl->data = NULL;
+	}
+
+	stream->pos=pos;
+
+	return 1;
+}
+
+
 // By using the protocol, the extension of the file or the content-type
 // we might be able to guess the streaming type.
 int
@@ -581,6 +633,7 @@ autodetectProtocol(streaming_ctrl_t *streaming_ctrl, int *fd_out, int *file_form
 	int fd=-1;
 	int redirect;
 	int auth_retry=0;
+	int seekable=0;
 	char *extension;
 	char *content_type;
 	char *next_url;
@@ -632,25 +685,10 @@ extension=NULL;
 		
 		// Checking for RTSP
 		if( !strcasecmp(url->protocol, "rtsp") ) {
-			// Checking for Real rtsp://
-			// Extension based detection, should be replaced with something based on server answer
-			if( url->file!= NULL ) {
-				char *p;
-				for( p = url->file; p[0]; p++ ) {
-					if( p[0] == '.' && tolower(p[1]) == 'r' && (tolower(p[2]) == 'm' || tolower(p[2]) == 'a') && (!p[3] || p[3] == '?' || p[3] == '&') ) {
-						*file_format = DEMUXER_TYPE_REAL;
-						return 0;
-					}
-				}
-			}
-			mp_msg(MSGT_NETWORK,MSGL_INFO,"Not a Realmedia rtsp url. Trying standard rtsp protocol.\n");
-#ifdef STREAMING_LIVE_DOT_COM
-			*file_format = DEMUXER_TYPE_RTP;
+			// Try Real rtsp:// first (it's always built in)
+			// If it fails, try live.com (if compiled in)
+			*file_format = DEMUXER_TYPE_REAL;
 			return 0;
-#else
-			mp_msg(MSGT_NETWORK,MSGL_ERR,"RTSP support requires the \"LIVE.COM Streaming Media\" libraries!\n");
-			return -1;
-#endif
 		// Checking for SIP
 		} else if( !strcasecmp(url->protocol, "sip") ) {
 #ifdef STREAMING_LIVE_DOT_COM
@@ -683,7 +721,7 @@ extension=NULL;
 
 		// HTTP based protocol
 		if( !strcasecmp(url->protocol, "http") || !strcasecmp(url->protocol, "http_proxy") ) {
-			fd = http_send_request( url );
+			fd = http_send_request( url, 0 );
 			if( fd<0 ) {
 				return -1;
 			}
@@ -701,7 +739,14 @@ extension=NULL;
 			}
 			
 			streaming_ctrl->data = (void*)http_hdr;
-			
+
+			// Check if we can make partial content requests and thus seek in http-streams
+		        if( http_hdr!=NULL && http_hdr->status_code==200 ) {
+			    char *accept_ranges;
+			    if( (accept_ranges = http_get_field(http_hdr,"Accept-Ranges")) != NULL )
+				seekable = strncmp(accept_ranges,"bytes",5)==0;
+			} 
+
 			// Check if the response is an ICY status_code reason_phrase
 			if( !strcasecmp(http_hdr->protocol, "ICY") ) {
 				switch( http_hdr->status_code ) {
@@ -720,8 +765,14 @@ extension=NULL;
 							mp_msg(MSGT_NETWORK,MSGL_INFO,"Public : %s\n", atoi(field_data)?"yes":"no"); field_data = NULL;
 						if( (field_data = http_get_field(http_hdr, "icy-br")) != NULL )
 							mp_msg(MSGT_NETWORK,MSGL_INFO,"Bitrate: %skbit/s\n", field_data); field_data = NULL;
-						// Ok, we have detected an mp3 stream
-						*file_format = DEMUXER_TYPE_AUDIO;
+						
+						// If content-type == video/nsv we most likely have a winamp video stream 
+						// otherwise it should be mp3. if there are more types consider adding mime type 
+						// handling like later
+				                if ( (field_data = http_get_field(http_hdr, "content-type")) != NULL && !strcmp(field_data, "video/nsv"))
+							*file_format = DEMUXER_TYPE_NSV;
+						else
+							*file_format = DEMUXER_TYPE_AUDIO;
 						return 0;
 					}
 					case 400: // Server Full
@@ -756,13 +807,13 @@ extension=NULL;
 						for( i=0 ; i<(sizeof(mime_type_table)/sizeof(mime_type_table[0])) ; i++ ) {
 							if( !strcasecmp( content_type, mime_type_table[i].mime_type ) ) {
 								*file_format = mime_type_table[i].demuxer_type;
-								return 0; 
+								return seekable; // for streaming_start
 							}
 						}
 					}
 					// Not found in the mime type table, don't fail,
 					// we should try raw HTTP
-					return 0;
+					return seekable; // for streaming_start
 				// Redirect
 				case 301: // Permanently
 				case 302: // Temporarily
@@ -852,12 +903,14 @@ nop_streaming_seek( int fd, off_t pos, streaming_ctrl_t *stream_ctrl ) {
 int
 nop_streaming_start( stream_t *stream ) {
 	HTTP_header_t *http_hdr = NULL;
-	int fd;
+	char *next_url=NULL;
+	URL_t *rd_url=NULL;
+	int fd,ret;
 	if( stream==NULL ) return -1;
 
 	fd = stream->fd;
 	if( fd<0 ) {
-		fd = http_send_request( stream->streaming_ctrl->url ); 
+		fd = http_send_request( stream->streaming_ctrl->url, 0 ); 
 		if( fd<0 ) return -1;
 		http_hdr = http_read_response( fd );
 		if( http_hdr==NULL ) return -1;
@@ -873,10 +926,36 @@ nop_streaming_start( stream_t *stream ) {
 					}
 				}
 				break;
+			// Redirect
+			case 301: // Permanently
+			case 302: // Temporarily
+				ret=-1;
+				next_url = http_get_field( http_hdr, "Location" );
+
+				if (next_url != NULL)
+					rd_url=url_new(next_url);
+
+				if (next_url != NULL && rd_url != NULL) {
+					mp_msg(MSGT_NETWORK,MSGL_STATUS,"Redirected: Using this url instead %s\n",next_url);
+							stream->streaming_ctrl->url=check4proxies(rd_url);
+					ret=nop_streaming_start(stream); //recursively get streaming started 
+				} else {
+					mp_msg(MSGT_NETWORK,MSGL_ERR,"Redirection failed\n");
+					closesocket( fd );
+					fd = -1;
+				}
+				return ret;
+				break;
+			case 401: //Authorization required
+			case 403: //Forbidden
+			case 404: //Not found
+			case 500: //Server Error
 			default:
-				mp_msg(MSGT_NETWORK,MSGL_ERR,"Server return %d: %s\n", http_hdr->status_code, http_hdr->reason_phrase );
+				mp_msg(MSGT_NETWORK,MSGL_ERR,"Server returned code %d: %s\n", http_hdr->status_code, http_hdr->reason_phrase );
 				closesocket( fd );
 				fd = -1;
+				return -1;
+				break;
 		}
 		stream->fd = fd;
 	} else {
@@ -1117,10 +1196,21 @@ streaming_start(stream_t *stream, int *demuxer_type, URL_t *url) {
 		return -1;
 	}
 	stream->streaming_ctrl->url = check4proxies( url );
+
+        if (*demuxer_type != DEMUXER_TYPE_PLAYLIST){ 
 	ret = autodetectProtocol( stream->streaming_ctrl, &stream->fd, demuxer_type );
+        } else {
+	  ret=0;
+	}
+
 	if( ret<0 ) {
 		return -1;
 	}
+	if( ret==1 ) {
+		stream->flags |= STREAM_SEEK;
+		stream->seek = http_seek;
+	}
+
 	ret = -1;
 	
 	// Get the bandwidth available
@@ -1146,10 +1236,20 @@ streaming_start(stream_t *stream, int *demuxer_type, URL_t *url) {
 	if( (!strcasecmp( stream->streaming_ctrl->url->protocol, "rtsp")) &&
 			(*demuxer_type == DEMUXER_TYPE_REAL)) {
 		stream->fd = -1;
-		ret = realrtsp_streaming_start( stream );
+		if ((ret = realrtsp_streaming_start( stream )) < 0) {
+		    mp_msg(MSGT_NETWORK,MSGL_INFO,"Not a Realmedia rtsp url. Trying standard rtsp protocol.\n");
+#ifdef STREAMING_LIVE_DOT_COM
+		    *demuxer_type =  DEMUXER_TYPE_RTP;
+		    goto try_livedotcom;
+#else
+		    mp_msg(MSGT_NETWORK,MSGL_ERR,"RTSP support requires the \"LIVE.COM Streaming Media\" libraries!\n");
+		    return -1;
+#endif
+		}
 	} else
 
 	// For connection-oriented streams, we can usually determine the streaming type.
+try_livedotcom:
 	switch( *demuxer_type ) {
 		case DEMUXER_TYPE_ASF:
 			// Send the appropriate HTTP request
@@ -1160,6 +1260,7 @@ streaming_start(stream_t *stream, int *demuxer_type, URL_t *url) {
 			ret = asf_streaming_start( stream, demuxer_type );
 			if( ret<0 ) {
 				mp_msg(MSGT_NETWORK,MSGL_ERR,"asf_streaming_start failed\n");
+                                mp_msg(MSGT_NETWORK,MSGL_STATUS,"Check if this is a playlist which requires -playlist option\nExample: mplayer -playlist <url>\n");
 			}
 			break;
 #ifdef STREAMING_LIVE_DOT_COM
@@ -1185,6 +1286,7 @@ streaming_start(stream_t *stream, int *demuxer_type, URL_t *url) {
 		case DEMUXER_TYPE_OGG:
 		case DEMUXER_TYPE_PLAYLIST:
 		case DEMUXER_TYPE_UNKNOWN:
+		case DEMUXER_TYPE_NSV: 
 			// Generic start, doesn't need to filter
 			// the network stream, it's a raw stream
 			ret = nop_streaming_start( stream );

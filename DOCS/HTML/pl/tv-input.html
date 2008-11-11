@@ -1,5 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html><head><meta content="text/html; charset=ISO-8859-1" http-equiv="Content-Type"><title>2.4. Wej&#347;cie TV</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.50.0"><link rel="home" href="index.html" title="MPlayer - Odtwarzacz filmów dla LINUKSA"><link rel="up" href="features.html" title="Rozdzia&#322; 2. Mo&#380;liwo&#347;ci"><link rel="previous" href="devices.html" title="2.3. Urz&#261;dzenia wyj&#347;ciowe"><link rel="next" href="edl.html" title="2.5. Edit Decision Lists (EDL)"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">2.4. Wej&#347;cie TV</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="devices.html">Poprzedni</a> </td><th width="60%" align="center">Rozdzia&#322; 2. Mo&#380;liwo&#347;ci</th><td width="20%" align="right"> <a accesskey="n" href="edl.html">Nast&#281;pny</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="tv-input"></a>2.4. Wej&#347;cie TV</h2></div></div><p>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>2.4. Wej&#347;cie TV</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - Odtwarzacz filmów dla LINUKSA"><link rel="up" href="features.html" title="Rozdzia&#322; 2. Mo&#380;liwo&#347;ci"><link rel="previous" href="devices.html" title="2.3. Urz&#261;dzenia wyj&#347;ciowe"><link rel="next" href="usage.html" title="Rozdzia&#322; 3. Sposób u&#380;ycia"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">2.4. Wej&#347;cie TV</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="devices.html">Poprzedni</a> </td><th width="60%" align="center">Rozdzia&#322; 2. Mo&#380;liwo&#347;ci</th><td width="20%" align="right"> <a accesskey="n" href="usage.html">Nast&#281;pny</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="tv-input"></a>2.4. Wej&#347;cie TV</h2></div></div><p>
 Sekcja ta opisuje jak <span class="bold"><b>ogl&#261;da&#263;/nagrywa&#263; obraz
 za pomoc&#261; tunera TV kompatybilnego z V4L</b></span>. Zajrzyj do strony man
 by zobaczy&#263; opis opcji TV i klawiszy steruj&#261;cych.
@@ -19,7 +18,7 @@ U&#380;ywaj opcji <tt class="option">channels</tt>. Przyk&#322;ad
 <pre class="screen">-tv channels=26-MTV1,23-TV2</pre>
 Wyja&#347;nienie: u&#380;ywaj&#261;c tej opcji, tylko kana&#322;y 23 i 26 b&#281;d&#261; dost&#281;pne oraz pojawi
 si&#281; fajny napis na OSD przy zmianie kana&#322;u, wy&#347;wietlaj&#261;cy jego nazw&#281;.
-Odst&#281;py w nazwie kana&#322;u musz&#261; zosta&#263; zast&#261;pione znakiem &quot;_&quot;.
+Odst&#281;py w nazwie kana&#322;u musz&#261; zosta&#263; zast&#261;pione znakiem "_".
 </p></li><li><p>
 U&#380;ywaj rozs&#261;dnych rozmiarów obrazu. Rozmiary obrazu wynikowego powinny
 by&#263; podzielne przez 16.
@@ -35,12 +34,12 @@ usuwanie przeplotu za pomoc&#261; opcji <tt class="option">-vf pp=TYP_DEINT</tt>
 <tt class="option">pp=lb</tt> spisuje si&#281; dobrze, ale to kwestia gustu. Poczytaj o
 innych algorytmach usuwania przeplotu na stronie man i zacznij eksperymentowa&#263;.
 </p></li><li><p>
-Usuwaj &quot;martwe miejsca&quot;. Kiedy nagrywasz video, s&#261; pewnie miejsca przy brzegach,
+Usuwaj "martwe miejsca". Kiedy nagrywasz video, s&#261; pewnie miejsca przy brzegach,
 które s&#261; zazwyczaj czarne lub zawieraj&#261; szum. Jak si&#281; &#322;atwo domy&#347;li&#263;,
 niepotrzebnie wymagaj&#261; wi&#281;kszej przepustowo&#347;ci (dok&#322;adniej, to nie same czarne
 miejsca, lecz ostre przej&#347;cia pomi&#281;dzy czarnym kolorem i ja&#347;niejszym obrazem
 video, ale nie jest to akurat takie wa&#380;ne). Zanim zaczniesz nagrywa&#263;, ustaw
-argumenty opcji <tt class="option">crop</tt> by wszystkie &quot;&#347;mieci&quot; na brzegach zosta&#322;y
+argumenty opcji <tt class="option">crop</tt> by wszystkie "&#347;mieci" na brzegach zosta&#322;y
 wyci&#281;te. Oczywi&#347;cie nie zapomnij o utrzymaniu prawid&#322;owych wymiarów obrazu.
 </p></li><li><p>
 Uwa&#380;aj na obci&#261;&#380;enie CPU. Nie powinno ono przekroczy&#263; granicy 90% przez
@@ -64,9 +63,10 @@ konieczne by&#322;o podanie formatu wyj&#347;cia.
 Ten problem powinien by&#263; rozwi&#261;zany w aktualnych wydaniach i opcja
 <tt class="option">outfmt</tt> nie jest ju&#380; wymagana, a ustawienie domy&#347;lne powinno
 pasowa&#263; ka&#380;demu. Na przyk&#322;ad, je&#347;li nagrywasz do formatu DivX u&#380;ywaj&#261;c
-libavcodec i podasz opcj&#281; <tt class="option">outfmt=RGB24</tt> aby zwi&#281;kszy&#263; jako&#347;&#263;
-nagrywanego obrazu, zostanie on i tak pó&#378;niej z powrotem przekonwertowany do
-YV12, wi&#281;c jedyne, co osi&#261;gniesz, to ogromna strata mocy obliczeniowej.
+<tt>libavcodec</tt> i podasz opcj&#281; <tt class="option">outfmt=RGB24</tt>
+aby zwi&#281;kszy&#263; jako&#347;&#263; nagrywanego obrazu, zostanie on i tak pó&#378;niej z
+powrotem przekonwertowany do YV12, wi&#281;c jedyne, co osi&#261;gniesz, to ogromna
+strata mocy obliczeniowej.
 </p></li><li><p>
 By u&#380;y&#263; przestrzeni kolorów I420 (<tt class="option">outfmt=i420</tt>), musisz doda&#263;
 opcj&#281; <tt class="option">-vc rawi420</tt> z powodu konfliktu fourcc z kodekiem Intel
@@ -85,8 +85,8 @@ Je&#347;li <span class="application">MEncoder</span> nie mo&#380;e otworzy&#263;
 d&#378;wi&#281;kowego, upewnij si&#281;, &#380;e jest ono rzeczywi&#347;cie dost&#281;pne. Zdarzaj&#261; si&#281;
 problemy z serwerami d&#378;wi&#281;ku typu aRts (KDE) lub esd (GNOME). Je&#347;li masz
 kart&#281; full-duplex (prawie wszystkie przyzwoite karty dost&#281;pne obecnie obs&#322;uguj&#261;
-t&#281; funkcj&#281;) i korzystasz z KDE, spróbuj zaznaczy&#263; opcj&#281; &quot;Dzia&#322;anie w pe&#322;ni
-dupleksowe&quot; (&quot;full duplex&quot;) w konfiguracji serwera d&#378;wi&#281;ku.
+t&#281; funkcj&#281;) i korzystasz z KDE, spróbuj zaznaczy&#263; opcj&#281; "Dzia&#322;anie w pe&#322;ni
+dupleksowe" ("full duplex") w konfiguracji serwera d&#378;wi&#281;ku.
 </p></li></ul></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="tv-examples"></a>2.4.3. Przyk&#322;ady</h3></div></div><div class="informalexample"><p>
 Puste wyj&#347;cie, do AAlib :)
 <pre class="screen">
@@ -106,7 +106,7 @@ dobre do nagrywania filmów.
      mencoder -tv driver=v4l:width=768:height=576 \
      -ovc lavc -lavcopts vcodec=mpeg4:vbitrate=900 \
      -oac mp3lame -lameopts cbr:br=64 \
-     -vf crop=720:544:24:16,pp=lb -o output.avi tv://
+     -vf crop=720:544:24:16,pp=lb -o <i><tt>wyjscie.avi</tt></i> tv://
 </pre>
 </p></div><div class="informalexample"><p>
 Ten przyk&#322;ad dodatkowo przeskaluje obraz do 384x288 i skompresuje video
@@ -118,11 +118,11 @@ nagrywania d&#322;ugich seriali TV, kiedy jako&#347;&#263; obrazu nie jest tak w
      mencoder -tv driver=v4l:width=768:height=576 \
      -ovc lavc -lavcopts vcodec=mpeg4:vbitrate=350:vhq:vqmax=31:keyint=300 \
      -oac mp3lame -lameopts cbr:br=48 \
-     -vf crop=720:540:24:18,pp=tn/lb,scale=384:288 -sws 1 -o output.avi tv://
+     -vf crop=720:540:24:18,pp=tn/lb,scale=384:288 -sws 1 -o <i><tt>wyjscie.avi</tt></i> tv://
 </pre>
 Jest równie&#380; mo&#380;liwe podanie mniejszych wymiarów obrazu w opcji
 <tt class="option">-tv</tt> i pomini&#281;cie programowego skalowania, ale to podej&#347;cie
 wykorzystuje maksymaln&#261; ilo&#347;&#263; dost&#281;pnych informacji i jest troch&#281; bardziej
 odporne na szum. Z powodu ogranicze&#324; sprz&#281;towych Uk&#322;ady bt878 mog&#261; stosowa&#263;
 u&#347;rednianie pikseli jedynie w kierunku poziomym.
-</p></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="devices.html">Poprzedni</a> </td><td width="20%" align="center"><a accesskey="u" href="features.html">Pocz&#261;tek rozdzia&#322;u</a></td><td width="40%" align="right"> <a accesskey="n" href="edl.html">Nast&#281;pny</a></td></tr><tr><td width="40%" align="left" valign="top">2.3. Urz&#261;dzenia wyj&#347;ciowe </td><td width="20%" align="center"><a accesskey="h" href="index.html">Spis tre&#347;ci</a></td><td width="40%" align="right" valign="top"> 2.5. Edit Decision Lists (EDL)</td></tr></table></div></body></html>
+</p></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="devices.html">Poprzedni</a> </td><td width="20%" align="center"><a accesskey="u" href="features.html">Pocz&#261;tek rozdzia&#322;u</a></td><td width="40%" align="right"> <a accesskey="n" href="usage.html">Nast&#281;pny</a></td></tr><tr><td width="40%" align="left" valign="top">2.3. Urz&#261;dzenia wyj&#347;ciowe </td><td width="20%" align="center"><a accesskey="h" href="index.html">Spis tre&#347;ci</a></td><td width="40%" align="right" valign="top"> Rozdzia&#322; 3. Sposób u&#380;ycia</td></tr></table></div></body></html>

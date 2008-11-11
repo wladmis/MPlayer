@@ -95,6 +95,7 @@ static const uint8_t offset[127][2]= {
 struct vf_priv_s {
 	int log2_count;
 	int qp;
+	int mode;
 	int mpeg2;
 	unsigned int outfmt;
 	int temp_stride;
@@ -106,7 +107,7 @@ struct vf_priv_s {
 
 #define SHIFT 22
 
-static void requantize_c(DCTELEM dst[64], DCTELEM src[64], int qp, uint8_t *permutation){
+static void hardthresh_c(DCTELEM dst[64], DCTELEM src[64], int qp, uint8_t *permutation){
 	int i; 
 	int bias= 0; //FIXME
 	unsigned int threshold1, threshold2;
@@ -126,8 +127,31 @@ static void requantize_c(DCTELEM dst[64], DCTELEM src[64], int qp, uint8_t *perm
 	}
 }
 
+static void softthresh_c(DCTELEM dst[64], DCTELEM src[64], int qp, uint8_t *permutation){
+	int i; 
+	int bias= 0; //FIXME
+	unsigned int threshold1, threshold2;
+	
+	threshold1= qp*((1<<4) - bias) - 1;
+	threshold2= (threshold1<<1);
+        
+	memset(dst, 0, 64*sizeof(DCTELEM));
+	dst[0]= (src[0] + 4)>>3;
+
+        for(i=1; i<64; i++){
+		int level= src[i];
+		if(((unsigned)(level+threshold1))>threshold2){
+			const int j= permutation[i];
+			if(level>0)
+				dst[j]= (level - threshold1 + 4)>>3;
+			else
+				dst[j]= (level + threshold1 + 4)>>3;
+		}
+	}
+}
+
 #ifdef HAVE_MMX
-static void requantize_mmx(DCTELEM dst[64], DCTELEM src[64], int qp, uint8_t *permutation){
+static void hardthresh_mmx(DCTELEM dst[64], DCTELEM src[64], int qp, uint8_t *permutation){
 	int bias= 0; //FIXME
 	unsigned int threshold1;
 	
@@ -194,6 +218,82 @@ static void requantize_mmx(DCTELEM dst[64], DCTELEM src[64], int qp, uint8_t *pe
 	);
 	dst[0]= (src[0] + 4)>>3;
 }
+
+static void softthresh_mmx(DCTELEM dst[64], DCTELEM src[64], int qp, uint8_t *permutation){
+	int bias= 0; //FIXME
+	unsigned int threshold1;
+
+	threshold1= qp*((1<<4) - bias) - 1;
+	
+        asm volatile(
+#undef REQUANT_CORE
+#define REQUANT_CORE(dst0, dst1, dst2, dst3, src0, src1, src2, src3) \
+		"movq " #src0 ", %%mm0	\n\t"\
+		"movq " #src1 ", %%mm1	\n\t"\
+		"pxor %%mm6, %%mm6	\n\t"\
+		"pxor %%mm7, %%mm7	\n\t"\
+		"pcmpgtw %%mm0, %%mm6	\n\t"\
+		"pcmpgtw %%mm1, %%mm7	\n\t"\
+		"pxor %%mm6, %%mm0	\n\t"\
+		"pxor %%mm7, %%mm1	\n\t"\
+		"psubusw %%mm4, %%mm0	\n\t"\
+		"psubusw %%mm4, %%mm1	\n\t"\
+		"pxor %%mm6, %%mm0	\n\t"\
+		"pxor %%mm7, %%mm1	\n\t"\
+		"movq " #src2 ", %%mm2	\n\t"\
+		"movq " #src3 ", %%mm3	\n\t"\
+		"pxor %%mm6, %%mm6	\n\t"\
+		"pxor %%mm7, %%mm7	\n\t"\
+		"pcmpgtw %%mm2, %%mm6	\n\t"\
+		"pcmpgtw %%mm3, %%mm7	\n\t"\
+		"pxor %%mm6, %%mm2	\n\t"\
+		"pxor %%mm7, %%mm3	\n\t"\
+		"psubusw %%mm4, %%mm2	\n\t"\
+		"psubusw %%mm4, %%mm3	\n\t"\
+		"pxor %%mm6, %%mm2	\n\t"\
+		"pxor %%mm7, %%mm3	\n\t"\
+\
+		"paddsw %%mm5, %%mm0	\n\t"\
+		"paddsw %%mm5, %%mm1	\n\t"\
+		"paddsw %%mm5, %%mm2	\n\t"\
+		"paddsw %%mm5, %%mm3	\n\t"\
+		"psraw $3, %%mm0	\n\t"\
+		"psraw $3, %%mm1	\n\t"\
+		"psraw $3, %%mm2	\n\t"\
+		"psraw $3, %%mm3	\n\t"\
+\
+		"movq %%mm0, %%mm7	\n\t"\
+		"punpcklwd %%mm2, %%mm0	\n\t" /*A*/\
+		"punpckhwd %%mm2, %%mm7	\n\t" /*C*/\
+		"movq %%mm1, %%mm2	\n\t"\
+		"punpcklwd %%mm3, %%mm1	\n\t" /*B*/\
+		"punpckhwd %%mm3, %%mm2	\n\t" /*D*/\
+		"movq %%mm0, %%mm3	\n\t"\
+		"punpcklwd %%mm1, %%mm0	\n\t" /*A*/\
+		"punpckhwd %%mm7, %%mm3	\n\t" /*C*/\
+		"punpcklwd %%mm1, %%mm7	\n\t" /*B*/\
+		"punpckhwd %%mm2, %%mm1	\n\t" /*D*/\
+\
+		"movq %%mm0, " #dst0 "	\n\t"\
+		"movq %%mm7, " #dst1 "	\n\t"\
+		"movq %%mm3, " #dst2 "	\n\t"\
+		"movq %%mm1, " #dst3 "	\n\t"
+                
+		"movd %2, %%mm4		\n\t"
+		"movd %3, %%mm5		\n\t"
+		"packssdw %%mm4, %%mm4	\n\t"
+		"packssdw %%mm5, %%mm5	\n\t"
+		"packssdw %%mm4, %%mm4	\n\t"
+		"packssdw %%mm5, %%mm5	\n\t"
+		REQUANT_CORE(  (%1),  8(%1), 16(%1), 24(%1),  (%0), 8(%0), 64(%0), 72(%0))
+		REQUANT_CORE(32(%1), 40(%1), 48(%1), 56(%1),16(%0),24(%0), 48(%0), 56(%0))
+		REQUANT_CORE(64(%1), 72(%1), 80(%1), 88(%1),32(%0),40(%0), 96(%0),104(%0))
+		REQUANT_CORE(96(%1),104(%1),112(%1),120(%1),80(%0),88(%0),112(%0),120(%0))
+		: : "r" (src), "r" (dst), "g" (threshold1), "rm" (4) //FIXME maybe more accurate then needed?
+	);
+
+	dst[0]= (src[0] + 4)>>3;
+}
 #endif
 
 static inline void add_block(int16_t *dst, int stride, DCTELEM block[64]){
@@ -216,7 +316,7 @@ static void store_slice_c(uint8_t *dst, int16_t *src, int dst_stride, int src_st
 	dst[x + y*dst_stride + pos]= temp;
 
 	for(y=0; y<height; y++){
-		uint8_t *d= dither[y];
+		const uint8_t *d= dither[y];
 		for(x=0; x<width; x+=8){
 			int temp;
 			STORE(0);
@@ -274,7 +374,7 @@ static void store_slice_mmx(uint8_t *dst, int16_t *src, int dst_stride, int src_
 
 static void (*store_slice)(uint8_t *dst, int16_t *src, int dst_stride, int src_stride, int width, int height, int log2_scale)= store_slice_c;
 
-static void (*requantize)(DCTELEM dst[64], DCTELEM src[64], int qp, uint8_t *permutation)= requantize_c;
+static void (*requantize)(DCTELEM dst[64], DCTELEM src[64], int qp, uint8_t *permutation)= hardthresh_c;
 
 static void filter(struct vf_priv_s *p, uint8_t *dst, uint8_t *src, int dst_stride, int src_stride, int width, int height, uint8_t *qp_store, int qp_stride, int is_luma){
 	int x, y, i;
@@ -465,6 +565,9 @@ static int control(struct vf_instance_s* vf, int request, void* data){
 }
 
 static int open(vf_instance_t *vf, char* args){
+
+    int log2c;
+    
     vf->config=config;
     vf->put_image=put_image;
     vf->get_image=get_image;
@@ -478,17 +581,33 @@ static int open(vf_instance_t *vf, char* args){
 
     vf->priv->avctx= avcodec_alloc_context();
     dsputil_init(&vf->priv->dsp, vf->priv->avctx);
-#ifdef HAVE_MMX
-    if(gCpuCaps.hasMMX){
-	store_slice= store_slice_mmx;
-	requantize= requantize_mmx;
-    }
-#endif
     
     vf->priv->log2_count= 3;
     
-    if (args) sscanf(args, "%d:%d", &vf->priv->log2_count, &vf->priv->qp);
-	
+    if (args) sscanf(args, "%d:%d:%d", &log2c, &vf->priv->qp, &vf->priv->mode);
+
+    if( log2c >=0 && log2c <=6 )
+        vf->priv->log2_count = log2c;
+
+    if(vf->priv->qp < 0)
+        vf->priv->qp = 0;
+
+    switch(vf->priv->mode){
+        default:
+	case 0: requantize= hardthresh_c; break;
+	case 1: requantize= softthresh_c; break;
+    }
+
+#ifdef HAVE_MMX
+    if(gCpuCaps.hasMMX){
+	store_slice= store_slice_mmx;
+	switch(vf->priv->mode){
+	    case 0: requantize= hardthresh_mmx; break;
+	    case 1: requantize= softthresh_mmx; break;
+	}
+    }
+#endif
+    
     // check csp:
     vf->priv->outfmt=vf_match_csp(&vf->next,fmt_list,IMGFMT_YV12);
     if(!vf->priv->outfmt)

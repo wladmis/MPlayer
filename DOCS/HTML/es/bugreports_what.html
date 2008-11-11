@@ -1,5 +1,5 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html><head><meta content="text/html; charset=ISO-8859-1" http-equiv="Content-Type"><title>B.4. De qué informar</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.50.0"><link rel="home" href="index.html" title="MPlayer - El reproductor de Películas para LINUX"><link rel="up" href="bugreports.html" title="Apéndice B. Cómo reportar errores"><link rel="previous" href="bugreports_where.html" title="B.3. Dónde informar de los errores"><link rel="next" href="bugreports_advusers.html" title="B.5. Yo sé lo que estoy haciendo..."></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">B.4. De qué informar</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="bugreports_where.html">Anterior</a> </td><th width="60%" align="center">Apéndice B. Cómo reportar errores</th><td width="20%" align="right"> <a accesskey="n" href="bugreports_advusers.html">Siguiente</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="bugreports_what"></a>B.4. De qué informar</h2></div></div><p>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>B.4. De qué informar</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - El reproductor de Películas
+para LINUX"><link rel="up" href="bugreports.html" title="Apéndice B. Cómo reportar errores"><link rel="previous" href="bugreports_where.html" title="B.3. Dónde informar de los errores"><link rel="next" href="bugreports_advusers.html" title="B.5. Yo sé lo que estoy haciendo..."></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">B.4. De qué informar</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="bugreports_where.html">Anterior</a> </td><th width="60%" align="center">Apéndice B. Cómo reportar errores</th><td width="20%" align="right"> <a accesskey="n" href="bugreports_advusers.html">Siguiente</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="bugreports_what"></a>B.4. De qué informar</h2></div></div><p>
 Necesita incluir un historial, archivos de configuración o muestras en su informe
 de error. Si alguno de estos es muy grande entonces es mejor subirlos a nuestro
 <a href="ftp://mplayerhq.hu/MPlayer/incoming/" target="_top">servidor FTP</a> en un
@@ -34,7 +34,7 @@ Si tiene problemas con el modo de pantalla completa:
 </p></li><li><p>
 Si tiene problemas con XVIDIX:
   </p><div class="itemizedlist"><ul type="round"><li><p>Profundidad de color de las X:
-<pre class="screen">xdpyinfo | grep &quot;depth of root&quot;</pre>
+<pre class="screen">xdpyinfo | grep "depth of root"</pre>
     </p></li></ul></div><p>
 </p></li><li><p>
 Si solo el GUI está fallando:
@@ -84,8 +84,9 @@ Si su problema es específico con uno o más archivos, suba las víctimas a:
 Suba también un pequeño archivo de texto que tenga la misma base en el nombre de
 su archivo con una extensión .txt. Describa el problema que tiene con el archivo
 en particular e incluya su dirección de correo electrónico así como la salida de
-MPlayer con nivel de prolijo 1. Usualmente los primeros 1-5 MB del archivo son
-suficientes para reproducir el problema, pero para asegurarse haga:
+<span class="application">MPlayer</span> con nivel de prolijo 1.
+Usualmente los primeros 1-5 MB del archivo son suficientes para reproducir
+el problema, pero para asegurarse haga:
 <pre class="screen">dd if=<i><tt>su-archivo</tt></i> of=<i><tt>archivo-pequeño</tt></i> bs=1024k count=5</pre>
 Esto coje los primeros cinco megabytes de '<span class="bold"><b>su-archivo</b></span>'
 y los escribe a '<span class="bold"><b>archivo-pequeño</b></span>. Entonces pruebe de
@@ -100,12 +101,12 @@ Debería ejecutar <span class="application">MPlayer</span> dentro de <b>gdb</b>
 y enviarnos la salida completa o si tiene un volcado <tt class="filename">core</tt> de
 cuelgue puede extraer información útil desde el archivo Core. Aquí tiene cómo:
 </p><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="bugreports_debug"></a>B.4.6.1. Cómo conservar información acerca de un error reproducible</h4></div></div><p>
-Recompile MPlayer con debug de código activado:
+Recompile <span class="application">MPlayer</span> con debug de código activado:
 <pre class="screen">
 ./configure --enable-debug=3
 make
 </pre>
-y luego ejecute MPlayer dentro de gdb usando:
+y luego ejecute <span class="application">MPlayer</span> dentro de gdb usando:
 <pre class="screen">gdb ./mplayer</pre>
 Ahora ya está dentro de gdb. Escriba:
 <pre class="screen">run -v <i><tt>opciones-para-mplayer</tt></i>

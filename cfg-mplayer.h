@@ -77,6 +77,11 @@ extern int osd_level;
 extern char *ao_outputfilename;
 extern int ao_pcm_waveheader;
 
+#ifdef HAVE_DIRECTX
+extern int adapter_num;
+extern int refresh_rate;
+#endif
+
 #ifdef HAVE_X11
 extern char *mDisplayName;
 extern int WinID;
@@ -173,7 +178,6 @@ extern char* pp_help;
 
 m_option_t mplayer_opts[]={
 	/* name, pointer, type, flags, min, max */
-	{"include", cfg_include, CONF_TYPE_FUNC_PARAM, CONF_NOSAVE, 0, 0, NULL}, /* this don't need anymore to be the first!!! */
 
 //---------------------- libao/libvo options ------------------------
 	{"o", "Option -o has been renamed to -vo (video-out), use -vo !\n",
@@ -188,6 +192,7 @@ m_option_t mplayer_opts[]={
 	{"aop", ao_plugin_conf, CONF_TYPE_SUBCONFIG, 0, 0, 0, NULL},
 	{"dsp", "Use -ao oss:dsp_path!\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
         {"mixer", &mixer_device, CONF_TYPE_STRING, 0, 0, 0, NULL},
+        {"mixer-channel", &mixer_channel, CONF_TYPE_STRING, 0, 0, 0, NULL},
 	{"master", "Option -master has been removed, use -aop list=volume instead.\n", CONF_TYPE_PRINT, 0, 0, 0, NULL},
 	// override audio buffer size (used only by -ao oss, anyway obsolete...)
 	{"abs", &ao_data.buffersize, CONF_TYPE_INT, CONF_MIN, 0, 0, NULL},
@@ -286,7 +291,9 @@ m_option_t mplayer_opts[]={
 
 	{"grabpointer", &vo_grabpointer, CONF_TYPE_FLAG, 0, 0, 1, NULL},
 	{"nograbpointer", &vo_grabpointer, CONF_TYPE_FLAG, 0, 1, 0, NULL},
-
+	
+    {"adapter", &vo_adapter_num, CONF_TYPE_INT, CONF_RANGE, 0, 5, NULL},
+    {"refreshrate",&vo_refresh_rate,CONF_TYPE_INT,CONF_RANGE, 0,100, NULL},
 #ifdef HAVE_X11
 	// x11,xv,xmga,xvidix
 	{"wid", &WinID, CONF_TYPE_INT, 0, 0, 0, NULL},
@@ -386,7 +393,8 @@ m_option_t mplayer_opts[]={
 	{"lircconf", &lirc_configfile, CONF_TYPE_STRING, CONF_GLOBAL, 0, 0, NULL},
 #endif
 
-	{"gui", &use_gui, CONF_TYPE_FLAG, CONF_GLOBAL|CONF_NOCMD, 0, 1, NULL},
+	{"gui", "Please remove gui=yes from your config and run gmplayer if you want the GUI.\n", CONF_TYPE_PRINT, 0, 0, 0, NULL},
+//	{"gui", &use_gui, CONF_TYPE_FLAG, CONF_GLOBAL|CONF_NOCMD, 0, 1, NULL},
 //	{"nogui", &use_gui, CONF_TYPE_FLAG, CONF_GLOBAL, 1, 0, NULL},
       
 #ifdef HAVE_NEW_GUI
@@ -419,11 +427,7 @@ m_option_t mplayer_opts[]={
 #undef MAIN_CONF
         
 	{"identify", &identify, CONF_TYPE_FLAG, CONF_GLOBAL, 0, 1, NULL},
-	{"quiet", &quiet, CONF_TYPE_FLAG, CONF_GLOBAL, 0, 1, NULL},
-	{"noquiet", &quiet, CONF_TYPE_FLAG, CONF_GLOBAL, 1, 0, NULL},
 	{"really-quiet", &verbose, CONF_TYPE_FLAG, CONF_GLOBAL, 0, -10, NULL},
-	{"verbose", &verbose, CONF_TYPE_INT, CONF_RANGE|CONF_GLOBAL, 0, 100, NULL},
-	{"v", cfg_inc_verbose, CONF_TYPE_FUNC, CONF_GLOBAL|CONF_NOSAVE, 0, 0, NULL},
 	{"-help", help_text, CONF_TYPE_PRINT, CONF_NOCFG|CONF_GLOBAL, 0, 0, NULL},
 	{"help", help_text, CONF_TYPE_PRINT, CONF_NOCFG|CONF_GLOBAL, 0, 0, NULL},
 	{"h", help_text, CONF_TYPE_PRINT, CONF_NOCFG|CONF_GLOBAL, 0, 0, NULL},

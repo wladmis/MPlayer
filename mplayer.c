@@ -82,7 +82,7 @@ extern int mp_input_win32_slave_cmd_func(int fd,char* dest,int size);
 int slave_mode=0;
 int verbose=0;
 int identify=0;
-static int quiet=0;
+int quiet=0;
 
 #define ABS(x) (((x)>=0)?(x):(-(x)))
 #define ROUND(x) ((int)((x)<0 ? (x)-0.5 : (x)+0.5))
@@ -152,7 +152,7 @@ static int cfg_include(m_option_t *conf, char *filename){
 //**************************************************************************//
 
 #ifdef HAVE_X11
-void xscreensaver_heartbeat(float time);
+void xscreensaver_heartbeat(void);
 #endif
 
 //**************************************************************************//
@@ -436,7 +436,7 @@ static void uninit_player(unsigned int mask){
   if(mask&INITED_AO){
     inited_flags&=~INITED_AO;
     current_module="uninit_ao";
-    audio_out->uninit(); audio_out=NULL;
+    audio_out->uninit(1); audio_out=NULL;
   }
 
 #ifdef HAVE_NEW_GUI
@@ -736,6 +736,7 @@ int osd_show_sub_changed = 0;
 int osd_show_percentage = 0;
 int osd_show_tv_channel = 25;
 int osd_show_ontop = 0;
+int osd_show_framedropping = 0;
 
 int rtc_fd=-1;
 
@@ -752,7 +753,7 @@ int gui_no_filename=0;
   mp_msg_init();
   mp_msg_set_level(MSGL_STATUS);
 
-  mp_msg(MSGT_CPLAYER,MSGL_INFO, "MPlayer " VERSION " (C) 2000-2003 MPlayer Team\n\n");
+  mp_msg(MSGT_CPLAYER,MSGL_INFO, "MPlayer " VERSION " (C) 2000-2004 MPlayer Team\n\n");
   /* Test for cpu capabilities (and corresponding OS support) for optimizing */
   GetCpuCaps(&gCpuCaps);
 #ifdef ARCH_X86
@@ -893,13 +894,15 @@ int gui_no_filename=0;
     }
 
 // check codec.conf
-if(!parse_codec_cfg(get_path("codecs.conf"))){
-  if(!parse_codec_cfg(MPLAYER_CONFDIR "/codecs.conf")){
-    if(!parse_codec_cfg(NULL)){
-      mp_msg(MSGT_CPLAYER,MSGL_HINT,MSGTR_CopyCodecsConf);
-      exit(0);
+if(!codecs_file || !parse_codec_cfg(codecs_file)){
+  if(!parse_codec_cfg(get_path("codecs.conf"))){
+    if(!parse_codec_cfg(MPLAYER_CONFDIR "/codecs.conf")){
+      if(!parse_codec_cfg(NULL)){
+	mp_msg(MSGT_CPLAYER,MSGL_HINT,MSGTR_CopyCodecsConf);
+	exit(0);
+      }
+      mp_msg(MSGT_CPLAYER,MSGL_INFO,MSGTR_BuiltinCodecsConf);
     }
-    mp_msg(MSGT_CPLAYER,MSGL_INFO,MSGTR_BuiltinCodecsConf);
   }
 }
 
@@ -1086,7 +1089,7 @@ if(!parse_codec_cfg(get_path("codecs.conf"))){
   {
     // seteuid(0); /* Can't hurt to try to get root here */
     if ((rtc_fd = open("/dev/rtc", O_RDONLY)) < 0)
-	mp_msg(MSGT_CPLAYER, MSGL_WARN, "Failed to open /dev/rtc: %s (mplayer should be setuid root or /dev/rtc should be readable by the user.)\n", strerror(errno));
+	mp_msg(MSGT_CPLAYER, MSGL_WARN, "Failed to open /dev/rtc: %s (/dev/rtc should be readable by the user.)\n", strerror(errno));
      else {
 	unsigned long irqp = 1024; /* 512 seemed OK. 128 is jerky. */
 
@@ -1630,7 +1633,8 @@ if(sh_video) {
         add_subtitles (sub_name[i], sh_video->fps, 0); 
   } 
   if(sub_auto) { // auto load sub file ...
-    char **tmp = sub_filenames(get_path("sub/"), filename);
+    char *psub = get_path( "sub/" );
+    char **tmp = sub_filenames((psub ? psub : ""), filename);
     char **tmp2 = tmp;
     while (*tmp2)
         add_subtitles (*tmp2++, sh_video->fps, 0);
@@ -2463,6 +2467,10 @@ if (stream->type==STREAMTYPE_DVDNAV && dvd_nav_still)
 
 #ifdef USE_EDL
  if( next_edl_record->next ) { // Are we (still?) doing EDL?
+  if ( !sh_video ) {
+    mp_msg( MSGT_CPLAYER, MSGL_ERR, "Cannot use edit list without video. EDL disabled.\n" );
+    next_edl_record->next = NULL;
+  } else {
    if( sh_video->pts >= next_edl_record->start_sec ) {
      if( next_edl_record->action == EDL_SKIP ) {
        osd_function = OSD_FFW;
@@ -2482,6 +2490,7 @@ if (stream->type==STREAMTYPE_DVDNAV && dvd_nav_still)
        next_edl_record = next_edl_record->next;
      }
    }
+  }
  }
 #endif
 
@@ -2851,8 +2860,13 @@ if (stream->type==STREAMTYPE_DVDNAV && dvd_nav_still)
     } break;
     case MP_CMD_FRAMEDROPPING :  {
       int v = cmd->args[0].v.i;
-      if(v < 0)
+      if(v < 0){
 	frame_dropping = (frame_dropping+1)%3;
+#ifdef USE_OSD
+       osd_show_framedropping=10;
+       vo_osd_changed(OSDTYPE_SUBTITLE);
+#endif
+      }
       else
 	frame_dropping = v > 2 ? 2 : v;
     } break;
@@ -2953,7 +2967,7 @@ if (stream->type==STREAMTYPE_DVDNAV && dvd_nav_still)
 		else
 		    last_dvb_step = -1;
 
-  		if(dvb_set_channel(priv, cmd->args[0].v.i))
+  		if(dvb_set_channel(priv, cmd->args[1].v.i, cmd->args[0].v.i))
 		{
 	  	  uninit_player(INITED_ALL-(INITED_STREAM|INITED_INPUT));
 		  cache_uninit(stream);
@@ -3398,6 +3412,7 @@ if(rel_seek_secs || abs_seek_pos){
 
       if(sh_video){
 	 current_module="seek_video_reset";
+         resync_video_stream(sh_video);
          if(vo_config_count) video_out->control(VOCTRL_RESET,NULL);
       }
       
@@ -3556,6 +3571,11 @@ if(rel_seek_secs || abs_seek_pos){
       } else if (osd_show_ontop) {
 	  snprintf(osd_text_tmp, 63, "Stay on top: %sabled", vo_ontop?"en":"dis");
 	  osd_show_ontop--;
+      } else if (osd_show_framedropping) {
+	  snprintf(osd_text_tmp, 63, "Framedropping: %s",
+	     (frame_dropping == 1 ? "on" :
+	     (frame_dropping == 2 ? "hard"  : "off")));
+	  osd_show_framedropping--;
       } else if(osd_level>=2) {
           int len = demuxer_get_time_length(demuxer);
           int percentage = -1;
@@ -3607,7 +3627,7 @@ if(rel_seek_secs || abs_seek_pos){
 #ifdef HAVE_X11
 if (stop_xscreensaver && sh_video) {
   current_module="stop_xscreensaver";
-  xscreensaver_heartbeat(sh_video->pts);
+  xscreensaver_heartbeat();
   current_module=NULL;
 }
 #endif

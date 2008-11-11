@@ -1,6 +1,7 @@
 /*
  * MSMPEG4 backend for ffmpeg encoder and decoder
  * Copyright (c) 2001 Fabrice Bellard.
+ * Copyright (c) 2002-2004 Michael Niedermayer <michaelni@gmx.at>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -448,7 +449,7 @@ static inline int coded_block_pred(MpegEncContext * s, int n, uint8_t **coded_bl
     int xy, wrap, pred, a, b, c;
 
     xy = s->block_index[n];
-    wrap = s->block_wrap[0];
+    wrap = s->b8_stride;
 
     /* B C
      * A X 
@@ -566,7 +567,7 @@ void msmpeg4_encode_mb(MpegEncContext * s,
 
             s->misc_bits += get_bits_diff(s);
 
-            h263_pred_motion(s, 0, &pred_x, &pred_y);
+            h263_pred_motion(s, 0, 0, &pred_x, &pred_y);
             msmpeg4v2_encode_motion(s, motion_x - pred_x);
             msmpeg4v2_encode_motion(s, motion_y - pred_y);
         }else{
@@ -577,7 +578,7 @@ void msmpeg4_encode_mb(MpegEncContext * s,
             s->misc_bits += get_bits_diff(s);
 
             /* motion vector */
-            h263_pred_motion(s, 0, &pred_x, &pred_y);
+            h263_pred_motion(s, 0, 0, &pred_x, &pred_y);
             msmpeg4_encode_motion(s, motion_x - pred_x, 
                                   motion_y - pred_y);
         }
@@ -1548,7 +1549,7 @@ static int msmpeg4v12_decode_mb(MpegEncContext *s, DCTELEM block[6][64])
         cbp|= cbpy<<2;
         if(s->msmpeg4_version==1 || (cbp&3) != 3) cbp^= 0x3C;
         
-        h263_pred_motion(s, 0, &mx, &my);
+        h263_pred_motion(s, 0, 0, &mx, &my);
         mx= msmpeg4v2_decode_motion(s, mx, 1);
         my= msmpeg4v2_decode_motion(s, my, 1);
         
@@ -1636,7 +1637,7 @@ static int msmpeg4v34_decode_mb(MpegEncContext *s, DCTELEM block[6][64])
             s->rl_chroma_table_index = s->rl_table_index;
         }
         set_stat(ST_MV);
-        h263_pred_motion(s, 0, &mx, &my);
+        h263_pred_motion(s, 0, 0, &mx, &my);
         if (msmpeg4_decode_motion(s, &mx, &my) < 0)
             return -1;
         s->mv_dir = MV_DIR_FORWARD;

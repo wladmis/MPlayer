@@ -1,5 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html><head><meta content="text/html; charset=ISO-8859-1" http-equiv="Content-Type"><title>2.3. &#1059;&#1089;&#1090;&#1088;&#1086;&#1081;&#1089;&#1090;&#1074;&#1072; &#1074;&#1099;&#1074;&#1086;&#1076;&#1072;</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.50.0"><link rel="home" href="index.html" title="MPlayer - The Movie Player for LINUX"><link rel="up" href="features.html" title="&#1043;&#1083;&#1072;&#1074;&#1072; 2. &#1042;&#1086;&#1079;&#1084;&#1086;&#1078;&#1085;&#1086;&#1089;&#1090;&#1080;"><link rel="previous" href="codecs.html" title="2.2. &#1055;&#1086;&#1076;&#1076;&#1077;&#1088;&#1078;&#1080;&#1074;&#1072;&#1077;&#1084;&#1099;&#1077; &#1082;&#1086;&#1076;&#1077;&#1082;&#1080;"><link rel="next" href="tv-input.html" title="2.4. TV &#1074;&#1093;&#1086;&#1076;"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">2.3. &#1059;&#1089;&#1090;&#1088;&#1086;&#1081;&#1089;&#1090;&#1074;&#1072; &#1074;&#1099;&#1074;&#1086;&#1076;&#1072;</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="codecs.html">&#1055;&#1088;&#1077;&#1076;.</a> </td><th width="60%" align="center">&#1043;&#1083;&#1072;&#1074;&#1072; 2. &#1042;&#1086;&#1079;&#1084;&#1086;&#1078;&#1085;&#1086;&#1089;&#1090;&#1080;</th><td width="20%" align="right"> <a accesskey="n" href="tv-input.html">&#1057;&#1083;&#1077;&#1076;.</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="devices"></a>2.3. &#1059;&#1089;&#1090;&#1088;&#1086;&#1081;&#1089;&#1090;&#1074;&#1072; &#1074;&#1099;&#1074;&#1086;&#1076;&#1072;</h2></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="video-dev"></a>2.3.1. Video output devices</h3></div></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="mtrr"></a>2.3.1.1. Setting up MTRR</h4></div></div><p>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>2.3. &#1059;&#1089;&#1090;&#1088;&#1086;&#1081;&#1089;&#1090;&#1074;&#1072; &#1074;&#1099;&#1074;&#1086;&#1076;&#1072;</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - The Movie Player for LINUX"><link rel="up" href="features.html" title="&#1043;&#1083;&#1072;&#1074;&#1072; 2. &#1042;&#1086;&#1079;&#1084;&#1086;&#1078;&#1085;&#1086;&#1089;&#1090;&#1080;"><link rel="previous" href="codecs.html" title="2.2. &#1055;&#1086;&#1076;&#1076;&#1077;&#1088;&#1078;&#1080;&#1074;&#1072;&#1077;&#1084;&#1099;&#1077; &#1082;&#1086;&#1076;&#1077;&#1082;&#1080;"><link rel="next" href="tv-input.html" title="2.4. TV &#1074;&#1093;&#1086;&#1076;"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">2.3. &#1059;&#1089;&#1090;&#1088;&#1086;&#1081;&#1089;&#1090;&#1074;&#1072; &#1074;&#1099;&#1074;&#1086;&#1076;&#1072;</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="codecs.html">&#1055;&#1088;&#1077;&#1076;.</a> </td><th width="60%" align="center">&#1043;&#1083;&#1072;&#1074;&#1072; 2. &#1042;&#1086;&#1079;&#1084;&#1086;&#1078;&#1085;&#1086;&#1089;&#1090;&#1080;</th><td width="20%" align="right"> <a accesskey="n" href="tv-input.html">&#1057;&#1083;&#1077;&#1076;.</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="devices"></a>2.3. &#1059;&#1089;&#1090;&#1088;&#1086;&#1081;&#1089;&#1090;&#1074;&#1072; &#1074;&#1099;&#1074;&#1086;&#1076;&#1072;</h2></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="video-dev"></a>2.3.1. Video output devices</h3></div></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="mtrr"></a>2.3.1.1. Setting up MTRR</h4></div></div><p>
 It is VERY recommended to check if the MTRR registers
 are set up properly, because they can give a big performance boost.
 </p><p>
@@ -40,7 +39,7 @@ You know base address and memory size, let's setup MTRR registers!
 For example, for the Matrox card above (<tt>base=0xd8000000</tt>)
 with 32MB ram (<tt>size=0x2000000</tt>) just execute:
 <pre class="screen">
-echo &quot;base=0xd8000000 size=0x2000000 type=write-combining&quot; &gt;| /proc/mtrr
+echo "base=0xd8000000 size=0x2000000 type=write-combining" &gt;| /proc/mtrr
 </pre>
 </p><p>
 Not all CPUs support MTRRs. For example older K6-2's (around 266MHz,
@@ -75,7 +74,7 @@ In order to make this work, be sure to check the following:
   <pre class="screen">
 X-Video Extension version 2.2
 screen #0
-  Adaptor #0: &quot;Savage Streams Engine&quot;
+  Adaptor #0: "Savage Streams Engine"
     number of ports: 1
     port base: 43
     operations supported: PutImage
@@ -100,7 +99,7 @@ screen #0
   with <span class="application">MPlayer</span>.
   </p></li><li><p>
   And finally, check if <span class="application">MPlayer</span> was compiled
-  with 'xv' support. Do a <b>mplayer -vo help | grep xv </b>
+  with 'xv' support. Do a <b>mplayer -vo help | grep xv </b>.
   If 'xv' support was built a line similar to this should appear:
   <pre class="screen">
   xv      X11/Xv</pre>
@@ -137,9 +136,9 @@ Riva128 cards don't have XVideo support with XFree86's nVidia driver :(
 Complain to nVidia.
 </p><p>
 However, <span class="application">MPlayer</span> contains a
-<a href="devices.html#vidix" title="2.3.1.2.12. VIDIX">VIDIX</a> driver for most nVidia cards. Currently it
+<a href="devices.html#vidix" title="2.3.1.2.13. VIDIX">VIDIX</a> driver for most nVidia cards. Currently it
 is in beta stage, and has some drawbacks. For more information, see
-<a href="devices.html#vidix-nvidia" title="2.3.1.2.12.5. nVidia cards">nVidia VIDIX</a> section.
+<a href="devices.html#vidix-nvidia" title="2.3.1.2.13.5. nVidia cards">nVidia VIDIX</a> section.
 </p></div><div class="sect5"><div class="titlepage"><div><h6 class="title"><a name="ati"></a>2.3.1.2.1.4. ATI cards</h6></div></div><p>
 The <a href="http://www.linuxvideo.org/gatos" target="_top">GATOS driver</a>
 (which you should use, unless you have Rage128 or Radeon) has VSYNC enabled
@@ -151,7 +150,7 @@ Radeon VE - if you need X, use XFree86 4.2.0 or greater for this card.
 No TV out support. Of course with <span class="application">MPlayer</span> you can
 happily get <span class="bold"><b>accelerated</b></span> display, with or without
 <span class="bold"><b>TV output</b></span>, and no libraries or X are needed.
-Read the <a href="devices.html#vidix" title="2.3.1.2.12. VIDIX">VIDIX</a> section.
+Read the <a href="devices.html#vidix" title="2.3.1.2.13. VIDIX">VIDIX</a> section.
 </p></div><div class="sect5"><div class="titlepage"><div><h6 class="title"><a name="neomagic"></a>2.3.1.2.1.5. NeoMagic cards</h6></div></div><p>
 These cards can be found in many laptops. You must use XFree86 4.3.0 or
 above, or else use Stefan Seyfried's
@@ -166,10 +165,10 @@ next release after 4.3.0.
 </p><p>
 To allow playback of DVD sized content change your XF86Config like this:
 <pre class="programlisting">
-Section &quot;Device&quot;
+Section "Device"
     [...]
-    Driver &quot;neomagic&quot;
-    <span class="emphasis"><em>Option &quot;OverlayMem&quot; &quot;829440&quot;</em></span>
+    Driver "neomagic"
+    <span class="emphasis"><i>Option "OverlayMem" "829440"</i></span>
     [...]
 EndSection</pre>
 </p></div><div class="sect5"><div class="titlepage"><div><h6 class="title"><a name="trident"></a>2.3.1.2.1.6. Trident cards</h6></div></div><p>
@@ -178,7 +177,7 @@ with 4.1.0, install XFree 4.2.0. 4.2.0 adds support for fullscreen Xv
 support with the Cyberblade XP card.
 </p><p>
 Alternatively, <span class="application">MPlayer</span> contains a
-<a href="devices.html#vidix" title="2.3.1.2.12. VIDIX">VIDIX</a> driver for the Cyberblade/i1 card.
+<a href="devices.html#vidix" title="2.3.1.2.13. VIDIX">VIDIX</a> driver for the Cyberblade/i1 card.
 </p></div><div class="sect5"><div class="titlepage"><div><h6 class="title"><a name="kyro"></a>2.3.1.2.1.7. Kyro/PowerVR cards</h6></div></div><p>
 If you want to use Xv with a Kyro based card (for example Hercules
 Prophet 4000XT), you should download the drivers from the
@@ -188,8 +187,8 @@ This document tries to explain in some words what DGA is in general and
 what the DGA video output driver for <span class="application">MPlayer</span>
 can do (and what it can't).
 </p><p><b>WHAT IS DGA. </b>
-DGA is short for <span class="emphasis"><em>Direct Graphics
-Access</em></span> and is a means for a program to bypass the X server and
+DGA is short for <span class="emphasis"><i>Direct Graphics
+Access</i></span> and is a means for a program to bypass the X server and
 directly modifying the framebuffer memory.  Technically spoken this happens
 by mapping the framebuffer memory into the memory range of your process.
 This is allowed by the kernel only if you have superuser privileges. You
@@ -233,9 +232,9 @@ access to be able to write directly video memory. If you want to run it as
 user, then install <span class="application">MPlayer</span> SUID root:
 
 <pre class="screen">
-chown root /usr/local/bin/mplayer
-chmod 750 /usr/local/bin/mplayer
-chmod +s /usr/local/bin/mplayer
+chown root <i><tt>/usr/local/bin/mplayer</tt></i>
+chmod 750 <i><tt>/usr/local/bin/mplayer</tt></i>
+chmod +s <i><tt>/usr/local/bin/mplayer</tt></i>
 </pre>
 
 Now it works as a simple user, too.
@@ -265,15 +264,15 @@ at: <tt class="filename">/var/log/XFree86.0.log</tt>.
 These entries are known to work fine with a Riva128 chip, using the nv.o X
 server driver module.
 </p><p><pre class="programlisting">
-Section &quot;Modes&quot;
-  Identifier &quot;Modes[0]&quot;
-  Modeline &quot;800x600&quot;  40     800 840 968 1056  600 601 605 628
-  Modeline &quot;712x600&quot;  35.0   712 740 850 900   400 410 412 425
-  Modeline &quot;640x480&quot;  25.175 640 664 760 800   480 491 493 525
-  Modeline &quot;400x300&quot;  20     400 416 480 528   300 301 303 314 Doublescan
-  Modeline &quot;352x288&quot;  25.10  352 368 416 432   288 296 290 310
-  Modeline &quot;352x240&quot;  15.750 352 368 416 432   240 244 246 262 Doublescan
-  Modeline &quot;320x240&quot;  12.588 320 336 384 400   240 245 246 262 Doublescan
+Section "Modes"
+  Identifier "Modes[0]"
+  Modeline "800x600"  40     800 840 968 1056  600 601 605 628
+  Modeline "712x600"  35.0   712 740 850 900   400 410 412 425
+  Modeline "640x480"  25.175 640 664 760 800   480 491 493 525
+  Modeline "400x300"  20     400 416 480 528   300 301 303 314 Doublescan
+  Modeline "352x288"  25.10  352 368 416 432   288 296 290 310
+  Modeline "352x240"  15.750 352 368 416 432   240 244 246 262 Doublescan
+  Modeline "320x240"  12.588 320 336 384 400   240 245 246 262 Doublescan
 EndSection
 </pre></p><p><b>DGA &amp; MPLAYER. </b>
 DGA is used in two places with <span class="application">MPlayer</span>: The SDL
@@ -385,7 +384,7 @@ system problem), or audio is lagging.
 </p><p>
 SDL video output supports displaying subtitles under the movie, on the (if
 present) black bar.
-</p><div class="variablelist"><p class="title"><b>There are several command line switches for SDL:</b></p><dl><dt><span class="term"><tt class="option">-vo sdl:<i><tt>name</tt></i></tt></span></dt><dd>
+</p><div class="variablelist"><p><b>There are several command line switches for SDL:</b></p><dl><dt><span class="term"><tt class="option">-vo sdl:<i><tt>name</tt></i></tt></span></dt><dd>
     specifies SDL video driver to use (i.e. <tt>aalib</tt>,
     <tt>dga</tt>, <tt>x11</tt>)
   </dd><dt><span class="term"><tt class="option">-ao sdl:<i><tt>name</tt></i></tt></span></dt><dd>
@@ -395,11 +394,11 @@ present) black bar.
     disables XVideo hardware acceleration
   </dd><dt><span class="term"><tt class="option">-forcexv</tt></span></dt><dd>
     tries to force XVideo acceleration
-  </dd></dl></div><div class="table"><p class="title"><b>&#1058;&#1072;&#1073;&#1083;&#1080;&#1094;&#1072; 2.1. SDL only keys</b></p><table summary="SDL only keys" border="1"><colgroup><col><col></colgroup><thead><tr><th>Key</th><th>Action</th></tr></thead><tbody><tr><td><span class="keycap"><b>c</b></span></td><td>
+  </dd></dl></div><div class="table"><p><b>&#1058;&#1072;&#1073;&#1083;&#1080;&#1094;&#1072; 2.1. SDL only keys</b></p><table summary="SDL only keys" border="1"><colgroup><col><col></colgroup><thead><tr><th>Key</th><th>Action</th></tr></thead><tbody><tr><td><span class="keycap"><b>c</b></span></td><td>
     cycles available fullscreen modes
     </td></tr><tr><td><span class="keycap"><b>n</b></span></td><td>
     changes back to normal mode
-    </td></tr></tbody></table></div><div class="itemizedlist"><p class="title"><b>Known bugs:</b></p><ul type="disc"><li>
+    </td></tr></tbody></table></div><div class="itemizedlist"><p><b>Known bugs:</b></p><ul type="disc"><li>
   Keys pressed under sdl:aalib console driver repeat forever. (use
   <tt class="option">-vo aa</tt>!) It's bug in SDL, I can't change it (tested with
   SDL 1.2.1).
@@ -470,7 +469,9 @@ The FBdev output takes some additional parameters above the others:
     <tt class="filename">example.conf</tt>
     </dd></dl></div><p>
 If you want to change to a specific mode, then use
-<pre class="screen">mplayer -vm -fbmode <i><tt>name_of_mode</tt></i> <i><tt>filename</tt></i></pre>
+<pre class="screen">
+mplayer -vm -fbmode <i><tt>name_of_mode</tt></i> <i><tt>filename</tt></i>
+</pre>
 </p><div class="itemizedlist"><ul type="disc"><li><p>
   <tt class="option">-vm</tt> alone will choose the most suitable mode from
   <tt class="filename">/etc/fb.modes</tt>. Can be used together with
@@ -494,7 +495,7 @@ If you want to change to a specific mode, then use
   or
   <pre class="screen">setterm -cursor on</pre>
   </p></li></ul></div><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">&#1047;&#1072;&#1084;&#1077;&#1095;&#1072;&#1085;&#1080;&#1077;</h3><p>
-FBdev video mode changing <span class="emphasis"><em>does not work</em></span> with the VESA
+FBdev video mode changing <span class="emphasis"><i>does not work</i></span> with the VESA
 framebuffer, and don't ask for it, since it's not an
 <span class="application">MPlayer</span> limitation.
 </p></div></div><div class="sect4"><div class="titlepage"><div><h5 class="title"><a name="mga_vid"></a>2.3.1.2.6. Matrox framebuffer (mga_vid)</h5></div></div><p>
@@ -504,8 +505,8 @@ it has hardware VSYNC support with triple buffering. It works on both
 framebuffer console and under X.
 </p><div class="warning" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">&#1042;&#1085;&#1080;&#1084;&#1072;&#1085;&#1080;&#1077;</h3><p>
 This is Linux only! On non-Linux (tested on FreeBSD) systems, you can use
-<a href="devices.html#vidix" title="2.3.1.2.12. VIDIX">VIDIX</a> instead!
-</p></div><div class="procedure"><p class="title"><b>Installation:</b></p><ol type="1"><li><p>
+<a href="devices.html#vidix" title="2.3.1.2.13. VIDIX">VIDIX</a> instead!
+</p></div><div class="procedure"><p><b>Installation:</b></p><ol type="1"><li><p>
   To use it, you first have to compile <tt class="filename">mga_vid.o</tt>:
   <pre class="screen">
 cd drivers
@@ -548,7 +549,7 @@ The <tt class="filename">/dev/mga_vid</tt> device file can be read for some
 info, for example by
 <pre class="screen">cat /dev/mga_vid</pre>
 and can be written for brightness change:
-<pre class="screen">echo &quot;brightness=120&quot; &gt; /dev/mga_vid</pre>
+<pre class="screen">echo "brightness=120" &gt; /dev/mga_vid</pre>
 </p></div><div class="sect4"><div class="titlepage"><div><h5 class="title"><a name="tdfxfb"></a>2.3.1.2.7. 3Dfx YUV support</h5></div></div><p>
 This driver uses the kernel's tdfx framebuffer driver to play movies with
 YUV acceleration. You'll need a kernel with tdfxfb support, and recompile
@@ -578,7 +579,7 @@ least on nVidia):
 <b>export $__GL_SYNC_TO_VBLANK=1</b>
 </p></div><div class="sect4"><div class="titlepage"><div><h5 class="title"><a name="aalib"></a>2.3.1.2.9. AAlib - text mode displaying</h5></div></div><p>
 AAlib is a library for displaying graphics in text mode, using powerful
-ASCII renderer. There are <span class="emphasis"><em>lots</em></span> of programs already
+ASCII renderer. There are <span class="emphasis"><i>lots</i></span> of programs already
 supporting it, like Doom, Quake, etc. <span class="application">MPlayer</span>
 contains a very usable driver for it. If <tt class="filename">./configure</tt>
 detects aalib installed, the aalib libvo driver will be built.
@@ -600,7 +601,7 @@ You can use some keys in the AA Window to change rendering options:
   invert image
   </td></tr><tr><td><span class="keycap"><b>8</b></span></td><td>
   toggles between aa and <span class="application">MPlayer</span> control
-  </td></tr></tbody></table></div><div class="variablelist"><p class="title"><b>The following command line options can be used:</b></p><dl><dt><span class="term"><tt class="option">-aaosdcolor=<i><tt>V</tt></i></tt></span></dt><dd><p>
+  </td></tr></tbody></table></div><div class="variablelist"><p><b>The following command line options can be used:</b></p><dl><dt><span class="term"><tt class="option">-aaosdcolor=<i><tt>V</tt></i></tt></span></dt><dd><p>
     change OSD color
     </p></dd><dt><span class="term"><tt class="option">-aasubcolor=<i><tt>V</tt></i></tt></span></dt><dd><p>
     change subtitle color
@@ -612,7 +613,7 @@ You can use some keys in the AA Window to change rendering options:
     <tt>3</tt> (bold font),
     <tt>4</tt> (reverse),
     <tt>5</tt> (special).
-    </p></dd></dl></div><div class="variablelist"><p class="title"><b>AAlib itself provides a large sum of options. Here are some
+    </p></dd></dl></div><div class="variablelist"><p><b>AAlib itself provides a large sum of options. Here are some
 important:</b></p><dl><dt><span class="term"><tt class="option">-aadriver</tt></span></dt><dd>
     set recommended aa driver (X11, curses, Linux)
     </dd><dt><span class="term"><tt class="option">-aaextended</tt></span></dt><dd>
@@ -638,7 +639,48 @@ need write access on
 That isn't autodetected by aalib, but vo_aa tries to find the best mode.
 See <a href="http://aa-project.sourceforge.net/tune" target="_top">http://aa-project.sourceforge.net/tune</a> for further
 tuning issues.
-</p></div><div class="sect4"><div class="titlepage"><div><h5 class="title"><a name="vesa"></a>2.3.1.2.10. VESA - output to VESA BIOS</h5></div></div><p>
+</p></div><div class="sect4"><div class="titlepage"><div><h5 class="title"><a name="caca"></a>2.3.1.2.10. <tt>libcaca</tt> - Colour AsCii Art library</h5></div></div><p>
+The <a href="http://sam.zoy.org/projects/libcaca/" target="_top"><tt>libcaca</tt></a>
+library is a graphics library that outputs text instead of pixels, so that it
+can work on older video cards or text terminals. It is not unlike the famous
+<tt>AAlib</tt> library.
+<tt>libcaca</tt> needs a terminal to work, thus
+it should work on all Unix systems (including Mac OS X) using either the
+<tt>slang</tt> library or the
+<tt>ncurses</tt> library, on DOS using the
+<tt>conio.h</tt> library, and on Windows systems
+using either <tt>slang</tt> or
+<tt>ncurses</tt> (through Cygwin emulation) or
+<tt>conio.h</tt>. If
+<tt class="filename">./configure</tt>
+detects <tt>libcaca</tt>, the caca libvo driver
+will be built.
+</p><div class="itemizedlist"><p><b>The differences with <tt>AAlib</tt> are
+  the following:</b></p><ul type="disc"><li>
+   16 available colours for character output (256 colour pairs)
+  </li><li>
+   color image dithering
+  </li></ul></div><div class="itemizedlist"><p><b>But <tt>libcaca</tt> also has the
+  following limitations:</b></p><ul type="disc"><li>
+   no support for brightness, contrast, gamma
+  </li></ul></div><p>
+You can use some keys in the caca window to change rendering options:
+</p><div class="informaltable"><table border="1"><colgroup><col><col></colgroup><thead><tr><th>Key</th><th>Action</th></tr></thead><tbody><tr><td><span class="keycap"><b>d</b></span></td><td>
+  Toggle <tt>libcaca</tt> dithering methods.
+  </td></tr><tr><td><span class="keycap"><b>a</b></span></td><td>
+  Toggle <tt>libcaca</tt> antialiasing.
+  </td></tr><tr><td><span class="keycap"><b>b</b></span></td><td>
+  Toggle <tt>libcaca</tt> background.
+  </td></tr></tbody></table></div><div class="variablelist"><p><b><tt>libcaca</tt> will also look for certain environment variables:</b></p><dl><dt><span class="term"><tt class="option">CACA_DRIVER</tt></span></dt><dd>
+    Set recommended caca driver. e.g. ncurses, slang, x11.
+    </dd><dt><span class="term"><tt class="option">CACA_GEOMETRY (X11 only)</tt></span></dt><dd>
+    Specifies the number of rows and columns. e.g. 128x50.
+    </dd><dt><span class="term"><tt class="option">CACA_FONT (X11 only)</tt></span></dt><dd>
+    Specifies the font to use. e.g. fixed, nexus.
+    </dd></dl></div><p>
+Use the <tt class="option">-framedrop</tt> option if your computer is not fast
+enough to render all frames.
+</p></div><div class="sect4"><div class="titlepage"><div><h5 class="title"><a name="vesa"></a>2.3.1.2.11. VESA - output to VESA BIOS</h5></div></div><p>
 This driver was designed and introduced as a <span class="bold"><b>generic
 driver</b></span> for any video card which has VESA VBE 2.0 compatible
 BIOS. Another advantage of this driver is that it tries to force TV output
@@ -661,7 +703,7 @@ controller.
 So you have chances to get working TV-out by using this driver.
 (I guess that TV-out frequently is standalone head or standalone output
 at least.)
-</p><div class="itemizedlist"><p class="title"><b>ADVANTAGES</b></p><ul type="disc" compact="compact"><li>
+</p><div class="itemizedlist"><p><b>ADVANTAGES</b></p><ul type="disc" compact><li>
   You have chances to watch movies <span class="bold"><b>if Linux even doesn't
   know</b></span> your video hardware.
   </li><li>
@@ -674,7 +716,7 @@ at least.)
   </li><li>
   This driver calls <tt>int 10h</tt> handler thus it's not
   an emulator - it calls <span class="bold"><b>real</b></span> things of
-  <span class="emphasis"><em>real</em></span> BIOS in <span class="emphasis"><em>real-mode</em></span>
+  <span class="emphasis"><i>real</i></span> BIOS in <span class="emphasis"><i>real-mode</i></span>
   (actually in vm86 mode).
   </li><li>
   You can use VIDIX with it, thus getting accelerated video display
@@ -686,7 +728,7 @@ at least.)
   (config file, or commandline) you will get the highest possible refresh rate.
   (Using General Timing Formula). To enable this feature you have to specify
   <span class="bold"><b>all</b></span> your monitor options.
-  </li></ul></div><div class="itemizedlist"><p class="title"><b>DISADVANTAGES</b></p><ul type="disc" compact="compact"><li>
+  </li></ul></div><div class="itemizedlist"><p><b>DISADVANTAGES</b></p><ul type="disc" compact><li>
    It works only on <span class="bold"><b>x86 systems</b></span>.
   </li><li>
   It can be used only by <tt>root</tt>.
@@ -695,13 +737,13 @@ at least.)
   </li></ul></div><div class="important" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">&#1042;&#1072;&#1078;&#1085;&#1086;</h3><p>
 Don't use this driver with <span class="bold"><b>GCC 2.96</b></span>!
 It won't work!
-</p></div><div class="variablelist"><p class="title"><b>COMMAND LINE OPTIONS AVAILABLE FOR VESA</b></p><dl><dt><span class="term"><tt class="option">-vo vesa:<i><tt>opts</tt></i></tt></span></dt><dd>
+</p></div><div class="variablelist"><p><b>COMMAND LINE OPTIONS AVAILABLE FOR VESA</b></p><dl><dt><span class="term"><tt class="option">-vo vesa:<i><tt>opts</tt></i></tt></span></dt><dd>
     currently recognized: <tt>dga</tt> to force dga mode and
     <tt>nodga</tt> to disable dga mode. In dga mode you can enable
     double buffering via the <tt class="option">-double</tt> option. Note: you may omit
     these parameters to enable <span class="bold"><b>autodetection</b></span> of
     dga mode.
-    </dd></dl></div><div class="itemizedlist"><p class="title"><b>KNOWN PROBLEMS AND WORKAROUNDS</b></p><ul type="disc" compact="compact"><li>
+    </dd></dl></div><div class="itemizedlist"><p><b>KNOWN PROBLEMS AND WORKAROUNDS</b></p><ul type="disc" compact><li>
   If you have installed <span class="bold"><b>NLS</b></span> font on your
   Linux box and run VESA driver from text-mode then after terminating
   <span class="application">MPlayer</span> you will have
@@ -725,7 +767,7 @@ It won't work!
   To get <span class="bold"><b>working TV-out</b></span> you need have plugged
   TV-connector in before booting your PC since video BIOS initializes
   itself only once during POST procedure.
-  </li></ul></div></div><div class="sect4"><div class="titlepage"><div><h5 class="title"><a name="x11"></a>2.3.1.2.11. X11</h5></div></div><p>
+  </li></ul></div></div><div class="sect4"><div class="titlepage"><div><h5 class="title"><a name="x11"></a>2.3.1.2.12. X11</h5></div></div><p>
 Avoid if possible. Outputs to X11 (uses shared memory extension), with no
 hardware acceleration at all. Supports (MMX/3DNow/SSE accelerated, but
 still slow) software scaling, use the options <tt class="option">-fs -zoom</tt>.
@@ -742,7 +784,7 @@ Software scaling is very slow, you better try changing video modes instead.
 It's very simple. See the <a href="devices.html#dga-modelines">DGA section's
 modelines</a>, and insert them into your <tt class="filename">XF86Config</tt>.
 
-</p><div class="itemizedlist"><ul type="disc" compact="compact"><li>
+</p><div class="itemizedlist"><ul type="disc" compact><li>
   If you have XFree86 4.x.x: use the <tt class="option">-vm</tt> option. It will
   change to a resolution your movie fits in. If it doesn't:
   </li><li>
@@ -757,7 +799,7 @@ modelines</a>, and insert them into your <tt class="filename">XF86Config</tt>.
 If you can't find the modes you inserted, browse XFree86's output. Some
 drivers can't use low pixelclocks that are needed for low resolution
 video modes.
-</p></div><div class="sect4"><div class="titlepage"><div><h5 class="title"><a name="vidix"></a>2.3.1.2.12. VIDIX</h5></div></div><p><b>PREAMBLE. </b>
+</p></div><div class="sect4"><div class="titlepage"><div><h5 class="title"><a name="vidix"></a>2.3.1.2.13. VIDIX</h5></div></div><p><b>PREAMBLE. </b>
 VIDIX is the abbreviation for <span class="bold"><b>VID</b></span>eo
 <span class="bold"><b>I</b></span>nterface for *ni<span class="bold"><b>X</b></span>.
 VIDIX was designed and introduced as an interface for fast user-space drivers
@@ -771,23 +813,23 @@ which are known as BES (BackEnd scalers) or OV (Video Overlays). It doesn't
 provide lowlevel interface to things which are known as graphics servers.
 (I don't want to compete with X11 team in graphics mode switching). I.e.
 main goal of this interface is to maximize the speed of video playback.
-</p><div class="itemizedlist"><p class="title"><b>USAGE</b></p><ul type="disc" compact="compact"><li>
+</p><div class="itemizedlist"><p><b>USAGE</b></p><ul type="disc" compact><li>
   You can use standalone video output driver: <tt class="option">-vo xvidix</tt>.
   This driver was developed as X11's front end to VIDIX technology.  It
   requires X server and can work only under X server. Note that, as it directly
   accesses the hardware and circumvents the X driver, pixmaps cached in the
   graphics card's memory may be corrupted. You can prevent this by limiting
-  the amount of video memory used by X with the XF86Config option &quot;VideoRam&quot;
+  the amount of video memory used by X with the XF86Config option "VideoRam"
   in the device section. You should set this to the amount of memory installed
   on your card minus 4MB. If you have less than 8MB of video ram, you can use
-  the option &quot;XaaNoPixmapCache&quot; in the screen section instead.
+  the option "XaaNoPixmapCache" in the screen section instead.
   </li><li>
   There is a console VIDIX driver: <tt class="option">-vo cvidix</tt>.
   This requires a working and initialized framebuffer for most cards (or else
   you'll just mess up the screen), and you'll have a similar effect as with
   <tt class="option">-vo mga</tt> or <tt class="option">-vo fbdev</tt>. nVidia cards however
   are able to output truly graphical video on a real text console. See the
-  <a href="devices.html#vidix-nvidia" title="2.3.1.2.12.5. nVidia cards">nvidia_vid</a> section for more information.
+  <a href="devices.html#vidix-nvidia" title="2.3.1.2.13.5. nVidia cards">nvidia_vid</a> section for more information.
   </li><li>
   You can use VIDIX subdevice which was applied to several video output
   drivers, such as: <tt class="option">-vo vesa:vidix</tt>
@@ -796,7 +838,7 @@ main goal of this interface is to maximize the speed of video playback.
   </li></ul></div><p>
 Indeed it doesn't matter which video output driver is used with
 <span class="bold"><b>VIDIX</b></span>.
-</p><div class="itemizedlist"><p class="title"><b>REQUIREMENTS</b></p><ul type="disc" compact="compact"><li>
+</p><div class="itemizedlist"><p><b>REQUIREMENTS</b></p><ul type="disc" compact><li>
   Video card should be in graphics mode (except nVidia cards with the
   <tt class="option">-vo cvidix</tt> output driver).
   </li><li>
@@ -816,9 +858,9 @@ recognizes the following options: <tt class="option">-fs -zoom -x -y -double</tt
 Also you can specify VIDIX's driver directly as third subargument in
 command line:
 
-<pre class="screen">mplayer -vo xvidix:mga_vid.so -fs -zoom -double file.avi</pre>
+<pre class="screen">mplayer -vo xvidix:mga_vid.so -fs -zoom -double <i><tt>file.avi</tt></i></pre>
 or
-<pre class="screen">mplayer -vo vesa:vidix:radeon_vid.so -fs -zoom -double -bpp 32 file.avi</pre>
+<pre class="screen">mplayer -vo vesa:vidix:radeon_vid.so -fs -zoom -double -bpp 32 <i><tt>file.avi</tt></i></pre>
 
 But it's dangerous, and you shouldn't do that. In this case given driver
 will be forced and result is unpredictable (it may
@@ -856,35 +898,35 @@ Alternatively, you can use a special kernel module, like this:
   <tt class="filename">mplayer/main/libdha/svgalib_helper</tt>.
   </p></li><li><p>
   Required if you download the source from the svgalib site: Remove the comment before the
-  CFLAGS line containing &quot;svgalib_helper&quot; string from the
+  CFLAGS line containing "svgalib_helper" string from the
   <tt class="filename">libdha/Makefile</tt>.
   </p></li><li><p>
   Recompile and install libdha.
-  </p></li></ol></div><div class="sect5"><div class="titlepage"><div><h6 class="title"><a name="vidix-ati"></a>2.3.1.2.12.1. ATI cards</h6></div></div><p>
+  </p></li></ol></div><div class="sect5"><div class="titlepage"><div><h6 class="title"><a name="vidix-ati"></a>2.3.1.2.13.1. ATI cards</h6></div></div><p>
 Currently most ATI cards are supported natively, from Mach64 to the
 newest Radeons.
 </p><p>
 There are two compiled binaries: <tt class="filename">radeon_vid</tt> for Radeon and
 <tt class="filename">rage128_vid</tt> for Rage 128 cards. You may force one or let
 the VIDIX system autoprobe all available drivers.
-</p></div><div class="sect5"><div class="titlepage"><div><h6 class="title"><a name="vidix-mga"></a>2.3.1.2.12.2. Matrox cards</h6></div></div><p>
+</p></div><div class="sect5"><div class="titlepage"><div><h6 class="title"><a name="vidix-mga"></a>2.3.1.2.13.2. Matrox cards</h6></div></div><p>
 Matrox G200, G400, G450 and G550 have been reported to work.
 </p><p>
 The driver supports video equalizers and should be nearly as fast as the
 <a href="devices.html#mga_vid" title="2.3.1.2.6. Matrox framebuffer (mga_vid)">Matrox framebuffer</a>
-</p></div><div class="sect5"><div class="titlepage"><div><h6 class="title"><a name="vidix-trident"></a>2.3.1.2.12.3. Trident cards</h6></div></div><p>
+</p></div><div class="sect5"><div class="titlepage"><div><h6 class="title"><a name="vidix-trident"></a>2.3.1.2.13.3. Trident cards</h6></div></div><p>
 There is a driver available for the Trident Cyberblade/i1 chipset, which
 can be found on VIA Epia motherboards.
 </p><p>
 The driver was written and is maintained by
 <a href="http://www.blackfiveservices.co.uk/EPIAVidix.shtml" target="_top">Alastair M. Robinson</a>
-</p></div><div class="sect5"><div class="titlepage"><div><h6 class="title"><a name="vidix-3dlabs"></a>2.3.1.2.12.4. 3DLabs cards</h6></div></div><p>
+</p></div><div class="sect5"><div class="titlepage"><div><h6 class="title"><a name="vidix-3dlabs"></a>2.3.1.2.13.4. 3DLabs cards</h6></div></div><p>
 Although there is a driver for the 3DLabs GLINT R3 and Permedia3 chips, no one
 has tested it, so reports are welcome.
-</p></div><div class="sect5"><div class="titlepage"><div><h6 class="title"><a name="vidix-nvidia"></a>2.3.1.2.12.5. nVidia cards</h6></div></div><p>
+</p></div><div class="sect5"><div class="titlepage"><div><h6 class="title"><a name="vidix-nvidia"></a>2.3.1.2.13.5. nVidia cards</h6></div></div><p>
 There's a relatively new nVidia driver out there, it's known to work on Riva
 128, TNT and GeForce2 chipsets, also others have been reported working.
-</p><div class="itemizedlist"><p class="title"><b>LIMITATIONS</b></p><ul type="disc" compact="compact"><li><p>
+</p><div class="itemizedlist"><p><b>LIMITATIONS</b></p><ul type="disc" compact><li><p>
   It's recommended to use the binary nVidia drivers for X before using this
   VIDIX driver, because some of the registers which need to be initialized
   haven't been discovered yet, so it will probably fail with the Open Source
@@ -892,12 +934,14 @@ There's a relatively new nVidia driver out there, it's known to work on Riva
   </p></li><li><p>
   Currently only codecs capable of UYVY colorspace output
   can work in conjunction with this driver. Unfortunately, this excludes
-  every single decoder from the libavcodec family. This leaves us with the
-  following usable popular codecs: <tt>cvid, divxds, xvid, divx4,
-  wmv7, wmv8</tt> and some others. Please note that this is only
+  every single decoder from the
+  <tt>libavcodec</tt> family. This leaves
+  us with the following usable popular codecs:
+  <tt>cvid, divxds, xvid, divx4, wmv7, wmv8</tt> and some
+  others. Please note that this is only
   a temporal inconvenience. The usage syntax is as follows:
   <pre class="screen">
-    mplayer -vf format=uyvy -vc divxds divx3file.avi
+    mplayer -vf format=uyvy -vc divxds <i><tt>divx3file.avi</tt></i>
   </pre>
   </p></li></ul></div><p>
   An unique feature of the nvidia_vid driver is its ability to display video on
@@ -905,24 +949,24 @@ There's a relatively new nVidia driver out there, it's known to work on Riva
   framebuffer or X magic whatsoever. For this purpose, we'll have to use the
   <tt class="option">cvidix</tt> video output, as the following example shows:
   <pre class="screen">
-    mplayer -vf format=uyvy -vc divxds -vo cvidix example.avi
+    mplayer -vf format=uyvy -vc divxds -vo cvidix <i><tt>example.avi</tt></i>
   </pre>
 </p><p>
 Reports awaited!
-</p></div><div class="sect5"><div class="titlepage"><div><h6 class="title"><a name="vidix-sis"></a>2.3.1.2.12.6. SiS cards</h6></div></div><p>
+</p></div><div class="sect5"><div class="titlepage"><div><h6 class="title"><a name="vidix-sis"></a>2.3.1.2.13.6. SiS cards</h6></div></div><p>
 This is very experimental code, just like nvidia_vid.
 </p><p>
 It's been tested on SiS 650/651/740 (the most common chipsets used in the 
-SiS versions of the &quot;Shuttle XPC&quot; barebones boxes out there)
+SiS versions of the "Shuttle XPC" barebones boxes out there)
 </p><p>
 Reports awaited!
-</p></div></div><div class="sect4"><div class="titlepage"><div><h5 class="title"><a name="directfb"></a>2.3.1.2.13. DirectFB</h5></div></div><blockquote class="blockquote"><p>
-&quot;DirectFB is a graphics library which was designed with embedded systems
+</p></div></div><div class="sect4"><div class="titlepage"><div><h5 class="title"><a name="directfb"></a>2.3.1.2.14. DirectFB</h5></div></div><blockquote class="blockquote"><p>
+"DirectFB is a graphics library which was designed with embedded systems
 in mind. It offers maximum hardware accelerated performance at a minimum
-of resource usage and overhead.&quot; - quoted from <a href="http://www.directfb.org" target="_top">http://www.directfb.org</a>
+of resource usage and overhead." - quoted from <a href="http://www.directfb.org" target="_top">http://www.directfb.org</a>
 </p></blockquote><p>I'll exclude DirectFB features from this section.</p><p>
-Though <span class="application">MPlayer</span> is not supported as a &quot;video
-provider&quot; in DirectFB, this output driver will enable video playback through
+Though <span class="application">MPlayer</span> is not supported as a "video
+provider" in DirectFB, this output driver will enable video playback through
 DirectFB. It will - of course - be accelerated, on my Matrox G400 DirectFB's speed
 was the same as XVideo.
 </p><p>
@@ -930,19 +974,21 @@ Always try to use the newest version of DirectFB. You can use DirectFB options o
 the command line, using the <tt class="option">-dfbopts</tt> option. Layer selection can
 be done by the subdevice method, e.g.: <tt class="option">-vo directfb:2</tt>
 (layer -1 is default: autodetect)
-</p></div><div class="sect4"><div class="titlepage"><div><h5 class="title"><a name="dfbmga"></a>2.3.1.2.14. DirectFB/Matrox (dfbmga)</h5></div></div><p>
-Please read the <a href="devices.html#directfb" title="2.3.1.2.13. DirectFB">main DirectFB</a> section or general
-informations.
-</p><p>This video output driver will enable CRTC2 (on the second head) on the
-Matrox G400/G450/G550 card, displaying video <span class="bold"><b>independently</b></span>
-of the first head.
+</p></div><div class="sect4"><div class="titlepage"><div><h5 class="title"><a name="dfbmga"></a>2.3.1.2.15. DirectFB/Matrox (dfbmga)</h5></div></div><p>
+Please read the <a href="devices.html#directfb" title="2.3.1.2.14. DirectFB">main DirectFB</a> section for general
+information.
 </p><p>
-Instructions on how to make it work can be found in the
-<a href="../../tech/directfb.txt" target="_top">tech</a> section
-or directly on Ville Syrjala's
-<a href="http://www.sci.fi/~syrjala/directfb/Matrox_TV-out_README.txt" target="_top">home page</a>.
+This video output driver will enable CRTC2 (on the second head) on Matrox
+G400/G450/G550 cards, displaying video
+<span class="bold"><b>independent</b></span> of the first head.
+</p><p>
+Ville Syrjala's has a 
+<a href="http://www.sci.fi/~syrjala/directfb/Matrox_TV-out_README.txt" target="_top">README</a>
+and a 
+<a href="http://www.sci.fi/~syrjala/directfb/matrox_tv-out_howto" target="_top">HOWTO</a>
+on his homepage that explain how to make DirectFB TV output run on Matrox cards.
 </p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">&#1047;&#1072;&#1084;&#1077;&#1095;&#1072;&#1085;&#1080;&#1077;</h3><p>
-the first DirectFB version with which we could kick this working was
+the first DirectFB version with which we could get this working was
 0.9.17 (it's buggy, needs that <tt>surfacemanager</tt> patch from
 the URL above). Anyway, porting of the CRTC2 code to <span class="bold"><b>mga_vid</b></span>
 is underway.
@@ -956,12 +1002,14 @@ Configure should detect your DVB card. If it did not, force detection with
 </p><p><pre class="screen">./configure --enable-dvb</pre></p><p>If you have ost headers at a non-standard path, set the path with</p><p><pre class="screen">./configure --with-extraincdir=<i><tt>DVB source directory</tt></i>/ost/include
 </pre></p><p>Then compile and install as usual.</p><p><b>USAGE. </b>
 Hardware decoding (playing standard MPEG1/2 files) can be done with this command:
-</p><p><pre class="screen">mplayer -ao mpegpes -vo mpegpes file.mpg|vob</pre></p><p>
+</p><p>
+<pre class="screen">mplayer -ao mpegpes -vo mpegpes <i><tt>file.mpg|vob</tt></i></pre>
+</p><p>
 Software decoding or transcoding different formats to MPEG1 can be achieved using
 a command like this:
 </p><p><pre class="screen">
-mplayer -ao mpegpes -vo mpegpes yourfile.ext
-mplayer -ao mpegpes -vo mpegpes -vf expand yourfile.ext
+mplayer -ao mpegpes -vo mpegpes <i><tt>yourfile.ext</tt></i>
+mplayer -ao mpegpes -vo mpegpes -vf expand <i><tt>yourfile.ext</tt></i>
 </pre></p><p>
 Note that DVB cards only support heights 288 and 576 for PAL or 240 and 480 for
 NTSC. You <span class="bold"><b>must</b></span> rescale for other heights by adding
@@ -973,10 +1021,16 @@ DivX try:
 </p><p><pre class="screen">mplayer -ao mpegpes -vo mpegpes -vf scale=512:576</pre></p><p>If you have a widescreen movie and you do not want to scale it to full height,
 you can use the <tt class="option">expand=w:h</tt> filter to add black bands. To view a
 640x384 DivX, try:
-</p><p><pre class="screen">mplayer -ao mpegpes -vo mpegpes -vf expand=640:576 file.avi
-</pre></p><p>If your CPU is too slow for a full size 720x576 DivX, try downscaling:</p><p><pre class="screen">mplayer -ao mpegpes -vo mpegpes -vf scale=352:576 file.avi
-</pre></p><p>If speed does not improve, try vertical downscaling, too:</p><p><pre class="screen">mplayer -ao mpegpes -vo mpegpes -vf scale=352:288 file.avi
-</pre></p><p>
+</p><p>
+<pre class="screen">mplayer -ao mpegpes -vo mpegpes -vf expand=640:576 <i><tt>file.avi</tt></i>
+</pre>
+</p><p>If your CPU is too slow for a full size 720x576 DivX, try downscaling:</p><p>
+<pre class="screen">mplayer -ao mpegpes -vo mpegpes -vf scale=352:576 <i><tt>file.avi</tt></i>
+</pre>
+</p><p>If speed does not improve, try vertical downscaling, too:</p><p>
+<pre class="screen">mplayer -ao mpegpes -vo mpegpes -vf scale=352:288 <i><tt>file.avi</tt></i>
+</pre>
+</p><p>
 For OSD and subtitles use the OSD feature of the expand filter. So, instead of
 <tt class="option">expand=w:h</tt> or <tt class="option">expand=w:h:x:y</tt>, use
 <tt class="option">expand=w:h:x:y:1</tt> (the 5th parameter <tt class="option">:1</tt>
@@ -994,12 +1048,8 @@ while keeping the right aspect ratio), use the new dvbscale filter:
 </p><p><pre class="screen">
 for a  4:3 TV: -vf dvbscale,scale=-1:0,expand=-1:576:-1:-1:1
 for a 16:9 TV: -vf dvbscale=1024,scale=-1:0,expand=-1:576:-1:-1:1
-</pre></p><p><b>Using your DVB card for watching Digital TV (DVB input module). </b>
-  First you need to pass the <tt>dvb_shutdown_timeout=0</tt>
-  parameter to the kernel module <tt class="filename">dvb-core</tt>, or
-  <span class="application">MPlayer</span> will die after 10 seconds.
-</p><p>
-  You should also have the programs <b>scan</b> and
+</pre></p><p><b>Digital TV (DVB input module). </b>You can use your DVB card for watching Digital TV.</p><p>
+  You should have the programs <b>scan</b> and
   <b>szap/tzap/czap</b> installed; they are all included in
   the drivers package.
 </p><p>
@@ -1011,9 +1061,19 @@ for a 16:9 TV: -vf dvbscale=1024,scale=-1:0,expand=-1:576:-1:-1:1
   file, with the syntax accepted by <b>szap/tzap/czap</b>, or
   have <b>scan</b> compile it for you.
 </p><p>
-  Make sure that you have have <span class="emphasis"><em>only</em></span> Free to Air
+  If you have more than one card type (e.g. Satellitar, Terrestrial and Cable)
+  you can save your channels files as
+  <tt class="filename">~/.mplayer/channels.conf.sat</tt>,
+  <tt class="filename">~/.mplayer/channels.conf.ter</tt>
+  and <tt class="filename">~/.mplayer/channels.conf.cbl</tt>,
+  respectively, so as to implicitly hint <span class="application">MPlayer</span>
+  to use these files rather than <tt class="filename">~/.mplayer/channels.conf</tt>,
+  and you only need to specify which card to use.
+</p><p>
+  Make sure that you have have <span class="emphasis"><i>only</i></span> Free to Air
   channels in your <tt class="filename">channels.conf</tt> file, or
-  <span class="application">MPlayer</span> will hang on the others.
+  <span class="application">MPlayer</span> will try to skip to the next visible one,
+  but it may take long if there are many consecutive encrypted channels.
 </p><p>
   To show the first of the channels present in your list, run
 </p><pre class="screen">
@@ -1022,6 +1082,11 @@ for a 16:9 TV: -vf dvbscale=1024,scale=-1:0,expand=-1:576:-1:-1:1
   If you want to watch a specific channel, such as R1, run
 </p><pre class="screen">
   mplayer dvb://R1
+</pre><p>
+  If you have more than one card you also need to specify the number of the card 
+  where the channel is visibile (e.g. 2) with the syntax:
+</p><pre class="screen">
+  mplayer dvb://2@R1
 </pre><p>
   To change channels press the <span class="keycap"><b>h</b></span> (next) and
   <span class="keycap"><b>k</b></span> (previous) keys, or use the OSD menu (requires
@@ -1032,7 +1097,9 @@ for a 16:9 TV: -vf dvbscale=1024,scale=-1:0,expand=-1:576:-1:-1:1
   file <tt class="filename">etc/dvb-menu.conf</tt> (that you can use to overwrite
   <tt class="filename">~/.mplayer/menu.conf</tt>), the main menu will show a
   sub-menu entry that will permit you to choose one of the channels present
-  in your <tt class="filename">channels.conf</tt>.
+  in your <tt class="filename">channels.conf</tt>, possibly preceded by a menu
+  with the list of cards available if more than one is usable by
+  <span class="application">MPlayer</span>.
 </p><p>
   If you want to save a program to disk you can use
 </p><pre class="screen">
@@ -1060,14 +1127,14 @@ decompression).
 First of all you will need properly installed DXR2 drivers. You can find
 the drivers and installation instructions at the
 <a href="http://dxr2.sourceforge.net/" target="_top">DXR2 Resource Center</a> site.
-</p><div class="variablelist"><p class="title"><b>USAGE</b></p><dl><dt><span class="term"><tt class="option">-vo dxr2</tt></span></dt><dd><p>enable TV output</p></dd><dt><span class="term"><tt class="option">-vo dxr2:x11</tt> or <tt class="option">-vo dxr2:xv</tt></span></dt><dd><p>enable Overlay output in X11</p></dd><dt><span class="term"><tt class="option">-dxr2 &lt;option1:option2:...&gt;</tt></span></dt><dd><p>This option is used to control the DXR2 driver.</p></dd></dl></div><p>
+</p><div class="variablelist"><p><b>USAGE</b></p><dl><dt><span class="term"><tt class="option">-vo dxr2</tt></span></dt><dd><p>enable TV output</p></dd><dt><span class="term"><tt class="option">-vo dxr2:x11</tt> or <tt class="option">-vo dxr2:xv</tt></span></dt><dd><p>enable Overlay output in X11</p></dd><dt><span class="term"><tt class="option">-dxr2 &lt;option1:option2:...&gt;</tt></span></dt><dd><p>This option is used to control the DXR2 driver.</p></dd></dl></div><p>
 The overlay chipset used on the DXR2 is of pretty bad quality but the
 default settings should work for everybody. The OSD may be usable with the
 overlay (not on TV) by drawing it in the colorkey. With the default colorkey
 settings you may get variable results, usually you will see the colorkey
 around the characters or some other funny effect. But if you properly adjust
 the colorkey settings you should be able to get acceptable results.
-</p><p>Please see the manpage for available options.</p></div><div class="sect4"><div class="titlepage"><div><h5 class="title"><a name="dxr3"></a>2.3.1.3.3. DXR3/Hollywood+</h5></div></div><p>
+</p><p>Please see the man page for available options.</p></div><div class="sect4"><div class="titlepage"><div><h5 class="title"><a name="dxr3"></a>2.3.1.3.3. DXR3/Hollywood+</h5></div></div><p>
 <span class="application">MPlayer</span> supports hardware accelerated playback
 with the Creative DXR3 and Sigma Designs Hollywood Plus cards. These cards
 both use the em8300 MPEG decoder chip from Sigma Designs.
@@ -1077,7 +1144,7 @@ or later. You can find the drivers and installation instructions at the
 <a href="http://dxr3.sourceforge.net/" target="_top">DXR3 &amp; Hollywood Plus for Linux</a>
 site. <tt class="filename">configure</tt> should detect your card automatically,
 compilation should go without problems.
-</p><div class="variablelist"><p class="title"><b>USAGE</b></p><dl><dt><span class="term"><tt class="option">-vo dxr3:prebuf:sync:norm=x:<i><tt>device</tt></i></tt></span></dt><dd><p>
+</p><div class="variablelist"><p><b>USAGE</b></p><dl><dt><span class="term"><tt class="option">-vo dxr3:prebuf:sync:norm=x:<i><tt>device</tt></i></tt></span></dt><dd><p>
 <tt class="option">overlay</tt> activates the overlay instead of TVOut. It requires
 that you have a properly configured overlay setup to work right. The easiest
 way to configure the overlay is to first run autocal. Then run mplayer with
@@ -1126,7 +1193,9 @@ one matches closest. I.e. if the movie uses 22050Hz use 44100Hz as
 This does not work with digital audio output (<tt class="option">-ac hwac3</tt>).
 </p></dd><dt><span class="term"><tt class="option">-vf lavc/fame</tt></span></dt><dd><p>
 To watch non-MPEG content on the em8300 (i.e. DivX or RealVideo) you have to
-specify an MPEG1 video filter such as libavcodec (lavc) or libfame (fame). At
+specify an MPEG1 video filter such as
+<tt>libavcodec</tt> (lavc) or
+<tt>libfame</tt> (fame). At
 the moment lavc is both faster and gives better image quality, it is suggested
 that you use that unless you have problems with it. See the man page for further
 info about <tt class="option">-vf lavc/fame</tt>.
@@ -1143,7 +1212,7 @@ much lower quality than <span class="application">MPlayer's</span> traditional O
 and has several refresh problems as well. The command line above will firstly
 convert the input video to MPEG4 (this is mandatory, sorry), then apply an
 expand filter which won't expand anything (-1: default), but apply the normal
-OSD onto the picture (that's what the &quot;1&quot; at the end does).
+OSD onto the picture (that's what the "1" at the end does).
 </p></dd><dt><span class="term"><tt class="option">-ac hwac3</tt></span></dt><dd><p>
 The em8300 supports playing back AC3 audio (surround sound) through the
 digital audio output of the card. See the <tt class="option">-ao oss</tt> option above,
@@ -1152,8 +1221,9 @@ it must be used to specify the DXR3's output instead of a soundcard.
 This is a display-driver (<tt class="option">-vo zr</tt>) for a number of MJPEG
 capture/playback cards (tested for DC10+ and Buz, and it should work for the
 LML33, the DC10). The driver works by encoding the frame to JPEG and then
-sending it to the card. For the JPEG encoding <tt>libavcodec</tt>
-is used, and required. With the special <span class="emphasis"><em>cinerama</em></span> mode,
+sending it to the card. For the JPEG encoding
+<tt>libavcodec</tt>
+is used, and required. With the special <span class="emphasis"><i>cinerama</i></span> mode,
 you can watch movies in true wide screen provided that you have two beamers
 and two MJPEG cards. Depending on resolution and quality settings, this driver
 may require a lot of CPU power, remember to specify <tt class="option">-framedrop</tt>
@@ -1179,18 +1249,24 @@ fullscreen on your DC10+. There are three main possibilities, you may scale
 the movie to a width of 768, 384 or 192. For performance and quality reasons,
 I would choose to scale the movie to 384x204 using the fast bilinear software
 scaler. The commandline is
-<pre class="screen">mplayer -vo zr -sws 0 -vf scale=384:204 movie.avi</pre>
+<pre class="screen">
+mplayer -vo zr -sws 0 -vf scale=384:204 <i><tt>movie.avi</tt></i>
+</pre>
 </p><p>
 Cropping can be done by the <tt class="option">crop</tt> filter and by this
 driver itself. Suppose that a movie is too wide for display on your Buz and
 that you want to use <tt class="option">-zrcrop</tt> to make the movie less wide,
 then you would issue the following command
-<pre class="screen">mplayer -vo zr -zrcrop 720x320+80+0 benhur.avi</pre>
+<pre class="screen">
+mplayer -vo zr -zrcrop 720x320+80+0 <i><tt>benhur.avi</tt></i>
+</pre>
 </p><p>
 if you want to use the <tt class="option">crop</tt> filter, you would do
-<pre class="screen">mplayer -vo zr -vf crop=720:320:80:0 benhur.avi</pre>
+<pre class="screen">
+mplayer -vo zr -vf crop=720:320:80:0 <i><tt>benhur.avi</tt></i>
+</pre>
 </p><p>
-Extra occurrences of <tt class="option">-zrcrop</tt> invoke <span class="emphasis"><em>cinerama</em></span>
+Extra occurrences of <tt class="option">-zrcrop</tt> invoke <span class="emphasis"><i>cinerama</i></span>
 mode, i.e. you can distribute the movie over several TV's or beamers to create a
 larger screen. Suppose you have two beamers. The left one is connected to your
 Buz at <tt class="filename">/dev/video1</tt> and the right one is connected to
@@ -1200,13 +1276,14 @@ that the left beamer should have JPEG frames at quality 10, then you would
 issue the following command
 <pre class="screen">
 mplayer -vo zr -zrdev /dev/video0 -zrcrop 352x288+352+0 -zrxdoff 0 -zrbw \
-          -zrcrop 352x288+0+0 -zrdev /dev/video1 -zrquality 10 movie.avi
+          -zrcrop 352x288+0+0 -zrdev /dev/video1 -zrquality 10 \
+	  <i><tt>movie.avi</tt></i>
 </pre>
 </p><p>
 You see that the options appearing before the second <tt class="option">-zrcrop</tt>
 only apply to the DC10+ and that the options after the second
 <tt class="option">-zrcrop</tt> apply to the Buz. The maximum number of MJPEG cards
-participating in <span class="emphasis"><em>cinerama</em></span> is four, so you can build a
+participating in <span class="emphasis"><i>cinerama</i></span> is four, so you can build a
 2x2 vidiwall.
 </p><p>
 Finally an important remark: Do not start or stop XawTV on the playback device
@@ -1227,14 +1304,14 @@ for Matrox G450/G550 TV-out instructions, please see the next section!
     on the TV.
     </p><p>
     <span class="bold"><b>This method doesn't give you accelerated playback</b></span>
-    as under Windows! The second head has only YUV framebuffer, the <span class="emphasis"><em>BES</em></span>
+    as under Windows! The second head has only YUV framebuffer, the <span class="emphasis"><i>BES</i></span>
     (Back End Scaler, the YUV scaler on G200/G400/G450/G550 cards) doesn't
     work on it! The windows driver somehow workarounds this, probably by
     using the 3D engine to zoom, and the YUV framebuffer to display the
     zoomed image. If you really want to use X, use the <tt class="option">-vo x11 -fs
     -zoom</tt> options, but it will be <span class="bold"><b>SLOW</b></span>,
     and has <span class="bold"><b>Macrovision</b></span> copy protection enabled
-    (you can &quot;workaround&quot; Macrovision using this
+    (you can "workaround" Macrovision using this
     <a href="http://avifile.sourceforge.net/mgamacro.pl" target="_top">perl script</a>).
     </p></dd><dt><span class="term">Framebuffer</span></dt><dd><p>
     Using the <span class="bold"><b>matroxfb modules</b></span> in the 2.4
@@ -1315,7 +1392,7 @@ module can't be used AFAIK, because the G450/G550 driver works only in one
 configuration: the first CRTC chip (with much more features) on the first display
 (on monitor), and the second CRTC (no <span class="bold"><b>BES</b></span> - for
 explanation on BES, please see the G400 section above) on TV. So you can only
-use <span class="application">MPlayer</span>'s <span class="emphasis"><em>fbdev</em></span> output driver
+use <span class="application">MPlayer</span>'s <span class="emphasis"><i>fbdev</i></span> output driver
 at the present.
 </p><p>
 The first CRTC can't be routed to the second head currently. The author of the
@@ -1328,7 +1405,7 @@ The necessary kernel patch and the detailed howto is downloadable from
 </p></div><div class="sect4"><div class="titlepage"><div><h5 class="title"><a name="tvout-ati"></a>2.3.1.5.3. ATI cards</h5></div></div><p><b>PREAMBLE. </b>
 Currently ATI doesn't want to support any of its TV-out chips under Linux,
 because of their licensed Macrovision technology.
-</p><div class="itemizedlist"><p class="title"><b>ATI CARDS TV-OUT STATUS ON LINUX</b></p><ul type="disc"><li>
+</p><div class="itemizedlist"><p><b>ATI CARDS TV-OUT STATUS ON LINUX</b></p><ul type="disc"><li>
   <span class="bold"><b>ATI Mach64</b></span>:
   supported by <a href="http://gatos.sf.net" target="_top">gatos</a>.
   </li><li>
@@ -1337,13 +1414,13 @@ because of their licensed Macrovision technology.
   </li><li>
   <span class="bold"><b>Radeon</b></span> and <span class="bold"><b>Rage128</b></span>:
   supported by <span class="application">MPlayer</span>!
-  Check <a href="devices.html#vesa" title="2.3.1.2.10. VESA - output to VESA BIOS">VESA driver</a> and
-  <a href="devices.html#vidix" title="2.3.1.2.12. VIDIX">VIDIX</a> sections.
+  Check <a href="devices.html#vesa" title="2.3.1.2.11. VESA - output to VESA BIOS">VESA driver</a> and
+  <a href="devices.html#vidix" title="2.3.1.2.13. VIDIX">VIDIX</a> sections.
   </li><li>
   <span class="bold"><b>Rage Mobility P/M, Radeon, Rage 128, Mobility M3/M4</b></span>:
   supported by <a href="http://www.stud.uni-hamburg.de/users/lennart/projects/atitvout/" target="_top">atitvout</a>.
   </li></ul></div><p>
-On other cards, just use the <a href="devices.html#vesa" title="2.3.1.2.10. VESA - output to VESA BIOS">VESA</a> driver,
+On other cards, just use the <a href="devices.html#vesa" title="2.3.1.2.11. VESA - output to VESA BIOS">VESA</a> driver,
 without VIDIX. Powerful CPU is needed, though.
 </p><p>
 Only thing you need to do - <span class="bold"><b>Have the TV connector
@@ -1361,21 +1438,21 @@ card's Device section in the <tt class="filename">XF86Config</tt> file, accordin
 to the following example (adapt for your card/TV):
 
 <pre class="programlisting">
-Section &quot;Device&quot;
-        Identifier      &quot;GeForce&quot;
-        VendorName      &quot;ASUS&quot;
-        BoardName       &quot;nVidia GeForce2/MX 400&quot;
-        Driver          &quot;nvidia&quot;
-        #Option         &quot;NvAGP&quot; &quot;1&quot;
-        Option          &quot;NoLogo&quot;
-        Option          &quot;CursorShadow&quot;  &quot;on&quot;
+Section "Device"
+        Identifier      "GeForce"
+        VendorName      "ASUS"
+        BoardName       "nVidia GeForce2/MX 400"
+        Driver          "nvidia"
+        #Option         "NvAGP" "1"
+        Option          "NoLogo"
+        Option          "CursorShadow"  "on"
 
-        Option          &quot;TwinView&quot;
-        Option          &quot;TwinViewOrientation&quot; &quot;Clone&quot;
-        Option          &quot;MetaModes&quot; &quot;1024x768,640x480&quot;
-        Option          &quot;ConnectedMonitor&quot; &quot;CRT, TV&quot;
-        Option          &quot;TVStandard&quot; &quot;PAL-B&quot;
-        Option          &quot;TVOutFormat&quot; &quot;Composite&quot;
+        Option          "TwinView"
+        Option          "TwinViewOrientation" "Clone"
+        Option          "MetaModes" "1024x768,640x480"
+        Option          "ConnectedMonitor" "CRT, TV"
+        Option          "TVStandard" "PAL-B"
+        Option          "TVOutFormat" "Composite"
 
 EndSection
 </pre>
@@ -1395,7 +1472,7 @@ movie becomes 4bpp in every 10 minutes, and stays that way. Frequent hard
 freezes, LCD display problems.
 </p></div></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="audio-dev"></a>2.3.2. Audio output devices</h3></div></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="sync"></a>2.3.2.1. Audio/Video synchronisation</h4></div></div><p>
 <span class="application">MPlayer</span>'s audio interface is called
-<span class="emphasis"><em>libao2</em></span>. It currently contains these drivers:
+<span class="emphasis"><i>libao2</i></span>. It currently contains these drivers:
 </p><div class="informaltable"><table border="1"><colgroup><col><col></colgroup><thead><tr><th>Driver</th><th>Comment</th></tr></thead><tbody><tr><td>oss</td><td>
   OSS (ioctl) driver (supports hardware AC3 passthrough)
   </td></tr><tr><td>sdl</td><td>
@@ -1420,14 +1497,14 @@ freezes, LCD display problems.
   </td></tr></tbody></table></div><p>
 Linux sound card drivers have compatibility problems. This is because
 <span class="application">MPlayer</span> relies on an in-built feature of
-<span class="emphasis"><em>properly</em></span> coded sound drivers that enable them to
+<span class="emphasis"><i>properly</i></span> coded sound drivers that enable them to
 maintain correct audio/video sync. Regrettably, some driver authors
 don't take the care to code this feature since it is not needed for
 playing MP3s or sound effects.
 </p><p>
 Other media players like <a href="http://avifile.sourceforge.net" target="_top">aviplay</a>
 or <a href="http://xine.sourceforge.net" target="_top">xine</a> possibly work
-out-of-the-box with these drivers because they use &quot;simple&quot; methods
+out-of-the-box with these drivers because they use "simple" methods
 with internal timing. Measuring showed that their methods are not as
 efficient as <span class="application">MPlayer</span>'s.
 </p><p>
@@ -1438,7 +1515,7 @@ only with very badly created files (check the man page for workarounds).
 If you happen to have a bad audio driver, try the <tt class="option">-autosync</tt>
 option, it should sort out your problems. See the man page for detailed
 information.
-</p><div class="itemizedlist"><p class="title"><b>Some notes:</b></p><ul type="disc"><li><p>
+</p><div class="itemizedlist"><p><b>Some notes:</b></p><ul type="disc"><li><p>
   If you have an OSS driver, first try <tt class="option">-ao oss</tt> (this is
   the default).  If you experience glitches, halts or anything out of the
   ordinary, try <tt class="option">-ao sdl</tt> (NOTE: you need to have SDL libraries
@@ -1473,8 +1550,8 @@ sound cards are only supported by the commercial OSS drivers from
 They also support several non-Linux systems.
 </p><div class="informaltable"><table border="1"><colgroup><col><col><col><col><col><col><col><col></colgroup><thead><tr><th rowspan="3" valign="middle">SOUND CARD</th><th colspan="4">DRIVER</th><th rowspan="3" valign="middle">Max kHz</th><th rowspan="3" valign="middle">Max Channels</th><th rowspan="3" valign="middle">Max Opens
       <sup>[<a name="maxopens" href="#ftn.maxopens">a</a>]</sup></th></tr><tr><th>OSS/Free</th><th>ALSA</th><th>OSS/Pro</th><th>other</th></tr></thead><tbody><tr><td>VIA onboard (686/A/B, 8233, 8235)</td><td><a href="http://sourceforge.net/project/showfiles.php?group_id=3242&amp;release_id=59602" target="_top">via82cxxx_audio</a></td><td>snd-via82xx</td><td> </td><td> </td><td>4-48 kHz or 48 kHz only, depending on the chipset</td><td> </td><td> </td></tr><tr><td>Aureal Vortex 2</td><td>none</td><td>none</td><td>OK</td><td><a href="http://aureal.sourceforge.net" target="_top">Linux Aureal Drivers</a><a href="http://makacs.poliod.hu/~pontscho/aureal/au88xx-1.1.3.tar.bz2" target="_top">buffer size increased to 32k</a></td><td>48</td><td>4.1</td><td>5+</td></tr><tr><td>SB Live!</td><td>Analog OK, SP/DIF not working</td><td>Both OK</td><td>Both OK</td><td><a href="http://opensource.creative.com" target="_top">Creative's OSS driver (SP/DIF support)</a></td><td>192</td><td>4.0/5.1</td><td>32</td></tr><tr><td>SB 128 PCI (es1371)</td><td>OK</td><td>?</td><td> </td><td> </td><td>48</td><td>stereo</td><td>2</td></tr><tr><td>SB AWE 64</td><td>max 44kHz</td><td>48kHz sounds bad</td><td> </td><td> </td><td>48</td><td> </td><td> </td></tr><tr><td>GUS PnP</td><td>none</td><td>OK</td><td>OK</td><td> </td><td>48</td><td> </td><td> </td></tr><tr><td>Gravis UltraSound ACE</td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr><tr><td>Gravis UltraSound MAX</td><td>OK</td><td>OK (?)</td><td> </td><td> </td><td>48</td><td> </td><td> </td></tr><tr><td>ESS 688</td><td>OK</td><td>OK (?)</td><td> </td><td> </td><td>48</td><td> </td><td> </td></tr><tr><td>C-Media cards (CMI8338/8738)</td><td>OK</td><td>OK SP/DIF is supported with ALSA 0.9.x</td><td>?</td><td> </td><td>44</td><td>stereo</td><td>1</td></tr><tr><td>Yamaha cards (*ymf*)</td><td>not OK (?) (maybe <tt class="option">-ao sdl</tt>)</td><td>OK only with ALSA 0.5 with OSS emulation
-      <span class="bold"><b>AND</b></span><tt class="option">-ao sdl</tt> (!) (?)</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr><tr><td>Cards with envy24 chips (like Terratec EWS88MT)</td><td>?</td><td>?</td><td>OK</td><td> </td><td>?</td><td> </td><td> </td></tr><tr><td>PC Speaker or DAC</td><td>OK</td><td>none</td><td> </td><td><a href="http://www.geocities.com/stssppnn/pcsp.html" target="_top">Linux PC speaker OSS driver</a></td><td>The driver emulates 44.1, maybe more.</td><td>mono</td><td>1</td></tr></tbody><tbody class="footnotes"><tr><td colspan="8"><div class="footnote"><p><sup>[<a name="ftn.maxopens" href="#maxopens">a</a>] </sup>the number of applications that are able to use
-          the device <span class="emphasis"><em>at the same time</em></span>.</p></div></td></tr></tbody></table></div><p>
+      <span class="bold"><b>AND</b></span><tt class="option">-ao sdl</tt> (!) (?)</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr><tr><td>Cards with envy24 chips (like Terratec EWS88MT)</td><td>?</td><td>?</td><td>OK</td><td> </td><td>?</td><td> </td><td> </td></tr><tr><td>PC Speaker or DAC</td><td>OK</td><td>none</td><td> </td><td><a href="http://www.geocities.com/stssppnn/pcsp.html" target="_top">Linux PC speaker OSS driver</a></td><td>The driver emulates 44.1, maybe more.</td><td>mono</td><td>1</td></tr></tbody><tbody class="footnotes"><tr><td colspan="8"><div class="footnote"><p><sup>[<a name="ftn.maxopens" href="#maxopens">a</a>] </sup><sup>[<a name="ftn.maxopens" href="#maxopens">a</a>] </sup>the number of applications that are able to use
+          the device <span class="emphasis"><i>at the same time</i></span>.</p></div></td></tr></tbody></table></div><p>
 Feedback to this document is welcome. Please tell us how
 <span class="application">MPlayer</span> and your sound card(s) worked together.
 </p></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="af"></a>2.3.2.3. Audio filters</h4></div></div><p>
@@ -1489,7 +1566,7 @@ Feedback to this document is welcome. Please tell us how
   they appear in the comma separated list.
 </p><p>
 Example:
-<pre class="screen">mplayer -af resample,pan movie.avi</pre>
+<pre class="screen">mplayer -af resample,pan <i><tt>movie.avi</tt></i></pre>
 would run the sound through the resampling filter followed by the pan filter.
 Observe that the list must not contain any spaces, else it will fail.
 </p><p>
@@ -1497,7 +1574,7 @@ The filters often have options that change their behavior. These options
 are explained in detail in the sections below. A filter will execute using
 default settings if its options are omitted. Here is an example of how to use
 filters in combination with filter specific options:
-<pre class="screen">mplayer -af resample=11025,pan=1:0.5:0.5 -channels 1 -srate 11025 media.avi</pre>
+<pre class="screen">mplayer -af resample=11025,pan=1:0.5:0.5 -channels 1 -srate 11025 <i><tt>media.avi</tt></i></pre>
 would set the output frequency of the resample filter to 11025Hz and downmix
 the audio to 1 channel using the pan filter.
 </p><p>
@@ -1510,13 +1587,13 @@ are inserted and what speed/accuracy optimizations they use:
 Use automatic insertion of filters and optimize according to CPU speed.
 </p></dd><dt><span class="term"><tt class="option">1</tt></span></dt><dd><p>
 Use automatic insertion of filters and optimize for the highest speed.
-<span class="emphasis"><em>Warning:</em></span> Some features in the audio filters may
+<span class="emphasis"><i>Warning:</i></span> Some features in the audio filters may
 silently fail, and the sound quality may drop.
 </p></dd><dt><span class="term"><tt class="option">2</tt></span></dt><dd><p>
 Use automatic insertion of filters and optimize for quality.
 </p></dd><dt><span class="term"><tt class="option">3</tt></span></dt><dd><p>
 Use no automatic insertion of filters and no optimization.
-<span class="emphasis"><em>Warning:</em></span> It may be possible to crash <span class="application">MPlayer</span>
+<span class="emphasis"><i>Warning:</i></span> It may be possible to crash <span class="application">MPlayer</span>
 using this setting.
 </p></dd><dt><span class="term"><tt class="option">4</tt></span></dt><dd><p>
 Use automatic insertion of filters according to 0 above,
@@ -1614,14 +1691,14 @@ itself if not needed. The number of options is dynamic:
   channels are truncated.
 </p><p>
 Example 1:
-<pre class="screen">mplayer -af channels=4:4:0:1:1:0:2:2:3:3 media.avi</pre>
+<pre class="screen">mplayer -af channels=4:4:0:1:1:0:2:2:3:3 <i><tt>media.avi</tt></i></pre>
 would change the number of channels to 4 and set up 4 routes that swap
 channel 0 and channel 1 and leave channel 2 and 3 intact. Observe that
 if media containing two channels was played back, channels 2 and 3 would
 contain silence but 0 and 1 would still be swapped.
 </p><p>
 Example 2:
-<pre class="screen">mplayer -af channels=6:4:0:0:0:1:0:2:0:3 media.avi</pre>
+<pre class="screen">mplayer -af channels=6:4:0:0:0:1:0:2:0:3 <i><tt>media.avi</tt></i></pre>
 would change the number of channels to 6 and set up 4 routes that copy
 channel 0 to channels 0 to 3. Channel 4 and 5 will contain silence.
 </p></div><div class="sect4"><div class="titlepage"><div><h5 class="title"><a name="af_format"></a>2.3.2.3.3. Sample format converter</h5></div></div><p>
@@ -1640,7 +1717,7 @@ The <tt class="option">format</tt> filter converts between different sample form
     leaving it empty results in a runtime error.
 </p></dd></dl></div><p>
 Example:
-<pre class="screen">mplayer -af format=4:float media.avi</pre>
+<pre class="screen">mplayer -af format=4:float <i><tt>media.avi</tt></i></pre>
 would set the output format to 4 bytes per sample floating point data.
 </p></div><div class="sect4"><div class="titlepage"><div><h5 class="title"><a name="af_delay"></a>2.3.2.3.4. Delay</h5></div></div><p>
 The <tt class="option">delay</tt> filter delays the sound to the loudspeakers such that
@@ -1667,7 +1744,7 @@ Calculate the required delays in ms as
     d[i] = 1000*s[i]/342; i = 1...5
 </p></li></ol></div><p>
 Example:
-<pre class="screen">mplayer -af delay=10.5:10.5:0:0:7:0 media.avi</pre>
+<pre class="screen">mplayer -af delay=10.5:10.5:0:0:7:0 <i><tt>media.avi</tt></i></pre>
 would delay front left and right by 10.5ms, the two rear channels and the sub
 by 0ms and the center channel by 7ms.
 </p></div><div class="sect4"><div class="titlepage"><div><h5 class="title"><a name="af_volume"></a>2.3.2.3.5. Software volume control</h5></div></div><p>Software volume control is implemented by the <tt class="option">volume</tt>
@@ -1690,7 +1767,7 @@ hissing noise in the background is gone. This filter has two options:
     this feature creates distortion and should be considered a last resort.
 </p></dd></dl></div><p>
 Example:
-<pre class="screen">mplayer -af volume=10.1:0 media.avi</pre>
+<pre class="screen">mplayer -af volume=10.1:0 <i><tt>media.avi</tt></i></pre>
 would amplify the sound by 10.1dB and hard-clip if the sound level is too high.
 </p><p>
 This filter has a second feature: It measures the overall maximum sound level
@@ -1716,7 +1793,7 @@ are floating point numbers between <tt>-12</tt> and <tt>+12</tt>
 representing the gain in dB for each frequency band.
 </p></dd></dl></div><p>
 Example:
-<pre class="screen">mplayer -af equalizer=11:11:10:5:0:-12:0:5:12:12 media.avi</pre>
+<pre class="screen">mplayer -af equalizer=11:11:10:5:0:-12:0:5:12:12 <i><tt>media.avi</tt></i></pre>
 would amplify the sound in the upper and lower frequency region while
 canceling it almost completely around 1kHz.
 </p></div><div class="sect4"><div class="titlepage"><div><h5 class="title"><a name="af_panning"></a>2.3.2.3.7. Panning filter</h5></div></div><p>
@@ -1726,7 +1803,7 @@ There are two major uses for this filter:
 </p><div class="orderedlist"><ol type="1"><li><p>
 Down-mixing many channels to only a few, stereo to mono for example.
 </p></li><li><p>
-Varying the &quot;width&quot; of the center speaker in a surround sound system.
+Varying the "width" of the center speaker in a surround sound system.
 </p></li></ol></div><p>
 This filter is hard to use, and will require some tinkering before the
 desired result is obtained. The number of options for this filter
@@ -1741,11 +1818,11 @@ are floating point values between <tt>0</tt> and <tt>1</tt>.
 output channel i.
 </p></dd></dl></div><p>
 Example 1:
-<pre class="screen">mplayer -af pan=1:0.5:0.5 -channels 1 media.avi</pre>
+<pre class="screen">mplayer -af pan=1:0.5:0.5 -channels 1 <i><tt>media.avi</tt></i></pre>
 would down-mix from stereo to mono.
 </p><p>
 Example 2:
-<pre class="screen">mplayer -af pan=3:1:0:1:0.5:0.5 -channels 3 media.avi</pre>
+<pre class="screen">mplayer -af pan=3:1:0:1:0.5:0.5 -channels 3 <i><tt>media.avi</tt></i></pre>
 would give 3 channel output leaving channels 0 and 1 intact, and mix
 channels 0 and 1 into output channel 2 (which could be sent to a
 sub-woofer for example).
@@ -1771,7 +1848,7 @@ sub-woofer. This filter has two parameters:
     necessary.
 </p></dd></dl></div><p>
 Example:
-<pre class="screen">mplayer -af sub=100:4 -channels 5 media.avi</pre>
+<pre class="screen">mplayer -af sub=100:4 -channels 5 <i><tt>media.avi</tt></i></pre>
 would add a sub-woofer channel with a cutoff frequency of
 100Hz to output channel 4.
 </p></div><div class="sect4"><div class="titlepage"><div><h5 class="title"><a name="af_surround"></a>2.3.2.3.9. Surround-sound decoder</h5></div></div><p>
@@ -1790,7 +1867,7 @@ be set to 15ms if d1 &lt;= d2 and to 15 + 5*(d1-d2) if d1 &gt; d2. The default
 value for d is 20ms.
 </p></dd></dl></div><p>
 Example:
-<pre class="screen">mplayer -af surround=15 -channels 4 media.avi</pre>
+<pre class="screen">mplayer -af surround=15 -channels 4 <i><tt>media.avi</tt></i></pre>
 would add surround sound decoding with 15ms delay for the sound to the
 rear speakers.
 </p></div><div class="sect4"><div class="titlepage"><div><h5 class="title"><a name="af_export"></a>2.3.2.3.10. Audio Exporter</h5></div></div><p>
@@ -1812,7 +1889,7 @@ The file you want this filter to export to. The default is to map to
 Number of samples per channel. The default is <tt>512</tt> samples.
 </p></dd></dl></div><p>
 Example:
-<pre class="screen">mplayer -af export=/tmp/mplayer-af_export:1024 media.avi</pre>
+<pre class="screen">mplayer -af export=/tmp/mplayer-af_export:1024 <i><tt>media.avi</tt></i></pre>
 would export 1024 samples per channel to <tt class="filename">/tmp/mplayer-af_export</tt>.
 </p></div></div><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="audio-plugins"></a>2.3.2.4. Audio plugins (deprecated)</h4></div></div><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">&#1047;&#1072;&#1084;&#1077;&#1095;&#1072;&#1085;&#1080;&#1077;</h3><p><span class="bold"><b>Audio plugins have been deprecated by audio filters and will
 be removed soon.</b></span></p></div><p>
@@ -1824,7 +1901,7 @@ the sound reaches the sound card. They are enabled using the
 <tt class="option">list</tt> argument is required and determines which plugins
 should be used and in which order they should be executed. Example:
 
-<pre class="screen">mplayer media.avi -aop list=resample,format</pre>
+<pre class="screen">mplayer <i><tt>media.avi</tt></i> -aop list=resample,format</pre>
 
 would run the sound through the resampling plugin followed by the format
 plugin.
@@ -1834,7 +1911,7 @@ switches are explained in detail in the sections below. A plugin will
 execute using default settings if its switches are omitted.  Here is an
 example of how to use plugins in combination with plugin specific switches:
 
-<pre class="screen">mplayer media.avi -aop list=resample,format:fout=44100:format=0x8</pre>
+<pre class="screen">mplayer <i><tt>media.avi</tt></i> -aop list=resample,format:fout=44100:format=0x8</pre>
 
 would set the output frequency of the resample plugin to 44100 Hz and the
 output format of the format plugin to AFMT_U8.
@@ -1911,7 +1988,7 @@ Usage:
 <pre class="screen">
 mplayer <i><tt>media.avi</tt></i> -aop list=volume:volume=<i><tt>0-255</tt></i></pre>
 </p><p>
-This plugin also has compressor or &quot;soft-clipping&quot; capabilities.
+This plugin also has compressor or "soft-clipping" capabilities.
 Compression can be used if the dynamic range of the sound is very high or
 if the dynamic range of the loudspeakers is very low. Be aware that this
 feature creates distortion and should be considered a last resort.
@@ -1922,7 +1999,7 @@ mplayer <i><tt>media.avi</tt></i> -aop list=volume:softclip</pre>
 </p></div><div class="sect4"><div class="titlepage"><div><h5 class="title"><a name="extrastereo"></a>2.3.2.4.6. Extrastereo</h5></div></div><p>
 This plugin (linearly) increases the difference between left and right
 channels (like the <span class="application">XMMS</span> extrastereo plugin) which gives some
-sort of &quot;live&quot; effect to playback.
+sort of "live" effect to playback.
 </p><p>
 Usage:
 <pre class="screen">

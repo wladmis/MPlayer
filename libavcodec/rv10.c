@@ -1,6 +1,7 @@
 /*
  * RV10 codec
  * Copyright (c) 2000,2001 Fabrice Bellard.
+ * Copyright (c) 2002-2004 Michael Niedermayer
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -359,6 +360,11 @@ static int rv20_decode_picture_header(MpegEncContext *s)
         return -1;
     }
     
+    if(s->last_picture_ptr==NULL && s->pict_type==B_TYPE){
+        av_log(s->avctx, AV_LOG_ERROR, "early B pix\n");
+        return -1;
+    }
+    
     if (get_bits(&s->gb, 1)){
         av_log(s->avctx, AV_LOG_ERROR, "unknown bit set\n");
         return -1;
@@ -378,13 +384,22 @@ static int rv20_decode_picture_header(MpegEncContext *s)
         
     if(s->avctx->has_b_frames){
         if (get_bits(&s->gb, 1)){
-            av_log(s->avctx, AV_LOG_ERROR, "unknown bit3 set\n");
-            return -1;
+//            av_log(s->avctx, AV_LOG_ERROR, "unknown bit3 set\n");
+//            return -1;
         }
         seq= get_bits(&s->gb, 15);
-    }else
+        if (s->avctx->sub_id == 0x20201002 && get_bits(&s->gb, 1)){
+            av_log(s->avctx, AV_LOG_ERROR, "unknown bit4 set\n");
+//            return -1;
+        }
+        mb_pos= get_bits(&s->gb, av_log2(s->mb_num-1)+1);
+        s->mb_x= mb_pos % s->mb_width;
+        s->mb_y= mb_pos / s->mb_width;
+    }else{
         seq= get_bits(&s->gb, 8)*128;
-//printf("%d\n", seq);
+        mb_pos= ff_h263_decode_mba(s);
+    }
+//av_log(s->avctx, AV_LOG_DEBUG, "%d\n", seq);
     seq |= s->time &~0x7FFF;
     if(seq - s->time >  0x4000) seq -= 0x8000;
     if(seq - s->time < -0x4000) seq += 0x8000;
@@ -397,14 +412,16 @@ static int rv20_decode_picture_header(MpegEncContext *s)
             s->time= seq;
             s->pb_time= s->pp_time - (s->last_non_b_time - s->time);
             if(s->pp_time <=s->pb_time || s->pp_time <= s->pp_time - s->pb_time || s->pp_time<=0){
-                printf("messed up order, seeking?, skiping current b frame\n");
+                av_log(s->avctx, AV_LOG_DEBUG, "messed up order, seeking?, skiping current b frame\n");
                 return FRAME_SKIPED;
             }
         }
     }
 //    printf("%d %d %d %d %d\n", seq, (int)s->time, (int)s->last_non_b_time, s->pp_time, s->pb_time);
-
-    ff_h263_decode_mba(s);    
+/*for(i=0; i<32; i++){
+    av_log(s->avctx, AV_LOG_DEBUG, "%d", get_bits1(&s->gb));
+}
+av_log(s->avctx, AV_LOG_DEBUG, "\n");*/
     s->no_rounding= get_bits1(&s->gb);
     
     s->f_code = 1;
@@ -431,6 +448,8 @@ static int rv10_decode_init(AVCodecContext *avctx)
     MpegEncContext *s = avctx->priv_data;
     static int done=0;
 
+    MPV_decode_defaults(s);
+    
     s->avctx= avctx;
     s->out_format = FMT_H263;
     s->codec_id= avctx->codec_id;
@@ -443,6 +462,12 @@ static int rv10_decode_init(AVCodecContext *avctx)
         s->rv10_version= 0;
         s->h263_long_vectors=0;
         s->low_delay=1;
+        break;
+    case 0x10002000:
+        s->rv10_version= 3;
+        s->h263_long_vectors=1;
+        s->low_delay=1;
+        s->obmc=1;
         break;
     case 0x10003000:
         s->rv10_version= 3;
@@ -460,6 +485,7 @@ static int rv10_decode_init(AVCodecContext *avctx)
         s->low_delay=1;
         break;
     case 0x20200002:
+    case 0x20201002:
     case 0x30202002:
     case 0x30203002:
         s->low_delay=0;
@@ -469,14 +495,10 @@ static int rv10_decode_init(AVCodecContext *avctx)
         av_log(s->avctx, AV_LOG_ERROR, "unknown header %X\n", avctx->sub_id);
     }
 //printf("ver:%X\n", avctx->sub_id);
-    s->flags= avctx->flags;
-
     if (MPV_common_init(s) < 0)
         return -1;
 
     h263_decode_init_vlc(s);
-
-    s->progressive_sequence=1;
 
     /* init rv vlc */
     if (!done) {
@@ -537,7 +559,7 @@ static int rv10_decode_packet(AVCodecContext *avctx,
     }
 //if(s->pict_type == P_TYPE) return 0;
 
-    if (s->mb_x == 0 && s->mb_y == 0) {
+    if ((s->mb_x == 0 && s->mb_y == 0) || s->current_picture_ptr==NULL) {
         if(MPV_frame_start(s, avctx) < 0)
             return -1;
     }
@@ -570,22 +592,23 @@ static int rv10_decode_packet(AVCodecContext *avctx,
     s->rv10_first_dc_coded[0] = 0;
     s->rv10_first_dc_coded[1] = 0;
     s->rv10_first_dc_coded[2] = 0;
-
+//printf("%d %X %X\n", s->pict_type, s->current_picture.motion_val[0], s->current_picture.motion_val[1]);
     s->block_wrap[0]=
     s->block_wrap[1]=
     s->block_wrap[2]=
-    s->block_wrap[3]= s->mb_width*2 + 2;
+    s->block_wrap[3]= s->b8_stride;
     s->block_wrap[4]=
-    s->block_wrap[5]= s->mb_width + 2;
+    s->block_wrap[5]= s->mb_stride;
     ff_init_block_index(s);
     /* decode each macroblock */
-    for(i=0;i<mb_count;i++) {
+
+    for(s->mb_num_left= mb_count; s->mb_num_left>0; s->mb_num_left--) {
         int ret;
         ff_update_block_index(s);
 #ifdef DEBUG
         printf("**mb x=%d y=%d\n", s->mb_x, s->mb_y);
 #endif
-        
+
 	s->dsp.clear_blocks(s->block[0]);
         s->mv_dir = MV_DIR_FORWARD;
         s->mv_type = MV_TYPE_16X16; 
@@ -595,7 +618,8 @@ static int rv10_decode_packet(AVCodecContext *avctx,
             av_log(s->avctx, AV_LOG_ERROR, "ERROR at MB %d %d\n", s->mb_x, s->mb_y);
             return -1;
         }
-        ff_h263_update_motion_val(s);
+        if(s->pict_type != B_TYPE)
+            ff_h263_update_motion_val(s);
         MPV_decode_mb(s, s->block);
         if(s->loop_filter)
             ff_h263_loop_filter(s);
@@ -630,7 +654,7 @@ static int rv10_decode_frame(AVCodecContext *avctx,
         *data_size = 0;
         return 0;
     }
-    
+
     if(avctx->slice_count){
         for(i=0; i<avctx->slice_count; i++){
             int offset= avctx->slice_offset[i];
@@ -648,16 +672,16 @@ static int rv10_decode_frame(AVCodecContext *avctx,
         if( rv10_decode_packet(avctx, buf, buf_size) < 0 )
             return -1;
     }
-
+    
     if(s->mb_y>=s->mb_height){
         MPV_frame_end(s);
     
         if(s->pict_type==B_TYPE || s->low_delay){
             *pict= *(AVFrame*)&s->current_picture;
-            ff_print_debug_info(s, s->current_picture_ptr);
+            ff_print_debug_info(s, pict);
         } else {
             *pict= *(AVFrame*)&s->last_picture;
-            ff_print_debug_info(s, s->last_picture_ptr);
+            ff_print_debug_info(s, pict);
         }
         
         *data_size = sizeof(AVFrame);

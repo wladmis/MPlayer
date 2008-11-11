@@ -1,0 +1,137 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>7.11. Making a high quality MPEG4 ("DivX") rip of a DVD movie</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - The Movie Player for LINUX"><link rel="up" href="mencoder.html" title="Chapter 7. Encoding with MEncoder"><link rel="previous" href="custommatrices.html" title="7.10. Custom inter/intra matrices"><link rel="next" href="menc-feat-telecine.html" title="7.12. How to deal with telecine and interlacing within NTSC DVDs"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">7.11. Making a high quality MPEG4 ("DivX") rip of a DVD movie</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="custommatrices.html">Prev</a> </td><th width="60%" align="center">Chapter 7. Encoding with MEncoder</th><td width="20%" align="right"> <a accesskey="n" href="menc-feat-telecine.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="menc-feat-dvd-mpeg4"></a>7.11. Making a high quality MPEG4 ("DivX") rip of a DVD movie</h2></div></div><p>
+  Ripping a DVD title into a maximally high quality MPEG4 (DivX) file
+  involves many considerations. Below is an example of the process when
+  there is no file size goal (other than perhaps fitting the result into 2GB).
+  <tt>libavcodec</tt>
+  will be used for the video,
+  and the audio will be copied as is without any changes.
+</p><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="menc-feat-dvd-mpeg4-crop"></a>7.11.1. Cropping</h3></div></div><p>
+  Play the DVD and run the crop detection filter
+  (<tt class="option">-vf cropdetect</tt>) on it. This gives you a crop rectangle
+  to use for encoding. The reason for cropping is that many movies are
+  not shot in a standard DVD aspect ratio (16/9 or 4/3), or, for whatever
+  reason, the picture does not properly fill the frame. So you want to crop
+  out the pointless black bars when you rip. It also improves the quality
+  of the rip since the sharp edge of the black bars wastes a lot of bits.
+  A common aspect is 2.35, which is cinescope. Most big blockbuster
+  movies have this aspect ratio.
+</p></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="menc-feat-dvd-mpeg4-quality"></a>7.11.2. Quality level</h3></div></div><p>
+  Next you need to choose the desired quality level. When there is no
+  need to fit the resulting file on CDs or the like, using constant
+  quantizing AKA constant quality is a good choice. That way each frame
+  is given as much bits as its needs to keep the quality at the desired
+  level, but multiple encoding passes are not needed. With
+  <tt>libavcodec</tt>,
+  you get constant quality by using
+  <tt class="option">-lavcopts vqscale=<i><tt>N</tt></i></tt>.
+  <tt class="option">vqscale=3</tt> should give you a file below 2GB in size,
+  depending mainly on the movie length and video noisiness (the more
+  noise, the harder it is to compress).
+</p></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="menc-feat-dvd-mpeg4-2gb"></a>7.11.3. Files over 2GB</h3></div></div><p>
+  If the file resulting from constant quality encoding is over 2GB big,
+  you will have to create an index to be able to view it properly.
+  Either
+
+</p><div class="itemizedlist"><ul type="disc"><li><p>
+  play the file with <tt class="option">-forceidx</tt> to create an index
+  on the fly or
+  </p></li><li><p>
+  use <tt class="option">-saveidx</tt> to write an index to a file once and
+  <tt class="option">-loadidx</tt> to use it when playing the file.
+  </p></li></ul></div><p>
+
+  If this bothers you, you may want to keep the file size below 2GB.
+</p><p>
+  There are three ways to avoid this. You can try encoding again using
+  <tt class="option">vqscale=4</tt> and see if both the resulting file size
+  and picture quality are acceptable. You can also use
+  <a href="menc-feat-divx4.html" title='7.1. Encoding 2 or 3-pass MPEG-4 ("DivX")'>2 pass encoding</a>.
+  As you will be copying the audio track as is and hence know its
+  bitrate, and you know the running time of the movie, you can
+  compute the required video bitrate to give to the
+  <tt class="option">-lavcopts vbitrate=<i><tt>bitrate</tt></i></tt>
+  option without using
+  <a href="menc-feat-divx4.html" title='7.1. Encoding 2 or 3-pass MPEG-4 ("DivX")'>3 pass encoding</a>.
+</p><p>
+  The third and possibly the best option may be to slightly scale down
+  the resolution. The uniform slight softening and loss of detail is
+  visually more appealing than the blockiness and other artifacts
+  caused by MPEG compression. Scaling down also effectively reduces the
+  noise of the picture, which is good, as noise is hard to compress.
+</p></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="menc-feat-dvd-mpeg4-deinterlacing"></a>7.11.4. Deinterlacing</h3></div></div><p>
+  If the movie is interlaced, you may want to deinterlace it as part of
+  the ripping. It is debatable whether deinterlacing should be done at
+  this stage. The benefit is that deinterlacing when converting to
+  MPEG4 makes compression better, and viewing easier and less CPU
+  intensive on computer monitors as no deinterlacing is required at
+  that stage.
+</p><p>
+  If deinterlacing at the ripping stage is a good idea depends on
+  the DVD. If the DVD is made from film, which was shot at 24 fps, you
+  can as well deinterlace while ripping. If, however, the original was
+  50/60 fps video, converting into deinterlaced 23.976/25 fps video
+  will lose information. If you do decide to deinterlace, you can further
+  experiment with different deinterlacing filters. See
+  <a href="http://www.wieser-web.de/MPlayer/" target="_top">http://www.wieser-web.de/MPlayer/</a>
+  for examples. A good starting point is <tt class="option">-vf pp=fd</tt>.
+</p><p>
+  If you are both cropping and deinterlacing, deinterlace
+  <span class="emphasis"><i>before</i></span> cropping. Actually, this is not necessary
+  if the crop offset is vertically a multiple of 2 pixels. However with
+  some other filters, like dering, you should always crop last, so it's a
+  good habit to put the crop filter last.
+</p></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="menc-feat-dvd-mpeg4-telecine"></a>7.11.5. Inverse telecine</h3></div></div><p>
+  If you are ripping a PAL DVD, which is 25 fps, you do not need to
+  think about the fps. Just use 25 fps. NTSC DVDs on the other hand are
+  29.97 fps (often rounded to 30 fps, but that is not what they are).
+  If the movie was shot for TV, you again do not need to touch the fps.
+  But if the movie was shot on film, and hence at (exactly) 24 fps,
+  it has been converted to 29.97 fps when making the DVD. That
+  conversion where 12 fields are added to each 24 frames of film is
+  called telecine. For more info about telecine, see a
+  <a href="http://www.google.com/search?q=telecine+field+23.976" target="_top">
+  Google search for "telecine field 23.976"</a>.
+</p><p>
+  In case you have such a telecined DVD, you will want to do inverse
+  telecine, that is convert the movie to 23.976 fps (29.97*4/5).
+  Otherwise camera panning will look jerky and awful. You can use
+  <tt class="option">-ofps 23.976</tt> for this. Anything that is shown in
+  theatres is shot on film and needs inverse telecine, TV shows do not.
+</p></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="menc-feat-dvd-mpeg4-scaling"></a>7.11.6. Scaling and aspect ratio</h3></div></div><p>
+  For best quality, do not scale the movie while ripping. Scaling down
+  obviously loses detail, and scaling up causes artifacts and obviously
+  makes the file larger. Pixels in DVD movies
+  are not square, so DVD movies include info about the correct aspect
+  ratio. It is possible to store the aspect ratio in the MPEG4 header
+  of the output file. Most video players ignore this info, but
+  <span class="application">MPlayer</span> honors it. So if you are only
+  going to use <span class="application">MPlayer</span> for viewing the
+  ripped file, you do not need to scale the movie, just pass
+  <tt class="option">-lavcopts autoaspect</tt> to
+  <span class="application">MEncoder</span> and things will
+  automagically work right. If you must scale the movie, be
+  careful about getting the size right especially if you do cropping.
+</p></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="menc-feat-dvd-mpeg4-summary"></a>7.11.7. Summing it up</h3></div></div><p>
+  With all of the above mentioned in mind, a suitable encoding command
+  might be
+
+  <pre class="screen">
+mencoder dvd://1 -aid 128 -oac copy -ovc lavc -lavcopts vcodec=mpeg4:vqscale=3:vhq:v4mv:trell:autoaspect \
+  -ofps 23.976 -vf crop=720:364:0:56 -o Harry_Potter_2.avi
+  </pre>
+
+  Here <tt class="option">dvd://1</tt> gives the DVD title to rip. Option
+  <tt class="option">-aid 128</tt> says to use audio track 128, and
+  <tt class="option">-oac copy</tt> to copy it as is. You'll have to use
+  <span class="application">MPlayer</span> to find out the right values for
+  these options.
+</p><p>
+  Options <tt class="option">vhq:v4mv:trell</tt> for
+  <tt class="option">-lavcopts</tt> improve quality versus bitrate, but make
+  encoding take longer. Especially <tt class="option">trell</tt> slows
+  encoding down but also increases quality visibly. If you want to
+  deinterlace, add a <tt class="option">pp</tt> filter to
+  <tt class="option">-vf</tt>, for example
+  <tt class="option">-vf pp=fd,crop=720:364:0:56</tt> (in that order). If you don't need
+  inverse telecine, leave out the <tt class="option">-ofps 23.976</tt>.
+</p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="custommatrices.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="mencoder.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="menc-feat-telecine.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">7.10. Custom inter/intra matrices </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 7.12. How to deal with telecine and interlacing within NTSC DVDs</td></tr></table></div></body></html>

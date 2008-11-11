@@ -1,5 +1,5 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html><head><meta content="text/html; charset=ISO-8859-1" http-equiv="Content-Type"><title>2.4. Entrada de TV</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.50.0"><link rel="home" href="index.html" title="MPlayer - El reproductor de Películas para LINUX"><link rel="up" href="features.html" title="Capítulo 2. Características"><link rel="previous" href="devices.html" title="2.3. Dispositivos de Salida"><link rel="next" href="edl.html" title="2.5. Listas de Decisión de Edición (EDL)"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">2.4. Entrada de TV</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="devices.html">Anterior</a> </td><th width="60%" align="center">Capítulo 2. Características</th><td width="20%" align="right"> <a accesskey="n" href="edl.html">Siguiente</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="tv-input"></a>2.4. Entrada de TV</h2></div></div><p>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>2.4. Entrada de TV</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.49"><link rel="home" href="index.html" title="MPlayer - El reproductor de Películas
+para LINUX"><link rel="up" href="features.html" title="Capítulo 2. Características"><link rel="previous" href="devices.html" title="2.3. Dispositivos de Salida"><link rel="next" href="usage.html" title="Capítulo 3. Uso"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">2.4. Entrada de TV</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="devices.html">Anterior</a> </td><th width="60%" align="center">Capítulo 2. Características</th><td width="20%" align="right"> <a accesskey="n" href="usage.html">Siguiente</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="tv-input"></a>2.4. Entrada de TV</h2></div></div><p>
 Esta sección es acerca de como poder <span class="bold"><b>mirar/capturar
 desde un dispositivo sintonizador de TV compatible con V4L</b></span>. Vea
 la página del manual para una descripción de las opciones de TV y los controles
@@ -21,7 +21,7 @@ Use la opción <tt class="option">channels</tt>(canales). Ejemplo:
 Explicación: usando esta opción, solo se podrá ver el canal 26 y el 23 y
 habrá un bonito texto en pantalla (OSD) por cada cambio de canal, mostrando
 el nombre del canal. Los espacios en el nombre del canal deben ser reemplazados
-por el carácter &quot;_&quot;.
+por el carácter "_".
 </p></li><li><p>
 Elija varias dimensiones de imagen razonables. Las dimensiones de la imagen
 resultante deberían ser divisibles por 16.
@@ -65,7 +65,8 @@ YV12). En las versiones viejas de <span class="application">MPlayer</span>/<span
 MEncoder</span> era necesario especificar el formato de salida. Este
 problema se debería estar resuelto en las versiones actuales y la opción <tt class="option">outfmt</tt>
 no se requiere más, ya que la opción por omisión sirve para la mayoría de los propósitos. Por
-ejemplo si está capturando en DivX usando libavcodec y especifica <tt class="option">outfmt=RGB24</tt>
+ejemplo si está capturando en DivX usando
+<tt>libavcodec</tt> y especifica <tt class="option">outfmt=RGB24</tt>
 para incrementar la calidad de las imágenes capturadas, las imágenes capturadas serán
 realmente convertidas nuevamente a YV12 por lo que lo único que logra es un desperdicio
 masivo de ciclos de CPU.
@@ -79,14 +80,15 @@ su tarjeta de sonido por medio de un cable de conexión externo entre la placa
 sintonizadora y la linea de entrada, o usando el chip ADC incorporado en el chip
 bt878. En este ultimo caso, deberá cargar el controlador <span class="bold"><b>btaudio
 </b></span>. Lea el archivo <tt class="filename">linux/Documentation/sound/btaudio</tt>
-(en el árbol de directorio del núcleo, no el de MPlayer) para instrucciones de como
+(en el árbol de directorio del núcleo, no el de
+<span class="application">MPlayer</span>) para instrucciones de como
 usar este controlador.
 </p></li><li><p>
 Si <span class="application">MEncoder</span> no puede abrir el dispositivo de audio,
 asegúrese que este realmente disponible. Puede haber algunos problemas con
 algunos servidores de sonido como arts (KDE) o esd (GNOME). Si tiene una placa
 de sonido full dúplex (casi todas las placas decentes lo soportan hoy en día), y
-está usando KDE, trate activando la opción &quot;full dúplex&quot; en el menú de preferencias del
+está usando KDE, trate activando la opción "full dúplex" en el menú de preferencias del
 servidor de sonido.
 </p></li></ul></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="tv-examples"></a>2.4.3. Ejemplos</h3></div></div><div class="informalexample"><p>
 Salida ficticia, a AAlib :)
@@ -97,15 +99,16 @@ Entrada desde un dispositivo estándar V4L:
 <pre class="screen">
 mplayer -tv driver=v4l:width=640:height=480:outfmt=i420 -vc rawi420 -vo xv tv://</pre>
 </p></div><div class="informalexample"><p>
-Un ejemplo más sofisticado. Esto hace que MEncoder capture la imagen completa
-PAL, corte los margenes y desentrelazando la imagen usando un algoritmo linear
-blend. El audio es comprimido con una tasa de bits constante de 64kbps, usando
-el codec LAME. Esta configuración es satisfactoria para capturar películas.
+Un ejemplo más sofisticado. Esto hace que <span class="application">MEncoder</span>
+capture la imagen completa PAL, corte los margenes y desentrelazando la
+imagen usando un algoritmo linear blend. El audio es comprimido con una
+tasa de bits constante de 64kbps, usando el codec LAME. Esta configuración
+es satisfactoria para capturar películas.
 <pre class="screen">
      mencoder -tv driver=v4l:width=768:height=576 \
      -ovc lavc -lavcopts vcodec=mpeg4:vbitrate=900 \
      -oac mp3lame -lameopts cbr:br=64 \
-     -vf crop=720:544:24:16,pp=lb -o salida.avi tv://
+     -vf crop=720:544:24:16,pp=lb -o <i><tt>salida.avi</tt></i> tv://
 </pre>
 </p></div><div class="informalexample"><p>
 Esto adicionalmente escalará la imagen a 384x288 y comprimirá el vídeo
@@ -118,10 +121,11 @@ es tan importante.
      mencoder -tv driver=v4l:width=768:height=576 \
      -ovc lavc -lavcopts vcodec=mpeg4:vbitrate=350:vhq:vqmax=31:keyint=300 \
      -oac mp3lame -lameopts cbr:br=48 \
-     -vf crop=720:540:24:18,pp=tn/lb,scale=384:288 -sws 1 -o salida.avi tv://
+     -vf crop=720:540:24:18,pp=tn/lb,scale=384:288 -sws 1 \
+     -o <i><tt>salida.avi</tt></i> tv://
 </pre>
 Es posible especificar una dimensión de imagen más chica en la opción <tt class="option">-tv</tt>
 y omitir el escalado de software pero este enfoque usa la máxima cantidad de información
 disponible y es un poco más resistente al ruido. Los chips bt8x8 pueden hacer
 el promediado de pixels solo en dirección horizontal debido a limitaciones de hardware.
-</p></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="devices.html">Anterior</a> </td><td width="20%" align="center"><a accesskey="u" href="features.html">Subir</a></td><td width="40%" align="right"> <a accesskey="n" href="edl.html">Siguiente</a></td></tr><tr><td width="40%" align="left" valign="top">2.3. Dispositivos de Salida </td><td width="20%" align="center"><a accesskey="h" href="index.html">Inicio</a></td><td width="40%" align="right" valign="top"> 2.5. Listas de Decisión de Edición (EDL)</td></tr></table></div></body></html>
+</p></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="devices.html">Anterior</a> </td><td width="20%" align="center"><a accesskey="u" href="features.html">Subir</a></td><td width="40%" align="right"> <a accesskey="n" href="usage.html">Siguiente</a></td></tr><tr><td width="40%" align="left" valign="top">2.3. Dispositivos de Salida </td><td width="20%" align="center"><a accesskey="h" href="index.html">Inicio</a></td><td width="40%" align="right" valign="top"> Capítulo 3. Uso</td></tr></table></div></body></html>

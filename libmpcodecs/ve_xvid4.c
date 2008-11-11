@@ -31,6 +31,7 @@
 #include <errno.h>
 #include <math.h>
 #include <limits.h>
+#include <time.h>
 
 #include "../config.h"
 #include "../mp_msg.h"
@@ -52,12 +53,93 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <limits.h>
+#include <assert.h>
 
 #include "m_option.h"
 
 #define XVID_FIRST_PASS_FILENAME "xvid-twopass.stats"
 #define FINE (!0)
 #define BAD (!FINE)
+
+// Code taken from Libavcodec and ve_lavc.c to handle Aspect Ratio calculation
+
+typedef struct XVIDRational{
+    int num; 
+    int den;
+} XVIDRational;
+
+#define MAX(a,b) ((a) > (b) ? (a) : (b))
+#define ABS(a) ((a) >= 0 ? (a) : (-(a)))
+
+
+static int64_t xvid_gcd(int64_t a, int64_t b){
+    if(b) return xvid_gcd(b, a%b);
+    else  return a;
+}
+
+static int xvid_reduce(int *dst_nom, int *dst_den, int64_t nom, int64_t den, int64_t max){
+    int exact=1, sign=0;
+    int64_t gcd;
+
+    assert(den != 0);
+
+    if(den < 0){
+        den= -den;
+        nom= -nom;
+    }
+    
+    if(nom < 0){
+        nom= -nom;
+        sign= 1;
+    }
+    
+    gcd = xvid_gcd(nom, den);
+    nom /= gcd;
+    den /= gcd;
+    
+    if(nom > max || den > max){
+        XVIDRational a0={0,1}, a1={1,0};
+        exact=0;
+
+        for(;;){
+            int64_t x= nom / den;
+            int64_t a2n= x*a1.num + a0.num;
+            int64_t a2d= x*a1.den + a0.den;
+
+            if(a2n > max || a2d > max) break;
+
+            nom %= den;
+        
+            a0= a1;
+            a1= (XVIDRational){a2n, a2d};
+            if(nom==0) break;
+            x= nom; nom=den; den=x;
+        }
+        nom= a1.num;
+        den= a1.den;
+    }
+    
+    assert(xvid_gcd(nom, den) == 1);
+    
+    if(sign) nom= -nom;
+    
+    *dst_nom = nom;
+    *dst_den = den;
+    
+    return exact;
+}
+
+
+static XVIDRational xvid_d2q(double d, int max){
+    XVIDRational a;
+    int exponent= MAX( (int)(log(ABS(d) + 1e-20)/log(2)), 0);
+    int64_t den= 1LL << (61 - exponent);
+    xvid_reduce(&a.num, &a.den, (int64_t)(d * den + 0.5), den, max);
+
+    return a;
+}
+
+
 
 /*****************************************************************************
  * Configuration options
@@ -76,14 +158,18 @@ static int xvidenc_trellis = 0;
 static int xvidenc_cartoon = 0;
 static int xvidenc_hqacpred = 1;
 static int xvidenc_chromame = 0;
+static int xvidenc_chroma_opt = 0;
 static int xvidenc_vhq = 0;
 static int xvidenc_motion = 6;
+static int xvidenc_turbo = 0;
 static int xvidenc_stats = 0;
-static int xvidenc_max_key_interval = 0;
+static int xvidenc_max_key_interval = 0; /* Let xvidcore set a 10s interval by default */
 static int xvidenc_frame_drop_ratio = 0;
 static int xvidenc_greyscale = 0;
+static int xvidenc_debug = 0;
+static int xvidenc_psnr = 0;
 
-static int xvidenc_max_bframes = 0;
+static int xvidenc_max_bframes = 2;
 static int xvidenc_bquant_ratio = 150;
 static int xvidenc_bquant_offset = 100;
 static int xvidenc_bframe_threshold = 0;
@@ -99,18 +185,20 @@ static int xvidenc_cbr_averaging_period = 0;
 static int xvidenc_cbr_buffer = 0;
 
 static int xvidenc_vbr_keyframe_boost = 0;
-static int xvidenc_vbr_overflow_control_strength = 0;
+static int xvidenc_vbr_overflow_control_strength = 5;
 static int xvidenc_vbr_curve_compression_high = 0;
 static int xvidenc_vbr_curve_compression_low = 0;
-static int xvidenc_vbr_max_overflow_improvement = 0;
-static int xvidenc_vbr_max_overflow_degradation = 0;
+static int xvidenc_vbr_max_overflow_improvement = 5;
+static int xvidenc_vbr_max_overflow_degradation = 5;
 static int xvidenc_vbr_kfreduction = 0;
 static int xvidenc_vbr_kfthreshold = 0;
-static int xvidenc_vbr_container_frame_overhead = 0;
+static int xvidenc_vbr_container_frame_overhead = 24; /* mencoder uses AVI container */
 
 static char *xvidenc_par = NULL;
 static int xvidenc_par_width = 0;
 static int xvidenc_par_height = 0;
+static float xvidenc_dar_aspect = 0.0f;
+static int xvidenc_autoaspect = 0;
 
 m_option_t xvidencopts_conf[] =
 {
@@ -123,6 +211,7 @@ m_option_t xvidencopts_conf[] =
 	{"quant_type", &xvidenc_quant_method, CONF_TYPE_STRING, 0, 0, 0, NULL},
 	{"me_quality", &xvidenc_motion, CONF_TYPE_INT, CONF_RANGE, 0, 6, NULL},
 	{"chroma_me", &xvidenc_chromame, CONF_TYPE_FLAG, 0, 0, 1, NULL},
+	{"chroma_opt", &xvidenc_chroma_opt, CONF_TYPE_FLAG, 0, 0, 1, NULL},
 	{"vhq", &xvidenc_vhq, CONF_TYPE_INT, CONF_RANGE, 0, 4, NULL},
 	{"max_bframes", &xvidenc_max_bframes, CONF_TYPE_INT, CONF_RANGE, 0, 20, NULL},
 	{"bquant_ratio", &xvidenc_bquant_ratio, CONF_TYPE_INT, CONF_RANGE, 0, 200, NULL},
@@ -139,7 +228,10 @@ m_option_t xvidencopts_conf[] =
 	{"frame_drop_ratio", &xvidenc_frame_drop_ratio, CONF_TYPE_INT, CONF_RANGE, 0, 100, NULL},
 	{"max_key_interval", &xvidenc_max_key_interval, CONF_TYPE_INT, CONF_MIN, 0, 0, NULL},
 	{"greyscale", &xvidenc_greyscale, CONF_TYPE_FLAG, 0, 0, 1, NULL},
+	{"turbo", &xvidenc_turbo, CONF_TYPE_FLAG, 0, 0, 1, NULL},
+	{"debug", &xvidenc_debug, CONF_TYPE_INT , 0 ,0,-1,NULL},
 	{"stats", &xvidenc_stats, CONF_TYPE_FLAG, 0, 0, 1, NULL},
+	{"psnr",  &xvidenc_psnr , CONF_TYPE_FLAG, 0, 0, 1, NULL},
 
 
 	/* section [quantizer] */
@@ -172,6 +264,8 @@ m_option_t xvidencopts_conf[] =
 	{"par", &xvidenc_par, CONF_TYPE_STRING, 0, 0, 0, NULL},
 	{"par_width", &xvidenc_par_width, CONF_TYPE_INT, CONF_RANGE, 0, 255, NULL},
 	{"par_height", &xvidenc_par_height, CONF_TYPE_INT, CONF_RANGE, 0, 255, NULL},
+	{"aspect", &xvidenc_dar_aspect, CONF_TYPE_FLOAT, CONF_RANGE, 0.1, 9.99, NULL},
+	{"autoaspect", &xvidenc_autoaspect, CONF_TYPE_FLAG, 0, 0, 1, NULL},
 
 	/* End of the config array */
 	{NULL, 0, 0, 0, 0, 0, NULL}
@@ -209,9 +303,14 @@ typedef struct _xvid_mplayer_module_t
 	int min_sse_y;
 	int min_sse_u;
 	int min_sse_v;
+	int min_framenum;
 	int max_sse_y;
 	int max_sse_u;
 	int max_sse_v;
+	int max_framenum;
+	
+	int pixels;
+	int d_width, d_height;
 } xvid_mplayer_module_t;
 
 static void dispatch_settings(xvid_mplayer_module_t *mod);
@@ -240,6 +339,7 @@ config(struct vf_instance_s* vf,
 	mod->mux->bih->biHeight = height;
 	mod->mux->bih->biSizeImage = 
 		mod->mux->bih->biWidth * mod->mux->bih->biHeight * 3;
+	mod->mux->aspect = (float)d_width/d_height;
 
 	/* Message the FourCC type */
 	mp_msg(MSGT_MENCODER, MSGL_INFO,
@@ -250,6 +350,9 @@ config(struct vf_instance_s* vf,
 	/*--------------------------------------------------------------------
 	 * Dispatch all module settings to XviD structures
 	 *------------------------------------------------------------------*/
+
+	mod->d_width = d_width;
+	mod->d_height = d_height;
 
 	dispatch_settings(mod);
 
@@ -293,13 +396,9 @@ uninit(struct vf_instance_s* vf)
 
 	/* Display stats */
 	if(mod->frames) {
-		int pixels;
-
 		mod->sse_y /= mod->frames;
 		mod->sse_u /= mod->frames;
 		mod->sse_v /= mod->frames;
-
-		pixels = mod->create.width*mod->create.height;
 
 #define SSE2PSNR(sse, nbpixels) \
 ((!(sse)) ? 99.99f : 48.131f - 10*(double)log10((double)(sse)/(double)((nbpixels))))
@@ -307,22 +406,24 @@ uninit(struct vf_instance_s* vf)
 		       "The value 99.99dB is a special value and represents "
 		       "the upper range limit\n");
 		mp_msg(MSGT_MENCODER, MSGL_INFO,
-		       "xvid:     Min PSNR y : %.2f dB, u : %.2f dB, v : %.2f dB\n",
-		       SSE2PSNR(mod->max_sse_y, pixels),
-		       SSE2PSNR(mod->max_sse_u, pixels/4),
-		       SSE2PSNR(mod->max_sse_v, pixels/4));
+		       "xvid:     Min PSNR y : %.2f dB, u : %.2f dB, v : %.2f dB, in frame %d\n",
+		       SSE2PSNR(mod->max_sse_y, mod->pixels),
+		       SSE2PSNR(mod->max_sse_u, mod->pixels/4),
+		       SSE2PSNR(mod->max_sse_v, mod->pixels/4),
+		       mod->max_framenum);
 		mp_msg(MSGT_MENCODER, MSGL_INFO,
-		       "xvid: Average PSNR y : %.2f dB, u : %.2f dB, v : %.2f dB\n",
-		       SSE2PSNR(mod->sse_y, pixels),
-		       SSE2PSNR(mod->sse_u, pixels/4),
-		       SSE2PSNR(mod->sse_v, pixels/4));
+		       "xvid: Average PSNR y : %.2f dB, u : %.2f dB, v : %.2f dB, for %d frames\n",
+		       SSE2PSNR(mod->sse_y, mod->pixels),
+		       SSE2PSNR(mod->sse_u, mod->pixels/4),
+		       SSE2PSNR(mod->sse_v, mod->pixels/4),
+		       mod->frames);
 		mp_msg(MSGT_MENCODER, MSGL_INFO,
-		       "xvid:     Max PSNR y : %.2f dB, u : %.2f dB, v : %.2f dB\n",
-		       SSE2PSNR(mod->min_sse_y, pixels),
-		       SSE2PSNR(mod->min_sse_u, pixels/4),
-		       SSE2PSNR(mod->min_sse_v, pixels/4));
+		       "xvid:     Max PSNR y : %.2f dB, u : %.2f dB, v : %.2f dB, in frame %d\n",
+		       SSE2PSNR(mod->min_sse_y, mod->pixels),
+		       SSE2PSNR(mod->min_sse_u, mod->pixels/4),
+		       SSE2PSNR(mod->min_sse_v, mod->pixels/4),
+		       mod->min_framenum);
 	}
-#undef SSE2PSNR
 
 	/* ToDo: free matrices, and some string settings (quant method, matrix
 	 * filenames...) */
@@ -401,7 +502,6 @@ put_image(struct vf_instance_s* vf, mp_image_t *mpi)
 
 	/* Did xvidcore returned stats about an encoded frame ? (asynchronous) */
 	if(xvidenc_stats && stats.type > 0) {
-		mod->frames++;
 		mod->sse_y += stats.sse_y;
 		mod->sse_u += stats.sse_u;
 		mod->sse_v += stats.sse_v;
@@ -410,14 +510,46 @@ put_image(struct vf_instance_s* vf, mp_image_t *mpi)
 			mod->min_sse_y = stats.sse_y;
 			mod->min_sse_u = stats.sse_u;
 			mod->min_sse_v = stats.sse_v;
+			mod->min_framenum = mod->frames;
 		}
 
 		if(mod->max_sse_y < stats.sse_y) {
 			mod->max_sse_y = stats.sse_y;
 			mod->max_sse_u = stats.sse_u;
 			mod->max_sse_v = stats.sse_v;
+			mod->max_framenum = mod->frames;
 		}
+		if (xvidenc_psnr) {
+                    static FILE *fvstats = NULL;
+                    char filename[20];
+
+                    if (!fvstats) {
+                        time_t today2;
+                        struct tm *today;
+                        today2 = time (NULL);
+                        today = localtime (&today2);
+                        sprintf (filename, "psnr_%02d%02d%02d.log", today->tm_hour, today->tm_min, today->tm_sec);
+                        fvstats = fopen (filename,"w");
+                        if (!fvstats) {
+                            perror ("fopen");
+                            xvidenc_psnr = 0; // disable block
+                        }
+                    }
+                    fprintf (fvstats, "%6d, %2d, %6d, %2.2f, %2.2f, %2.2f, %2.2f %c\n",
+                             mod->frames,
+                             stats.quant,
+                             stats.length,
+                             SSE2PSNR (stats.sse_y, mod->pixels),
+                             SSE2PSNR (stats.sse_u, mod->pixels / 4),
+                             SSE2PSNR (stats.sse_v, mod->pixels / 4),
+                             SSE2PSNR (stats.sse_y + stats.sse_u + stats.sse_v,(double)mod->pixels * 1.5),
+                             stats.type==1?'I':stats.type==2?'P':stats.type==3?'B':stats.type?'S':'?'
+                             );
+		}
+		mod->frames++;
+
 	}
+#undef SSE2PSNR
 
 	/* xvidcore outputed bitstream -- mux it */
 	muxer_write_chunk(mod->mux,
@@ -496,6 +628,7 @@ vf_open(vf_instance_t *vf, char* args)
 	/* Initialize the xvid_gbl_init structure */
 	memset(&xvid_gbl_init, 0, sizeof(xvid_gbl_init_t));
 	xvid_gbl_init.version = XVID_VERSION;
+	xvid_gbl_init.debug = xvidenc_debug;
 
 	/* Initialize the xvidcore library */
 	if (xvid_global(NULL, XVID_GBL_INIT, &xvid_gbl_init, NULL) < 0) {
@@ -518,6 +651,7 @@ static void dispatch_settings(xvid_mplayer_module_t *mod)
 	xvid_enc_frame_t  *frame      = &mod->frame;
 	xvid_plugin_single_t *onepass = &mod->onepass;
 	xvid_plugin_2pass2_t *pass2   = &mod->pass2;
+	XVIDRational ar;
 
 	const int motion_presets[7] =
 		{
@@ -549,6 +683,9 @@ static void dispatch_settings(xvid_mplayer_module_t *mod)
 
 	if(xvidenc_closed_gop)
 		create->global |= XVID_GLOBAL_CLOSED_GOP;
+
+        if(xvidenc_psnr)
+	    xvidenc_stats = 1;
 
 	if(xvidenc_stats)
 		create->global |= XVID_GLOBAL_EXTRASTATS_ENABLE;
@@ -652,6 +789,9 @@ static void dispatch_settings(xvid_mplayer_module_t *mod)
 	if(xvidenc_hqacpred) {
 		frame->vop_flags |= XVID_VOP_HQACPRED;
 	}
+	if(xvidenc_chroma_opt) {
+		frame->vop_flags |= XVID_VOP_CHROMAOPT;
+	}
 	if(xvidenc_motion > 4) {
 		frame->vop_flags |= XVID_VOP_INTER4V;
 	}
@@ -674,6 +814,13 @@ static void dispatch_settings(xvid_mplayer_module_t *mod)
 	if(xvidenc_vhq >= 4) {
 		frame->motion |= XVID_ME_EXTSEARCH_RD;
 	}
+	if(xvidenc_turbo) {
+		frame->motion |= XVID_ME_FASTREFINE16;
+		frame->motion |= XVID_ME_FASTREFINE8;
+		frame->motion |= XVID_ME_SKIP_DELTASEARCH;
+		frame->motion |= XVID_ME_FAST_MODEINTERPOLATE;
+		frame->motion |= XVID_ME_BFRAME_EARLYSTOP;
+	}
 
 	/* motion level == 0 means no motion search which is equivalent to
 	 * intra coding only */
@@ -685,22 +832,46 @@ static void dispatch_settings(xvid_mplayer_module_t *mod)
 
 	frame->bframe_threshold = xvidenc_bframe_threshold;
 
-	frame->par = 0;
-	if(xvidenc_par != NULL) {
+	/* PAR related initialization */
+	frame->par = XVID_PAR_11_VGA; /* Default */
+
+	if(xvidenc_dar_aspect > 0) 
+	    ar = xvid_d2q(xvidenc_dar_aspect * mod->mux->bih->biHeight / mod->mux->bih->biWidth, 255);
+	else if(xvidenc_autoaspect)
+	    ar = xvid_d2q((float)mod->d_width / mod->d_height * mod->mux->bih->biHeight / mod->mux->bih->biWidth, 255);
+	else ar.num = ar.den = 0;
+	
+	if(ar.den != 0) {
+		if(ar.num == 12 && ar.den == 11)
+		    frame->par = XVID_PAR_43_PAL;
+		else if(ar.num == 10 && ar.den == 11)
+		    frame->par = XVID_PAR_43_NTSC;
+		else if(ar.num == 16 && ar.den == 11)
+		    frame->par = XVID_PAR_169_PAL;
+		else if(ar.num == 40 && ar.den == 33)
+		    frame->par = XVID_PAR_169_NTSC;
+		else
+		{    
+		    frame->par = XVID_PAR_EXT;
+		    frame->par_width = ar.num;
+		    frame->par_height= ar.den;
+		}
+			
+		mp_msg(MSGT_MENCODER, MSGL_INFO, "XVID4_DAR: %d/%d code %d, Display frame: (%d, %d), original frame: (%d, %d)\n", 
+	    	    ar.num, ar.den, frame->par,
+		    mod->d_width, mod->d_height, mod->mux->bih->biWidth, mod->mux->bih->biHeight);
+	} else if(xvidenc_par != NULL) {
 		if(strcasecmp(xvidenc_par, "pal43") == 0)
 			frame->par = XVID_PAR_43_PAL;
-		if(strcasecmp(xvidenc_par, "pal169") == 0)
+		else if(strcasecmp(xvidenc_par, "pal169") == 0)
 			frame->par = XVID_PAR_169_PAL;
-		if(strcasecmp(xvidenc_par, "ntsc43") == 0)
+		else if(strcasecmp(xvidenc_par, "ntsc43") == 0)
 			frame->par = XVID_PAR_43_NTSC;
-		if(strcasecmp(xvidenc_par, "ntsc169") == 0)
+		else if(strcasecmp(xvidenc_par, "ntsc169") == 0)
 			frame->par = XVID_PAR_169_NTSC;
-		if(strcasecmp(xvidenc_par, "ext") == 0)
+		else if(strcasecmp(xvidenc_par, "ext") == 0)
 			frame->par = XVID_PAR_EXT;
-	}
-	if(frame->par == 0) {
-		frame->par = XVID_PAR_11_VGA;
-	}
+
 	if(frame->par == XVID_PAR_EXT) {
 		if(xvidenc_par_width)
 			frame->par_width = xvidenc_par_width;
@@ -712,7 +883,7 @@ static void dispatch_settings(xvid_mplayer_module_t *mod)
 		else
 			frame->par_height = 1;
 	}
-
+	}
 	return;
 }
 
@@ -728,6 +899,9 @@ static int set_create_struct(xvid_mplayer_module_t *mod)
 	/* Width and Height */
 	create->width  = mod->mux->bih->biWidth;
 	create->height = mod->mux->bih->biHeight;
+
+	/* Pixels are needed for PSNR calculations */
+	mod->pixels = create->width * create->height;
 
 	/* FPS */
 	create->fincr = mod->mux->h.dwScale;
@@ -814,22 +988,20 @@ static int set_create_struct(xvid_mplayer_module_t *mod)
 		/* Quantizer mode uses the same plugin, we have only to define
 		 * a constant quantizer zone beginning at frame 0 */
 		if(pass == MODE_QUANT) {
-			int base, incr;
-
-			base = 100;
-			incr = (int)xvidenc_quantizer*base;
+                        XVIDRational squant;
+			squant = xvid_d2q(xvidenc_quantizer,128);
 
 			create->zones[create->num_zones].mode      = XVID_ZONE_QUANT;
 			create->zones[create->num_zones].frame     = 0;
-			create->zones[create->num_zones].base      = base;
-			create->zones[create->num_zones].increment = incr;
+			create->zones[create->num_zones].base      = squant.num;
+			create->zones[create->num_zones].increment = squant.den;
 			create->num_zones++;
 
 			mp_msg(MSGT_MENCODER, MSGL_INFO,
 			       "xvid: Fixed Quant Rate Control -- quantizer=%d/%d=%2.2f\n",
-			       incr,
-			       base,
-			       (float)(incr)/(float)(base));
+			       squant.num,
+			       squant.den,
+			       (float)(squant.num)/(float)(squant.den));
 			
 		} else {
 			mp_msg(MSGT_MENCODER, MSGL_INFO,

@@ -19,7 +19,8 @@ OBJS= common.o utils.o mem.o allcodecs.o \
       vp3.o asv1.o 4xm.o cabac.o ffv1.o ra144.o ra288.o vcr1.o cljr.o \
       roqvideo.o dpcm.o interplayvideo.o xan.o rpza.o cinepak.o msrle.o \
       msvideo1.o vqavideo.o idcinvideo.o adx.o rational.o faandct.o 8bps.o \
-      smc.o parser.o flicvideo.o truemotion1.o
+      smc.o parser.o flicvideo.o truemotion1.o vmdav.o lcl.o qtrle.o g726.o \
+      flac.o vp3dsp.o
 
 ifeq ($(AMR_NB),yes)
 ifeq ($(AMR_NB_FIXED),yes)
@@ -31,6 +32,14 @@ else
 OBJS+= amr.o amr_float/sp_dec.o amr_float/sp_enc.o amr_float/interf_dec.o amr_float/interf_enc.o
 CLEANAMR=cleanamrfloat
 endif
+endif
+
+ifeq ($(HAVE_PTHREADS),yes)
+OBJS+= pthread.o
+endif
+
+ifeq ($(HAVE_W32THREADS),yes)
+OBJS+= w32thread.o
 endif
 
 ifeq ($(AMR_WB),yes)
@@ -107,9 +116,11 @@ ifeq ($(TARGET_MMX),yes)
 OBJS += i386/fdct_mmx.o i386/cputest.o \
 	i386/dsputil_mmx.o i386/mpegvideo_mmx.o \
 	i386/idct_mmx.o i386/motion_est_mmx.o \
-	i386/simple_idct_mmx.o i386/fft_sse.o
+	i386/simple_idct_mmx.o i386/fft_sse.o i386/vp3dsp_mmx.o \
+	i386/vp3dsp_sse2.o
 ifdef TARGET_BUILTIN_VECTOR
 i386/fft_sse.o: CFLAGS+= -msse
+depend: CFLAGS+= -msse
 endif
 endif
 
@@ -151,6 +162,14 @@ ifeq ($(TARGET_ARCH_SH4),yes)
 OBJS+= sh4/idct_sh4.o sh4/dsputil_sh4.o sh4/dsputil_align.o
 endif
 
+ifeq ($(TARGET_ARCH_SPARC),yes)
+OBJS+=sparc/dsputil_vis.o
+sparc/%.o: sparc/%.c
+	$(CC) -mcpu=ultrasparc -mtune=ultrasparc $(CFLAGS) -c -o $@ $< 
+endif
+ifeq ($(TARGET_ARCH_SPARC64),yes)
+CFLAGS+= -mcpu=ultrasparc -mtune=ultrasparc
+endif
 
 SRCS := $(OBJS:.o=.c) $(ASM_OBJS:.o=.S)
 OBJS := $(OBJS) $(ASM_OBJS)
@@ -178,7 +197,7 @@ ifeq ($(CONFIG_WIN32),yes)
 	$(CC) $(SHFLAGS) -Wl,--output-def,$(@:.dll=.def) -o $@ $(OBJS) $(EXTRALIBS) $(AMREXTRALIBS)
 	-lib /machine:i386 /def:$(@:.dll=.def)
 else
-	$(CC) $(SHFLAGS) -o $@ $(OBJS) $(EXTRALIBS) $(AMREXTRALIBS)
+	$(CC) $(SHFLAGS) -o $@ $(OBJS) $(EXTRALIBS) $(AMREXTRALIBS) $(LDFLAGS)
 endif
 
 dsputil.o: dsputil.c dsputil.h
@@ -205,6 +224,7 @@ clean: $(CLEANAMR)
 	   ppc/*.o ppc/*~ \
 	   ps2/*.o ps2/*~ \
 	   sh4/*.o sh4/*~ \
+	   sparc/*.o sparc/*~ \
 	   liba52/*.o liba52/*~ \
 	   apiexample $(TESTS)
 	$(MAKE) -C libpostproc clean

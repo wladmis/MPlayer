@@ -18,14 +18,10 @@
 #include <sys/poll.h>
 
 #include "../config.h"
+#include "../mixer.h"
 
-#if HAVE_SYS_ASOUNDLIB_H
-#include <sys/asoundlib.h>
-#elif HAVE_ALSA_ASOUNDLIB_H
+#define ALSA_PCM_OLD_HW_PARAMS_API
 #include <alsa/asoundlib.h>
-#else
-#error "asoundlib.h is not in sys/ or alsa/ - please bugreport"
-#endif
 
 #include "audio_out.h"
 #include "audio_out_internal.h"
@@ -42,7 +38,6 @@ static ao_info_t info =
 };
 
 LIBAO_EXTERN(alsa9)
-
 
 static snd_pcm_t *alsa_handler;
 static snd_pcm_format_t alsa_format;
@@ -74,8 +69,8 @@ static int alsa_can_pause = 0;
 
 #define ALSA_DEVICE_SIZE 48
 
-#undef BUFFERTIME
-#define SET_CHUNKSIZE
+//#undef BUFFERTIME
+//#undef SET_CHUNKSIZE
 #undef USE_POLL
 
 
@@ -96,12 +91,27 @@ static int control(int cmd, void *arg)
       snd_mixer_elem_t *elem;
       snd_mixer_selem_id_t *sid;
 
-      const char *mix_name = "PCM";
-      char *card = "default";
+      static char *mix_name = NULL;
+      static char *card = NULL;
 
       long pmin, pmax;
       long get_vol, set_vol;
       float calc_vol, diff, f_multi;
+
+      if(mix_name == NULL){
+        if(mixer_device) {
+          card = strdup(mixer_device);
+          mix_name = strchr(card, '/');
+          if(mix_name) {
+            *mix_name++ = 0;
+          } else {
+            mix_name = "PCM";
+          }
+        } else {
+          mix_name = "PCM";
+          card = "default";
+        }
+      }
 
       if(ao_data.format == AFMT_AC3)
 	return CONTROL_TRUE;
@@ -609,7 +619,7 @@ static int init(int rate_hz, int channels, int format, int flags)
 		   snd_strerror(err));
 	    return(0);
 	  }
-	if (verbose>0)
+//	if (verbose>0)
 	  printf("alsa-init: buffer_time: %d, period_time :%d\n",alsa_buffer_time, err);
       }
 #endif
@@ -617,14 +627,15 @@ static int init(int rate_hz, int channels, int format, int flags)
 #ifdef SET_CHUNKSIZE
       {
 	//set chunksize
-	if ((err = snd_pcm_hw_params_set_period_size(alsa_handler, alsa_hwparams, chunk_size, 0)) < 0)
+	if ((err = snd_pcm_hw_params_set_period_size_near(alsa_handler, alsa_hwparams, chunk_size, 0)) < 0)
 	  {
-	    printf("alsa-init: unable to set periodsize: %s\n", snd_strerror(err));
+	    printf("alsa-init: unable to set periodsize(%d): %s\n",
+			    chunk_size, snd_strerror(err));
 	    return(0);
 	  }
-	else if (verbose>0) {
+	else // if (verbose>0) {
 	  printf("alsa-init: chunksize set to %i\n", chunk_size);
-	}
+//	}
 
 	//set period_count
 	if ((period_val = snd_pcm_hw_params_get_periods_max(alsa_hwparams, 0)) < alsa_fragcount) {
@@ -634,7 +645,7 @@ static int init(int rate_hz, int channels, int format, int flags)
 	if (verbose>0)
 	  printf("alsa-init: current val=%i, fragcount=%i\n", period_val, alsa_fragcount);
 
-	if ((err = snd_pcm_hw_params_set_periods(alsa_handler, alsa_hwparams, alsa_fragcount, 0)) < 0) {
+	if ((err = snd_pcm_hw_params_set_periods_near(alsa_handler, alsa_hwparams, alsa_fragcount, 0)) < 0) {
 	  printf("alsa-init: unable to set periods: %s\n", snd_strerror(err));
 	}
       }
@@ -712,7 +723,7 @@ static int init(int rate_hz, int channels, int format, int flags)
 
 
 /* close audio device */
-static void uninit()
+static void uninit(int immed)
 {
 
   if (alsa_handler) {

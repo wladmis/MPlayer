@@ -43,7 +43,7 @@
 .TH MPlayer 1 "2003-07-05"
 .
 .SH NAME
-mplayer  \- Filmlelátszó Linux alá
+mplayer  \- Filmlejátszó Linux alá
 .br
 mencoder \- Filmenkóder Linux alá
 
@@ -170,7 +170,7 @@ Az MPlayernek van onscreen display (OSD) funkciója is státuszinformációk
 megjelenítésére, szép élsímított árnyékolt betûtipusokkal. Európai/\:ISO
 8859-1,2 (Magyar, Angol, Cseh, stb), cirill és kóreai betûtipusok is
 támogatottak 10 szöveges, (MicroDVD, SubRip, SubViewer, Sami, VPlayer, RT, SSA,
-AQTitle, JACOsub és a sajátunk: MPsub) valamint DVD feliratokkal (SPU
+AQTitle, JACOsub, PJS és a sajátunk: MPsub) valamint DVD feliratokkal (SPU
 stream-ek, VobSub és Closed Caption).
 .PP
 .B mencoder
@@ -1445,6 +1445,13 @@ Signed 32-bit (Big-Endian)
 .B \-mixer <egység>
 /dev/\:mixer helyett más egység használata.
 .TP
+.B \-mixer-channel <mixer csatorna> (csak -ao oss)
+Ezzel az opcióval megadható hogy a hangerõállító funkció az alapértelmezett PCM
+csatorna helyett más csatornára vonatkozzon. Néhány példa:
+.B vol, pcm, line.
+Az opciók teljes listáját lásd a SOUND_DEVICE_NAMES változóban a
+/usr/include/linux/soundcard.h file-ban.
+.TP
 .B \-nowaveheader (csak -ao pcm)
 Ne írjon wave fejlécet.
 Csak RAW PCM-hez.
@@ -1944,9 +1951,9 @@ A szûrõk beillesztésének módját határozza meg az alábbiak szerint:
 .RSss
 0: Teljesen automatikus beillesztés (alap)
 .br
-1: Sebességoptimalizálás
+1: Pontosságra optimalizálás
 .br
-2: Pontosságra optimalizálás
+2: Sebességoptimalizálás
 .br
 3: Automatikus beillesztés kikapcsolása
 .REss
@@ -2752,7 +2759,7 @@ helyett.
 .TP
 .B \-oac <codec neve>
 Enkódolás a megadott audio codec-kel.
-A codec-ek listája \-ovc help opcióval kérhetõ le (nincs alapértelmezés).
+A codec-ek listája \-oac help opcióval kérhetõ le (nincs alapértelmezés).
 
 .I PÉLDA:
 .PD 0

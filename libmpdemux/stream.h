@@ -166,6 +166,19 @@ inline static uint64_t stream_read_qword(stream_t *s){
   return y;
 }
 
+inline static uint64_t stream_read_qword_le(stream_t *s){
+  uint64_t y;
+  y = stream_read_char(s);
+  y|=stream_read_char(s)<<8;
+  y|=stream_read_char(s)<<16;
+  y|=stream_read_char(s)<<24;
+  y|=(uint64_t)stream_read_char(s)<<32;
+  y|=(uint64_t)stream_read_char(s)<<40;
+  y|=(uint64_t)stream_read_char(s)<<48;
+  y|=(uint64_t)stream_read_char(s)<<56;
+  return y;
+}
+
 inline static unsigned int stream_read_int24(stream_t *s){
   unsigned int y;
   y = stream_read_char(s);
@@ -216,7 +229,7 @@ inline static int stream_seek(stream_t *s,off_t pos){
 }
 
 inline static int stream_skip(stream_t *s,off_t len){
-  if(len<0 || (len>2*STREAM_BUFFER_SIZE && s->type!=STREAMTYPE_STREAM)){
+  if( (len<0 && (s->flags & STREAM_SEEK_BW)) || (len>2*STREAM_BUFFER_SIZE && (s->flags & STREAM_SEEK_FW)) ) {
     // negative or big skip!
     return stream_seek(s,stream_tell(s)+len);
   }

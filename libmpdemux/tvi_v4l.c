@@ -241,6 +241,8 @@ static int format2palette(int format)
 	    return(VIDEO_PALETTE_YUV420P);
 	case IMGFMT_YUY2:
 	    return(VIDEO_PALETTE_YUV422);
+    case IMGFMT_UYVY:
+       return(VIDEO_PALETTE_UYVY);
     }
     return(-1);
 }
@@ -330,7 +332,6 @@ static void init_v4l_audio(priv_t *priv)
 	}
 
 	/* mute all channels */
-	priv->audio[i].volume = 0;
 	priv->audio[i].flags |= VIDEO_AUDIO_MUTE;
 	reqmode = -1;
 	if (tv_param_amode >= 0) {
@@ -408,7 +409,7 @@ static void init_v4l_audio(priv_t *priv)
     }
 }
 
-#ifndef __LINUX_VIDEODEV2_H
+#if !defined(__LINUX_VIDEODEV2_H) && !defined(VIDIOC_QUERYCAP)
 struct v4l2_capability
 {
         __u8    driver[16];     /* i.e. "bttv" */
@@ -634,7 +635,7 @@ static int init(priv_t *priv)
     /* audio init */
     if (!tv_param_noaudio) {
 	
-#ifdef HAVE_ALSA9
+#if defined(HAVE_ALSA9) || defined(HAVE_ALSA1X)
 	if (tv_param_alsa)
 	    audio_in_init(&priv->audio_in, AUDIO_IN_ALSA);
 	else
@@ -694,7 +695,6 @@ static int uninit(priv_t *priv)
     mp_msg(MSGT_TV, MSGL_V, "done\n");
 
     if (priv->capability.audios) {
-	priv->audio[priv->audio_id].volume = 0;
 	priv->audio[priv->audio_id].flags |= VIDEO_AUDIO_MUTE;
 	ioctl(priv->video_fd, VIDIOCSAUDIO, &priv->audio[priv->audio_id]);
     }
@@ -1126,7 +1126,6 @@ static int control(priv_t *priv, int cmd, void *arg)
 	    unsigned long freq = (unsigned long)*(void **)arg;
 	    
 	    if (priv->capability.audios) {
-		priv->audio[priv->audio_id].volume = 0;
 		priv->audio[priv->audio_id].flags |= VIDEO_AUDIO_MUTE;
 		ioctl(priv->video_fd, VIDIOCSAUDIO, &priv->audio[priv->audio_id]);
 	    }
@@ -1145,7 +1144,6 @@ static int control(priv_t *priv, int cmd, void *arg)
 	    usleep(100000); // wait to supress noise during switching
 
 	    if (priv->capability.audios) {
-		priv->audio[priv->audio_id].volume = tv_param_volume;
 		priv->audio[priv->audio_id].flags &= ~VIDEO_AUDIO_MUTE;
 		ioctl(priv->video_fd, VIDIOCSAUDIO, &priv->audio[priv->audio_id]);
 	    }
