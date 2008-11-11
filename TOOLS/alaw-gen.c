@@ -3,7 +3,7 @@
 
 // sox -t raw -A -r 8000 -b alaw.alaw -t sw alaw.out
 
-int main(){
+int main(void){
 int i;
 FILE *f;
 
@@ -43,5 +43,5 @@ for(i=0;i<256;i++){
 fclose(f);
 printf("};\n");
 
-
+return 0;
 }

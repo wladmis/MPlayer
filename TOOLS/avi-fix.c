@@ -11,11 +11,11 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-//#include <string.h>
+#include <string.h>
 
 #define FCC(a,b,c,d)  (((a)<<24)|((b)<<16)|((c)<<8)|(d))
 
-static inline xx(unsigned char c){
+static inline char xx(unsigned char c){
     if(c>=32 && c<128) return c;
     return '?';
 }
@@ -138,6 +138,5 @@ faszom:
     offset=0;
 }
 
-
+return 0;
 }
-

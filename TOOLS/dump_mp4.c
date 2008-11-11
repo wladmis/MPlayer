@@ -1,4 +1,6 @@
-int main(){
+#include <stdio.h>
+
+int main(void){
 int c;
 unsigned int head=-1;
 int pos=-3;
@@ -41,4 +43,5 @@ while((c=getchar())>=0){
     ++pos;
 }
 
+return 0;
 }

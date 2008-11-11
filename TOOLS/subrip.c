@@ -14,12 +14,15 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include "libvo/video_out.h"
 #include "vobsub.h"
 #include "spudec.h"
+
+void guiMessageBox(int level, char * str) {};
 
 /* XXX Kludge ahead, this MUST be the same as the definitions found in ../spudec.c */
 typedef struct packet_t packet_t;
@@ -74,7 +77,6 @@ typedef struct {
 
 int use_gui;
 int gtkMessageBox;
-int verbose=1;
 int identify=0;
 int vobsub_id=0;
 int sub_pos=0;
@@ -199,9 +201,6 @@ main(int argc, char **argv)
     void *vobsub;
     void *packet;
     int packet_len;
-#ifdef BAD
-    unsigned int prev_pts;
-#endif
     unsigned int pts100;
 
     if (argc < 2 || 4 < argc) {

@@ -7,7 +7,9 @@
 #include "loader/wine/avifmt.h"
 #include "loader/wine/vfw.h"
 
+#include "stream/stream.h"
 #include "libmpdemux/muxer.h"
+#include "libmpdemux/demuxer.h"
 
 char *info_name;
 char *info_artist;
@@ -153,9 +155,6 @@ int postable[32768];
 
 int main(int argc,char ** argv){
 int c;
-unsigned int head=-1;
-int pos=0;
-int frames=0;
 FILE *f;
 FILE *f2;
 muxer_t* avi;
@@ -163,7 +162,6 @@ muxer_stream_t* mux;
 //unsigned char* buffer=malloc(0x200000);
 int i,len;
 int v_id=0;
-int flag=0;
 int flag2=0;
 int prefix=0;
 
@@ -292,4 +290,5 @@ muxer_write_index(avi);
 fseek(f2,0,SEEK_SET);
 muxer_write_header(avi);
 
+return 0;
 }

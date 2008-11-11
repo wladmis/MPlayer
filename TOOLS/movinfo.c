@@ -63,12 +63,12 @@ unsigned int read_dword(FILE *f){
  return (atom_size_b[0]<<24)|(atom_size_b[1]<<16)|(atom_size_b[2]<<8)|atom_size_b[3];
 }
 
-void *video_stream_info(FILE *f, int len)
+void video_stream_info(FILE *f, int len)
 {
   int orig_pos = ftell(f);
   unsigned char data[len-8];
   int i;
-  char codec[len-8];
+//  char codec[len-8];
 
   len -= 8;
   for (i=0; i<len; i++)
@@ -79,7 +79,7 @@ void *video_stream_info(FILE *f, int len)
   fseek(f,orig_pos,SEEK_SET);
 }
 
-void *audio_stream_info(FILE *f, int len)
+void audio_stream_info(FILE *f, int len)
 {
   int orig_pos = ftell(f);
   unsigned char data[len-8];
@@ -98,11 +98,9 @@ void *audio_stream_info(FILE *f, int len)
   fseek(f,orig_pos,SEEK_SET);
 }
 
-void *userdata_info(FILE *f, int len, int pos, int level)
+void userdata_info(FILE *f, int len, int pos, int level)
 {
   int orig_pos = pos; /*ftell(f);*/
-  unsigned char data[len-8];
-  int i;
   unsigned int atom_size = 1;
   unsigned int atom_type;
 
@@ -336,4 +334,6 @@ int main(int argc,char* argv[])
     lschunks(f, 0, 0);
 
     printf("\nSummary: streams: %d video/%d audio\n", v_stream, a_stream);
+
+    return 0;
 }

@@ -17,8 +17,6 @@
 #include <sys/time.h>
 #include <inttypes.h>
 
-#include "libvo/fastmemcpy.h"
-
 //#define ARR_SIZE 100000
 #define ARR_SIZE (1024*768*2)
 
@@ -26,14 +24,11 @@
 
 #include "drivers/mga_vid.h"
 
-static int mga_next_frame=0;
-
 static mga_vid_config_t mga_vid_config;
 static unsigned char* frame=NULL;
 static int f;
 
 static int mga_init(){
-	char *frame_mem;
 
 	f = open("/dev/mga_vid",O_RDWR);
 	if(f == -1)

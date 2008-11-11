@@ -28,6 +28,8 @@
 
 #include <stddef.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <dlfcn.h>
 #include <sys/time.h>
 
@@ -342,8 +344,8 @@ ulong RAGetNumberOfFlavors(void) {
 
 ulong RAInitDecoder(ulong p1,ulong p2) {
 	ulong result;
-	int temp[256];
-	unsigned char temp2[256];
+//	int temp[256];
+//	unsigned char temp2[256];
 	fprintf(stderr, "RAInitDecoder(ulong p1=0x%0x(%d), ", p1, p1);
 	fprintf(stderr, "ulong p2=0x%0x(%d))\n", p2, p2);
 	hexdump((void*)p2, 4*7);
