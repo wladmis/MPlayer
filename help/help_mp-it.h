@@ -1,19 +1,11 @@
 // Translated by: Fabio Olimpieri <fabio.olimpieri@tin.it>
 // Updated by: Roberto Togni <see AUTHORS for email address>
 
-// Updated to help_mp-en.h v1.83
-
-// Translated files should be uploaded to ftp://mplayerhq.hu/MPlayer/incoming
-// and send a notify message to mplayer-dev-eng maillist.
+// Updated to help_mp-en.h v1.108
 
 // ========================= MPlayer help ===========================
 
 #ifdef HELP_MP_DEFINE_STATIC
-static char* banner_text=
-"\n\n"
-"MPlayer " VERSION "(C) 2000-2003 Arpad Gereoffy (vedi DOCS!)\n"
-"\n";
-
 static char help_text[]=
 "Uso:   mplayer [opzioni] [percorso/]nome_file\n"
 "\n"
@@ -21,13 +13,13 @@ static char help_text[]=
 " -vo <drv[:dev]> sceglie driver e dispositivo output video ('-vo help' lista)\n"
 " -ao <drv[:dev]> sceglie driver e dispositivo output audio ('-ao help' lista)\n"
 #ifdef HAVE_VCD
-" -vcd <trackno>  legge traccia VCD (Video CD) da dispositivo anziché da file\n"
+" vcd://<trackno>  legge traccia VCD (Video CD) da dispositivo anziché da file\n"
 #endif
 #ifdef HAVE_LIBCSS
 " -dvdauth <dev>  dispositivo DVD per l\'autenticazione (per dischi criptati)\n"
 #endif
 #ifdef USE_DVDREAD
-" -dvd <titleno>  legge titolo/traccia DVD dal dispositivo anziché da file\n"
+" dvd://<titleno>  legge titolo/traccia DVD dal dispositivo anziché da file\n"
 " -alang/-slang   sceglie lingua audio/sottotitoli DVD (cod nazione 2 caratteri)\n"
 #endif
 " -ss <timepos>   cerca una determinata posizione (in secondi o in hh:mm:ss) \n"
@@ -86,7 +78,7 @@ static char help_text[]=
 #define MSGTR_TryForceAudioFmtStr "Cerco di forzare l\'uso della famiglia dei driver dei codec audio %d ...\n"
 #define MSGTR_CantFindAfmtFallback "Impossibile trovare i codec audio per la famiglia dei driver richiesta, torno agli altri driver.\n"
 #define MSGTR_CantFindAudioCodec "Impossibile trovare il codec per il formato audio 0x%X !\n"
-#define MSGTR_TryUpgradeCodecsConfOrRTFM "*** Prova ad aggiornare %s da etc/codecs.conf\n*** Se non va ancora bene, allora leggi DOCS/codecs.html!\n"
+#define MSGTR_RTFMCodecs "Leggi DOCS/it/codecs.html!\n"
 #define MSGTR_CouldntInitAudioCodec "Impossibile inizializzare il codec audio! -> nessun suono\n"
 #define MSGTR_TryForceVideoFmtStr "Cerco di forzare l\'uso della famiglia dei driver dei codec video %d ...\n"
 #define MSGTR_CantFindVideoCodec "Impossibile trovare il codec per il formato video 0x%X !\n"
@@ -101,15 +93,15 @@ static char help_text[]=
 "         ***************************************************************\n"\
 "!!! Possibili cause, problemi, soluzioni: \n"\
 "- Nella maggior parte dei casi: driver audio corrotto/bacato. Soluzione: prova -ao sdl o usa\n"\
-"  ALSA 0.5 o l\'emulazione oss di ALSA 0.9. Leggi DOCS/sound.html per ulteriori suggerimenti!\n"\
+"  ALSA 0.5 o l\'emulazione oss di ALSA 0.9. Leggi DOCS/it/sound.html per ulteriori suggerimenti!\n"\
 " Puoi anche provare con -autosync 30 o altri valori.\n"\
 "- Output video lento. Prova un differente -vo driver (per la lista completa: -vo help) o prova\n"\
-"  con -framedrop !  Leggi DOCS/video.html per suggerimenti sulla regolazione/accelerazione del video.\n"\
+"  con -framedrop !  Leggi DOCS/it/video.html per suggerimenti sulla regolazione/accelerazione del video.\n"\
 "- Cpu lenta. Non provare a riprodurre grossi dvd/divx su cpu lente! Prova -hardframedrop\n"\
 "- File corrotto. Prova varie combinazioni di: -nobps  -ni  -mc 0  -forceidx\n"\
 "- Per riprodurre da dispositivi lenti (dischi nfs/smb, dvd, vcd etc) prova -cache 8192\n"\
 "- Stai usando -cache per riprodurre un file AVI senza interleave? Prova con -nocache.\n"\
-"Se il problema non è in nessuno di questi casi, allora leggi DOCS/bugreports.html !\n\n"
+"Se il problema non è in nessuno di questi casi, allora leggi DOCS/it/bugreports.html !\n\n"
 
 #define MSGTR_NoGui "MPlayer è stato compilato senza il supporto della GUI!\n"
 #define MSGTR_GuiNeedsX "LA GUI di MPlayer richiede X11!\n"
@@ -125,6 +117,7 @@ static char help_text[]=
 #define MSGTR_AvailableVideoCodecs "Codec video disponibili:\n"
 #define MSGTR_AvailableAudioFm "\nFamiglie/driver di codec audio disponibili (compilati):\n"
 #define MSGTR_AvailableVideoFm "\nFamiglie/driver di codec video disponibili (compilati):\n"
+#define MSGTR_AvailableFsType "Modi disponibili a schermo pieno:\n"
 #define MSGTR_UsingRTCTiming "Sto utilizzando la temporizzazione hardware RTC di Linux (%ldHz)\n"
 #define MSGTR_CannotReadVideoProperties "Video: impossibile leggere le proprietà\n"
 #define MSGTR_NoStreamFound "Nessun flusso trovato\n"
@@ -136,12 +129,12 @@ static char help_text[]=
 #define MSGTR_AOComment "AO: Commento: %s\n"
 #define MSGTR_Video_NoVideo "Video: no video!!!\n"
 #define MSGTR_NotInitializeVOPorVO "\nFATAL: Impossibile inizializzare i filtri video (-vop) o l'output video (-vo)!\n"
-#define MSGTR_Paused "\n------ IN PAUSA -------\r"
+#define MSGTR_Paused "\n  =====  PAUSA  =====\r"
 #define MSGTR_PlaylistLoadUnable "\nImpossibile caricare la playlist %s\n"
 #define MSGTR_Exit_SIGILL_RTCpuSel \
 "- MPlayer è stato interrotto dal segnale 'Istruzione illegale'.\n"\
 "  Potrebbe essere un errore nel codice di rilevazione del tipo di processore...\n"\
-"  leggi DOCS/bugreports.html\n"
+"  leggi DOCS/it/bugreports.html\n"
 #define MSGTR_Exit_SIGILL \
 "- MPlayer è stato interrotto dal segnale 'Istruzione illegale'.\n"\
 "  Solitamente questo avviene quando si esegue il programma su un processore\n"\
@@ -149,17 +142,16 @@ static char help_text[]=
 #define MSGTR_Exit_SIGSEGV_SIGFPE \
 "- MPlayer è stato interrotto per un errore nell'uso della CPU/FPU/RAM.\n"\
 "  Ricompila MPlayer con --enable-debug e crea un baktrace ed un disassemblato\n"\
-"  con 'gdb'. Per i dettagli, leggi DOCS/bugreports.html sezione 5.b.\n"
+"  con 'gdb'. Per i dettagli, leggi DOCS/it/bugreports.html#crash\n"
 #define MSGTR_Exit_SIGCRASH \
 "- MPlayer è andato in crash. Questo non dovrebbe accadere.\n"\
 "  Può essere un errore nel codice di MPlayer _o_ nei tuoi driver _o_ nella tua\n"\
-"  versione di gcc. Se ritieni sia colpa di MPlayer, leggi DOCS/bugreports.html\n"\
+"  versione di gcc. Se ritieni sia colpa di MPlayer, leggi DOCS/it/bugreports.html\n"\
 "  e segui le istruzioni. Non possiamo aiutarti, e non lo faremo, se non\n"\
 "  fornisci queste informazioni quando segnali un possibile problema.\n"
 
 // mencoder.c:
 
-#define MSGTR_MEncoderCopyright "(C) 2000-2003 Arpad Gereoffy (vedi DOCS!)\n"
 #define MSGTR_UsingPass3ControllFile "Sto usando il file di controllo pass3: %s\n"
 #define MSGTR_MissingFilename "\nNome file mancante!\n\n"
 #define MSGTR_CannotOpenFile_Device "Impossibile aprire il file/dispositivo\n"
@@ -284,10 +276,10 @@ static char help_text[]=
 #define MSGTR_CantSeekRawAVI "Impossibile spostarsi nei flussi .AVI grezzi! (richiesto un indice, prova con l\'opzione -idx !)  \n"
 #define MSGTR_CantSeekFile "Impossibile spostarsi in questo file!  \n"
 
-#define MSGTR_EncryptedVOB "File VOB criptato (non compilato con il supporto delle libcss)! Leggi il file DOCS/cd-dvd.html\n"
+#define MSGTR_EncryptedVOB "File VOB criptato! Leggi il file DOCS/it/cd-dvd.html\n"
 #define MSGTR_EncryptedVOBauth "Flusso criptato di cui non è stata chiesta l\'autenticazione!\n"
 
-#define MSGTR_MOVcomprhdr "MOV: Intestazioni compresse non (ancora) supportate!\n"
+#define MSGTR_MOVcomprhdr "MOV: Il supporto delle intestazioni compresse richiede ZLIB!\n"
 #define MSGTR_MOVvariableFourCC "MOV: Avvertimento! Rilevato FOURCC variabile!?\n"
 #define MSGTR_MOVtooManyTrk "MOV: Avvertimento! troppe tracce!"
 #define MSGTR_FoundAudioStream "==> Trovato flusso audio: %d\n"
@@ -480,6 +472,12 @@ static char help_text[]=
 #define MSGTR_EQU_Center "Centro"
 #define MSGTR_EQU_Bass "Bassi"
 #define MSGTR_EQU_All "Tutti"
+#define MSGTR_EQU_Channel1 "Canale 1:"
+#define MSGTR_EQU_Channel2 "Canale 2:"
+#define MSGTR_EQU_Channel3 "Canale 3:"
+#define MSGTR_EQU_Channel4 "Canale 4:"
+#define MSGTR_EQU_Channel5 "Canale 5:"
+#define MSGTR_EQU_Channel6 "Canale 6:"
 
 // --- playlist
 #define MSGTR_PLAYLIST_Path "Percorso"
@@ -561,6 +559,7 @@ static char help_text[]=
 #define MSGTR_PREFERENCES_FontEncoding19 "Korean charset (CP949)"
 #define MSGTR_PREFERENCES_FontEncoding20 "Thai charset (CP874)"
 #define MSGTR_PREFERENCES_FontEncoding21 "Cyrillic Windows (CP1251)"
+#define MSGTR_PREFERENCES_FontEncoding22 "Slavic/Central European Windows (CP1250)"
 #define MSGTR_PREFERENCES_FontNoAutoScale "No autoscale"
 #define MSGTR_PREFERENCES_FontPropWidth "Proporzionale alla larghezza del filmato"
 #define MSGTR_PREFERENCES_FontPropHeight "Proporzionale all'altezza del filmato"
@@ -574,12 +573,20 @@ static char help_text[]=
 #define MSGTR_PREFERENCES_Cache "Cache on/off"
 #define MSGTR_PREFERENCES_LoadFullscreen "Avvia a pieno schermo"
 #define MSGTR_PREFERENCES_CacheSize "Dimensione cache: "
+#define MSGTR_PREFERENCES_SaveWinPos "Salva la posizione della finestra"
 #define MSGTR_PREFERENCES_XSCREENSAVER "Arresta XScreenSaver"
 #define MSGTR_PREFERENCES_PlayBar "Attiva playbar"
 #define MSGTR_PREFERENCES_AutoSync "AutoSync on/off"
 #define MSGTR_PREFERENCES_AutoSyncValue "Autosync: "
 #define MSGTR_PREFERENCES_CDROMDevice "Dispositivo CD-ROM:"
 #define MSGTR_PREFERENCES_DVDDevice "Dispositivo DVD:"
+#define MSGTR_PREFERENCES_FPS "FPS del filmato:"
+#define MSGTR_PREFERENCES_ShowVideoWindow "Mostra la finestra video anche quando non è attiva"
+
+#define MSGTR_ABOUT_UHU "Lo sviluppo della GUI è sponsorizzato da UHU Linux\n"
+#define MSGTR_ABOUT_CoreTeam "   Team sviluppo MPlayer:\n"
+#define MSGTR_ABOUT_AdditionalCoders "   Altri programmatori:\n"
+#define MSGTR_ABOUT_MainTesters "   Tester principali:\n"
 
 // --- messagebox
 #define MSGTR_MSGBOX_LABEL_FatalError "Errore fatale!"

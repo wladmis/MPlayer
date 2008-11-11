@@ -12,7 +12,7 @@
 #include <string.h>
 #include <sys/stat.h>
 
-#include "../cfgparser.h"
+#include "../m_option.h"
 #include "../libao2/afmt.h"
 #include "stream.h"
 #include "demuxer.h"
@@ -142,9 +142,10 @@ static InputPlugin* input_plugins[100];
 static int no_plugins=0;
 
 /* Dummy functions  */
-static int input_get_vis_type(){return 0;}
+static InputVisType input_get_vis_type(){return 0;}
 static void input_add_vis_pcm(int time, AFormat fmt, int nch, int length, void *ptr){}
 static void input_set_info_text(char * text){}
+char *xmms_get_gentitle_format(){ return ""; }
 /* Dummy functions  END*/
 
 static void input_set_info(char* title,int length, int rate, int freq, int nch){

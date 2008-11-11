@@ -17,16 +17,20 @@ OBJS += decode_MMX.o dct64_MMX.o tabinit_MMX.o
 #SRCS += dct64_sse.s
 #OBJS += dct64_sse.o
 #endif
-SRCS += dct36_3dnow.s dct64_3dnow.c
+SRCS += dct36_3dnow.c dct64_3dnow.c
 OBJS += dct36_3dnow.o dct64_3dnow.o
-SRCS += dct36_k7.s dct64_k7.c
+SRCS += dct36_k7.c dct64_k7.c
 OBJS += dct36_k7.o dct64_k7.o
 endif
 ifeq ($(TARGET_ARCH_POWERPC),yes)
 ifeq ($(TARGET_ALTIVEC),yes)
 SRCS += dct64_altivec.c
 OBJS += dct64_altivec.o
+ifeq ($(TARGET_OS),Darwin)
 CFLAGS += -faltivec
+else
+CFLAGS += -maltivec -mabi=altivec
+endif
 endif
 endif
 
@@ -48,6 +52,9 @@ decode_i586.o: decode_i586.c
 libMP3.a:	$(OBJS)
 	$(AR) r libMP3.a $(OBJS)
 ifeq ($(TARGET_OS),CYGWIN)
+	./mp3lib_objfix.sh
+endif
+ifeq ($(TARGET_MINGW32),yes)
 	./mp3lib_objfix.sh
 endif
 ifeq ($(TARGET_OS),OpenBSD)

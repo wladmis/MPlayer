@@ -15,7 +15,7 @@
 #include "mp_msg.h"
 #include "help_mp.h"
 
-#include "../linux/shmem.h"
+#include "../osdep/shmem.h"
 
 //int vo_flags=0;
 
@@ -33,6 +33,7 @@ int vo_dwidth=0;
 int vo_dheight=0;
 int vo_dbpp=0;
 
+int vo_nomouse_input = 0;
 int vo_grabpointer = 1;
 int vo_doublebuffering = 0;
 int vo_vsync = 0;
@@ -46,12 +47,16 @@ float vo_fps=0; // for mp1e rte
 char *vo_subdevice = NULL;
 int vo_directrendering=0;
 
+int vo_colorkey = 0x0000ff00; // default colorkey is green
+
 //
 // Externally visible list of all vo drivers
 //
 extern vo_functions_t video_out_mga;
 extern vo_functions_t video_out_xmga;
 extern vo_functions_t video_out_x11;
+extern vo_functions_t video_out_xover;
+extern vo_functions_t video_out_xvmc;
 extern vo_functions_t video_out_xv;
 extern vo_functions_t video_out_gl;
 extern vo_functions_t video_out_gl2;
@@ -68,6 +73,7 @@ extern vo_functions_t video_out_pgm;
 extern vo_functions_t video_out_md5;
 extern vo_functions_t video_out_syncfb;
 extern vo_functions_t video_out_fbdev;
+extern vo_functions_t video_out_fbdev2;
 extern vo_functions_t video_out_svga;
 extern vo_functions_t video_out_png;
 extern vo_functions_t video_out_ggi;
@@ -92,16 +98,27 @@ extern vo_functions_t video_out_vesa;
 #endif
 #ifdef HAVE_DIRECTFB
 extern vo_functions_t video_out_directfb;
-#if DIRECTFBVERSION >= 914
+#if DIRECTFBVERSION >= 915
 extern vo_functions_t video_out_dfbmga;
 #endif
 #endif
 #ifdef CONFIG_VIDIX
 extern vo_functions_t video_out_xvidix;
+extern vo_functions_t video_out_winvidix;
+extern vo_functions_t video_out_cvidix;
+#endif
+#ifdef HAVE_TDFX_VID
+extern vo_functions_t video_out_tdfx_vid;
+#endif
+#ifdef HAVE_TGA
+extern vo_functions_t video_out_tga;
 #endif
 
 vo_functions_t* video_out_drivers[] =
 {
+#ifdef HAVE_TDFX_VID
+        &video_out_tdfx_vid,
+#endif
 #ifdef HAVE_DIRECTX
         &video_out_directx,
 #endif
@@ -120,14 +137,20 @@ vo_functions_t* video_out_drivers[] =
 #ifdef HAVE_TDFXFB
         &video_out_tdfxfb,
 #endif
+#ifdef HAVE_XVMC
+        &video_out_xvmc,
+#endif
 #ifdef HAVE_XV
         &video_out_xv,
 #endif
 #ifdef HAVE_X11
         &video_out_x11,
+        &video_out_xover,
 #endif
 #ifdef HAVE_GL
-        &video_out_gl,
+	#ifndef GL_WIN32
+	        &video_out_gl,
+	#endif
         &video_out_gl2,
 #endif
 #ifdef HAVE_DGA
@@ -142,6 +165,7 @@ vo_functions_t* video_out_drivers[] =
 #endif
 #ifdef HAVE_FBDEV
 	&video_out_fbdev,
+	&video_out_fbdev2,
 #endif
 #ifdef HAVE_SVGALIB
 	&video_out_svga,
@@ -182,12 +206,21 @@ vo_functions_t* video_out_drivers[] =
 #endif
 #ifdef HAVE_DIRECTFB
 	&video_out_directfb,
-#if DIRECTFBVERSION >= 914
+#if DIRECTFBVERSION >= 915
         &video_out_dfbmga,
 #endif
 #endif
-#if defined(CONFIG_VIDIX) && defined(HAVE_X11) 
+#ifdef CONFIG_VIDIX
+#ifdef HAVE_X11
 	&video_out_xvidix,
+#endif
+#ifdef WIN32
+    &video_out_winvidix,
+#endif
+    &video_out_cvidix,
+#endif
+#ifdef HAVE_TGA
+        &video_out_tga,
 #endif
         NULL
 };
@@ -219,10 +252,14 @@ vo_functions_t* init_best_video_out(char** vo_list){
 	    if(!strcmp(info->short_name,vo)){
 		// name matches, try it
 		if(!video_driver->preinit(vo_subdevice))
+		{
+		    free(vo);
 		    return video_driver; // success!
+		}
 	    }
 	}
         // continue...
+	free(vo);
 	++vo_list;
 	if(!(vo_list[0])) return NULL; // do NOT fallback to others
       }

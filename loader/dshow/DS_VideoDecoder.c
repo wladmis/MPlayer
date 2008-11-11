@@ -4,7 +4,7 @@
 	Copyright 2000 Eugene Kuznetsov  (divx@euro.ru)
 
 *********************************************************/
-
+#include "config.h"
 #include "guids.h"
 #include "interfaces.h"
 #include "registry.h"
@@ -35,7 +35,9 @@ struct _DS_VideoDecoder
 #include "DS_VideoDecoder.h"
 
 #include "../wine/winerror.h"
+#ifdef WIN32_LOADER
 #include "../ldt_keeper.h"
+#endif
 
 #ifndef NOAVIFILE_HEADERS
 #define VFW_E_NOT_RUNNING               0x80040226
@@ -47,7 +49,9 @@ struct _DS_VideoDecoder
 #include <fcntl.h>
 #include <errno.h>
 #include <sys/types.h>
+#ifndef __MINGW32__
 #include <sys/mman.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>  // labs
 
@@ -80,7 +84,7 @@ static ct check[] = {
 		{16, fccYVYU, &MEDIASUBTYPE_YVYU, CAP_YVYU},
 		{12, fccI420, &MEDIASUBTYPE_I420, CAP_I420},
 		{9,  fccYVU9, &MEDIASUBTYPE_YVU9, CAP_YVU9},
-		{0},
+		{0, 0, 0, 0},
 	    };
 
 
@@ -97,7 +101,9 @@ DS_VideoDecoder * DS_VideoDecoder_Open(char* dllname, GUID* guid, BITMAPINFOHEAD
     this->m_iLastQuality = -1;
     this->m_iMaxAuto = maxauto;
 
+#ifdef WIN32_LOADER
     Setup_LDT_Keeper();
+#endif
 
     //memset(&m_obh, 0, sizeof(m_obh));
     //m_obh.biSize = sizeof(m_obh);
@@ -277,9 +283,8 @@ void DS_VideoDecoder_StartInternal(DS_VideoDecoder *this)
     
     props.cBuffers = 1;
     props.cbBuffer = this->m_sDestType.lSampleSize;
-
-    //don't know how to do this correctly
-    props.cbAlign = props.cbPrefix = 0;
+    props.cbAlign = 1;
+    props.cbPrefix = 0;
     this->m_pDS_Filter->m_pAll->vt->SetProperties(this->m_pDS_Filter->m_pAll, &props, &props1);
     this->m_pDS_Filter->m_pAll->vt->Commit(this->m_pDS_Filter->m_pAll);
     
@@ -328,7 +333,9 @@ int DS_VideoDecoder_DecodeInternal(DS_VideoDecoder *this, const void* src, int s
     // crashes inside ...->Receive() fixed now?
     //
     // nope - but this is surely helpfull - I'll try some more experiments
+#ifdef WIN32_LOADER
     Setup_FS_Segment();
+#endif
 #if 0
     if (!this->m_pDS_Filter || !this->m_pDS_Filter->m_pImp
 	|| !this->m_pDS_Filter->m_pImp->vt
@@ -452,7 +459,10 @@ int DS_VideoDecoder_SetDestFmt(DS_VideoDecoder *this, int bits, unsigned int csp
 	}
 
         if (ok) {
-	    this->iv.m_obh.biBitCount=bits;
+	    if (bits == 15)
+		this->iv.m_obh.biBitCount=16;
+	    else
+		this->iv.m_obh.biBitCount=bits;
             if( bits == 15 || bits == 16 ) {
 	      this->iv.m_obh.biSize=sizeof(BITMAPINFOHEADER)+12;
 	      this->iv.m_obh.biCompression=3;//BI_BITFIELDS

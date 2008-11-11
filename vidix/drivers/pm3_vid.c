@@ -112,6 +112,11 @@ int vixProbe(int verbose, int force)
 		dname = pci_device_name(VENDOR_3DLABS, lst[i].device);
 		dname = dname ? dname : "Unknown chip";
 		printf("[pm3] Found chip: %s\n", dname);
+		if ((lst[i].command & PCI_COMMAND_IO) == 0)
+		{
+			printf("[pm3] Device is disabled, ignoring\n");
+			continue;
+		}
 		pm3_cap.device_id = lst[i].device;
 		err = 0;
 		memcpy(&pci_info, &lst[i], sizeof(pciinfo_t));
@@ -191,7 +196,7 @@ int vixQueryFourcc(vidix_fourcc_t *to)
 #define FORMAT_VUY422	PM3VideoOverlayMode_COLORFORMAT_VUY422
 #define FORMAT_YUV422	PM3VideoOverlayMode_COLORFORMAT_YUV422
 
-/* Notice, have to check that we dont overflow the deltas here ... */
+/* Notice, have to check that we don't overflow the deltas here ... */
 static void
 compute_scale_factor(
     short* src_w, short* dst_w,

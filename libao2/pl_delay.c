@@ -1,4 +1,4 @@
-/* Audio out plugin it doesnt't really do anything useful but serves
+/* Audio out plugin it doesn't really do anything useful but serves
    an example of how audio plugins work. It delays the output signal
    by the nuber of samples set by delay=n where n is the number of
    bytes.  
@@ -38,7 +38,7 @@ typedef struct pl_delay_s
 static pl_delay_t pl_delay={NULL,NULL,0,0,0,0};
 
 // to set/get/query special features/parameters
-static int control(int cmd,int arg){
+static int control(int cmd,void *arg){
   switch(cmd){
   case AOCONTROL_PLUGIN_SET_LEN:
     if(pl_delay.data) 

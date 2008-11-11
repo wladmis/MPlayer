@@ -2,7 +2,7 @@
  * error.c: error management functions
  *****************************************************************************
  * Copyright (C) 1998-2002 VideoLAN
- * $Id: error.c,v 1.2 2002/08/16 22:50:21 arpi Exp $
+ * $Id: error.c,v 1.4 2003/08/30 13:35:25 arpi Exp $
  *
  * Author: Samuel Hocevar <sam@zoy.org>
  *
@@ -10,7 +10,7 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -24,6 +24,8 @@
 #include "config.h"
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
 
 #include "dvdcss.h"
 

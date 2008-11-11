@@ -17,6 +17,7 @@ float vo_panscan_amount = 0;
 #include "video_out.h"
 
 float monitor_aspect=4.0/3.0;
+extern float movie_aspect;
 
 static struct {
   int orgw; // real width
@@ -59,6 +60,12 @@ void aspect_save_screenres(int scrw, int scrh){
 void aspect(int *srcw, int *srch, int zoom){
   int tmpw;
 
+  if(!zoom && movie_aspect == 0) {
+#ifdef ASPECT_DEBUG
+    printf("aspect(0) no aspect forced!\n");
+#endif
+    return; // the user doesn't want to fix aspect
+  }
 #ifdef ASPECT_DEBUG
   printf("aspect(0) fitin: %dx%d zoom: %d screenaspect: %.2f\n",aspdat.scrw,aspdat.scrh,
       zoom,monitor_aspect);

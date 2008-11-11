@@ -64,7 +64,7 @@ static void CALLBACK waveOutProc(HWAVEOUT hWaveOut,UINT uMsg,DWORD dwInstance,
 }
 
 // to set/get/query special features/parameters
-static int control(int cmd,int arg)
+static int control(int cmd,void *arg)
 {
 	DWORD volume;
 	switch (cmd)
@@ -152,6 +152,7 @@ static int init(int rate,int channels,int format,int flags)
 	waveOutGetVolume(hWaveOut,&restoredvolume); 
 	//allocate buffer memory as one big block
 	buffer = malloc(totalBufferSize);
+	memset(buffer,0x0,totalBufferSize);
     //and setup pointers to each buffer 
     waveBlocks = (WAVEHDR*)buffer;
     buffer += sizeof(WAVEHDR) * BUFFER_COUNT;
@@ -241,7 +242,7 @@ static int play(void* data,int len,int flags)
 {
 	return write_waveOutBuffer(data,len);
 }
-int previous = 0;
+
 // return: delay in seconds between first and last sample in buffer
 static float get_delay()
 {

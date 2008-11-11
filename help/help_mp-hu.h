@@ -1,14 +1,11 @@
 // Translated by: Gabucino the Almighty! <gabucino@mplayerhq.hu>
 // Send me money/hw/babes!
+// ... Okay enough of the hw, now send the other two!
+// Sync'ed with help_mp-en.h 1.105
 
 // ========================= MPlayer help ===========================
 
 #ifdef HELP_MP_DEFINE_STATIC
-static char* banner_text=
-"\n\n"
-"MPlayer " VERSION "(C) 2000-2003  Gereöffy Árpád  (lásd DOCS!)\n"
-"\n";
-
 static char help_text[]=
 "Indítás:   mplayer [opciók] [url|útvonal/]filenév\n"
 "\n"
@@ -16,13 +13,13 @@ static char help_text[]=
 " -vo <drv[:dev]> videomeghajtó és -alegység kiválasztása (lista: '-vo help')\n"
 " -ao <drv[:dev]> audiomeghajtó és -alegység kiválasztása (lista: '-ao help')\n"
 #ifdef HAVE_VCD
-" -vcd <sávszám>  lejátszás VCD (video cd)-sávból, közvetlenül az eszközrõl\n"
+" vcd://<sávszám>  lejátszás VCD (video cd)-sávból, közvetlenül az eszközrõl\n"
 #endif
 #ifdef HAVE_LIBCSS
 " -dvdauth <megh> DVD-meghajtó elérési útjának megadása (kódolt lemezekhez)\n"
 #endif
 #ifdef USE_DVDREAD
-" -dvd <titleno>  a megadott DVD sáv lejátszása, file helyett\n"
+" dvd://<titleno>  a megadott DVD sáv lejátszása, file helyett\n"
 " -alang/-slang   DVD audio/felirat nyelv kiválasztása (2 betûs országkóddal)\n"
 #endif
 " -ss <idõpoz>    a megadott (másodperc v. óra:perc:mperc) pozícióra tekerés\n"
@@ -68,6 +65,7 @@ static char help_text[]=
 #define MSGTR_InvalidVOdriver "Nem létezõ video meghajtó: %s\nHasználd a '-vo help' opciót, hogy listát kapj a használható vo meghajtókról.\n"
 #define MSGTR_InvalidAOdriver "Nem létezõ audio meghajtó: %s\nHasználd az '-ao help' opciót, hogy listát kapj a használható ao meghajtókról.\n"
 #define MSGTR_CopyCodecsConf "(másold/linkeld az etc/codecs.conf file-t ~/.mplayer/codecs.conf-ba)\n"
+#define MSGTR_BuiltinCodecsConf "Befordított codecs.conf - ot használom.\n"
 #define MSGTR_CantLoadFont "Nem tudom betölteni a következõ fontot: %s\n"
 #define MSGTR_CantLoadSub "Nem tudom betölteni a feliratot: %s\n"
 #define MSGTR_ErrorDVDkey "Hiba a DVD-KULCS feldolgozása közben.\n"
@@ -80,7 +78,6 @@ static char help_text[]=
 #define MSGTR_TryForceAudioFmtStr "Megpróbálom a(z) %s audio codec-családot használni ...\n"
 #define MSGTR_CantFindAfmtFallback "A megadott audio codec-családban nem találtam idevaló meghajtót, próbálkozok más meghajtóval.\n"
 #define MSGTR_CantFindAudioCodec "Nem találok codecet a(z) 0x%X audio-formátumhoz !\n"
-#define MSGTR_TryUpgradeCodecsConfOrRTFM "*** Frissítsd a %s-t az etc/codecs.conf-ból\n*** Ha még mindig nem jó, olvasd el a DOCS/codecs.html-t!\n"
 #define MSGTR_CouldntInitAudioCodec "Nem tudom indítani az audio codecet! -> nincshang ;)\n"
 #define MSGTR_TryForceVideoFmtStr "Megpróbálom a(z) %s video codec-családot használni ...\n"
 #define MSGTR_CantFindVideoCodec "Nem találok codec-et ami megfelel a kivalasztott vo-hoz es 0x%X video-formátumhoz !\n"
@@ -93,17 +90,24 @@ static char help_text[]=
 "         ***************************************\n"\
 "         **** A rendszered túl LASSÚ ehhez! ****\n"\
 "         ***************************************\n"\
-"!!! Lehetséges okok, és megoldásaik: \n"\
-"- Legyakrabban : hibás _audio_ meghajtó. Workaround: próbáld az -ao sdl\n"\
-"  opciót, vagy 0.5-ös ALSA-t, vagy ALSA 0.9-et oss emulációval.\n"\
-"  További info a DOCS/sound.html file-ban!\n"\
-"- Lassú video kimenet. Próbálj másik -vo meghajtót (lista: -vo help) vagy\n"\
-"  a -framedrop opciót ! Sebességnövelõ tippekhez lásd DOCS/video.html.\n"\
-"- Lassú CPU. Fölösleges gyenge CPU-n DVD-t vagy nagy DivX-et lejátszani.\n"\
-"  Talán -hardframedrop opcióval.\n"\
-"- Hibás file. A következõk kombinációjaival probálkozz: -nobps -ni -mc 0\n"\
-"  -forceidx\n"\
-"Ha egyik se müxik, olvasd el a DOCS/bugreports.html file-t !\n\n"
+"Lehetséges okok, és megoldásaik:\n"\
+"- Legyakrabban : hibás _audio_ meghajtó\n"\
+"  - Próbáld ki az -ao sdl opciót, vagy használd az ALSA 0.9 OSS emulációját.\n"\
+"  - Adj különbözõ értékeket az -autosync opciónak, kezdetnek a 30 megteszi.\n"\
+"- Lassú videokimenet\n"\
+"  - Egy másik -vo meghajtó kipróbálása eredményre vezethet (a listához lásd\n"\
+"    -vo help), és/vagy használd a -framedrop opciót!\n"\
+"- Lassú CPU\n"\
+"  - Nagy felbontású DivX/DVD lejátszásával nem érdemes gyenge processzoron\n"\
+"    próbálkozni! Esetleg -hardframedrop ?\n"\
+"- Hibás file\n"\
+"  - A -nobps -ni -forceidx -mc opciók kombinációval érdemes szórakozni.\n"\
+"- Lassú média (NFS/SMB, DVD, VCD, stb)\n"\
+"  - Próbáld ki a -cache 8192 opciót.\n"\
+"- Talán egy non-interleaved AVI filet próbálsz -cache opcióval lejátszani?\n"\
+"  - Használd a -nocache opciót.\n"\
+"Tuninghoz tippeket a DOCS/hu/video.html és DOCS/hu/sound.html file-ok tartalmaznak.\n"\
+"Ha ezek után sem tetszik az eredmény, olvasd el a DOCS/hu/bugreports.html file-t.\n\n"
 
 #define MSGTR_NoGui "Az MPlayer grafikus felület NÉLKÜL lett fordítva!\n"
 #define MSGTR_GuiNeedsX "Az MPlayer grafikus felületének X11-re van szüksége!\n"
@@ -119,6 +123,7 @@ static char help_text[]=
 #define MSGTR_AvailableVideoCodecs "Rendelkezésre álló video codec-ek:\n"
 #define MSGTR_AvailableAudioFm "\nRendelkezésre álló (befordított) audio codec családok/meghajtók:\n"
 #define MSGTR_AvailableVideoFm "\nRendelkezésre álló (befordított) video codec családok/meghajtók:\n"
+#define MSGTR_AvailableFsType "A használható teljesképernyõs réteg-módok:\n"
 #define MSGTR_UsingRTCTiming "Linux hardveres RTC idõzítés használata (%ldHz)\n"
 #define MSGTR_CannotReadVideoProperties "Video: tulajdonságok beolvasása nem lehetséges\n"
 #define MSGTR_NoStreamFound "Nem található stream\n"
@@ -130,12 +135,30 @@ static char help_text[]=
 #define MSGTR_AOComment "AO: Komment: %s\n"
 #define MSGTR_Video_NoVideo "Video: nincs video!!!\n"
 #define MSGTR_NotInitializeVOPorVO "\nHIBA: Nem sikerült a video filterek (-vop) vagy a video kimenet (-vo) inicializálása!\n"
-#define MSGTR_Paused "\n------- SZÜNET -------\r"
+#define MSGTR_Paused "\n  =====  SZÜNET  =====\r"
 #define MSGTR_PlaylistLoadUnable "\nLejátszási lista (%s) betöltése sikertelen\n"
+#define MSGTR_Exit_SIGILL_RTCpuSel \
+"- Az MPlayer egy 'illegális utasítást' hajtott végre.\n"\
+"  Lehet hogy a futásidejû CPU detektáló kód bugja...\n"\
+"  Olvasd el a DOCS/hu/bugreports.html file-t.\n"
+#define MSGTR_Exit_SIGILL \
+"- Az MPlayer egy 'illegális utasítást' hajtott végre.\n"\
+"  Ez akkor történik amikor más CPU-n futtatod az MPlayer-t mint amire a\n"\
+"  fordítás/optimalizálás történt.\n  Ellenõrizd!\n"
+#define MSGTR_Exit_SIGSEGV_SIGFPE \
+"- Az MPlayer röpke félrelépése miatt hiba lépett fel a CPU/FPU/RAM-ban.\n"\
+"  Fordítsd újra az MPlayer-t az --enable-debug opcióval, és készíts egy\n"\
+"  'gdb' backtrace-t. A részletek a DOCS/hu/bugreports.html file-ban találhatóak.\n"
+#define MSGTR_Exit_SIGCRASH \
+"- Az MPlayer elcrashelt. Ennek nem lenne szabad megtörténnie.\n"\
+"  Az ok lehet egy hiba az MPlayer kódjában _vagy_ a Te meghajtóidban, _vagy_\n"\
+"  a gcc-ben. Ha úgy véled hogy ez egy MPlayer hiba, úgy olvasd el a\n"\
+"  DOCS/hu/bugreports.html file-t. Amig ezt figyelmesen meg nem teszed, nem tudunk\n"\
+"  segíteni.\n"
+
 
 // mencoder.c:
 
-#define MSGTR_MEncoderCopyright "(C) 2000-2003 Arpad Gereoffy (lásd DOCS!)\n"
 #define MSGTR_UsingPass3ControllFile "Pass3 file használata: %s\n"
 #define MSGTR_MissingFilename "\nHiányzó filenév!\n\n"
 #define MSGTR_CannotOpenFile_Device "File/eszköz megnyitása sikertelen\n"
@@ -157,6 +180,56 @@ static char help_text[]=
 #define MSGTR_VideoStreamResult "\nVideo stream: %8.3f kbit/mp  (%d bps)  méret: %d byte  %5.3f mp  %d képkocka\n"
 #define MSGTR_AudioStreamResult "\nAudio stream: %8.3f kbit/mp  (%d bps)  méret: %d byte  %5.3f mp\n"
 
+// cfg-mencoder.h:
+
+#define MSGTR_MEncoderMP3LameHelp "\n\n"\
+" vbr=<0-4>     a változó bitrátájú enkódolás módja\n"\
+"                0: cbr\n"\
+"                1: mt\n"\
+"                2: rh(alapértelmezett)\n"\
+"                3: abr\n"\
+"                4: mtrh\n"\
+"\n"\
+" abr           átlagos bitráta\n"\
+"\n"\
+" cbr           konstans bitráta\n"\
+"               Forces also CBR mode encoding on subsequent ABR presets modes\n"\
+"\n"\
+" br=<0-1024>   bitráta kBit-ben (csak CBR és ABR)\n"\
+"\n"\
+" q=<0-9>       minõség (0-legjobb, 9-legrosszabb) (csak VBR-nél)\n"\
+"\n"\
+" aq=<0-9>      algoritmikus minõség (0-legjobb, 9-legrosszabb/leggyorsabb)\n"\
+"\n"\
+" ratio=<1-100> tömörítés aránya\n"\
+"\n"\
+" vol=<0-10>    audio bemenet hangereje\n"\
+"\n"\
+" mode=<0-3>    (alap: automatikus)\n"\
+"                0: stereo\n"\
+"                1: joint-stereo\n"\
+"                2: dualchannel\n"\
+"                3: mono\n"\
+"\n"\
+" padding=<0-2>\n"\
+"                0: nincs\n"\
+"                1: mind\n"\
+"                2: állítás\n"\
+"\n"\
+" fast          valamivel gyorsabb VBR enkódolás, kicsit rosszabb minõség és\n"\
+"               magasabb bitráta.\n"\
+"\n"\
+" preset=<érték> elõre beállított értékek.\n"\
+"                 medium: VBR  enkódolás,  kellemes minõség\n"\
+"                 (150-180 kbps bitráta tartomány)\n"\
+"                 standard:  VBR enkódolás, jó minõség\n"\
+"                 (170-210 kbps bitráta tartomány)\n"\
+"                 extreme: VBR enkódolás, nagyon jó minõség\n"\
+"                 (200-240 kbps bitráta tartomány)\n"\
+"                 insane:  CBR  enkódolás, legjobb minõség\n"\
+"                 (320 kbps bitráta)\n"\
+"                 <8-320>: ABR enkódolás átlagban a megadott bitrátával.\n\n"
+
 // open.c, stream.c:
 #define MSGTR_CdDevNotfound "A CD-ROM meghajtó (%s) nem található!\n"
 #define MSGTR_ErrTrackSelect "Hiba a VCD-sáv kiválasztásakor!"
@@ -164,6 +237,10 @@ static char help_text[]=
 #define MSGTR_UnableOpenURL "Nem megnyitható az URL: %s\n"
 #define MSGTR_ConnToServer "Csatlakozom a szerverhez: %s\n"
 #define MSGTR_FileNotFound "A file nem található: '%s'\n"
+
+#define MSGTR_SMBInitError "Samba kliens könyvtár nem inicializálható: %d\n"
+#define MSGTR_SMBFileNotFound "Nem nyitható meg a hálózatról: '%s'\n"
+#define MSGTR_SMBNotCompiled "Nincs befordítva az MPlayer - be az SMB támogatás\n"
 
 #define MSGTR_CantOpenDVD "Nem tudom megnyitni a DVD eszközt: %s\n"
 #define MSGTR_DVDwait "A lemez struktúrájának olvasása, kérlek várj...\n"
@@ -182,7 +259,8 @@ static char help_text[]=
 #define MSGTR_VideoStreamRedefined "Vigyázat! Többszörösen definiált Video-folyam: %d (Hibás file?)\n"
 #define MSGTR_TooManyAudioInBuffer "\nDEMUXER: Túl sok (%d db, %d bájt) audio-csomag a pufferben!\n"
 #define MSGTR_TooManyVideoInBuffer "\nDEMUXER: Túl sok (%d db, %d bájt) video-csomag a pufferben!\n"
-#define MSGTR_MaybeNI "(talán ez egy nem összefésült (interleaved) file vagy a CODEC nem mûködik jól)\n"
+#define MSGTR_MaybeNI "Talán ez egy nem összefésült (interleaved) file vagy a codec nem mûködik jól?\n" \
+		      "AVI file-oknál próbáld meg a non-interleaved mód kényszerítését a -ni opcióval.\n"
 #define MSGTR_SwitchToNi "\nRosszul összefésült (interleaved) file, átváltás -ni módba!\n"
 #define MSGTR_Detected_XXX_FileFormat "Ez egy %s formátumú file!\n"
 #define MSGTR_DetectedAudiofile "Audio file detektálva!\n"
@@ -224,9 +302,12 @@ static char help_text[]=
 #define MSGTR_DemuxerInfoAlreadyPresent "%s demuxer info már jelen van!\n"
 #define MSGTR_ClipInfo "Clip info: \n"
 
+#define MSGTR_LeaveTelecineMode "\ndemux_mpg: Progresszív file, kilépés a 3:2 TELECINE módból\n"
+#define MSGTR_EnterTelecineMode "\ndemux_mpg: 3:2 TELECINE detektálva, inverz telecine fix használata. Az új FPS: %5.3f!  \n"
+
 // dec_video.c & dec_audio.c:
-#define MSGTR_CantOpenCodec "nem tudom megnyitni a kodeket\n"
-#define MSGTR_CantCloseCodec "nem tudom lezárni a kodeket\n"
+#define MSGTR_CantOpenCodec "Nem tudom megnyitni a kodeket\n"
+#define MSGTR_CantCloseCodec "Nem tudom lezárni a kodeket\n"
 
 #define MSGTR_MissingDLLcodec "HIBA: Nem tudom megnyitni a kért DirectShow kodeket: %s\n"
 #define MSGTR_ACMiniterror "Nem tudom betölteni/inicializálni a Win32/ACM kodeket (hiányzó DLL file?)\n"
@@ -277,7 +358,6 @@ static char help_text[]=
 #define MSGTR_MovieAspectIsSet "A film aspect értéke %.2f:1 - aspect arány javítása.\n"
 #define MSGTR_MovieAspectUndefined "A film aspect értéke nem definiált - nincs arányjavítás.\n"
 
-
 //  ====================== GUI messages/buttons ========================
 
 #ifdef HAVE_NEW_GUI
@@ -294,7 +374,8 @@ static char help_text[]=
 #define MSGTR_SkinBrowser "Skin böngészõ"
 #define MSGTR_Network "Lejátszás WEB - röl ..."
 #define MSGTR_Preferences "Beállítások"
-#define MSGTR_OSSPreferences "OSS driver beállítások"
+#define MSGTR_OSSPreferences "OSS meghajtó beállítások"
+#define MSGTR_SDLPreferences "SDL meghajtó beállítások"
 #define MSGTR_NoMediaOpened "nincs megnyitva semmi"
 #define MSGTR_VCDTrack "%d. VCD track"
 #define MSGTR_NoChapter "nincs megnyitott fejezet"
@@ -314,13 +395,14 @@ static char help_text[]=
 // --- error messages ---
 #define MSGTR_NEMDB "Nincs elég memória a buffer kirajzolásához."
 #define MSGTR_NEMFMR "Nincs elég memória a menü rendereléséhez."
-#define MSGTR_IDFGCVD "Nem talaltam gui kompatibilis video drivert."
+#define MSGTR_IDFGCVD "Nem talaltam gui kompatibilis video meghajtót."
 #define MSGTR_NEEDLAVCFAME "Nem MPEG file lejátszása nem lehetséges a DXR3/H+ hardverrel újrakódolás nélkül.\nKapcsold be a lavc vagy fame opciót a DXR3/H+ konfigurációs panelen."
 
 // --- skin loader error messages
 #define MSGTR_SKIN_ERRORMESSAGE "[skin] hiba a skin konfigurációs file-jának %d. sorában: %s"
 #define MSGTR_SKIN_WARNING1 "[skin] figyelmeztetés a skin konfigurációs file-jának %d. sorában: widget megvan, de nincs elõtte \"section\" ( %s )"
 #define MSGTR_SKIN_WARNING2 "[skin] figyelmeztetés a skin konfigurációs file-jának %d. sorában: widget megvan, de nincs elõtte \"subsection\" ( %s )"
+#define MSGTR_SKIN_WARNING3 "[skin] figyelmeztetés a skin konfigurációs file-jának %d. sorában: ez az elem nem használható ebben az alrészben ( %s )"
 #define MSGTR_SKIN_BITMAP_16bit  "16 vagy kevesebb bites bitmap nem támogatott ( %s ).\n"
 #define MSGTR_SKIN_BITMAP_FileNotFound  "file nem található ( %s )\n"
 #define MSGTR_SKIN_BITMAP_BMPReadError "bmp olvasási hiba ( %s )\n"
@@ -372,10 +454,16 @@ static char help_text[]=
 #define MSGTR_MENU_Chapter "%2d. fejezet"
 #define MSGTR_MENU_AudioLanguages "Szinkron nyelvei"
 #define MSGTR_MENU_SubtitleLanguages "Feliratok nyelvei"
-#define MSGTR_MENU_PlayList "Playlist"
+#define MSGTR_MENU_PlayList "Lejátszási lista"
 #define MSGTR_MENU_SkinBrowser "Skin böngészõ"
 #define MSGTR_MENU_Preferences "Beállítások" 
 #define MSGTR_MENU_Exit "Kilépés ..."
+#define MSGTR_MENU_Mute "Néma"
+#define MSGTR_MENU_Original "Eredeti"
+#define MSGTR_MENU_AspectRatio "Képarány"
+#define MSGTR_MENU_AudioTrack "Audio track"
+#define MSGTR_MENU_Track "%d. sáv"
+#define MSGTR_MENU_VideoTrack "Video track"
 
 // --- equalizer
 #define MSGTR_EQU_Audio "Audio"
@@ -391,14 +479,26 @@ static char help_text[]=
 #define MSGTR_EQU_Center "Középsõ"
 #define MSGTR_EQU_Bass "Basszus"
 #define MSGTR_EQU_All "Mindegyik"
+#define MSGTR_EQU_Channel1 "1. Csatorna"
+#define MSGTR_EQU_Channel2 "2. Csatorna"
+#define MSGTR_EQU_Channel3 "3. Csatorna"
+#define MSGTR_EQU_Channel4 "4. Csatorna"
+#define MSGTR_EQU_Channel5 "5. Csatorna"
+#define MSGTR_EQU_Channel6 "6. Csatorna"
 
 // --- playlist
 #define MSGTR_PLAYLIST_Path "Utvonal"
-#define MSGTR_PLAYLIST_Selected "Kiv'lasztott filr - ok"
+#define MSGTR_PLAYLIST_Selected "Kiválasztott file - ok"
 #define MSGTR_PLAYLIST_Files "File - ok"
 #define MSGTR_PLAYLIST_DirectoryTree "Könyvtár lista"
 
 // --- preferences
+#define MSGTR_PREFERENCES_Audio "Audio"
+#define MSGTR_PREFERENCES_Video "Video"
+#define MSGTR_PREFERENCES_SubtitleOSD "Felirat & OSD"
+#define MSGTR_PREFERENCES_Codecs "Kodekek és demuxerek"
+#define MSGTR_PREFERENCES_Misc "Egyéb"
+
 #define MSGTR_PREFERENCES_None "Egyik sem"
 #define MSGTR_PREFERENCES_AvailableDrivers "Driverek:"
 #define MSGTR_PREFERENCES_DoNotPlaySound "Hang nélkül"
@@ -407,16 +507,15 @@ static char help_text[]=
 #define MSGTR_PREFERENCES_ExtraStereo "Extra stereo"
 #define MSGTR_PREFERENCES_Coefficient "Együttható:"
 #define MSGTR_PREFERENCES_AudioDelay "Hang késleltetés"
-#define MSGTR_PREFERENCES_Audio "Audio"
 #define MSGTR_PREFERENCES_DoubleBuffer "Dupla bufferelés"
 #define MSGTR_PREFERENCES_DirectRender "Direct rendering"
 #define MSGTR_PREFERENCES_FrameDrop "Kép eldobás"
 #define MSGTR_PREFERENCES_HFrameDrop "Erõszakos kép eldobó"
 #define MSGTR_PREFERENCES_Flip "Kép fejjel lefelé"
 #define MSGTR_PREFERENCES_Panscan "Panscan: "
-#define MSGTR_PREFERENCES_Video "Video"
 #define MSGTR_PREFERENCES_OSDTimer "Óra es indikátorok"
 #define MSGTR_PREFERENCES_OSDProgress "Csak a százalék jelzõk"
+#define MSGTR_PREFERENCES_OSDTimerPercentageTotalTime "Óra, százalék és a teljes idõ"
 #define MSGTR_PREFERENCES_Subtitle "Felirat:"
 #define MSGTR_PREFERENCES_SUB_Delay "Késleltetés: "
 #define MSGTR_PREFERENCES_SUB_FPS "FPS:"
@@ -425,6 +524,7 @@ static char help_text[]=
 #define MSGTR_PREFERENCES_SUB_Unicode "Unicode felirat"
 #define MSGTR_PREFERENCES_SUB_MPSUB "A film feliratának konvertálása MPlayer felirat formátumba"
 #define MSGTR_PREFERENCES_SUB_SRT "A film feliratának konvertálása SubViewer ( SRT ) formátumba"
+#define MSGTR_PREFERENCES_SUB_Overlap "Felirat átlapolás"
 #define MSGTR_PREFERENCES_Font "Betûk:"
 #define MSGTR_PREFERENCES_FontFactor "Betû együttható:"
 #define MSGTR_PREFERENCES_PostProcess "Képjavítás"
@@ -442,6 +542,7 @@ static char help_text[]=
 #define MSGTR_PREFERENCES_FRAME_Misc "Egyéb"
 #define MSGTR_PREFERENCES_OSS_Device "Meghajtó:"
 #define MSGTR_PREFERENCES_OSS_Mixer "Mixer:"
+#define MSGTR_PREFERENCES_SDL_Driver "Meghajtó:"
 #define MSGTR_PREFERENCES_Message "Kérlek emlékezz, néhány opció igényli a lejátszás újraindítását."
 #define MSGTR_PREFERENCES_DXR3_VENC "Video kódoló:"
 #define MSGTR_PREFERENCES_DXR3_LAVC "LAVC használata (ffmpeg)"
@@ -449,9 +550,9 @@ static char help_text[]=
 #define MSGTR_PREFERENCES_FontEncoding1 "Unicode"
 #define MSGTR_PREFERENCES_FontEncoding2 "Nyugat-Európai karakterkészlet (ISO-8859-1)"
 #define MSGTR_PREFERENCES_FontEncoding3 "Nyugat-Európai karakterkészlet euróval (ISO-8859-15)"
-#define MSGTR_PREFERENCES_FontEncoding4 "Szláv / Közép-Európai karakterkészlet (ISO-8859-2)"
-#define MSGTR_PREFERENCES_FontEncoding5 "Eszperantó, gall, máltai, török karakterkészlet (ISO-8859-3)"
-#define MSGTR_PREFERENCES_FontEncoding6 "Régi baltik karakterkészlet (ISO-8859-4)"
+#define MSGTR_PREFERENCES_FontEncoding4 "Szláv és közép-európai karakterkészlet (ISO-8859-2)"
+#define MSGTR_PREFERENCES_FontEncoding5 "Eszperantó, gall, máltai és török karakterkészlet (ISO-8859-3)"
+#define MSGTR_PREFERENCES_FontEncoding6 "Régi balti karakterkészlet (ISO-8859-4)"
 #define MSGTR_PREFERENCES_FontEncoding7 "Cirill karakterkészlet (ISO-8859-5)"
 #define MSGTR_PREFERENCES_FontEncoding8 "Arab karakterkészlet (ISO-8859-6)"
 #define MSGTR_PREFERENCES_FontEncoding9 "Modern görög karakterkészlet (ISO-8859-7)"
@@ -466,7 +567,8 @@ static char help_text[]=
 #define MSGTR_PREFERENCES_FontEncoding18 "Japán karakterkészlet (SHIFT-JIS)"
 #define MSGTR_PREFERENCES_FontEncoding19 "Koreai karakterkészlet (CP949)"
 #define MSGTR_PREFERENCES_FontEncoding20 "Thai karakterkészlet (CP874)"
-#define MSGTR_PREFERENCES_FontEncoding21 "Cirill Winnyóz (CP1251)"
+#define MSGTR_PREFERENCES_FontEncoding21 "Cirill karakterkészlet (Windows) (CP1251)"
+#define MSGTR_PREFERENCES_FontEncoding22 "Szláv és közép-európai karakterkészlet (Windows) (CP1250)"
 #define MSGTR_PREFERENCES_FontNoAutoScale "Nincs automata karakterméret választás"
 #define MSGTR_PREFERENCES_FontPropWidth "Karakterméret film szélességéhez való állítása"
 #define MSGTR_PREFERENCES_FontPropHeight "Karakterméret film magasságához való állítása"
@@ -476,13 +578,27 @@ static char help_text[]=
 #define MSGTR_PREFERENCES_FontOutLine "Körvonal:"
 #define MSGTR_PREFERENCES_FontTextScale "Szöveg skála:"
 #define MSGTR_PREFERENCES_FontOSDScale "OSD skála:"
-#define MSGTR_PREFERENCES_SubtitleOSD "Felirat & OSD"
-#define MSGTR_PREFERENCES_Cache "Cache be/ki"
+#define MSGTR_PREFERENCES_Cache "Gyorsítótár be/ki"
+#define MSGTR_PREFERENCES_CacheSize "Gyorsítótár merete:"
 #define MSGTR_PREFERENCES_LoadFullscreen "Indítás teljes képernyõn"
+#define MSGTR_PREFERENCES_SaveWinPos "Ablakok pozíciójának mentése"
+#define MSGTR_PREFERENCES_XSCREENSAVER "XScreenSaver leállítása film lejátszásakor"
+#define MSGTR_PREFERENCES_PlayBar "PlayBar engedélyezése"
+#define MSGTR_PREFERENCES_AutoSync "AutoSync ki/be kapcsolása"
+#define MSGTR_PREFERENCES_AutoSyncValue "Értéke:"
+#define MSGTR_PREFERENCES_CDROMDevice "CD meghajtó:"
+#define MSGTR_PREFERENCES_DVDDevice "DVD meghajtó:"
+#define MSGTR_PREFERENCES_FPS "Film FPS:"
+#define MSGTR_PREFERENCES_ShowVideoWindow "Lejátszó ablak megjelenítése ha inaktív"
+
+#define MSGTR_ABOUT_UHU "GUI fejlesztést az UHU Linux támogatta\n"
+#define MSGTR_ABOUT_CoreTeam "   MPlayer csapat:\n"
+#define MSGTR_ABOUT_AdditionalCoders "   További kóderek:\n"
+#define MSGTR_ABOUT_MainTesters "   Teszterek:\n"
 
 // --- messagebox
-#define MSGTR_MSGBOX_LABEL_FatalError "végzetes hiba ..."
-#define MSGTR_MSGBOX_LABEL_Error "hiba ..."
-#define MSGTR_MSGBOX_LABEL_Warning "figyelmeztetés ..."
+#define MSGTR_MSGBOX_LABEL_FatalError "Végzetes hiba!"
+#define MSGTR_MSGBOX_LABEL_Error "Hiba!"
+#define MSGTR_MSGBOX_LABEL_Warning "Figyelmeztetés!"
 
 #endif

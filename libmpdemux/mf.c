@@ -5,12 +5,17 @@
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <glob.h>
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 
 #include "config.h"
+
+#ifdef HAVE_GLOB
+#include <glob.h>
+#else
+#include "../osdep/glob.h"
+#endif
 
 #include "mp_msg.h"
 #include "help_mp.h"
@@ -18,13 +23,13 @@
 
 #include "mf.h"
 
-int    mf_support = 0;
-int    mf_w = 352;
-int    mf_h = 288;
+int    mf_w = 0; //352; // let codecs to detect it
+int    mf_h = 0; //288;
 float  mf_fps = 25.0;
-char * mf_type = "jpg";
+char * mf_type = NULL; //"jpg";
 
 mf_t* open_mf(char * filename){
+#if defined(HAVE_GLOB) || defined(__MINGW32__)
  glob_t        gg;
  struct stat   fs;
  int           i;
@@ -111,5 +116,9 @@ mf_t* open_mf(char * filename){
 exit_mf:
  free( fname );
  return mf;
+#else
+ mp_msg(MSGT_STREAM,MSGL_FATAL,"[mf] mf support is disabled on your os\n");
+ return 0;
+#endif
 }
 

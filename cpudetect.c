@@ -13,6 +13,7 @@ CpuCaps gCpuCaps;
 
 #include <stdio.h>
 #include <string.h>
+#include "osdep/timer.h"
 
 #ifdef __NetBSD__
 #include <sys/param.h>
@@ -27,6 +28,10 @@ CpuCaps gCpuCaps;
 
 #ifdef __linux__
 #include <signal.h>
+#endif
+
+#ifdef WIN32
+#include <windows.h>
 #endif
 
 //#define X86_FXSR_MAGIC
@@ -115,26 +120,28 @@ void GetCpuCaps( CpuCaps *caps)
 
 		do_cpuid(0x00000001, regs2);
 
-		tmpstr=GetCpuFriendlyName(regs, regs2);
-		mp_msg(MSGT_CPUDETECT,MSGL_INFO,"CPU: %s ",tmpstr);
-		free(tmpstr);
-
 		caps->cpuType=(regs2[0] >> 8)&0xf;
 		if(caps->cpuType==0xf){
 		    // use extended family (P4, IA64)
 		    caps->cpuType=8+((regs2[0]>>20)&255);
 		}
 		caps->cpuStepping=regs2[0] & 0xf;
-		mp_msg(MSGT_CPUDETECT,MSGL_INFO,"(Family: %d, Stepping: %d)\n",
-		    caps->cpuType, caps->cpuStepping);
 
 		// general feature flags:
+		caps->hasTSC  = (regs2[3] & (1 << 8  )) >>  8; // 0x0000010
 		caps->hasMMX  = (regs2[3] & (1 << 23 )) >> 23; // 0x0800000
 		caps->hasSSE  = (regs2[3] & (1 << 25 )) >> 25; // 0x2000000
 		caps->hasSSE2 = (regs2[3] & (1 << 26 )) >> 26; // 0x4000000
 		caps->hasMMX2 = caps->hasSSE; // SSE cpus supports mmxext too
 		cl_size = ((regs2[1] >> 8) & 0xFF)*8;
 		if(cl_size) caps->cl_size = cl_size;
+
+		tmpstr=GetCpuFriendlyName(regs, regs2);
+		mp_msg(MSGT_CPUDETECT,MSGL_INFO,"CPU: %s ",tmpstr);
+		free(tmpstr);
+		mp_msg(MSGT_CPUDETECT,MSGL_INFO,"(Family: %d, Stepping: %d)\n",
+		    caps->cpuType, caps->cpuStepping);
+
 	}
 	do_cpuid(0x80000000, regs);
 	if (regs[0]>=0x80000001) {
@@ -163,7 +170,7 @@ void GetCpuCaps( CpuCaps *caps)
 #endif
 
 		/* FIXME: Does SSE2 need more OS support, too? */
-#if defined(__linux__) || defined(__FreeBSD__) || defined(__NetBSD__)
+#if defined(__linux__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__CYGWIN__)
 		if (caps->hasSSE)
 			check_os_katmai_support();
 		if (!caps->hasSSE)
@@ -203,6 +210,29 @@ void GetCpuCaps( CpuCaps *caps)
 }
 
 
+static inline unsigned long long int rdtsc( void )
+{
+  unsigned long long int retval;
+  __asm __volatile ("rdtsc":"=A"(retval)::"memory");
+  return retval;
+}
+
+/* Returns CPU clock in khz */
+static unsigned int GetCpuSpeed(void)
+{
+	unsigned long long int tscstart, tscstop;
+	unsigned int start, stop;
+
+	tscstart = rdtsc();
+	start = GetTimer();
+	usec_sleep(50000);
+	stop = GetTimer();
+	tscstop = rdtsc();
+
+	return((tscstop-tscstart)/((stop-start)/1000.0));
+}
+
+
 #define CPUID_EXTFAMILY	((regs2[0] >> 20)&0xFF) /* 27..20 */
 #define CPUID_EXTMODEL	((regs2[0] >> 16)&0x0F) /* 19..16 */
 #define CPUID_TYPE		((regs2[0] >> 12)&0x04) /* 13..12 */
@@ -212,23 +242,37 @@ void GetCpuCaps( CpuCaps *caps)
 
 char *GetCpuFriendlyName(unsigned int regs[], unsigned int regs2[]){
 #include "cputable.h" /* get cpuname and cpuvendors */
-	char vendor[17];
+	char vendor[17], cpuspeed[16];
 	char *retname;
-	int i;
+	int i=0;
 
 	if (NULL==(retname=(char*)malloc(256))) {
 		mp_msg(MSGT_CPUDETECT,MSGL_FATAL,"Error: GetCpuFriendlyName() not enough memory\n");
 		exit(1);
 	}
 
+	/* Measure CPU speed */
+	if (gCpuCaps.hasTSC && (i = GetCpuSpeed()) > 0) {
+		if (i < 1000000) {
+			i += 50; /* for rounding */
+			snprintf(cpuspeed,15, " %d.%d MHz", i/1000, (i/100)%10);
+		} else {
+			//i += 500; /* for rounding */
+			snprintf(cpuspeed,15, " %d MHz", i/1000);
+		}
+	} else { /* No TSC Support */
+		cpuspeed[0]='\0';
+	}
+	
+
 	sprintf(vendor,"%.4s%.4s%.4s",(char*)(regs+1),(char*)(regs+3),(char*)(regs+2));
 
 	for(i=0; i<MAX_VENDORS; i++){
 		if(!strcmp(cpuvendors[i].string,vendor)){
 			if(cpuname[i][CPUID_FAMILY][CPUID_MODEL]){
-				snprintf(retname,255,"%s %s",cpuvendors[i].name,cpuname[i][CPUID_FAMILY][CPUID_MODEL]);
+				snprintf(retname,255,"%s %s%s",cpuvendors[i].name,cpuname[i][CPUID_FAMILY][CPUID_MODEL],cpuspeed);
 			} else {
-				snprintf(retname,255,"unknown %s %d. Generation CPU",cpuvendors[i].name,CPUID_FAMILY); 
+				snprintf(retname,255,"unknown %s %d. Generation CPU%s",cpuvendors[i].name,CPUID_FAMILY,cpuspeed); 
 				mp_msg(MSGT_CPUDETECT,MSGL_WARN,"unknown %s CPU:\n",cpuvendors[i].name);
 				mp_msg(MSGT_CPUDETECT,MSGL_WARN,"Vendor:   %s\n",cpuvendors[i].string);
 				mp_msg(MSGT_CPUDETECT,MSGL_WARN,"Type:     %d\n",CPUID_TYPE);
@@ -293,6 +337,19 @@ static void sigfpe_handler_sse( int signal, struct sigcontext sc )
 }
 #endif /* __linux__ && _POSIX_SOURCE && X86_FXSR_MAGIC */
 
+#ifdef WIN32
+LONG CALLBACK win32_sig_handler_sse(EXCEPTION_POINTERS* ep)
+{
+   if(ep->ExceptionRecord->ExceptionCode==EXCEPTION_ILLEGAL_INSTRUCTION){
+      mp_msg(MSGT_CPUDETECT,MSGL_V, "SIGILL, " );
+      ep->ContextRecord->Eip +=3;
+      gCpuCaps.hasSSE=0;       
+	  return EXCEPTION_CONTINUE_EXECUTION;
+   }
+   return EXCEPTION_CONTINUE_SEARCH;
+}
+#endif /* WIN32 */
+
 /* If we're running on a processor that can do SSE, let's see if we
  * are allowed to or not.  This will catch 2.4.0 or later kernels that
  * haven't been configured for a Pentium III but are running on one,
@@ -343,6 +400,16 @@ static void check_os_katmai_support( void )
    gCpuCaps.hasSSE = 0;
    mp_msg(MSGT_CPUDETECT,MSGL_WARN, "No OS support for SSE, disabling to be safe.\n" );
 #endif
+#elif defined(WIN32)
+   LPTOP_LEVEL_EXCEPTION_FILTER exc_fil;
+   if ( gCpuCaps.hasSSE ) {
+      mp_msg(MSGT_CPUDETECT,MSGL_V, "Testing OS support for SSE... " );
+      exc_fil = SetUnhandledExceptionFilter(win32_sig_handler_sse);
+      __asm __volatile ("xorps %xmm0, %xmm0");
+      SetUnhandledExceptionFilter(exc_fil);
+      if ( gCpuCaps.hasSSE ) mp_msg(MSGT_CPUDETECT,MSGL_V, "yes.\n" );
+      else mp_msg(MSGT_CPUDETECT,MSGL_V, "no!\n" );
+   }
 #elif defined(__linux__)
 #if defined(_POSIX_SOURCE) && defined(X86_FXSR_MAGIC)
    struct sigaction saved_sigill;
@@ -479,7 +546,6 @@ void GetCpuCaps( CpuCaps *caps)
                 if (err == 0)
                         if (has_vu != 0)
                                 caps->hasAltiVec = 1;
-                mp_msg(MSGT_CPUDETECT,MSGL_INFO,"AltiVec %sfound\n", (caps->hasAltiVec ? "" : "not "));
         }
 #else /* SYS_DARWIN */
 /* no Darwin, do it the brute-force way */
@@ -492,7 +558,7 @@ void GetCpuCaps( CpuCaps *caps)
             canjump = 1;
             
             asm volatile ("mtspr 256, %0\n\t"
-                          "vand v0, v0, v0"
+                          "vand %%v0, %%v0, %%v0"
                           :
                           : "r" (-1));
             
@@ -501,6 +567,7 @@ void GetCpuCaps( CpuCaps *caps)
           }
         }
 #endif /* SYS_DARWIN */
+        mp_msg(MSGT_CPUDETECT,MSGL_INFO,"AltiVec %sfound\n", (caps->hasAltiVec ? "" : "not "));
 #endif /* HAVE_ALTIVEC */
 }
 #endif /* !ARCH_X86 */

@@ -1,7 +1,4 @@
-
 #include "config.h"
-
-#ifdef NEW_CONFIG
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -24,9 +21,9 @@ static int recursion_depth = 0;
 int m_config_parse_config_file(m_config_t* config, char *conffile)
 {
 #define PRINT_LINENUM	mp_msg(MSGT_CFGPARSER,MSGL_V,"%s(%d): ", conffile, line_num)
-#define MAX_LINE_LEN	1000
-#define MAX_OPT_LEN	100
-#define MAX_PARAM_LEN	100
+#define MAX_LINE_LEN	10000
+#define MAX_OPT_LEN	1000
+#define MAX_PARAM_LEN	1000
 	FILE *fp;
 	char *line;
 	char opt[MAX_OPT_LEN + 1];
@@ -94,7 +91,7 @@ int m_config_parse_config_file(m_config_t* config, char *conffile)
 			opt[opt_pos++] = line[line_pos++];
 			if (opt_pos >= MAX_OPT_LEN) {
 				PRINT_LINENUM;
-				mp_msg(MSGT_CFGPARSER,MSGL_ERR,"too long option\n");
+				mp_msg(MSGT_CFGPARSER,MSGL_ERR,"too long option at line %d\n",line_num);
 				errors++;
 				ret = -1;
 				goto nextline;
@@ -102,7 +99,7 @@ int m_config_parse_config_file(m_config_t* config, char *conffile)
 		}
 		if (opt_pos == 0) {
 			PRINT_LINENUM;
-			mp_msg(MSGT_CFGPARSER,MSGL_ERR,"parse error\n");
+			mp_msg(MSGT_CFGPARSER,MSGL_ERR,"parse error at line %d\n",line_num);
 			ret = -1;
 			errors++;
 			continue;
@@ -121,7 +118,7 @@ int m_config_parse_config_file(m_config_t* config, char *conffile)
 		/* check '=' */
 		if (line[line_pos++] != '=') {
 			PRINT_LINENUM;
-			mp_msg(MSGT_CFGPARSER,MSGL_ERR,"option without parameter\n");
+			mp_msg(MSGT_CFGPARSER,MSGL_ERR,"Option %s needs a parameter at line %d\n",opt,line_num);
 			ret = -1;
 			errors++;
 			continue;
@@ -139,7 +136,7 @@ int m_config_parse_config_file(m_config_t* config, char *conffile)
 				param[param_pos++] = line[line_pos++];
 				if (param_pos >= MAX_PARAM_LEN) {
 					PRINT_LINENUM;
-					mp_msg(MSGT_CFGPARSER,MSGL_ERR,"too long parameter\n");
+					mp_msg(MSGT_CFGPARSER,MSGL_ERR,"Option %s has a too long parameter at line %d\n",opt,line_num);
 					ret = -1;
 					errors++;
 					goto nextline;
@@ -164,7 +161,7 @@ int m_config_parse_config_file(m_config_t* config, char *conffile)
 		/* did we read a parameter? */
 		if (param_pos == 0) {
 			PRINT_LINENUM;
-			mp_msg(MSGT_CFGPARSER,MSGL_ERR,"option without parameter\n");
+			mp_msg(MSGT_CFGPARSER,MSGL_ERR,"Option %s needs a parameter at line %d\n",opt,line_num);
 			ret = -1;
 			errors++;
 			continue;
@@ -183,14 +180,18 @@ int m_config_parse_config_file(m_config_t* config, char *conffile)
 		/* EOL / comment */
 		if (line[line_pos] != '\0' && line[line_pos] != '#') {
 			PRINT_LINENUM;
-			mp_msg(MSGT_CFGPARSER,MSGL_WARN,"extra characters on line: %s\n", line+line_pos);
+			mp_msg(MSGT_CFGPARSER,MSGL_WARN,"extra characters on line %d: %s\n",line_num, line+line_pos);
 			ret = -1;
 		}
 
 		tmp = m_config_set_option(config, opt, param);
 		if (tmp < 0) {
 			PRINT_LINENUM;
-			mp_msg(MSGT_CFGPARSER,MSGL_INFO,"%s\n", opt);
+			if(tmp == M_OPT_UNKNOWN) {
+				mp_msg(MSGT_CFGPARSER,MSGL_WARN,"Warning unknown option %s at line %d\n", opt,line_num);
+				continue;
+			}
+			mp_msg(MSGT_CFGPARSER,MSGL_ERR,"Error parsing option %s=%s at line %d\n",opt,param,line_num);
 			ret = -1;
 			errors++;
 			continue;
@@ -207,5 +208,3 @@ out:
 	--recursion_depth;
 	return ret;
 }
-
-#endif

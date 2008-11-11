@@ -85,10 +85,12 @@ static int cmd_filter(mp_cmd_t* cmd, int paused, struct vf_priv_s * priv) {
 
   switch(cmd->id) {
   case MP_CMD_PAUSE :
+#if 0 // http://mplayerhq.hu/pipermail/mplayer-dev-eng/2003-March/017331.html
     if(!paused && !go2pause) { // Initial pause cmd -> wait the next put_image
       go2pause = 1;
       return 1;
     }
+#endif
     if(go2pause == 2) // Msg resent by put_image after saving the image
       go2pause = 0;
     break;
@@ -108,7 +110,7 @@ static int cmd_filter(mp_cmd_t* cmd, int paused, struct vf_priv_s * priv) {
     else if(strcmp(arg,"hide") == 0)
       priv->current->show = 0;
     else
-      printf("Unknow menu command: '%s'\n",arg);
+      printf("Unknown menu command: '%s'\n",arg);
     return 1;
   }
   case MP_CMD_SET_MENU : {
@@ -277,7 +279,8 @@ vf_info_t vf_info_menu  = {
   "menu",
   "Albeu",
   "",
-  open
+  open,
+  NULL
 };
 
 

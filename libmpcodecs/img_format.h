@@ -8,6 +8,7 @@
 #define IMGFMT_RGB (('R'<<24)|('G'<<16)|('B'<<8))
 #define IMGFMT_RGB1  (IMGFMT_RGB|1)
 #define IMGFMT_RGB4  (IMGFMT_RGB|4)
+#define IMGFMT_RG4B  (IMGFMT_RGB|4|128) // RGB4 with 1 pixel per byte
 #define IMGFMT_RGB8  (IMGFMT_RGB|8)
 #define IMGFMT_RGB15 (IMGFMT_RGB|15)
 #define IMGFMT_RGB16 (IMGFMT_RGB|16)
@@ -18,6 +19,7 @@
 #define IMGFMT_BGR (('B'<<24)|('G'<<16)|('R'<<8))
 #define IMGFMT_BGR1 (IMGFMT_BGR|1)
 #define IMGFMT_BGR4 (IMGFMT_BGR|4)
+#define IMGFMT_BG4B (IMGFMT_BGR|4|128) // BGR4 with 1 pixel per byte
 #define IMGFMT_BGR8 (IMGFMT_BGR|8)
 #define IMGFMT_BGR15 (IMGFMT_BGR|15)
 #define IMGFMT_BGR16 (IMGFMT_BGR|16)
@@ -27,8 +29,8 @@
 #define IMGFMT_IS_RGB(fmt) (((fmt)&IMGFMT_RGB_MASK)==IMGFMT_RGB)
 #define IMGFMT_IS_BGR(fmt) (((fmt)&IMGFMT_BGR_MASK)==IMGFMT_BGR)
 
-#define IMGFMT_RGB_DEPTH(fmt) ((fmt)&~IMGFMT_RGB)
-#define IMGFMT_BGR_DEPTH(fmt) ((fmt)&~IMGFMT_BGR)
+#define IMGFMT_RGB_DEPTH(fmt) ((fmt)&0x3F)
+#define IMGFMT_BGR_DEPTH(fmt) ((fmt)&0x3F)
 
 
 /* Planar YUV Formats */
@@ -42,11 +44,13 @@
 #define IMGFMT_Y800 0x30303859
 #define IMGFMT_Y8   0x20203859
 #define IMGFMT_NV12 0x3231564E
+#define IMGFMT_NV21 0x3132564E
 
 /* unofficial Planar Formats, FIXME if official 4CC exists */
 #define IMGFMT_444P 0x50343434
 #define IMGFMT_422P 0x50323234
 #define IMGFMT_411P 0x50313134
+#define IMGFMT_HM12 0x32314D48
 
 /* Packed YUV Formats */
 
@@ -73,6 +77,14 @@
 
 /* Compressed Formats */
 #define IMGFMT_MPEGPES (('M'<<24)|('P'<<16)|('E'<<8)|('S'))
+
+// I think that this code could not be used by any other codec/format
+#define IMGFMT_XVMC 0x1DC70000
+#define IMGFMT_XVMC_MASK 0xFFFF0000
+#define IMGFMT_IS_XVMC(fmt) (((fmt)&IMGFMT_XVMC_MASK)==IMGFMT_XVMC)
+//these are chroma420
+#define IMGFMT_XVMC_MOCO_MPEG2 (IMGFMT_XVMC|0x02)
+#define IMGFMT_XVMC_IDCT_MPEG2 (IMGFMT_XVMC|0x82)
 
 typedef struct {
     void* data;

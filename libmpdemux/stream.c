@@ -5,34 +5,37 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#ifndef __MINGW32__
 #include <sys/ioctl.h>
 #include <sys/wait.h>
+#endif
 #include <fcntl.h>
 #include <signal.h>
+#include <strings.h>
 
 #include "config.h"
+
+#ifndef HAVE_WINSOCK2
+#define closesocket close
+#else
+#include <winsock2.h>
+#endif
+
 #include "mp_msg.h"
 #include "help_mp.h"
-#include "../linux/shmem.h"
+#include "../osdep/shmem.h"
 
 #include "stream.h"
 #include "demuxer.h"
 
+#include "../m_option.h"
+#include "../m_struct.h"
+
+
 extern int verbose; // defined in mplayer.c
+void cache_uninit(stream_t *s); // defined in cache2.c
 
 #include "cue_read.h"
-
-#ifdef HAVE_VCD
-
-#ifdef __FreeBSD__
-#include "vcd_read_fbsd.h" 
-#elif defined(__NetBSD__)
-#include "vcd_read_nbsd.h" 
-#else
-#include "vcd_read.h"
-#endif
-
-#endif
 
 //#include "vcd_read_bincue.h"
 
@@ -42,31 +45,150 @@ void dvd_seek(dvd_priv_t *d,int pos);
 void dvd_close(dvd_priv_t *d);
 #endif
 
-#ifdef HAVE_CDDA
-int read_cdda(stream_t* s);
-void seek_cdda(stream_t* s);
-void close_cdda(stream_t* s);
-#endif
-
 #ifdef LIBSMBCLIENT
 #include "libsmbclient.h"
 #endif
+
+#ifdef HAVE_VCD
+extern stream_info_t stream_info_vcd;
+#endif
+#ifdef HAVE_CDDA
+extern stream_info_t stream_info_cdda;
+#endif
+#ifdef MPLAYER_NETWORK
+extern stream_info_t stream_info_netstream;
+#endif
+#ifdef HAS_DVBIN_SUPPORT
+extern stream_info_t stream_info_dvb;
+#endif
+#ifdef HAVE_FTP
+extern stream_info_t stream_info_ftp;
+#endif
+
+extern stream_info_t stream_info_null;
+extern stream_info_t stream_info_file;
+
+stream_info_t* auto_open_streams[] = {
+#ifdef HAVE_VCD
+  &stream_info_vcd,
+#endif
+#ifdef HAVE_CDDA
+  &stream_info_cdda,
+#endif
+#ifdef MPLAYER_NETWORK
+  &stream_info_netstream,
+#endif
+#ifdef HAS_DVBIN_SUPPORT
+  &stream_info_dvb,
+#endif
+#ifdef HAVE_FTP
+  &stream_info_ftp,
+#endif
+  &stream_info_null,
+  &stream_info_file,
+  NULL
+};
+
+stream_t* open_stream_plugin(stream_info_t* sinfo,char* filename,int mode,
+			     char** options, int* file_format, int* ret) {
+  void* arg = NULL;
+  stream_t* s;
+  m_struct_t* desc = (m_struct_t*)sinfo->opts;
+
+  // Parse options
+  if(desc) {
+    arg = m_struct_alloc(desc);
+    if(sinfo->opts_url) {
+      m_option_t url_opt = 
+	{ "stream url", arg , CONF_TYPE_CUSTOM_URL, 0, 0 ,0, sinfo->opts };
+      if(m_option_parse(&url_opt,"stream url",filename,arg,M_CONFIG_FILE) < 0) {
+	mp_msg(MSGT_OPEN,MSGL_ERR, "URL parsing failed on url %s\n",filename);
+	m_struct_free(desc,arg);
+	return NULL;
+      }	
+    }
+    if(options) {
+      int i;
+      for(i = 0 ; options[i] != NULL ; i += 2) {
+	mp_msg(MSGT_OPEN,MSGL_DBG2, "Set stream arg %s=%s\n",
+	       options[i],options[i+1]);
+	if(!m_struct_set(desc,arg,options[i],options[i+1]))
+	  mp_msg(MSGT_OPEN,MSGL_WARN, "Failed to set stream option %s=%s\n",
+		 options[i],options[i+1]);
+      }
+    }
+  }
+  s = new_stream(-2,-2);
+  s->url=strdup(filename);
+  s->flags |= mode;
+  *ret = sinfo->open(s,mode,arg,file_format);
+  if((*ret) != STREAM_OK) {
+    free(s->url);
+    free(s);
+    return NULL;
+  }
+  if(s->type <= -2)
+    mp_msg(MSGT_OPEN,MSGL_WARN, "Warning streams need a type !!!!\n");
+  if(s->flags & STREAM_SEEK && !s->seek)
+    s->flags &= ~STREAM_SEEK;
+  if(s->seek && !(s->flags & STREAM_SEEK))
+    s->flags |= STREAM_SEEK;
+  
+
+  mp_msg(MSGT_OPEN,MSGL_V, "STREAM: [%s] %s\n",sinfo->name,filename);
+  mp_msg(MSGT_OPEN,MSGL_V, "STREAM: Description: %s\n",sinfo->info);
+  mp_msg(MSGT_OPEN,MSGL_V, "STREAM: Author: %s\n", sinfo->author);
+  mp_msg(MSGT_OPEN,MSGL_V, "STREAM: Comment: %s\n", sinfo->comment);
+  
+  return s;
+}
+
+
+stream_t* open_stream_full(char* filename,int mode, char** options, int* file_format) {
+  int i,j,l,r;
+  stream_info_t* sinfo;
+  stream_t* s;
+
+  for(i = 0 ; auto_open_streams[i] ; i++) {
+    sinfo = auto_open_streams[i];
+    if(!sinfo->protocols) {
+      mp_msg(MSGT_OPEN,MSGL_WARN, "Stream type %s has protocols == NULL, it's a bug\n", sinfo->name);
+      continue;
+    }
+    for(j = 0 ; sinfo->protocols[j] ; j++) {
+      l = strlen(sinfo->protocols[j]);
+      // l == 0 => Don't do protocol matching (ie network and filenames)
+      if((l == 0) || ((strncmp(sinfo->protocols[j],filename,l) == 0) &&
+		      (strncmp("://",filename+l,3) == 0))) {
+	*file_format = DEMUXER_TYPE_UNKNOWN;
+	s = open_stream_plugin(sinfo,filename,mode,options,file_format,&r);
+	if(s) return s;
+	if(r != STREAM_UNSUPORTED) {
+	  mp_msg(MSGT_OPEN,MSGL_ERR, "Failed to open %s\n",filename);
+	  return NULL;
+	}
+	break;
+      }
+    }
+  }
+
+  mp_msg(MSGT_OPEN,MSGL_ERR, "No stream found to handle url %s\n",filename);
+  return NULL;
+}
 
 //=================== STREAMER =========================
 
 int stream_fill_buffer(stream_t *s){
   int len;
-  if(s->eof){ s->buf_pos=s->buf_len=0; return 0; }
+  if (/*s->fd == NULL ||*/ s->eof) { s->buf_pos = s->buf_len = 0; return 0; }
   switch(s->type){
 #ifdef LIBSMBCLIENT
   case STREAMTYPE_SMB:
     len=smbc_read(s->fd,s->buffer,STREAM_BUFFER_SIZE);
     break;
 #endif    
-  case STREAMTYPE_FILE:
   case STREAMTYPE_STREAM:
-  case STREAMTYPE_PLAYLIST:
-#ifdef STREAMING
+#ifdef MPLAYER_NETWORK
     if( s->streaming_ctrl!=NULL ) {
 	    len=s->streaming_ctrl->streaming_read(s->fd,s->buffer,STREAM_BUFFER_SIZE, s->streaming_ctrl);break;
     } else {
@@ -74,15 +196,6 @@ int stream_fill_buffer(stream_t *s){
     }
 #else
     len=read(s->fd,s->buffer,STREAM_BUFFER_SIZE);break;
-#endif
-#ifdef HAVE_CDDA
-  case STREAMTYPE_CDDA:
-    len = read_cdda(s);
-    break;
-#endif
-#ifdef HAVE_VCD
-  case STREAMTYPE_VCD:
-    len=vcd_read(s->fd,s->buffer);break;
 #endif
   case STREAMTYPE_VCDBINCUE:
     len=cue_vcd_read(s->buffer);break;
@@ -106,7 +219,10 @@ int stream_fill_buffer(stream_t *s){
   case STREAMTYPE_DS:
     len = demux_read_data((demux_stream_t*)s->priv,s->buffer,STREAM_BUFFER_SIZE);
     break;
-  default: len=0;
+  
+    
+  default: 
+    len= s->fill_buffer ? s->fill_buffer(s,s->buffer,STREAM_BUFFER_SIZE) : 0;
   }
   if(len<=0){ s->eof=1; s->buf_pos=s->buf_len=0; return 0; }
   s->buf_pos=0;
@@ -124,7 +240,6 @@ off_t newpos=0;
   s->buf_pos=s->buf_len=0;
 
   switch(s->type){
-  case STREAMTYPE_FILE:
   case STREAMTYPE_SMB:
   case STREAMTYPE_STREAM:
 #ifdef _LARGEFILE_SOURCE
@@ -132,16 +247,22 @@ off_t newpos=0;
 #else
     newpos=pos&(~(STREAM_BUFFER_SIZE-1));break;
 #endif
-  case STREAMTYPE_VCD:
-    newpos=(pos/VCD_SECTOR_DATA)*VCD_SECTOR_DATA;break;
   case STREAMTYPE_VCDBINCUE:
     newpos=(pos/VCD_SECTOR_DATA)*VCD_SECTOR_DATA;break;
   case STREAMTYPE_DVD:
     newpos=pos/2048; newpos*=2048; break;
-#ifdef HAVE_CDDA
-  case STREAMTYPE_CDDA:
-    newpos=(pos/VCD_SECTOR_SIZE)*VCD_SECTOR_SIZE;break;
+  default:
+    // Round on sector size
+    if(s->sector_size)
+      newpos=(pos/s->sector_size)*s->sector_size;
+    else { // Otherwise on the buffer size
+#ifdef _LARGEFILE_SOURCE
+      newpos=pos&(~((long long)STREAM_BUFFER_SIZE-1));break;
+#else
+      newpos=pos&(~(STREAM_BUFFER_SIZE-1));break;
 #endif
+    }
+    break;
   }
 
 if(verbose>=3){
@@ -158,33 +279,16 @@ if(verbose>=3){
 
 if(newpos==0 || newpos!=s->pos){
   switch(s->type){
-  case STREAMTYPE_FILE:
-    s->pos=newpos; // real seek
-    if(lseek(s->fd,s->pos,SEEK_SET)<0) s->eof=1;
-    break;
 #ifdef LIBSMBCLIENT
   case STREAMTYPE_SMB:
     s->pos=newpos; // real seek
     if(smbc_lseek(s->fd,s->pos,SEEK_SET)<0) s->eof=1;
     break;
 #endif
-#ifdef HAVE_VCD
-  case STREAMTYPE_VCD:
-    s->pos=newpos; // real seek
-    vcd_set_msf(s->pos/VCD_SECTOR_DATA);
-    break;
-#endif
   case STREAMTYPE_VCDBINCUE:
     s->pos=newpos; // real seek
     cue_set_msf(s->pos/VCD_SECTOR_DATA);
     break;
-#ifdef HAVE_CDDA
-  case STREAMTYPE_CDDA: {
-    s->pos=newpos;
-    seek_cdda(s);
-    break;
-  }
-#endif
 #ifdef USE_DVDNAV
   case STREAMTYPE_DVDNAV: {
     if (newpos==0) {
@@ -209,7 +313,7 @@ if(newpos==0 || newpos!=s->pos){
     // Some streaming protocol allow to seek backward and forward
     // A function call that return -1 can tell that the protocol
     // doesn't support seeking.
-#ifdef STREAMING
+#ifdef MPLAYER_NETWORK
     if( s->streaming_ctrl!=NULL && s->streaming_ctrl->streaming_seek ) {
       if( s->streaming_ctrl->streaming_seek( s->fd, pos, s->streaming_ctrl )<0 ) {
         mp_msg(MSGT_STREAM,MSGL_INFO,"Stream not seekable!\n");
@@ -227,7 +331,14 @@ if(newpos==0 || newpos!=s->pos){
 #endif
     break;
   default:
-    return 0;
+    // This should at the beginning as soon as all streams are converted
+    if(!s->seek)
+      return 0;
+    // Now seek
+    if(!s->seek(s,newpos)) {
+      mp_msg(MSGT_STREAM,MSGL_ERR, "Seek failed\n");
+      return 0;
+    }
   }
 //   putchar('.');fflush(stdout);
 //} else {
@@ -257,6 +368,7 @@ void stream_reset(stream_t *s){
 //    s->buf_pos=s->buf_len=0;
     s->eof=0;
   }
+  if(s->control) s->control(s,STREAM_CTRL_RESET,NULL);
   //stream_seek(s,0);
 }
 
@@ -277,6 +389,14 @@ stream_t* new_stream(int fd,int type){
   stream_t *s=malloc(sizeof(stream_t));
   if(s==NULL) return NULL;
   memset(s,0,sizeof(stream_t));
+
+#ifdef HAVE_WINSOCK2
+  {
+    WSADATA wsdata;
+    int temp = WSAStartup(0x0202, &wsdata); // there might be a better place for this (-> later)
+    mp_msg(MSGT_STREAM,MSGL_V,"WINSOCK2 init: %i\n", temp);
+  }
+#endif
   
   s->fd=fd;
   s->type=type;
@@ -291,30 +411,34 @@ stream_t* new_stream(int fd,int type){
 
 void free_stream(stream_t *s){
 //  printf("\n*** free_stream() called ***\n");
+#ifdef USE_STREAM_CACHE
   if(s->cache_pid) {
-//    kill(s->cache_pid,SIGTERM);
-    kill(s->cache_pid,SIGKILL);
-    waitpid(s->cache_pid,NULL,0);
-    shmem_free(s->cache_data);
+    cache_uninit(s);
   }
-  if(s->fd>0) close(s->fd);
+#endif
   switch(s->type) {
 #ifdef LIBSMBCLIENT
   case STREAMTYPE_SMB:
     smbc_close(s->fd);
     break;    
 #endif
-#ifdef HAVE_CDDA
-  case STREAMTYPE_CDDA:
-    close_cdda(s);
-    break;
-#endif
+
 #ifdef USE_DVDREAD
   case STREAMTYPE_DVD:
     dvd_close(s->priv);
 #endif
-  }  
-  if(s->priv) free(s->priv);
+  default:
+    if(s->close) s->close(s);
+  }
+  if(s->fd>0) closesocket(s->fd);
+#ifdef HAVE_WINSOCK2
+  mp_msg(MSGT_STREAM,MSGL_V,"WINSOCK2 uninit\n");
+  WSACleanup(); // there might be a better place for this (-> later)
+#endif
+  // Disabled atm, i don't like that. s->priv can be anything after all
+  // streams should destroy their priv on close
+  //if(s->priv) free(s->priv);
+  if(s->url) free(s->url);
   free(s);
 }
 

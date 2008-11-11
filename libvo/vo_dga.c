@@ -1,10 +1,6 @@
-#define DISP
-
 /*
- * $Id: vo_dga.c,v 1.60 2002/11/11 15:20:25 alex Exp $
- * 
- * video_out_dga.c, X11 interface
  *
+ * X11 DGA Interface
  *
  * Copyright ( C ) 2001, Andreas Ackermann. All Rights Reserved.
  *
@@ -12,41 +8,7 @@
  *
  * Sourceforge username: acki2
  * 
- * note well: 
- *   
- * - covers only common video card formats i.e. 
- *      BGR_16_15_555
- *      BGR_16_16_565
- *      BGR_24_24_888
- *      BGR_32_24_888
- *
- * 
- * 30/02/2001
- *
- * o query_format(): with DGA 2.0 it returns all depths it supports
- *   (even 16 when running 32 and vice versa)
- *   Checks for (hopefully!) compatible RGBmasks in 15/16 bit modes
- * o added some more criterions for resolution switching
- * o cleanup
- * o with DGA2.0 present, ONLY DGA2.0 functions are used
- * o for 15/16 modes ONLY RGB 555 is supported, since the divx-codec
- *   happens to map the data this way. If your graphics card supports
- *   this, you're well off and may use these modes; for mpeg 
- *   movies things could be different, but I was too lazy to implement 
- *   it ...
- * o you may define VO_DGA_FORCE_DEPTH to the depth you desire 
- *   if you don't like the choice the driver makes
- *   Beware: unless you can use DGA2.0 this has to be your X Servers
- *           depth!!!
- * o Added double buffering :-))
- * o included VidMode switching support for DGA1.0, written by  Michael Graffam
- *    mgraffam@idsi.net
- * 
  */
-
-//#define VO_DGA_DBG 1
-//#undef HAVE_DGA2
-//#undef HAVE_XF86VM
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -56,9 +18,10 @@
 #include "config.h"
 #include "video_out.h"
 #include "video_out_internal.h"
-#include "../postproc/swscale.h"
-#include "../postproc/rgb2rgb.h"
 #include "aspect.h"
+#include "x11_common.h"
+#include "fastmemcpy.h"
+#include "../mp_msg.h"
 
 #include <X11/Xlib.h>
 #include <X11/extensions/xf86dga.h>
@@ -66,12 +29,6 @@
 #ifdef HAVE_XF86VM
 #include <X11/extensions/xf86vmode.h>
 #endif
-
-#include "x11_common.h"
-#include "../postproc/rgb2rgb.h"
-#include "fastmemcpy.h"
-
-#include "../mp_msg.h"
 
 static vo_info_t info =
 {
@@ -113,14 +70,9 @@ struct vd_modes {
   int    vdm_gmask;
   int    vdm_bmask;
   int    vdm_hw_mode;
-  int    vdm_conversion_func;
 };
 
 //------------------------------------------------------------------
-
-#define VDM_CONV_NATIVE 0
-#define VDM_CONV_15TO16 1
-#define VDM_CONV_24TO32 2
 
 static struct vd_modes vo_dga_modes[] = {
   // these entries describe HW modes
@@ -128,11 +80,11 @@ static struct vd_modes vo_dga_modes[] = {
   // so the last two values describe, which HW mode to use and which conversion 
   // function to use for a mode that is not supported by HW
 
-  {  0,  0,  0,  0, 0,          0,          0, 0,      0, 0},
-  { 15,  0, 15, 16, 2,     0x7c00,     0x03e0, 0x001f, 2, VDM_CONV_15TO16 },
-  { 16,  0, 16, 16, 2,     0xf800,     0x07e0, 0x001f, 2, VDM_CONV_NATIVE },
-  { 24,  0, 24, 24, 3,   0xff0000,   0x00ff00, 0x0000ff, 4, VDM_CONV_24TO32},
-  { 32,  0, 24, 32, 4, 0x00ff0000, 0x0000ff00, 0x000000ff, 4, VDM_CONV_NATIVE}
+  {  0,  0,  0,  0, 0,          0,          0, 0,      0, },
+  { 15,  0, 15, 16, 2,     0x7c00,     0x03e0, 0x001f, 2, },
+  { 16,  0, 16, 16, 2,     0xf800,     0x07e0, 0x001f, 2, },
+  { 24,  0, 24, 24, 3,   0xff0000,   0x00ff00, 0x0000ff, 4},
+  { 32,  0, 24, 32, 4, 0x00ff0000, 0x0000ff00, 0x000000ff, 4}
 };
 
 static int vo_dga_mode_num = sizeof(vo_dga_modes)/sizeof(struct vd_modes);
@@ -149,7 +101,6 @@ static int vd_EnableMode( int depth, int bitspp,
        vo_dga_modes[i].vdm_bmask == bmask){
        vo_dga_modes[i].vdm_supported = 1;
        vo_dga_modes[i].vdm_hw_mode = i;
-       vo_dga_modes[i].vdm_conversion_func = VDM_CONV_NATIVE;
        return i;
     }
   }
@@ -176,7 +127,6 @@ static int vd_ValidateMode( int mplayer_depth){
     if(vo_dga_modes[i].vdm_mplayer_depth == mplayer_depth ){ 
       vo_dga_modes[i].vdm_supported = 1;
       vo_dga_modes[i].vdm_hw_mode = i;
-      vo_dga_modes[i].vdm_conversion_func = VDM_CONV_NATIVE;
       return i;
     }
   }
@@ -196,18 +146,6 @@ static int vd_ModeValid( int mplayer_depth){
   return 0;
 }
 
-static int vd_ModeSupportedMethod( int mplayer_depth){
-  int i;
-  if(mplayer_depth == 0)return 0;
-  for(i=1; i<vo_dga_mode_num; i++){
-    if(vo_dga_modes[i].vdm_mplayer_depth == mplayer_depth && 
-       vo_dga_modes[i].vdm_supported != 0){
-      return vo_dga_modes[i].vdm_conversion_func;
-    }
-  }
-  return 0;
-}
-
 static char *vd_GetModeString(int index){
 
 #define VO_DGA_MAX_STRING_LEN 100
@@ -220,17 +158,14 @@ static char *vd_GetModeString(int index){
     vo_dga_modes[index].vdm_rmask,
     vo_dga_modes[index].vdm_gmask,
     vo_dga_modes[index].vdm_bmask,
-    vo_dga_modes[index].vdm_supported ? 
-    (vo_dga_modes[index].vdm_conversion_func == VDM_CONV_NATIVE ? 
-        "native (fast),    " : "conversion (slow),") :
-        "not supported :-( ",
+    vo_dga_modes[index].vdm_supported ? "native" : "not supported",
     vo_dga_modes[index].vdm_mplayer_depth);
   return stringbuf;
 }
 
 //-----------------------------------------------------------------
 
-#ifdef HAVE_XF86VM
+#if defined(HAVE_XF86VM) && !defined(HAVE_DGA2)
 static XF86VidModeModeInfo **vo_dga_vidmodes=NULL;
 #endif
 
@@ -315,7 +250,7 @@ static void draw_alpha( int x0,int y0, int w,int h, unsigned char* src, unsigned
 
 
 // quick & dirty - for debugging only 
-
+#if 0
 static void fillblock(char *strt, int yoff, int lines, int val){
   char *i;
   for(i = strt + yoff * vo_dga_width *HW_MODE.vdm_bytespp; 
@@ -323,7 +258,7 @@ static void fillblock(char *strt, int yoff, int lines, int val){
     *i++ = val;
   }
 }
-
+#endif
 
 //---------------------------------------------------------
 
@@ -337,9 +272,6 @@ static uint32_t draw_frame( uint8_t *src[] ){
   s = *src;
   d = CURRENT_VIDEO_BUFFER.data + vo_dga_vp_offset;
   
-  switch(SRC_MODE.vdm_conversion_func){
-  case VDM_CONV_NATIVE:
-
     mem2agpcpy_pic(
     	d, s, 
 	vo_dga_bytes_per_line, 
@@ -358,36 +290,6 @@ static uint32_t draw_frame( uint8_t *src[] ){
   fillblock(d, 40, 10, 0x800000ff);
   fillblock(d, 50, 10, 0x0f0000ff);
 #endif
-    break;
-  case VDM_CONV_15TO16:
-        {
-	  int i;
-	  for(i=0; i< vo_dga_lines; i++){
-            rgb15to16( s, d, vo_dga_bytes_per_line);
-	    d+=vo_dga_bytes_per_line;
-	    s+=vo_dga_bytes_per_line;
-            d+= vo_dga_vp_skip;
-	  }
-	}
-	break;
-  case VDM_CONV_24TO32:
-
-    {
-      int i,k,l,m;
-      for(i = 0; i< vo_dga_lines; i++ ){
-	for(k = 0; k< vo_dga_src_width; k+=2 ){
-          l = *(((uint32_t *)s)++);
-          m = (l & 0xff000000)>> 24 ;
-          *(((uint32_t *)d)++) = (l & 0x00ffffff); // | 0x80000000;
-          m |= *(((uint16_t *)s)++) << 8;           
-          *(((uint32_t *)d)++) = m; // | 0x80000000 ;
-	}
-        d+= vp_skip;
-      }
-    }
-    //printf("vo_dga: 24 to 32 not implemented yet!!!\n");
-    break;
-  }
   return 0;
 }
 
@@ -434,24 +336,6 @@ static void flip_page( void )
 static uint32_t draw_slice( uint8_t *src[],int stride[],
                             int w,int h,int x,int y )
 {
-  if (scale_srcW) {
-    uint8_t *dst[3] =
-    {
-	    CURRENT_VIDEO_BUFFER.data + vo_dga_vp_offset,
-	    0,
-	    0
-    };
-    SwScale_YV12slice(src,stride,y,h,
-          dst,
-          /*scale_dstW*/ vo_dga_width * HW_MODE.vdm_bytespp, HW_MODE.vdm_bitspp,
-		      scale_srcW, scale_srcH, scale_dstW, scale_dstH);
-  } else {
-    yuv2rgb(CURRENT_VIDEO_BUFFER.data + vo_dga_vp_offset + 
-          (vo_dga_width * y +x) * HW_MODE.vdm_bytespp,
-           src[0], src[1], src[2],
-           w,h, vo_dga_width * HW_MODE.vdm_bytespp,
-           stride[0],stride[1] );
-  }
   return 0;
 };
 
@@ -460,15 +344,10 @@ static uint32_t draw_slice( uint8_t *src[],int stride[],
 static uint32_t query_format( uint32_t format )
 {
 
- if( format==IMGFMT_YV12 ) return VFCAP_CSP_SUPPORTED;
- 
  if( (format&IMGFMT_BGR_MASK) == IMGFMT_BGR && 
      vd_ModeValid(format&0xff))
  {
-    if (vd_ModeSupportedMethod(format&0xff) == VDM_CONV_NATIVE)
 	return VFCAP_CSP_SUPPORTED|VFCAP_CSP_SUPPORTED_BY_HW|VFCAP_OSD;
-    else
-	return VFCAP_CSP_SUPPORTED|VFCAP_OSD;
  }
  
  return 0;
@@ -555,6 +434,7 @@ static int check_res( int num, int x, int y, int bpp,
        // as long as it's above 50 Hz (acki2 on 30/3/2001)
        ||
        (
+	(
 	(new_x == *old_x) &&
 	(new_y == *old_y) &&
 	(
@@ -567,6 +447,7 @@ static int check_res( int num, int x, int y, int bpp,
 	  new_vbi < *old_vbi &&
 	  new_vbi >= 50
 	 )
+	)
 	)
         ||
         // if everything is equal, then use the mode with the lower 
@@ -611,10 +492,12 @@ static void init_video_buffers(uint8_t *buffer_base,
 	else
 		vo_dga_nr_video_buffers = 1;
 
-	vo_dga_current_video_buffer = 0;
-	
-	if(MAX_NR_VIDEO_BUFFERS < vo_dga_nr_video_buffers)
+	if (vo_dga_nr_video_buffers > MAX_NR_VIDEO_BUFFERS)
 		vo_dga_nr_video_buffers = MAX_NR_VIDEO_BUFFERS;
+	if (vo_dga_nr_video_buffers <= 0)
+		vo_dga_nr_video_buffers = 1;
+
+	vo_dga_current_video_buffer = 0;
 	
 	for(i = 0; i < vo_dga_nr_video_buffers; i++)
 	{
@@ -662,24 +545,13 @@ static uint32_t config( uint32_t width,  uint32_t height,
   if(!wanted_width)  wanted_width = width;
 
   if( !vo_dbpp ){
- 
-    if (format == IMGFMT_YV12){
-      vo_dga_src_mode = vo_dga_XServer_mode;
-    }else if((format & IMGFMT_BGR_MASK) == IMGFMT_BGR){
+     if((format & IMGFMT_BGR_MASK) == IMGFMT_BGR){
       vo_dga_src_mode = vd_ModeValid( format & 0xff );
     }
   }else{
     vo_dga_src_mode = vd_ModeValid(vo_dbpp);
   }
   vo_dga_hw_mode = SRC_MODE.vdm_hw_mode;
-
-  if( format == IMGFMT_YV12 && vo_dga_src_mode != vo_dga_hw_mode ){
-    mp_msg(MSGT_VO, MSGL_ERR, 
-    "vo_dga: YV12 supports native modes only. Using %d instead of selected %d.\n",
-       HW_MODE.vdm_mplayer_depth,
-       SRC_MODE.vdm_mplayer_depth );
-    vo_dga_src_mode = vo_dga_hw_mode;
-  }
 
   if(!vo_dga_src_mode){ 
     mp_msg(MSGT_VO, MSGL_ERR, "vo_dga: unsupported video format!\n");
@@ -749,7 +621,6 @@ static uint32_t config( uint32_t width,  uint32_t height,
     aspect_save_screenres(mX,mY);
     aspect_save_orig(scale_srcW,scale_srcH);
 	  aspect_save_prescale(scale_dstW,scale_dstH);
-    SwScale_Init();
     if(flags&0x01) /* -fs */
       aspect(&scale_dstW,&scale_dstH,A_ZOOM);
     else if(flags&0x04) /* -fs */
@@ -844,7 +715,7 @@ static uint32_t config( uint32_t width,  uint32_t height,
   if(vo_dga_vp_width == VO_DGA_INVALID_RES){
     mp_msg(MSGT_VO,  MSGL_ERR, "vo_dga: Something is wrong with your DGA. There doesn't seem to be a\n"
 		       "         single suitable mode!\n"
-		       "         Please file a bug report (see DOCS/bugreports.html)\n");
+		       "         Please file a bug report (see DOCS/en/bugreports.html)\n");
 #ifndef HAVE_DGA2
 #ifdef HAVE_XF86VM
     if(vo_dga_vidmodes){
@@ -856,7 +727,7 @@ static uint32_t config( uint32_t width,  uint32_t height,
     return 1;
   }
   
-// now lets start the DGA thing 
+// now let's start the DGA thing 
 
  if ( !vo_config_count || width != prev_width || height != prev_height )
   {
@@ -905,12 +776,6 @@ static uint32_t config( uint32_t width,  uint32_t height,
   }
 
   // do some more checkings here ...
-
-  if( format==IMGFMT_YV12 ){ 
-    yuv2rgb_init( vo_dga_modes[vo_dga_hw_mode].vdm_mplayer_depth , MODE_RGB );
-    mp_msg(MSGT_VO,  MSGL_V, "vo_dga: Using mplayer depth %d for YV12\n", 
-               vo_dga_modes[vo_dga_hw_mode].vdm_mplayer_depth);
-  }
 
   mp_msg(MSGT_VO, MSGL_V, "vo_dga: bytes/line: %d, screen res: %dx%d, depth: %d, base: %08x, bpp: %d\n", 
           vo_dga_width, vo_dga_vp_width, 

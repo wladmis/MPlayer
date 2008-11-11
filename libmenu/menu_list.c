@@ -13,7 +13,7 @@
 #include "menu.h"
 
 #include "../libvo/font_load.h"
-#include "../linux/keycodes.h"
+#include "../osdep/keycodes.h"
 
 #define IMPL 1
 #include "menu_list.h"
@@ -137,7 +137,7 @@ void menu_list_read_cmd(menu_t* menu,int cmd) {
 }
 
 void menu_list_jump_to_key(menu_t* menu,int c) {
-  if(isalnum(c)) {
+  if(c < 256 && isalnum(c)) {
     list_entry_t* e = mpriv->current;
     if(e->txt[0] == c) e = e->next;
     for(  ; e ; e = e->next) {

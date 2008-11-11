@@ -2,6 +2,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <math.h>
+#include <time.h>
+
+#if !defined(INFINITY) && defined(HUGE_VAL)
+#define INFINITY HUGE_VAL
+#endif
 
 #include "../config.h"
 #include "../mp_msg.h"
@@ -22,7 +28,7 @@
 #include <xvid.h>
 #include "xvid_vbr.h"
 
-#include "cfgparser.h"
+#include "m_option.h"
 
 
 #ifdef XVID_API_UNSTABLE
@@ -30,7 +36,7 @@
 #warning **                                                               **
 #warning **  Y O U '' R E   U S I N G   U N S T A B L E   S O F T W A R E  **
 #warning **                                                               **
-#warning ** Streams produced by this version aren''nt probably compatible  **
+#warning ** Streams produced by this version aren''t probably compatible   **
 #warning ** with anything else, even the xvid decoder itself. There are   **
 #warning ** bugs, this code could crash, could blow up your PC or the     **
 #warning ** whole building !                                              **
@@ -45,12 +51,12 @@
 static int const motion_presets[7] = {
 #ifdef XVID_API_UNSTABLE
 	0,
-	PMV_QUICKSTOP16,
+	0,
 	0,
 	0,
 	PMV_HALFPELREFINE16 | PMV_HALFPELDIAMOND8,
 	PMV_HALFPELREFINE16 | PMV_HALFPELDIAMOND8 | PMV_ADVANCEDDIAMOND16,
-	PMV_HALFPELREFINE16 | PMV_EXTSEARCH16 | PMV_HALFPELREFINE8 | PMV_HALFPELDIAMOND8 | PMV_USESQUARES16
+	PMV_HALFPELREFINE16 | PMV_EXTSEARCH16 |	PMV_HALFPELREFINE8 | PMV_HALFPELDIAMOND8 | PMV_USESQUARES16
 #else
         0,
 	PMV_QUICKSTOP16,
@@ -67,7 +73,7 @@ static int const motion_presets[7] = {
 extern char* passtmpfile;
 
 static int xvidenc_pass = 0;
-static int xvidenc_quality = 4;
+static int xvidenc_quality = 6;
 static int xvidenc_4mv = 0;
 static int xvidenc_bitrate = -1;
 static int xvidenc_rc_reaction_delay_factor = -1;
@@ -78,25 +84,33 @@ static int xvidenc_min_key_interval = -1;
 static int xvidenc_max_key_interval = -1;
 static int xvidenc_mpeg_quant = 0;
 static int xvidenc_mod_quant = 0;
-static int xvidenc_lumi_mask = 0;
 static int xvidenc_keyframe_boost = -1;
 static int xvidenc_kfthreshold = -1;
 static int xvidenc_kfreduction = -1;
 static int xvidenc_fixed_quant = 0;
 static int xvidenc_debug = 0;
-static int xvidenc_hintedme = 0;
-static char* xvidenc_hintfile = "xvid_hint_me.dat";
+static int xvidenc_interlacing = 0;
+static int xvidenc_greyscale = 0;
 #ifdef XVID_API_UNSTABLE
+static int xvidenc_packed = 0;
+static int xvidenc_divx5bvop = 1;
+static int xvidenc_lumi_mask = 0;
 static int xvidenc_qpel = 0;
 static int xvidenc_max_bframes = 0;
-static int xvidenc_bquant_ratio = 125;
-static int xvidenc_bquant_offset = 60;
+static int xvidenc_bquant_ratio = 150;
+static int xvidenc_bquant_offset = 100;
+static int xvidenc_bf_threshold = 0;
 static int xvidenc_gmc = 0;
-static int xvidenc_me_colour = 0;
+static int xvidenc_chroma_me = 0;
+static int xvidenc_chroma_opt = 0;
 static int xvidenc_reduced = 0;
+static int xvidenc_hqac = 0;
+static int xvidenc_vhq = 0;
+static int xvidenc_psnr = 0;
+static uint64_t xvid_error[3];
 #endif
 
-struct config xvidencopts_conf[] = {
+m_option_t xvidencopts_conf[] = {
     { "pass", &xvidenc_pass, CONF_TYPE_INT, CONF_RANGE, 0, 2, NULL},
     { "me_quality", &xvidenc_quality, CONF_TYPE_INT, CONF_RANGE, 0,
       sizeof(motion_presets) / sizeof(motion_presets[0]) - 1, NULL},
@@ -110,22 +124,29 @@ struct config xvidencopts_conf[] = {
     { "max_key_interval", &xvidenc_max_key_interval, CONF_TYPE_INT, 0, 0, 0, NULL},
     { "mpeg_quant", &xvidenc_mpeg_quant, CONF_TYPE_FLAG, 0, 0, 1, NULL},
     { "mod_quant", &xvidenc_mod_quant, CONF_TYPE_FLAG, 0, 0, 1, NULL},
-    { "lumi_mask", &xvidenc_lumi_mask, CONF_TYPE_FLAG, 0, 0, 1, NULL},
     { "keyframe_boost", &xvidenc_keyframe_boost, CONF_TYPE_INT, CONF_RANGE, 0, 1000, NULL}, /* for XVID_MODE_2PASS_2 */
     { "kfthreshold", &xvidenc_kfthreshold, CONF_TYPE_INT, 0, 0, 0, NULL}, /* for XVID_MODE_2PASS_2 */
     { "kfreduction", &xvidenc_kfreduction, CONF_TYPE_INT, CONF_RANGE, 0, 100, NULL}, /* for XVID_MODE_2PASS_2 */
     { "fixed_quant", &xvidenc_fixed_quant, CONF_TYPE_INT, CONF_RANGE, 1, 31, NULL}, /* for XVID_MODE_FIXED_QUANT */
     { "debug", &xvidenc_debug, CONF_TYPE_FLAG, 0, 0, 1, NULL},
-    { "hintedme", &xvidenc_hintedme, CONF_TYPE_FLAG, 0, 0, 1, NULL},
-    { "hintfile", &xvidenc_hintfile, CONF_TYPE_STRING, 0, 0, 0, NULL},
+    { "interlacing", &xvidenc_interlacing, CONF_TYPE_FLAG, 0, 0, 1, NULL},
+    { "greyscale", &xvidenc_greyscale, CONF_TYPE_FLAG, 0, 0, 1, NULL},
 #ifdef XVID_API_UNSTABLE
+    { "packed", &xvidenc_packed, CONF_TYPE_FLAG, 0, 0, 1, NULL},
+    { "divx5bvop", &xvidenc_divx5bvop, CONF_TYPE_FLAG, 0, 0, 1, NULL},
+    //{ "lumi_mask", &xvidenc_lumi_mask, CONF_TYPE_FLAG, 0, 0, 1, NULL},
+    { "psnr", &xvidenc_psnr, CONF_TYPE_FLAG, 0, 0, 1, NULL},
     { "qpel", &xvidenc_qpel, CONF_TYPE_FLAG, 0, 0, 1, NULL},
     { "max_bframes", &xvidenc_max_bframes, CONF_TYPE_INT, CONF_RANGE, 0, 4, NULL},
     { "bquant_ratio", &xvidenc_bquant_ratio, CONF_TYPE_INT, CONF_RANGE, 0, 1000, NULL},
     { "bquant_offset", &xvidenc_bquant_offset, CONF_TYPE_INT, CONF_RANGE, -1000, 1000, NULL},
+    { "bf_threshold", &xvidenc_bf_threshold, CONF_TYPE_INT, CONF_RANGE, -255, 255, NULL},
     { "reduced", &xvidenc_reduced, CONF_TYPE_FLAG, 0, 0, 1, NULL},
     { "gmc", &xvidenc_gmc, CONF_TYPE_FLAG, 0, 0, 1, NULL},
-    { "me_colour", &xvidenc_me_colour, CONF_TYPE_FLAG, 0, 0, 1, NULL},
+    { "chroma_me", &xvidenc_chroma_me, CONF_TYPE_FLAG, 0, 0, 1, NULL},
+    { "hq_ac", &xvidenc_hqac, CONF_TYPE_FLAG, 0, 0, 1, NULL},
+    { "vhq", &xvidenc_vhq, CONF_TYPE_INT, CONF_RANGE, 0, 4, NULL},
+    { "chroma_opt", &xvidenc_chroma_opt, CONF_TYPE_FLAG, 0, 0, 1, NULL},
 #endif
     { NULL, NULL, 0, 0, 0, 0, NULL}
 };
@@ -135,8 +156,8 @@ struct vf_priv_s {
     XVID_ENC_FRAME enc_frame;
     void* enc_handle;
     vbr_control_t vbr_state;
-    FILE *hintfile;
-    void *hintstream;
+    int pixels;
+    int nb_frames;
 };
 
 static int
@@ -176,7 +197,7 @@ config(struct vf_instance_s* vf,
 	    "**                                                               **\n"
 	    "**  Y O U ' R E   U S I N G   U N S T A B L E   S O F T W A R E  **\n"
 	    "**                                                               **\n"
-	    "** Streams produced by this version aren'nt probably compatible  **\n"
+	    "** Streams produced by this version aren't probably compatible   **\n"
 	    "** with anything else, even the xvid decoder itself. There are   **\n"
 	    "** bugs, this code could crash, could blow up your PC or the     **\n"
 	    "** whole building !                                              **\n"
@@ -208,8 +229,20 @@ config(struct vf_instance_s* vf,
     enc_param.max_bframes = xvidenc_max_bframes;
     enc_param.bquant_ratio = xvidenc_bquant_ratio;
     enc_param.bquant_offset = xvidenc_bquant_offset;
+    if (xvidenc_divx5bvop) 
+	enc_param.global |= XVID_GLOBAL_DX50BVOP;
+    if (xvidenc_packed) 
+	enc_param.global |= XVID_GLOBAL_PACKED;
     if (xvidenc_reduced)
 	enc_param.global |= XVID_GLOBAL_REDUCED;
+    if (xvidenc_psnr) {
+	enc_param.global |= XVID_GLOBAL_EXTRASTATS;
+	fp->pixels = width * height;
+	fp->nb_frames = 0;
+	xvid_error[0] = xvid_error[1] = xvid_error[2] = 0;
+    }
+    if (xvidenc_greyscale)
+	enc_param.global |= XVID_GREYSCALE;
 #endif
     enc_param.rc_reaction_delay_factor = xvidenc_rc_reaction_delay_factor;
     enc_param.rc_averaging_period = xvidenc_rc_averaging_period;
@@ -238,19 +271,44 @@ config(struct vf_instance_s* vf,
     fp->enc_frame.general = XVID_HALFPEL | (xvidenc_mpeg_quant ? XVID_MPEGQUANT : XVID_H263QUANT);
     if (xvidenc_4mv)
 	fp->enc_frame.general |= XVID_INTER4V;
+    if (xvidenc_interlacing)
+	fp->enc_frame.general |= XVID_INTERLACING;
+#ifdef XVID_API_UNSTABLE
+    fp->enc_frame.bframe_threshold = xvidenc_bf_threshold;
     if (xvidenc_lumi_mask)
 	fp->enc_frame.general |= XVID_LUMIMASKING;
-#ifdef XVID_API_UNSTABLE
     if (xvidenc_qpel) {
 	fp->enc_frame.general |= XVID_QUARTERPEL;
 	fp->enc_frame.motion |= PMV_QUARTERPELREFINE16 | PMV_QUARTERPELREFINE8;
     }
+    switch (xvidenc_vhq) {
+    case 4: // wide search
+	fp->enc_frame.motion |= EXTSEARCH_BITS | PMV_EXTSEARCH8;
+    case 3: // medium search
+	fp->enc_frame.motion |= HALFPELREFINE8_BITS | QUARTERPELREFINE8_BITS | CHECKPREDICTION_BITS;
+    case 2: // limited search
+	fp->enc_frame.motion |= HALFPELREFINE16_BITS | QUARTERPELREFINE16_BITS;
+    case 1: // mode decision
+	fp->enc_frame.general |= XVID_MODEDECISION_BITS;
+	break;
+    case 0: // off
+	break;
+    }
     if (xvidenc_gmc)
 	fp->enc_frame.general |= XVID_GMC;
-    if (xvidenc_me_colour)
-	fp->enc_frame.general |= XVID_ME_COLOUR;
+    if (xvidenc_psnr)
+	fp->enc_frame.general |= XVID_EXTRASTATS;
+    if (xvidenc_chroma_me)
+	fp->enc_frame.motion |= PMV_CHROMA16 | PMV_CHROMA8;
     if(xvidenc_reduced)
 	fp->enc_frame.general |= XVID_REDUCED;
+    if(xvidenc_hqac)
+	fp->enc_frame.general |= XVID_HQACPRED;
+    if (xvidenc_chroma_opt)
+	fp->enc_frame.general |= XVID_CHROMAOPT;
+#else
+    if (xvidenc_greyscale)
+	fp->enc_frame.general |= XVID_GREYSCALE;
 #endif
 
     switch (outfmt) {
@@ -276,24 +334,6 @@ config(struct vf_instance_s* vf,
     }
     fp->enc_frame.quant_intra_matrix = 0;
     fp->enc_frame.quant_inter_matrix = 0;
-
-    // hinted ME
-    fp->hintstream = NULL;
-    fp->hintfile = NULL;
-    if (xvidenc_hintedme && (xvidenc_pass == 1 || xvidenc_pass == 2)) {
-	fp->hintstream = malloc( 100000 ); // this is what the vfw code in XViD CVS allocates
-	if (fp->hintstream == NULL)
-	    mp_msg(MSGT_MENCODER,MSGL_ERR, "xvid: cannot allocate memory for hinted ME\n");
-	else {
-	    fp->hintfile = fopen(xvidenc_hintfile, xvidenc_pass == 1 ? "w" : "r");
-	    if (fp->hintfile == NULL) {
-		mp_msg(MSGT_MENCODER,MSGL_ERR, "xvid: %s: %s\n", strerror(errno), xvidenc_hintfile);
-		free(fp->hintstream);
-	    }
-	}
-	if (fp->hintstream == NULL || fp->hintfile == NULL)
-	    xvidenc_hintedme = 0;
-    }
 
     // initialize VBR engine
     // =====================
@@ -340,15 +380,31 @@ config(struct vf_instance_s* vf,
     return 1;
 }
 
+#ifdef XVID_API_UNSTABLE
+static double
+sse_to_PSNR(double sse, double pixels)
+{
+    return sse == 0 ? INFINITY : 4.34294481903251827652 * (11.08252709031685229249 - log(sse/pixels));
+    // 4.34294481903251827652 = 10/log(10)
+    // 11.08252709031685229249 = log(255*255)
+}
+#endif
+
 static void
 uninit(struct vf_instance_s* vf)
 {
     struct vf_priv_s *fp = vf->priv;
 
-    if (fp->hintfile)
-	fclose(fp->hintfile);
-    if (fp->hintstream)
-	free(fp->hintstream);
+#ifdef XVID_API_UNSTABLE
+    if (xvidenc_psnr) {
+	double p = (double)fp->pixels * (double)fp->nb_frames;
+        printf ("PSNR: Y:%2.2f, Cb:%2.2f, Cr:%2.2f, All:%2.2f\n", 
+		sse_to_PSNR(xvid_error[0], p), 
+		sse_to_PSNR(xvid_error[1], p/4), 
+		sse_to_PSNR(xvid_error[2], p/4), 
+		sse_to_PSNR(xvid_error[0] + xvid_error[1] + xvid_error[2], p*1.5));
+    }
+#endif
     vbrFinish(&fp->vbr_state);
 }
 
@@ -388,14 +444,16 @@ put_image(struct vf_instance_s* vf, mp_image_t *mpi)
     // get quantizers & I/P decision from the VBR engine
 #ifdef XVID_API_UNSTABLE
     if (xvidenc_max_bframes >= 1) {
-	if (!xvidenc_fixed_quant) {
+	if (xvidenc_fixed_quant!=0) {
 	    // hack, the internal VBR engine isn't fixed-quant aware
 	    fp->enc_frame.quant = xvidenc_fixed_quant;
 	    fp->enc_frame.intra = -1;
 	    fp->enc_frame.bquant = (xvidenc_fixed_quant * xvidenc_bquant_ratio + xvidenc_bquant_offset) / 100;
 	} else
 	    // use the internal VBR engine since the external one isn't bframe aware
-	    fp->enc_frame.quant = fp->enc_frame.intra = fp->enc_frame.bquant = -1;
+	    fp->enc_frame.quant =0;
+	    fp->enc_frame.intra =-1;
+	    fp->enc_frame.bquant = 0;
     } else {
 	fp->enc_frame.quant = vbrGetQuant(&fp->vbr_state);
 	fp->enc_frame.intra = vbrGetIntra(&fp->vbr_state);
@@ -409,32 +467,6 @@ put_image(struct vf_instance_s* vf, mp_image_t *mpi)
     if (xvidenc_mod_quant && xvidenc_pass == 2) {
 	fp->enc_frame.general |= (fp->enc_frame.quant < 4) ? XVID_MPEGQUANT : XVID_H263QUANT;
 	fp->enc_frame.general &= (fp->enc_frame.quant < 4) ? ~XVID_H263QUANT : ~XVID_MPEGQUANT;
-    }
-
-    // hinted ME, 1st part
-    if (xvidenc_hintedme && xvidenc_pass == 1) {
-	fp->enc_frame.hint.hintstream = fp->hintstream;
-	fp->enc_frame.hint.rawhints = 0;
-	fp->enc_frame.general |= XVID_HINTEDME_GET;
-    }
-    else if (xvidenc_hintedme && xvidenc_pass == 2) {
-	size_t read;
-	int blocksize;
-	fp->enc_frame.general &= ~XVID_HINTEDME_SET;
-	read = fread(&blocksize, sizeof(blocksize), 1, fp->hintfile);
-	if (read == 1) {
-	    read = fread(fp->hintstream, (size_t)blocksize, 1, fp->hintfile);
-	    if (read == 1) {
-		fp->enc_frame.hint.hintstream = fp->hintstream;
-		fp->enc_frame.hint.hintlength = 0;
-		fp->enc_frame.hint.rawhints = 0;
-		fp->enc_frame.general |= XVID_HINTEDME_SET;
-	    } 
-	    else
-		perror("xvid: hint file read block failure");
-	} 
-	else
-	    perror("xvid: hint file read failure");
     }
 
     // encode frame
@@ -451,6 +483,43 @@ put_image(struct vf_instance_s* vf, mp_image_t *mpi)
 	mp_msg(MSGT_MENCODER, MSGL_ERR, "xvid: failure\n");
 	break;
     }
+
+#ifdef XVID_API_UNSTABLE
+    if (xvidenc_psnr) {
+        static FILE *fvstats = NULL;
+        char filename[20];
+
+        if (!fvstats) {
+            time_t today2;
+            struct tm *today;
+            today2 = time (NULL);
+            today = localtime (&today2);
+            sprintf (filename, "psnr_%02d%02d%02d.log", today->tm_hour, today->tm_min, today->tm_sec);
+            fvstats = fopen (filename,"w");
+            if (!fvstats) {
+                perror ("fopen");
+                xvidenc_psnr = 0; // disable block
+            }
+        }
+
+	xvid_error[0] += enc_stats.sse_y;
+	xvid_error[1] += enc_stats.sse_u;
+	xvid_error[2] += enc_stats.sse_v;
+
+        fprintf (fvstats, "%6d, %2d, %6d, %2.2f, %2.2f, %2.2f, %2.2f %c\n",
+		 fp->nb_frames,
+		 enc_stats.quant,
+		 fp->enc_frame.length,
+		 sse_to_PSNR (enc_stats.sse_y, fp->pixels),
+		 sse_to_PSNR (enc_stats.sse_u, fp->pixels / 4),
+		 sse_to_PSNR (enc_stats.sse_v, fp->pixels / 4),
+		 sse_to_PSNR (enc_stats.sse_y + enc_stats.sse_u + enc_stats.sse_v, (double)fp->pixels * 1.5),
+		 fp->enc_frame.intra == 0 ? 'P' : fp->enc_frame.intra == 1 ? 'I' : 'B'
+		 );
+
+	fp->nb_frames++;
+    }
+#endif
     
     // write output
     muxer_write_chunk(fp->mux, fp->enc_frame.length, fp->enc_frame.intra==1 ? 0x10 : 0);
@@ -459,17 +528,6 @@ put_image(struct vf_instance_s* vf, mp_image_t *mpi)
     vbrUpdate(&fp->vbr_state, enc_stats.quant, fp->enc_frame.intra,
 	      enc_stats.hlength, fp->enc_frame.length, enc_stats.kblks, enc_stats.mblks, enc_stats.ublks);
 
-    // hinted ME, 2nd part
-    if (fp->enc_frame.general & XVID_HINTEDME_GET) {
-	size_t wrote = fwrite(&fp->enc_frame.hint.hintlength, sizeof(fp->enc_frame.hint.hintlength), 1, fp->hintfile);
-	if (wrote == 1) {
-	    wrote = fwrite(fp->enc_frame.hint.hintstream, fp->enc_frame.hint.hintlength, 1, fp->hintfile);
-	    if (wrote != 1)
-		perror("xvid: hint write block failure");
-	}
-	else
-	    perror("xvid: hint write failure");
-    }
     return 1;
 }
 

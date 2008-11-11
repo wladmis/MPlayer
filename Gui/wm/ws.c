@@ -22,7 +22,10 @@
 #include "../../libvo/x11_common.h"
 #include "ws.h"
 #include "wsxdnd.h"
+#include "../../cpudetect.h"
+#include "../../postproc/swscale.h"
 #include "../../postproc/rgb2rgb.h"
+#include "../../libmpcodecs/vf_scale.h"
 #include "../../mp_msg.h"
 #include "../../mplayer.h"
 
@@ -31,10 +34,18 @@
 #include <X11/extensions/shape.h>
 #endif
 
+#ifdef HAVE_XINERAMA
+#include <X11/extensions/Xinerama.h>
+#endif
+
 #include <sys/ipc.h>
 #include <sys/shm.h>
 
 #undef ENABLE_DPMS 
+
+#ifdef HAVE_XINERAMA
+extern int xinerama_screen;
+#endif
 
 typedef struct
 {
@@ -49,6 +60,8 @@ Atom                 wsMotifHints;
 
 int                  wsMaxX         = 0; // Screen width.
 int                  wsMaxY         = 0; // Screen height.
+int                  wsOrgX         = 0; // Screen origin x.
+int                  wsOrgY         = 0; // Screen origin y.
 
 Display            * wsDisplay;
 int                  wsScreen;
@@ -218,8 +231,29 @@ wsXDNDInitialize();
 
  wsScreen=DefaultScreen( wsDisplay );
  wsRootWin=RootWindow( wsDisplay,wsScreen );
+#ifdef HAVE_XINERAMA
+ if(XineramaIsActive(wsDisplay))
+  {
+  XineramaScreenInfo *screens;
+  int num_screens;
+
+  screens = XineramaQueryScreens(wsDisplay, &num_screens);
+  if(xinerama_screen >= num_screens) xinerama_screen = 0;
+  wsOrgX = screens[xinerama_screen].x_org;
+  wsOrgY = screens[xinerama_screen].y_org;
+  wsMaxX=screens[xinerama_screen].width;
+  wsMaxY=screens[xinerama_screen].height;
+  mp_msg( MSGT_GPLAYER,MSGL_STATUS,"[ws] screens %d Max %d, %d Org %d,%d\n", 
+    num_screens, wsMaxX, wsMaxY, wsOrgX, wsOrgY);
+  XFree(screens);
+  }
+  else
+#endif
+ {
+ wsOrgX = wsOrgY = 0;
  wsMaxX=DisplayWidth( wsDisplay,wsScreen );
  wsMaxY=DisplayHeight( wsDisplay,wsScreen );
+ }
 
  wsGetDepthOnScreen();
 #ifdef DEBUG
@@ -227,6 +261,9 @@ wsXDNDInitialize();
    int minor,major,shp;
    mp_msg( MSGT_GPLAYER,MSGL_DBG2,"[ws] Screen depth: %d\n",wsDepthOnScreen );
    mp_msg( MSGT_GPLAYER,MSGL_DBG2,"[ws]  size: %dx%d\n",wsMaxX,wsMaxY );
+#ifdef HAVE_XINERAMA
+   mp_msg( MSGT_GPLAYER,MSGL_DBG2,"[ws]  origin: +%d+%d\n",wsOrgX,wsOrgY );
+#endif
    mp_msg( MSGT_GPLAYER,MSGL_DBG2,"[ws]  red mask: 0x%x\n",wsRedMask );
    mp_msg( MSGT_GPLAYER,MSGL_DBG2,"[ws]  green mask: 0x%x\n",wsGreenMask );
    mp_msg( MSGT_GPLAYER,MSGL_DBG2,"[ws]  blue mask: 0x%x\n",wsBlueMask );
@@ -246,6 +283,7 @@ wsXDNDInitialize();
 #endif
  wsOutMask=wsGetOutMask();
  mp_dbg( MSGT_GPLAYER,MSGL_DBG2,"[ws] Initialized converter: " );
+ sws_rgb2rgb_init(get_sws_cpuflags());
  switch ( wsOutMask )
   {
    case wsRGB32:
@@ -308,14 +346,14 @@ void wsCreateWindow( wsTWindow * win,int X,int Y,int wX,int hY,int bW,int cV,uns
 // The window position and size.
  switch ( X )
   {
-   case -1: win->X=( wsMaxX / 2 ) - ( wX / 2 ); break;
-   case -2: win->X=wsMaxX - wX - 1; break;
+   case -1: win->X=( wsMaxX / 2 ) - ( wX / 2 ) + wsOrgX; break;
+   case -2: win->X=wsMaxX - wX - 1 + wsOrgX; break;
    default: win->X=X; break;
   }
  switch ( Y )
   {
-   case -1: win->Y=( wsMaxY / 2 ) - ( hY / 2 ); break;
-   case -2: win->Y=wsMaxY - hY - 1; break;
+   case -1: win->Y=( wsMaxY / 2 ) - ( hY / 2 ) + wsOrgY; break;
+   case -2: win->Y=wsMaxY - hY - 1 + wsOrgY; break;
    default: win->Y=Y; break;
   }
  win->Width=wX;
@@ -451,7 +489,7 @@ void wsCreateWindow( wsTWindow * win,int X,int Y,int wX,int hY,int bW,int cV,uns
   for ( i=0;i < wsWLCount;i++ )
    if ( wsWindowList[i] == NULL ) break;
   if ( i == wsWLCount )
-   { printf( "!!! tul sok nyitott ablak van.\n" ); exit( 1 ); }
+   {  mp_msg( MSGT_GPLAYER,MSGL_FATAL,"[ws] there are too many open windows\n" ); exit( 0 ); }
   wsWindowList[i]=win;
  }
 
@@ -730,7 +768,7 @@ void wsFullScreen( wsTWindow * win )
    {
     win->OldX=win->X; win->OldY=win->Y;
     win->OldWidth=win->Width; win->OldHeight=win->Height;
-    win->X=0; win->Y=0;
+    win->X=wsOrgX; win->Y=wsOrgY;
     win->Width=wsMaxX; win->Height=wsMaxY;
     win->isFullScreen=True;
 #ifdef ENABLE_DPMS
@@ -738,18 +776,12 @@ void wsFullScreen( wsTWindow * win )
 #endif
    }
 
- if ( net_wm_support != SUPPORT_FULLSCREEN || metacity_hack == 1 )
-  {
-   vo_x11_decoration( wsDisplay,win->WindowID,decoration );
-   vo_x11_sizehint( win->X,win->Y,win->Width,win->Height,0 );
-  }
+ vo_x11_decoration( wsDisplay,win->WindowID,decoration );
+ vo_x11_sizehint( win->X,win->Y,win->Width,win->Height,0 );
  vo_x11_setlayer( wsDisplay,win->WindowID,win->isFullScreen );
- if ( net_wm_support != SUPPORT_FULLSCREEN || metacity_hack == 1 )
-  {
-   if ( vo_wm_type == vo_wm_Unknown && !(vo_fsmode&16) )
-    XWithdrawWindow( wsDisplay,win->WindowID,wsScreen );
-   XMoveResizeWindow( wsDisplay,win->WindowID,win->X,win->Y,win->Width,win->Height );
-  }
+ if ( vo_wm_type == 0 && !(vo_fsmode&16) )
+  XWithdrawWindow( wsDisplay,win->WindowID,wsScreen );
+ XMoveResizeWindow( wsDisplay,win->WindowID,win->X,win->Y,win->Width,win->Height );
  XMapRaised( wsDisplay,win->WindowID );
  XRaiseWindow( wsDisplay,win->WindowID );
  XFlush( wsDisplay );
@@ -807,14 +839,14 @@ void wsMoveWindow( wsTWindow * win,int b,int x, int y )
   {
    switch ( x )
     {
-     case -1: win->X=( wsMaxX / 2 ) - ( win->Width / 2 ); break;
-     case -2: win->X=wsMaxX - win->Width; break;
+     case -1: win->X=( wsMaxX / 2 ) - ( win->Width / 2 ) + wsOrgX; break;
+     case -2: win->X=wsMaxX - win->Width + wsOrgX; break;
      default: win->X=x; break;
     }
    switch ( y )
     {
-     case -1: win->Y=( wsMaxY / 2 ) - ( win->Height / 2 ); break;
-     case -2: win->Y=wsMaxY - win->Height; break;
+     case -1: win->Y=( wsMaxY / 2 ) - ( win->Height / 2 ) + wsOrgY; break;
+     case -2: win->Y=wsMaxY - win->Height + wsOrgY; break;
      default: win->Y=y; break;
     }
   }
@@ -860,7 +892,7 @@ void wsResizeWindow( wsTWindow * win,int sx, int sy )
  win->SizeHint.win_gravity=StaticGravity;
  win->SizeHint.base_width=sx; win->SizeHint.base_height=sy;
 
- if ( vo_wm_type == vo_wm_Unknown ) XUnmapWindow( wsDisplay,win->WindowID );
+ if ( vo_wm_type == 0 ) XUnmapWindow( wsDisplay,win->WindowID );
 
  XSetWMNormalHints( wsDisplay,win->WindowID,&win->SizeHint );
  XResizeWindow( wsDisplay,win->WindowID,sx,sy );

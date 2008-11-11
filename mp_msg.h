@@ -83,6 +83,8 @@ extern int verbose; // defined in mplayer.c
 
 #define MSGT_AFILTER 37  // Audio filter messages
 
+#define MSGT_NETST 38 // Netstream
+
 #define MSGT_MAX 64
 
 void mp_msg_init();
@@ -105,9 +107,8 @@ int mp_msg_test(int mod, int lev);
 #define mp_gettext(String) String
 #endif
 
-void mp_msg_c( int x, const char *format, ... );
-
 #ifdef __GNUC__
+void mp_msg_c( int x, const char *format, ... ) __attribute__ ((format (printf, 2, 3)));
 #define mp_msg(mod,lev, args... ) mp_msg_c(((mod)<<8)|(lev), ## args )
 
 #ifdef MP_DEBUG
@@ -117,6 +118,7 @@ void mp_msg_c( int x, const char *format, ... );
 #define mp_dbg(mod,lev, args... ) 
 #endif
 #else // not GNU C
+void mp_msg_c( int x, const char *format, ... );
 #define mp_msg(mod,lev, ... ) mp_msg_c(((mod)<<8)|(lev), __VA_ARGS__)
 
 #ifdef MP_DEBUG

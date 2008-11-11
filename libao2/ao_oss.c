@@ -39,7 +39,7 @@ static int audio_fd=-1;
 char *oss_mixer_device = PATH_DEV_MIXER;
 
 // to set/get/query special features/parameters
-static int control(int cmd,int arg){
+static int control(int cmd,void *arg){
     switch(cmd){
 	case AOCONTROL_SET_DEVICE:
 	    dsp=(char*)arg;
@@ -166,6 +166,7 @@ ac3_retry:
 	mp_msg(MSGT_AO,MSGL_ERR,"audio_setup: Failed to set audio device to %d channels\n", ao_data.channels);
 	return 0;
       }
+      ao_data.channels=c+1;
     }
     mp_msg(MSGT_AO,MSGL_V,"audio_setup: using %d channels (requested: %d)\n", ao_data.channels, channels);
     // set rate
@@ -246,6 +247,10 @@ static void reset(){
 	mp_msg(MSGT_AO,MSGL_ERR,"\nFatal error: *** CANNOT RE-OPEN / RESET AUDIO DEVICE *** %s\n", strerror(errno));
 	return;
     }
+
+#if defined(FD_CLOEXEC) && defined(F_SETFD)
+  fcntl(audio_fd, F_SETFD, FD_CLOEXEC);
+#endif
 
   ioctl (audio_fd, SNDCTL_DSP_SETFMT, &ao_data.format);
   if(ao_data.format != AFMT_AC3) {

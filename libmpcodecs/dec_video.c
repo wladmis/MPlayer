@@ -11,8 +11,8 @@
 #include "mp_msg.h"
 #include "help_mp.h"
 
-#include "linux/timer.h"
-#include "linux/shmem.h"
+#include "osdep/timer.h"
+#include "osdep/shmem.h"
 
 #include "stream.h"
 #include "demuxer.h"
@@ -36,8 +36,6 @@
 
 extern double video_time_usage;
 extern double vout_time_usage;
-
-#include "postproc/postprocess.h"
 
 #include "cpudetect.h"
 
@@ -189,11 +187,11 @@ int init_video(sh_video_t *sh_video,char* codecname,char* vfm,int status){
 	    vd_functions_t *funcs_sym;
 	    vd_info_t *info_sym;
 
-	    buf_len = strlen(LIBDIR)+strlen(sh_video->codec->drv)+16;
+	    buf_len = strlen(MPLAYER_LIBDIR)+strlen(sh_video->codec->drv)+16;
 	    buf = malloc(buf_len);
 	    if (!buf)
 		break;
-	    snprintf(buf, buf_len, "%s/mplayer/vd_%s.so", LIBDIR, sh_video->codec->drv);
+	    snprintf(buf, buf_len, "%s/mplayer/vd_%s.so", MPLAYER_LIBDIR, sh_video->codec->drv);
 	    mp_msg(MSGT_DECVIDEO, MSGL_DBG2, "Trying to open external plugin: %s\n", buf);
 	    sh_video->dec_handle = dlopen(buf, RTLD_LAZY);
 	    if (!sh_video->dec_handle)
@@ -209,7 +207,7 @@ int init_video(sh_video_t *sh_video,char* codecname,char* vfm,int status){
 	    free(buf);
 	    mpvdec = funcs_sym;
 	    mp_msg(MSGT_DECVIDEO, MSGL_V, "Using external decoder plugin (%s/mplayer/vd_%s.so)!\n",
-		LIBDIR, sh_video->codec->drv);
+		MPLAYER_LIBDIR, sh_video->codec->drv);
 	}
 #endif
 	if(!mpvdec){ // driver not available (==compiled in)
@@ -282,8 +280,8 @@ while(!sh_video->inited && *video_codec_list){
 }
 
 if(!sh_video->inited){
-    mp_msg(MSGT_DECVIDEO,MSGL_HINT, MSGTR_TryUpgradeCodecsConfOrRTFM,get_path("codecs.conf"));
     mp_msg(MSGT_DECVIDEO,MSGL_ERR,MSGTR_CantFindVideoCodec,sh_video->format);
+    mp_msg(MSGT_DECAUDIO,MSGL_HINT, MSGTR_RTFMCodecs);
     return 0; // failed
 }
 

@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2002 Brian Foley
  * Copyright (c) 2002 Dieter Shirley
+ * Copyright (c) 2003 Romain Dolbeau <romain@dolbeau.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,40 +19,44 @@
  */
  
 #include "../dsputil.h"
+
+#include "gcc_fixes.h"
+
 #include "dsputil_altivec.h"
 
-#if CONFIG_DARWIN
+#ifdef CONFIG_DARWIN
 #include <sys/sysctl.h>
-#endif
+#else /* CONFIG_DARWIN */
+#include <signal.h>
+#include <setjmp.h>
 
-#ifdef ALTIVEC_TBL_PERFORMANCE_REPORT
-unsigned long long perfdata[altivec_perf_total][altivec_data_total];
-/* list below must match enum in dsputil_altivec.h */
-static unsigned char* perfname[] = {
-  "fft_calc",
-  "gmc1",
-  "dct_unquantize_h263",
-  "idct_add",
-  "idct_put",
-  "put_pixels_clamped",
-  "put_pixels16",
-  "avg_pixels16"
-};
-#include <stdio.h>
-#endif
+static sigjmp_buf jmpbuf;
+static volatile sig_atomic_t canjump = 0;
+
+static void sigill_handler (int sig)
+{
+    if (!canjump) {
+        signal (sig, SIG_DFL);
+        raise (sig);
+    }
+    
+    canjump = 0;
+    siglongjmp (jmpbuf, 1);
+}
+#endif /* CONFIG_DARWIN */
 
 int pix_abs16x16_x2_altivec(uint8_t *pix1, uint8_t *pix2, int line_size)
 {
     int i;
     int s __attribute__((aligned(16)));
-    const vector unsigned char zero = (const vector unsigned char)(0);
+    const vector unsigned char zero = (const vector unsigned char)vec_splat_u8(0);
     vector unsigned char *tv;
     vector unsigned char pix1v, pix2v, pix2iv, avgv, t5;
     vector unsigned int sad;
     vector signed int sumdiffs;
 
     s = 0;
-    sad = (vector unsigned int)(0);
+    sad = (vector unsigned int)vec_splat_u32(0);
     for(i=0;i<16;i++) {
         /*
            Read unaligned pixels into our vectors. The vectors are as follows:
@@ -91,7 +96,7 @@ int pix_abs16x16_y2_altivec(uint8_t *pix1, uint8_t *pix2, int line_size)
 {
     int i;
     int s __attribute__((aligned(16)));
-    const vector unsigned char zero = (const vector unsigned char)(0);
+    const vector unsigned char zero = (const vector unsigned char)vec_splat_u8(0);
     vector unsigned char *tv;
     vector unsigned char pix1v, pix2v, pix3v, avgv, t5;
     vector unsigned int sad;
@@ -99,7 +104,7 @@ int pix_abs16x16_y2_altivec(uint8_t *pix1, uint8_t *pix2, int line_size)
     uint8_t *pix3 = pix2 + line_size;
 
     s = 0;
-    sad = (vector unsigned int)(0);
+    sad = (vector unsigned int)vec_splat_u32(0);
 
     /*
        Due to the fact that pix3 = pix2 + line_size, the pix3 of one
@@ -152,8 +157,8 @@ int pix_abs16x16_xy2_altivec(uint8_t *pix1, uint8_t *pix2, int line_size)
     int i;
     int s __attribute__((aligned(16)));
     uint8_t *pix3 = pix2 + line_size;
-    const vector unsigned char zero = (const vector unsigned char)(0);
-    const vector unsigned short two = (const vector unsigned short)(2);
+    const vector unsigned char zero = (const vector unsigned char)vec_splat_u8(0);
+    const vector unsigned short two = (const vector unsigned short)vec_splat_u16(2);
     vector unsigned char *tv, avgv, t5;
     vector unsigned char pix1v, pix2v, pix3v, pix2iv, pix3iv;
     vector unsigned short pix2lv, pix2hv, pix2ilv, pix2ihv;
@@ -163,7 +168,7 @@ int pix_abs16x16_xy2_altivec(uint8_t *pix1, uint8_t *pix2, int line_size)
     vector unsigned int sad;
     vector signed int sumdiffs;
 
-    sad = (vector unsigned int)(0);
+    sad = (vector unsigned int)vec_splat_u32(0);
     
     s = 0;
 
@@ -252,13 +257,13 @@ int pix_abs16x16_altivec(uint8_t *pix1, uint8_t *pix2, int line_size)
 {
     int i;
     int s __attribute__((aligned(16)));
-    const vector unsigned int zero = (const vector unsigned int)(0);
+    const vector unsigned int zero = (const vector unsigned int)vec_splat_u32(0);
     vector unsigned char perm1, perm2, *pix1v, *pix2v;
     vector unsigned char t1, t2, t3,t4, t5;
     vector unsigned int sad;
     vector signed int sumdiffs;
     
-    sad = (vector unsigned int) (0);
+    sad = (vector unsigned int)vec_splat_u32(0);
 
 
     for(i=0;i<16;i++) {
@@ -294,14 +299,15 @@ int pix_abs8x8_altivec(uint8_t *pix1, uint8_t *pix2, int line_size)
 {
     int i;
     int s __attribute__((aligned(16)));
-    const vector unsigned int zero = (const vector unsigned int)(0);
+    const vector unsigned int zero = (const vector unsigned int)vec_splat_u32(0);
     vector unsigned char perm1, perm2, permclear, *pix1v, *pix2v;
     vector unsigned char t1, t2, t3,t4, t5;
     vector unsigned int sad;
     vector signed int sumdiffs;
 
-    sad = (vector unsigned int)(0);
-    permclear = (vector unsigned char) (255,255,255,255,255,255,255,255,0,0,0,0,0,0,0,0);
+    sad = (vector unsigned int)vec_splat_u32(0);
+
+    permclear = (vector unsigned char)AVV(255,255,255,255,255,255,255,255,0,0,0,0,0,0,0,0);
 
     for(i=0;i<8;i++) {
 	/* Read potentially unaligned pixels into t1 and t2
@@ -338,13 +344,13 @@ int pix_norm1_altivec(uint8_t *pix, int line_size)
 {
     int i;
     int s __attribute__((aligned(16)));
-    const vector unsigned int zero = (const vector unsigned int)(0);
+    const vector unsigned int zero = (const vector unsigned int)vec_splat_u32(0);
     vector unsigned char *tv;
     vector unsigned char pixv;
     vector unsigned int sv;
     vector signed int sum;
     
-    sv = (vector unsigned int)(0);
+    sv = (vector unsigned int)vec_splat_u32(0);
     
     s = 0;
     for (i = 0; i < 16; i++) {
@@ -374,14 +380,16 @@ int sse8_altivec(void *v, uint8_t *pix1, uint8_t *pix2, int line_size)
 {
     int i;
     int s __attribute__((aligned(16)));
-    const vector unsigned int zero = (const vector unsigned int)(0);
+    const vector unsigned int zero = (const vector unsigned int)vec_splat_u32(0);
     vector unsigned char perm1, perm2, permclear, *pix1v, *pix2v;
     vector unsigned char t1, t2, t3,t4, t5;
     vector unsigned int sum;
     vector signed int sumsqr;
     
-    sum = (vector unsigned int)(0);
-    permclear = (vector unsigned char)(0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00);
+    sum = (vector unsigned int)vec_splat_u32(0);
+
+    permclear = (vector unsigned char)AVV(255,255,255,255,255,255,255,255,0,0,0,0,0,0,0,0);
+
     
     for(i=0;i<8;i++) {
 	/* Read potentially unaligned pixels into t1 and t2
@@ -428,13 +436,13 @@ int sse16_altivec(void *v, uint8_t *pix1, uint8_t *pix2, int line_size)
 {
     int i;
     int s __attribute__((aligned(16)));
-    const vector unsigned int zero = (const vector unsigned int)(0);
+    const vector unsigned int zero = (const vector unsigned int)vec_splat_u32(0);
     vector unsigned char perm1, perm2, *pix1v, *pix2v;
     vector unsigned char t1, t2, t3,t4, t5;
     vector unsigned int sum;
     vector signed int sumsqr;
     
-    sum = (vector unsigned int)(0);
+    sum = (vector unsigned int)vec_splat_u32(0);
     
     for(i=0;i<16;i++) {
 	/* Read potentially unaligned pixels into t1 and t2 */
@@ -470,9 +478,9 @@ int sse16_altivec(void *v, uint8_t *pix1, uint8_t *pix2, int line_size)
     return s;
 }
 
-int pix_sum_altivec(UINT8 * pix, int line_size)
+int pix_sum_altivec(uint8_t * pix, int line_size)
 {
-    const vector unsigned int zero = (const vector unsigned int)(0);
+    const vector unsigned int zero = (const vector unsigned int)vec_splat_u32(0);
     vector unsigned char perm, *pixv;
     vector unsigned char t1;
     vector unsigned int sad;
@@ -481,7 +489,7 @@ int pix_sum_altivec(UINT8 * pix, int line_size)
     int i;
     int s __attribute__((aligned(16)));
     
-    sad = (vector unsigned int) (0);
+    sad = (vector unsigned int)vec_splat_u32(0);
     
     for (i = 0; i < 16; i++) {
 	/* Read the potentially unaligned 16 pixels into t1 */
@@ -503,11 +511,11 @@ int pix_sum_altivec(UINT8 * pix, int line_size)
     return s;
 }
 
-void get_pixels_altivec(DCTELEM *restrict block, const UINT8 *pixels, int line_size)
+void get_pixels_altivec(DCTELEM *restrict block, const uint8_t *pixels, int line_size)
 {
     int i;
     vector unsigned char perm, bytes, *pixv;
-    const vector unsigned char zero = (const vector unsigned char) (0);
+    const vector unsigned char zero = (const vector unsigned char)vec_splat_u8(0);
     vector signed short shorts;
 
     for(i=0;i<8;i++)
@@ -529,12 +537,12 @@ void get_pixels_altivec(DCTELEM *restrict block, const UINT8 *pixels, int line_s
     }
 }
 
-void diff_pixels_altivec(DCTELEM *restrict block, const UINT8 *s1,
-        const UINT8 *s2, int stride)
+void diff_pixels_altivec(DCTELEM *restrict block, const uint8_t *s1,
+        const uint8_t *s2, int stride)
 {
     int i;
     vector unsigned char perm, bytes, *pixv;
-    const vector unsigned char zero = (const vector unsigned char) (0);
+    const vector unsigned char zero = (const vector unsigned char)vec_splat_u8(0);
     vector signed short shorts1, shorts2;
 
     for(i=0;i<4;i++)
@@ -644,93 +652,14 @@ void add_bytes_altivec(uint8_t *dst, uint8_t *src, int w) {
 #endif /* ALTIVEC_USE_REFERENCE_C_CODE */
 }
 
-extern UINT8 cropTbl[];
-void put_pixels_clamped_altivec(const DCTELEM *block, UINT8 *restrict pixels,
-                                int line_size)
-{
-ALTIVEC_TBL_DECLARE(altivec_put_pixels_clamped_num, 1);
-#ifdef ALTIVEC_USE_REFERENCE_C_CODE
-    int i;
-    UINT8 *cm = cropTbl + MAX_NEG_CROP;
-
-ALTIVEC_TBL_START_COUNT(altivec_put_pixels_clamped_num, 1);
-    
-    /* read the pixels */
-    for(i=0;i<8;i++) {
-        pixels[0] = cm[block[0]];
-        pixels[1] = cm[block[1]];
-        pixels[2] = cm[block[2]];
-        pixels[3] = cm[block[3]];
-        pixels[4] = cm[block[4]];
-        pixels[5] = cm[block[5]];
-        pixels[6] = cm[block[6]];
-        pixels[7] = cm[block[7]];
-
-        pixels += line_size;
-        block += 8;
-    }
-
-ALTIVEC_TBL_STOP_COUNT(altivec_put_pixels_clamped_num, 1);
-
-#else /* ALTIVEC_USE_REFERENCE_C_CODE */
-    register const vector short vczero = (const vector short)(0);
-    register vector short
-      blockv0, blockv1, blockv2, blockv3,
-      blockv4, blockv5, blockv6, blockv7;
-    register vector unsigned char
-      pixelsv0, pixelsv1, pixelsv2, pixelsv3, pixelsv4,
-      pixelsv0old, pixelsv4old;
-
-ALTIVEC_TBL_START_COUNT(altivec_put_pixels_clamped_num, 1);
-
-    blockv0 = vec_ld(0, block);
-    blockv1 = vec_ld(16, block);
-    blockv2 = vec_ld(32, block);
-    blockv3 = vec_ld(48, block);
-    blockv4 = vec_ld(64, block);
-    blockv5 = vec_ld(80, block);
-    blockv6 = vec_ld(96, block);
-    blockv7 = vec_ld(112, block);
-    if (((unsigned long)pixels) & 0x0000000F)
-    {
-      pixelsv0old = vec_ld(-8, pixels);
-      pixelsv4old = vec_ld(56, pixels);
-      pixelsv0 = vec_packsu(vczero, blockv0);
-      pixelsv1 = vec_packsu(blockv1, blockv2);
-      pixelsv2 = vec_packsu(blockv3, blockv4);
-      pixelsv3 = vec_packsu(blockv5, blockv6);
-      pixelsv4 = vec_packsu(blockv5, vczero);
-      pixelsv0 = vec_perm(pixelsv0old, pixelsv0, vcprm(0, 1, s2, s3));
-      pixelsv4 = vec_perm(pixelsv4, pixelsv4old, vcprm(0, 1, s2, s3));
-      vec_st(pixelsv0, -8, pixels);
-      vec_st(pixelsv1, 8, pixels);
-      vec_st(pixelsv2, 24, pixels);
-      vec_st(pixelsv3, 40, pixels);
-      vec_st(pixelsv4, 56, pixels);
-    }
-    else
-    {
-      pixelsv0 = vec_packsu(blockv0, blockv1);
-      pixelsv1 = vec_packsu(blockv2, blockv3);
-      pixelsv2 = vec_packsu(blockv4, blockv5);
-      pixelsv3 = vec_packsu(blockv6, blockv7);
-      vec_st(pixelsv0, 0, pixels);
-      vec_st(pixelsv1, 16, pixels);
-      vec_st(pixelsv2, 32, pixels);
-      vec_st(pixelsv3, 48, pixels);
-    }
-
-ALTIVEC_TBL_STOP_COUNT(altivec_put_pixels_clamped_num, 1);
-#endif /* ALTIVEC_USE_REFERENCE_C_CODE */
-}
-
+/* next one assumes that ((line_size % 16) == 0) */
 void put_pixels16_altivec(uint8_t *block, const uint8_t *pixels, int line_size, int h)
 {
-ALTIVEC_TBL_DECLARE(altivec_put_pixels16_num, 1);
+POWERPC_PERF_DECLARE(altivec_put_pixels16_num, 1);
 #ifdef ALTIVEC_USE_REFERENCE_C_CODE
     int i;
 
-ALTIVEC_TBL_START_COUNT(altivec_put_pixels16_num, 1);
+POWERPC_PERF_START_COUNT(altivec_put_pixels16_num, 1);
 
     for(i=0; i<h; i++) {
       *((uint32_t*)(block )) = (((const struct unaligned_32 *) (pixels))->l);
@@ -741,37 +670,71 @@ ALTIVEC_TBL_START_COUNT(altivec_put_pixels16_num, 1);
       block +=line_size;
     }
 
-ALTIVEC_TBL_STOP_COUNT(altivec_put_pixels16_num, 1);
+POWERPC_PERF_STOP_COUNT(altivec_put_pixels16_num, 1);
 
 #else /* ALTIVEC_USE_REFERENCE_C_CODE */
-
-    register vector unsigned char perm = vec_lvsl(0, pixels); 
     register vector unsigned char pixelsv1, pixelsv2;
+    register vector unsigned char pixelsv1B, pixelsv2B;
+    register vector unsigned char pixelsv1C, pixelsv2C;
+    register vector unsigned char pixelsv1D, pixelsv2D;
+
+    register vector unsigned char perm = vec_lvsl(0, pixels);
     int i;
+    register int line_size_2 = line_size << 1;
+    register int line_size_3 = line_size + line_size_2;
+    register int line_size_4 = line_size << 2;
 
-ALTIVEC_TBL_START_COUNT(altivec_put_pixels16_num, 1);
-
+POWERPC_PERF_START_COUNT(altivec_put_pixels16_num, 1);
+// hand-unrolling the loop by 4 gains about 15%
+// mininum execution time goes from 74 to 60 cycles
+// it's faster than -funroll-loops, but using
+// -funroll-loops w/ this is bad - 74 cycles again.
+// all this is on a 7450, tuning for the 7450
+#if 0
     for(i=0; i<h; i++) {
       pixelsv1 = vec_ld(0, (unsigned char*)pixels);
       pixelsv2 = vec_ld(16, (unsigned char*)pixels);
-      vec_st(vec_perm(pixelsv1, pixelsv2, perm), 0, (unsigned char*)block);
+      vec_st(vec_perm(pixelsv1, pixelsv2, perm),
+             0, (unsigned char*)block);
       pixels+=line_size;
       block +=line_size;
     }
-
-ALTIVEC_TBL_STOP_COUNT(altivec_put_pixels16_num, 1);
+#else
+    for(i=0; i<h; i+=4) {
+      pixelsv1 = vec_ld(0, (unsigned char*)pixels);
+      pixelsv2 = vec_ld(16, (unsigned char*)pixels);
+      pixelsv1B = vec_ld(line_size, (unsigned char*)pixels);
+      pixelsv2B = vec_ld(16 + line_size, (unsigned char*)pixels);
+      pixelsv1C = vec_ld(line_size_2, (unsigned char*)pixels);
+      pixelsv2C = vec_ld(16 + line_size_2, (unsigned char*)pixels);
+      pixelsv1D = vec_ld(line_size_3, (unsigned char*)pixels);
+      pixelsv2D = vec_ld(16 + line_size_3, (unsigned char*)pixels);
+      vec_st(vec_perm(pixelsv1, pixelsv2, perm),
+             0, (unsigned char*)block);
+      vec_st(vec_perm(pixelsv1B, pixelsv2B, perm),
+             line_size, (unsigned char*)block);
+      vec_st(vec_perm(pixelsv1C, pixelsv2C, perm),
+             line_size_2, (unsigned char*)block);
+      vec_st(vec_perm(pixelsv1D, pixelsv2D, perm),
+             line_size_3, (unsigned char*)block);
+      pixels+=line_size_4;
+      block +=line_size_4;
+    }
+#endif
+POWERPC_PERF_STOP_COUNT(altivec_put_pixels16_num, 1);
 
 #endif /* ALTIVEC_USE_REFERENCE_C_CODE */
 }
 
+/* next one assumes that ((line_size % 16) == 0) */
 #define op_avg(a,b)  a = ( ((a)|(b)) - ((((a)^(b))&0xFEFEFEFEUL)>>1) )
 void avg_pixels16_altivec(uint8_t *block, const uint8_t *pixels, int line_size, int h)
 {
-ALTIVEC_TBL_DECLARE(altivec_avg_pixels16_num, 1);
+POWERPC_PERF_DECLARE(altivec_avg_pixels16_num, 1);
 #ifdef ALTIVEC_USE_REFERENCE_C_CODE
     int i;
 
-ALTIVEC_TBL_START_COUNT(altivec_avg_pixels16_num, 1);
+POWERPC_PERF_START_COUNT(altivec_avg_pixels16_num, 1);
 
     for(i=0; i<h; i++) {
       op_avg(*((uint32_t*)(block)),(((const struct unaligned_32 *)(pixels))->l));
@@ -782,15 +745,14 @@ ALTIVEC_TBL_START_COUNT(altivec_avg_pixels16_num, 1);
       block +=line_size;
     }
 
-ALTIVEC_TBL_STOP_COUNT(altivec_avg_pixels16_num, 1);
+POWERPC_PERF_STOP_COUNT(altivec_avg_pixels16_num, 1);
 
 #else /* ALTIVEC_USE_REFERENCE_C_CODE */
-
-    register vector unsigned char perm = vec_lvsl(0, pixels); 
     register vector unsigned char pixelsv1, pixelsv2, pixelsv, blockv;
+    register vector unsigned char perm = vec_lvsl(0, pixels);
     int i;
 
-ALTIVEC_TBL_START_COUNT(altivec_avg_pixels16_num, 1);
+POWERPC_PERF_START_COUNT(altivec_avg_pixels16_num, 1);
 
     for(i=0; i<h; i++) {
       pixelsv1 = vec_ld(0, (unsigned char*)pixels);
@@ -803,14 +765,554 @@ ALTIVEC_TBL_START_COUNT(altivec_avg_pixels16_num, 1);
       block +=line_size;
     }
 
-ALTIVEC_TBL_STOP_COUNT(altivec_avg_pixels16_num, 1);
+POWERPC_PERF_STOP_COUNT(altivec_avg_pixels16_num, 1);
 
+#endif /* ALTIVEC_USE_REFERENCE_C_CODE */
+}
+
+/* next one assumes that ((line_size % 8) == 0) */
+void avg_pixels8_altivec(uint8_t * block, const uint8_t * pixels, int line_size, int h)
+{
+POWERPC_PERF_DECLARE(altivec_avg_pixels8_num, 1);
+#ifdef ALTIVEC_USE_REFERENCE_C_CODE
+    int i;
+POWERPC_PERF_START_COUNT(altivec_avg_pixels8_num, 1);
+    for (i = 0; i < h; i++) {
+        *((uint32_t *) (block)) =
+            (((*((uint32_t *) (block))) |
+              ((((const struct unaligned_32 *) (pixels))->l))) -
+             ((((*((uint32_t *) (block))) ^
+                ((((const struct unaligned_32 *) (pixels))->
+                  l))) & 0xFEFEFEFEUL) >> 1));
+        *((uint32_t *) (block + 4)) =
+            (((*((uint32_t *) (block + 4))) |
+              ((((const struct unaligned_32 *) (pixels + 4))->l))) -
+             ((((*((uint32_t *) (block + 4))) ^
+                ((((const struct unaligned_32 *) (pixels +
+                                                  4))->
+                  l))) & 0xFEFEFEFEUL) >> 1));
+        pixels += line_size;
+        block += line_size;
+    }
+POWERPC_PERF_STOP_COUNT(altivec_avg_pixels8_num, 1);
+
+#else /* ALTIVEC_USE_REFERENCE_C_CODE */
+    register vector unsigned char pixelsv1, pixelsv2, pixelsv, blockv;
+    int i;
+
+POWERPC_PERF_START_COUNT(altivec_avg_pixels8_num, 1);
+ 
+   for (i = 0; i < h; i++) {
+     /*
+       block is 8 bytes-aligned, so we're either in the
+       left block (16 bytes-aligned) or in the right block (not)
+     */
+     int rightside = ((unsigned long)block & 0x0000000F);
+     
+     blockv = vec_ld(0, block);
+     pixelsv1 = vec_ld(0, (unsigned char*)pixels);
+     pixelsv2 = vec_ld(16, (unsigned char*)pixels);
+     pixelsv = vec_perm(pixelsv1, pixelsv2, vec_lvsl(0, pixels));
+     
+     if (rightside)
+     {
+       pixelsv = vec_perm(blockv, pixelsv, vcprm(0,1,s0,s1));
+     }
+     else
+     {
+       pixelsv = vec_perm(blockv, pixelsv, vcprm(s0,s1,2,3));
+     }
+     
+     blockv = vec_avg(blockv, pixelsv);
+
+     vec_st(blockv, 0, block);
+     
+     pixels += line_size;
+     block += line_size;
+   }
+   
+POWERPC_PERF_STOP_COUNT(altivec_avg_pixels8_num, 1);
+ 
+#endif /* ALTIVEC_USE_REFERENCE_C_CODE */
+}
+
+/* next one assumes that ((line_size % 8) == 0) */
+void put_pixels8_xy2_altivec(uint8_t *block, const uint8_t *pixels, int line_size, int h)
+{
+POWERPC_PERF_DECLARE(altivec_put_pixels8_xy2_num, 1);
+#ifdef ALTIVEC_USE_REFERENCE_C_CODE
+    int j;
+POWERPC_PERF_START_COUNT(altivec_put_pixels8_xy2_num, 1);
+    for (j = 0; j < 2; j++) {
+      int i;
+      const uint32_t a = (((const struct unaligned_32 *) (pixels))->l);
+      const uint32_t b =
+        (((const struct unaligned_32 *) (pixels + 1))->l);
+      uint32_t l0 =
+        (a & 0x03030303UL) + (b & 0x03030303UL) + 0x02020202UL;
+      uint32_t h0 =
+        ((a & 0xFCFCFCFCUL) >> 2) + ((b & 0xFCFCFCFCUL) >> 2);
+      uint32_t l1, h1;
+      pixels += line_size;
+      for (i = 0; i < h; i += 2) {
+        uint32_t a = (((const struct unaligned_32 *) (pixels))->l);
+        uint32_t b = (((const struct unaligned_32 *) (pixels + 1))->l);
+        l1 = (a & 0x03030303UL) + (b & 0x03030303UL);
+        h1 = ((a & 0xFCFCFCFCUL) >> 2) + ((b & 0xFCFCFCFCUL) >> 2);
+        *((uint32_t *) block) =
+          h0 + h1 + (((l0 + l1) >> 2) & 0x0F0F0F0FUL);
+        pixels += line_size;
+        block += line_size;
+        a = (((const struct unaligned_32 *) (pixels))->l);
+        b = (((const struct unaligned_32 *) (pixels + 1))->l);
+        l0 = (a & 0x03030303UL) + (b & 0x03030303UL) + 0x02020202UL;
+        h0 = ((a & 0xFCFCFCFCUL) >> 2) + ((b & 0xFCFCFCFCUL) >> 2);
+        *((uint32_t *) block) =
+          h0 + h1 + (((l0 + l1) >> 2) & 0x0F0F0F0FUL);
+        pixels += line_size;
+        block += line_size;
+      } pixels += 4 - line_size * (h + 1);
+      block += 4 - line_size * h;
+    }
+
+POWERPC_PERF_STOP_COUNT(altivec_put_pixels8_xy2_num, 1);
+
+#else /* ALTIVEC_USE_REFERENCE_C_CODE */
+   register int i;
+   register vector unsigned char
+     pixelsv1, pixelsv2,
+     pixelsavg;
+   register vector unsigned char
+     blockv, temp1, temp2;
+   register vector unsigned short
+     pixelssum1, pixelssum2, temp3;
+   register const vector unsigned char vczero = (const vector unsigned char)vec_splat_u8(0);
+   register const vector unsigned short vctwo = (const vector unsigned short)vec_splat_u16(2);
+   
+   temp1 = vec_ld(0, pixels);
+   temp2 = vec_ld(16, pixels);
+   pixelsv1 = vec_perm(temp1, temp2, vec_lvsl(0, pixels));
+   if ((((unsigned long)pixels) & 0x0000000F) ==  0x0000000F)
+   {
+     pixelsv2 = temp2;
+   }
+   else
+   {
+     pixelsv2 = vec_perm(temp1, temp2, vec_lvsl(1, pixels));
+   }
+   pixelsv1 = vec_mergeh(vczero, pixelsv1);
+   pixelsv2 = vec_mergeh(vczero, pixelsv2);
+   pixelssum1 = vec_add((vector unsigned short)pixelsv1,
+                        (vector unsigned short)pixelsv2);
+   pixelssum1 = vec_add(pixelssum1, vctwo);
+   
+POWERPC_PERF_START_COUNT(altivec_put_pixels8_xy2_num, 1); 
+   for (i = 0; i < h ; i++) {
+     int rightside = ((unsigned long)block & 0x0000000F);
+     blockv = vec_ld(0, block);
+
+     temp1 = vec_ld(line_size, pixels);
+     temp2 = vec_ld(line_size + 16, pixels);
+     pixelsv1 = vec_perm(temp1, temp2, vec_lvsl(line_size, pixels));
+     if (((((unsigned long)pixels) + line_size) & 0x0000000F) ==  0x0000000F)
+     {
+       pixelsv2 = temp2;
+     }
+     else
+     {
+       pixelsv2 = vec_perm(temp1, temp2, vec_lvsl(line_size + 1, pixels));
+     }
+
+     pixelsv1 = vec_mergeh(vczero, pixelsv1);
+     pixelsv2 = vec_mergeh(vczero, pixelsv2);
+     pixelssum2 = vec_add((vector unsigned short)pixelsv1,
+                          (vector unsigned short)pixelsv2);
+     temp3 = vec_add(pixelssum1, pixelssum2);
+     temp3 = vec_sra(temp3, vctwo);
+     pixelssum1 = vec_add(pixelssum2, vctwo);
+     pixelsavg = vec_packsu(temp3, (vector unsigned short) vczero);
+     
+     if (rightside)
+     {
+       blockv = vec_perm(blockv, pixelsavg, vcprm(0, 1, s0, s1));
+     }
+     else
+     {
+       blockv = vec_perm(blockv, pixelsavg, vcprm(s0, s1, 2, 3));
+     }
+     
+     vec_st(blockv, 0, block);
+     
+     block += line_size;
+     pixels += line_size;
+   }
+   
+POWERPC_PERF_STOP_COUNT(altivec_put_pixels8_xy2_num, 1);
+#endif /* ALTIVEC_USE_REFERENCE_C_CODE */
+}
+
+/* next one assumes that ((line_size % 8) == 0) */
+void put_no_rnd_pixels8_xy2_altivec(uint8_t *block, const uint8_t *pixels, int line_size, int h)
+{
+POWERPC_PERF_DECLARE(altivec_put_no_rnd_pixels8_xy2_num, 1);
+#ifdef ALTIVEC_USE_REFERENCE_C_CODE
+    int j;
+POWERPC_PERF_START_COUNT(altivec_put_no_rnd_pixels8_xy2_num, 1);
+    for (j = 0; j < 2; j++) {
+      int i;
+      const uint32_t a = (((const struct unaligned_32 *) (pixels))->l);
+      const uint32_t b =
+        (((const struct unaligned_32 *) (pixels + 1))->l);
+      uint32_t l0 =
+        (a & 0x03030303UL) + (b & 0x03030303UL) + 0x01010101UL;
+      uint32_t h0 =
+        ((a & 0xFCFCFCFCUL) >> 2) + ((b & 0xFCFCFCFCUL) >> 2);
+      uint32_t l1, h1;
+      pixels += line_size;
+      for (i = 0; i < h; i += 2) {
+        uint32_t a = (((const struct unaligned_32 *) (pixels))->l);
+        uint32_t b = (((const struct unaligned_32 *) (pixels + 1))->l);
+        l1 = (a & 0x03030303UL) + (b & 0x03030303UL);
+        h1 = ((a & 0xFCFCFCFCUL) >> 2) + ((b & 0xFCFCFCFCUL) >> 2);
+        *((uint32_t *) block) =
+          h0 + h1 + (((l0 + l1) >> 2) & 0x0F0F0F0FUL);
+        pixels += line_size;
+        block += line_size;
+        a = (((const struct unaligned_32 *) (pixels))->l);
+        b = (((const struct unaligned_32 *) (pixels + 1))->l);
+        l0 = (a & 0x03030303UL) + (b & 0x03030303UL) + 0x01010101UL;
+        h0 = ((a & 0xFCFCFCFCUL) >> 2) + ((b & 0xFCFCFCFCUL) >> 2);
+        *((uint32_t *) block) =
+          h0 + h1 + (((l0 + l1) >> 2) & 0x0F0F0F0FUL);
+        pixels += line_size;
+        block += line_size;
+      } pixels += 4 - line_size * (h + 1);
+      block += 4 - line_size * h;
+    }
+    
+POWERPC_PERF_STOP_COUNT(altivec_put_no_rnd_pixels8_xy2_num, 1);
+
+#else /* ALTIVEC_USE_REFERENCE_C_CODE */
+   register int i;
+   register vector unsigned char
+     pixelsv1, pixelsv2,
+     pixelsavg;
+   register vector unsigned char
+     blockv, temp1, temp2;
+   register vector unsigned short
+     pixelssum1, pixelssum2, temp3;
+   register const vector unsigned char vczero = (const vector unsigned char)vec_splat_u8(0);
+   register const vector unsigned short vcone = (const vector unsigned short)vec_splat_u16(1);
+   register const vector unsigned short vctwo = (const vector unsigned short)vec_splat_u16(2);
+   
+   temp1 = vec_ld(0, pixels);
+   temp2 = vec_ld(16, pixels);
+   pixelsv1 = vec_perm(temp1, temp2, vec_lvsl(0, pixels));
+   if ((((unsigned long)pixels) & 0x0000000F) ==  0x0000000F)
+   {
+     pixelsv2 = temp2;
+   }
+   else
+   {
+     pixelsv2 = vec_perm(temp1, temp2, vec_lvsl(1, pixels));
+   }
+   pixelsv1 = vec_mergeh(vczero, pixelsv1);
+   pixelsv2 = vec_mergeh(vczero, pixelsv2);
+   pixelssum1 = vec_add((vector unsigned short)pixelsv1,
+                        (vector unsigned short)pixelsv2);
+   pixelssum1 = vec_add(pixelssum1, vcone);
+   
+POWERPC_PERF_START_COUNT(altivec_put_no_rnd_pixels8_xy2_num, 1); 
+   for (i = 0; i < h ; i++) {
+     int rightside = ((unsigned long)block & 0x0000000F);
+     blockv = vec_ld(0, block);
+
+     temp1 = vec_ld(line_size, pixels);
+     temp2 = vec_ld(line_size + 16, pixels);
+     pixelsv1 = vec_perm(temp1, temp2, vec_lvsl(line_size, pixels));
+     if (((((unsigned long)pixels) + line_size) & 0x0000000F) ==  0x0000000F)
+     {
+       pixelsv2 = temp2;
+     }
+     else
+     {
+       pixelsv2 = vec_perm(temp1, temp2, vec_lvsl(line_size + 1, pixels));
+     }
+
+     pixelsv1 = vec_mergeh(vczero, pixelsv1);
+     pixelsv2 = vec_mergeh(vczero, pixelsv2);
+     pixelssum2 = vec_add((vector unsigned short)pixelsv1,
+                          (vector unsigned short)pixelsv2);
+     temp3 = vec_add(pixelssum1, pixelssum2);
+     temp3 = vec_sra(temp3, vctwo);
+     pixelssum1 = vec_add(pixelssum2, vcone);
+     pixelsavg = vec_packsu(temp3, (vector unsigned short) vczero);
+     
+     if (rightside)
+     {
+       blockv = vec_perm(blockv, pixelsavg, vcprm(0, 1, s0, s1));
+     }
+     else
+     {
+       blockv = vec_perm(blockv, pixelsavg, vcprm(s0, s1, 2, 3));
+     }
+     
+     vec_st(blockv, 0, block);
+     
+     block += line_size;
+     pixels += line_size;
+   }
+   
+POWERPC_PERF_STOP_COUNT(altivec_put_no_rnd_pixels8_xy2_num, 1);
+#endif /* ALTIVEC_USE_REFERENCE_C_CODE */
+}
+
+/* next one assumes that ((line_size % 16) == 0) */
+void put_pixels16_xy2_altivec(uint8_t * block, const uint8_t * pixels, int line_size, int h)
+{
+POWERPC_PERF_DECLARE(altivec_put_pixels16_xy2_num, 1);
+#ifdef ALTIVEC_USE_REFERENCE_C_CODE
+    int j;
+POWERPC_PERF_START_COUNT(altivec_put_pixels16_xy2_num, 1);
+      for (j = 0; j < 4; j++) {
+      int i;
+      const uint32_t a = (((const struct unaligned_32 *) (pixels))->l);
+      const uint32_t b =
+        (((const struct unaligned_32 *) (pixels + 1))->l);
+      uint32_t l0 =
+        (a & 0x03030303UL) + (b & 0x03030303UL) + 0x02020202UL;
+      uint32_t h0 =
+        ((a & 0xFCFCFCFCUL) >> 2) + ((b & 0xFCFCFCFCUL) >> 2);
+      uint32_t l1, h1;
+      pixels += line_size;
+      for (i = 0; i < h; i += 2) {
+        uint32_t a = (((const struct unaligned_32 *) (pixels))->l);
+        uint32_t b = (((const struct unaligned_32 *) (pixels + 1))->l);
+        l1 = (a & 0x03030303UL) + (b & 0x03030303UL);
+        h1 = ((a & 0xFCFCFCFCUL) >> 2) + ((b & 0xFCFCFCFCUL) >> 2);
+        *((uint32_t *) block) =
+          h0 + h1 + (((l0 + l1) >> 2) & 0x0F0F0F0FUL);
+        pixels += line_size;
+        block += line_size;
+        a = (((const struct unaligned_32 *) (pixels))->l);
+        b = (((const struct unaligned_32 *) (pixels + 1))->l);
+        l0 = (a & 0x03030303UL) + (b & 0x03030303UL) + 0x02020202UL;
+        h0 = ((a & 0xFCFCFCFCUL) >> 2) + ((b & 0xFCFCFCFCUL) >> 2);
+        *((uint32_t *) block) =
+          h0 + h1 + (((l0 + l1) >> 2) & 0x0F0F0F0FUL);
+        pixels += line_size;
+        block += line_size;
+      } pixels += 4 - line_size * (h + 1);
+      block += 4 - line_size * h;
+    }
+
+POWERPC_PERF_STOP_COUNT(altivec_put_pixels16_xy2_num, 1);
+
+#else /* ALTIVEC_USE_REFERENCE_C_CODE */
+   register int i;
+   register vector unsigned char
+     pixelsv1, pixelsv2, pixelsv3, pixelsv4;
+   register vector unsigned char
+     blockv, temp1, temp2;
+   register vector unsigned short
+     pixelssum1, pixelssum2, temp3,
+     pixelssum3, pixelssum4, temp4;
+   register const vector unsigned char vczero = (const vector unsigned char)vec_splat_u8(0);
+   register const vector unsigned short vctwo = (const vector unsigned short)vec_splat_u16(2);
+
+POWERPC_PERF_START_COUNT(altivec_put_pixels16_xy2_num, 1);
+ 
+   temp1 = vec_ld(0, pixels);
+   temp2 = vec_ld(16, pixels);
+   pixelsv1 = vec_perm(temp1, temp2, vec_lvsl(0, pixels));
+   if ((((unsigned long)pixels) & 0x0000000F) ==  0x0000000F)
+   {
+     pixelsv2 = temp2;
+   }
+   else
+   {
+     pixelsv2 = vec_perm(temp1, temp2, vec_lvsl(1, pixels));
+   }
+   pixelsv3 = vec_mergel(vczero, pixelsv1);
+   pixelsv4 = vec_mergel(vczero, pixelsv2);
+   pixelsv1 = vec_mergeh(vczero, pixelsv1);
+   pixelsv2 = vec_mergeh(vczero, pixelsv2);
+   pixelssum3 = vec_add((vector unsigned short)pixelsv3,
+                        (vector unsigned short)pixelsv4);
+   pixelssum3 = vec_add(pixelssum3, vctwo);
+   pixelssum1 = vec_add((vector unsigned short)pixelsv1,
+                        (vector unsigned short)pixelsv2);
+   pixelssum1 = vec_add(pixelssum1, vctwo);
+   
+   for (i = 0; i < h ; i++) {
+     blockv = vec_ld(0, block);
+
+     temp1 = vec_ld(line_size, pixels);
+     temp2 = vec_ld(line_size + 16, pixels);
+     pixelsv1 = vec_perm(temp1, temp2, vec_lvsl(line_size, pixels));
+     if (((((unsigned long)pixels) + line_size) & 0x0000000F) ==  0x0000000F)
+     {
+       pixelsv2 = temp2;
+     }
+     else
+     {
+       pixelsv2 = vec_perm(temp1, temp2, vec_lvsl(line_size + 1, pixels));
+     }
+
+     pixelsv3 = vec_mergel(vczero, pixelsv1);
+     pixelsv4 = vec_mergel(vczero, pixelsv2);
+     pixelsv1 = vec_mergeh(vczero, pixelsv1);
+     pixelsv2 = vec_mergeh(vczero, pixelsv2);
+     
+     pixelssum4 = vec_add((vector unsigned short)pixelsv3,
+                          (vector unsigned short)pixelsv4);
+     pixelssum2 = vec_add((vector unsigned short)pixelsv1,
+                          (vector unsigned short)pixelsv2);
+     temp4 = vec_add(pixelssum3, pixelssum4);
+     temp4 = vec_sra(temp4, vctwo);
+     temp3 = vec_add(pixelssum1, pixelssum2);
+     temp3 = vec_sra(temp3, vctwo);
+
+     pixelssum3 = vec_add(pixelssum4, vctwo);
+     pixelssum1 = vec_add(pixelssum2, vctwo);
+
+     blockv = vec_packsu(temp3, temp4);
+     
+     vec_st(blockv, 0, block);
+     
+     block += line_size;
+     pixels += line_size;
+   }
+   
+POWERPC_PERF_STOP_COUNT(altivec_put_pixels16_xy2_num, 1);
+#endif /* ALTIVEC_USE_REFERENCE_C_CODE */
+}
+
+/* next one assumes that ((line_size % 16) == 0) */
+void put_no_rnd_pixels16_xy2_altivec(uint8_t * block, const uint8_t * pixels, int line_size, int h)
+{
+POWERPC_PERF_DECLARE(altivec_put_no_rnd_pixels16_xy2_num, 1);
+#ifdef ALTIVEC_USE_REFERENCE_C_CODE
+    int j;
+POWERPC_PERF_START_COUNT(altivec_put_no_rnd_pixels16_xy2_num, 1);
+      for (j = 0; j < 4; j++) {
+      int i;
+      const uint32_t a = (((const struct unaligned_32 *) (pixels))->l);
+      const uint32_t b =
+        (((const struct unaligned_32 *) (pixels + 1))->l);
+      uint32_t l0 =
+        (a & 0x03030303UL) + (b & 0x03030303UL) + 0x01010101UL;
+      uint32_t h0 =
+        ((a & 0xFCFCFCFCUL) >> 2) + ((b & 0xFCFCFCFCUL) >> 2);
+      uint32_t l1, h1;
+      pixels += line_size;
+      for (i = 0; i < h; i += 2) {
+        uint32_t a = (((const struct unaligned_32 *) (pixels))->l);
+        uint32_t b = (((const struct unaligned_32 *) (pixels + 1))->l);
+        l1 = (a & 0x03030303UL) + (b & 0x03030303UL);
+        h1 = ((a & 0xFCFCFCFCUL) >> 2) + ((b & 0xFCFCFCFCUL) >> 2);
+        *((uint32_t *) block) =
+          h0 + h1 + (((l0 + l1) >> 2) & 0x0F0F0F0FUL);
+        pixels += line_size;
+        block += line_size;
+        a = (((const struct unaligned_32 *) (pixels))->l);
+        b = (((const struct unaligned_32 *) (pixels + 1))->l);
+        l0 = (a & 0x03030303UL) + (b & 0x03030303UL) + 0x01010101UL;
+        h0 = ((a & 0xFCFCFCFCUL) >> 2) + ((b & 0xFCFCFCFCUL) >> 2);
+        *((uint32_t *) block) =
+          h0 + h1 + (((l0 + l1) >> 2) & 0x0F0F0F0FUL);
+        pixels += line_size;
+        block += line_size;
+      } pixels += 4 - line_size * (h + 1);
+      block += 4 - line_size * h;
+    }
+
+POWERPC_PERF_STOP_COUNT(altivec_put_no_rnd_pixels16_xy2_num, 1);
+
+#else /* ALTIVEC_USE_REFERENCE_C_CODE */
+   register int i;
+   register vector unsigned char
+     pixelsv1, pixelsv2, pixelsv3, pixelsv4;
+   register vector unsigned char
+     blockv, temp1, temp2;
+   register vector unsigned short
+     pixelssum1, pixelssum2, temp3,
+     pixelssum3, pixelssum4, temp4;
+   register const vector unsigned char vczero = (const vector unsigned char)vec_splat_u8(0);
+   register const vector unsigned short vcone = (const vector unsigned short)vec_splat_u16(1);
+   register const vector unsigned short vctwo = (const vector unsigned short)vec_splat_u16(2);
+
+POWERPC_PERF_START_COUNT(altivec_put_no_rnd_pixels16_xy2_num, 1);
+ 
+   temp1 = vec_ld(0, pixels);
+   temp2 = vec_ld(16, pixels);
+   pixelsv1 = vec_perm(temp1, temp2, vec_lvsl(0, pixels));
+   if ((((unsigned long)pixels) & 0x0000000F) ==  0x0000000F)
+   {
+     pixelsv2 = temp2;
+   }
+   else
+   {
+     pixelsv2 = vec_perm(temp1, temp2, vec_lvsl(1, pixels));
+   }
+   pixelsv3 = vec_mergel(vczero, pixelsv1);
+   pixelsv4 = vec_mergel(vczero, pixelsv2);
+   pixelsv1 = vec_mergeh(vczero, pixelsv1);
+   pixelsv2 = vec_mergeh(vczero, pixelsv2);
+   pixelssum3 = vec_add((vector unsigned short)pixelsv3,
+                        (vector unsigned short)pixelsv4);
+   pixelssum3 = vec_add(pixelssum3, vcone);
+   pixelssum1 = vec_add((vector unsigned short)pixelsv1,
+                        (vector unsigned short)pixelsv2);
+   pixelssum1 = vec_add(pixelssum1, vcone);
+   
+   for (i = 0; i < h ; i++) {
+     blockv = vec_ld(0, block);
+
+     temp1 = vec_ld(line_size, pixels);
+     temp2 = vec_ld(line_size + 16, pixels);
+     pixelsv1 = vec_perm(temp1, temp2, vec_lvsl(line_size, pixels));
+     if (((((unsigned long)pixels) + line_size) & 0x0000000F) ==  0x0000000F)
+     {
+       pixelsv2 = temp2;
+     }
+     else
+     {
+       pixelsv2 = vec_perm(temp1, temp2, vec_lvsl(line_size + 1, pixels));
+     }
+
+     pixelsv3 = vec_mergel(vczero, pixelsv1);
+     pixelsv4 = vec_mergel(vczero, pixelsv2);
+     pixelsv1 = vec_mergeh(vczero, pixelsv1);
+     pixelsv2 = vec_mergeh(vczero, pixelsv2);
+     
+     pixelssum4 = vec_add((vector unsigned short)pixelsv3,
+                          (vector unsigned short)pixelsv4);
+     pixelssum2 = vec_add((vector unsigned short)pixelsv1,
+                          (vector unsigned short)pixelsv2);
+     temp4 = vec_add(pixelssum3, pixelssum4);
+     temp4 = vec_sra(temp4, vctwo);
+     temp3 = vec_add(pixelssum1, pixelssum2);
+     temp3 = vec_sra(temp3, vctwo);
+
+     pixelssum3 = vec_add(pixelssum4, vcone);
+     pixelssum1 = vec_add(pixelssum2, vcone);
+
+     blockv = vec_packsu(temp3, temp4);
+     
+     vec_st(blockv, 0, block);
+     
+     block += line_size;
+     pixels += line_size;
+   }
+   
+POWERPC_PERF_STOP_COUNT(altivec_put_no_rnd_pixels16_xy2_num, 1);
 #endif /* ALTIVEC_USE_REFERENCE_C_CODE */
 }
 
 int has_altivec(void)
 {
-#if CONFIG_DARWIN
+#ifdef CONFIG_DARWIN
     int sels[2] = {CTL_HW, HW_VECTORUNIT};
     int has_vu = 0;
     size_t len = sizeof(has_vu);
@@ -819,25 +1321,25 @@ int has_altivec(void)
     err = sysctl(sels, 2, &has_vu, &len, NULL, 0);
 
     if (err == 0) return (has_vu != 0);
-#endif
+#else /* CONFIG_DARWIN */
+/* no Darwin, do it the brute-force way */
+/* this is borrowed from the libmpeg2 library */
+    {
+      signal (SIGILL, sigill_handler);
+      if (sigsetjmp (jmpbuf, 1)) {
+        signal (SIGILL, SIG_DFL);
+      } else {
+        canjump = 1;
+        
+        asm volatile ("mtspr 256, %0\n\t"
+                      "vand %%v0, %%v0, %%v0"
+                      :
+                      : "r" (-1));
+        
+        signal (SIGILL, SIG_DFL);
+        return 1;
+      }
+    }
+#endif /* CONFIG_DARWIN */
     return 0;
 }
-
-#ifdef ALTIVEC_TBL_PERFORMANCE_REPORT
-void altivec_display_perf_report(void)
-{
-  int i;
-  fprintf(stderr, "AltiVec performance report\n Values are from the Time Base register, and represent 4 bus cycles.\n");
-  for(i = 0 ; i < altivec_perf_total ; i++)
-  {
-    if (perfdata[i][altivec_data_num] != (unsigned long long)0)
-      fprintf(stderr, " Function \"%s\":\n\tmin: %llu\n\tmax: %llu\n\tavg: %1.2lf (%llu)\n",
-              perfname[i],
-              perfdata[i][altivec_data_min],
-              perfdata[i][altivec_data_max],
-              (double)perfdata[i][altivec_data_sum] /
-              (double)perfdata[i][altivec_data_num],
-              perfdata[i][altivec_data_num]);
-  }
-}
-#endif /* ALTIVEC_TBL_PERFORMANCE_REPORT */

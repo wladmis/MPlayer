@@ -16,19 +16,20 @@
 #include "mp_image.h"
 #include "vf.h"
 
+#ifdef USE_LIBAVCODEC
+
 #define EMU_OLD
 
-#include "../postproc/postprocess.h"
+#include "../libavcodec/libpostproc/postprocess.h"
 
 #ifdef EMU_OLD
-#include "../postproc/postprocess_internal.h"
+#include "../libavcodec/libpostproc/postprocess_internal.h"
 #endif
 
 struct vf_priv_s {
     int pp;
     pp_mode_t *ppMode[PP_QUALITY_MAX+1];
     void *context;
-    mp_image_t *dmpi;
     unsigned int outfmt;
 };
 
@@ -52,7 +53,7 @@ static int config(struct vf_instance_s* vf,
     if(vf->priv->context) pp_free_context(vf->priv->context);
     vf->priv->context= pp_get_context(width, height, flags);
 
-    return vf_next_config(vf,width,height,d_width,d_height,voflags,vf->priv->outfmt);
+    return vf_next_config(vf,width,height,d_width,d_height,voflags,outfmt);
 }
 
 static void uninit(struct vf_instance_s* vf){
@@ -95,16 +96,16 @@ static void get_image(struct vf_instance_s* vf, mp_image_t *mpi){
     if(!(mpi->flags&MP_IMGFLAG_ACCEPT_STRIDE) && mpi->imgfmt!=vf->priv->outfmt)
 	return; // colorspace differ
     // ok, we can do pp in-place (or pp disabled):
-    vf->priv->dmpi=vf_get_image(vf->next,mpi->imgfmt,
+    vf->dmpi=vf_get_image(vf->next,mpi->imgfmt,
         mpi->type, mpi->flags, mpi->w, mpi->h);
-    mpi->planes[0]=vf->priv->dmpi->planes[0];
-    mpi->stride[0]=vf->priv->dmpi->stride[0];
-    mpi->width=vf->priv->dmpi->width;
+    mpi->planes[0]=vf->dmpi->planes[0];
+    mpi->stride[0]=vf->dmpi->stride[0];
+    mpi->width=vf->dmpi->width;
     if(mpi->flags&MP_IMGFLAG_PLANAR){
-        mpi->planes[1]=vf->priv->dmpi->planes[1];
-        mpi->planes[2]=vf->priv->dmpi->planes[2];
-	mpi->stride[1]=vf->priv->dmpi->stride[1];
-	mpi->stride[2]=vf->priv->dmpi->stride[2];
+        mpi->planes[1]=vf->dmpi->planes[1];
+        mpi->planes[2]=vf->dmpi->planes[2];
+	mpi->stride[1]=vf->dmpi->stride[1];
+	mpi->stride[2]=vf->dmpi->stride[2];
     }
     mpi->flags|=MP_IMGFLAG_DIRECT;
 }
@@ -112,24 +113,28 @@ static void get_image(struct vf_instance_s* vf, mp_image_t *mpi){
 static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
     if(!(mpi->flags&MP_IMGFLAG_DIRECT)){
 	// no DR, so get a new image! hope we'll get DR buffer:
-	vf->priv->dmpi=vf_get_image(vf->next,vf->priv->outfmt,
+	vf->dmpi=vf_get_image(vf->next,mpi->imgfmt,
 	    MP_IMGTYPE_TEMP, MP_IMGFLAG_ACCEPT_STRIDE|MP_IMGFLAG_PREFER_ALIGNED_STRIDE,
 //	    MP_IMGTYPE_TEMP, MP_IMGFLAG_ACCEPT_STRIDE,
 //	    mpi->w,mpi->h);
 	    (mpi->w+7)&(~7),(mpi->h+7)&(~7));
-	vf->priv->dmpi->w=mpi->w; vf->priv->dmpi->h=mpi->h; // display w;h
+	vf->dmpi->w=mpi->w; vf->dmpi->h=mpi->h; // display w;h
     }
     
     if(vf->priv->pp || !(mpi->flags&MP_IMGFLAG_DIRECT)){
 	// do the postprocessing! (or copy if no DR)
 	pp_postprocess(mpi->planes           ,mpi->stride,
-		    vf->priv->dmpi->planes,vf->priv->dmpi->stride,
+		    vf->dmpi->planes,vf->dmpi->stride,
 		    (mpi->w+7)&(~7),mpi->h,
 		    mpi->qscale, mpi->qstride,
 		    vf->priv->ppMode[ vf->priv->pp ], vf->priv->context,
+#ifdef PP_PICT_TYPE_QP2
+		    mpi->pict_type | (mpi->qscale_type ? PP_PICT_TYPE_QP2 : 0));
+#else
 		    mpi->pict_type);
+#endif
     }
-    return vf_next_put_image(vf,vf->priv->dmpi);
+    return vf_next_put_image(vf,vf->dmpi);
 }
 
 //===========================================================================//
@@ -205,31 +210,8 @@ static int open(vf_instance_t *vf, char* args){
     }
 #endif
     
-    vf->priv->pp=PP_QUALITY_MAX; //divx_quality;
+    vf->priv->pp=PP_QUALITY_MAX;
     return 1;
-}
-
-int readPPOpt(void *conf, char *arg)
-{
-  int val;
-
-  if(arg == NULL)
-    return -2; // ERR_MISSING_PARAM
-  errno = 0;
-  val = (int)strtol(arg,NULL,0);
-  if(errno != 0)
-    return -4;  // What about include cfgparser.h and use ERR_* defines */
-  if(val < 0)
-    return -3; // ERR_OUT_OF_RANGE
-
-  divx_quality = val;
-
-  return 1;
-}
-  
-void revertPPOpt(void *conf, char* opt) 
-{
-  divx_quality=0;
 }
 
 vf_info_t vf_info_pp = {
@@ -237,7 +219,10 @@ vf_info_t vf_info_pp = {
     "pp",
     "A'rpi",
     "",
-    open
+    open,
+    NULL
 };
 
 //===========================================================================//
+
+#endif // USE_LIBAVCODEC

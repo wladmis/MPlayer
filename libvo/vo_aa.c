@@ -28,12 +28,13 @@
 #include "video_out_internal.h"
 #include "aspect.h"
 #include "../postproc/swscale.h"
+#include "../libmpcodecs/vf_scale.h"
 #include "font_load.h"
 #include "sub.h"
 
-#include "linux/keycodes.h"
+#include "osdep/keycodes.h"
 #include <aalib.h>
-#include "cfgparser.h"
+#include "m_option.h"
 #include "mp_msg.h"
 
 
@@ -79,8 +80,7 @@ int aaconfigmode=1;
 #ifdef USE_OSD
 font_desc_t* vo_font_save = NULL;
 #endif
-static SwsContext *sws=NULL;
-extern m_config_t *mconfig;
+static struct SwsContext *sws=NULL;
 
 /* our version of the playmodes :) */
 
@@ -119,8 +119,8 @@ resize(void){
     screen_x = (aa_scrwidth(c) - screen_w) / 2;
     screen_y = (aa_scrheight(c) - screen_h) / 2;
     
-    if(sws) freeSwsContext(sws);
-    sws = getSwsContextFromCmdLine(src_width,src_height,image_format,
+    if(sws) sws_freeContext(sws);
+    sws = sws_getContextFromCmdLine(src_width,src_height,image_format,
 				   image_width,image_height,IMGFMT_Y8);
 
     image[0] = aa_image(c) + image_y * aa_imgwidth(c) + image_x;
@@ -254,7 +254,9 @@ config(uint32_t width, uint32_t height, uint32_t d_width,
       vo_font=malloc(sizeof(font_desc_t));//if(!desc) return NULL;
       memset(vo_font,0,sizeof(font_desc_t));
       vo_font->pic_a[0]=malloc(sizeof(raw_file));
+      memset(vo_font->pic_a[0],0,sizeof(raw_file));
       vo_font->pic_b[0]=malloc(sizeof(raw_file));
+      memset(vo_font->pic_b[0],0,sizeof(raw_file));
 
 #ifdef HAVE_FREETYPE
       vo_font->dynamic = 0;
@@ -264,7 +266,9 @@ config(uint32_t width, uint32_t height, uint32_t d_width,
       vo_font->charspace=0;
       vo_font->height=1;
       vo_font->pic_a[0]->bmp=malloc(255);
+      vo_font->pic_a[0]->pal=NULL;
       vo_font->pic_b[0]->bmp=malloc(255);
+      vo_font->pic_b[0]->pal=NULL;
       vo_font->pic_a[0]->w=1;
       vo_font->pic_a[0]->h=1;
       for (i=0; i<255; i++){
@@ -356,7 +360,7 @@ draw_frame(uint8_t *src[]) {
     break;
   }
 
-  sws->swScale(sws,src,stride,0,src_height,image,image_stride);
+  sws_scale_ordered(sws,src,stride,0,src_height,image,image_stride);
 
    /* Now 'ASCIInate' the image */ 
   if (fast)
@@ -376,7 +380,7 @@ draw_slice(uint8_t *src[], int stride[],
   int dx2 = screen_x + ((x+w) * screen_w / src_width);
   int dy2 = screen_y + ((y+h) * screen_h / src_height);
 
-  sws->swScale(sws,src,stride,y,h,image,image_stride);
+  sws_scale_ordered(sws,src,stride,y,h,image,image_stride);
 
   /* Now 'ASCIInate' the image */ 
   if (fast)
@@ -510,7 +514,6 @@ uninit(void) {
 
     if (strstr(c->driver->name,"Curses") || strstr(c->driver->name,"Linux")){
 	freopen("/dev/tty", "w", stderr);
-	m_config_set_option(mconfig,"quiet",NULL); /* enable mplayer outputs */
     }
 #ifdef USE_OSD
     if(vo_font_save) {
@@ -586,7 +589,7 @@ getcolor(char * s){
 }
 
 int
-vo_aa_parseoption(struct config * conf, char *opt, char *param){
+vo_aa_parseoption(m_option_t * conf, char *opt, char *param){
     /* got an option starting with aa */
     char *pseudoargv[4];
     int pseudoargc;
@@ -594,12 +597,12 @@ vo_aa_parseoption(struct config * conf, char *opt, char *param){
     int i;
     /* do WE need it ? */
     if (!strcasecmp(opt, "aaosdcolor")){
-	if (param==NULL) return ERR_MISSING_PARAM;
-	if ((i=getcolor(param))==-1) return ERR_OUT_OF_RANGE;
+	if (param==NULL) return M_OPT_MISSING_PARAM;
+	if ((i=getcolor(param))==-1) return M_OPT_OUT_OF_RANGE;
 	aaopt_osdcolor=i;
 	return 1;
     }else if (!strcasecmp(opt, "aasubcolor")){
-	if ((i=getcolor(param))==-1) return ERR_OUT_OF_RANGE;
+	if ((i=getcolor(param))==-1) return M_OPT_OUT_OF_RANGE;
 	aaopt_subcolor=i;
 	return 1;
     }else if (!strcasecmp(opt, "aahelp")){
@@ -652,7 +655,7 @@ vo_aa_parseoption(struct config * conf, char *opt, char *param){
 	fprintf(stderr,"VO: [aa] ");
 	i=aa_parseoptions(&aa_defparams, &aa_defrenderparams, &pseudoargc, pseudoargv);
 	if (i!=1){
-	    return ERR_MISSING_PARAM;
+	    return M_OPT_MISSING_PARAM;
 	}
 	if (pseudoargv[1]!=NULL){
 	    /* aalib has given param back */
@@ -663,12 +666,12 @@ vo_aa_parseoption(struct config * conf, char *opt, char *param){
 	return 1; /* all opt & params accepted */
 
     }
-    return ERR_NOT_AN_OPTION;
+    return M_OPT_UNKNOWN;
 		
 }
 
 void
-vo_aa_revertoption(config_t* opt,char* param) {
+vo_aa_revertoption(m_option_t* opt,char* param) {
   if (!strcasecmp(param, "aaosdcolor"))
     aaopt_osdcolor= AA_SPECIAL;
   else if (!strcasecmp(param, "aasubcolor"))
@@ -729,7 +732,6 @@ static uint32_t preinit(const char *arg)
 
     if ((strstr(c->driver->name,"Curses")) || (strstr(c->driver->name,"Linux"))){
 	freopen("/dev/null", "w", stderr);
-	m_config_set_option(mconfig,"noquiet",NULL); /* disable mplayer outputs */
 	/* disable console blanking */
 	printf("\033[9;0]");
     }

@@ -2,11 +2,16 @@ include ../config.mak
 
 LIBNAME = libaf.a
 
-SRCS=af.c af_mp.c af_dummy.c af_delay.c af_channels.c af_format.c af_resample.c window.c filter.c af_volume.c af_equalizer.c af_tools.c af_comp.c af_gate.c af_pan.c af_surround.c af_sub.c
+SRCS=af.c af_mp.c af_dummy.c af_delay.c af_channels.c af_format.c af_resample.c window.c filter.c af_volume.c af_equalizer.c af_tools.c af_comp.c af_gate.c af_pan.c af_surround.c af_sub.c af_export.c
 
 OBJS=$(SRCS:.c=.o)
 
-CFLAGS  = $(OPTFLAGS) -I. -Wall 
+CFLAGS  = $(OPTFLAGS) -I. -Wall $(EXTRA_INC)
+
+ifeq ($(TARGET_MINGW32),yes)
+CFLAGS += -D_IO_H_
+endif
+
 .SUFFIXES: .c .o
 
 .c.o:

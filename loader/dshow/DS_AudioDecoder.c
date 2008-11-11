@@ -4,6 +4,7 @@
 	 Copyright 2001 Eugene Kuznetsov  (divx@euro.ru)
 
 *********************************************************/
+#include "config.h"
 
 #ifndef NOAVIFILE_HEADERS
 #include "audiodecoder.h"
@@ -24,7 +25,9 @@ struct _DS_AudioDecoder
 };
 
 #include "DS_AudioDecoder.h"
+#ifdef WIN32_LOADER
 #include "../ldt_keeper.h"
+#endif
 
 #include <string.h>
 #include <stdio.h>
@@ -41,8 +44,10 @@ DS_AudioDecoder * DS_AudioDecoder_Open(char* dllname, GUID* guid, WAVEFORMATEX* 
     int sz;
     WAVEFORMATEX* pWF;
 
+#ifdef WIN32_LOADER
     Setup_LDT_Keeper();
     Setup_FS_Segment();
+#endif
         
     this = malloc(sizeof(DS_AudioDecoder));
     
@@ -105,7 +110,8 @@ DS_AudioDecoder * DS_AudioDecoder_Open(char* dllname, GUID* guid, WAVEFORMATEX* 
 
 	props.cBuffers=1;
         props.cbBuffer=this->m_sOurType.lSampleSize;
-	props.cbAlign=props.cbPrefix=0;
+	props.cbAlign=1;
+	props.cbPrefix=0;
 	this->m_pDS_Filter->m_pAll->vt->SetProperties(this->m_pDS_Filter->m_pAll, &props, &props1);
 	this->m_pDS_Filter->m_pAll->vt->Commit(this->m_pDS_Filter->m_pAll);
     }
@@ -140,7 +146,9 @@ int DS_AudioDecoder_Convert(DS_AudioDecoder *this, const void* in_data, unsigned
     if (!in_data || !out_data)
 	return -1;
 
+#ifdef WIN32_LOADER
     Setup_FS_Segment();
+#endif
 
     in_size -= in_size%this->in_fmt.nBlockAlign;
     while (in_size>0)

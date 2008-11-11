@@ -6,7 +6,8 @@
 #include "../config.h"
 #include "../mp_msg.h"
 #include "../mplayer.h"
-#include "../cfgparser.h"
+#include "../m_config.h"
+#include "../m_option.h"
 
 #ifdef USE_SETLOCALE
 #include <locale.h>
@@ -57,8 +58,14 @@ int    gtkSubDumpMPSub = 0;
 int    gtkSubDumpSrt = 0;
 
 int    gtkLoadFullscreen = 0;
+int    gtkShowVideoWindow = 1;
 int    gtkEnablePlayBar = 1;
 
+int    gui_save_pos = 1;
+int    gui_main_pos_x = -2;
+int    gui_main_pos_y = -2;
+int    gui_sub_pos_x = -1;
+int    gui_sub_pos_y = -1;
 // ---
 
 extern char * get_path( char * filename );
@@ -67,7 +74,7 @@ extern int    frame_dropping;
 extern int    stop_xscreensaver;
 
 static m_config_t * gui_conf;
-static config_t gui_opts[] =
+static m_option_t gui_opts[] =
 {
  { "enable_audio_equ",&gtkEnableAudioEqualizer,CONF_TYPE_FLAG,0,0,1,NULL },
  
@@ -116,6 +123,9 @@ static config_t gui_opts[] =
  { "sub_unicode",&sub_unicode,CONF_TYPE_FLAG,0,0,1,NULL },
  { "sub_pos",&sub_pos,CONF_TYPE_INT,CONF_RANGE,0,200,NULL },
  { "sub_overlap",&suboverlap_enabled,CONF_TYPE_FLAG,0,0,0,NULL },
+#ifdef USE_ICONV
+ { "sub_cp",&sub_cp,CONF_TYPE_STRING,0,0,0,NULL },
+#endif
  { "font_factor",&font_factor,CONF_TYPE_FLOAT,CONF_RANGE,0.0,10.0,NULL },
  { "font_name",&font_name,CONF_TYPE_STRING,0,0,0,NULL },
 #ifdef HAVE_FREETYPE 
@@ -132,12 +142,19 @@ static config_t gui_opts[] =
 
  { "playbar",&gtkEnablePlayBar,CONF_TYPE_FLAG,0,0,1,NULL }, 
  { "load_fullscreen",&gtkLoadFullscreen,CONF_TYPE_FLAG,0,0,1,NULL },
+ { "show_videowin", &gtkShowVideoWindow,CONF_TYPE_FLAG,0,0,1,NULL },
  { "stopxscreensaver",&stop_xscreensaver,CONF_TYPE_FLAG,0,0,1,NULL },
 
  { "autosync",&gtkAutoSyncOn,CONF_TYPE_FLAG,0,0,1,NULL },
  { "autosync_size",&gtkAutoSync,CONF_TYPE_INT,CONF_RANGE,0,10000,NULL },
  
  { "gui_skin",&skinName,CONF_TYPE_STRING,0,0,0,NULL },
+
+ { "gui_save_pos", &gui_save_pos, CONF_TYPE_FLAG,0,0,1,NULL},
+ { "gui_main_pos_x", &gui_main_pos_x, CONF_TYPE_INT,0,0,0,NULL},
+ { "gui_main_pos_y", &gui_main_pos_y, CONF_TYPE_INT,0,0,0,NULL},
+ { "gui_video_out_pos_x", &gui_sub_pos_x, CONF_TYPE_INT,0,0,0,NULL},
+ { "gui_video_out_pos_y", &gui_sub_pos_y, CONF_TYPE_INT,0,0,0,NULL},
 
  { "equ_channel_1",&gtkEquChannel1,CONF_TYPE_STRING,0,0,0,NULL },
  { "equ_channel_2",&gtkEquChannel2,CONF_TYPE_STRING,0,0,0,NULL },
@@ -183,11 +200,7 @@ int cfg_read( void )
 
 // -- read configuration
  mp_msg( MSGT_GPLAYER,MSGL_STATUS,"[cfg] read config file: %s\n",cfg );
- gui_conf=m_config_new(
-#ifndef NEW_CONFIG
- play_tree_new()
-#endif
- ); 
+ gui_conf=m_config_new();
  m_config_register_options( gui_conf,gui_opts );
  if ( m_config_parse_config_file( gui_conf,cfg ) < 0 ) 
   {
@@ -230,6 +243,21 @@ int cfg_read( void )
   }
  free( cfg );
 
+// -- reade file loader history
+ cfg=get_path( "gui.history" );
+ if ( (f=fopen( cfg,"rt+" )) )
+  {
+   int i = 0;
+   while ( !feof( f ) )
+    {
+     char tmp[512];
+     if ( gfgets( tmp,512,f ) == NULL ) continue;
+     fsHistory[i++]=gstrdup( tmp );
+    }
+   fclose( f );
+  }
+ free( cfg );
+
 #ifdef USE_SETLOCALE
  setlocale( LC_ALL,"" );
 #endif
@@ -252,33 +280,12 @@ int cfg_write( void )
   {
    for ( i=0;gui_opts[i].name;i++ )
     {
-#ifdef NEW_CONFIG
       char* v = m_option_print(&gui_opts[i],gui_opts[i].p);
       if(v) {
 	fprintf( f,"%s = \"%s\"\n",gui_opts[i].name, v);
 	free(v);
       } else if((int)v == -1)
-	mp_msg(MSGT_GPLAYER,MSGL_WARN,"Unable to save the %s option\n");
-#else
-     switch ( gui_opts[i].type )
-      {
-       case CONF_TYPE_INT:
-       case CONF_TYPE_FLAG:   fprintf( f,"%s = %d\n",gui_opts[i].name,*( (int *)gui_opts[i].p ) );   break;
-       case CONF_TYPE_FLOAT:  fprintf( f,"%s = %f\n",gui_opts[i].name,*( (float *)gui_opts[i].p ) ); break;
-       case CONF_TYPE_STRING: 
-            {
-	     char * tmp = *( (char **)gui_opts[i].p );
-	     if ( tmp && tmp[0] ) fprintf( f,"%s = \"%s\"\n",gui_opts[i].name,tmp );
-	     break;
-	    }
-       case CONF_TYPE_STRING_LIST:
-            {
-	     char ** tmp = *( (char ***)gui_opts[i].p );
-	     if ( tmp && tmp[0] && tmp[0][0] ) fprintf( f,"%s = \"%s\"\n",gui_opts[i].name,tmp[0] );
-	     break;
-	    }
-      }
-#endif
+	mp_msg(MSGT_GPLAYER,MSGL_WARN,"Unable to save the '%s' option\n", gui_opts[i].name);
     }
    fclose( f );
   }
@@ -311,6 +318,18 @@ int cfg_write( void )
      if ( URLList->url ) fprintf( f,"%s\n",URLList->url );
      URLList=URLList->next;
     }
+   fclose( f );
+  }
+ free( cfg );
+
+// -- save file loader history
+ cfg=get_path( "gui.history" );
+ if ( (f=fopen( cfg,"wt+" )) )
+  {
+   int i = 0;
+//   while ( fsHistory[i] != NULL )
+   for ( i=0;i < 5; i++)
+     if( fsHistory[i] ) fprintf( f,"%s\n",fsHistory[i] );
    fclose( f );
   }
  free( cfg );

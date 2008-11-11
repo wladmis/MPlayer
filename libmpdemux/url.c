@@ -13,10 +13,11 @@
 #include "mp_msg.h"
 
 URL_t*
-url_new(char* url) {
+url_new(const char* url) {
 	int pos1, pos2;
 	URL_t* Curl;
-	char *ptr1, *ptr2, *ptr3;
+	char *ptr1=NULL, *ptr2=NULL, *ptr3=NULL;
+	int jumpSize = 3;
 
 	if( url==NULL ) return NULL;
 	
@@ -40,9 +41,15 @@ url_new(char* url) {
 	// extract the protocol
 	ptr1 = strstr(url, "://");
 	if( ptr1==NULL ) {
-		mp_msg(MSGT_NETWORK,MSGL_V,"Not an URL!\n");
-		url_free(Curl);
-		return NULL;
+	        // Check for a special case: "sip:" (without "//"):
+	        if (strstr(url, "sip:") == url) {
+		        ptr1 = &url[3]; // points to ':'
+			jumpSize = 1;
+		} else {
+		        mp_msg(MSGT_NETWORK,MSGL_V,"Not an URL!\n");
+		        url_free(Curl);
+			return NULL;
+		}
 	}
 	pos1 = ptr1-url;
 	Curl->protocol = (char*)malloc(pos1+1);
@@ -55,8 +62,8 @@ url_new(char* url) {
 	Curl->protocol[pos1] = '\0';
 
 	// jump the "://"
-	ptr1 += 3;
-	pos1 += 3;
+	ptr1 += jumpSize;
+	pos1 += jumpSize;
 
 	// check if a username:password is given
 	ptr2 = strstr(ptr1, "@");
@@ -94,23 +101,36 @@ url_new(char* url) {
 		ptr1 = ptr2+1;
 		pos1 = ptr1-url;
 	}
+
+	// before looking for a port number check if we have an IPv6 type numeric address
+	// in IPv6 URL the numeric address should be inside square braces.
+	ptr2 = strstr(ptr1, "[");
+	ptr3 = strstr(ptr1, "]");
+	if( ptr2!=NULL && ptr3!=NULL ) {
+		// we have an IPv6 numeric address
+		ptr1++;
+		pos1++;
+		ptr2 = ptr3;
+	} else {
+		ptr2 = ptr1;
+
+	}
 	
 	// look if the port is given
-	ptr2 = strstr(ptr1, ":");
+	ptr2 = strstr(ptr2, ":");
 	// If the : is after the first / it isn't the port
 	ptr3 = strstr(ptr1, "/");
 	if(ptr3 && ptr3 - ptr2 < 0) ptr2 = NULL;
 	if( ptr2==NULL ) {
 		// No port is given
 		// Look if a path is given
-		ptr2 = strstr(ptr1, "/");
-		if( ptr2==NULL ) {
+		if( ptr3==NULL ) {
 			// No path/filename
 			// So we have an URL like http://www.hostname.com
 			pos2 = strlen(url);
 		} else {
 			// We have an URL like http://www.hostname.com/file.txt
-			pos2 = ptr2-url;
+			pos2 = ptr3-url;
 		}
 	} else {
 		// We have an URL beginning like http://www.hostname.com:1212
@@ -118,6 +138,7 @@ url_new(char* url) {
 		Curl->port = atoi(ptr2+1);
 		pos2 = ptr2-url;
 	}
+	if( strstr(ptr1, "]")!=NULL ) pos2--;
 	// copy the hostname in the URL container
 	Curl->hostname = (char*)malloc(pos2-pos1+1);
 	if( Curl->hostname==NULL ) {
@@ -143,7 +164,7 @@ url_new(char* url) {
 			}
 		}
 	} 
-	// Check if a filenme was given or set, else set it with '/'
+	// Check if a filename was given or set, else set it with '/'
 	if( Curl->file==NULL ) {
 		Curl->file = (char*)malloc(2);
 		if( Curl->file==NULL ) {
@@ -174,7 +195,7 @@ url_free(URL_t* url) {
 /* works like strcpy(), but without return argument */
 /* unescape_url_string comes from ASFRecorder */
 void
-url_unescape_string(char *outbuf, char *inbuf)
+url_unescape_string(char *outbuf, const char *inbuf)
 {
 	unsigned char c;
 	do {
@@ -199,7 +220,7 @@ url_unescape_string(char *outbuf, char *inbuf)
 /* works like strcpy(), but without return argument */
 /* escape_url_string comes from ASFRecorder */
 void
-url_escape_string(char *outbuf, char *inbuf) {
+url_escape_string(char *outbuf, const char *inbuf) {
 	unsigned char c;
 	do {
 		c = *inbuf++;
@@ -218,9 +239,9 @@ url_escape_string(char *outbuf, char *inbuf) {
 			unsigned char c1 = ((c & 0xf0) >> 4);
 			unsigned char c2 = (c & 0x0f);
 			if (c1 < 10) c1+='0';
-			else c1+='A';
+			else c1+='A'-10;
 			if (c2 < 10) c2+='0';
-			else c2+='A';
+			else c2+='A'-10;
 			*outbuf++ = '%';
 			*outbuf++ = c1;
 			*outbuf++ = c2;
@@ -230,7 +251,7 @@ url_escape_string(char *outbuf, char *inbuf) {
 
 #ifdef __URL_DEBUG
 void
-url_debug(URL_t *url) {
+url_debug(const URL_t *url) {
 	if( url==NULL ) {
 		printf("URL pointer NULL\n");
 		return;

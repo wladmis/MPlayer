@@ -1,7 +1,5 @@
-
-#ifndef NEW_CONFIG
-#warning "Including m_struct.h but NEW_CONFIG is disabled"
-#else
+#ifndef _M_STRUCT_H
+#define _M_STRUCT_H
 
 ///////////////////// A struct setter ////////////////////////
 
@@ -24,7 +22,7 @@ typedef struct m_struct_st {
 #define M_ST_MB_P(struct_p, struct_offset)   \
     ((void*) (struct_p) + (unsigned long) (struct_offset))
 #define M_ST_MB(member_type, struct_p, struct_offset)   \
-    (*(member_type*) M_STRUCT_MEMBER_P ((struct_p), (struct_offset)))
+    (*(member_type*) M_ST_MB_P ((struct_p), (struct_offset)))
 
 
 
@@ -47,4 +45,4 @@ m_struct_free(m_struct_t* st, void* obj);
 struct m_option*
 m_struct_get_field(m_struct_t* st,char* f);
 
-#endif
+#endif /* _M_STRUCT_H */

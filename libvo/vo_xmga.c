@@ -38,7 +38,7 @@
 #include "aspect.h"
 
 #ifdef SHOW_TIME
-#include "../linux/timer.h"
+#include "../osdep/timer.h"
 static unsigned int timer=0;
 static unsigned int timerd=0;
 #endif
@@ -62,7 +62,7 @@ static XGCValues              wGCV;
 
 static uint32_t               mDepth;
 static XWindowAttributes      attribs;
-static uint32_t               fgColor;
+static int colorkey;
 
 static uint32_t               mvHeight;
 static uint32_t               mvWidth;
@@ -81,7 +81,7 @@ static void mDrawColorKey( void )
 {
  XSetBackground( mDisplay,vo_gc,0 );
  XClearWindow( mDisplay,vo_window );
- XSetForeground( mDisplay,vo_gc,fgColor );
+ XSetForeground( mDisplay,vo_gc,colorkey );
  XFillRectangle( mDisplay,vo_window,vo_gc,drwX,drwY,drwWidth,(vo_fs?drwHeight - 1:drwHeight) );
  XFlush( mDisplay );
 }
@@ -112,6 +112,7 @@ static uint32_t config( uint32_t width, uint32_t height, uint32_t d_width, uint3
  char                 * mTitle=(title == NULL) ? "XMGA render" : title;
  XVisualInfo            vinfo;
  unsigned long          xswamask;
+ int r, g, b;
 
  if(mga_init(width,height,format)) return -1; // ioctl errors?
 
@@ -125,21 +126,26 @@ static uint32_t config( uint32_t width, uint32_t height, uint32_t d_width, uint3
 
  vo_dx=( vo_screenwidth - d_width ) / 2;
  vo_dy=( vo_screenheight - d_height ) / 2;
+ geometry(&vo_dx, &vo_dy, &d_width, &d_height, vo_screenwidth, vo_screenheight);
  vo_dwidth=d_width; vo_dheight=d_height;
  vo_mouse_autohide=1;
 
+ r = (vo_colorkey & 0x00ff0000) >> 16;
+ g = (vo_colorkey & 0x0000ff00) >> 8;
+ b = vo_colorkey & 0x000000ff;
  switch ( vo_depthonscreen )
   {
-   case 32:
-   case 24: fgColor=0x00ff00ffL; break;
-   case 16: fgColor=0xf81fL; break;
-   case 15: fgColor=0x7c1fL; break;
+   case 32: colorkey = vo_colorkey; break;
+   case 24: colorkey = vo_colorkey & 0x00ffffff; break;
+   case 16: colorkey = ((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3); break;
+   case 15: colorkey = ((r >> 3) << 10) | ((g >> 3) << 5) | (b >> 3); break;
    default: mp_msg(MSGT_VO,MSGL_ERR,"Sorry, this (%d) color depth not supported.\n",vo_depthonscreen ); return -1;
   }
+  mp_msg(MSGT_VO, MSGL_INFO, "Using colorkey: %x\n", colorkey);
 
   inited=1;
 
-  aspect(&vo_dwidth,&vo_dheight,A_NOZOOM);
+  aspect(&d_width,&d_height,A_NOZOOM);
 
 #ifdef HAVE_NEW_GUI
   if(use_gui)
@@ -207,9 +213,9 @@ static uint32_t config( uint32_t width, uint32_t height, uint32_t d_width, uint3
  panscan_calc();
 
  mga_vid_config.colkey_on=1;
- mga_vid_config.colkey_red=255;
- mga_vid_config.colkey_green=0;
- mga_vid_config.colkey_blue=255;
+ mga_vid_config.colkey_red=r;
+ mga_vid_config.colkey_green=g;
+ mga_vid_config.colkey_blue=b;
 
  set_window();	// set up mga_vid_config.dest_width etc
 

@@ -867,6 +867,8 @@ void free_font_desc(font_desc_t *desc)
     
     if (!desc) return;
 
+//    if (!desc->dynamic) return; // some vo_aa crap, better leaking than crashing
+
     if (desc->name) free(desc->name);
     if (desc->fpath) free(desc->fpath);
     
@@ -903,7 +905,7 @@ static int load_sub_face(char *name, FT_Face *face)
     if (err) {
 	err = FT_New_Face(library, get_path("subfont.ttf"), 0, face);
 	if (err) {
-	    err = FT_New_Face(library, DATADIR"/subfont.ttf", 0, face);
+	    err = FT_New_Face(library, MPLAYER_DATADIR "/subfont.ttf", 0, face);
 	    if (err) {
 	        mp_msg(MSGT_OSD, MSGL_ERR, "New_Face failed. Maybe the font path is wrong.\nPlease supply the text font file (~/.mplayer/subfont.ttf).\n" );
 		return -1;

@@ -66,6 +66,9 @@
 #include "mp_image.h"
 #include "vf.h"
 #include "img_format.h"
+#include "../config.h"
+
+#ifndef HAVE_NO_POSIX_SELECT
 
 #include "../mp_msg.h"
 
@@ -90,9 +93,9 @@
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 #define INRANGE(a,b,c)	( ((a) < (b)) ? (b) : ( ((a) > (c)) ? (c) : (a) ) )
 
-#define rgb2y(R,G,B)  (  (0.257 * R) + (0.504 * G) + (0.098 * B) + 16  )
-#define rgb2u(R,G,B)  ( -(0.148 * R) - (0.291 * G) + (0.439 * B) + 128 )
-#define rgb2v(R,G,B)  (  (0.439 * R) - (0.368 * G) - (0.071 * B) + 128 )
+#define rgb2y(R,G,B)  ( (( 263*R + 516*G + 100*B) >> 10) + 16  )
+#define rgb2u(R,G,B)  ( ((-152*R - 298*G + 450*B) >> 10) + 128 )
+#define rgb2v(R,G,B)  ( (( 450*R - 376*G -  73*B) >> 10) + 128 )
 
 #define DBG(a) (mp_msg(MSGT_VFILTER, MSGL_DBG2, "DEBUG: %d\n", a))
 
@@ -211,11 +214,13 @@ put_image(struct vf_instance_s* vf, mp_image_t* mpi){
 
     if(vf->priv->stream_fd >= 0) {
 		struct timeval tv;
+		int ready;
 
 		FD_SET( vf->priv->stream_fd, &vf->priv->stream_fdset );
 		tv.tv_sec=0; tv.tv_usec=0;
 
-		if( select( vf->priv->stream_fd+1, &vf->priv->stream_fdset, NULL, NULL, &tv ) > 0) {
+		ready = select( vf->priv->stream_fd+1, &vf->priv->stream_fdset, NULL, NULL, &tv );
+		if(ready > 0) {
 			// We've got new data from the FIFO
 
 			char cmd[20], args[100];
@@ -359,7 +364,9 @@ put_image(struct vf_instance_s* vf, mp_image_t* mpi){
 				} // for buf_x
 			} // for buf_y
 			free (buffer);
-		} else if(errno) mp_msg(MSGT_VFILTER, MSGL_WARN, "\nvf_bmovl: Error %d in fifo: %s\n\n", errno, strerror(errno));
+		} else if(ready < 0) {
+			mp_msg(MSGT_VFILTER, MSGL_WARN, "\nvf_bmovl: Error %d in fifo: %s\n\n", errno, strerror(errno));
+		}
     }
 
 	if(vf->priv->hidden) return vf_next_put_image(vf, dmpi);
@@ -395,11 +402,20 @@ put_image(struct vf_instance_s* vf, mp_image_t* mpi){
 						dmpi->planes[2][pos] = vf->priv->bitmap.v[pos];
 					}
 				} else { // Alphablended pixel
-					dmpi->planes[0][pos] = (dmpi->planes[0][pos]*(1.0-(alpha/255.0))) + (vf->priv->bitmap.y[pos]*(alpha/255.0));
+					dmpi->planes[0][pos] = 
+						((255 - alpha) * (int)dmpi->planes[0][pos] + 
+						alpha * (int)vf->priv->bitmap.y[pos]) >> 8;
+					
 					if ((ypos%2) && (xpos%2)) {
 						pos = ( (ypos/2) * dmpi->stride[1] ) + (xpos/2);
-						dmpi->planes[1][pos] = (dmpi->planes[1][pos]*(1.0-(alpha/255.0))) + (vf->priv->bitmap.u[pos]*(alpha/255.0));
-						dmpi->planes[2][pos] = (dmpi->planes[2][pos]*(1.0-(alpha/255.0))) + (vf->priv->bitmap.v[pos]*(alpha/255.0));
+
+						dmpi->planes[1][pos] = 
+							((255 - alpha) * (int)dmpi->planes[1][pos] + 
+							alpha * (int)vf->priv->bitmap.u[pos]) >> 8;
+						
+						dmpi->planes[2][pos] = 
+							((255 - alpha) * (int)dmpi->planes[2][pos] + 
+							alpha * (int)vf->priv->bitmap.v[pos]) >> 8;
 					}
 			    }
 			} // for xpos
@@ -420,7 +436,7 @@ vf_open(vf_instance_t* vf, char* args)
 
     vf->priv = malloc(sizeof(struct vf_priv_s));
 
-	if( sscanf(args, "%d:%d:%s", &vf->priv->hidden, &vf->priv->opaque, filename) < 3 ) {
+	if(!args || sscanf(args, "%d:%d:%s", &vf->priv->hidden, &vf->priv->opaque, filename) < 3 ) {
         mp_msg(MSGT_VFILTER, MSGL_ERR, "vf_bmovl: Bad arguments!\n");
 		mp_msg(MSGT_VFILTER, MSGL_ERR, "vf_bmovl: Arguments are 'bool hidden:bool opaque:string fifo'\n");
 		return FALSE;
@@ -443,5 +459,8 @@ vf_info_t vf_info_bmovl = {
     "bmovl",
     "Per Wigren",
     "",
-    vf_open
+    vf_open,
+    NULL
 };
+
+#endif

@@ -93,8 +93,8 @@ typedef struct {
     int videoready;
     int btfd;
     int source;
-    int maxfps;
-    int fps;
+    float maxfps;
+    float fps;
     int iformat;
     int maxheight;
     int maxwidth;
@@ -358,6 +358,14 @@ static int control(priv_t *priv, int cmd, void *arg)
             return(0);
             }
 
+#ifdef BT848_SAUDIO
+	if((priv->tunerready == TRUE) &&
+	    ioctl(priv->btfd, BT848_SAUDIO, &tv_param_audio_id) < 0)
+	    {
+	    perror("audioid:ioctl");
+	    }
+#endif
+
         return(TVI_CONTROL_TRUE);
         }
     
@@ -419,7 +427,7 @@ static int control(priv_t *priv, int cmd, void *arg)
         return(TVI_CONTROL_TRUE);        
 
     case TVI_CONTROL_VID_GET_FPS:
-        (int)*(void **)arg = (int)priv->fps;
+        *(float *)arg = priv->fps;
         return(TVI_CONTROL_TRUE);        
 
 /*
@@ -787,7 +795,7 @@ if(ioctl(priv->dspfd, FIONREAD, &bytesavail) < 0)
     }
 
 /* When mencoder wants audio data, it wants data..
-   it wont go do anything else until it gets it :( */
+   it won't go do anything else until it gets it :( */
 
 if(bytesavail == 0) return FRAGSIZE;
 

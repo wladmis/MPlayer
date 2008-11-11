@@ -1,7 +1,7 @@
 /*
     Real parser & demuxer
     
-    (C) Alex Beregszaszi <alex@naxine.org>
+    (C) Alex Beregszaszi
     
     Based on FFmpeg's libav/rm.c.
 
@@ -60,6 +60,7 @@ typedef struct {
     int		current_vpacket;
     
     // timestamp correction:
+    int		kf_base;// timestamp of the prev. video keyframe
     int		kf_pts;	// timestamp of next video keyframe
     int		a_pts;	// previous audio timestamp
     float	v_pts;  // previous video timestamp
@@ -313,27 +314,55 @@ int real_check_file(demuxer_t* demuxer)
 
 void hexdump(char *, unsigned long);
 
+#define SKIP_BITS(n) buffer<<=n
+#define SHOW_BITS(n) ((buffer)>>(32-(n)))
+
 static float real_fix_timestamp(real_priv_t* priv, unsigned char* s, int timestamp, float frametime, unsigned int format){
   float v_pts;
+  uint32_t buffer= (s[0]<<24) + (s[1]<<16) + (s[2]<<8) + s[3];
   int kf=timestamp;
-  if(format==0x30335652){ // RV30 timestamps:
-    kf=2*(((s[1]&15)<<8)+s[2]); // 12-bit timestamp from frame header
-    //kf=((s[1]<<8)+s[2])>>3; // 12-bit timestamp from frame header
-    if(verbose>1) printf("\nTS: %08X (%04X) %02X %02X %02X %02X\n",timestamp,kf,s[0],s[1],s[2],s[3]);
-    kf|=timestamp&(~0x1fff);	// combine with packet timestamp
-    if(kf<timestamp-4096) kf+=8192; else // workaround wrap-around problems
-    if(kf>timestamp+4096) kf-=8192;
-    if(!(s[0]&0x8) || !(s[0]&0x10)){ // P || I  frame -> swap timestamps
+  int pict_type;
+  int orig_kf;
+
+#if 1
+  if(format==mmioFOURCC('R','V','3','0') || format==mmioFOURCC('R','V','4','0')){
+    if(format==mmioFOURCC('R','V','3','0')){
+      SKIP_BITS(3);
+      pict_type= SHOW_BITS(2);
+      SKIP_BITS(2 + 7);
+    }else{
+      SKIP_BITS(1);
+      pict_type= SHOW_BITS(2);
+      SKIP_BITS(2 + 7 + 3);
+    }
+    orig_kf=
+    kf= SHOW_BITS(13);  //    kf= 2*SHOW_BITS(12);
+//    if(pict_type==0)
+    if(pict_type<=1){
+      // I frame, sync timestamps:
+      priv->kf_base=timestamp-kf;
+      if(verbose>1) printf("\nTS: base=%08X\n",priv->kf_base);
+      kf=timestamp;
+    } else {
+      // P/B frame, merge timestamps:
+      int tmp=timestamp-priv->kf_base;
+      kf|=tmp&(~0x1fff);	// combine with packet timestamp
+      if(kf<tmp-4096) kf+=8192; else // workaround wrap-around problems
+      if(kf>tmp+4096) kf-=8192;
+      kf+=priv->kf_base;
+    }
+    if(pict_type != 3){ // P || I  frame -> swap timestamps
 	int tmp=kf;
 	kf=priv->kf_pts;
 	priv->kf_pts=tmp;
 //	if(kf<=tmp) kf=0;
     }
+    if(verbose>1) printf("\nTS: %08X -> %08X (%04X) %d %02X %02X %02X %02X %5d\n",timestamp,kf,orig_kf,pict_type,s[0],s[1],s[2],s[3],kf-(int)(1000.0*priv->v_pts));
   }
+#endif
     v_pts=kf*0.001f;
-    if(v_pts<priv->v_pts || !kf) v_pts=priv->v_pts+frametime;
+//    if(v_pts<priv->v_pts || !kf) v_pts=priv->v_pts+frametime;
     priv->v_pts=v_pts;
-//    printf("\n#T# %5d/%5d (%5.3f) %5.3f  \n",kf,timestamp,frametime,v_pts);
     return v_pts;
 }
 
@@ -363,16 +392,17 @@ int demux_real_fill_buffer(demuxer_t *demuxer)
 
   while(1){
 
-    /* also don't check if no num_of_packets was defined in header */
-    if ((priv->current_packet > priv->num_of_packets) &&
-	(priv->num_of_packets != -10)){
-	printf("num_of_packets reached!\n");
-	return 0; /* EOF */
-    }
-
     demuxer->filepos = stream_tell(demuxer->stream);
     version = stream_read_word(demuxer->stream); /* version */
     len = stream_read_word(demuxer->stream);
+    if ((version==0x4441) && (len==0x5441)) { // new data chunk
+	mp_msg(MSGT_DEMUX,MSGL_INFO,"demux_real: New data chunk is coming!!!\n");
+	stream_skip(demuxer->stream,14); 
+	demuxer->filepos = stream_tell(demuxer->stream);
+        version = stream_read_word(demuxer->stream); /* version */
+	len = stream_read_word(demuxer->stream);	
+    }
+
     
     if (len == -256){ /* EOF */
 //	printf("len==-256!\n");
@@ -439,6 +469,7 @@ got_audio:
 		if(cnt2>0x150) *((int*)NULL)=1; // sig11 :)
 	    }
 #endif
+#if 0
 	    if( ((sh_audio_t *)ds->sh)->format == 0x2000) {
 		// if DNET, swap bytes, as DNET is byte-swapped AC3:
 		char *ptr = dp->buffer;
@@ -451,6 +482,7 @@ got_audio:
 		    ptr += 2;
 		}
 	    }
+#endif
 	    dp->pts = (priv->a_pts==timestamp) ? 0 : (timestamp/1000.0f);
 	    priv->a_pts=timestamp;
 	    dp->pos = demuxer->filepos;
@@ -487,14 +519,14 @@ got_video:
 		// bit 7: 1=last block in block chain
 		// bit 6: 1=short header (only one block?)
 		vpkg_header=stream_read_char(demuxer->stream); --len;
-		mp_dbg(MSGT_DEMUX,MSGL_DBG2, "hdr: %0.2X (len=%d) ",vpkg_header,len);
+		mp_dbg(MSGT_DEMUX,MSGL_DBG2, "hdr: %02X (len=%d) ",vpkg_header,len);
 
 		if (0x40==(vpkg_header&0xc0)) {
 		    // seems to be a very short header
 	    	    // 2 bytes, purpose of the second byte yet unknown
 	    	    int bummer;
 		    bummer=stream_read_char(demuxer->stream); --len;
- 		    mp_dbg(MSGT_DEMUX,MSGL_DBG2,  "%0.2X",bummer);
+ 		    mp_dbg(MSGT_DEMUX,MSGL_DBG2,  "%02X",bummer);
  	    	    vpkg_offset=0;
  		    vpkg_length=len;
 		} else {
@@ -503,7 +535,7 @@ got_video:
 			// sub-seqnum (bits 0-6: number of fragment. bit 7: ???)
 		        vpkg_subseq=stream_read_char(demuxer->stream);
 	                --len;
-		        mp_dbg(MSGT_DEMUX,MSGL_DBG2,  "subseq: %0.2X ",vpkg_subseq);
+		        mp_dbg(MSGT_DEMUX,MSGL_DBG2,  "subseq: %02X ",vpkg_subseq);
 			vpkg_subseq&=0x7f;
 	            }
 
@@ -511,11 +543,11 @@ got_video:
 		    // bit 14 is always one (same applies to the offset)
 		    vpkg_length=stream_read_word(demuxer->stream);
 		    len-=2;
-		    mp_dbg(MSGT_DEMUX,MSGL_DBG2, "l: %0.2X %0.2X ",vpkg_length>>8,vpkg_length&0xff);
+		    mp_dbg(MSGT_DEMUX,MSGL_DBG2, "l: %02X %02X ",vpkg_length>>8,vpkg_length&0xff);
 		    if (!(vpkg_length&0xC000)) {
 			vpkg_length<<=16;
 		        vpkg_length|=stream_read_word(demuxer->stream);
-		        mp_dbg(MSGT_DEMUX,MSGL_DBG2, "l+: %0.2X %0.2X ",(vpkg_length>>8)&0xff,vpkg_length&0xff);
+		        mp_dbg(MSGT_DEMUX,MSGL_DBG2, "l+: %02X %02X ",(vpkg_length>>8)&0xff,vpkg_length&0xff);
 	    	        len-=2;
 		    } else
 		    vpkg_length&=0x3fff;
@@ -525,17 +557,17 @@ got_video:
 		    // _end_ of the packet, so it's equal to fragment size!!!
 		    vpkg_offset=stream_read_word(demuxer->stream);
 	            len-=2;
-		    mp_dbg(MSGT_DEMUX,MSGL_DBG2, "o: %0.2X %0.2X ",vpkg_offset>>8,vpkg_offset&0xff);
+		    mp_dbg(MSGT_DEMUX,MSGL_DBG2, "o: %02X %02X ",vpkg_offset>>8,vpkg_offset&0xff);
 		    if (!(vpkg_offset&0xC000)) {
 			vpkg_offset<<=16;
 		        vpkg_offset|=stream_read_word(demuxer->stream);
-		        mp_dbg(MSGT_DEMUX,MSGL_DBG2, "o+: %0.2X %0.2X ",(vpkg_offset>>8)&0xff,vpkg_offset&0xff);
+		        mp_dbg(MSGT_DEMUX,MSGL_DBG2, "o+: %02X %02X ",(vpkg_offset>>8)&0xff,vpkg_offset&0xff);
 	    	        len-=2;
 		    } else
 		    vpkg_offset&=0x3fff;
 
 		    vpkg_seqnum=stream_read_char(demuxer->stream); --len;
-		    mp_dbg(MSGT_DEMUX,MSGL_DBG2, "seq: %0.2X ",vpkg_seqnum);
+		    mp_dbg(MSGT_DEMUX,MSGL_DBG2, "seq: %02X ",vpkg_seqnum);
 	        }
  		mp_dbg(MSGT_DEMUX,MSGL_DBG2, "\n");
                 mp_dbg(MSGT_DEMUX,MSGL_DBG2, "blklen=%d\n", len);
@@ -577,7 +609,7 @@ got_video:
 			    if(dp_hdr->len!=vpkg_length-vpkg_offset)
 				mp_msg(MSGT_DEMUX,MSGL_V,"warning! assembled.len=%d  frag.len=%d  total.len=%d  \n",dp->len,vpkg_offset,vpkg_length-vpkg_offset);
             		    stream_read(demuxer->stream, dp_data+dp_hdr->len, vpkg_offset);
-			    if(dp_data[dp_hdr->len]&0x20) --dp_hdr->chunks; else
+			    if((dp_data[dp_hdr->len]&0x20) && (sh_video->format==0x30335652)) --dp_hdr->chunks; else
 			    dp_hdr->len+=vpkg_offset;
 			    len-=vpkg_offset;
  			    mp_dbg(MSGT_DEMUX,MSGL_DBG2, "fragment (%d bytes) appended, %d bytes left\n",vpkg_offset,len);
@@ -593,7 +625,7 @@ got_video:
 			if(dp_hdr->len!=vpkg_offset)
 			    mp_msg(MSGT_DEMUX,MSGL_V,"warning! assembled.len=%d  offset=%d  frag.len=%d  total.len=%d  \n",dp->len,vpkg_offset,len,vpkg_length);
             		stream_read(demuxer->stream, dp_data+dp_hdr->len, len);
-			if(dp_data[dp_hdr->len]&0x20) --dp_hdr->chunks; else
+			if((dp_data[dp_hdr->len]&0x20) && (sh_video->format==0x30335652)) --dp_hdr->chunks; else
 			dp_hdr->len+=len;
 			len=0;
 			break; // no more fragments in this chunk!
@@ -685,7 +717,8 @@ void demux_open_real(demuxer_t* demuxer)
 //    stream_skip(demuxer->stream, 4); /* number of headers */
 
     /* parse chunks */
-    for (i = 1; i < num_of_headers; i++)
+    for (i = 1; i <= num_of_headers; i++)
+//    for (i = 1; ; i++)
     {
 	int chunk_id, chunk_pos, chunk_size;
 	
@@ -906,6 +939,7 @@ void demux_open_real(demuxer_t* demuxer)
 		    sh->wf->cbSize = 0;
 		    sh->format = MKTAG(buf[0], buf[1], buf[2], buf[3]);
 
+#if 0
 		    switch (sh->format){
 			case MKTAG('d', 'n', 'e', 't'):
 			    mp_msg(MSGT_DEMUX,MSGL_V,"Audio: DNET (AC3 with low-bitrate extension)\n");
@@ -922,13 +956,16 @@ void demux_open_real(demuxer_t* demuxer)
 			default:
 			    mp_msg(MSGT_DEMUX,MSGL_V,"Audio: Unknown (%s)\n", buf);
 		    }
+#endif
 
 		    switch (sh->format)
 		    {
 			case MKTAG('d', 'n', 'e', 't'):
 			    mp_msg(MSGT_DEMUX,MSGL_V,"Audio: DNET -> AC3\n");
-			    sh->format = 0x2000;
+//			    sh->format = 0x2000;
 			    break;
+			case MKTAG('1', '4', '_', '4'):
+			case MKTAG('2', '8', '_', '8'):
 			case MKTAG('s', 'i', 'p', 'r'):
 #if 0
 			    sh->format = 0x130;
@@ -1009,8 +1046,8 @@ void demux_open_real(demuxer_t* demuxer)
 		    mp_msg(MSGT_DEMUX,MSGL_V,"video fourcc: %.4s (%x)\n", (char *)&sh->format, sh->format);
 
 		    /* emulate BITMAPINFOHEADER */
-		    sh->bih = malloc(sizeof(BITMAPINFOHEADER)+8);
-		    memset(sh->bih, 0, sizeof(BITMAPINFOHEADER)+8);
+		    sh->bih = malloc(sizeof(BITMAPINFOHEADER)+12);
+		    memset(sh->bih, 0, sizeof(BITMAPINFOHEADER)+12);
 	    	    sh->bih->biSize = 48;
 		    sh->disp_w = sh->bih->biWidth = stream_read_word(demuxer->stream);
 		    sh->disp_h = sh->bih->biHeight = stream_read_word(demuxer->stream);
@@ -1019,7 +1056,8 @@ void demux_open_real(demuxer_t* demuxer)
 		    sh->bih->biCompression = sh->format;
 		    sh->bih->biSizeImage= sh->bih->biWidth*sh->bih->biHeight*3;
 
-		    sh->fps = stream_read_word(demuxer->stream);
+		    sh->fps = (float) stream_read_word(demuxer->stream);
+		    if (sh->fps<=0) sh->fps=24; // we probably won't even care about fps
 		    sh->frametime = 1.0f/sh->fps;
 		    
 #if 1
@@ -1029,10 +1067,13 @@ void demux_open_real(demuxer_t* demuxer)
 		    printf("unknown2: 0x%X  \n",stream_read_word(demuxer->stream));
 		    printf("unknown3: 0x%X  \n",stream_read_word(demuxer->stream));
 #endif
-		    if (sh->format==0x30335652 ||
-			sh->format==0x30325652 ) {
-		        sh->fps = stream_read_word(demuxer->stream);
-	        	sh->frametime = 1.0f/sh->fps;
+//		    if(sh->format==0x30335652 || sh->format==0x30325652 )
+		    if(1)
+		    {
+			int tmp=stream_read_word(demuxer->stream);
+			if(tmp>0){
+			    sh->fps=tmp; sh->frametime = 1.0f/sh->fps;
+			}
 		    } else {
 	    		int fps=stream_read_word(demuxer->stream);
 			printf("realvid: ignoring FPS = %d\n",fps);
@@ -1073,6 +1114,12 @@ void demux_open_real(demuxer_t* demuxer)
 			    /* codec id: none */
 			    mp_msg(MSGT_DEMUX,MSGL_V,"unknown id: %x\n", tmp);
 		    }
+
+		    if((sh->format<=0x30335652) && (tmp>=0x20200002)){
+			// read secondary WxH for the cmsg24[] (see vd_realvid.c)
+			((unsigned short*)(sh->bih+1))[4]=4*(unsigned short)stream_read_char(demuxer->stream); //widht
+			((unsigned short*)(sh->bih+1))[5]=4*(unsigned short)stream_read_char(demuxer->stream); //height
+		    } 
 		    
 		    if(demuxer->video->id==stream_id){
 			demuxer->video->id=stream_id;
@@ -1115,6 +1162,7 @@ void demux_open_real(demuxer_t* demuxer)
     }
 
 header_end:
+//    printf("i=%d num_of_headers=%d   \n",i,num_of_headers);
     priv->num_of_packets = stream_read_dword(demuxer->stream);
 //    stream_skip(demuxer->stream, 4); /* number of packets */
     stream_skip(demuxer->stream, 4); /* next data header */
@@ -1144,6 +1192,13 @@ header_end:
 	if(!ds_fill_buffer(demuxer->audio)){
           mp_msg(MSGT_DEMUXER,MSGL_INFO,"RM: " MSGTR_MissingAudioStream);
 	}
+    }
+
+    if(demuxer->video->sh){
+	sh_video_t *sh=demuxer->video->sh;
+	mp_msg(MSGT_DEMUX,MSGL_INFO,"VIDEO:  %.4s [%08X,%08X]  %dx%d  (aspect %4.2f)  %4.2f fps\n",
+	    &sh->format,((unsigned int*)(sh->bih+1))[1],((unsigned int*)(sh->bih+1))[0],
+	    sh->disp_w,sh->disp_h,sh->aspect,sh->fps);
     }
 
 }

@@ -1,7 +1,7 @@
 /*
   ao_alsa9 - ALSA-0.9.x output plugin for MPlayer
 
-  (C) Alex Beregszaszi <alex@naxine.org>
+  (C) Alex Beregszaszi
   
   modified for real alsa-0.9.0-support by Joy Winter <joy@pingfm.org>
   additional AC3 passthrough support by Andy Lo A Foe <andy@alsaplayer.org>  
@@ -37,7 +37,7 @@ static ao_info_t info =
 {
     "ALSA-0.9.x audio output",
     "alsa9",
-    "Alex Beregszaszi <alex@naxine.org>, Joy Winter <joy@pingfm.org>",
+    "Alex Beregszaszi, Joy Winter <joy@pingfm.org>",
     "under developement"
 };
 
@@ -70,6 +70,7 @@ int first = 1;
 
 static int open_mode;
 static int set_block_mode;
+static int alsa_can_pause = 0;
 
 #define ALSA_DEVICE_SIZE 48
 
@@ -79,15 +80,14 @@ static int set_block_mode;
 
 
 /* to set/get/query special features/parameters */
-static int control(int cmd, int arg)
+static int control(int cmd, void *arg)
 {
   switch(cmd) {
   case AOCONTROL_QUERY_FORMAT:
     return CONTROL_TRUE;
+#ifndef WORDS_BIGENDIAN 
   case AOCONTROL_GET_VOLUME:
   case AOCONTROL_SET_VOLUME:
-#ifndef WORDS_BIGENDIAN 
-{ //seems to be a problem on macs?
     {
       ao_control_vol_t *vol = (ao_control_vol_t *)arg;
 
@@ -180,17 +180,9 @@ static int control(int cmd, int arg)
       snd_mixer_close(handle);
       return CONTROL_OK;
     }
-}// end big-endian
-#endif
-#ifdef WORDS_BIGENDIAN
-{
-  {
-    return (CONTROL_UNKNOWN);
-  }
-}
 #endif
     
-  } //end witch
+  } //end switch
   return(CONTROL_UNKNOWN);
 }
 
@@ -207,8 +199,7 @@ static int init(int rate_hz, int channels, int format, int flags)
     snd_pcm_info_t *alsa_info;
     char *str_block_mode;
     int device_set = 0;
-    
-    printf("alsa-init: testing and bugreports are welcome.\n");    
+
     printf("alsa-init: requested format: %d Hz, %d channels, %s\n", rate_hz,
 	channels, audio_out_format_name(format));
 
@@ -285,7 +276,6 @@ static int init(int rate_hz, int channels, int format, int flags)
       default:
 	break;	    
       }
-    bytes_per_sample = ao_data.bps / ao_data.samplerate;
 
     if (ao_subdevice) {
       //start parsing ao_subdevice, ugly and not thread safe!
@@ -317,8 +307,12 @@ static int init(int rate_hz, int channels, int format, int flags)
 	  }
 	  else if (strcmp(*(token_str+i3), "hw") == 0) {
 	    if ((i3 < i2-1) && (strcmp(*(token_str+i3+1), "noblock") != 0) && (strcmp(*(token_str+i3+1), "mmap") != 0)) {
+              char *tmp;
+
 	      alsa_device = alloca(ALSA_DEVICE_SIZE);
 	      snprintf(alsa_device, ALSA_DEVICE_SIZE, "hw:%s", *(token_str+(i3+1)));
+	      if ((tmp = strrchr(alsa_device, '.')) && isdigit(*(tmp+1)))
+                *tmp = ',';
 	      device_set = 1;
 	    }
 		else {
@@ -332,7 +326,25 @@ static int init(int rate_hz, int channels, int format, int flags)
 	  }
 	}
       }
-    } //end parsing ao_subdevice
+    } else { //end parsing ao_subdevice
+        /* in any case for multichannel playback we should select
+         * appropriate device
+         */
+        char devstr[128];
+
+        switch (channels) {
+          case 4:
+            strcpy(devstr, "surround40");
+            alsa_device = devstr;
+           break;
+          case 6:
+            strcpy(devstr, "surround51");
+            alsa_device = devstr;
+           break;
+          default:
+        }
+    }
+
 
     /* switch for spdif
      * sets opening sequence for SPDIF
@@ -372,7 +384,7 @@ static int init(int rate_hz, int channels, int format, int flags)
 
       default:
 	fprintf(stderr, "%d channels are not supported\n", channels);
-	exit (0);
+	return(0);
       }
 
       alsa_device = devstr;
@@ -396,13 +408,13 @@ static int init(int rate_hz, int channels, int format, int flags)
 
 	if ((tmp_device = snd_pcm_info_get_device(alsa_info)) < 0)
 	  {
-	    printf("alsa-init: cant get device\n");
+	    printf("alsa-init: can't get device\n");
 	    return(0);
 	  }
 
 	if ((tmp_subdevice = snd_pcm_info_get_subdevice(alsa_info)) < 0)
 	  {
-	    printf("alsa-init: cant get subdevice\n");
+	    printf("alsa-init: can't get subdevice\n");
 	    return(0);
 	  }
 	
@@ -411,7 +423,7 @@ static int init(int rate_hz, int channels, int format, int flags)
 
 	if ((err = snprintf(alsa_device, ALSA_DEVICE_SIZE, "hw:%1d,%1d", tmp_device, tmp_subdevice)) <= 0)
 	  {
-	    printf("alsa-init: cant wrote device-id\n");
+	    printf("alsa-init: can't write device-id\n");
 	  }
 
 	snd_pcm_info_free(alsa_info);
@@ -421,9 +433,9 @@ static int init(int rate_hz, int channels, int format, int flags)
 	printf("alsa-help: available options are:\n");
 	printf("           mmap: sets mmap-mode\n");
 	printf("           noblock: sets noblock-mode\n");
-	printf("           device-name: sets device name\n");
-	printf("           example -ao alsa9:mmap:noblock:hw:0,3 sets noblock-mode,\n");
-	printf("           mmap-mode and the device-name as first card third device\n");
+	printf("           device-name: sets device name (change comma to point)\n");
+	printf("           example -ao alsa9:mmap:noblock:hw:0.3 sets noblock-mode,\n");
+	printf("           mmap-mode and the device-name as first card fourth device\n");
 	return(0);
       } else {
 		printf("alsa-init: soundcard set to %s\n", alsa_device);
@@ -491,7 +503,7 @@ static int init(int rate_hz, int channels, int format, int flags)
       //modes = 0, SND_PCM_NONBLOCK, SND_PCM_ASYNC
       if ((err = snd_pcm_open(&alsa_handler, alsa_device, SND_PCM_STREAM_PLAYBACK, open_mode)) < 0)
 	{
-	  if (ao_noblock) {
+	  if (err != -EBUSY && ao_noblock) {
 	    printf("alsa-init: open in nonblock-mode failed, trying to open in block-mode\n");
 	    if ((err = snd_pcm_open(&alsa_handler, alsa_device, SND_PCM_STREAM_PLAYBACK, 0)) < 0) {
 	      printf("alsa-init: playback open error: %s\n", snd_strerror(err));
@@ -539,6 +551,21 @@ static int init(int rate_hz, int channels, int format, int flags)
 	printf("alsa-init: unable to set access type: %s\n", snd_strerror(err));
 	return (0);
       }
+
+      /* workaround for nonsupported formats
+	 sets default format to S16_LE if the given formats aren't supported */
+      if ((err = snd_pcm_hw_params_test_format(alsa_handler, alsa_hwparams,
+                                             alsa_format)) < 0)
+      {
+         printf("alsa-init: format %s are not supported by hardware, trying default\n",
+                 audio_out_format_name(format));
+         alsa_format = SND_PCM_FORMAT_S16_LE;
+         ao_data.format = AFMT_S16_LE;
+         ao_data.bps = channels * rate_hz * 2;
+      }
+
+      bytes_per_sample = ao_data.bps / ao_data.samplerate; //it should be here
+
     
       if ((err = snd_pcm_hw_params_set_format(alsa_handler, alsa_hwparams,
 					      alsa_format)) < 0)
@@ -679,6 +706,7 @@ static int init(int rate_hz, int channels, int format, int flags)
 	     snd_pcm_format_description(alsa_format));
 
     } // end switch alsa_handler (spdif)
+    alsa_can_pause = snd_pcm_hw_params_can_pause(alsa_hwparams);
     return(1);
 } // end init
 
@@ -691,9 +719,9 @@ static void uninit()
     int err;
 
     if (!ao_noblock) {
-      if ((err = snd_pcm_drain(alsa_handler)) < 0)
+      if ((err = snd_pcm_drop(alsa_handler)) < 0)
 	{
-	  printf("alsa-uninit: pcm drain error: %s\n", snd_strerror(err));
+	  printf("alsa-uninit: pcm drop error: %s\n", snd_strerror(err));
 	  return;
 	}
     }
@@ -718,19 +746,20 @@ static void audio_pause()
 {
     int err;
 
-    if (!ao_noblock) {
-      //drain causes error in nonblock-mode!
-      if ((err = snd_pcm_drain(alsa_handler)) < 0)
-	{
-	  printf("alsa-pause: pcm drain error: %s\n", snd_strerror(err));
-	  return;
-	}
-    }
-    else {
-      if (verbose>0)
-	printf("alsa-pause: paused nonblock\n");
-
-      return;
+    if (alsa_can_pause) {
+        if ((err = snd_pcm_pause(alsa_handler, 1)) < 0)
+        {
+            printf("alsa-pause: pcm pause error: %s\n", snd_strerror(err));
+            return;
+        }
+        if (verbose)
+          printf("alsa-pause: pause supported by hardware\n");
+    } else {
+        if ((err = snd_pcm_drop(alsa_handler)) < 0)
+        {
+            printf("alsa-pause: pcm drop error: %s\n", snd_strerror(err));
+            return;
+        }
     }
 }
 
@@ -738,10 +767,20 @@ static void audio_resume()
 {
     int err;
 
-    if ((err = snd_pcm_prepare(alsa_handler)) < 0)
-    {
-	printf("alsa-resume: pcm prepare error: %s\n", snd_strerror(err));
-	return;
+    if (alsa_can_pause) {
+        if ((err = snd_pcm_pause(alsa_handler, 0)) < 0)
+        {
+            printf("alsa-resume: pcm resume error: %s\n", snd_strerror(err));
+            return;
+        }
+        if (verbose)
+          printf("alsa-resume: resume supported by hardware\n");
+    } else {
+        if ((err = snd_pcm_prepare(alsa_handler)) < 0)
+        {
+           printf("alsa-resume: pcm prepare error: %s\n", snd_strerror(err));
+            return;
+        }
     }
 }
 
@@ -750,24 +789,17 @@ static void reset()
 {
     int err;
 
-    if (!ao_noblock) {
-      //drain causes error in nonblock-mode!
-      if ((err = snd_pcm_drain(alsa_handler)) < 0)
-	{
-	  printf("alsa-pause: pcm drain error: %s\n", snd_strerror(err));
-	  return;
-	}
-
-      if ((err = snd_pcm_prepare(alsa_handler)) < 0)
-	{
-	  printf("alsa-reset: pcm prepare error: %s\n", snd_strerror(err));
-	  return;
-	}
-    } else {
-      if (verbose>0)
-	printf("alsa-reset: reset nonblocked");
-      return;
+    if ((err = snd_pcm_drop(alsa_handler)) < 0)
+    {
+	printf("alsa-reset: pcm drop error: %s\n", snd_strerror(err));
+	return;
     }
+    if ((err = snd_pcm_prepare(alsa_handler)) < 0)
+    {
+	printf("alsa-reset: pcm prepare error: %s\n", snd_strerror(err));
+	return;
+    }
+    return;
 }
 
 #ifdef USE_POLL
@@ -906,7 +938,7 @@ static int play_normal(void* data, int len)
     printf("alsa-play: write error %s", snd_strerror(res));
     return 0;
   }
-  return res < 0 ? (int)res : len;
+  return res < 0 ? (int)res : len - len % bytes_per_sample;
 }
 
 /* mmap-mode mainly based on descriptions by Joshua Haberman <joshua@haberman.com>

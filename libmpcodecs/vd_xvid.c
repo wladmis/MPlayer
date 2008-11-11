@@ -7,11 +7,9 @@
 #ifdef HAVE_XVID
 
 #include "vd_internal.h"
-#include "cfgparser.h"
+#include "m_option.h"
 
-#include <divx4.h>
 #include <xvid.h>
-
 
 #ifdef XVID_API_UNSTABLE
 #warning *******************************************************************
@@ -25,6 +23,18 @@
 #warning **                                                               **
 #warning *******************************************************************
 #endif
+
+typedef struct
+{
+	void *y;
+	void *u;
+	void *v;
+	int stride_y;
+	int stride_uv;
+}
+DIVX4_DEC_PICTURE;
+
+
 
 static vd_info_t info = 
 {
@@ -46,7 +56,7 @@ typedef struct {
 
 static int do_dr2 = 0;
 
-struct config xvid_dec_opts[] = {
+m_option_t xvid_dec_opts[] = {
   { "dr2", &do_dr2, CONF_TYPE_FLAG, 0, 0, 1, NULL},
   { "nodr2", &do_dr2, CONF_TYPE_FLAG, 0, 1, 0, NULL},
   {NULL, NULL, 0, 0, 0, 0, NULL}
@@ -129,7 +139,7 @@ static int init(sh_video_t *sh){
 
   if(ini.api_version != API_VERSION) {
     if(ini.api_version < API_VERSION) {
-      mp_msg(MSGT_DECVIDEO,MSGL_ERR,"Too old version of xivd (min. %d)\n",API_VERSION);
+      mp_msg(MSGT_DECVIDEO,MSGL_ERR,"Too old version of xvid (min. %d)\n",API_VERSION);
       return 0;
     }
     mp_msg(MSGT_DECVIDEO,MSGL_WARN,"Bad xvid version %d was compiled with %d\n",
@@ -178,7 +188,7 @@ static void uninit(sh_video_t *sh){
 // decode a frame
 static mp_image_t* decode(sh_video_t *sh,void* data,int len,int flags){
   XVID_DEC_FRAME dec;
-  DEC_PICTURE d4_pic;
+  DIVX4_DEC_PICTURE d4_pic;
 #ifdef XVID_CSP_EXTERN
   XVID_DEC_PICTURE pic;
 #endif
@@ -237,5 +247,4 @@ static mp_image_t* decode(sh_video_t *sh,void* data,int len,int flags){
 
   return mpi;
 }
-
-#endif
+#endif  //have_xvid

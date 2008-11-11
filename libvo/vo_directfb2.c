@@ -30,14 +30,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <errno.h>
-#include <ctype.h>
-#include <assert.h>
 
-#include <sys/mman.h>
-#include <sys/ioctl.h>
 #ifdef __linux__
 #include <sys/kd.h>
 #else
@@ -49,13 +42,17 @@
 #include "video_out_internal.h"
 #include "fastmemcpy.h"
 #include "sub.h"
-
+#include "mp_msg.h"
 #include "aspect.h"
 
 #ifndef min
 #define min(x,y) (((x)<(y))?(x):(y))
 #endif
 
+#if DIRECTFBVERSION > 917
+// triple buffering
+#define TRIPLE 1
+#endif
 
 static vo_info_t info = {
 	"Direct Framebuffer Device",
@@ -135,7 +132,10 @@ extern char *fb_dev_name;
 char *fb_dev_name;
 #endif
 char *dfb_params;
-int layer_id = -1;
+static int layer_id = -1;
+static int buffer_mode = 1;
+static int use_input = 1;
+static int field_parity = -1;
 
 /******************************
 *	   implementation     *
@@ -149,18 +149,120 @@ if (primary && primarylocked) primary->Unlock(primary);
 
 static uint32_t preinit(const char *arg)
 {
+    DFBResult ret;
 
-DFBResult ret;
-	
-if (verbose) printf("DirectFB: Preinit entered\n");
+    mp_msg(MSGT_VO, MSGL_INFO,"DirectFB: Preinit entered\n");
 
-	if (arg) {
-	    int tmp=-1;
-	    if (sscanf(arg,"%i",&tmp)) {
-		layer_id=tmp;
-		if (verbose) printf("DirectFB: Layer id forced to %i\n",layer_id);
-	    };
-	}
+    if (dfb) return 0; // we are already inited!
+
+    buffer_mode = 1 + vo_doublebuffering; // honor -double switch
+
+// config stuff - borrowed from dfbmga (to be as compatible as it could be :-)
+    
+     if (vo_subdevice) {
+          int show_help = 0;
+          int opt_no = 0;
+          while (*vo_subdevice != '\0') {
+               if (!strncmp(vo_subdevice, "input", 5)) {
+                    use_input = !opt_no;
+                    vo_subdevice += 5;
+                    opt_no = 0;
+               } else if (!strncmp(vo_subdevice, "buffermode=", 11)) {
+                    if (opt_no) {
+                         show_help = 1;
+                         break;
+                    }
+                    vo_subdevice += 11;
+                    if (!strncmp(vo_subdevice, "single", 6)) {
+                         buffer_mode = 1;
+                         vo_subdevice += 6;
+                    } else if (!strncmp(vo_subdevice, "double", 6)) {
+                         buffer_mode = 2;
+                         vo_subdevice += 6;
+                    } else if (!strncmp(vo_subdevice, "triple", 6)) {
+                         buffer_mode = 3;
+                         vo_subdevice += 6;
+                    } else {
+                         show_help = 1;
+                         break;
+                    }
+                    opt_no = 0;
+               } else if (!strncmp(vo_subdevice, "fieldparity=", 12)) {
+                    if (opt_no) {
+                         show_help = 1;
+                         break;
+                    }
+                    vo_subdevice += 12;
+                    if (!strncmp(vo_subdevice, "top", 3)) {
+                         field_parity = 0;
+                         vo_subdevice += 3;
+                    } else if (!strncmp(vo_subdevice, "bottom", 6)) {
+                         field_parity = 1;
+                         vo_subdevice += 6;
+                    } else {
+                         show_help = 1;
+                         break;
+                    }
+                    opt_no = 0;
+               } else if (!strncmp(vo_subdevice, "layer=", 6)) {
+		    int tmp=-1;
+                    if (opt_no) {
+                         show_help = 1;
+                         break;
+                    }
+                    vo_subdevice += 6;
+		    if (sscanf(vo_subdevice,"%i",&tmp)) {
+			 layer_id=tmp;
+			 mp_msg(MSGT_VO, MSGL_INFO,"DirectFB: Layer id is forced to %i\n",layer_id);
+		    } else {
+                         show_help = 1;
+                         break;
+                    }
+                    opt_no = 0;
+               } else if (!strncmp(vo_subdevice, "no", 2)) {
+                    if (opt_no) {
+                         show_help = 1;
+                         break;
+                    }
+                    vo_subdevice += 2;
+                    opt_no = 1;
+               } else if (*vo_subdevice == ':') {
+                    if (opt_no) {
+                         show_help = 1;
+                         break;
+                    }
+                    vo_subdevice++;
+                    opt_no = 0;
+               } else if (!strncmp(vo_subdevice, "help", 4)) {
+                    show_help = 1;
+                    vo_subdevice += 4;
+                    break;
+               } else  {
+                    vo_subdevice++;
+	       }
+          }
+	       
+          if (show_help) {
+               mp_msg( MSGT_VO, MSGL_ERR,
+                       "\nvo_dfbmga command line help:\n"
+                       "Example: mplayer -vo directfb:layer=1:buffermode=single\n"
+                       "\nOptions (use 'no' prefix to disable):\n"
+                       "  input  Use DirectFB for keyboard input\n"
+                       "\nOther options:\n"
+                       "  layer=n\n"
+                       "    n=0..xx   Use layer with id n for output (0=primary)\n"
+                       "  buffermode=(single|double|triple)\n"
+                       "    single   Use single buffering\n"
+                       "    double   Use double buffering\n"
+                       "    triple   Use triple buffering\n"
+                       "  fieldparity=(top|bottom)\n"
+                       "    top      Top field first\n"
+                       "    bottom   Bottom field first\n"
+                       "\n" );
+               return -1;
+          }
+     }
+
 
 	if (dfb_params)
 	{
@@ -189,7 +291,7 @@ if (verbose) printf("DirectFB: Preinit entered\n");
 	    (directfb_minor_version <= 9) &&
 	    (directfb_micro_version < 13)))
 	{
-	    printf("DirectFB: Unsupported DirectFB version\n");	
+	    mp_msg(MSGT_VO, MSGL_ERR,"DirectFB: Unsupported DirectFB version\n");	
 	    return 1;
 	}
 
@@ -197,7 +299,7 @@ if (verbose) printf("DirectFB: Preinit entered\n");
    * (set options)
    */
 	
-	if (!fb_dev_name && !(fb_dev_name = getenv("FRAMEBUFFER"))) fb_dev_name = "/dev/fb0";
+	if (!fb_dev_name && !(fb_dev_name = getenv("FRAMEBUFFER"))) fb_dev_name = strdup("/dev/fb0");
     	DFBCHECK (DirectFBSetOption ("fbdev",fb_dev_name));
 	
 //	uncomment this if you do not wish to create a new vt for DirectFB
@@ -217,24 +319,27 @@ if (verbose) printf("DirectFB: Preinit entered\n");
    */
 
         DFBCHECK (DirectFBCreate (&dfb));
-        if (DFB_OK != dfb->SetCooperativeLevel (dfb, DFSCL_FULLSCREEN)) {
-	    printf("DirectFB: Warning - cannot swith to fullscreen mode");
-	};
 
+#if DIRECTFBVERSION < 917
+        if (DFB_OK != dfb->SetCooperativeLevel (dfb, DFSCL_FULLSCREEN)) {
+            mp_msg(MSGT_VO, MSGL_WARN,"DirectFB: Warning - cannot swith to fullscreen mode");
+        };
+#endif
+	
   /*
    * (Get keyboard)
    */
-
-  ret = dfb->GetInputDevice (dfb, DIDID_KEYBOARD, &keyboard);
-
-  if (ret==DFB_OK) {
-    if (verbose) {
-    printf("DirectFB: Keyboard init OK\n");
+    
+  if (use_input) {
+    ret = dfb->GetInputDevice (dfb, DIDID_KEYBOARD, &keyboard);
+    if (ret==DFB_OK) {
+	mp_msg(MSGT_VO, MSGL_INFO,"DirectFB: Keyboard init OK\n");
+    } else {
+	keyboard = NULL;
+	mp_msg(MSGT_VO, MSGL_ERR,"DirectFB: Keyboard init FAILED\n");
     }
-  } else {
-    keyboard = NULL;
-    printf("DirectFB: Keyboard init FAILED\n");
-  }
+  } 
+
 
   /*
    * Create an input buffer for the keyboard.
@@ -244,9 +349,7 @@ if (verbose) printf("DirectFB: Preinit entered\n");
   // just to start with clean ...
   if (buffer) buffer->Reset(buffer);
 
-  if (verbose) {
-    printf("DirectFB: Preinit OK\n");
-   }
+  mp_msg(MSGT_VO, MSGL_INFO,"DirectFB: Preinit OK\n");
 
   return 0;
 
@@ -274,6 +377,9 @@ DFBSurfacePixelFormat convformat(uint32_t format)
     	    case IMGFMT_YV12:  return  DSPF_YV12; break;
     	    case IMGFMT_I420:  return  DSPF_I420; break;
 //    	    case IMGFMT_IYUV:  return  DSPF_IYUV; break;
+    	    case IMGFMT_RGB8:  return  DSPF_RGB332; break;
+    	    case IMGFMT_BGR8:  return  DSPF_RGB332; break;
+	
 	    default: return 0;
 	}
 return 0;	
@@ -305,7 +411,7 @@ DFBEnumerationResult test_format_callback( unsigned int                 id,
 	       return DFENUM_OK;
      } else {
         DFBDisplayLayerConfig        dlc;
-	
+
 	if (params->setsize) {
     	    dlc.flags	= DLCONF_WIDTH |DLCONF_HEIGHT;
 	    dlc.width	= params->width;
@@ -316,34 +422,34 @@ DFBEnumerationResult test_format_callback( unsigned int                 id,
 
         dlc.flags       = DLCONF_PIXELFORMAT;
 	dlc.pixelformat = convformat(params->format);
-             
+
 	layer->SetOpacity(layer,0);
+             
 	ret = layer->TestConfiguration(layer,&dlc,NULL);
  
         layer->Release(layer);
 
-	if (verbose) printf("DirectFB: Test format - layer %i scale/pos %i\n",id,(desc.caps & DLCAPS_SCREEN_LOCATION));
+	mp_msg(MSGT_VO, MSGL_INFO,"DirectFB: Test format - layer %i scale/pos %i\n",id,(desc.caps & DLCAPS_SCREEN_LOCATION));
      
-	if (!ret) {
+	if (ret==DFB_OK) {
 //	    printf("Test OK\n");     
 	    if (params->result) {
 	        if  ((!params->scale) && (desc.caps & DLCAPS_SCREEN_LOCATION)) {
 		    params->scale=1;
 		    params->id=id;
-		    if (verbose) printf("DirectFB: Test format - added layer %i scale/pos %i\n",id,(desc.caps & DLCAPS_SCREEN_LOCATION));
-		    
+		    mp_msg(MSGT_VO, MSGL_INFO,"DirectFB: Test format - added layer %i scale/pos %i\n",id,(desc.caps & DLCAPS_SCREEN_LOCATION));
 		}
 	    } else {
 		params->result=1;
 		params->id=id;
 		if (desc.caps & DLCAPS_SCREEN_LOCATION) params->scale=1;
-		if (verbose) printf("DirectFB: Test format - added layer %i scale/pos %i\n",id,(desc.caps & DLCAPS_SCREEN_LOCATION));
+		mp_msg(MSGT_VO, MSGL_INFO,"DirectFB: Test format - added layer %i scale/pos %i\n",id,(desc.caps & DLCAPS_SCREEN_LOCATION));
 	   };
 	};
      };
 
     };
-    
+
     return DFENUM_OK;
 }
 
@@ -359,7 +465,7 @@ static uint32_t query_format(uint32_t format)
 //	if (format == IMGFMT_I420) return 0;
 	if (format == IMGFMT_IYUV) return 0;
 	
-	if (verbose) printf("DirectFB: Format query: %s\n",vo_format_name(format));
+	mp_msg(MSGT_VO, MSGL_INFO,"DirectFB: Format query: %s\n",vo_format_name(format));
 
 	params.format=format;
 	params.scale=0;
@@ -394,7 +500,7 @@ DFBEnumerationResult video_modes_callback( unsigned int width,unsigned int heigh
 int overx=0,overy=0,closer=0,over=0;
 int we_are_under=0;
 
-if (verbose) printf("DirectFB: Validator entered %i %i %i\n",width,height,bpp);
+mp_msg(MSGT_VO, MSGL_INFO,"DirectFB: Validator entered %i %i %i\n",width,height,bpp);
 
 overx=width-params->out_width;
 overy=height-params->out_height;
@@ -404,7 +510,7 @@ if (!params->width) {
         params->height=height;
 	params->overx=overx;
 	params->overy=overy;
-	if (verbose) printf("DirectFB: Mode added %i %i %i\n",width,height,bpp);
+	mp_msg(MSGT_VO, MSGL_INFO,"DirectFB: Mode added %i %i %i\n",width,height,bpp);
 }
 
 if ((params->overy<0)||(params->overx<0)) we_are_under=1; // stored mode is smaller than req mode
@@ -415,7 +521,7 @@ if ((closer && (over || we_are_under)) || (we_are_under && over)) {
                 params->height=height;
                 params->overx=overx;
                 params->overy=overy;
-		if (verbose) printf("DirectFB: Better mode added %i %i %i\n",width,height,bpp);
+		mp_msg(MSGT_VO, MSGL_INFO,"DirectFB: Better mode added %i %i %i\n",width,height,bpp);
                 };
 
 return DFENUM_OK;
@@ -445,10 +551,9 @@ static uint32_t config(uint32_t s_width, uint32_t s_height, uint32_t d_width,
 
 	enum1_t params;
 
-	if (verbose) {
-	    printf("DirectFB: Config entered [%ix%i]\n",s_width,s_height);
-	    printf("DirectFB: With requested format: %s\n",vo_format_name(format));
-	}
+	mp_msg(MSGT_VO, MSGL_INFO,"DirectFB: Config entered [%ix%i]\n",s_width,s_height);
+	mp_msg(MSGT_VO, MSGL_INFO,"DirectFB: With requested format: %s\n",vo_format_name(format));
+	
 // initial clean-up
 	if (frame) {
 	    frame->Release(frame);
@@ -475,12 +580,12 @@ static uint32_t config(uint32_t s_width, uint32_t s_height, uint32_t d_width,
 	    params.width=0;
 	    params.height=0;
 	    switch (format) {
-		    case IMGFMT_RGB32: 
-    		    case IMGFMT_BGR32: 
+		    case IMGFMT_RGB32:
+    		    case IMGFMT_BGR32:
 					params.bpp=32;
 					break;
-        	    case IMGFMT_RGB24: 
-		    case IMGFMT_BGR24: 
+        	    case IMGFMT_RGB24:
+		    case IMGFMT_BGR24:
 					params.bpp=24;
 					break;
 		    case IMGFMT_RGB16:
@@ -489,10 +594,10 @@ static uint32_t config(uint32_t s_width, uint32_t s_height, uint32_t d_width,
 	    	    case IMGFMT_BGR15:
 					params.bpp=16;
 					break;
-		    default:		params.bpp=0;		
-					
-	    }			
-	    if (verbose) printf("DirectFB: Config - videomode change\n");
+		    default:		params.bpp=0;
+
+	    }
+	    mp_msg(MSGT_VO, MSGL_INFO,"DirectFB: Config - trying to change videomode\n");
             DFBCHECK (dfb->EnumVideoModes(dfb,video_modes_callback,&params));
 	    ret=dfb->SetVideoMode(dfb,params.width,params.height,params.bpp);
 	    if (ret) {
@@ -509,9 +614,28 @@ static uint32_t config(uint32_t s_width, uint32_t s_height, uint32_t d_width,
 	    }
 	} // vm end
 
+// just for sure clear primary layer
+#if DIRECTFBVERSION > 913
+        ret = dfb->GetDisplayLayer( dfb, DLID_PRIMARY, &layer);
+	if (ret==DFB_OK) {
+	    ret = layer->GetSurface(layer,&primary);
+	    if (ret==DFB_OK) {
+		primary->Clear(primary,0,0,0,0xff);
+		ret = primary->Flip(primary,NULL,0);
+		if (ret==DFB_OK) { 
+		    primary->Clear(primary,0,0,0,0xff);
+		}
+    	    primary->Release(primary);
+	    }
+	primary=NULL;
+        layer->Release(layer);
+	}
+	layer=NULL;
+#endif
+
 // find best layer
 
-        if (verbose) printf("DirectFB: Config - find suitable layer\n");
+        mp_msg(MSGT_VO, MSGL_INFO,"DirectFB: Config - looking for suitable layer\n");
 	params.format=format;
 	params.scale=0;
 	params.result=0;
@@ -522,84 +646,209 @@ static uint32_t config(uint32_t s_width, uint32_t s_height, uint32_t d_width,
         DFBCHECK (dfb->EnumDisplayLayers(dfb,test_format_callback,&params));
 
 	if (!params.result) {
-	    printf("DirectFB: ConfigError - no suitable layer found\n");
+	    mp_msg(MSGT_VO, MSGL_ERR,"DirectFB: ConfigError - no suitable layer found\n");
 	    params.id = DLID_PRIMARY;
-	}	
-/*	Uncomment following if you want to use tvout on CRTC2 (requieres patch for DirectFB from Ville Syrjala)
-	params.id=2;
-	params.scale=0;
-	params.result=1;
-*/	
-	if (verbose) printf("DirectFB: Config - layer %i\n",params.id);
+	}
 
+	mp_msg(MSGT_VO, MSGL_INFO,"DirectFB: Config - layer %i\n",params.id);
 
-// try to setp-up proper configuration
-
+	// setup layer
 
         DFBCHECK (dfb->GetDisplayLayer( dfb, params.id, &layer));
+	
+#if DIRECTFBVERSION > 916
+	ret = layer->SetCooperativeLevel (layer, DLSCL_EXCLUSIVE);
 
+        if (DFB_OK != ret) {
+	    mp_msg(MSGT_VO, MSGL_WARN,"DirectFB: Warning - cannot swith layer to exclusive mode. This could cause\nproblems. You may need to select correct pixel format manually!\n");
+	    DirectFBError("MPlayer - Switch layer to exlusive mode.",ret);
+	};
+#endif
 	if (params.scale) {
-            if (verbose) printf("DirectFB: Config - set layer config (size)\n");
+            mp_msg(MSGT_VO, MSGL_INFO,"DirectFB: Config - changing layer configuration (size)\n");
             dlc.flags       = DLCONF_WIDTH | DLCONF_HEIGHT;
 	    dlc.width       = s_width;
     	    dlc.height      = s_height;
-	    
+
 	    ret = layer->SetConfiguration(layer,&dlc);
-	    
-	    if (ret && (params.scale || verbose)) printf("DirectFB: ConfigError in layer configuration (size)\n");
-	
+
+	    if (ret) {
+		mp_msg(MSGT_VO, MSGL_ERR,"DirectFB: ConfigError in layer configuration (size)\n");
+		DirectFBError("MPlayer - Layer size change.",ret);
+	    };
 	}
 
-        dlc.flags       = DLCONF_PIXELFORMAT;
-	dlc.pixelformat = convformat(params.format);
+        // look if we need to change pixel fromat of layer
+	// and just for sure fetch also all layer propreties
+	dlc.flags       = DLCONF_PIXELFORMAT | DLCONF_WIDTH | DLCONF_HEIGHT | DLCONF_OPTIONS | DLCONF_BUFFERMODE;
 
-//	printf("DirectFB: Format [%x]\n",dlc.pixelformat);
-             
-        if (verbose) printf("DirectFB: Config - set layer config (format)\n");
-	ret = layer->SetConfiguration(layer,&dlc);
-	
+	ret = layer->GetConfiguration(layer,&dlc);
+
+	dlc.flags       = DLCONF_PIXELFORMAT | DLCONF_WIDTH | DLCONF_HEIGHT;
+
 	if (ret) {
-	    printf("DirectFB: ConfigError in layer configuration (format)\n");
-	    return CONFIG_ERROR;
+	    mp_msg(MSGT_VO, MSGL_WARN,"DirectFB: Warning - could not get layer properties!\n");
+	} else {
+	    mp_msg(MSGT_VO, MSGL_INFO,"DirectFB: Layer reports format:%x\n",dlc.pixelformat);
+	}
+
+	if ((dlc.pixelformat != convformat(params.format)) || (ret != DFB_OK)) {
+
+    	    dlc.flags       = DLCONF_PIXELFORMAT;
+	    dlc.pixelformat = convformat(params.format);
+
+	    mp_msg(MSGT_VO, MSGL_INFO,"DirectFB: Desired pixelformat: %x\n",dlc.pixelformat);
+
+    	    mp_msg(MSGT_VO, MSGL_INFO,"DirectFB: Config - changing layer configuration (format)\n");
+	    ret = layer->SetConfiguration(layer,&dlc);
+
+	    if (ret) {
+		unsigned int bpp;
+		mp_msg(MSGT_VO, MSGL_ERR,"DirectFB: ConfigError in layer configuration (format, flags=%x)\n",dlc.flags);
+		DirectFBError("MPlayer - layer pixelformat change",ret);
+
+		// ugly fbdev workabout - try to switch pixelformat via videomode change
+		switch (dlc.pixelformat) {
+		    case DSPF_ARGB: 
+		    case DSPF_RGB32: bpp=32;break;
+    		    case DSPF_RGB24: bpp=24;break;
+	            case DSPF_RGB16: bpp=16;break;
+#if DIRECTFBVERSION > 915
+    		    case DSPF_ARGB1555: bpp=15;break;
+#else
+        	    case DSPF_RGB15: bpp=15;break;
+#endif
+		    case DSPF_RGB332 : bpp=8;break;
+		}
+		
+		switch (dlc.pixelformat) {
+		    case DSPF_ARGB:
+		    case DSPF_RGB32:
+    		    case DSPF_RGB24:
+	            case DSPF_RGB16:
+#if DIRECTFBVERSION > 915
+    		    case DSPF_ARGB1555:
+#else
+        	    case DSPF_RGB15:
+#endif
+		    case DSPF_RGB332:
+				    mp_msg(MSGT_VO, MSGL_INFO,"DirectFB: Trying to recover via videomode change (VM).\n");
+				    // get size
+		        	    dlc.flags = DLCONF_WIDTH | DLCONF_HEIGHT;
+				    if (DFB_OK==layer->GetConfiguration(layer,&dlc)) {
+					// try to set videomode
+				        mp_msg(MSGT_VO, MSGL_INFO,"DirectFB: Videomode  %ix%i BPP %i\n",dlc.width,dlc.height,bpp);
+				    	ret = dfb->SetVideoMode(dfb,dlc.width,dlc.height,bpp);
+					if (ret) DirectFBError("MPlayer - VM - pixelformat change",ret);
+
+				    };
+
+				    //get current pixel format
+				    dlc.flags       = DLCONF_PIXELFORMAT;
+	    			    ret = layer->GetConfiguration(layer,&dlc);
+				    if (ret) {
+					DirectFBError("MPlayer - VM - Layer->GetConfiguration",ret);
+					} else {
+				        mp_msg(MSGT_VO, MSGL_INFO,"DirectFB: Layer has now pixelformat [%x]\n",dlc.pixelformat);
+					};
+
+				    // check if we were succesfull
+				    if ((dlc.pixelformat != convformat(params.format)) || (ret != DFB_OK)) {
+				        mp_msg(MSGT_VO, MSGL_INFO,"DirectFB: Recovery failed!.\n");
+					return CONFIG_ERROR;
+					}
+
+				    break;
+				    
+		    default: return CONFIG_ERROR;	
+			
+		};
+	    };
 	};
-	
 
 // flipping of layer
+// try triple, \double... buffering
 
 	dlc.flags = DLCONF_BUFFERMODE;
-	dlc.buffermode = DLBM_BACKVIDEO;
-        ret = layer->SetConfiguration( layer, &dlc );
-        if (ret!=DFB_OK) {
-    	    dlc.buffermode = DLBM_BACKSYSTEM;
+#ifdef TRIPLE
+	if (buffer_mode > 2) {
+	    dlc.buffermode = DLBM_TRIPLE;
 	    ret = layer->SetConfiguration( layer, &dlc );
+	} else { 
+	    ret=!DFB_OK;
+	}
+	
+	if (ret!=DFB_OK) {
+#endif
+	    if (buffer_mode > 1) {
+		    dlc.buffermode = DLBM_BACKVIDEO;
+    		    ret = layer->SetConfiguration( layer, &dlc );
+    		if (ret!=DFB_OK) {
+    		    dlc.buffermode = DLBM_BACKSYSTEM;
+		    ret = layer->SetConfiguration( layer, &dlc );
 		}
+	    }
+	    if (ret == DFB_OK) {
+		mp_msg(MSGT_VO, MSGL_INFO,"DirectFB: Double buffering is active\n");
+	    }
+#ifdef TRIPLE
+	} else { 
+	    mp_msg(MSGT_VO, MSGL_INFO,"DirectFB: Triple buffering is active\n");
+	}
+#endif
+
+#if DIRECTFBVERSION > 916
+        if (field_parity != -1) {
+	    dlc.flags = DLCONF_OPTIONS;
+	    ret = layer->GetConfiguration( layer, &dlc );
+	    if (ret==DFB_OK) {
+               dlc.options |= DLOP_FIELD_PARITY;
+	       ret = layer->SetConfiguration( layer, &dlc );
+		if (ret==DFB_OK) {
+            	    layer->SetFieldParity( layer, field_parity );
+		}
+	    }
+        }
+#endif
+
 
 // get layer surface
 	
 	ret = layer->GetSurface(layer,&primary);
 	
 	if (ret) {
-	    printf("DirectFB: ConfigError in obtaining surface\n");
+	    mp_msg(MSGT_VO, MSGL_ERR,"DirectFB: ConfigError - could not get surface\n");
 	    return CONFIG_ERROR; // what shall we report on fail?
 	}
 
 // test surface for flipping	
 	DFBCHECK(primary->GetCapabilities(primary,&caps));
 #if DIRECTFBVERSION > 913
-	primary->Clear(primary,0,0,0,0);
+	primary->Clear(primary,0,0,0,0xff);
 #endif	
         flipping = 0;
-	if (caps & DSCAPS_FLIPPING) {
+	if (caps & (DSCAPS_FLIPPING
+#ifdef TRIPLE
+	| DSCAPS_TRIPLE
+#endif
+	)) {
 	    ret = primary->Flip(primary,NULL,0);
 	    if (ret==DFB_OK) { 
 #if DIRECTFBVERSION > 913
-		primary->Clear(primary,0,0,0,0);
+		primary->Clear(primary,0,0,0,0xff);
+#ifdef TRIPLE
+// if we have 3 buffers clean once more
+	if (caps & DSCAPS_TRIPLE) {
+		primary->Flip(primary,NULL,0);
+		primary->Clear(primary,0,0,0,0xff);
+	}
+#endif
 #endif	
 		flipping = 1; 
 	    } 
 	};
 
-        if (verbose) printf("DirectFB: Config - flipping = %i\n",flipping);
+        mp_msg(MSGT_VO, MSGL_INFO,"DirectFB: Config - flipping = %i\n",flipping);
 
 // is scale needed ? Aspect ratio and layer pos/size
 	
@@ -607,7 +856,7 @@ static uint32_t config(uint32_t s_width, uint32_t s_height, uint32_t d_width,
 	// get surface size
 	DFBCHECK(primary->GetSize(primary,&width,&height));
 
-        if (verbose) printf("DirectFB: Config - surface size = %ix%i\n",width,height);
+        mp_msg(MSGT_VO, MSGL_INFO,"DirectFB: Config - surface size = %ix%i\n",width,height);
 
 	aspect_save_orig(s_width,s_height);
 	aspect_save_prescale(d_width,d_height);
@@ -617,7 +866,7 @@ static uint32_t config(uint32_t s_width, uint32_t s_height, uint32_t d_width,
 
                 ret = layer->SetScreenLocation(layer,(1-(float)out_width/10000)/2,(1-(float)out_height/10000)/2,((float)out_width/10000),((float)out_height/10000));
 
-		if (ret) printf("DirectFB: ConfigError in layer configuration (position)\n");
+		if (ret) mp_msg(MSGT_VO, MSGL_ERR,"DirectFB: ConfigError in layer configuration (position)\n");
 
 		xoffset = 0;
 		yoffset = 0;
@@ -655,7 +904,7 @@ static uint32_t config(uint32_t s_width, uint32_t s_height, uint32_t d_width,
 	    
 	    DFBCHECK (dfb->CreateSurface( dfb, &dsc, &frame));
 	    DFBCHECK(frame->GetSize(frame,&width,&height));
-	    if (verbose) printf("DirectFB: Frame is active.\n");
+	    mp_msg(MSGT_VO, MSGL_INFO,"DirectFB: Frame is active.\n");
 	} 
 
 // get format for draw_alpha - should be removed soon - osd will be rendered outside vo driver
@@ -668,14 +917,14 @@ static uint32_t config(uint32_t s_width, uint32_t s_height, uint32_t d_width,
  // finally turn on layer
  layer->SetOpacity(layer,255);
 
- if (verbose) printf("DirectFB: Config finished [%ix%i] - [%ix%i]\n",out_width,out_height,width,height);
+ mp_msg(MSGT_VO, MSGL_INFO,"DirectFB: Config finished [%ix%i] - [%ix%i]\n",out_width,out_height,width,height);
 
 return 0;
 }
 
 extern void mplayer_put_key(int code);
 
-#include "../linux/keycodes.h"
+#include "../osdep/keycodes.h"
 
 static void check_events(void)
 {
@@ -755,35 +1004,46 @@ static void flip_page(void)
 static void uninit(void)
 {
 
-  if (verbose ) printf("DirectFB: Uninit entered\n");
+  mp_msg(MSGT_VO, MSGL_INFO,"DirectFB: Uninit entered\n");
 
   unlock();
   
   /*
    * (Release)
    */
-  if (verbose ) printf("DirectFB: Release buffer\n");
+/*
+  mp_msg(MSGT_VO, MSGL_INFO,"DirectFB: Releasing buffer\n");
   if (buffer) buffer->Release (buffer);
-  if (verbose ) printf("DirectFB: Release keyboard\n");
+  mp_msg(MSGT_VO, MSGL_INFO,"DirectFB: Releasing keyboard\n");
   if (keyboard) keyboard->Release (keyboard);
+*/
   if (frame) {
-    if (verbose ) printf("DirectFB: Release frame\n");
+    mp_msg(MSGT_VO, MSGL_INFO,"DirectFB: Releasing frame\n");
     frame->Release (frame);
+    frame = NULL;
   };
-
-  if (verbose ) printf("DirectFB: Release primary\n");
-  if (primary) primary->Release (primary);
 
 //  switch off BES
 //  if (layer) layer->SetOpacity(layer,0);
 
-  if (layer) layer->Release(layer);
+  if (layer) {
+   mp_msg(MSGT_VO, MSGL_INFO,"DirectFB: Releasing layer\n");
+   layer->Release(layer);
+   layer = NULL;
+  }
 
-  if (verbose ) printf("DirectFB: Release DirectFB library\n");
+  if (primary) {
+   mp_msg(MSGT_VO, MSGL_INFO,"DirectFB: Releasing primary\n");
+   primary->Release (primary);
+   primary = NULL;
+  }
+
+
+/*  mp_msg(MSGT_VO, MSGL_INFO,"DirectFB: Releasing DirectFB library\n");
 
   dfb->Release (dfb);
-
-  if (verbose ) printf("DirectFB: Uninit done.\n");
+*/
+  mp_msg(MSGT_VO, MSGL_INFO,"DirectFB: Uninit done.\n");
 }
 
 
@@ -807,7 +1067,7 @@ if (layer) {
 	    if (desc.caps & DLCAPS_BRIGHTNESS) {
 		ca.brightness = value * factor +0x8000;
 		ca.flags |= DCAF_BRIGHTNESS;
-		if (verbose) printf("DirectFB: SetVEq Brightness 0x%X %i\n",ca.brightness,value);
+		mp_msg(MSGT_VO, MSGL_INFO,"DirectFB: SetVEq Brightness 0x%X %i\n",ca.brightness,value);
 	    } else return VO_FALSE;
 	}
 
@@ -815,7 +1075,7 @@ if (layer) {
 	    if ((desc.caps & DLCAPS_CONTRAST)) {
 	        ca.contrast = value * factor + 0x8000;
 		ca.flags |= DCAF_CONTRAST;
-		if (verbose) printf("DirectFB: SetVEq Contrast 0x%X %i\n",ca.contrast,value);
+		mp_msg(MSGT_VO, MSGL_INFO,"DirectFB: SetVEq Contrast 0x%X %i\n",ca.contrast,value);
 	    } else return VO_FALSE;
 	}
 
@@ -823,7 +1083,7 @@ if (layer) {
     	    if ((desc.caps & DLCAPS_HUE)) {
 		ca.hue = value * factor + 0x8000;
 		ca.flags |= DCAF_HUE;
-		if (verbose) printf("DirectFB: SetVEq Hue 0x%X %i\n",ca.hue,value);
+		mp_msg(MSGT_VO, MSGL_INFO,"DirectFB: SetVEq Hue 0x%X %i\n",ca.hue,value);
 	    } else return VO_FALSE;
 	}
 
@@ -831,7 +1091,7 @@ if (layer) {
 		if ((desc.caps & DLCAPS_SATURATION)) {
 	        ca.saturation = value * factor + 0x8000;
 		ca.flags |= DCAF_SATURATION;
-		if (verbose) printf("DirectFB: SetVEq Saturation 0x%X %i\n",ca.saturation,value);
+		mp_msg(MSGT_VO, MSGL_INFO,"DirectFB: SetVEq Saturation 0x%X %i\n",ca.saturation,value);
 	    } else return VO_FALSE;
 	}
 
@@ -864,7 +1124,7 @@ if (layer) {
 	if (! strcmp( data,"brightness" )) {
 	    if (desc.caps & DLCAPS_BRIGHTNESS) {
 		*value = (int) ((ca.brightness-0x8000) * factor);
-		if (verbose) printf("DirectFB: GetVEq Brightness 0x%X %i\n",ca.brightness,*value);
+		mp_msg(MSGT_VO, MSGL_INFO,"DirectFB: GetVEq Brightness 0x%X %i\n",ca.brightness,*value);
     		return VO_TRUE;
 	    } else return VO_FALSE;
 	}
@@ -872,7 +1132,7 @@ if (layer) {
 	if (! strcmp( data,"contrast" )) {
 	    if ((desc.caps & DLCAPS_CONTRAST)) {
 		*value = (int) ((ca.contrast-0x8000) * factor);
-		if (verbose) printf("DirectFB: GetVEq Contrast 0x%X %i\n",ca.contrast,*value);
+		mp_msg(MSGT_VO, MSGL_INFO,"DirectFB: GetVEq Contrast 0x%X %i\n",ca.contrast,*value);
     		return VO_TRUE;
 	    } else return VO_FALSE;
 	}
@@ -880,7 +1140,7 @@ if (layer) {
 	if (! strcmp( data,"hue" )) {
     	    if ((desc.caps & DLCAPS_HUE)) {
 		*value = (int) ((ca.hue-0x8000) * factor);
-    		if (verbose) printf("DirectFB: GetVEq Hue 0x%X %i\n",ca.hue,*value);
+    		mp_msg(MSGT_VO, MSGL_INFO,"DirectFB: GetVEq Hue 0x%X %i\n",ca.hue,*value);
     		return VO_TRUE;
 	    } else return VO_FALSE;
 	}
@@ -888,7 +1148,7 @@ if (layer) {
 	if (! strcmp( data,"saturation" )) {
     	    if ((desc.caps & DLCAPS_SATURATION)) {
 		*value = (int) ((ca.saturation-0x8000) * factor);
-    		if (verbose) printf("DirectFB: GetVEq Saturation 0x%X %i\n",ca.saturation,*value);
+    		mp_msg(MSGT_VO, MSGL_INFO,"DirectFB: GetVEq Saturation 0x%X %i\n",ca.saturation,*value);
     		return VO_TRUE;
 	    } else return VO_FALSE;
 	}
@@ -904,7 +1164,7 @@ static uint32_t get_image(mp_image_t *mpi)
         int pitch;
 
 //    if (verbose) printf("DirectFB: get_image() called\n");
-    if(mpi->flags&MP_IMGFLAG_READABLE) return VO_FALSE; // slow video ram
+    if(mpi->flags&MP_IMGFLAG_READABLE) return VO_FALSE; // slow video ram 
     if(mpi->type==MP_IMGTYPE_STATIC) return VO_FALSE; // it is not static
 
 //    printf("width=%d vs. pitch=%d, flags=0x%X  \n",mpi->width,pitch,mpi->flags);
@@ -914,7 +1174,7 @@ static uint32_t get_image(mp_image_t *mpi)
        // we're lucky or codec accepts stride => ok, let's go!
 
 	    if (frame) {
-		err = frame->Lock(frame,DSLF_WRITE,&dst,&pitch);
+		err = frame->Lock(frame,DSLF_WRITE|DSLF_READ,&dst,&pitch);
 		framelocked=1;
 	    } else {
  		err = primary->Lock(primary,DSLF_WRITE,&dst,&pitch);
@@ -922,7 +1182,7 @@ static uint32_t get_image(mp_image_t *mpi)
 	    }
 
 	    if (err) {
-		if (verbose) printf("DirectFB: DR lock failed!");
+		mp_msg(MSGT_VO, MSGL_ERR,"DirectFB: DR lock failed!");
 		return VO_FALSE;
 	    };
 
@@ -945,6 +1205,19 @@ static uint32_t get_image(mp_image_t *mpi)
 	   mpi->width=width;
 	   mpi->stride[0]=pitch;
        }
+
+       // center image
+       
+       if (!frame) {
+            if(mpi->flags&MP_IMGFLAG_PLANAR){
+		mpi->planes[0]= dst + yoffset * pitch + xoffset;
+		mpi->planes[1]+= (yoffset * pitch) >> 2 + xoffset >> 1;
+		mpi->planes[2]+= (yoffset * pitch) >> 2 + xoffset >> 1;
+	    } else {
+		mpi->planes[0]=dst + yoffset * pitch + xoffset * (mpi->bpp >> 3);
+	    }		   
+       }
+       
        mpi->flags|=MP_IMGFLAG_DIRECT;
 //       if (verbose) printf("DirectFB: get_image() SUCCESS -> Direct Rendering ENABLED\n");
        return VO_TRUE;
@@ -962,10 +1235,12 @@ static uint32_t draw_slice(uint8_t *src[], int stride[], int w, int h, int x, in
         void *srcp;
 	unsigned int p;
 
+//        if (verbose) printf("DirectFB: draw_slice entered\n");
+
 	unlock();
 
 	if (frame) {
-		DFBCHECK (frame->Lock(frame,DSLF_WRITE,&dst,&pitch));
+		DFBCHECK (frame->Lock(frame,DSLF_WRITE|DSLF_READ,&dst,&pitch));
 		framelocked = 1;
         } else {
 		DFBCHECK (primary->Lock(primary,DSLF_WRITE,&dst,&pitch));
@@ -1061,7 +1336,7 @@ static uint32_t put_image(mp_image_t *mpi){
 
 //        if (verbose) printf("DirectFB: Put_image - planar branch\n");
 	if (frame) {
-		DFBCHECK (frame->Lock(frame,DSLF_WRITE,&dst,&pitch));
+		DFBCHECK (frame->Lock(frame,DSLF_WRITE|DSLF_READ,&dst,&pitch));
 		framelocked = 1;
         } else {
 		DFBCHECK (primary->Lock(primary,DSLF_WRITE,&dst,&pitch));
@@ -1076,6 +1351,7 @@ static uint32_t put_image(mp_image_t *mpi){
             memcpy(dst+i*pitch,src+i*mpi->stride[0],p);
         }
 
+	
 	if (pixel_format == DSPF_YV12) {
 
             dst += pitch*height;
@@ -1114,7 +1390,9 @@ static uint32_t put_image(mp_image_t *mpi){
 	unlock();
 
     } else {
+// I had to disable native directfb blit because it wasn't working under some conditions :-(
 
+/*
 	dsc.flags = DSDESC_HEIGHT | DSDESC_PIXELFORMAT | DSDESC_WIDTH | DSDESC_PREALLOCATED;
 	dsc.preallocated[0].data = mpi->planes[0];
 	dsc.preallocated[0].pitch = mpi->stride[0];
@@ -1135,6 +1413,23 @@ static uint32_t put_image(mp_image_t *mpi){
 		DFBCHECK (tmp->Blit(tmp,primary,&rect,xoffset,yoffset));
         };
         tmp->Release(tmp);
+*/
+
+	unsigned int pitch;
+        void *dst;
+
+//        if (verbose) printf("DirectFB: Put_image - non planar branch\n");
+	if (frame) {
+		DFBCHECK (frame->Lock(frame,DSLF_WRITE,&dst,&pitch));
+		framelocked = 1;
+		mem2agpcpy_pic(dst,mpi->planes[0] + mpi->y * mpi->stride[0] + mpi->x * (mpi->bpp >> 3)  ,mpi->w * (mpi->bpp >> 3),mpi->h,pitch,mpi->stride[0]);
+        } else {
+		DFBCHECK (primary->Lock(primary,DSLF_WRITE,&dst,&pitch));
+		primarylocked = 1;
+		mem2agpcpy_pic(dst + yoffset * pitch + xoffset * (mpi->bpp >> 3),mpi->planes[0] + mpi->y * mpi->stride[0] + mpi->x * (mpi->bpp >> 3)  ,mpi->w * (mpi->bpp >> 3),mpi->h,pitch,mpi->stride[0]);
+        };
+	unlock();
+
     }
     return VO_TRUE;
 }
@@ -1191,10 +1486,10 @@ static void draw_alpha(int x0, int y0, int w, int h, unsigned char *src,
         void *dst;
         int pitch;
 	
-	unlock(); // isnt it silly I have to unlock surface and than lock again :-)
+	unlock(); // isn't it silly I have to unlock surface and then lock it again :-)
 	
 	if (frame) {
-		DFBCHECK (frame->Lock(frame,DSLF_WRITE,&dst,&pitch));
+		DFBCHECK (frame->Lock(frame,DSLF_WRITE|DSLF_READ,&dst,&pitch));
 		framelocked = 1;
         } else {
 		DFBCHECK (primary->Lock(primary,DSLF_WRITE,&dst,&pitch));

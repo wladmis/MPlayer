@@ -24,7 +24,7 @@ typedef struct
 {
  int  signal;
  char module[512];
-} guiUnknowErrorStruct;
+} guiUnknownErrorStruct;
 
 typedef struct
 {
@@ -54,9 +54,9 @@ typedef struct
 typedef struct
 {
  int message;
-   guiResizeStruct      resize;
-   guiVideoStruct       videodata;
-   guiUnknowErrorStruct error;
+   guiResizeStruct       resize;
+   guiVideoStruct        videodata;
+   guiUnknownErrorStruct error;
    
    void * sh_video;
    void * demuxer;
@@ -169,6 +169,10 @@ extern plItem * plLastPlayed;
 
 extern URLItem * URLList;
 
+#define fsPersistant_MaxPath 512
+#define fsPersistant_MaxPos 5
+extern char * fsHistory[fsPersistant_MaxPos];
+
 #define gtkSetContrast       0
 #define gtkSetBrightness     1
 #define gtkSetHue	     2
@@ -191,6 +195,10 @@ extern URLItem * URLList;
 #define gtkSetFontOSDScale  19
 #define gtkSetFontEncoding  20
 #define gtkSetFontAutoScale 21
+#define gtkSetSubEncoding   22
+#define gtkDelCurrPlItem    23
+#define gtkInsertPlItem     24
+#define gtkSetCurrPlItem    25
 
 extern float gtkEquChannels[6][10];
 

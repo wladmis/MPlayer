@@ -11,7 +11,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include "cfgparser.h"
+#include "m_config.h"
 #include "playtree.h"
 #include "playtreeparser.h"
 #include "libmpdemux/stream.h"
@@ -107,6 +107,7 @@ play_tree_parser_get_line(play_tree_parser_t* p) {
     if(end[0] != '\0') {
       p->buffer_end -= end-p->iter;
       memmove(p->buffer,end,p->buffer_end);
+      p->buffer[p->buffer_end] = '\0';
     } else
       p->buffer_end = 0;
     p->iter = p->buffer;
@@ -192,7 +193,7 @@ parse_asx(play_tree_parser_t* p) {
   while((line = play_tree_parser_get_line(p)) != NULL)
     /* NOTHING */;
 
- mp_msg(MSGT_PLAYTREE,MSGL_DBG3,"Parsing asx file : [%s]\n",p->buffer);
+ mp_msg(MSGT_PLAYTREE,MSGL_DBG3,"Parsing asx file: [%s]\n",p->buffer);
  return asx_parser_build_tree(p->buffer,p->deep);
 }
 
@@ -248,15 +249,15 @@ parse_pls(play_tree_parser_t* p) {
   char *line,*v;
   pls_entry_t* entries = NULL;
   int n_entries = 0,max_entry=0,num;
-  play_tree_t *list = NULL, *entry = NULL;
+  play_tree_t *list = NULL, *entry = NULL, *last_entry = NULL;
 
-  mp_msg(MSGT_PLAYTREE,MSGL_V,"Trying winamp playlist...\n");
+  mp_msg(MSGT_PLAYTREE,MSGL_V,"Trying Winamp playlist...\n");
   if (!(line = play_tree_parser_get_line(p)))
     return NULL;
   strstrip(line);
   if(strcasecmp(line,"[playlist]"))
     return NULL;
-  mp_msg(MSGT_PLAYTREE,MSGL_V,"Detected winamp playlist format\n");
+  mp_msg(MSGT_PLAYTREE,MSGL_V,"Detected Winamp playlist format\n");
   play_tree_parser_stop_keeping(p);
   line = play_tree_parser_get_line(p);
   if(!line)
@@ -266,9 +267,9 @@ parse_pls(play_tree_parser_t* p) {
     v = pls_entry_get_value(line);
     n_entries = atoi(v);
     if(n_entries < 0)
-      mp_msg(MSGT_PLAYTREE,MSGL_DBG2,"Invalid number of entries : very funny !!!\n");
+      mp_msg(MSGT_PLAYTREE,MSGL_DBG2,"Invalid number of entries: very funny!!!\n");
     else
-      mp_msg(MSGT_PLAYTREE,MSGL_DBG2,"Playlist claim to have %d entries. Let's see.\n",n_entries);
+      mp_msg(MSGT_PLAYTREE,MSGL_DBG2,"Playlist claims to have %d entries. Let's see.\n",n_entries);
     line = play_tree_parser_get_line(p);
   }
 
@@ -297,7 +298,7 @@ parse_pls(play_tree_parser_t* p) {
       else
 	entries[num-1].length = strdup(v);
     } else 
-      mp_msg(MSGT_PLAYTREE,MSGL_WARN,"Unknow entry type %s\n",line);
+      mp_msg(MSGT_PLAYTREE,MSGL_WARN,"Unknown entry type %s\n",line);
     line = play_tree_parser_get_line(p);
   }
 
@@ -310,9 +311,10 @@ parse_pls(play_tree_parser_t* p) {
       play_tree_add_file(entry,entries[num].file);
       free(entries[num].file);
       if(list)
-	play_tree_append_entry(list,entry);
+	play_tree_append_entry(last_entry,entry);
       else
 	list = entry;
+      last_entry = entry;
     }
     if(entries[num].title) {
       // When we have info in playtree we add this info
@@ -337,7 +339,7 @@ parse_pls(play_tree_parser_t* p) {
 play_tree_t*
 parse_ref_ini(play_tree_parser_t* p) {
   char *line,*v;
-  play_tree_t *list = NULL, *entry = NULL;
+  play_tree_t *list = NULL, *entry = NULL, *last_entry = NULL;
 
   mp_msg(MSGT_PLAYTREE,MSGL_V,"Trying reference-ini playlist...\n");
   if (!(line = play_tree_parser_get_line(p)))
@@ -362,9 +364,10 @@ parse_ref_ini(play_tree_parser_t* p) {
         entry = play_tree_new();
         play_tree_add_file(entry,v);
         if(list)
-  	  play_tree_append_entry(list,entry);
+  	  play_tree_append_entry(last_entry,entry);
         else
   	  list = entry;
+	last_entry = entry;
       }
     }
     line = play_tree_parser_get_line(p);
@@ -379,7 +382,7 @@ parse_ref_ini(play_tree_parser_t* p) {
 play_tree_t*
 parse_m3u(play_tree_parser_t* p) {
   char* line;
-  play_tree_t *list = NULL, *entry = NULL;
+  play_tree_t *list = NULL, *entry = NULL, *last_entry = NULL;
 
   mp_msg(MSGT_PLAYTREE,MSGL_V,"Trying extended m3u playlist...\n");
   if (!(line = play_tree_parser_get_line(p)))
@@ -414,7 +417,8 @@ parse_m3u(play_tree_parser_t* p) {
     if(!list)
       list = entry;
     else
-      play_tree_append_entry(list,entry);
+      play_tree_append_entry(last_entry,entry);
+    last_entry = entry;
   }
    
   if(!list) return NULL;
@@ -426,7 +430,7 @@ parse_m3u(play_tree_parser_t* p) {
 play_tree_t*
 parse_textplain(play_tree_parser_t* p) {
   char* line;
-  play_tree_t *list = NULL, *entry = NULL;
+  play_tree_t *list = NULL, *entry = NULL, *last_entry = NULL;
 
   mp_msg(MSGT_PLAYTREE,MSGL_V,"Trying plaintext playlist...\n");
   play_tree_parser_stop_keeping(p);
@@ -440,7 +444,8 @@ parse_textplain(play_tree_parser_t* p) {
     if(!list)
       list = entry;
     else
-      play_tree_append_entry(list,entry);
+      play_tree_append_entry(last_entry,entry);
+    last_entry = entry;
   }
    
   if(!list) return NULL;
@@ -456,7 +461,6 @@ parse_playtree(stream_t *stream, int forced) {
 
 #ifdef MP_DEBUG
   assert(stream != NULL);
-  assert(stream->type == STREAMTYPE_PLAYLIST);
 #endif
 
   p = play_tree_parser_new(stream,0);
@@ -493,37 +497,45 @@ play_tree_add_basepath(play_tree_t* pt, char* bp) {
   }
 }
 
+// Wrapper for play_tree_add_basepath (add base path from file)
+void play_tree_add_bpf(play_tree_t* pt, char* filename)
+{
+  char *ls, *file;
+  
+  if (pt && filename)
+  {
+    file = strdup(filename);
+    if (file)
+    {
+      ls = strrchr(file,PATH_SEP);
+      if(ls) {
+        ls[1] = '\0';
+        play_tree_add_basepath(pt,file);
+      }
+      free(file);
+    }
+  }
+}
+
 play_tree_t*
 parse_playlist_file(char* file) {
   stream_t *stream;
   play_tree_t* ret;
-  int fd;
+  int f;
 
-  if(!strcmp(file,"-"))
-    fd = 0;
-  else
-    fd = open(file,O_RDONLY);
+  stream = open_stream(file,0,&f);
 
-  if(fd < 0) {
-    mp_msg(MSGT_PLAYTREE,MSGL_ERR,"Error while opening playlist file %s : %s\n",file,strerror(errno));
+  if(!stream) {
+    mp_msg(MSGT_PLAYTREE,MSGL_ERR,"Error while opening playlist file %s: %s\n",file,strerror(errno));
     return NULL;
   }
 
   mp_msg(MSGT_PLAYTREE,MSGL_V,"Parsing playlist file %s...\n",file);
 
-  stream = new_stream(fd,STREAMTYPE_PLAYLIST);
   ret = parse_playtree(stream,1);
-  if(close(fd) < 0)
-    mp_msg(MSGT_PLAYTREE,MSGL_ERR,"Warning error while closing playlist file %s : %s\n",file,strerror(errno));
   free_stream(stream);
 
-  if(ret) {
-    char* ls = strrchr(file,PATH_SEP);
-    if(ls) {
-      ls[1] = '\0';
-      play_tree_add_basepath(ret,file);
-    }
-  }
+  play_tree_add_bpf(ret, file);
 
   return ret;
 
@@ -595,14 +607,14 @@ play_tree_parser_get_play_tree(play_tree_parser_t* p, int forced) {
   }
 
   if(tree)
-    mp_msg(MSGT_PLAYTREE,MSGL_V,"Playlist succefully parsed\n");
+    mp_msg(MSGT_PLAYTREE,MSGL_V,"Playlist successfully parsed\n");
   else 
     mp_msg(MSGT_PLAYTREE,((forced==1)?MSGL_ERR:MSGL_V),"Error while parsing playlist\n");
 
   if(tree)
     tree = play_tree_cleanup(tree);
   
-  if(!tree) mp_msg(MSGT_PLAYTREE,((forced==1)?MSGL_WARN:MSGL_V),"Warning empty playlist\n");
+  if(!tree) mp_msg(MSGT_PLAYTREE,((forced==1)?MSGL_WARN:MSGL_V),"Warning: empty playlist\n");
 
   return tree;
 }

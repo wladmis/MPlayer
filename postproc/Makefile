@@ -2,17 +2,9 @@
 include ../config.mak
 
 SWSLIB = libswscale.a
-ifeq ($(SHARED_PP),yes)
-SPPLIB = libpostproc.so
-SPPVERSION = 0.0.1
-endif
-PPLIB = libpostproc.a
 
 SWSSRCS=swscale.c rgb2rgb.c yuv2rgb.c
 SWSOBJS=$(SWSSRCS:.c=.o)
-PPOBJS=postprocess.o
-SPPOBJS=postprocess_pic.o
-CS_TEST_OBJS=cs_test.o rgb2rgb.o ../cpudetect.o ../mp_msg.o ../libvo/aclib.o
 
 CFLAGS  = $(OPTFLAGS) $(MLIB_INC) -I. -I.. $(EXTRA_INC)
 # -I/usr/X11R6/include/
@@ -22,50 +14,29 @@ CFLAGS  = $(OPTFLAGS) $(MLIB_INC) -I. -I.. $(EXTRA_INC)
 # .PHONY: all clean
 
 .c.o:
-	$(CC) -c $(CFLAGS) -o $@ $<
+	$(CC) -c $(CFLAGS) -I.. -o $@ $<
 
-all:    $(SWSLIB) $(PPLIB) $(SPPLIB)
+all:    $(SWSLIB)
 
 $(SWSLIB):     $(SWSOBJS)
 	$(AR) r $(SWSLIB) $(SWSOBJS)
 
 clean:
-	rm -f *.o *.a *~ *.so
+	rm -f *.o *.a *~ *.so cs_test swscale-example
 
 distclean:
-	rm -f Makefile.bak *.o *.a *~ *.so .depend
+	rm -f Makefile.bak *.o *.a *~ *.so .depend cs_test swscale-example
 
 dep:    depend
 
 depend:
-	$(CC) -MM $(CFLAGS) $(SWSSRCS) postprocess.c 1>.depend
+	$(CC) -MM $(CFLAGS) $(SWSSRCS) 1>.depend
 
-cs_test: $(CS_TEST_OBJS)
-	$(CC) $(CS_TEST_OBJS) -o cs_test
+cs_test: cs_test.o $(SWSLIB)
+	$(CC) cs_test.o $(SWSLIB) ../cpudetect.o -DFOR_MENCODER ../mp_msg.c -o cs_test -W -Wall
 
-ifeq ($(SHARED_PP),yes)
-postprocess_pic.o: postprocess.c
-	$(CC) -c $(CFLAGS) -fomit-frame-pointer -fPIC -DPIC -o $@ $<
-
-$(SPPLIB): $(SPPOBJS)
-	$(CC) -shared -Wl,-soname,$(SPPLIB).0 \
-	-o $(SPPLIB) $(SPPOBJS)
-endif
-
-$(PPLIB): $(PPOBJS)
-	$(AR) r $(PPLIB) $(PPOBJS)
-
-install: all
-ifeq ($(SHARED_PP),yes)
-	install -d $(prefix)/lib
-	install -s -m 755 $(SPPLIB) $(prefix)/lib/$(SPPLIB).$(SPPVERSION)
-	ln -sf $(SPPLIB).$(SPPVERSION) $(prefix)/lib/$(SPPLIB)
-	ldconfig || true
-	mkdir -p $(prefix)/include/postproc
-	install -m 644 postprocess.h $(prefix)/include/postproc/postprocess.h
-endif
-
-
+swscale-example: swscale-example.o $(SWSLIB)
+	$(CC) swscale-example.o $(SWSLIB) ../libmpcodecs/img_format.o -lm -o swscale-example -W -Wall
 #
 # include dependency files if they exist
 #

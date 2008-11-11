@@ -12,12 +12,15 @@
 
 #include "../libvo/fastmemcpy.h"
 #include "../postproc/rgb2rgb.h"
+#include "vf_scale.h"
 
 //===========================================================================//
 
 static int config(struct vf_instance_s* vf,
         int width, int height, int d_width, int d_height,
 	unsigned int flags, unsigned int outfmt){
+
+    sws_rgb2rgb_init(get_sws_cpuflags());
     
     if(vf_next_query_format(vf,IMGFMT_YUY2)<=0){
 	printf("yuy2 not supported by next filter/vo :(\n");
@@ -42,8 +45,7 @@ static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
     yv12toyuy2(mpi->planes[0],mpi->planes[1],mpi->planes[2], dmpi->planes[0],
 	    mpi->w,mpi->h, mpi->stride[0],mpi->stride[1],dmpi->stride[0]);
     
-    dmpi->qscale=mpi->qscale;
-    dmpi->qstride=mpi->qstride;
+    vf_clone_mpi_attributes(dmpi, mpi);
     
     return vf_next_put_image(vf,dmpi);
 }
@@ -73,7 +75,8 @@ vf_info_t vf_info_yuy2 = {
     "yuy2",
     "A'rpi",
     "",
-    open
+    open,
+    NULL
 };
 
 //===========================================================================//

@@ -55,7 +55,7 @@ A setting of 4 should look readable. Here's an overview again:
 
     - groff:     Groff is the "official" tool to convert man pages.
                  To get good results you need a recent version (1.18.2).
-                 cat mplayer.1 | sed s/SS\ 20/SS\ 4/ | groff -man -Thtml - > manpage.html
+                 groff -man -Thtml mplayer.1 > manpage.html
                  groff -rLL=64n -m man -Tascii mplayer.1 | col -bx > manpage.txt
                  The groff man page lists other output formats to use with -T.
     - man2html:  You can view it through a CGI script:
@@ -90,6 +90,8 @@ DESCRIPTION
 GENERAL NOTES
     Some general notes about the options and a description of the config file
     format.
+KEYBOARD CONTROL
+    A description of MPlayer's input system and the default keyboard controls.
 PLAYER OPTIONS (MPLAYER ONLY)
     User interface option descriptions (MPlayer only).
 DEMUXER/STREAM OPTIONS
@@ -103,13 +105,13 @@ AUDIO OUTPUT OPTIONS (MPLAYER ONLY)
 VIDEO OUTPUT OPTIONS (MPLAYER ONLY)
     Video output layer (vo) option descriptions (MPlayer only).
 DECODING/FILTERING OPTIONS
-    Decoding and filter layer options (ad, vd, vf, pl).
-ENCODING OPTIONS (MENCODER ONLY)
+    Decoding/Filtering layer options (ad, vd, pl).
+VIDEO FILTERS
+    Video filter description (vf)
+GENERAL ENCODING OPTIONS (MENCODER ONLY)
     Encoding option descriptions (ve) (MEncoder only).
-KEYBOARD CONTROL
-    A description of MPlayer's input system and the default keyboard controls.
-SLAVE MODE PROTOCOL
-    A description of the slave mode protocol (-slave).
+CODEC SPECIFIC ENCODING OPTIONS (MENCODER ONLY)
+    Codec specific option descriptions (lavc,divx4,xvid,lame) (MEncoder only).
 FILES
     A list and description of all installed/used files/directories.
 EXAMPLES
@@ -208,7 +210,7 @@ Options, suboptions, examples structure:
       [...]
       description. Available options are:
 
-      .DP 0
+      .PD 0
       .RSs
       .IPs "subopt1=<value>"
       description1
@@ -218,7 +220,7 @@ Options, suboptions, examples structure:
       .IPs "last subopt=<value>"
       last description
       .RE
-      .DP 1
+      .PD 1
       .
       [...]
 

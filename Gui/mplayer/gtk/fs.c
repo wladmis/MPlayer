@@ -50,13 +50,15 @@ char * fsVideoFilterNames[][2] =
 	   { "RealVideo files (*.rm)",					"*.rm"  },
 	   { "Windows Media Video (*.wmv)",			  	"*.wmv" },
 	   { "OGG Media files (*.ogm)",			  		"*.ogm" },
+	   { "Matroska Media files (*.mkv)",			  	"*.mkv" },
 	   { "Autodesk animations (*.fli,*.flc)",			"*.fli,*.flc" },
 	   { "NuppelVideo files (*.nuv)",				"*.nuv" },
-	   { "MP3 files (*.mp3,mp2)",					"*.mp3,*.mp2" },
+	   { "MP3 files (*.mp3,*.mp2)",					"*.mp3,*.mp2" },
 	   { "Wave files (*.wav)",					"*.wav" },
 	   { "WMA files (*.wma)",					"*.wma" },
-	   { "Audio files",						"*.wav,*.ogg,*.mp2,*.mp3,*.wma" },
-	   { "Video files", 						"*.asf,*.avi,*.divx,*.fli,*.flc,*.ogm,*.mpg,*.mpeg,*.m1v,*.mov,*.nuv,*.qt,*.rm,*.vob,*.viv,*.wmv" },
+	   { "Matroska Audio files (*.mka)",			  	"*.mka" },
+	   { "Audio files",						"*.wav,*.ogg,*.mp2,*.mp3,*.wma,*.mka" },
+	   { "Video files", 						"*.asf,*.avi,*.divx,*.fli,*.flc,*.ogm,*.mpg,*.mpeg,*.m1v,*.mov,*.nuv,*.qt,*.rm,*.vob,*.viv,*.wmv,*.mkv" },
            { "All files",	      					"*" },
 	   { NULL,NULL }
 	 };
@@ -86,7 +88,9 @@ char * fsAudioFileNames[][2] =
 	   { "WAV files (*.wav)",					   "*.wav" },
 	   { "MP3 files (*.mp2, *.mp3)",				   "*.mp2,*.mp3" },
 	   { "OGG Vorbis files (*.ogg)",				   "*.ogg" },
-	   { "Audio files",						   "*.ogg,*.mp2,*.mp3,*.wav" },
+	   { "WMA files (*.wma)",				 	   "*.wma" },
+	   { "Matroska Audio files (*.mka)",			  	   "*.mka" },
+	   { "Audio files",						   "*.ogg,*.mp2,*.mp3,*.wav,*.wma,*.mka" },
 	   { "All files",						   "*" },
 	   { NULL, NULL }
 	 };
@@ -94,7 +98,9 @@ char * fsAudioFileNames[][2] =
 char * fsFontFileNames[][2] =
          {
 #ifdef HAVE_FREETYPE
-	   { "font files (*.ttf)",					   "*.ttf" },
+	   { "True Type fonts (*.ttf)",					   "*.ttf" },
+	   { "Type1 fonts (*.pfb)",					   "*.pfb" },
+	   { "All fonts",						   "*.ttf,*.pfb" },
 #else
 	   { "font files (*.desc)",					   "*.desc" },
 #endif
@@ -221,6 +227,8 @@ void CheckDir( GtkWidget * list,char * directory )
  gtk_widget_show( list );
 }
 
+void fs_PersistantHistory( char *subject ); /* forward declaration */
+
 void ShowFileSelect( int type,int modal )
 {
  int i;
@@ -304,14 +312,15 @@ void ShowFileSelect( int type,int modal )
  
  if ( fsTopList_items ) g_list_free( fsTopList_items ); fsTopList_items=NULL;
  {
-  char hist[fsPersistant_MaxPath + 1];
+  char * hist;
+  int  i, c = 1;
   
-  bzero( hist,fsPersistant_MaxPath + 1 );
-  if ( fs_PersistantHistory( 0,hist,0 ) == 0 )
-   { 
-    fsTopList_items=g_list_append( fsTopList_items,hist );
-    chdir( hist );
-   } else fsTopList_items=g_list_append( fsTopList_items,(gchar *)get_current_dir_name() );
+  if ( fsType == fsVideoSelector )
+   {
+    for ( i=0;i < fsPersistant_MaxPos;i++ )
+     if ( fsHistory[i] ) { fsTopList_items=g_list_append( fsTopList_items,fsHistory[i] ); c=0; }
+   }
+  if ( c ) fsTopList_items=g_list_append( fsTopList_items,(gchar *)get_current_dir_name() );
  }
  if ( getenv( "HOME" ) ) fsTopList_items=g_list_append( fsTopList_items,getenv( "HOME" ) );
  fsTopList_items=g_list_append( fsTopList_items,"/home" );
@@ -332,60 +341,21 @@ void HideFileSelect( void )
  fsFileSelect=NULL;
 }
 
-//----------------------------------------------------
+void fs_PersistantHistory( char * subject )
+{
+ int i;
 
-/*
- * int fs_PersistantHistory(int rw_command, char *subject)
- *
- * is used to read/write in the $HOME/.mplayer/persistant_history file
- * parameters:  rw_command = (0,1) <=> (read,write)
- *              subject - for i/o
- *              pos - position in history file (line)
- * return:      0 = ok
- *
- */
-	 
- int fs_PersistantHistory(int rw_command, char *subject, int pos)
- {
-  FILE *pfile;
-  
-  char path[fsPersistant_MaxPath+1];
-  int fdata,fpos = 0;
-  char *subpath = NULL;
-  const char *ph_filename = fsPersistant_FilePath;
-  
-  if (!subject) return -1;
-  if (pos < 0 || pos > fsPersistant_MaxPos) return -2;
-  bzero(path,fsPersistant_MaxPath+1);
-  
-  subpath = getenv("HOME");
-  if (!subpath) return -3;
-  if (strlen(subpath)+strlen(fsPersistant_FilePath) > fsPersistant_MaxPath) return -4;
-  memcpy(path, subpath, strlen(subpath));
-  memcpy(path+strlen(subpath), ph_filename, strlen(ph_filename));
+ if ( fsType != fsVideoSelector ) return;
 
-  if (rw_command == 0)
-  {
-   pfile = fopen(path,"r");
-   if (!pfile) return -5;
-   while ((fdata = fgetc(pfile)) != EOF)
+ for ( i=0;i < fsPersistant_MaxPos;i++ )
+  if ( fsHistory[i] && !strcmp( fsHistory[i],subject ) )
    {
-    if (fpos > fsPersistant_MaxPath) { fclose(pfile);return -6; }
-    subject[fpos++] = fdata;
+    char * tmp = fsHistory[i]; fsHistory[i]=fsHistory[0]; fsHistory[0]=tmp;
+    return;
    }
-   fclose(pfile);
-   return 0;
-  }
-
-  if (rw_command == 1)
-  {
-   pfile = fopen(path,"w+");
-   if (!pfile) return -6;
-   fprintf(pfile,"%s",subject);
-   fclose(pfile);
-   return 0;
-  }
-  else return -10;
+ gfree( (void **)&fsHistory[fsPersistant_MaxPos - 1] );
+ for ( i=fsPersistant_MaxPos - 1;i;i-- ) fsHistory[i]=fsHistory[i - 1];
+ fsHistory[0]=gstrdup( subject );
 }
 //-----------------------------------------------
 
@@ -482,7 +452,6 @@ void fs_Ok_released( GtkButton * button,gpointer user_data )
    fsSelectedFile=fsThatDir;
    CheckDir( fsFNameList,get_current_dir_name() );
    gtk_entry_set_text( GTK_ENTRY( fsPathCombo ),(unsigned char *)get_current_dir_name() );
-   fs_PersistantHistory(1,get_current_dir_name(),0);      //totem, write into history
    return;
   }
 
@@ -513,9 +482,10 @@ void fs_Ok_released( GtkButton * button,gpointer user_data )
    case fsVideoSelector:
           guiSetDF( guiIntfStruct.Filename,fsSelectedDirectory,fsSelectedFile );
           guiIntfStruct.StreamType=STREAMTYPE_FILE;
-          guiIntfStruct.FilenameChanged=1;
+          guiIntfStruct.FilenameChanged=1; sub_fps=0;
 	  gfree( (void **)&guiIntfStruct.AudioFile );
 	  gfree( (void **)&guiIntfStruct.Subtitlename );
+          fs_PersistantHistory( fsSelectedDirectory );      //totem, write into history
           break;
 #ifdef USE_SUB
    case fsSubtitleSelector:
@@ -548,12 +518,13 @@ void fs_Ok_released( GtkButton * button,gpointer user_data )
   }
  if ( i ) fsTopList_items=g_list_prepend( fsTopList_items,(gchar *)get_current_dir_name() );
  if ( mplMainAutoPlay ) { mplMainAutoPlay=0; mplEventHandling( evPlay,0 ); }
+  else guiGetEvent( guiCEvent,guiSetStop );
 }
 
 void fs_Cancel_released( GtkButton * button,gpointer user_data )
 {
  HideFileSelect();
- fs_PersistantHistory(1,get_current_dir_name(),0);      //totem, write into history file
+ fs_PersistantHistory( get_current_dir_name() );      //totem, write into history file
 }
 
 void fs_fsFNameList_select_row( GtkWidget * widget,gint row,gint column,GdkEventButton *bevent,gpointer user_data )

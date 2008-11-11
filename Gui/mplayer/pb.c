@@ -15,6 +15,7 @@
 #include "../../config.h"
 #include "../../help_mp.h"
 #include "../../libvo/x11_common.h"
+#include "../../libvo/fastmemcpy.h"
 
 #include "../../libmpdemux/stream.h"
 #include "../../mixer.h"
@@ -39,11 +40,19 @@ int		mplPBFade = 0;
 
 void mplPBDraw( void )
 {
+ int x;
+ 
  if ( !appMPlayer.subWindow.isFullScreen ) return;
  if ( !mplPBVisible || !appMPlayer.barIsPresent ) return;
 
- appMPlayer.bar.x=( appMPlayer.subWindow.Width - appMPlayer.bar.width ) / 2;
-
+// appMPlayer.bar.x=( appMPlayer.subWindow.Width - appMPlayer.bar.width ) / 2;
+ switch( appMPlayer.bar.x )
+  {
+   case -1: x=( appMPlayer.subWindow.Width - appMPlayer.bar.width ) / 2; break;
+   case -2: x=( appMPlayer.subWindow.Width - appMPlayer.bar.width ); break;
+   default: x=appMPlayer.bar.x;
+  }
+	      
  switch ( mplPBFade )
   {
    case 1: // fade in
@@ -54,7 +63,7 @@ void mplPBDraw( void )
 	  mplPBFade=0;
 	  vo_mouse_autohide=0;
 	 }
-        wsMoveWindow( &appMPlayer.barWindow,0,appMPlayer.bar.x,mplPBLength ); 
+        wsMoveWindow( &appMPlayer.barWindow,0,x,mplPBLength ); 
 	break;
    case 2: // fade out
 	mplPBLength+=10;
@@ -66,7 +75,7 @@ void mplPBDraw( void )
           wsVisibleWindow( &appMPlayer.barWindow,wsHideWindow ); 
 	  return;
 	 }
-        wsMoveWindow( &appMPlayer.barWindow,0,appMPlayer.bar.x,mplPBLength ); 
+        wsMoveWindow( &appMPlayer.barWindow,0,x,mplPBLength ); 
 	break;
   }
 
@@ -75,6 +84,8 @@ void mplPBDraw( void )
   {
    btnModify( evSetMoviePosition,guiIntfStruct.Position );
    btnModify( evSetVolume,guiIntfStruct.Volume );
+   
+   vo_mouse_autohide=0;
 
    memcpy( mplPBDrawBuffer,appMPlayer.bar.Bitmap.Image,appMPlayer.bar.Bitmap.ImageSize );
    Render( &appMPlayer.barWindow,appMPlayer.barItems,appMPlayer.NumberOfBarItems,mplPBDrawBuffer,appMPlayer.bar.Bitmap.ImageSize );
@@ -204,13 +215,13 @@ void mplPBShow( int x, int y )
 
 void mplPBInit( void )
 {
- gfree( (void**)&mplPBDrawBuffer );
-
  if ( !appMPlayer.barIsPresent ) return;
 
- if ( ( mplPBDrawBuffer = (unsigned char *)calloc( 1,appMPlayer.bar.Bitmap.ImageSize ) ) == NULL )
+ gfree( (void**)&mplPBDrawBuffer );
+
+ if ( ( mplPBDrawBuffer = (unsigned char *)malloc( appMPlayer.bar.Bitmap.ImageSize ) ) == NULL )
   {
-   fprintf( stderr,MSGTR_NEMDB );
+   mp_msg( MSGT_GPLAYER,MSGL_FATAL,MSGTR_NEMDB );
    exit( 0 );
   }
 

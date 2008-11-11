@@ -13,20 +13,23 @@ extern char *tv_param_freq;
 extern char *tv_param_channel;
 extern char *tv_param_chanlist;
 extern char *tv_param_norm;
+#ifdef HAVE_TV_V4L2
+extern int tv_param_normid;
+#endif
 extern char *tv_param_device;
 extern char *tv_param_driver;
 extern int tv_param_width;
 extern int tv_param_height;
 extern int tv_param_input;
-extern char *tv_param_outfmt;
+extern int tv_param_outfmt;
 extern float tv_param_fps;
 extern char **tv_param_channels;
 extern int tv_param_noaudio;
 extern int tv_param_immediate;
 extern int tv_param_audiorate;
-#ifdef HAVE_TV_V4L
-extern int tv_param_amode;
 extern int tv_param_audio_id;
+#if defined(HAVE_TV_V4L) || defined(HAVE_TV_V4L2)
+extern int tv_param_amode;
 extern int tv_param_volume;
 extern int tv_param_bass;
 extern int tv_param_treble;
@@ -34,11 +37,18 @@ extern int tv_param_balance;
 extern int tv_param_forcechan;
 extern int tv_param_force_audio;
 extern int tv_param_buffer_size;
+extern int tv_param_mjpeg;
+extern int tv_param_decimation;
+extern int tv_param_quality;
 #ifdef HAVE_ALSA9
 extern int tv_param_alsa;
 #endif
 extern char* tv_param_adevice;
 #endif
+extern int tv_param_brightness;
+extern int tv_param_contrast;
+extern int tv_param_hue;
+extern int tv_param_saturation;
 
 typedef struct tvi_info_s
 {
@@ -169,6 +179,11 @@ int tv_set_channel(tvi_handle_t *tvh, char *channel);
 
 int tv_step_norm(tvi_handle_t *tvh);
 int tv_step_chanlist(tvi_handle_t *tvh);
+
+int tv_set_freq(tvi_handle_t *tvh, unsigned long freq);
+int tv_get_freq(tvi_handle_t *tvh, unsigned long *freq);
+
+int tv_set_norm(tvi_handle_t *tvh, char* norm);
 
 #define TV_NORM_PAL		1
 #define TV_NORM_NTSC		2

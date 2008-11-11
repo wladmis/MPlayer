@@ -23,7 +23,9 @@
 #include "sub.h"
 
 #include "../postproc/swscale.h"
+#include "../postproc/swscale_internal.h" //FIXME
 #include "../postproc/rgb2rgb.h"
+#include "../libmpcodecs/vf_scale.h"
 
 #include "../mp_msg.h"
 
@@ -53,6 +55,8 @@ static unsigned char *ImageData;
 static XImage *myximage = NULL;
 static int depth,bpp,mode;
 static XWindowAttributes attribs;
+
+static int int_pause;
 
 static int Flip_Flag;
 static int zoomFlag;
@@ -86,12 +90,15 @@ static int old_vo_dheight=-1;
 static void check_events(){
   int ret = vo_x11_check_events(mDisplay);
   
-   /* clear the old window */
-  if ( (ret & VO_EVENT_RESIZE)||(ret & VO_EVENT_EXPOSE) )
+   /* clear left over borders and redraw frame if we are paused */
+  if ( ret & VO_EVENT_EXPOSE && int_pause)
   {
-    XSetBackground(mDisplay, vo_gc, 0);
-    XClearWindow(mDisplay, vo_window);
-  }
+	  vo_x11_clearwindow_part(mDisplay, vo_window, myximage->width, myximage->height, 0);
+	  flip_page();
+  } else
+      if ( (ret & VO_EVENT_RESIZE)||(ret & VO_EVENT_EXPOSE) )
+              vo_x11_clearwindow_part(mDisplay, vo_window, myximage->width, myximage->height, 0);
+  
 }
 
 static void draw_alpha_32(int x0,int y0, int w,int h, unsigned char* src, unsigned char *srca, int stride){
@@ -240,16 +247,18 @@ static uint32_t config( uint32_t width,uint32_t height,uint32_t d_width,uint32_t
     title = strdup("MPlayer X11 (XImage/Shm) render");
 
  in_format=format;
- if(in_format==IMGFMT_I420 || in_format==IMGFMT_IYUV) in_format=IMGFMT_YV12;
  srcW= width;
  srcH= height;
  vo_dx=( vo_screenwidth - d_width ) / 2; vo_dy=( vo_screenheight - d_height ) / 2;
+ geometry(&vo_dx, &vo_dy, &d_width, &d_height, vo_screenwidth, vo_screenheight);
  vo_dwidth=d_width; vo_dheight=d_height;
  
  if( flags&0x03 ) fullscreen = 1;
  if( flags&0x02 ) vm = 1;
  if( flags&0x08 ) Flip_Flag = 1;
  zoomFlag = flags&0x04;
+
+ int_pause = 0;
 // if(!fullscreen) zoomFlag=1; //it makes no sense to avoid zooming on windowd mode
  
 //printf( "w: %d h: %d\n\n",vo_dwidth,vo_dheight );
@@ -261,11 +270,12 @@ static uint32_t config( uint32_t width,uint32_t height,uint32_t d_width,uint32_t
    Visual *visual;
    depth = vo_find_depth_from_visuals(mDisplay, mScreen, &visual);
  }
- if ( !XMatchVisualInfo( mDisplay,mScreen,depth,DirectColor,&vinfo ))
+ if ( !XMatchVisualInfo( mDisplay,mScreen,depth,DirectColor,&vinfo ) ||
+      (WinID > 0 && vinfo.visualid != XVisualIDFromVisual(attribs.visual)))
    XMatchVisualInfo( mDisplay,mScreen,depth,TrueColor,&vinfo );
 
  /* set image size (which is indeed neither the input nor output size), 
-    if zoom is on it will be changed during draw_slice anyway so we dont dupplicate the aspect code here 
+    if zoom is on it will be changed during draw_slice anyway so we don't duplicate the aspect code here 
  */
  image_width=(width + 7) & (~7);
  image_height=height;
@@ -323,10 +333,7 @@ static uint32_t config( uint32_t width,uint32_t height,uint32_t d_width,uint32_t
      {
       if ( vo_window == None )
        {
-        vo_window=XCreateWindow( mDisplay,mRootWin,
-    			 vo_dx,vo_dy,
-			 vo_dwidth,vo_dheight,
-                         xswa.border_pixel,depth,CopyFromParent,vinfo.visual,xswamask,&xswa );
+	vo_window=vo_x11_create_smooth_window( mDisplay,mRootWin,vinfo.visual, vo_dx, vo_dy, vo_dwidth, vo_dheight, depth, theCmap );
 
         vo_x11_classhint( mDisplay,vo_window,"x11" );
         vo_hidecursor(mDisplay,vo_window);
@@ -370,7 +377,7 @@ static uint32_t config( uint32_t width,uint32_t height,uint32_t d_width,uint32_t
   if ( myximage )
    {
     freeMyXImage();
-    freeSwsContext(swsContext);
+    sws_freeContext(swsContext);
    }
   getMyXImage();
   
@@ -396,7 +403,9 @@ static uint32_t config( uint32_t width,uint32_t height,uint32_t d_width,uint32_t
   }
 
   /* always allocate swsContext as size could change between frames */
-  swsContext= getSwsContextFromCmdLine(width, height, in_format, width, height, out_format );
+  swsContext= sws_getContextFromCmdLine(width, height, in_format, width, height, out_format );
+  if (!swsContext)
+    return -1;
 
   //printf( "X11 bpp: %d  color mask:  R:%lX  G:%lX  B:%lX\n",bpp,myximage->red_mask,myximage->green_mask,myximage->blue_mask );
 
@@ -416,10 +425,6 @@ static uint32_t config( uint32_t width,uint32_t height,uint32_t d_width,uint32_t
 #ifdef WORDS_BIGENDIAN
   if(mode==MODE_BGR && bpp!=32){
     mp_msg(MSGT_VO,MSGL_ERR,"BGR%d not supported, please contact the developers\n", bpp);
-    return -1;
-  }
-  if(mode==MODE_RGB && bpp==32){
-    mp_msg(MSGT_VO,MSGL_ERR,"RGB32 not supported on big-endian systems, please contact the developers\n");
     return -1;
   }
 #else
@@ -481,7 +486,7 @@ static uint32_t draw_slice( uint8_t *src[],int stride[],int w,int h,int x,int y 
 
     if(sws_flags==0) newW&= (~31); // not needed but, if the user wants the FAST_BILINEAR SCALER, then its needed
 
-    swsContext= getSwsContextFromCmdLine(srcW, srcH, in_format, 
+    swsContext= sws_getContextFromCmdLine(srcW, srcH, in_format, 
     					 newW, newH, out_format);
     if(swsContext)
     {
@@ -490,7 +495,7 @@ static uint32_t draw_slice( uint8_t *src[],int stride[],int w,int h,int x,int y 
 
 	freeMyXImage();
 	getMyXImage();
-	freeSwsContext(oldContext);
+	sws_freeContext(oldContext);
     }    
     else
     {
@@ -506,13 +511,13 @@ static uint32_t draw_slice( uint8_t *src[],int stride[],int w,int h,int x,int y 
   {
 	dstStride[0]= -image_width*((bpp+7)/8);
 	dst[0]=ImageData - dstStride[0]*(image_height-1);
-	swsContext->swScale(swsContext,src,stride,y,h,dst, dstStride);
+	sws_scale_ordered(swsContext,src,stride,y,h,dst, dstStride);
   }
   else
   {
 	dstStride[0]=image_width*((bpp+7)/8);
 	dst[0]=ImageData;
-	swsContext->swScale(swsContext,src,stride,y,h,dst, dstStride);
+	sws_scale_ordered(swsContext,src,stride,y,h,dst, dstStride);
   }
   return 0;
 }
@@ -568,7 +573,7 @@ static uint32_t query_format( uint32_t format )
     mp_msg(MSGT_VO,MSGL_DBG2,"vo_x11: query_format was called: %x (%s)\n",format,vo_format_name(format));
     if (IMGFMT_IS_BGR(format))
     {
-	if (IMGFMT_BGR_DEPTH(format) == 8)
+	if (IMGFMT_BGR_DEPTH(format) <= 8)
 	    return 0; // TODO 8bpp not yet fully implemented
 	if (IMGFMT_BGR_DEPTH(format) == vo_depthonscreen)
 	    return 3|VFCAP_OSD|VFCAP_SWSCALE|VFCAP_FLIP|VFCAP_ACCEPT_STRIDE;
@@ -608,7 +613,7 @@ static void uninit(void)
  zoomFlag=0;
  vo_x11_uninit();
 
- freeSwsContext(swsContext);
+ sws_freeContext(swsContext);
 }
 
 static uint32_t preinit(const char *arg)
@@ -626,6 +631,8 @@ static uint32_t preinit(const char *arg)
 static uint32_t control(uint32_t request, void *data, ...)
 {
   switch (request) {
+  case VOCTRL_PAUSE: return (int_pause=1);
+  case VOCTRL_RESUME: return (int_pause=0);
   case VOCTRL_QUERY_FORMAT:
     return query_format(*((uint32_t*)data));
   case VOCTRL_GUISUPPORT:
@@ -651,7 +658,10 @@ static uint32_t control(uint32_t request, void *data, ...)
       return vo_x11_get_equalizer(data, value);
     }
   case VOCTRL_FULLSCREEN:
-    vo_x11_fullscreen();
+    {
+      vo_x11_fullscreen();
+      vo_x11_clearwindow(mDisplay, vo_window);
+    }
     return VO_TRUE;
   }
   return VO_NOTIMPL;

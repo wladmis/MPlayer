@@ -36,7 +36,7 @@
 
 #include "fastmemcpy.h"
 #include "sub.h"
-#include "linux/vbelib.h"
+#include "osdep/vbelib.h"
 #include "bswap.h"
 #include "aspect.h"
 #include "vesa_lvo.h"
@@ -45,6 +45,7 @@
 #endif
 
 #include "../postproc/swscale.h"
+#include "../libmpcodecs/vf_scale.h"
 
 
 #ifdef HAVE_PNG
@@ -95,10 +96,10 @@ static void (*cpy_blk_fnc)(unsigned long,uint8_t *,unsigned long) = NULL;
 static uint32_t srcW=0,srcH=0,srcBpp,srcFourcc; /* source image description */
 static uint32_t dstBpp,dstW, dstH,dstFourcc; /* destinition image description */
 
-static SwsContext * sws = NULL;
+static struct SwsContext * sws = NULL;
 
 static int32_t x_offset,y_offset; /* to center image on screen */
-static unsigned init_mode; /* mode before run of mplayer */
+static unsigned init_mode=0; /* mode before run of mplayer */
 static void *init_state = NULL; /* state before run of mplayer */
 static struct win_frame win; /* real-mode window to video memory */
 static uint8_t *dga_buffer = NULL; /* for yuv2rgb and sw_scaling */
@@ -115,8 +116,10 @@ uint8_t   multi_idx=0; /* active buffer */
 
 /* Linux Video Overlay */
 static const char *lvo_name = NULL;
+static int lvo_opened = 0;
 #ifdef CONFIG_VIDIX
 static const char *vidix_name = NULL;
+static int vidix_opened = 0;
 #endif
 
 #define HAS_DGA()  (win.idx == -1)
@@ -150,16 +153,19 @@ static char * vbeErrToStr(int err)
 static void vesa_term( void )
 {
   int err;
-  if(lvo_name) vlvo_term();
+  if(lvo_opened) { vlvo_term();  lvo_opened = 0; }
 #ifdef CONFIG_VIDIX
-  else if(vidix_name) vidix_term();
+  else if(vidix_opened) { vidix_term();  vidix_opened = 0; }
 #endif
-  if((err=vbeRestoreState(init_state)) != VBE_OK) PRINT_VBE_ERR("vbeRestoreState",err);
-  if((err=vbeSetMode(init_mode,NULL)) != VBE_OK) PRINT_VBE_ERR("vbeSetMode",err);
+  if(init_state) if((err=vbeRestoreState(init_state)) != VBE_OK) PRINT_VBE_ERR("vbeRestoreState",err);
+  init_state=NULL;
+  if(init_mode) if((err=vbeSetMode(init_mode,NULL)) != VBE_OK) PRINT_VBE_ERR("vbeSetMode",err);
+  init_mode=0;
   if(HAS_DGA()) vbeUnmapVideoBuffer((unsigned long)win.ptr,win.high);
   if(dga_buffer && !HAS_DGA()) free(dga_buffer);
   vbeDestroy();
-  if(sws) freeSwsContext(sws);
+  if(sws) sws_freeContext(sws);
+  sws=NULL;
 }
 
 #define VALID_WIN_FRAME(offset) (offset >= win.low && offset < win.high)
@@ -179,7 +185,7 @@ static inline void __vbeSwitchBank(unsigned long offset)
     vesa_term();
     PRINT_VBE_ERR("vbeSetWindow",err);
     printf("vo_vesa: Fatal error occured! Can't continue\n");
-    exit(-1);
+    abort();
   }
   win.low = new_offset * gran;
   win.high = win.low + video_mode_info.WinSize*1024;
@@ -275,7 +281,7 @@ static uint32_t draw_slice(uint8_t *image[], int stride[], int w,int h,int x,int
     dstStride[1]=
     dstStride[2]=dstStride[0]>>1;
     if(HAS_DGA()) dst[0] += y_offset*SCREEN_LINE_SIZE(PIXEL_SIZE())+x_offset*PIXEL_SIZE();
-    sws->swScale(sws,image,stride,y,h,dst,dstStride);
+    sws_scale_ordered(sws,image,stride,y,h,dst,dstStride);
     flip_trigger = 1;
     return 0;
 }
@@ -381,7 +387,7 @@ static void flip_page(void)
       vesa_term();
       PRINT_VBE_ERR("vbeSetDisplayStart",err);
       printf("vo_vesa: Fatal error occured! Can't continue\n");
-      exit(EXIT_FAILURE);
+      abort();
     }
     multi_idx = multi_idx ? 0 : 1;
     win.ptr = dga_buffer = video_base + multi_buff[multi_idx];
@@ -420,7 +426,7 @@ static uint32_t draw_frame(uint8_t *src[])
 	else
 	    srcStride[0] = srcW*2;
 	if(HAS_DGA()) dst[0] += y_offset*SCREEN_LINE_SIZE(PIXEL_SIZE())+x_offset*PIXEL_SIZE();
-	sws->swScale(sws,src,srcStride,0,srcH,dst,dstStride);
+	sws_scale_ordered(sws,src,srcStride,0,srcH,dst,dstStride);
 	flip_trigger=1;
     }
     return 0;
@@ -797,7 +803,7 @@ config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uin
 #endif
 		) 
 		{
-		    sws = getSwsContextFromCmdLine(srcW,srcH,srcFourcc,dstW,dstH,dstFourcc);
+		    sws = sws_getContextFromCmdLine(srcW,srcH,srcFourcc,dstW,dstH,dstFourcc);
 		    if(!sws)
 		    {
 			printf("vo_vesa: Can't initialize SwScaler\n");
@@ -932,11 +938,11 @@ config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uin
 		  if(vlvo_init(width,height,x_offset,y_offset,dstW,dstH,format,dstBpp) != 0)
 		  {
 		    printf("vo_vesa: Can't initialize Linux Video Overlay\n");
-		    lvo_name = NULL;
 		    vesa_term();
 		    return -1;
 		  }
 		  else printf("vo_vesa: Using video overlay: %s\n",lvo_name);
+		  lvo_opened = 1;
 		}
 #ifdef CONFIG_VIDIX
 		else
@@ -947,12 +953,12 @@ config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uin
 				video_mode_info.XResolution,video_mode_info.YResolution) != 0)
 		  {
 		    printf("vo_vesa: Can't initialize VIDIX driver\n");
-		    vidix_name = NULL;
 		    vesa_term();
 		    return -1;
 		  }
 		  else printf("vo_vesa: Using VIDIX\n");
 		  vidix_start();
+		  vidix_opened = 1;
 		}
 #endif
 	}
@@ -978,11 +984,12 @@ config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uin
 	else
 	{
             clear_screen();	/* Clear screen for stupid BIOSes */
-	    if(verbose>1) paintBkGnd();
+	    if(verbose>1)
 	    {
 	        int x;
 	        x = (video_mode_info.XResolution/video_mode_info.XCharSize)/2-strlen(title)/2;
 	        if(x < 0) x = 0;
+	        paintBkGnd();
 	        vbeWriteString(x,0,7,title);
 	    }
 	}
@@ -993,7 +1000,6 @@ static void
 uninit(void)
 {
     // not inited
-    if (!init_state) return;
     vesa_term();
     if(verbose > 2)
         printf("vo_vesa: uninit was called\n");
@@ -1015,6 +1021,10 @@ static uint32_t preinit(const char *arg)
   if(verbose > 2)
         printf("vo_vesa: subdevice %s is being initialized\n",arg);
   subdev_flags = 0;
+  lvo_name = NULL;
+#ifdef CONFIG_VIDIX
+  vidix_name = NULL;
+#endif
   if(arg) subdev_flags = parseSubDevice(arg);
   if(lvo_name) pre_init_err = vlvo_preinit(lvo_name);
 #ifdef CONFIG_VIDIX

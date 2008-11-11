@@ -314,7 +314,7 @@ if (verbose) printf("DirectFB: Preinit entered\n");
 	    (directfb_minor_version <= 9) &&
 	    (directfb_micro_version < 7)))
 	{
-    	    if (!fb_dev_name && !(fb_dev_name = getenv("FRAMEBUFFER"))) fb_dev_name = "/dev/fb0";
+    	    if (!fb_dev_name && !(fb_dev_name = getenv("FRAMEBUFFER"))) fb_dev_name = strdup("/dev/fb0");
     	    DFBCHECK (DirectFBSetOption ("fbdev",fb_dev_name));
 	}
 
@@ -362,7 +362,7 @@ if (verbose) printf("DirectFB: Preinit entered\n");
         DFBCHECK (DirectFBCreate (&dfb));
         DFBCHECK (dfb->SetCooperativeLevel (dfb, DFSCL_FULLSCREEN));
 
-  // lets try to get YUY2 layer - borrowed from DirectFb examples
+  // let's try to get YUY2 layer - borrowed from DirectFb examples
 
      /* Enumerate display layers */
         DFBCHECK (dfb->EnumDisplayLayers( dfb, enum_layers_callback, &videolayer ));
@@ -1411,7 +1411,7 @@ static uint32_t draw_slice(uint8_t *src[], int stride[], int w, int h, int x, in
 
 extern void mplayer_put_key(int code);
 
-#include "../linux/keycodes.h"
+#include "../osdep/keycodes.h"
 
 static void check_events(void)
 {
@@ -1496,7 +1496,7 @@ static void draw_osd(void)
 		    framelocked=0;
 		};
 #endif
-		// lets clear blackborders
+		// let's clear blackborders
 		primary->SetColor(primary,0,0,0,0);
 		// top
 		primary->FillRectangle(primary,0,0,screen_width,yoffset);

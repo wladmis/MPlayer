@@ -144,7 +144,7 @@ int demux_asf_fill_buffer(demuxer_t *demux){
   demux->filepos=stream_tell(demux->stream);
   // Brodcast stream have movi_start==movi_end
   // Better test ?
-  if((demux->movi_start != demux->movi_end) && (demux->filepos>=demux->movi_end)){
+  if((demux->movi_start < demux->movi_end) && (demux->filepos>=demux->movi_end)){
           demux->stream->eof=1;
           return 0;
   }
@@ -183,7 +183,8 @@ int demux_asf_fill_buffer(demuxer_t *demux){
 	    case 2: plen=LOAD_LE16(p);p+=2;break;	// word
 	    case 1: plen=p[0];p++;break;		// byte
 	    default: plen=0;
-		mp_msg(MSGT_DEMUX,MSGL_V,"Invalid plen type! assuming plen=0\n");
+		//plen==0 is handled later
+		//mp_msg(MSGT_DEMUX,MSGL_V,"Invalid plen type! assuming plen=0\n");
 	    }
 
             // Read sequence:

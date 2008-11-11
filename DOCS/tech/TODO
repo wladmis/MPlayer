@@ -1,39 +1,45 @@
-
 TODO:
 =====
 
-FOR THE LAST RC-RELEASE:
-~~~~~~~~~~~~~~~~~~~~~~~~
-- fix iconv issues:
-   - ogm subtitles crash if compiled with libiconv - FIXED?
-   - -subcp crash / no effect - FIXED?
-- fix the broken -geometry option changes (fbdev, xv etc) - FIXED?
-- fix vo_svga  (unusably broken. On my Cirrus, and Geforce2, confirmed)
-   - Dec 28: Re: [Mplayer-cvslog] CVS: main/libvo vo_svga.c,1.55,1.56
-- fix partial -dr + ffmpeg + B frames (different stride per frame)
-- remove or fix -vop lavcdeint
+Post-0.90 / CVS CLEANUP work:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- maybe remove .raw font support too
+- remove -vf yuy2, yvu9
+- maybe upgrade to liba52 cvs & merge in (or redo?) the asm optimizations
+- change build & install stuff (cross-lib dependency etc)
+  - re-design makefile dependency system
+- we should switch to the patch tracker (roundup)
+- fix & apply the delayed patches:
+  - MPlayer-0.90rc2.rawyuv.diff - raw YUV (I420) video 'encoder'
+    (checks requires for stride==width, and aligned planes)
+  - of-raw-1.diff - raw audio/video stream dump 'muxer'
+  - bte.diff - something input plugin (uses fork() )
+  - lavc_statsfile_errorchecking-patch - handle errors writing to logfile
+  - xine-lib-cvs-xvmc.diff - XvMC support for libmpeg2 0.3.x
+  - fastermemcpy.diff - cacheline-size dependant optimizations
+  - fire-x86-runtime-options.diff - en/disable (force) cpu features runtime
+    (needs to be integrated with --runtime-cpu-detection en/disabled modes)
+  - mga_vid_laced.diff - buggy interlace support into mga_vid
+  - patch_sortsub_disable-1.3x.diff - remove --disable-sortsub
+  - mplayer-0.90rc3-fixfbdev.patch - ugly hack to fix multiple file & -vo fbdev
 - fix locale problems (add common float parser / mp_sscanf())
-- check files at FTP/incoming/!to_be_fixed/*
-- fix Gabucino's bugs:
-   - supporting Noir.rm? Garbled image now. Maybe codec scales?
-   - Nov 13: [BUG] sig11 while moving xmga window in Xinerama mode - FIXED?
-   - Nov 23: [BUG] panscan doesn't work properly with -fixed-vo (Xv)
-     UPDATE: Actually -fixed-vo -vo xv doesn't work at all with 'f'...
-     no matter if panscan is used or not...
-   - Dec 19: [BUG] mencoder+mp3lame creates desynced AVI (<=22Khz support missing)
+  maybe use Albeu's new filter args parser hack in all filters, remove sscanf()
+- new demuxer layer - at least modularized...
+- review and implement draw_slice() support in video filters
 
-FOR THE v0.90 RELEASE:
+FOR THE NEXT RELEASE:
 ~~~~~~~~~~~~~~~~~~~~~~
+- fix vo_svga vs. -vf scale - DONE?
+- Re: [Mplayer-cvslog] CVS: main/libvo vo_vesa.c,1.82,1.83
+  This patch makes mplayer unusable in console mode, always leaves the 
+  console in graphic mode.
+- Dec 19: [BUG] mencoder+mp3lame creates desynced AVI (<=22Khz support missing)
+- check files at FTP/incoming/!to_be_fixed/*
+- fix partial -dr + ffmpeg + B frames (different stride per frame)
 - implementing 8bpp support in vo_x11.c
-- remove SVQ1 from libmpcodecs
-- remove -vop yuy2, yvu9
 - cleanup qtaudio/qtvideo (move globals to context)
 - cleanup DMO interfaces
-- re-design makefile dependency system
-- finish audio filter layer
-- new demuxer layer - at least modularized...
 - fix AVI index offset base position handling ('no video stream found' bug)
-- review and implement draw_slice() support in video filters
 - Update GUI code to support gtk 2.x (any volunteers??? we really need help here)
 
 FOR THE v1.00 RELEASE:
@@ -56,6 +62,16 @@ mencoder:
 - add ogg/vorbis audio encoder
 - stop/resume
 
+DOCS:
+- merge tech/encoding-tips.txt into encoding.html
+- finish reviewing all of the docs
+  - mplayer.1
+  - encoding.html
+  - video.html
+  - documentation.html
+- enhance the FAQ
+- man page HTML version
+
 
 FUTURE:
 ~~~~~~~
@@ -71,30 +87,12 @@ decoders:
 other:
 - dvd server
 - mga_vid crtc2 fix
-- make nvidia_vid ;)
+- X11 Render support into DGA for OSD (from the DOCS;)
 
-
-
-DOCUMENTATION TODO:
-===================
-
-FOR THE v0.90 RELEASE:
-~~~~~~~~~~~~~~~~~~~~~~
-
+DOCS:
 - update the man page with all current options
-- merge tech/vop.txt and tech/libavc-options.txt into the man page
-- merge tech/encoding-tips.txt into encoding.html
-- finish reviewing all of the docs
-  - mplayer.1
-  - encoding.html
-  - video.html
-  - documentation.html
-- enhance the FAQ
-
-
-FUTURE:
-~~~~~~~
-
+  (prefer-ipv4/6, ipv4-only-proxy, tsfastparse, dvbin + subopts, sub-demuxer,
+  (no)autoexpand, oldpp, grabpointer, nuvopts + subopts, remove -aop?)
+- break up 6 level deep sections
+- convert man page to XML
 - write a detailed encoding guide
-- convert the docs to SGML/XML
-- restructuring?

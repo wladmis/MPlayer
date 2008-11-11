@@ -57,7 +57,7 @@ static pl_format_t pl_format={NULL,0,0,0,1};
 #define SIGN_MASK	(1<<3)
 
 // to set/get/query special features/parameters
-static int control(int cmd,int arg){
+static int control(int cmd,void *arg){
   switch(cmd){
   case AOCONTROL_PLUGIN_SET_LEN:
     if(pl_format.data) 
@@ -228,7 +228,7 @@ static int play(){
       switch(pl_format.in&SIGN_MASK){
       case(US):
 	for(i=0;i<len;i++)
-	((int32_t*)in_data)[i]=(int32_t)(-(1<<31-1)+((uint32_t*)in_data)[i]);
+	((int32_t*)in_data)[i]=(int32_t)(((uint32_t*)in_data)[i]-0x80000000);
 	break;
       case(SI):
 	for(i=0;i<len;i++)

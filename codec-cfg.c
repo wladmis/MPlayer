@@ -78,10 +78,10 @@ static int add_to_fourcc(char *s, char *alias, unsigned int *fourcc,
 		goto err_out_parse_error;
 	return 1;
 err_out_duplicated:
-	mp_msg(MSGT_CODECCFG,MSGL_ERR,"duplicated fourcc");
+	mp_msg(MSGT_CODECCFG,MSGL_ERR,"duplicated FourCC");
 	return 0;
 err_out_too_many:
-	mp_msg(MSGT_CODECCFG,MSGL_ERR,"too many fourcc/format...");
+	mp_msg(MSGT_CODECCFG,MSGL_ERR,"too many FourCCs/formats...");
 	return 0;
 err_out_parse_error:
 	mp_msg(MSGT_CODECCFG,MSGL_ERR,"parse error");
@@ -97,20 +97,20 @@ static int add_to_format(char *s, char *alias,unsigned int *fourcc, unsigned int
 	for (i = 0; i < CODECS_MAX_FOURCC && fourcc[i] != 0xffffffff; i++)
 		/* NOTHING */;
 	if (i == CODECS_MAX_FOURCC) {
-		mp_msg(MSGT_CODECCFG,MSGL_ERR,"too many fourcc/format...");
+		mp_msg(MSGT_CODECCFG,MSGL_ERR,"too many FourCCs/formats...");
 		return 0;
 	}
 
         fourcc[i]=strtoul(s,&endptr,0);
 	if (*endptr != '\0') {
-		mp_msg(MSGT_CODECCFG,MSGL_ERR,"parse error (format ID not number?)");
+		mp_msg(MSGT_CODECCFG,MSGL_ERR,"parse error (format ID not a number?)");
 		return 0;
 	}
 
 	if(alias){
 	    fourccmap[i]=strtoul(alias,&endptr,0);
 	    if (*endptr != '\0') {
-		mp_msg(MSGT_CODECCFG,MSGL_ERR,"parse error (format ID alias not number?)");
+		mp_msg(MSGT_CODECCFG,MSGL_ERR,"parse error (format ID alias not a number?)");
 		return 0;
 	    }
 	} else
@@ -132,6 +132,8 @@ static int add_to_format(char *s, char *alias,unsigned int *fourcc, unsigned int
 		{"YV12",  IMGFMT_YV12},
 		{"I420",  IMGFMT_I420},
 		{"IYUV",  IMGFMT_IYUV},
+		{"NV12",  IMGFMT_NV12},
+		{"NV21",  IMGFMT_NV21},
 		{"YVU9",  IMGFMT_YVU9},
 		{"IF09",  IMGFMT_IF09},
 		{"444P",  IMGFMT_444P},
@@ -158,6 +160,10 @@ static int add_to_format(char *s, char *alias,unsigned int *fourcc, unsigned int
 		{"BGR1",  IMGFMT_BGR|1},
 
 		{"MPES",  IMGFMT_MPEGPES},
+
+		{"IDCT_MPEG2",IMGFMT_XVMC_IDCT_MPEG2},
+		{"MOCO_MPEG2",IMGFMT_XVMC_MOCO_MPEG2},
+
 		{NULL,    0}
 	};
 
@@ -281,11 +287,9 @@ static short get_driver(char *s,int audioflag)
 		"qtrpza",
 		"mpng",
 		"ijpg",
-		"huffyuv",
 		"zlib",
 		"mpegpes",
 		"realvid",
-		"svq1",
 		"xvid",
 		"libdv",
 		NULL
@@ -317,7 +321,7 @@ static int validate_codec(codecs_t *c, int type)
 
 #if 0
 	if (c->fourcc[0] == 0xffffffff) {
-		mp_msg(MSGT_CODECCFG,MSGL_ERR,"\ncodec(%s) does not have fourcc/format!\n", c->name);
+		mp_msg(MSGT_CODECCFG,MSGL_ERR,"\ncodec(%s) does not have FourCC/format!\n", c->name);
 		return 0;
 	}
 
@@ -359,7 +363,7 @@ static int add_comment(char *s, char **d)
 		(*d)[pos++] = '\n';
 	}
 	if (!(*d = (char *) realloc(*d, pos + strlen(s) + 1))) {
-		mp_msg(MSGT_CODECCFG,MSGL_FATAL,"can't allocate mem for comment. ");
+		mp_msg(MSGT_CODECCFG,MSGL_FATAL,"Can't allocate memory for comment. ");
 		return 0;
 	}
 	strcpy(*d + pos, s);
@@ -499,12 +503,12 @@ int parse_codec_cfg(char *cfgfile)
 	mp_msg(MSGT_CODECCFG,MSGL_INFO,"Reading %s: ", cfgfile);
 
 	if ((fp = fopen(cfgfile, "r")) == NULL) {
-		mp_msg(MSGT_CODECCFG,MSGL_ERR,"can't open '%s': %s\n", cfgfile, strerror(errno));
+		mp_msg(MSGT_CODECCFG,MSGL_ERR,"Can't open '%s': %s\n", cfgfile, strerror(errno));
 		return 0;
 	}
 
 	if ((line = (char *) malloc(MAX_LINE_LEN + 1)) == NULL) {
-		mp_msg(MSGT_CODECCFG,MSGL_FATAL,"can't get memory for 'line': %s\n", strerror(errno));
+		mp_msg(MSGT_CODECCFG,MSGL_FATAL,"Can't get memory for 'line': %s\n", strerror(errno));
 		return 0;
 	}
 	read_nextline = 1;
@@ -562,7 +566,7 @@ int parse_codec_cfg(char *cfgfile)
 			}
 		        if (!(*codecsp = (codecs_t *) realloc(*codecsp,
 				sizeof(codecs_t) * (*nr_codecsp + 2)))) {
-			    mp_msg(MSGT_CODECCFG,MSGL_FATAL,"can't realloc '*codecsp': %s\n", strerror(errno));
+			    mp_msg(MSGT_CODECCFG,MSGL_FATAL,"Can't realloc '*codecsp': %s\n", strerror(errno));
 			    goto err_out;
 		        }
 			codec=*codecsp + *nr_codecsp;
@@ -577,19 +581,19 @@ int parse_codec_cfg(char *cfgfile)
 			for (i = 0; i < *nr_codecsp - 1; i++) {
 				if(( (*codecsp)[i].name!=NULL) && 
 				    (!strcmp(token[0], (*codecsp)[i].name)) ) {
-					mp_msg(MSGT_CODECCFG,MSGL_ERR,"codec name '%s' isn't unique", token[0]);
+					mp_msg(MSGT_CODECCFG,MSGL_ERR,"Codec name '%s' isn't unique.", token[0]);
 					goto err_out_print_linenum;
 				}
 			}
 			if (!(codec->name = strdup(token[0]))) {
-				mp_msg(MSGT_CODECCFG,MSGL_ERR,"can't strdup -> 'name': %s\n", strerror(errno));
+				mp_msg(MSGT_CODECCFG,MSGL_ERR,"Can't strdup -> 'name': %s\n", strerror(errno));
 				goto err_out;
 			}
 		} else if (!strcmp(token[0], "info")) {
 			if (codec->info || get_token(1, 1) < 0)
 				goto err_out_parse_error;
 			if (!(codec->info = strdup(token[0]))) {
-				mp_msg(MSGT_CODECCFG,MSGL_ERR,"can't strdup -> 'info': %s\n", strerror(errno));
+				mp_msg(MSGT_CODECCFG,MSGL_ERR,"Can't strdup -> 'info': %s\n", strerror(errno));
 				goto err_out;
 			}
 		} else if (!strcmp(token[0], "comment")) {
@@ -613,14 +617,14 @@ int parse_codec_cfg(char *cfgfile)
 			if (get_token(1, 1) < 0)
 				goto err_out_parse_error;
 			if (!(codec->drv = strdup(token[0]))) {
-				mp_msg(MSGT_CODECCFG,MSGL_ERR,"can't strdup -> 'driver': %s\n", strerror(errno));
+				mp_msg(MSGT_CODECCFG,MSGL_ERR,"Can't strdup -> 'driver': %s\n", strerror(errno));
 				goto err_out;
 			}
 		} else if (!strcmp(token[0], "dll")) {
 			if (get_token(1, 1) < 0)
 				goto err_out_parse_error;
 			if (!(codec->dll = strdup(token[0]))) {
-				mp_msg(MSGT_CODECCFG,MSGL_ERR,"can't strdup -> 'dll': %s\n", strerror(errno));
+				mp_msg(MSGT_CODECCFG,MSGL_ERR,"Can't strdup -> 'dll': %s\n", strerror(errno));
 				goto err_out;
 			}
 		} else if (!strcmp(token[0], "guid")) {
@@ -716,10 +720,10 @@ err_out:
 	fclose(fp);
 	return 0;
 err_out_not_valid:
-	mp_msg(MSGT_CODECCFG,MSGL_ERR,"codec is not defined correctly");
+	mp_msg(MSGT_CODECCFG,MSGL_ERR,"Codec is not defined correctly.");
 	goto err_out_print_linenum;
 err_out_release_num:
-	mp_msg(MSGT_CODECCFG,MSGL_ERR,"this codecs.conf is too old, incompatible with this mplayer release!");
+	mp_msg(MSGT_CODECCFG,MSGL_ERR,"This codecs.conf is too old and incompatible with this MPlayer release!");
 	goto err_out_print_linenum;
 }
 
@@ -1033,8 +1037,8 @@ int main(int argc, char* argv[])
 		exit(0);
 	}
 
-        f1=fopen("DOCS/codecs-in.html","rb"); if(!f1) exit(1);
-        f2=fopen("DOCS/codecs-status.html","wb"); if(!f2) exit(1);
+        f1=fopen("DOCS/tech/codecs-in.html","rb"); if(!f1) exit(1);
+        f2=fopen("DOCS/en/codecs-status.html","wb"); if(!f2) exit(1);
         
         while((c=fgetc(f1))>=0){
             if(c!='%'){

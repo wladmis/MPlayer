@@ -11,7 +11,7 @@
 #include "libmpdemux/stream.h"
 #include "asxparser.h"
 #include "mp_msg.h"
-#include "cfgparser.h"
+#include "m_config.h"
 
 extern m_config_t* mconfig;
 
@@ -193,18 +193,19 @@ asx_parse_attribs(ASX_Parser_t* parser,char* buffer,char*** _attribs) {
     attrib[ptr2-ptr1+1] = '\0';
 
     ptr1 = strchr(ptr3,'"');
+    if(ptr1 == NULL || ptr1[1] == '\0') ptr1 = strchr(ptr3,'\'');
     if(ptr1 == NULL || ptr1[1] == '\0') {
       mp_msg(MSGT_PLAYTREE,MSGL_WARN,"At line %d : can't find attribute %s value",parser->line,attrib);
       free(attrib);
       break;
     }
-    ptr1++;
-    ptr2 = strchr(ptr1,'"');
+    ptr2 = strchr(ptr1+1,ptr1[0]);
     if (ptr2 == NULL) {
       mp_msg(MSGT_PLAYTREE,MSGL_WARN,"At line %d : value of attribute %s isn't finished",parser->line,attrib);
       free(attrib);
       break;
     }
+    ptr1++;
     val = (char*)malloc(ptr2-ptr1+1);
     strncpy(val,ptr1,ptr2-ptr1);
     val[ptr2-ptr1] = '\0';
@@ -469,7 +470,7 @@ asx_parse_param(ASX_Parser_t* parser, char** attribs, play_tree_t* pt) {
   }
   val = asx_get_attrib("VALUE",attribs);
   if(m_config_get_option(mconfig,name) == NULL) {
-    mp_msg(MSGT_PLAYTREE,MSGL_WARN,"Found unknow param in asx: %s",name);
+    mp_msg(MSGT_PLAYTREE,MSGL_WARN,"Found unknown param in asx: %s",name);
     if(val)
       mp_msg(MSGT_PLAYTREE,MSGL_WARN,"=%s\n",val);
     else
@@ -477,6 +478,8 @@ asx_parse_param(ASX_Parser_t* parser, char** attribs, play_tree_t* pt) {
     return;
   }
   play_tree_set_param(pt,name,val);
+  free(name);
+  if(val) free(val);
 }
 
 static void
@@ -516,11 +519,7 @@ asx_parse_entryref(ASX_Parser_t* parser,char* buffer,char** _attribs) {
   stream=open_stream(href,0,&f);
   if(!stream) {
     mp_msg(MSGT_PLAYTREE,MSGL_WARN,"Can't open playlist %s\n",href);
-    return NULL;
-  }
-  if(stream->type != STREAMTYPE_PLAYLIST) {
-    mp_msg(MSGT_PLAYTREE,MSGL_WARN,"URL %s dont point to a playlist\n",href);
-    free_stream(stream);
+    free(href);
     return NULL;
   }
 
@@ -532,7 +531,7 @@ asx_parse_entryref(ASX_Parser_t* parser,char* buffer,char** _attribs) {
 
   play_tree_parser_free(ptp);
   free_stream(stream);
-
+  free(href);
   //mp_msg(MSGT_PLAYTREE,MSGL_INFO,"Need to implement entryref\n");
     
   return pt;

@@ -160,11 +160,11 @@ int init_audio(sh_audio_t *sh_audio,char* codecname,char* afm,int status){
 	    ad_functions_t *funcs_sym;
 	    ad_info_t *info_sym;
 	    
-	    buf_len = strlen(LIBDIR)+strlen(sh_audio->codec->drv)+16;
+	    buf_len = strlen(MPLAYER_LIBDIR)+strlen(sh_audio->codec->drv)+16;
 	    buf = malloc(buf_len);
 	    if (!buf)
 		break;
-	    snprintf(buf, buf_len, "%s/mplayer/ad_%s.so", LIBDIR, sh_audio->codec->drv);
+	    snprintf(buf, buf_len, "%s/mplayer/ad_%s.so", MPLAYER_LIBDIR, sh_audio->codec->drv);
 	    mp_msg(MSGT_DECAUDIO, MSGL_DBG2, "Trying to open external plugin: %s\n", buf);
 	    sh_audio->dec_handle = dlopen(buf, RTLD_LAZY);
 	    if (!sh_audio->dec_handle)
@@ -181,7 +181,7 @@ int init_audio(sh_audio_t *sh_audio,char* codecname,char* afm,int status){
 	    free(buf);
 	    mpadec = funcs_sym;
 	    mp_msg(MSGT_DECAUDIO, MSGL_V, "Using external decoder plugin (%s/mplayer/ad_%s.so)!\n",
-		LIBDIR, sh_audio->codec->drv);
+		MPLAYER_LIBDIR, sh_audio->codec->drv);
 	}
 #endif
 	if(!mpadec){ // driver not available (==compiled in)
@@ -242,8 +242,8 @@ while(!sh_audio->inited && *audio_codec_list){
 }
 
 if(!sh_audio->inited){
-    mp_msg(MSGT_DECAUDIO,MSGL_HINT, MSGTR_TryUpgradeCodecsConfOrRTFM,get_path("codecs.conf"));
     mp_msg(MSGT_DECAUDIO,MSGL_ERR,MSGTR_CantFindAudioCodec,sh_audio->format);
+    mp_msg(MSGT_DECAUDIO,MSGL_HINT, MSGTR_RTFMCodecs);
     return 0; // failed
 }
 
@@ -257,6 +257,7 @@ void uninit_audio(sh_audio_t *sh_audio)
     if(sh_audio->afilter){
 	mp_msg(MSGT_DECAUDIO,MSGL_V,"Uninit audio filters...\n");
 	af_uninit(sh_audio->afilter);
+	free(sh_audio->afilter);
 	sh_audio->afilter=NULL;
     }
     if(sh_audio->inited){
@@ -353,6 +354,7 @@ int init_audio_filters(sh_audio_t *sh_audio,
   
   // let's autoprobe it!
   if(0 != af_init(afs,1)){
+    sh_audio->afilter=NULL;
     free(afs);
     return 0; // failed :(
   }

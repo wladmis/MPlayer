@@ -21,11 +21,12 @@
 #ifdef MP_DEBUG
 #include <assert.h>
 #endif
-#include "../linux/getch2.h"
-#include "../linux/keycodes.h"
-#include "../linux/timer.h"
+#include "../osdep/getch2.h"
+#include "../osdep/keycodes.h"
+#include "../osdep/timer.h"
 #include "../mp_msg.h"
-#include "../cfgparser.h"
+#include "../m_config.h"
+#include "../m_option.h"
 
 #include "joystick.h"
 
@@ -33,13 +34,17 @@
 #include "lirc.h"
 #endif
 
-/// This array defines all know commands.
-/// The first field is an id used to recognize the command without too many strcmp
-/// The second is abviously the command name
-/// The third is the minimum number of argument this command need
-/// Then come the definition of each argument, terminated with and arg of type -1
-/// A command can take maximum MP_CMD_MAX_ARGS-1 arguments (-1 because of
-/// the terminal one) wich is actually 9
+#ifdef HAVE_LIRCC
+#include <lirc/lircc.h>
+#endif
+
+/// This array defines all known commands.
+/// The first field is an id used to recognize the command without too many strcmp.
+/// The second is obviously the command name.
+/// The third is the minimum number of arguments this command needs.
+/// Then comes the definition of each argument, terminated with an arg of type -1.
+/// A command can take a maximum of MP_CMD_MAX_ARGS-1 arguments (-1 because of
+/// the last one) which is actually 9.
 
 /// For the args, the first field is the type (actually int, float or string), the second
 /// is the default value wich is used for optional arguments
@@ -59,6 +64,7 @@ static mp_cmd_t mp_cmds[] = {
   { MP_CMD_SUB_DELAY, "sub_delay",1,  { {MP_CMD_ARG_FLOAT,{0}}, {MP_CMD_ARG_INT,{0}}, {-1,{0}} } },
   { MP_CMD_SUB_STEP, "sub_step",1,  { { MP_CMD_ARG_INT,{0} }, {MP_CMD_ARG_INT,{0}}, {-1,{0}} } },
   { MP_CMD_OSD, "osd",0, { {MP_CMD_ARG_INT,{-1}}, {-1,{0}} } },
+  { MP_CMD_OSD_SHOW_TEXT, "osd_show_text", 1, { {MP_CMD_ARG_STRING, {0}}, {-1,{0}} } },
   { MP_CMD_VOLUME, "volume", 1, { { MP_CMD_ARG_INT,{0} }, {MP_CMD_ARG_INT,{0}}, {-1,{0}} } },
   { MP_CMD_MIXER_USEMASTER, "use_master", 0, { {-1,{0}} } },
   { MP_CMD_MUTE, "mute", 0, { {-1,{0}} } },
@@ -80,6 +86,16 @@ static mp_cmd_t mp_cmds[] = {
   { MP_CMD_TV_STEP_CHANNEL_LIST, "tv_step_chanlist", 0, { {-1,{0}} }  },
   { MP_CMD_TV_SET_CHANNEL, "tv_set_channel", 1, { { MP_CMD_ARG_STRING, {0}}, {-1,{0}}  }},
   { MP_CMD_TV_LAST_CHANNEL, "tv_last_channel", 0, { {-1,{0}} } },
+  { MP_CMD_TV_SET_FREQ, "tv_set_freq", 1, { {MP_CMD_ARG_FLOAT,{0}}, {-1,{0}} } },
+  { MP_CMD_TV_SET_NORM, "tv_set_norm", 1, { {MP_CMD_ARG_STRING,{0}}, {-1,{0}} } },
+  { MP_CMD_TV_SET_BRIGHTNESS, "tv_set_brightness", 1,  { { MP_CMD_ARG_INT ,{0}}, {-1,{0}} }},
+  { MP_CMD_TV_SET_CONTRAST, "tv_set_contrast", 1,  { { MP_CMD_ARG_INT ,{0}}, {-1,{0}} }},
+  { MP_CMD_TV_SET_HUE, "tv_set_hue", 1,  { { MP_CMD_ARG_INT ,{0}}, {-1,{0}} }},
+  { MP_CMD_TV_SET_SATURATION, "tv_set_saturation", 1,  { { MP_CMD_ARG_INT ,{0}}, {-1,{0}} }},
+#endif
+  { MP_CMD_SUB_FORCED_ONLY, "forced_subs_only",  0, { {-1,{0}} } },
+#ifdef HAS_DVBIN_SUPPORT
+  { MP_CMD_DVB_SET_CHANNEL, "dvb_set_channel", 1, { { MP_CMD_ARG_INT, {0}}, {-1,{0}}  }},
 #endif
   { MP_CMD_VO_FULLSCREEN, "vo_fullscreen", 0, { {-1,{0}} } },
   { MP_CMD_SCREENSHOT, "screenshot", 0, { {-1,{0}} } },
@@ -112,11 +128,14 @@ static mp_cmd_t mp_cmds[] = {
   { MP_CMD_CHIDE, "hide", 0, { {MP_CMD_ARG_INT,{3000}}, {-1,{0}} } },
   { MP_CMD_CRUN, "run", 1, { {MP_CMD_ARG_STRING,{0}}, {-1,{0}} } },
 #endif
+ 
+  { MP_CMD_GET_VO_FULLSCREEN, "get_vo_fullscreen", 0, { {-1,{0}} } },
+  { MP_CMD_GET_SUB_VISIBILITY, "get_sub_visibility", 0, { {-1,{0}} } },
   
   { 0, NULL, 0, {} }
 };
 
-/// The names of the key for input.conf
+/// The names of the keys as used in input.conf
 /// If you add some new keys, you also need to add them here
 
 static mp_key_name_t key_names[] = {
@@ -136,6 +155,30 @@ static mp_key_name_t key_names[] = {
   { KEY_LEFT, "LEFT" },
   { KEY_DOWN, "DOWN" },
   { KEY_UP, "UP" },
+  { KEY_F+1, "F1" },
+  { KEY_F+2, "F2" },
+  { KEY_F+3, "F3" },
+  { KEY_F+4, "F4" },
+  { KEY_F+5, "F5" },
+  { KEY_F+6, "F6" },
+  { KEY_F+7, "F7" },
+  { KEY_F+8, "F8" },
+  { KEY_F+9, "F9" },
+  { KEY_F+10, "F10" },
+  { KEY_KP0, "KP0" },
+  { KEY_KP1, "KP1" },
+  { KEY_KP2, "KP2" },
+  { KEY_KP3, "KP3" },
+  { KEY_KP4, "KP4" },
+  { KEY_KP5, "KP5" },
+  { KEY_KP6, "KP6" },
+  { KEY_KP7, "KP7" },
+  { KEY_KP8, "KP8" },
+  { KEY_KP9, "KP9" },
+  { KEY_KPDEL, "KP_DEL" },
+  { KEY_KPDEC, "KP_DEC" },
+  { KEY_KPINS, "KP_INS" },
+  { KEY_KPENTER, "KP_ENTER" },
   { MOUSE_BTN0, "MOUSE_BTN0" },
   { MOUSE_BTN1, "MOUSE_BTN1" },
   { MOUSE_BTN2, "MOUSE_BTN2" },
@@ -182,11 +225,17 @@ static mp_key_name_t key_names[] = {
   { JOY_BTN7, "JOY_BTN7" },
   { JOY_BTN8, "JOY_BTN8" },
   { JOY_BTN9, "JOY_BTN9" },
+
+  { KEY_XF86_PAUSE, "XF86_PAUSE" },
+  { KEY_XF86_STOP, "XF86_STOP" },
+  { KEY_XF86_PREV, "XF86_PREV" },
+  { KEY_XF86_NEXT, "XF86_NEXT" },
+
   { 0, NULL }
 };
 
-// This is the default binding. The content of input.conf override these ones.
-// The first args is a null terminated array of key codes.
+// This is the default binding. The content of input.conf overrides these.
+// The first arg is a null terminated array of key codes.
 // The second is the command
 
 static mp_cmd_bind_t def_cmd_binds[] = {
@@ -252,6 +301,7 @@ static mp_cmd_bind_t def_cmd_binds[] = {
   { { 'a', 0 }, "sub_alignment" },
   { { 'v', 0 }, "sub_visibility" },
   { { 'j', 0 }, "vobsub_lang" },
+  { { 'F', 0 }, "forced_subs_only" },
 #ifdef USE_EDL
   { { 'i', 0 }, "edl_mark" },
 #endif
@@ -284,6 +334,12 @@ static mp_cmd_bind_t def_cmd_binds[] = {
   { { 's', 0 }, "screenshot" },
   { { 'w', 0 }, "panscan -0.1" },
   { { 'e', 0 }, "panscan +0.1" },
+
+  { { KEY_XF86_PAUSE, 0 }, "pause" },
+  { { KEY_XF86_STOP, 0 }, "quit" },
+  { { KEY_XF86_PREV, 0 }, "seek -60" },
+  { { KEY_XF86_NEXT, 0 }, "seek +60" },
+
   { { 0 }, NULL }
 };
 
@@ -308,7 +364,7 @@ typedef struct mp_input_fd {
   void* read_func;
   mp_close_func_t close_func;
   int flags;
-  // This fields are for the cmd fds
+  // These fields are for the cmd fds.
   char* buffer;
   int pos,size;
 } mp_input_fd_t;
@@ -344,7 +400,7 @@ static short ar_state = -1;
 static mp_cmd_t* ar_cmd = NULL;
 static unsigned int ar_delay = 100, ar_rate = 8, last_ar = 0;
 
-static int use_joystick = 1, use_lirc = 1;
+static int use_joystick = 1, use_lirc = 1, use_lircc = 1;
 static char* config_file = "input.conf";
 
 static char* js_dev = NULL;
@@ -352,11 +408,11 @@ static char* js_dev = NULL;
 static char* in_file = NULL;
 static int in_file_fd = -1;
 
-static int mp_input_print_key_list(config_t* cfg);
-static int mp_input_print_cmd_list(config_t* cfg);
+static int mp_input_print_key_list(m_option_t* cfg);
+static int mp_input_print_cmd_list(m_option_t* cfg);
 
 // Our command line options
-static config_t input_conf[] = {
+static m_option_t input_conf[] = {
   { "conf", &config_file, CONF_TYPE_STRING, CONF_GLOBAL, 0, 0, NULL },
   { "ar-delay", &ar_delay, CONF_TYPE_INT, CONF_GLOBAL, 0, 0, NULL },
   { "ar-rate", &ar_rate, CONF_TYPE_INT, CONF_GLOBAL, 0, 0, NULL },
@@ -367,12 +423,14 @@ static config_t input_conf[] = {
   { NULL, NULL, 0, 0, 0, 0, NULL}
 };
 
-static config_t mp_input_opts[] = {
+static m_option_t mp_input_opts[] = {
   { "input", &input_conf, CONF_TYPE_SUBCONFIG, 0, 0, 0, NULL},
   { "nojoystick", &use_joystick,  CONF_TYPE_FLAG, CONF_GLOBAL, 1, 0, NULL },
   { "joystick", &use_joystick,  CONF_TYPE_FLAG, CONF_GLOBAL, 0, 1, NULL },
   { "nolirc", &use_lirc, CONF_TYPE_FLAG, CONF_GLOBAL, 1, 0, NULL },
   { "lirc", &use_lirc, CONF_TYPE_FLAG, CONF_GLOBAL, 0, 1, NULL },
+  { "nolircc", &use_lircc, CONF_TYPE_FLAG, CONF_GLOBAL, 1, 0, NULL },
+  { "lircc", &use_lircc, CONF_TYPE_FLAG, CONF_GLOBAL, 0, 1, NULL },
   { NULL, NULL, 0, 0, 0, 0, NULL}
 };
 
@@ -389,7 +447,7 @@ mp_input_get_key_name(int key);
 int
 mp_input_add_cmd_fd(int fd, int select, mp_cmd_func_t read_func, mp_close_func_t close_func) {
   if(num_cmd_fd == MP_MAX_CMD_FD) {
-    mp_msg(MSGT_INPUT,MSGL_ERR,"Too much command fd, unable to register fd %d\n",fd);
+    mp_msg(MSGT_INPUT,MSGL_ERR,"Too many command fds, unable to register fd %d.\n",fd);
     return 0;
   }
 
@@ -445,7 +503,7 @@ mp_input_rm_key_fd(int fd) {
 int
 mp_input_add_key_fd(int fd, int select, mp_key_func_t read_func, mp_close_func_t close_func) {
   if(num_key_fd == MP_MAX_KEY_FD) {
-    mp_msg(MSGT_INPUT,MSGL_ERR,"Too much key fd, unable to register fd %d\n",fd);
+    mp_msg(MSGT_INPUT,MSGL_ERR,"Too many key fds, unable to register fd %d.\n",fd);
     return 0;
   }
 
@@ -509,7 +567,7 @@ mp_input_parse_cmd(char* str) {
       errno = 0;
       cmd->args[i].v.i = atoi(ptr);
       if(errno != 0) {
-	mp_msg(MSGT_INPUT,MSGL_ERR,"Command %s : argument %d isn't an integer\n",cmd_def->name,i+1);
+	mp_msg(MSGT_INPUT,MSGL_ERR,"Command %s: argument %d isn't an integer.\n",cmd_def->name,i+1);
 	ptr = NULL;
       }
       break;
@@ -524,7 +582,7 @@ mp_input_parse_cmd(char* str) {
       setlocale(LC_NUMERIC, "");
 #endif
       if(errno != 0) {
-	mp_msg(MSGT_INPUT,MSGL_ERR,"Command %s : argument %d isn't a float\n",cmd_def->name,i+1);
+	mp_msg(MSGT_INPUT,MSGL_ERR,"Command %s: argument %d isn't a float.\n",cmd_def->name,i+1);
 	ptr = NULL;
       }
       break;
@@ -546,19 +604,20 @@ mp_input_parse_cmd(char* str) {
       }
       
       if(term != ' ' && (!e || e[0] == '\0')) {
-	mp_msg(MSGT_INPUT,MSGL_ERR,"Command %s : argument %d is unterminated\n",cmd_def->name,i+1);
+	mp_msg(MSGT_INPUT,MSGL_ERR,"Command %s: argument %d is unterminated.\n",cmd_def->name,i+1);
 	ptr = NULL;
 	break;
       } else if(!e) e = ptr+strlen(ptr);
       l = e-start;
-      cmd->args[i].v.s = (char*)malloc((l+1)*sizeof(char));
-      strncpy(cmd->args[i].v.s,start,l);
-      cmd->args[i].v.s[l] = '\0';
       ptr2 = start;
        for(e = strchr(ptr2,'\\') ; e ; e = strchr(ptr2,'\\')) {
 	memmove(e,e+1,strlen(e));
 	ptr2 = e + 1;
+        l--;
       }
+      cmd->args[i].v.s = (char*)malloc((l+1)*sizeof(char));
+      strncpy(cmd->args[i].v.s,start,l);
+      cmd->args[i].v.s[l] = '\0';
     } break;
     case -1:
       ptr = NULL;
@@ -570,7 +629,7 @@ mp_input_parse_cmd(char* str) {
 
   if(cmd_def->nargs > cmd->nargs) {
     mp_msg(MSGT_INPUT,MSGL_ERR,"Got command '%s' but\n",str);
-    mp_msg(MSGT_INPUT,MSGL_ERR,"command %s require at least %d arguments, we found only %d so far\n",cmd_def->name,cmd_def->nargs,cmd->nargs);
+    mp_msg(MSGT_INPUT,MSGL_ERR,"command %s requires at least %d arguments, we found only %d so far.\n",cmd_def->name,cmd_def->nargs,cmd->nargs);
     mp_cmd_free(cmd);
     return NULL;
   }
@@ -608,7 +667,7 @@ mp_input_read_cmd(mp_input_fd_t* mp_fd, char** ret) {
   char* end;
   (*ret) = NULL;
 
-  // Allocate the buffer if it dont exist
+  // Allocate the buffer if it doesn't exist
   if(!mp_fd->buffer) {
     mp_fd->buffer = (char*)malloc(MP_CMD_MAX_SIZE*sizeof(char));
     mp_fd->pos = 0;
@@ -623,7 +682,7 @@ mp_input_read_cmd(mp_input_fd_t* mp_fd, char** ret) {
       switch(r) {
       case MP_INPUT_ERROR:
       case MP_INPUT_DEAD:
-	mp_msg(MSGT_INPUT,MSGL_ERR,"Error while reading cmd fd %d : %s\n",mp_fd->fd,strerror(errno));
+	mp_msg(MSGT_INPUT,MSGL_ERR,"Error while reading cmd fd %d: %s\n",mp_fd->fd,strerror(errno));
       case MP_INPUT_NOTHING:
 	return r;
       }
@@ -648,13 +707,13 @@ mp_input_read_cmd(mp_input_fd_t* mp_fd, char** ret) {
     if(!end) {
       // If buffer is full we must drop all until the next \n
       if(mp_fd->size - mp_fd->pos <= 1) {
-	mp_msg(MSGT_INPUT,MSGL_ERR,"Cmd buffer of fd %d is full : dropping content\n",mp_fd->fd);
+	mp_msg(MSGT_INPUT,MSGL_ERR,"Cmd buffer of fd %d is full: dropping content\n",mp_fd->fd);
 	mp_fd->pos = 0;
 	mp_fd->flags |= MP_FD_DROP;
       }
       break;
     }
-    // We alredy have a cmd : set the got_cmd flag
+    // We already have a cmd : set the got_cmd flag
     else if((*ret)) {
       mp_fd->flags |= MP_FD_GOT_CMD;
       break;
@@ -759,7 +818,7 @@ mp_input_get_cmd_from_keys(int n,int* keys, int paused) {
   }
   ret =  mp_input_parse_cmd(cmd);
   if(!ret) {
-    mp_msg(MSGT_INPUT,MSGL_ERR,"Invalid command for binded key %s",mp_input_get_key_name(key_down[0]));
+    mp_msg(MSGT_INPUT,MSGL_ERR,"Invalid command for bound key %s",mp_input_get_key_name(key_down[0]));
     if(  num_key_down > 1) {
       unsigned int s;
       for(s=1; s < num_key_down; s++)
@@ -772,16 +831,21 @@ mp_input_get_cmd_from_keys(int n,int* keys, int paused) {
 
 int
 mp_input_read_key_code(int time) {
+#ifndef HAVE_NO_POSIX_SELECT
   fd_set fds;
   struct timeval tv,*time_val;
+#endif
   int i,n=0,max_fd = 0;
   static int last_loop = 0;
 
   if(num_key_fd == 0)
     return MP_INPUT_NOTHING;
 
+#ifndef HAVE_NO_POSIX_SELECT
   FD_ZERO(&fds);
+#endif
   // Remove fd marked as dead and build the fd_set
+  // n == number of fd's to be select() checked
   for(i = 0; (unsigned int)i < num_key_fd; i++) {
     if( (key_fds[i].flags & MP_FD_DEAD) ) {
       mp_input_rm_key_fd(key_fds[i].fd);
@@ -791,12 +855,18 @@ mp_input_read_key_code(int time) {
       continue;
     if(key_fds[i].fd > max_fd)
       max_fd = key_fds[i].fd;
+#ifndef HAVE_NO_POSIX_SELECT
     FD_SET(key_fds[i].fd,&fds);
+#endif
     n++;
   }
 
-  if(n == 0 || num_key_fd == 0)
+  if(num_key_fd == 0)
     return MP_INPUT_NOTHING;
+
+#ifndef HAVE_NO_POSIX_SELECT
+// if we have fd's without MP_FD_NO_SELECT flag, call select():
+if(n>0){
 
   if(time >= 0 ) {
     tv.tv_sec=time/1000; 
@@ -805,27 +875,32 @@ mp_input_read_key_code(int time) {
   } else
     time_val = NULL;
   
-  while(n > 0) {
+  while(1) {
     if(select(max_fd+1,&fds,NULL,NULL,time_val) < 0) {
       if(errno == EINTR)
 	continue;
-      mp_msg(MSGT_INPUT,MSGL_ERR,"Select error : %s\n",strerror(errno));
+      mp_msg(MSGT_INPUT,MSGL_ERR,"Select error: %s\n",strerror(errno));
     }
     break;
   }
-    
+
+}
+#endif
+
   for(i = last_loop + 1 ; i != last_loop ; i++) {
     int code = -1;
-    // This is to check all fd in turn
+    // This is to check all fds in turn
     if((unsigned int)i >= num_key_fd) {
       i = -1;
       last_loop++;
       last_loop %= (num_key_fd+1);
       continue;
     }
+#ifndef HAVE_NO_POSIX_SELECT
     // No input from this fd
     if(! (key_fds[i].flags & MP_FD_NO_SELECT) && ! FD_ISSET(key_fds[i].fd,&fds))
       continue;
+#endif
     if(key_fds[i].fd == 0) { // stdin is handled by getch2
       code = getch2(time);
       if(code < 0)
@@ -867,7 +942,7 @@ mp_input_read_keys(int time,int paused) {
     // key pushed
     if(code & MP_KEY_DOWN) {
       if(num_key_down > MP_MAX_KEY_DOWN) {
-	mp_msg(MSGT_INPUT,MSGL_ERR,"Too much key down at the same time\n");
+	mp_msg(MSGT_INPUT,MSGL_ERR,"Too many key down events at the same time\n");
 	continue;
       }
       code &= ~MP_KEY_DOWN;
@@ -893,7 +968,7 @@ mp_input_read_keys(int time,int paused) {
     }
     if(j == num_key_down) { // key was not in the down keys : add it
       if(num_key_down > MP_MAX_KEY_DOWN) {
-	mp_msg(MSGT_INPUT,MSGL_ERR,"Too much key down at the same time\n");
+	mp_msg(MSGT_INPUT,MSGL_ERR,"Too many key down events at the same time\n");
 	continue;
       }
       key_down[num_key_down] = code;
@@ -941,8 +1016,10 @@ mp_input_read_keys(int time,int paused) {
 
 static mp_cmd_t*
 mp_input_read_cmds(int time) {
+#ifndef HAVE_NO_POSIX_SELECT
   fd_set fds;
   struct timeval tv,*time_val;
+#endif
   int i,n = 0,max_fd = 0,got_cmd = 0;
   mp_cmd_t* ret;
   static int last_loop = 0;
@@ -950,7 +1027,9 @@ mp_input_read_cmds(int time) {
   if(num_cmd_fd == 0)
     return NULL;
 
+#ifndef HAVE_NO_POSIX_SELECT
   FD_ZERO(&fds);
+#endif
   for(i = 0; (unsigned int)i < num_cmd_fd ; i++) {
     if( (cmd_fds[i].flags & MP_FD_DEAD) || (cmd_fds[i].flags & MP_FD_EOF) ) {
       mp_input_rm_cmd_fd(cmd_fds[i].fd);
@@ -962,13 +1041,16 @@ mp_input_read_cmds(int time) {
       got_cmd = 1;
     if(cmd_fds[i].fd > max_fd)
       max_fd = cmd_fds[i].fd;
+#ifndef HAVE_NO_POSIX_SELECT
     FD_SET(cmd_fds[i].fd,&fds);
+#endif
     n++;
   }
 
   if(num_cmd_fd == 0)
     return NULL;
 
+#ifndef HAVE_NO_POSIX_SELECT
   if(time >= 0) {
     tv.tv_sec=time/1000; 
     tv.tv_usec = (time%1000)*1000;
@@ -981,13 +1063,14 @@ mp_input_read_cmds(int time) {
       if(i < 0) {
 	if(errno == EINTR)
 	  continue;
-	mp_msg(MSGT_INPUT,MSGL_ERR,"Select error : %s\n",strerror(errno));
+	mp_msg(MSGT_INPUT,MSGL_ERR,"Select error: %s\n",strerror(errno));
       }
       if(!got_cmd)
 	return NULL;
     }
     break;
   }
+#endif
 
   for(i = last_loop + 1; i !=  last_loop ; i++) {
     int r = 0;
@@ -998,8 +1081,10 @@ mp_input_read_cmds(int time) {
       last_loop %= (num_cmd_fd+1);
       continue;
     }
+#ifndef HAVE_NO_POSIX_SELECT
     if( ! (cmd_fds[i].flags & MP_FD_NO_SELECT) && ! FD_ISSET(cmd_fds[i].fd,&fds) && ! (cmd_fds[i].flags & MP_FD_GOT_CMD) )
       continue;
+#endif
 
     r = mp_input_read_cmd(&cmd_fds[i],&cmd);
     if(r < 0) {
@@ -1236,7 +1321,7 @@ mp_input_parse_config(char *file) {
   fd = open(file,O_RDONLY);
 
   if(fd < 0) {
-    mp_msg(MSGT_INPUT,MSGL_ERR,"Can't open input config file %s : %s\n",file,strerror(errno));
+    mp_msg(MSGT_INPUT,MSGL_ERR,"Can't open input config file %s: %s\n",file,strerror(errno));
     return 0;
   }
 
@@ -1249,7 +1334,7 @@ mp_input_parse_config(char *file) {
       if(r < 0) {
 	if(errno == EINTR)
 	  continue;
-	mp_msg(MSGT_INPUT,MSGL_ERR,"Error while reading input config file %s : %s\n",file,strerror(errno));
+	mp_msg(MSGT_INPUT,MSGL_ERR,"Error while reading input config file %s: %s\n",file,strerror(errno));
 	mp_input_free_binds(binds);
 	close(fd);
 	return 0;
@@ -1262,7 +1347,7 @@ mp_input_parse_config(char *file) {
     }
     // Empty buffer : return
     if(bs <= 1) {
-      mp_msg(MSGT_INPUT,MSGL_INFO,"Input config file %s parsed : %d binds\n",file,n_binds);
+      mp_msg(MSGT_INPUT,MSGL_INFO,"Input config file %s parsed: %d binds\n",file,n_binds);
       if(binds)
 	cmd_binds = binds;
       close(fd);
@@ -1304,12 +1389,12 @@ mp_input_parse_config(char *file) {
       // Find the end of the key code name
       for(end = iter; end[0] != '\0' && strchr(SPACE_CHAR,end[0]) == NULL ; end++)
 	/*NOTHING */;
-      if(end[0] == '\0') { // Key name don't fit in the buffer
+      if(end[0] == '\0') { // Key name doesn't fit in the buffer
 	if(buffer == iter) {
 	  if(eof && (buffer-iter) == bs)
 	    mp_msg(MSGT_INPUT,MSGL_ERR,"Unfinished binding %s\n",iter);
 	  else
-	    mp_msg(MSGT_INPUT,MSGL_ERR,"Buffer is too small for this key name : %s\n",iter);
+	    mp_msg(MSGT_INPUT,MSGL_ERR,"Buffer is too small for this key name: %s\n",iter);
 	  mp_input_free_binds(binds);
 	  return 0;
 	}
@@ -1378,7 +1463,7 @@ mp_input_parse_config(char *file) {
       continue;
     }
   }
-  mp_msg(MSGT_INPUT,MSGL_ERR,"What are we doing here ?\n");
+  mp_msg(MSGT_INPUT,MSGL_ERR,"What are we doing here?\n");
   close(fd);
   return 0;
 }
@@ -1395,7 +1480,7 @@ mp_input_init(void) {
   
   if(! mp_input_parse_config(file)) {
     // Try global conf dir
-    file = CONFDIR"/input.conf";
+    file = MPLAYER_CONFDIR "/input.conf";
     if(! mp_input_parse_config(file))
       mp_msg(MSGT_INPUT,MSGL_WARN,"Falling back on default (hardcoded) input config\n");
   }
@@ -1415,6 +1500,14 @@ mp_input_init(void) {
     int fd = mp_input_lirc_init();
     if(fd > 0)
       mp_input_add_cmd_fd(fd,0,mp_input_lirc_read,mp_input_lirc_close);
+  }
+#endif
+
+#ifdef HAVE_LIRCC
+  if(use_lircc) {
+    int fd = lircc_init("mplayer", NULL);
+    if(fd >= 0)
+      mp_input_add_cmd_fd(fd,1,NULL,(mp_close_func_t)lircc_cleanup);
   }
 #endif
 
@@ -1454,7 +1547,7 @@ mp_input_register_options(m_config_t* cfg) {
   m_config_register_options(cfg,mp_input_opts);
 }
 
-static int mp_input_print_key_list(config_t* cfg) {
+static int mp_input_print_key_list(m_option_t* cfg) {
   int i;
   printf("\n");
   for(i= 0; key_names[i].name != NULL ; i++)
@@ -1462,7 +1555,7 @@ static int mp_input_print_key_list(config_t* cfg) {
   exit(0);
 }
 
-static int mp_input_print_cmd_list(config_t* cfg) {
+static int mp_input_print_cmd_list(m_option_t* cfg) {
   mp_cmd_t *cmd;
   int i,j;
   char* type;
@@ -1513,5 +1606,3 @@ mp_input_check_interrupt(int time) {
   mp_cmd_free(cmd);
   return 0;
 }
-
-

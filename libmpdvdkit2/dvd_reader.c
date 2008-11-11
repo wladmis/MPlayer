@@ -45,6 +45,16 @@
 #include <mntent.h>
 #endif
 
+#ifdef __MINGW32__
+#include <sys/timeb.h>
+static void gettimeofday(struct timeval* t,void* timezone){
+    struct timeb timebuffer;
+    ftime( &timebuffer );
+    t->tv_sec=timebuffer.time;
+    t->tv_usec=1000*timebuffer.millitm;
+}
+#endif
+
 #include "dvd_udf.h"
 #include "dvd_input.h"
 #include "dvd_reader.h"
@@ -154,7 +164,7 @@ static int initAllCSSKeys( dvd_reader_t *dvd )
  extern char * get_path( char * filename );
 #endif
 
-extern char * dvdcss_cache_dir;
+//extern char * dvdcss_cache_dir;
 
 /**
  * Open a DVD image or block device file.
@@ -164,13 +174,14 @@ static dvd_reader_t *DVDOpenImageFile( const char *location, int have_css )
     dvd_reader_t *dvd;
     dvd_input_t dev;
 
-    /* setup cache dir */
+    /* setup cache dir is no longer needed, it's now implemented in libdvdcss.c
     if(!dvdcss_cache_dir){
 	dvdcss_cache_dir=get_path( "" );
 	if ( dvdcss_cache_dir ) { mkdir( dvdcss_cache_dir,493 ); free( dvdcss_cache_dir ); }
 	dvdcss_cache_dir=get_path( "DVDKeys" );
 	if(dvdcss_cache_dir) mkdir( dvdcss_cache_dir,493 );
     }
+    */
     
     /* open it */
     dev = DVDinput_open( location );
@@ -242,7 +253,7 @@ static char *bsd_block2char( const char *path )
     char *new_path;
 
     /* If it doesn't start with "/dev/" or does start with "/dev/r" exit */ 
-    if( !strncmp( path, "/dev/",  5 ) || strncmp( path, "/dev/r", 6 ) ) 
+    if( strncmp( path, "/dev/",  5 ) || !strncmp( path, "/dev/r", 6 ) ) 
       return (char *) strdup( path );
 
     /* Replace "/dev/" with "/dev/r" */
@@ -309,7 +320,9 @@ dvd_reader_t *DVDOpen( const char *path )
 	    if( cdir >= 0 ) {
 		chdir( path_copy );
 		new_path = getcwd( NULL, PATH_MAX );
+#ifndef __MINGW32__       
 		fchdir( cdir );
+#endif       
 		close( cdir );
 		if( new_path ) {
 		    free( path_copy );
@@ -871,7 +884,7 @@ ssize_t DVDReadBlocks( dvd_file_t *dvd_file, int offset,
     return (ssize_t)ret;
 }
 
-int32_t DVDFileSeek( dvd_file_t *dvd_file, int32_t offset )
+int DVDFileSeek( dvd_file_t *dvd_file, int offset )
 {
    if( offset > dvd_file->filesize * DVD_VIDEO_LB_LEN ) {
        return -1;

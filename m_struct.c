@@ -1,7 +1,4 @@
-
 #include "config.h"
-
-#ifdef NEW_CONFIG
 
 #include <stdlib.h>
 #include <string.h>
@@ -27,7 +24,7 @@ m_struct_alloc(m_struct_t* st) {
   void* r;
 
   if(!st->defaults) {
-    mp_msg(MSGT_CFGPARSER, MSGL_ERR,"Struct %s need defaults\n");
+    mp_msg(MSGT_CFGPARSER, MSGL_ERR,"Struct %s needs defaults\n",st->name);
     return NULL;
   }
   // Check the struct fields
@@ -60,7 +57,7 @@ m_struct_set(m_struct_t* st, void* obj, char* field, char* param) {
   } 
 
   if(f->type->parse(f,field,param,M_ST_MB_P(obj,f->p),M_CONFIG_FILE) < 0) {
-    mp_msg(MSGT_CFGPARSER, MSGL_ERR,"Strut %s, field %s parsing error: %s\n",
+    mp_msg(MSGT_CFGPARSER, MSGL_ERR,"Struct %s, field %s parsing error: %s\n",
 	   st->name,field,param);
     return 0;
   }
@@ -113,7 +110,3 @@ m_struct_copy(m_struct_t* st, void* obj) {
 
   return r;
 }
-  
-
-
-#endif // NEW_CONFIG

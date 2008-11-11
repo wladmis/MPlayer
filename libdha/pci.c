@@ -89,6 +89,9 @@
 #include "sysdep/pci_os2.c"
 #elif defined (_WIN32) || defined(__CYGWIN__)
 #include "sysdep/pci_win32.c"
+#ifdef __MINGW32__
+#define ENOTSUP 134		/* Not supported */
+#endif
 #endif
 
 #if 0
@@ -504,6 +507,7 @@ static void identify_card(struct pci_config_reg *pcr, int idx)
   pci_lst[idx].bus     = pcibus ;
   pci_lst[idx].card    = pcicard ;
   pci_lst[idx].func    = pcifunc ;
+  pci_lst[idx].command = pcr->_status_command & 0xFFFF;
   pci_lst[idx].vendor  = pcr->_vendor ;
   pci_lst[idx].device  = pcr->_device ;
   pci_lst[idx].base0   = 0xFFFFFFFF ;

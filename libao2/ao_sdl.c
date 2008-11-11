@@ -95,8 +95,8 @@ static int read_buffer(unsigned char* data,int len){
 
 // end ring buffer stuff
 
-#if	 defined(HPUX) || defined(sun) && defined(__svr4__)
-/* setenv is missing on solaris and HPUX */
+#if defined(HPUX) || defined(sgi) || (defined(sun) && defined(__svr4__))
+/* setenv is missing on solaris, IRIX and HPUX */
 static void setenv(const char *name, const char *val, int _xx)
 {
   int len  = strlen(name) + strlen(val) + 2;
@@ -113,7 +113,7 @@ static void setenv(const char *name, const char *val, int _xx)
 
 
 // to set/get/query special features/parameters
-static int control(int cmd,int arg){
+static int control(int cmd,void *arg){
 	switch (cmd) {
 		case AOCONTROL_GET_VOLUME:
 		{

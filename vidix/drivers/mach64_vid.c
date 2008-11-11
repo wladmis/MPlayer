@@ -421,6 +421,11 @@ int vixProbe(int verbose,int force)
 	dname = pci_device_name(VENDOR_ATI,lst[i].device);
 	dname = dname ? dname : "Unknown chip";
 	printf("[mach64] Found chip: %s\n",dname);
+	if ((lst[i].command & PCI_COMMAND_IO) == 0)
+	{
+		printf("[mach64] Device is disabled, ignoring\n");
+		continue;
+	}
 	if(force > PROBE_NORMAL)
 	{
 	    printf("[mach64] Driver was forced. Was found %sknown chip\n",idx == -1 ? "un" : "");
@@ -775,8 +780,8 @@ for(i=0; i<32; i++){
         config->offsets[i] = config->offsets[i-1] + config->frame_size;
     
 	/*FIXME the left / top stuff is broken (= zoom a src rectangle from a larger one)
-		1. the framesize isnt known as the outer src rectangle dimensions arent known
-		2. the mach64 needs aligned addresses so it cant work anyway
+		1. the framesize isn't known as the outer src rectangle dimensions aren't known
+		2. the mach64 needs aligned addresses so it can't work anyway
 		   -> so we could shift the outer buffer to compensate that but that would mean
 		      alignment problems for the code which writes into it
 	*/
@@ -786,10 +791,6 @@ for(i=0; i<32; i++){
 	config->offset.y= 0;
 	config->offset.u= (pitch*src_h + 15)&~15; 
 	config->offset.v= (config->offset.u + (pitch*src_h>>2) + 15)&~15;
-	
-	src_offset_y= config->offset.y + top*pitch + left;
-	src_offset_u= config->offset.u + (top*pitch>>2) + (left>>1);
-	src_offset_v= config->offset.v + (top*pitch>>2) + (left>>1);
 
 	if(besr.fourcc == IMGFMT_I420 || besr.fourcc == IMGFMT_IYUV)
 	{
@@ -798,6 +799,10 @@ for(i=0; i<32; i++){
 	  config->offset.u = config->offset.v;
 	  config->offset.v = tmp;
 	}
+		
+	src_offset_y= config->offset.y + top*pitch + left;
+	src_offset_u= config->offset.u + (top*pitch>>2) + (left>>1);
+	src_offset_v= config->offset.v + (top*pitch>>2) + (left>>1);
     }
     else if(besr.fourcc == IMGFMT_YVU9)
     {

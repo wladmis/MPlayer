@@ -5,6 +5,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <string.h>
 
 #include "config.h"
 #include "mp_msg.h"
@@ -14,30 +15,30 @@
 #include <sys/cdrio.h>
 #endif
 
-#include "../cfgparser.h"
+#include "../m_option.h"
 #include "stream.h"
 #include "demuxer.h"
 #include "mf.h"
 
-#ifdef STREAMING
+#ifdef MPLAYER_NETWORK
 #include "url.h"
 #include "network.h"
 extern int streaming_start( stream_t *stream, int *demuxer_type, URL_t *url);
 #ifdef STREAMING_LIVE_DOT_COM
 #include "demux_rtp.h"
-int isSDPFile = 0;
 #endif
 static URL_t* url;
 #endif
 
+/// We keep these 2 for the gui atm, but they will be removed.
 int dvd_title=0;
+int vcd_track=0;
+
 int dvd_chapter=1;
 int dvd_last_chapter=0;
 int dvd_angle=1;
 char* dvd_device=NULL;
 char* cdrom_device=NULL;
-char* cue_file_name=NULL;
-int dvd_nav=0;                  /* use libdvdnav? */
 
 #ifdef USE_DVDNAV
 #include "dvdnav_stream.h"
@@ -63,25 +64,12 @@ char * dvd_audio_stream_types[8] =
         { "ac3","unknown","mpeg1","mpeg2ext","lpcm","unknown","dts" };
 
 char * dvd_audio_stream_channels[6] =
-	{ "unknown", "stereo", "unknown", "unknown", "unknown", "5.1" };
+	{ "mono", "stereo", "unknown", "unknown", "5.1/6.1", "5.1" };
 #endif
-
-extern int vcd_get_track_end(int fd,int track);
 
 #include "cue_read.h"
 
-#ifdef USE_TV
-#include "tv.h"
 
-extern int stream_open_tv(stream_t *stream, tvi_handle_t *tvh);
-#endif
-
-#ifdef HAVE_CDDA
-stream_t* open_cdda(char* dev,char* track);
-#ifdef STREAMING
-stream_t* cddb_open(char* dev,char* track);
-#endif
-#endif
 
 // Define function about auth the libsmbclient library
 // FIXME: I really do not not is this function is properly working
@@ -123,54 +111,33 @@ static void smb_auth_fn(const char *server, const char *share,
 
 // Open a new stream  (stdin/file/vcd/url)
 
-stream_t* open_stream(char* filename,int vcd_track,int* file_format){
+stream_t* open_stream(char* filename,char** options, int* file_format){
 stream_t* stream=NULL;
 int f=-1;
 off_t len;
-#ifdef __FreeBSD__
-int bsize = VCD_SECTOR_SIZE;
-#endif
-
-#ifdef HAVE_CDDA
-if(filename && strncmp("cdda://",filename,7) == 0)
-  return open_cdda(cdrom_device ? cdrom_device : DEFAULT_CDROM_DEVICE,filename+7);
-#ifdef STREAMING
-if(filename && strncmp("cddb://",filename,7) == 0)
-  return cddb_open(cdrom_device ? cdrom_device : DEFAULT_CDROM_DEVICE,filename+7);
-#endif
-#endif
-
-//============ Open VideoCD track ==============
-#ifdef HAVE_VCD
-if(vcd_track && !cue_file_name){
-  int ret,ret2;
-  if(!cdrom_device) cdrom_device=strdup(DEFAULT_CDROM_DEVICE);
-  f=open(cdrom_device,O_RDONLY);
-  if(f<0){ mp_msg(MSGT_OPEN,MSGL_ERR,MSGTR_CdDevNotfound,cdrom_device);return NULL; }
-  vcd_read_toc(f);
-  ret2=vcd_get_track_end(f,vcd_track);
-  if(ret2<0){ mp_msg(MSGT_OPEN,MSGL_ERR,MSGTR_ErrTrackSelect " (get)\n");return NULL;}
-  ret=vcd_seek_to_track(f,vcd_track);
-  if(ret<0){ mp_msg(MSGT_OPEN,MSGL_ERR,MSGTR_ErrTrackSelect " (seek)\n");return NULL;}
-  mp_msg(MSGT_OPEN,MSGL_V,"VCD start byte position: 0x%X  end: 0x%X\n",ret,ret2);
-#ifdef __FreeBSD__
-  if (ioctl (f, CDRIOCSETBLOCKSIZE, &bsize) == -1) {
-        perror ( "Error in CDRIOCSETBLOCKSIZE");
-  }
-#endif
-  stream=new_stream(f,STREAMTYPE_VCD);
-  stream->start_pos=ret;
-  stream->end_pos=ret2;
-  return stream;
+*file_format = DEMUXER_TYPE_UNKNOWN;
+if(!filename) {
+   mp_msg(MSGT_OPEN,MSGL_ERR,"NULL filename, report this bug\n");
+   return NULL;
 }
-#endif
-
 
 // for opening of vcds in bincue files
-if(vcd_track && cue_file_name){
+if(strncmp("cue://",filename,6) == 0){
   int ret,ret2;
-  if ((f = cue_read_cue (cue_file_name)) == -1) return NULL;
-
+  char* p = filename + 6;
+  vcd_track = 1;
+  p = strchr(p,':');
+  if(p && p[1] != '\0') {
+    vcd_track = strtol(p+1,NULL,0);
+    if(vcd_track < 1){ 
+      mp_msg(MSGT_OPEN,MSGL_ERR,"Invalid cue track %s\n",p+1);
+      return NULL;
+    }
+    p[0] = '\0';
+  }
+  f = cue_read_cue (filename + 6);
+  if(p && p[1] != '\0') p[0] = ':';
+  if (f == -1) return NULL;
   cue_vcd_read_toc();
   ret2=cue_vcd_get_track_end(vcd_track);
   ret=cue_vcd_seek_to_track(vcd_track);
@@ -180,26 +147,26 @@ if(vcd_track && cue_file_name){
   stream=new_stream(f,STREAMTYPE_VCDBINCUE);
   stream->start_pos=ret;
   stream->end_pos=ret2;
-  printf ("start:%d end:%d\n", ret, ret2);
   return stream;
 }
 
 
 //============ Open DVD title ==============
 #ifdef USE_DVDNAV
-if(dvd_nav){
+if(strncmp("dvdnav://",filename,9) == 0){
     dvdnav_priv_t *dvdnav_priv;
     int event,len,tmplen=0;
-
+    char* name = (filename[9] == '\0') ? NULL : filename + 9;
+    
     stream=new_stream(-1,STREAMTYPE_DVDNAV);
     if (!stream) {
         mp_msg(MSGT_OPEN,MSGL_ERR,MSGTR_Exit_error);
         return NULL;
     }
 
-    if(!filename) filename=DEFAULT_DVD_DEVICE;
-    if (!(dvdnav_priv=new_dvdnav_stream(filename))) {
-	mp_msg(MSGT_OPEN,MSGL_ERR,MSGTR_CantOpenDVD,filename);
+    if(!name) name=DEFAULT_DVD_DEVICE;
+    if (!(dvdnav_priv=new_dvdnav_stream(name))) {
+	mp_msg(MSGT_OPEN,MSGL_ERR,MSGTR_CantOpenDVD,name);
         return NULL;
     }
 
@@ -208,7 +175,7 @@ if(dvd_nav){
 }
 #endif
 #ifdef USE_DVDREAD
-if(dvd_title){
+if(strncmp("dvd://",filename,6) == 0){
 //  int ret,ret2;
     dvd_priv_t *d;
     int ttn,pgc_id,pgn;
@@ -217,14 +184,38 @@ if(dvd_title){
     ifo_handle_t *vmg_file;
     tt_srpt_t *tt_srpt;
     ifo_handle_t *vts_file;
+    dvd_title = filename[6] == '\0' ? 1 : strtol(filename + 6,NULL,0);
     /**
      * Open the disc.
      */
     if(!dvd_device) dvd_device=strdup(DEFAULT_DVD_DEVICE);
-    dvd = DVDOpen(dvd_device);
-    if( !dvd ) {
-        mp_msg(MSGT_OPEN,MSGL_ERR,MSGTR_CantOpenDVD,dvd_device);
-        return NULL;
+#ifdef SYS_DARWIN
+    /* Dynamic DVD drive selection on Darwin */
+    if (!strcmp(dvd_device, "/dev/rdiskN")) {
+	int i;
+	char *temp_device = malloc((strlen(dvd_device)+1)*sizeof(char));
+	
+	for (i = 1; i < 10; i++) {
+	    sprintf(temp_device, "/dev/rdisk%d", i);
+	    dvd = DVDOpen(temp_device);
+	    if (!dvd) {
+	        mp_msg(MSGT_OPEN,MSGL_ERR,MSGTR_CantOpenDVD,temp_device);
+	    } else {
+	        free(temp_device);
+	        break;
+	    }
+	}
+	
+	if (!dvd)
+	    return NULL;
+    } else
+#endif /* SYS_DARWIN */
+    {
+        dvd = DVDOpen(dvd_device);
+	if( !dvd ) {
+	    mp_msg(MSGT_OPEN,MSGL_ERR,MSGTR_CantOpenDVD,dvd_device);
+	    return NULL;
+	}
     }
 
     mp_msg(MSGT_OPEN,MSGL_INFO,MSGTR_DVDwait);
@@ -352,8 +343,11 @@ if(dvd_title){
 	  switch ( audio->audio_format )
 	   {
 	    case 0: // ac3
+	  	    d->audio_streams[d->nr_of_channels].id=ac3aid;
+		    ac3aid++;
+		    break;
 	    case 6: // dts
-	            d->audio_streams[d->nr_of_channels].id=ac3aid;
+	            d->audio_streams[d->nr_of_channels].id=ac3aid+8;
 		    ac3aid++;
 		    break;
 	    case 2: // mpeg layer 1/2/3
@@ -455,21 +449,38 @@ if(dvd_title){
 }
 #endif
 
-//============ Check for TV-input or multi-file input ====
-  if( (mf_support == 1)
-#ifdef USE_TV
-   || (tv_param_on == 1)
+
+#ifdef MPLAYER_NETWORK
+#ifdef STREAMING_LIVE_DOT_COM
+  // Check for a SDP file:
+  if (strncmp("sdp://",filename,6) == 0) {
+       filename += 6;
+#if defined(__CYGWIN__) || defined(__MINGW32__)
+       f=open(filename,O_RDONLY|O_BINARY);
+#else
+       f=open(filename,O_RDONLY);
 #endif
-  ){
-    /* create stream */
-    stream = new_stream(-1, STREAMTYPE_DUMMY);
-    if (!stream) return(NULL);
-    stream->url=filename?strdup(filename):NULL;
-    return(stream);
+       if(f<0){ mp_msg(MSGT_OPEN,MSGL_ERR,MSGTR_FileNotFound,filename);return NULL; }
+
+       len=lseek(f,0,SEEK_END); lseek(f,0,SEEK_SET);
+       if (len == -1)
+           return NULL;
+
+#ifdef _LARGEFILE_SOURCE
+	 mp_msg(MSGT_OPEN,MSGL_V,"File size is %lld bytes\n", (long long)len);
+#else
+	 mp_msg(MSGT_OPEN,MSGL_V,"File size is %u bytes\n", (unsigned int)len);
+#endif
+	 return stream_open_sdp(f, len, file_format);
   }
-  
-#ifdef STREAMING
-  url = url_new(filename);
+#endif
+
+  // FIXME: to avoid nonsense error messages...
+  if (strncmp("tv://", filename, 5) && strncmp("mf://", filename, 5) &&
+    strncmp("vcd://", filename, 6) && strncmp("dvb://", filename, 6) &&
+    strncmp("cdda://", filename, 7) && strncmp("cddb://", filename, 7) &&
+    strstr(filename, "://"))
+    url = url_new(filename);
   if(url) {
 	if (strcmp(url->protocol, "smb")==0){
 #ifdef LIBSMBCLIENT
@@ -504,63 +515,33 @@ if(dvd_title){
     	    stream->end_pos=len;
 	    return stream;
 #else
-	    mp_msg(MSGT_OPEN,MSGL_ERR,MSGTR_SMBNotCompiled,filename);
+	    mp_msg(MSGT_OPEN,MSGL_ERR,MSGTR_SMBNotCompiled);
 	    return NULL;
 #endif
 	}
         stream=new_stream(f,STREAMTYPE_STREAM);
 	if( streaming_start( stream, file_format, url )<0){
           mp_msg(MSGT_OPEN,MSGL_ERR,MSGTR_UnableOpenURL, filename);
-	  url_free(url);
-	  return NULL;
-	}
+	  //url_free(url);
+	  //return NULL;
+	} else {
         mp_msg(MSGT_OPEN,MSGL_INFO,MSGTR_ConnToServer, url->hostname );
 	url_free(url);
 	return stream;
   }
+  }
 #endif
 
 //============ Open STDIN or plain FILE ============
-    if(!strcmp(filename,"-")){
-	// read from stdin
-	mp_msg(MSGT_OPEN,MSGL_INFO,MSGTR_ReadSTDIN);
-	f=0; // 0=stdin
-    } else {
-#ifndef __CYGWIN__
-       f=open(filename,O_RDONLY);
-#else
-       f=open(filename,O_RDONLY|O_BINARY);
-#endif
-       if(f<0){ mp_msg(MSGT_OPEN,MSGL_ERR,MSGTR_FileNotFound,filename);return NULL; }
-    }
 
-       len=lseek(f,0,SEEK_END); lseek(f,0,SEEK_SET);
-       if (len == -1)
-           return new_stream(f,STREAMTYPE_STREAM); // open as stream
-
-#ifdef _LARGEFILE_SOURCE
-	 mp_msg(MSGT_OPEN,MSGL_V,"File size is %lld bytes\n", (long long)len);
-#else
-	 mp_msg(MSGT_OPEN,MSGL_V,"File size is %u bytes\n", (unsigned int)len);
-#endif
-
-#ifdef STREAMING_LIVE_DOT_COM
-	 // Check for a special case: a SDP file:
-	 if (isSDPFile) {
-	   return stream_open_sdp(f, len, file_format);
-	 }
-#endif
-
-       stream=new_stream(f,STREAMTYPE_FILE);
-       stream->end_pos=len;
-       stream->url=filename?strdup(filename):NULL;
-       return stream;
+  return open_stream_full(filename,STREAM_READ,options,file_format);
 }
 
-int dvd_parse_chapter_range(struct config *conf, const char *range){
+int dvd_parse_chapter_range(m_option_t *conf, const char *range){
   const char *s;
   char *t;
-/*  conf; prevent warning from GCC */
+  if (!range)
+    return M_OPT_MISSING_PARAM;
   s = range;
   dvd_chapter = 1;
   dvd_last_chapter = 0;
@@ -568,26 +549,26 @@ int dvd_parse_chapter_range(struct config *conf, const char *range){
     dvd_chapter = strtol(range, &s, 10);
     if (range == s) {
       mp_msg(MSGT_OPEN, MSGL_ERR, "Invalid chapter range specification %s\n", range);
-      return -1;
+      return M_OPT_INVALID;
     }
   }
   if (*s == 0)
     return 0;
   else if (*s != '-') {
     mp_msg(MSGT_OPEN, MSGL_ERR, "Invalid chapter range specification %s\n", range);
-    return -1;
+    return M_OPT_INVALID;
   }
   ++s;
   if (*s == 0)
       return 0;
   if (! isdigit(*s)) {
     mp_msg(MSGT_OPEN, MSGL_ERR, "Invalid chapter range specification %s\n", range);
-    return -1;
+    return M_OPT_INVALID;
   }
   dvd_last_chapter = strtol(s, &t, 10);
   if (s == t || *t)  {
     mp_msg(MSGT_OPEN, MSGL_ERR, "Invalid chapter range specification %s\n", range);
-    return -1;
+    return M_OPT_INVALID;
   }
   return 0;
 }
@@ -625,7 +606,8 @@ int dvd_chapter_from_cell(dvd_priv_t* dvd,int title,int cell)
 int dvd_aid_from_lang(stream_t *stream, unsigned char* lang){
 dvd_priv_t *d=stream->priv;
 int code,i;
-  while(lang && strlen(lang)>=2){
+if(lang){
+  while(strlen(lang)>=2){
     code=lang[1]|(lang[0]<<8);
     for(i=0;i<d->nr_of_channels;i++){
 	if(d->audio_streams[i].language==code){
@@ -638,7 +620,8 @@ int code,i;
     lang+=2; while (lang[0]==',' || lang[0]==' ') ++lang;
   }
   mp_msg(MSGT_OPEN,MSGL_WARN,"No matching DVD audio language found!\n");
-  return -1;
+}
+return d->nr_of_channels ? d->audio_streams[0].id : -1;
 }
 
 int dvd_sid_from_lang(stream_t *stream, unsigned char* lang){
@@ -752,8 +735,8 @@ read_next:
 
 	    if(d->angle_seek){
 		int i,skip=0;
-#if defined(__GNUC__) && defined(__sparc__)
-		// workaround for a bug in the sparc version of gcc 2.95.X ... 3.2,
+#if defined(__GNUC__) && ( defined(__sparc__) || defined(hpux) )
+		// workaround for a bug in the sparc/hpux version of gcc 2.95.X ... 3.2,
 		// it generates incorrect code for unaligned access to a packed
 		// structure member, resulting in an mplayer crash with a SIGBUS
 		// signal.
@@ -850,6 +833,8 @@ void dvd_close(dvd_priv_t *d) {
   ifoClose(d->vmg_file);
   DVDCloseFile(d->title);
   DVDClose(d->dvd);
+  dvd_chapter = 1;
+  dvd_last_chapter = 0;
 }
 
 #endif

@@ -21,15 +21,46 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifdef __sparc__
+/* code from ffmpeg/libavcodec */
+#if defined(__GNUC__) && (__GNUC__ > 3 || __GNUC_ == 3 && __GNUC_MINOR__ > 0)
+#    define always_inline __attribute__((always_inline)) inline
+#else
+#    define always_inline inline
+#endif
+
+#if defined(__sparc__) || defined(hpux)
 /*
  * the alt bitstream reader performs unaligned memory accesses; that doesn't work
- * on sparc.  For now, disable ALT_BITSTREAM_READER.
+ * on sparc/hpux.  For now, disable ALT_BITSTREAM_READER.
  */
 #undef	ALT_BITSTREAM_READER
 #else
 // alternative (faster) bitstram reader (reades upto 3 bytes over the end of the input)
 #define ALT_BITSTREAM_READER
+
+/* used to avoid missaligned exceptions on some archs (alpha, ...) */
+#if defined (ARCH_X86) || defined(ARCH_ARMV4L)
+#    define unaligned32(a) (*(uint32_t*)(a))
+#else
+#    ifdef __GNUC__
+static always_inline uint32_t unaligned32(const void *v) {
+    struct Unaligned {
+	uint32_t i;
+    } __attribute__((packed));
+
+    return ((const struct Unaligned *) v)->i;
+}
+#    elif defined(__DECC)
+static inline uint32_t unaligned32(const void *v) {
+    return *(const __unaligned uint32_t *) v;
+}
+#    else
+static inline uint32_t unaligned32(const void *v) {
+    return *(const uint32_t *) v;
+}
+#    endif
+#endif //!ARCH_X86
+
 #endif
  
 /* (stolen from the kernel) */
@@ -42,7 +73,7 @@
 #	if defined (__i386__)
 
 #	define swab32(x) __i386_swab32(x)
-	static inline const uint32_t __i386_swab32(uint32_t x)
+	static always_inline const uint32_t __i386_swab32(uint32_t x)
 	{
 		__asm__("bswap %0" : "=r" (x) : "0" (x));
 		return x;
@@ -50,10 +81,12 @@
 
 #	else
 
-#	define swab32(x)\
-((((uint8_t*)&x)[0] << 24) | (((uint8_t*)&x)[1] << 16) |  \
- (((uint8_t*)&x)[2] << 8)  | (((uint8_t*)&x)[3]))
-
+#	define swab32(x) __generic_swab32(x)
+	static always_inline const uint32_t __generic_swab32(uint32_t x)
+	{
+		return ((((uint8_t*)&x)[0] << 24) | (((uint8_t*)&x)[1] << 16) |
+		 (((uint8_t*)&x)[2] << 8)  | (((uint8_t*)&x)[3]));
+	}
 #	endif
 #endif
 
@@ -74,7 +107,7 @@ static inline uint32_t
 bitstream_get(uint32_t num_bits) // note num_bits is practically a constant due to inlineing
 {
 #ifdef ALT_BITSTREAM_READER
-    uint32_t result= swab32( *(uint32_t *)(((uint8_t *)buffer_start)+(indx>>3)) );
+    uint32_t result= swab32( unaligned32(((uint8_t *)buffer_start)+(indx>>3)) );
 
     result<<= (indx&0x07);
     result>>= 32 - num_bits;
@@ -107,7 +140,7 @@ static inline int32_t
 bitstream_get_2(uint32_t num_bits)
 {
 #ifdef ALT_BITSTREAM_READER
-    int32_t result= swab32( *(uint32_t *)(((uint8_t *)buffer_start)+(indx>>3)) );
+    int32_t result= swab32( unaligned32(((uint8_t *)buffer_start)+(indx>>3)) );
 
     result<<= (indx&0x07);
     result>>= 32 - num_bits;

@@ -9,7 +9,7 @@
 
 #include "../libvo/osd.h"
 #include "../libvo/font_load.h"
-#include "../linux/keycodes.h"
+#include "../osdep/keycodes.h"
 #include "../asxparser.h"
 #include "../libmpdemux/stream.h"
 
@@ -25,6 +25,10 @@ extern menu_info_t menu_info_filesel;
 extern menu_info_t menu_info_txt;
 extern menu_info_t menu_info_console;
 extern menu_info_t menu_info_pref;
+#ifdef HAS_DVBIN_SUPPORT
+extern menu_info_t menu_info_dvbsel;
+#endif
+
 
 menu_info_t* menu_info_list[] = {
   &menu_info_pt,
@@ -32,6 +36,9 @@ menu_info_t* menu_info_list[] = {
   &menu_info_filesel,
   &menu_info_txt,
   &menu_info_console,
+#ifdef HAS_DVBIN_SUPPORT
+  &menu_info_dvbsel,
+#endif  
   &menu_info_pref,
   NULL
 };
@@ -97,7 +104,7 @@ static int menu_parse_config(char* buffer) {
       mcount++;
       memset(&menu_list[mcount],0,sizeof(menu_def_t));
     } else {
-      printf("Unknow menu type %s at line %d\n",element,parser->line);
+      printf("Unknown menu type %s at line %d\n",element,parser->line);
       free(name);
       if(body) free(body);
     }
@@ -116,8 +123,12 @@ static int menu_parse_config(char* buffer) {
 int menu_init(char* cfg_file) {
   char* buffer = NULL;
   int bl = BUF_STEP, br = 0;
-  int f;
-  int fd = open(cfg_file, O_RDONLY);
+  int f, fd;
+#ifndef HAVE_FREETYPE
+  if(vo_font == NULL)
+    return 0;
+#endif
+  fd = open(cfg_file, O_RDONLY);
   if(fd < 0) {
     printf("Can't open menu config file: %s\n",cfg_file);
     return 0;

@@ -53,7 +53,22 @@
 /* Frame duplication */
 #define VOCTRL_DUPLICATE_FRAME 20
 // ... 21
+#define VOCTRL_START_SLICE 21
 
+// Vo can be used by xover
+#define VOCTRL_XOVERLAY_SUPPORT 22
+
+#define VOCTRL_XOVERLAY_SET_COLORKEY 24
+typedef struct {
+  uint32_t x11; // The raw x11 color
+  uint16_t r,g,b;
+} mp_colorkey_t;
+
+#define VOCTRL_XOVERLAY_SET_WIN 23
+typedef struct {
+  int x,y;
+  int w,h;
+} mp_win_t;
 
 #define VO_TRUE		1
 #define VO_FALSE	0
@@ -65,6 +80,7 @@
 #define VOFLAG_MODESWITCHING	0x02
 #define VOFLAG_SWSCALE		0x04
 #define VOFLAG_FLIPPING		0x08
+#define VOFLAG_XOVERLAY_SUB_VO  0x10000
 
 typedef struct vo_info_s
 {
@@ -188,11 +204,14 @@ extern int vo_gamma_green_intensity;
 extern int vo_gamma_blue_intensity;
 
 extern int vo_mouse_timer_const;
+extern int vo_nomouse_input;
 
 extern int vo_pts;
 extern float vo_fps;
 
 extern char *vo_subdevice;
+
+extern int vo_colorkey;
 
 #if defined(HAVE_FBDEV)||defined(HAVE_VESA) 
 

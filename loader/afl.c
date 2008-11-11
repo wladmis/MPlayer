@@ -31,7 +31,9 @@
 #include "wine/msacm.h"
 #include "wine/msacmdrv.h"
 #include "wineacm.h"
+#ifndef __MINGW32__
 #include "ext.h"
+#endif
 #include "driver.h"
 
 #include <stdio.h>
@@ -273,6 +275,9 @@ PWINE_ACMDRIVERID MSACM_RegisterDriver(const char* pszFileName,
 
     TRACE("('%s', '%x', 0x%08x)\n", pszFileName, wFormatTag, hinstModule);
 
+#ifndef WIN32_LOADER
+	MSACM_hHeap = GetProcessHeap();
+#endif
     padid = (PWINE_ACMDRIVERID) HeapAlloc(MSACM_hHeap, 0, sizeof(WINE_ACMDRIVERID));
     padid->pszFileName = (char*)malloc(strlen(pszFileName)+1);
     strcpy(padid->pszFileName, pszFileName);
@@ -494,7 +499,9 @@ MMRESULT WINAPI acmStreamOpen(PHACMSTREAM phas, HACMDRIVER had, PWAVEFORMATEX pw
 	if (phas)
 	    *phas = (HACMSTREAM)was;
 	TRACE("=> (%d)\n", ret);
+#ifdef WIN32_LOADER
         CodecAlloc();
+#endif
 	return ret;
     }
 errCleanUp:		
@@ -521,7 +528,9 @@ MMRESULT WINAPI acmStreamClose(HACMSTREAM has, DWORD fdwClose)
 	if (was->hAcmDriver)
 	    acmDriverClose(was->hAcmDriver, 0L);	
 	HeapFree(MSACM_hHeap, 0, was);
+#ifdef WIN32_LOADER
         CodecRelease();
+#endif
     }
     TRACE("=> (%d)\n", ret);
     return ret;

@@ -17,11 +17,11 @@ extern void revertPPOpt(void *conf, char* opt);
 extern char *pp_help;
 
 #ifdef HAVE_DIVX4ENCORE
-extern struct config divx4opts_conf[];
+extern m_option_t divx4opts_conf[];
 #endif
 
 #ifdef HAVE_MP3LAME
-struct config lameopts_conf[]={
+m_option_t lameopts_conf[]={
 	{"q", &lame_param_quality, CONF_TYPE_INT, CONF_RANGE, 0, 9, NULL},
 	{"aq", &lame_param_algqual, CONF_TYPE_INT, CONF_RANGE, 0, 9, NULL},
 	{"vbr", &lame_param_vbr, CONF_TYPE_INT, CONF_RANGE, 0, vbr_max_indicator, NULL},
@@ -45,18 +45,20 @@ struct config lameopts_conf[]={
 #endif
 
 #ifdef USE_LIBAVCODEC
-extern struct config lavcopts_conf[];
+extern m_option_t lavcopts_conf[];
 #endif
 
 #ifdef USE_WIN32DLL
-extern struct config vfwopts_conf[];
+extern m_option_t vfwopts_conf[];
 #endif
 
 #ifdef HAVE_XVID
-extern struct config xvidencopts_conf[];
+extern m_option_t xvidencopts_conf[];
 #endif
 
-struct config ovc_conf[]={
+extern m_option_t nuvopts_conf[];
+
+m_option_t ovc_conf[]={
 	{"copy", &out_video_codec, CONF_TYPE_FLAG, 0, 0, VCODEC_COPY, NULL},
 	{"frameno", &out_video_codec, CONF_TYPE_FLAG, 0, 0, VCODEC_FRAMENO, NULL},
 	{"divx4", &out_video_codec, CONF_TYPE_FLAG, 0, 0, VCODEC_DIVX4, NULL},
@@ -68,12 +70,18 @@ struct config ovc_conf[]={
 	{"libdv", &out_video_codec, CONF_TYPE_FLAG, 0, 0, VCODEC_LIBDV, NULL},
 	{"xvid", &out_video_codec, CONF_TYPE_FLAG, 0, 0, VCODEC_XVID, NULL},
 	{"qtvideo", &out_video_codec, CONF_TYPE_FLAG, 0, 0, VCODEC_QTVIDEO, NULL},
+	{"nuv", &out_video_codec, CONF_TYPE_FLAG, 0, 0, VCODEC_NUV, NULL},
 	{"help", "\nAvailable codecs:\n"
 	"   copy     - frame copy, without re-encoding. doesn't work with filters!\n"
 	"   frameno  - special audio-only file for 3-pass encoding, see DOCS!\n"
 	"   rawrgb   - uncompressed RGB 24bpp video\n"
+	"   nuv      - nuppel video\n"
 #ifdef HAVE_DIVX4ENCORE
-	"   divx4    - using divx4linux/divx5linux or xvid (depends on configuration)\n"
+#ifdef ENCORE_XVID
+	"   divx4    - using XviD (divx4linux compat. mode)\n"
+#else
+	"   divx4    - using divx4linux/divx5linux lib (depends on configuration)\n"
+#endif
 #endif
 #ifdef USE_LIBAVCODEC
 	"   lavc     - using libavcodec codecs - best quality!\n"
@@ -92,7 +100,7 @@ struct config ovc_conf[]={
 	{NULL, NULL, 0, 0, 0, 0, NULL}
 };
 
-struct config oac_conf[]={
+m_option_t oac_conf[]={
 	{"copy", &out_audio_codec, CONF_TYPE_FLAG, 0, 0, ACODEC_COPY, NULL},
 	{"pcm", &out_audio_codec, CONF_TYPE_FLAG, 0, 0, ACODEC_PCM, NULL},
 #ifdef HAVE_MP3LAME
@@ -110,7 +118,7 @@ struct config oac_conf[]={
 	{NULL, NULL, 0, 0, 0, 0, NULL}
 };
 
-struct config info_conf[]={
+m_option_t info_conf[]={
 	{"name", &info_name, CONF_TYPE_STRING, 0, 0, 0, NULL},
 	{"artist", &info_artist, CONF_TYPE_STRING, 0, 0, 0, NULL},
 	{"genre", &info_genre, CONF_TYPE_STRING, 0, 0, 0, NULL},
@@ -130,7 +138,7 @@ struct config info_conf[]={
 	{NULL, NULL, 0, 0, 0, 0, NULL}
 };
 
-struct config of_conf[]={
+m_option_t of_conf[]={
 	{"avi", &out_file_format, CONF_TYPE_FLAG, 0, 0, MUXER_TYPE_AVI, NULL},
 	{"mpeg", &out_file_format, CONF_TYPE_FLAG, 0, 0, MUXER_TYPE_MPEG, NULL},
 	{"help", "\nAvailable output formats:\n"
@@ -140,7 +148,7 @@ struct config of_conf[]={
 	{NULL, NULL, 0, 0, 0, 0, NULL}
 };
 
-static config_t mencoder_opts[]={
+m_option_t mencoder_opts[]={
 	/* name, pointer, type, flags, min, max */
 	{"include", cfg_include, CONF_TYPE_FUNC_PARAM, CONF_NOSAVE, 0, 0, NULL}, /* this must be the first!!! */
 
@@ -180,6 +188,9 @@ static config_t mencoder_opts[]={
 	{"vobsuboutindex", &vobsub_out_index, CONF_TYPE_INT, CONF_RANGE, 0, 31, NULL},
 	{"vobsuboutid", &vobsub_out_id, CONF_TYPE_STRING, 0, 0, 0, NULL},
 
+	{"autoexpand", &auto_expand, CONF_TYPE_FLAG, 0, 0, 1, NULL},
+	{"noautoexpand", &auto_expand, CONF_TYPE_FLAG, 0, 1, 0, NULL},
+	
 	// info header strings
 	{"info", info_conf, CONF_TYPE_SUBCONFIG, 0, 0, 0, NULL},
 
@@ -191,6 +202,8 @@ static config_t mencoder_opts[]={
 #endif
 #ifdef USE_LIBAVCODEC
 	{"lavcopts", lavcopts_conf, CONF_TYPE_SUBCONFIG, 0, 0, 0, NULL},
+#else
+	{"lavcopts", "MPlayer was compiled without libavcodec! See README or DOCS!\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
 #endif
 #ifdef USE_WIN32DLL
 	{"vfwopts", vfwopts_conf, CONF_TYPE_SUBCONFIG, 0, 0, 0, NULL},
@@ -198,6 +211,8 @@ static config_t mencoder_opts[]={
 #ifdef HAVE_XVID
 	{"xvidencopts", xvidencopts_conf, CONF_TYPE_SUBCONFIG, 0, 0, 0, NULL},
 #endif
+
+	{"nuvopts",  nuvopts_conf, CONF_TYPE_SUBCONFIG, 0, 0, 0, NULL},
 
 #define MAIN_CONF
 #include "cfg-common.h"

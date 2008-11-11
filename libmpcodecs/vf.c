@@ -9,15 +9,21 @@
 
 #include "../mp_msg.h"
 #include "../help_mp.h"
+#include "../m_option.h"
+#include "../m_struct.h"
 
 
 #include "img_format.h"
 #include "mp_image.h"
 #include "vf.h"
 
+#include "../libvo/fastmemcpy.h"
+
 extern vf_info_t vf_info_vo;
 extern vf_info_t vf_info_rectangle;
+#ifndef HAVE_NO_POSIX_SELECT
 extern vf_info_t vf_info_bmovl;
+#endif
 extern vf_info_t vf_info_crop;
 extern vf_info_t vf_info_expand;
 extern vf_info_t vf_info_pp;
@@ -52,16 +58,35 @@ extern vf_info_t vf_info_boxblur;
 extern vf_info_t vf_info_sab;
 extern vf_info_t vf_info_smartblur;
 extern vf_info_t vf_info_perspective;
-
-char** vo_plugin_args=(char**) NULL;
+extern vf_info_t vf_info_down3dright;
+extern vf_info_t vf_info_field;
+extern vf_info_t vf_info_denoise3d;
+extern vf_info_t vf_info_hqdn3d;
+extern vf_info_t vf_info_detc;
+extern vf_info_t vf_info_telecine;
+extern vf_info_t vf_info_tinterlace;
+extern vf_info_t vf_info_tfields;
+extern vf_info_t vf_info_ivtc;
+extern vf_info_t vf_info_ilpack;
+extern vf_info_t vf_info_dsize;
+extern vf_info_t vf_info_decimate;
+extern vf_info_t vf_info_softpulldown;
+extern vf_info_t vf_info_pullup;
+extern vf_info_t vf_info_framestep;
+extern vf_info_t vf_info_tile;
+extern vf_info_t vf_info_delogo;
 
 // list of available filters:
 static vf_info_t* filter_list[]={
     &vf_info_rectangle,
+#ifndef HAVE_NO_POSIX_SELECT
     &vf_info_bmovl,
+#endif
     &vf_info_crop,
     &vf_info_expand,
+#ifdef USE_LIBAVCODEC
     &vf_info_pp,
+#endif
     &vf_info_scale,
 //    &vf_info_osd,
     &vf_info_vo,
@@ -97,7 +122,35 @@ static vf_info_t* filter_list[]={
     &vf_info_sab,
     &vf_info_smartblur,
     &vf_info_perspective,
+    &vf_info_down3dright,
+    &vf_info_field,
+    &vf_info_denoise3d,
+    &vf_info_hqdn3d,
+    &vf_info_detc,
+    &vf_info_telecine,
+    &vf_info_tinterlace,
+    &vf_info_tfields,
+    &vf_info_ivtc,
+    &vf_info_ilpack,
+    &vf_info_dsize,
+    &vf_info_decimate,
+    &vf_info_softpulldown,
+    &vf_info_pullup,
+    &vf_info_framestep,
+    &vf_info_tile,
+    &vf_info_delogo,
     NULL
+};
+
+// For the vf option
+m_obj_settings_t* vf_settings = NULL;
+// For the vop option
+m_obj_settings_t* vo_plugin_args = NULL;
+m_obj_list_t vf_obj_list = {
+  (void**)filter_list,
+  M_ST_OFF(vf_info_t,name),
+  M_ST_OFF(vf_info_t,info),
+  M_ST_OFF(vf_info_t,opts)
 };
 
 //============================================================================
@@ -178,6 +231,7 @@ mp_image_t* vf_get_image(vf_instance_t* vf, unsigned int outfmt, int mp_imgtype,
   }
   if(mpi){
     mpi->type=mp_imgtype;
+    mpi->w=w; mpi->h=h;
     // keep buffer allocation status & color flags only:
 //    mpi->flags&=~(MP_IMGFLAG_PRESERVE|MP_IMGFLAG_READABLE|MP_IMGFLAG_DIRECT);
     mpi->flags&=MP_IMGFLAG_ALLOCATED|MP_IMGFLAG_TYPE_DISPLAYED|MP_IMGFLAGMASK_COLORS;
@@ -193,9 +247,10 @@ mp_image_t* vf_get_image(vf_instance_t* vf, unsigned int outfmt, int mp_imgtype,
 		mpi->flags&=~MP_IMGFLAG_ALLOCATED;
 		printf("vf.c: have to REALLOCATE buffer memory :(\n");
 	    }
-	} else {
-	    mpi->width=w2; mpi->chroma_width=w2>>mpi->chroma_x_shift;
-	    mpi->height=h; mpi->chroma_height=h>>mpi->chroma_y_shift;
+//	} else {
+	} {
+	    mpi->width=w2; mpi->chroma_width=(w2 + (1<<mpi->chroma_x_shift) - 1)>>mpi->chroma_x_shift;
+	    mpi->height=h; mpi->chroma_height=(h + (1<<mpi->chroma_y_shift) - 1)>>mpi->chroma_y_shift;
 	}
     }
     if(!mpi->bpp) mp_image_setfmt(mpi,outfmt);
@@ -220,7 +275,7 @@ mp_image_t* vf_get_image(vf_instance_t* vf, unsigned int outfmt, int mp_imgtype,
 //		  printf("query -> 0x%X    \n",flags);
 		  if(flags&VFCAP_ACCEPT_STRIDE){
 	              mpi->width=w2;
-		      mpi->chroma_width=w2>>mpi->chroma_x_shift;
+		      mpi->chroma_width=(w2 + (1<<mpi->chroma_x_shift) - 1)>>mpi->chroma_x_shift;
 		  }
 	      }
 	  }
@@ -230,15 +285,17 @@ mp_image_t* vf_get_image(vf_instance_t* vf, unsigned int outfmt, int mp_imgtype,
 	  {
 	     mpi->planes[0]=memalign(64, mpi->bpp*mpi->width*(mpi->height+2)/8+
 	    				mpi->chroma_width*mpi->chroma_height);
-	     /* delta table, just for fun ;) */
-	     mpi->planes[3]=mpi->planes[0]+2*(mpi->chroma_width*mpi->chroma_height);
+	     /* export delta table */
+	     mpi->planes[3]=mpi->planes[0]+(mpi->width*mpi->height)+2*(mpi->chroma_width*mpi->chroma_height);
 	  }
 	  else
 	     mpi->planes[0]=memalign(64, mpi->bpp*mpi->width*(mpi->height+2)/8);
 	  if(mpi->flags&MP_IMGFLAG_PLANAR){
 	      // YV12/I420/YVU9/IF09. feel free to add other planar formats here...
-	      if(!mpi->stride[0]) mpi->stride[0]=mpi->width;
-	      if(!mpi->stride[1]) mpi->stride[1]=mpi->stride[2]=mpi->chroma_width;
+	      //if(!mpi->stride[0]) 
+	      mpi->stride[0]=mpi->width;
+	      //if(!mpi->stride[1]) 
+	      mpi->stride[1]=mpi->stride[2]=mpi->chroma_width;
 	      if(mpi->flags&MP_IMGFLAG_SWAPPED){
 	          // I420/IYUV  (Y,U,V)
 	          mpi->planes[1]=mpi->planes[0]+mpi->width*mpi->height;
@@ -249,18 +306,22 @@ mp_image_t* vf_get_image(vf_instance_t* vf, unsigned int outfmt, int mp_imgtype,
 	          mpi->planes[1]=mpi->planes[2]+mpi->chroma_width*mpi->chroma_height;
 	      }
 	  } else {
-	      if(!mpi->stride[0]) mpi->stride[0]=mpi->width*mpi->bpp/8;
+	      //if(!mpi->stride[0]) 
+	      mpi->stride[0]=mpi->width*mpi->bpp/8;
 	  }
 //	  printf("clearing img!\n");
 	  vf_mpi_clear(mpi,0,0,mpi->width,mpi->height);
 	  mpi->flags|=MP_IMGFLAG_ALLOCATED;
         }
     }
+    if(mpi->flags&MP_IMGFLAG_DRAW_CALLBACK)
+	if(vf->start_slice) vf->start_slice(vf,mpi);
     if(!(mpi->flags&MP_IMGFLAG_TYPE_DISPLAYED)){
-	    mp_msg(MSGT_DECVIDEO,MSGL_V,"*** [%s] %s mp_image_t, %dx%dx%dbpp %s %s, %d bytes\n",
+	    mp_msg(MSGT_DECVIDEO,MSGL_V,"*** [%s] %s%s mp_image_t, %dx%dx%dbpp %s %s, %d bytes\n",
 		  vf->info->name,
 		  (mpi->type==MP_IMGTYPE_EXPORT)?"Exporting":
 	          ((mpi->flags&MP_IMGFLAG_DIRECT)?"Direct Rendering":"Allocating"),
+	          (mpi->flags&MP_IMGFLAG_DRAW_CALLBACK)?" (slices)":"",
 	          mpi->width,mpi->height,mpi->bpp,
 		  (mpi->flags&MP_IMGFLAG_YUV)?"YUV":((mpi->flags&MP_IMGFLAG_SWAPPED)?"BGR":"RGB"),
 		  (mpi->flags&MP_IMGFLAG_PLANAR)?"planar":"packed",
@@ -287,7 +348,7 @@ static int vf_default_query_format(struct vf_instance_s* vf, unsigned int fmt){
   return vf_next_query_format(vf,fmt);
 }
 
-vf_instance_t* vf_open_plugin(vf_info_t** filter_list, vf_instance_t* next, char *name, char *args){
+vf_instance_t* vf_open_plugin(vf_info_t** filter_list, vf_instance_t* next, char *name, char **args){
     vf_instance_t* vf;
     int i;
     for(i=0;;i++){
@@ -307,18 +368,48 @@ vf_instance_t* vf_open_plugin(vf_info_t** filter_list, vf_instance_t* next, char
     vf->put_image=vf_next_put_image;
     vf->default_caps=VFCAP_ACCEPT_STRIDE;
     vf->default_reqs=0;
-    if(vf->info->open(vf,args)>0) return vf; // Success!
+    if(vf->info->opts) { // vf_vo get some special argument
+      m_struct_t* st = vf->info->opts;
+      void* vf_priv = m_struct_alloc(st);
+      int n;
+      for(n = 0 ; args && args[2*n] ; n++)
+	m_struct_set(st,vf_priv,args[2*n],args[2*n+1]);
+      vf->priv = vf_priv;
+      args = NULL;
+    } else // Otherwise we should have the '_oldargs_'
+      if(args && !strcmp(args[0],"_oldargs_"))
+	args = (char**)args[1];
+      else
+	args = NULL;
+    if(vf->info->open(vf,(char*)args)>0) return vf; // Success!
     free(vf);
     mp_msg(MSGT_VFILTER,MSGL_ERR,MSGTR_CouldNotOpenVideoFilter,name);
     return NULL;
 }
 
-vf_instance_t* vf_open_filter(vf_instance_t* next, char *name, char *args){
-    if(strcmp(name,"vo"))
-    mp_msg(MSGT_VFILTER,MSGL_INFO,
-	args ? MSGTR_OpeningVideoFilter "[%s=%s]\n"
-	     : MSGTR_OpeningVideoFilter "[%s]\n",name,args);
-    return vf_open_plugin(filter_list,next,name,args);
+vf_instance_t* vf_open_filter(vf_instance_t* next, char *name, char **args){
+  if(args && strcmp(args[0],"_oldargs_")) {
+    int i,l = 0;
+    for(i = 0 ; args && args[2*i] ; i++)
+      l += 1 + strlen(args[2*i]) + 1 + strlen(args[2*i+1]);
+    l += strlen(name);
+    {
+      char str[l+1];
+      char* p = str;
+      p += sprintf(str,"%s",name);
+      for(i = 0 ; args && args[2*i] ; i++)
+	p += sprintf(p," %s=%s",args[2*i],args[2*i+1]);
+      mp_msg(MSGT_VFILTER,MSGL_INFO,MSGTR_OpeningVideoFilter "[%s]\n",str);
+    }
+  } else if(strcmp(name,"vo")) {
+    if(args && strcmp(args[0],"_oldargs_") == 0)
+      mp_msg(MSGT_VFILTER,MSGL_INFO,MSGTR_OpeningVideoFilter
+	     "[%s=%s]\n", name,args[1]);
+    else
+      mp_msg(MSGT_VFILTER,MSGL_INFO,MSGTR_OpeningVideoFilter
+	     "[%s]\n", name);
+  }
+  return vf_open_plugin(filter_list,next,name,args);
 }
 
 //============================================================================
@@ -352,6 +443,16 @@ unsigned int vf_match_csp(vf_instance_t** vfp,unsigned int* list,unsigned int pr
     }
     if(best) *vfp=vf; // else uninit vf  !FIXME!
     return best;
+}
+
+void vf_clone_mpi_attributes(mp_image_t* dst, mp_image_t* src){
+    dst->pict_type= src->pict_type;
+    dst->fields = src->fields;
+    dst->qscale_type= src->qscale_type;
+    if(dst->width == src->width && dst->height == src->height){
+	dst->qstride= src->qstride;
+	dst->qscale= src->qscale;
+    }
 }
 
 int vf_next_config(struct vf_instance_s* vf,
@@ -400,25 +501,51 @@ int vf_next_put_image(struct vf_instance_s* vf,mp_image_t *mpi){
 }
 
 void vf_next_draw_slice(struct vf_instance_s* vf,unsigned char** src, int * stride,int w, int h, int x, int y){
-    vf->next->draw_slice(vf->next,src,stride,w,h,x,y);
+    if (vf->next->draw_slice) {
+	vf->next->draw_slice(vf->next,src,stride,w,h,x,y);
+	return;
+    }
+    if (!vf->dmpi) {
+	mp_msg(MSGT_VFILTER,MSGL_ERR,"draw_slice: dmpi not stored by vf_%s\n", vf->info->name);
+	return;
+    }
+    if (!(vf->dmpi->flags & MP_IMGFLAG_PLANAR)) {
+	memcpy_pic(vf->dmpi->planes[0]+y*vf->dmpi->stride[0]+vf->dmpi->bpp/8*x,
+	    src[0], vf->dmpi->bpp/8*w, h, vf->dmpi->stride[0], stride[0]);
+	return;
+    }
+    memcpy_pic(vf->dmpi->planes[0]+y*vf->dmpi->stride[0]+x, src[0],
+	w, h, vf->dmpi->stride[0], stride[0]);
+    memcpy_pic(vf->dmpi->planes[1]+(y>>vf->dmpi->chroma_y_shift)*vf->dmpi->stride[1]+(x>>vf->dmpi->chroma_x_shift),
+	src[1], w>>vf->dmpi->chroma_x_shift, h>>vf->dmpi->chroma_y_shift, vf->dmpi->stride[1], stride[1]);
+    memcpy_pic(vf->dmpi->planes[2]+(y>>vf->dmpi->chroma_y_shift)*vf->dmpi->stride[2]+(x>>vf->dmpi->chroma_x_shift),
+	src[2], w>>vf->dmpi->chroma_x_shift, h>>vf->dmpi->chroma_y_shift, vf->dmpi->stride[2], stride[2]);
 }
 
 //============================================================================
 
 vf_instance_t* append_filters(vf_instance_t* last){
-    vf_instance_t* vf;
-    char** plugin_args = vo_plugin_args;
-    if(!vo_plugin_args) return last;
-    while(*plugin_args){
-	char* name=strdup(*plugin_args);
-	char* args=strchr(name,'=');
-	if(args){args[0]=0;++args;}
-	vf=vf_open_filter(last,name,args);
-	if(vf) last=vf;
-	free(name);
-	++plugin_args;
+  vf_instance_t* vf;
+  int i; 
+
+  // -vf take precedence over -vop
+  if(vf_settings) {
+    // We want to add them in the 'right order'
+    for(i = 0 ; vf_settings[i].name ; i++)
+      /* NOP */;
+    for(i-- ; i >= 0 ; i--) {
+      //printf("Open filter %s\n",vf_settings[i].name);
+      vf = vf_open_filter(last,vf_settings[i].name,vf_settings[i].attribs);
+      if(vf) last=vf;
     }
-    return last;
+  } else if(vo_plugin_args) {
+    for(i = 0 ; vo_plugin_args[i].name ; i++) {
+      vf = vf_open_filter(last,vo_plugin_args[i].name,
+			  vo_plugin_args[i].attribs);
+      if(vf) last=vf;
+    }
+  }
+  return last;
 }
 
 //============================================================================

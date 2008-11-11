@@ -38,6 +38,8 @@ extern ad_functions_t mpcodecs_ad_libmad;
 extern ad_functions_t mpcodecs_ad_realaud;
 extern ad_functions_t mpcodecs_ad_libdv;
 extern ad_functions_t mpcodecs_ad_qtaudio;
+extern ad_functions_t mpcodecs_ad_ra1428;
+extern ad_functions_t mpcodecs_ad_flac;
 
 ad_functions_t* mpcodecs_ad_drivers[] =
 {
@@ -67,7 +69,7 @@ ad_functions_t* mpcodecs_ad_drivers[] =
 #endif
   &mpcodecs_ad_acm,
 #endif
-#ifdef USE_QTX_CODECS
+#if defined(USE_QTX_CODECS) || defined(MACOSX)
   &mpcodecs_ad_qtaudio,
 #endif
 #ifdef HAVE_FAAD
@@ -84,6 +86,10 @@ ad_functions_t* mpcodecs_ad_drivers[] =
 #endif
 #ifdef HAVE_LIBDV095
   &mpcodecs_ad_libdv,
+#endif
+  &mpcodecs_ad_ra1428,
+#ifdef HAVE_FLAC
+  &mpcodecs_ad_flac,
 #endif
   NULL
 };

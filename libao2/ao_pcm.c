@@ -51,7 +51,7 @@ struct WaveHeader
 static struct WaveHeader wavhdr = {
 	le2me_32(WAV_ID_RIFF),
         /* same conventions than in sox/wav.c/wavwritehdr() */
-	le2me_32(0x7ffff024),
+	0, //le2me_32(0x7ffff024),
 	le2me_32(WAV_ID_WAVE),
 	le2me_32(WAV_ID_FMT),
 	le2me_32(16),
@@ -62,13 +62,13 @@ static struct WaveHeader wavhdr = {
 	le2me_16(4),
 	le2me_16(16),
 	le2me_32(WAV_ID_DATA),
-	le2me_32(0x7ffff000)
+	0, //le2me_32(0x7ffff000)
 };
 
 static FILE *fp = NULL;
 
 // to set/get/query special features/parameters
-static int control(int cmd,int arg){
+static int control(int cmd,void *arg){
     return -1;
 }
 
@@ -77,9 +77,7 @@ static int control(int cmd,int arg){
 static int init(int rate,int channels,int format,int flags){
 	int bits;
 	if(!ao_outputfilename) {
-		ao_outputfilename = (char *) malloc(sizeof(char) * 14);
-		strcpy(ao_outputfilename,
-		       (ao_pcm_waveheader ? "audiodump.wav" : "audiodump.pcm"));
+		ao_outputfilename = strdup(ao_pcm_waveheader ? "audiodump.wav" : "audiodump.pcm");
 	}
 
 	/* bits is only equal to format if (format == 8) or (format == 16);
@@ -109,19 +107,24 @@ static int init(int rate,int channels,int format,int flags){
 	wavhdr.sample_rate = le2me_32(ao_data.samplerate);
 	wavhdr.bytes_per_second = le2me_32(ao_data.bps);
 	wavhdr.bits = le2me_16(bits);
+	
+	wavhdr.data_length=le2me_32(0x7ffff000);
+	wavhdr.file_length = wavhdr.data_length + sizeof(wavhdr) - 8;
 
 	printf("PCM: File: %s (%s)\n"
 	       "PCM: Samplerate: %iHz Channels: %s Format %s\n",
 	       ao_outputfilename, (ao_pcm_waveheader?"WAVE":"RAW PCM"), rate,
 	       (channels > 1) ? "Stereo" : "Mono", audio_out_format_name(format));
-	printf("PCM: Info: fastest dumping is achieved with -vc null -vo null\n"
+	printf("PCM: Info: fastest dumping is achieved with -vc dummy -vo null\n"
 	       "PCM: Info: to write WAVE files use -waveheader (default); "
 	       "for RAW PCM -nowaveheader.\n");
 
 	fp = fopen(ao_outputfilename, "wb");
 	if(fp) {
-		if(ao_pcm_waveheader) /* Reserve space for wave header */
+		if(ao_pcm_waveheader){ /* Reserve space for wave header */
 			fwrite(&wavhdr,sizeof(wavhdr),1,fp);
+			wavhdr.file_length=wavhdr.data_length=0;
+		}
 		return 1;
 	}
 	printf("PCM: Failed to open %s for writing!\n", ao_outputfilename);
@@ -138,7 +141,6 @@ static void uninit(){
 		fwrite(&wavhdr,sizeof(wavhdr),1,fp);
 	}
 	fclose(fp);
-	free(ao_outputfilename);
 }
 
 // stop playing and empty buffers (for seeking/pause)

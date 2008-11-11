@@ -6,21 +6,21 @@
 #include <unistd.h>
 #include <string.h>
 
-#include "../cfgparser.h"
+#include "../m_option.h"
 
 #include "stream.h"
 #include "demuxer.h"
 #include "stheader.h"
 
 
-int use_rawaudio = 0;
+extern int demuxer_type;
 static int channels = 2;
 static int samplerate = 44100;
 static int samplesize = 2;
 static int format = 0x1; // Raw PCM
 
-config_t demux_rawaudio_opts[] = {
-  { "on", &use_rawaudio, CONF_TYPE_FLAG, 0,0, 1, NULL },
+m_option_t demux_rawaudio_opts[] = {
+  { "on", &demuxer_type, CONF_TYPE_FLAG, 0,0, DEMUXER_TYPE_RAWAUDIO, NULL },
   { "channels", &channels, CONF_TYPE_INT,CONF_RANGE,1,8, NULL },
   { "rate", &samplerate, CONF_TYPE_INT,CONF_RANGE,1000,8*48000, NULL },
   { "samplesize", &samplesize, CONF_TYPE_INT,CONF_RANGE,1,8, NULL },
@@ -65,10 +65,11 @@ int demux_rawaudio_fill_buffer(demuxer_t* demuxer, demux_stream_t *ds) {
     return 0;
 
   dp = new_demux_packet(l);
-  ds->pts = spos / (float)(sh_audio->wf->nAvgBytesPerSec);
-  ds->pos = spos;
+  dp->pts = (spos - demuxer->movi_start)  / (float)(sh_audio->wf->nAvgBytesPerSec);
+  dp->pos = (spos - demuxer->movi_start);
 
-  stream_read(demuxer->stream,dp->buffer,l);
+  l = stream_read(demuxer->stream,dp->buffer,l);
+  resize_demux_packet(dp, l);
   ds_add_packet(ds,dp);
 
   return 1;
@@ -87,7 +88,7 @@ void demux_rawaudio_seek(demuxer_t *demuxer,float rel_seek_secs,int flags){
 
   pos -= (pos % (sh_audio->channels * sh_audio->samplesize) );
   stream_seek(s,pos);
-  sh_audio->delay=pos / (float)(sh_audio->wf->nAvgBytesPerSec);
+  sh_audio->delay= (pos-ds_tell_pts(demuxer->audio)-sh_audio->a_in_buffer_len) / (float)(sh_audio->wf->nAvgBytesPerSec);
   resync_audio_stream(sh_audio);
 //  printf("demux_rawaudio: streamtell=%d\n",(int)stream_tell(demuxer->stream));
 }

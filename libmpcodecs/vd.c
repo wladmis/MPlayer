@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define USE_THEORA
+
 #include "config.h"
 #include "mp_msg.h"
 #include "help_mp.h"
@@ -29,6 +31,7 @@ extern vd_functions_t mpcodecs_vd_null;
 extern vd_functions_t mpcodecs_vd_cinepak;
 extern vd_functions_t mpcodecs_vd_qtrpza;
 extern vd_functions_t mpcodecs_vd_ffmpeg;
+extern vd_functions_t mpcodecs_vd_theora;
 extern vd_functions_t mpcodecs_vd_dshow;
 extern vd_functions_t mpcodecs_vd_dmo;
 extern vd_functions_t mpcodecs_vd_vfw;
@@ -36,6 +39,7 @@ extern vd_functions_t mpcodecs_vd_vfwex;
 extern vd_functions_t mpcodecs_vd_odivx;
 extern vd_functions_t mpcodecs_vd_divx4;
 extern vd_functions_t mpcodecs_vd_raw;
+extern vd_functions_t mpcodecs_vd_hmblck;
 extern vd_functions_t mpcodecs_vd_xanim;
 extern vd_functions_t mpcodecs_vd_msrle;
 extern vd_functions_t mpcodecs_vd_msvidc;
@@ -48,16 +52,16 @@ extern vd_functions_t mpcodecs_vd_nuv;
 extern vd_functions_t mpcodecs_vd_mpng;
 extern vd_functions_t mpcodecs_vd_ijpg;
 extern vd_functions_t mpcodecs_vd_mtga;
+extern vd_functions_t mpcodecs_vd_sgi;
 extern vd_functions_t mpcodecs_vd_libmpeg2;
-extern vd_functions_t mpcodecs_vd_huffyuv;
 extern vd_functions_t mpcodecs_vd_mpegpes;
 extern vd_functions_t mpcodecs_vd_realvid;
-extern vd_functions_t mpcodecs_vd_svq1;
 extern vd_functions_t mpcodecs_vd_xvid;
 extern vd_functions_t mpcodecs_vd_libdv;
 extern vd_functions_t mpcodecs_vd_lcl;
 extern vd_functions_t mpcodecs_vd_lzo;
 extern vd_functions_t mpcodecs_vd_qtvideo;
+extern vd_functions_t mpcodecs_vd_qt8bps;
 
 vd_functions_t* mpcodecs_vd_drivers[] = {
         &mpcodecs_vd_null,
@@ -65,6 +69,9 @@ vd_functions_t* mpcodecs_vd_drivers[] = {
         &mpcodecs_vd_qtrpza,
 #ifdef USE_LIBAVCODEC
         &mpcodecs_vd_ffmpeg,
+#endif
+#ifdef HAVE_OGGTHEORA
+	&mpcodecs_vd_theora,
 #endif
 #ifdef USE_WIN32DLL
 #ifdef USE_DIRECTSHOW
@@ -82,6 +89,7 @@ vd_functions_t* mpcodecs_vd_drivers[] = {
 #endif
         &mpcodecs_vd_lzo,
         &mpcodecs_vd_raw,
+        &mpcodecs_vd_hmblck,
         &mpcodecs_vd_msrle,
         &mpcodecs_vd_msvidc,
         &mpcodecs_vd_fli,
@@ -100,16 +108,13 @@ vd_functions_t* mpcodecs_vd_drivers[] = {
 	&mpcodecs_vd_ijpg,
 #endif
 	&mpcodecs_vd_mtga,
+	&mpcodecs_vd_sgi,
 #ifdef USE_LIBMPEG2
         &mpcodecs_vd_libmpeg2,
 #endif
-        &mpcodecs_vd_huffyuv,
         &mpcodecs_vd_mpegpes,
 #ifdef USE_REALCODECS
 	&mpcodecs_vd_realvid,
-#endif
-#ifdef USE_SVQ1
-	&mpcodecs_vd_svq1,
 #endif
 #ifdef HAVE_XVID
 	&mpcodecs_vd_xvid,
@@ -118,9 +123,10 @@ vd_functions_t* mpcodecs_vd_drivers[] = {
 	&mpcodecs_vd_libdv,
 #endif
 	&mpcodecs_vd_lcl,
-#ifdef USE_QTX_CODECS
+#if defined(USE_QTX_CODECS) || defined(MACOSX)
 	&mpcodecs_vd_qtvideo,
 #endif
+	&mpcodecs_vd_qt8bps,
 	NULL
 };
 
@@ -148,6 +154,7 @@ int mpcodecs_config_vo(sh_video_t *sh, int w, int h, unsigned int preferred_outf
     int screen_size_y=0;//SCREEN_SIZE_Y;
 //    vo_functions_t* video_out=sh->video_out;
     vf_instance_t* vf=sh->vfilter,*sc=NULL;
+    int palette=0;
 
     if(!sh->disp_w || !sh->disp_h)
         mp_msg(MSGT_DECVIDEO,MSGL_WARN, MSGTR_CodecDidNotSet);
@@ -172,11 +179,20 @@ int mpcodecs_config_vo(sh_video_t *sh, int w, int h, unsigned int preferred_outf
 
     // check if libvo and codec has common outfmt (no conversion):
 csp_again:
+
+    if(verbose>0){
+	vf_instance_t* f=vf;
+	mp_msg(MSGT_DECVIDEO,MSGL_V,"Trying filter chain:");
+	for(f = vf ; f ; f = f->next)
+	    mp_msg(MSGT_DECVIDEO,MSGL_V," %s",f->info->name);
+	mp_msg(MSGT_DECVIDEO,MSGL_V,"\n");
+    }
+
     j=-1;
     for(i=0;i<CODECS_MAX_OUTFMT;i++){
 	int flags;
 	out_fmt=sh->codec->outfmt[i];
-	if(out_fmt==(signed int)0xFFFFFFFF) continue;
+	if(out_fmt==(unsigned int)0xFFFFFFFF) continue;
 	flags=vf->query_format(vf,out_fmt);
 	mp_msg(MSGT_CPLAYER,MSGL_DBG2,"vo_debug: query(%s) returned 0x%X (i=%d) \n",vo_format_name(out_fmt),flags,i);
 	if((flags&2) || (flags && j<0)){
@@ -187,15 +203,27 @@ csp_again:
 		continue;
 	    }
 	    j=i; vo_flags=flags; if(flags&2) break;
+	} else
+	if(!palette && !(flags&3) && (out_fmt==IMGFMT_RGB8||out_fmt==IMGFMT_BGR8)){
+	    sh->outfmtidx=j; // pass index to the control() function this way
+	    if(mpvdec->control(sh,VDCTRL_QUERY_FORMAT,&out_fmt)!=CONTROL_FALSE)
+		palette=1;
 	}
     }
     if(j<0){
 	// TODO: no match - we should use conversion...
-	if(strcmp(vf->info->name,"scale")){	
+	if(strcmp(vf->info->name,"scale") && palette!=-1){
 	    mp_msg(MSGT_DECVIDEO,MSGL_INFO,MSGTR_CouldNotFindColorspace);
 	    sc=vf=vf_open_filter(vf,"scale",NULL);
 	    goto csp_again;
-	} else { // sws failed, if the last filter (vf_vo) support MPEGPES try to append vf_lavc
+	} else
+	if(palette==1){
+	    mp_msg(MSGT_DECVIDEO,MSGL_V,"vd: Trying -vop palette...\n");
+	    palette=-1;
+	    vf=vf_open_filter(vf,"palette",NULL);
+	    goto csp_again;
+	} else 
+	{ // sws failed, if the last filter (vf_vo) support MPEGPES try to append vf_lavc
 	     vf_instance_t* vo, *vp = NULL, *ve;
 	     // Remove the scale filter if we added it ourself
 	     if(vf == sc) {

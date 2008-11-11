@@ -64,6 +64,12 @@
 
 #define MP_MAX_PLANES	4
 
+#define MP_IMGFIELD_ORDERED 0x01
+#define MP_IMGFIELD_TOP_FIRST 0x02
+#define MP_IMGFIELD_REPEAT_FIRST 0x04
+#define MP_IMGFIELD_TOP 0x08
+#define MP_IMGFIELD_BOTTOM 0x10
+
 typedef struct mp_image_s {
     unsigned short flags;
     unsigned char type;
@@ -76,6 +82,8 @@ typedef struct mp_image_s {
     char * qscale;
     int qstride;
     int pict_type; // 0->unknown, 1->I, 2->P, 3->B
+    int fields;
+    int qscale_type; // 0->mpeg1/4/h263, 1->mpeg2
     int num_planes;
     /* these are only used by planar formats Y,U(Cb),V(Cr) */
     int chroma_width;
@@ -94,16 +102,20 @@ static inline void mp_image_setfmt(mp_image_t* mpi,unsigned int out_fmt){
 	mpi->bpp=0;
 	return;
     }
+    if(IMGFMT_IS_XVMC(out_fmt)){
+	mpi->bpp=0;
+	return;
+    }
     mpi->num_planes=1;
     if (IMGFMT_IS_RGB(out_fmt)) {
-	if (IMGFMT_RGB_DEPTH(out_fmt) < 8)
+	if (IMGFMT_RGB_DEPTH(out_fmt) < 8 && !(out_fmt&128))
 	    mpi->bpp = IMGFMT_RGB_DEPTH(out_fmt);
 	else
 	    mpi->bpp=(IMGFMT_RGB_DEPTH(out_fmt)+7)&(~7);
 	return;
     }
     if (IMGFMT_IS_BGR(out_fmt)) {
-	if (IMGFMT_BGR_DEPTH(out_fmt) < 8)
+	if (IMGFMT_BGR_DEPTH(out_fmt) < 8 && !(out_fmt&128))
 	    mpi->bpp = IMGFMT_BGR_DEPTH(out_fmt);
 	else
 	    mpi->bpp=(IMGFMT_BGR_DEPTH(out_fmt)+7)&(~7);
@@ -170,6 +182,17 @@ static inline void mp_image_setfmt(mp_image_t* mpi,unsigned int out_fmt){
     case IMGFMT_YUY2:
 	mpi->bpp=16;
 	mpi->num_planes=1;
+	return;
+    case IMGFMT_NV12:
+	mpi->flags|=MP_IMGFLAG_SWAPPED;
+    case IMGFMT_NV21:
+	mpi->flags|=MP_IMGFLAG_PLANAR;
+	mpi->bpp=12;
+	mpi->num_planes=2;
+	mpi->chroma_width=(mpi->width>>0);
+	mpi->chroma_height=(mpi->height>>1);
+	mpi->chroma_x_shift=0;
+	mpi->chroma_y_shift=1;
 	return;
     }
     printf("mp_image: Unknown out_fmt: 0x%X\n",out_fmt);

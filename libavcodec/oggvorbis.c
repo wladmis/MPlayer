@@ -1,6 +1,7 @@
-/*
- * Ogg Vorbis codec support via libvorbisenc
- * Mark Hills <mark@pogo.org.uk>
+/**
+ * @file oggvorbis.c
+ * Ogg Vorbis codec support via libvorbisenc.
+ * @author Mark Hills <mark@pogo.org.uk>
  */
 
 #include <time.h>
@@ -179,7 +180,7 @@ static inline int conv(int samples, float **pcm, char *buf, int channels) {
 	
 static int oggvorbis_decode_frame(AVCodecContext *avccontext,
                         void *data, int *data_size,
-                        UINT8 *buf, int buf_size)
+                        uint8_t *buf, int buf_size)
 {
     OggVorbisContext *context = avccontext->priv_data ;
     ogg_packet *op = (ogg_packet*)buf ;

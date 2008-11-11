@@ -3,12 +3,12 @@
 
 #include "config.h"
 
-#ifdef USE_QTX_CODECS
+#if defined(USE_QTX_CODECS) || defined(MACOSX)
 
 #include "mp_msg.h"
 #include "vd_internal.h"
 
-#ifdef USE_WIN32DLL
+#ifdef WIN32_LOADER
 #include "ldt_keeper.h"
 #endif
 
@@ -23,13 +23,21 @@ static vd_info_t info = {
 LIBVD_EXTERN(qtvideo)
 
 #include "../bswap.h"
-#include "qtx/qtxsdk/components.h"
 
+#ifdef MACOSX
+#include <QuickTime/ImageCodec.h>
+#define dump_ImageDescription(x)
+#else
+#include "qtx/qtxsdk/components.h"
+#endif
+
+#ifdef USE_QTX_CODECS
 //#include "wine/windef.h"
 
 HMODULE   WINAPI LoadLibraryA(LPCSTR);
 FARPROC   WINAPI GetProcAddress(HMODULE,LPCSTR);
 int       WINAPI FreeLibrary(HMODULE);
+#endif
 
 //static ComponentDescription desc; // for FindNextComponent()
 static ComponentInstance ci=NULL; // codec handle
@@ -46,6 +54,7 @@ static ImageDescriptionHandle framedescHandle;
 //static HINSTANCE qtml_dll;
 static HMODULE handler;
 
+#ifdef USE_QTX_CODECS
 static    Component (*FindNextComponent)(Component prev,ComponentDescription* desc);
 static    OSErr (*GetComponentInfo)(Component prev,ComponentDescription* desc,Handle h1,Handle h2,Handle h3);
 static    long (*CountComponents)(ComponentDescription* desc);
@@ -80,7 +89,7 @@ static    OSErr           (*QTNewGWorldFromPtr)(GWorldPtr *gw,
                                void *baseAddr,
                                long rowBytes); 
 static    OSErr           (*NewHandleClear)(Size byteCount);                          
-
+#endif
 
 // to set/get/query special features/parameters
 static int control(sh_video_t *sh,int cmd,void* arg,...){
@@ -98,7 +107,11 @@ static int init(sh_video_t *sh){
     CodecInfo cinfo;	// for ImageCodecGetCodecInfo()
     ImageSubCodecDecompressCapabilities icap; // for ImageCodecInitialize()
 
-#ifdef USE_WIN32DLL
+#ifdef MACOSX
+    EnterMovies();
+#else
+
+#ifdef WIN32_LOADER
     Setup_LDT_Keeper();
 #endif
 
@@ -130,6 +143,7 @@ static int init(sh_video_t *sh){
     printf("InitializeQTML returned %i\n",result);
 //    result=EnterMovies();
 //    printf("EnterMovies->%d\n",result);
+#endif /* !MACOSX */
 
 #if 0
     memset(&desc,0,sizeof(desc));
@@ -268,6 +282,9 @@ static int init(sh_video_t *sh){
 
 // uninit driver
 static void uninit(sh_video_t *sh){
+#ifdef MACOSX
+    ExitMovies();
+#endif
 }
 
 // decode a frame

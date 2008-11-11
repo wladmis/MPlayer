@@ -1,13 +1,20 @@
-/* avcodec API use example.
+/**
+ * @file apiexample.c
+ * avcodec API use example.
  *
  * Note that this library only handles codecs (mpeg, mpeg4, etc...),
- * not file formats (avi, vob, etc...). See library 'libav' for the
+ * not file formats (avi, vob, etc...). See library 'libavformat' for the
  * format handling 
  */
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+
+#ifdef HAVE_AV_CONFIG_H
+#undef HAVE_AV_CONFIG_H
+#endif
 
 #include "avcodec.h"
 
@@ -24,7 +31,7 @@ void audio_encode_example(const char *filename)
     FILE *f;
     short *samples;
     float t, tincr;
-    UINT8 *outbuf;
+    uint8_t *outbuf;
 
     printf("Audio encoding\n");
 
@@ -90,10 +97,13 @@ void audio_decode_example(const char *outfilename, const char *filename)
     AVCodecContext *c= NULL;
     int out_size, size, len;
     FILE *f, *outfile;
-    UINT8 *outbuf;
-    UINT8 inbuf[INBUF_SIZE], *inbuf_ptr;
+    uint8_t *outbuf;
+    uint8_t inbuf[INBUF_SIZE + FF_INPUT_BUFFER_PADDING_SIZE], *inbuf_ptr;
 
     printf("Audio decoding\n");
+    
+    /* set end of buffer to 0 (this ensures that no overreading happens for damaged mpeg streams) */
+    memset(inbuf + INBUF_SIZE, 0, FF_INPUT_BUFFER_PADDING_SIZE);
 
     /* find the mpeg audio decoder */
     codec = avcodec_find_decoder(CODEC_ID_MP2);
@@ -165,7 +175,7 @@ void video_encode_example(const char *filename)
     int i, out_size, size, x, y, outbuf_size;
     FILE *f;
     AVFrame *picture;
-    UINT8 *outbuf, *picture_buf;
+    uint8_t *outbuf, *picture_buf;
 
     printf("Video encoding\n");
 
@@ -185,8 +195,10 @@ void video_encode_example(const char *filename)
     c->width = 352;  
     c->height = 288;
     /* frames per second */
-    c->frame_rate = 25 * FRAME_RATE_BASE;  
+    c->frame_rate = 25;  
+    c->frame_rate_base= 1;
     c->gop_size = 10; /* emit one intra frame every ten frames */
+    c->max_b_frames=1;
 
     /* open it */
     if (avcodec_open(c, codec) < 0) {
@@ -217,7 +229,6 @@ void video_encode_example(const char *filename)
 
     /* encode 1 second of video */
     for(i=0;i<25;i++) {
-        printf("encoding frame %3d\r", i);
         fflush(stdout);
         /* prepare a dummy image */
         /* Y */
@@ -237,6 +248,16 @@ void video_encode_example(const char *filename)
 
         /* encode the image */
         out_size = avcodec_encode_video(c, outbuf, outbuf_size, picture);
+        printf("encoding frame %3d (size=%5d)\n", i, out_size);
+        fwrite(outbuf, 1, out_size, f);
+    }
+
+    /* get the delayed frames */
+    for(; out_size; i++) {
+        fflush(stdout);
+        
+        out_size = avcodec_encode_video(c, outbuf, outbuf_size, NULL);
+        printf("write frame %3d (size=%5d)\n", i, out_size);
         fwrite(outbuf, 1, out_size, f);
     }
 
@@ -279,8 +300,11 @@ void video_decode_example(const char *outfilename, const char *filename)
     int frame, size, got_picture, len;
     FILE *f;
     AVFrame *picture;
-    UINT8 inbuf[INBUF_SIZE], *inbuf_ptr;
+    uint8_t inbuf[INBUF_SIZE + FF_INPUT_BUFFER_PADDING_SIZE], *inbuf_ptr;
     char buf[1024];
+
+    /* set end of buffer to 0 (this ensures that no overreading happens for damaged mpeg streams) */
+    memset(inbuf + INBUF_SIZE, 0, FF_INPUT_BUFFER_PADDING_SIZE);
 
     printf("Video decoding\n");
 
@@ -345,7 +369,7 @@ void video_decode_example(const char *outfilename, const char *filename)
                 exit(1);
             }
             if (got_picture) {
-                printf("saving frame %3d\r", frame);
+                printf("saving frame %3d\n", frame);
                 fflush(stdout);
 
                 /* the picture is allocated by the decoder. no need to
@@ -366,7 +390,7 @@ void video_decode_example(const char *outfilename, const char *filename)
     len = avcodec_decode_video(c, picture, &got_picture, 
                                NULL, 0);
     if (got_picture) {
-        printf("saving frame %3d\r", frame);
+        printf("saving last frame %3d\n", frame);
         fflush(stdout);
         
         /* the picture is allocated by the decoder. no need to
@@ -385,6 +409,80 @@ void video_decode_example(const char *outfilename, const char *filename)
     printf("\n");
 }
 
+// simple example how the options could be used
+int options_example(int argc, char* argv[])
+{
+    AVCodec* codec = avcodec_find_encoder_by_name((argc > 1) ? argv[2] : "mpeg4");
+    const AVOption* c;
+    AVCodecContext* avctx;
+    char* def = av_malloc(5000);
+    const char* col = "";
+    int i = 0;
+
+    if (!codec)
+	return -1;
+    c = codec->options;
+    avctx = avcodec_alloc_context();
+    *def = 0;
+
+    if (c) {
+	const AVOption *stack[FF_OPT_MAX_DEPTH];
+	int depth = 0;
+	for (;;) {
+	    if (!c->name) {
+		if (c->help) {
+		    stack[depth++] = c;
+		    c = (const AVOption*)c->help;
+		} else {
+		    if (depth == 0)
+			break; // finished
+		    c = stack[--depth];
+                    c++;
+		}
+	    } else {
+		int t = c->type & FF_OPT_TYPE_MASK;
+		printf("Config   %s  %s\n",
+		       t == FF_OPT_TYPE_BOOL ? "bool   " :
+		       t == FF_OPT_TYPE_DOUBLE ? "double  " :
+		       t == FF_OPT_TYPE_INT ? "integer" :
+		       t == FF_OPT_TYPE_STRING ? "string " :
+		       "unknown??", c->name);
+		switch (t) {
+		case FF_OPT_TYPE_BOOL:
+		    i += sprintf(def + i, "%s%s=%s",
+				 col, c->name,
+				 c->defval != 0. ? "on" : "off");
+		    break;
+		case FF_OPT_TYPE_DOUBLE:
+		    i += sprintf(def + i, "%s%s=%f",
+				 col, c->name, c->defval);
+		    break;
+		case FF_OPT_TYPE_INT:
+		    i += sprintf(def + i, "%s%s=%d",
+				 col, c->name, (int) c->defval);
+		    break;
+		case FF_OPT_TYPE_STRING:
+		    if (c->defstr) {
+			char* d = av_strdup(c->defstr);
+			char* f = strchr(d, ',');
+			if (f)
+                            *f = 0;
+			i += sprintf(def + i, "%s%s=%s",
+				     col, c->name, d);
+                        av_free(d);
+		    }
+		    break;
+		}
+		col = ":";
+		c++;
+	    }
+	}
+    }
+    printf("Default Options: %s\n", def);
+    av_free(def);
+    return 0;
+}
+
 
 int main(int argc, char **argv)
 {
@@ -396,7 +494,10 @@ int main(int argc, char **argv)
     /* register all the codecs (you can also register only the codec
        you wish to have smaller code */
     avcodec_register_all();
-    
+
+#ifdef OPT_TEST
+    options_example(argc, argv);
+#else
     if (argc <= 1) {
         audio_encode_example("/tmp/test.mp2");
         audio_decode_example("/tmp/test.sw", "/tmp/test.mp2");
@@ -409,6 +510,7 @@ int main(int argc, char **argv)
 
     //    audio_decode_example("/tmp/test.sw", filename);
     video_decode_example("/tmp/test%d.pgm", filename);
+#endif
 
     return 0;
 }

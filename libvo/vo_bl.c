@@ -19,21 +19,27 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
-#include <netdb.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <sys/socket.h>
 #include <sys/time.h>
 #include <sys/mman.h>
 #include <sys/ioctl.h>
-#include <netinet/in.h>
 
 #include "config.h"
+
+#ifndef HAVE_WINSOCK2
+#define closesocket close
+#include <netdb.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#else
+#include <winsock2.h>
+#endif
 
 #include "video_out.h"
 #include "video_out_internal.h"
 #include "../mp_msg.h"
-#include "../cfgparser.h"
+#include "../m_option.h"
 #include "fastmemcpy.h"
 
 static vo_info_t info = 
@@ -168,19 +174,19 @@ static int udp_init(bl_host_t *h) {
 	if (connect(h->fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
 		mp_msg(MSGT_VO, MSGL_ERR, "couldn't connect socket for %s\n", 
 				h->name);
-		close(h->fd);
+		closesocket(h->fd);
 		return 1;
 	}
 	return 0;
 }
 
 static void udp_send(bl_host_t *h) {
-	if (write(h->fd, bl_packet, bl_size) != bl_size) 
+	if (send(h->fd, bl_packet, bl_size, 0) != bl_size) 
 		mp_msg(MSGT_VO, MSGL_ERR, "unable to send to %s\n", h->name);
 }
 
 static void udp_close(bl_host_t *h) {
-	close(h->fd);
+	closesocket(h->fd);
 }
 
 #define NO_BLS 2

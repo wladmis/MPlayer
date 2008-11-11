@@ -18,7 +18,6 @@
 #include "version.h"
 
 #include "vobsub.h"
-#include "libvo/video_out.h"
 #include "spudec.h"
 #include "mp_msg.h"
 #ifdef USE_UNRARLIB
@@ -58,7 +57,7 @@ rar_open(const char *const filename, const char *const mode)
     stream->file = fopen(filename, mode);
     if (stream->file == NULL) {
 	char *rar_filename;
-	char *p;
+	const char *p;
 	int rc;
 	/* Guess the RAR archive filename */
 	rar_filename = NULL;
@@ -264,7 +263,7 @@ mpeg_open(const char *filename)
 	res->packet = NULL;
 	res->packet_size = 0;
 	res->packet_reserve = 0;
-	res->stream = rar_open(filename, "r");
+	res->stream = rar_open(filename, "rb");
 	err = res->stream == NULL;
 	if (err)
 	    perror("fopen Vobsub file failed");
@@ -328,7 +327,7 @@ mpeg_run(mpeg_t *mpeg)
 	else if ((c & 0xf0) == 0x20)
 	    version = 2;
 	else {
-	    mp_msg(MSGT_VOBSUB,MSGL_ERR, "Unsupported MPEG version: 0x%02x", c);
+	    mp_msg(MSGT_VOBSUB,MSGL_ERR, "VobSub: Unsupported MPEG version: 0x%02x\n", c);
 	    return -1;
 	}
 	if (version == 4) {
@@ -577,6 +576,7 @@ typedef struct {
     unsigned int have_palette;
     unsigned int orig_frame_width, orig_frame_height;
     unsigned int origin_x, origin_y;
+    unsigned int forced_subs;
     /* index */
     packet_queue_t *spu_streams;
     unsigned int spu_streams_size;
@@ -889,6 +889,26 @@ vobsub_set_lang(const char *line)
 }
 
 static int
+vobsub_parse_forced_subs(vobsub_t *vob, const char *line)
+{
+    const char *p;
+
+    p  = line;
+    while (isspace(*p))
+	++p;
+
+    if (strncasecmp("on",p,2) == 0){
+	    vob->forced_subs=~0;
+	    return 0;
+    } else if (strncasecmp("off",p,3) == 0){
+	    vob->forced_subs=0;
+	    return 0;
+    }
+	
+    return -1;
+}
+
+static int
 vobsub_parse_one_line(vobsub_t *vob, rar_stream_t *fd)
 {
     ssize_t line_size;
@@ -921,6 +941,8 @@ vobsub_parse_one_line(vobsub_t *vob, rar_stream_t *fd)
 	else if (strncmp("custom colors:", line, 14) == 0)
 	    //custom colors: ON/OFF, tridx: XXXX, colors: XXXXXX, XXXXXX, XXXXXX,XXXXXX
 	    res = vobsub_parse_cuspal(vob, line) + vobsub_parse_tridx(line) + vobsub_parse_custom(vob, line);
+	else if (strncmp("forced subs:", line, 12) == 0)
+		res = vobsub_parse_forced_subs(vob, line + 12);
 	else {
 	    mp_msg(MSGT_VOBSUB,MSGL_V, "vobsub: ignoring %s", line);
 	    continue;
@@ -941,16 +963,16 @@ vobsub_parse_ifo(void* this, const char *const name, unsigned int *palette, unsi
     rar_stream_t *fd = rar_open(name, "rb");
     if (fd == NULL) {
         if (force)
-	    mp_msg(MSGT_VOBSUB,MSGL_ERR, "Can't open IFO file");
+	    mp_msg(MSGT_VOBSUB,MSGL_ERR, "VobSub: Can't open IFO file\n");
     } else {
 	// parse IFO header
 	unsigned char block[0x800];
 	const char *const ifo_magic = "DVDVIDEO-VTS";
 	if (rar_read(block, sizeof(block), 1, fd) != 1) {
 	    if (force)
-		mp_msg(MSGT_VOBSUB,MSGL_ERR, "Can't read IFO header");
+		mp_msg(MSGT_VOBSUB,MSGL_ERR, "VobSub: Can't read IFO header\n");
 	} else if (memcmp(block, ifo_magic, strlen(ifo_magic) + 1))
-	    mp_msg(MSGT_VOBSUB,MSGL_ERR, "Bad magic in IFO header\n");
+	    mp_msg(MSGT_VOBSUB,MSGL_ERR, "VobSub: Bad magic in IFO header\n");
 	else {
 	    unsigned long pgci_sector = block[0xcc] << 24 | block[0xcd] << 16
 		| block[0xce] << 8 | block[0xcf];
@@ -983,7 +1005,7 @@ vobsub_parse_ifo(void* this, const char *const name, unsigned int *palette, unsi
 	    }
 	    if (rar_seek(fd, pgci_sector * sizeof(block), SEEK_SET)
 		|| rar_read(block, sizeof(block), 1, fd) != 1)
-		mp_msg(MSGT_VOBSUB,MSGL_ERR, "Can't read IFO PGCI");
+		mp_msg(MSGT_VOBSUB,MSGL_ERR, "VobSub: Can't read IFO PGCI\n");
 	    else {
 		unsigned long idx;
 		unsigned long pgc_offset = block[0xc] << 24 | block[0xd] << 16
@@ -1018,6 +1040,7 @@ vobsub_open(const char *const name,const char *const ifo,const int force,void** 
 	vob->spu_streams_size = 0;
 	vob->spu_streams_current = 0;
 	vob->delay = 0;
+	vob->forced_subs=0;
 	buf = malloc((strlen(name) + 5) * sizeof(char));
 	if (buf) {
 	    rar_stream_t *fd;
@@ -1035,7 +1058,7 @@ vobsub_open(const char *const name,const char *const ifo,const int force,void** 
 	    fd = rar_open(buf, "rb");
 	    if (fd == NULL) {
 		if(force)
-		  mp_msg(MSGT_VOBSUB,MSGL_ERR,"VobSub: Can't open IDX file");
+		  mp_msg(MSGT_VOBSUB,MSGL_ERR,"VobSub: Can't open IDX file\n");
 		else {
 		  free(buf);
 		  free(vob);
@@ -1058,7 +1081,7 @@ vobsub_open(const char *const name,const char *const ifo,const int force,void** 
 	    mpg = mpeg_open(buf);
 	    if (mpg == NULL) {
 	      if(force)
-		mp_msg(MSGT_VOBSUB,MSGL_ERR,"VobSub: Can't open SUB file");
+		mp_msg(MSGT_VOBSUB,MSGL_ERR,"VobSub: Can't open SUB file\n");
 	      else {
 		
 		free(buf);
@@ -1071,7 +1094,7 @@ vobsub_open(const char *const name,const char *const ifo,const int force,void** 
 		    off_t pos = mpeg_tell(mpg);
 		    if (mpeg_run(mpg) < 0) {
 			if (!mpeg_eof(mpg))
-			    mp_msg(MSGT_VOBSUB,MSGL_ERR,"mpeg_run error");
+			    mp_msg(MSGT_VOBSUB,MSGL_ERR,"VobSub: mpeg_run error\n");
 			break;
 		    }
 		    if (mpg->packet_size) {
@@ -1148,6 +1171,15 @@ vobsub_get_id(void *vobhandle, unsigned int index)
 {
     vobsub_t *vob = (vobsub_t *) vobhandle;
     return (index < vob->spu_streams_size) ? vob->spu_streams[index].id : NULL;
+}
+
+unsigned int 
+vobsub_get_forced_subs_flag(void const * const vobhandle)
+{
+  if (vobhandle)
+    return ((vobsub_t*) vobhandle)->forced_subs;
+  else
+    return 0;
 }
 
 int
@@ -1257,6 +1289,9 @@ create_idx(vobsub_out_t *me, const unsigned int *palette, unsigned int orig_widt
 	}
 	putc('\n', me->fidx);
     }
+
+    fprintf(me->fidx,"# ON: displays only forced subtitles, OFF: shows everything\n"
+	    "forced subs: OFF\n");
 }
 
 void *

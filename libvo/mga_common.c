@@ -1,7 +1,10 @@
 
 #include "fastmemcpy.h"
 #include "../mmx_defs.h"
+#include "../cpudetect.h"
+#include "../postproc/swscale.h"
 #include "../postproc/rgb2rgb.h"
+#include "../libmpcodecs/vf_scale.h"
 #include "mp_msg.h"
 
 // mga_vid drawing functions
@@ -27,6 +30,7 @@ static uint32_t               drwcX,drwcY,dwidth,dheight;
 
 static void draw_alpha(int x0,int y0, int w,int h, unsigned char* src, unsigned char *srca, int stride){
     uint32_t bespitch = (mga_vid_config.src_width + 31) & ~31;
+    x0+=mga_vid_config.src_width*(vo_panscan_x>>1)/(vo_dwidth+vo_panscan_x);
     switch(mga_vid_config.format){
     case MGA_VID_FORMAT_YV12:
     case MGA_VID_FORMAT_IYUV:
@@ -44,7 +48,8 @@ static void draw_alpha(int x0,int y0, int w,int h, unsigned char* src, unsigned 
 
 static void draw_osd(void)
 {
-    vo_draw_text(mga_vid_config.src_width,mga_vid_config.src_height,draw_alpha);
+//    vo_draw_text(mga_vid_config.src_width,mga_vid_config.src_height,draw_alpha);
+    vo_draw_text(mga_vid_config.src_width-mga_vid_config.src_width*vo_panscan_x/(vo_dwidth+vo_panscan_x),mga_vid_config.src_height,draw_alpha);
 }
 
 
@@ -414,6 +419,7 @@ static int mga_uninit(){
 static uint32_t preinit(const char *vo_subdevice)
 {
   const char *devname=vo_subdevice?vo_subdevice:"/dev/mga_vid";
+	sws_rgb2rgb_init(get_sws_cpuflags());
 
 	f = open(devname,O_RDWR);
 	if(f == -1)
@@ -526,6 +532,6 @@ static void set_window( void ){
 #ifdef VO_XMGA
 	   mDrawColorKey();
 #endif
-	   if ( ioctl( f,MGA_VID_CONFIG,&mga_vid_config ) ) mp_msg(MSGT_VO,MSGL_WARN,"Error in mga_vid_config ioctl (wrong mga_vid.o version?)" );
 	  }
+	 if ( ioctl( f,MGA_VID_CONFIG,&mga_vid_config ) ) mp_msg(MSGT_VO,MSGL_WARN,"Error in mga_vid_config ioctl (wrong mga_vid.o version?)" );
 }

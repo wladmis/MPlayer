@@ -12,10 +12,12 @@
  */
 
 #include <inttypes.h>
-#include <sys/ioctl.h>
 #include <unistd.h>
 #include <fcntl.h>
+#ifndef __MINGW32__
+#include <sys/ioctl.h>
 #include <sys/mman.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -35,7 +37,6 @@
 #include "../libmpcodecs/mp_image.h"
 
 #define NUM_FRAMES VID_PLAY_MAXFRAMES /* Temporary: driver will overwrite it */
-#define UNUSED(x) ((void)(x)) /* Removes warning about unused arguments */
 
 static VDL_HANDLE vidix_handler = NULL;
 static uint8_t *vidix_mem = NULL;
@@ -205,8 +206,6 @@ static uint32_t vidix_draw_slice_410_fast(uint8_t *image[], int stride[], int w,
     uint8_t *src;
     uint8_t *dest;
 
-    UNUSED(w);
-    UNUSED(stride);
     dest = vidix_mem + vidix_play.offsets[next_frame] + vidix_play.offset.y;
     dest += dstrides.y*y + x;
     src = image[0];
@@ -250,16 +249,8 @@ static uint32_t vidix_draw_slice_packed(uint8_t *image[], int stride[], int w,in
 
 uint32_t vidix_draw_slice(uint8_t *image[], int stride[], int w,int h,int x,int y)
 {
-	UNUSED(image);
-	UNUSED(stride);
-	UNUSED(w);
-	UNUSED(h);
-	UNUSED(x);
-	UNUSED(y);
-	printf("vosub_vidix: Error unoptimized draw_slice was called\nExiting...");
-	vidix_term();
-	exit( EXIT_FAILURE );
-	return 0;
+    printf("vosub_vidix: dummy vidix_draw_slice() was called\n");
+    return -1;
 }
 
 static uint32_t  vidix_draw_image(mp_image_t *mpi){
@@ -275,7 +266,7 @@ static uint32_t  vidix_draw_image(mp_image_t *mpi){
 
 uint32_t vidix_draw_frame(uint8_t *image[])
 {
-  printf("vosub_vidix: vidix_draw_frame() was called!!!!\n");
+  printf("vosub_vidix: dummy vidix_draw_frame() was called\n");
   return -1;
 }
 
@@ -709,7 +700,7 @@ int vidix_preinit(const char *drvname,void *server)
 	  printf("vosub_vidix: You have wrong version of VIDIX library\n");
 	  return -1;
 	}
-	vidix_handler = vdlOpen(LIBDIR"/mplayer/vidix/",
+	vidix_handler = vdlOpen(MPLAYER_LIBDIR "/mplayer/vidix/",
 				drvname ? drvname[0] == ':' ? &drvname[1] : drvname[0] ? drvname : NULL : NULL,
 				TYPE_OUTPUT,
 				verbose);

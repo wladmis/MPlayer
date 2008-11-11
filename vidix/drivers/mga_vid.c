@@ -60,6 +60,10 @@
 #include "../../libdha/pci_ids.h"
 #include "../../libdha/pci_names.h"
 
+#ifdef __MINGW32__
+#define ENOTSUP 134
+#endif
+
 #if    !defined(ENOTSUP) && defined(EOPNOTSUPP)
 #define ENOTSUP EOPNOTSUPP
 #endif
@@ -721,7 +725,7 @@ int vixConfigPlayback(vidix_playback_t *config)
     dh = config->dest.h;
     
     config->dest.pitch.y=32;
-    config->dest.pitch.u=config->dest.pitch.v=16;
+    config->dest.pitch.u=config->dest.pitch.v=32;
 
     if (mga_verbose) printf("[mga] Setting up a %dx%d-%dx%d video window (src %dx%d) format %X\n",
            dw, dh, x, y, sw, sh, config->fourcc);
@@ -1196,6 +1200,11 @@ int vixProbe(int verbose,int force)
 		    i, lst[i].vendor, lst[i].device);
 	    if (lst[i].vendor == VENDOR_MATROX)
 	    {
+		if ((lst[i].command & PCI_COMMAND_IO) == 0)
+		{
+			printf("[mga] Device is disabled, ignoring\n");
+			continue;
+		}
 		switch(lst[i].device)
 		{
 		    case DEVICE_MATROX_MGA_G550_AGP:

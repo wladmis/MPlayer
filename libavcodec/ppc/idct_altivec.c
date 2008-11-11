@@ -38,6 +38,9 @@
 #include <stdlib.h>                                      /* malloc(), free() */
 #include <string.h>
 #include "../dsputil.h"
+
+#include "gcc_fixes.h"
+
 #include "dsputil_altivec.h"
 
 #define vector_s16_t vector signed short
@@ -151,26 +154,27 @@
     vx6 = vec_sra (vy6, shift);						\
     vx7 = vec_sra (vy7, shift);
 
+
 static const vector_s16_t constants[5] = {
-    (vector_s16_t)(23170, 13573, 6518, 21895, -23170, -21895, 32, 31),
-    (vector_s16_t)(16384, 22725, 21407, 19266, 16384, 19266, 21407, 22725),
-    (vector_s16_t)(22725, 31521, 29692, 26722, 22725, 26722, 29692, 31521),
-    (vector_s16_t)(21407, 29692, 27969, 25172, 21407, 25172, 27969, 29692),
-    (vector_s16_t)(19266, 26722, 25172, 22654, 19266, 22654, 25172, 26722)
+    (vector_s16_t) AVV(23170, 13573, 6518, 21895, -23170, -21895, 32, 31),
+    (vector_s16_t) AVV(16384, 22725, 21407, 19266, 16384, 19266, 21407, 22725),
+    (vector_s16_t) AVV(22725, 31521, 29692, 26722, 22725, 26722, 29692, 31521),
+    (vector_s16_t) AVV(21407, 29692, 27969, 25172, 21407, 25172, 27969, 29692),
+    (vector_s16_t) AVV(19266, 26722, 25172, 22654, 19266, 22654, 25172, 26722)
 };
 
 void idct_put_altivec(uint8_t* dest, int stride, vector_s16_t* block)
 {
-ALTIVEC_TBL_DECLARE(altivec_idct_put_num, 1);
+POWERPC_PERF_DECLARE(altivec_idct_put_num, 1);
 #ifdef ALTIVEC_USE_REFERENCE_C_CODE
-ALTIVEC_TBL_START_COUNT(altivec_idct_put_num, 1);
-    void simple_idct_put(UINT8 *dest, int line_size, INT16 *block);
-    simple_idct_put(dest, stride, (INT16*)block);
-ALTIVEC_TBL_STOP_COUNT(altivec_idct_put_num, 1);
+POWERPC_PERF_START_COUNT(altivec_idct_put_num, 1);
+    void simple_idct_put(uint8_t *dest, int line_size, int16_t *block);
+    simple_idct_put(dest, stride, (int16_t*)block);
+POWERPC_PERF_STOP_COUNT(altivec_idct_put_num, 1);
 #else /* ALTIVEC_USE_REFERENCE_C_CODE */
     vector_u8_t tmp;
 
-ALTIVEC_TBL_START_COUNT(altivec_idct_put_num, 1);
+POWERPC_PERF_START_COUNT(altivec_idct_put_num, 1);
 
     IDCT
 
@@ -188,18 +192,18 @@ ALTIVEC_TBL_START_COUNT(altivec_idct_put_num, 1);
     COPY (dest, vx6)	dest += stride;
     COPY (dest, vx7)
 
-ALTIVEC_TBL_STOP_COUNT(altivec_idct_put_num, 1);
+POWERPC_PERF_STOP_COUNT(altivec_idct_put_num, 1);
 #endif /* ALTIVEC_USE_REFERENCE_C_CODE */
 }
 
 void idct_add_altivec(uint8_t* dest, int stride, vector_s16_t* block)
 {
-ALTIVEC_TBL_DECLARE(altivec_idct_add_num, 1);
+POWERPC_PERF_DECLARE(altivec_idct_add_num, 1);
 #ifdef ALTIVEC_USE_REFERENCE_C_CODE
-ALTIVEC_TBL_START_COUNT(altivec_idct_add_num, 1);
-    void simple_idct_add(UINT8 *dest, int line_size, INT16 *block);
-    simple_idct_add(dest, stride, (INT16*)block);
-ALTIVEC_TBL_STOP_COUNT(altivec_idct_add_num, 1);
+POWERPC_PERF_START_COUNT(altivec_idct_add_num, 1);
+    void simple_idct_add(uint8_t *dest, int line_size, int16_t *block);
+    simple_idct_add(dest, stride, (int16_t*)block);
+POWERPC_PERF_STOP_COUNT(altivec_idct_add_num, 1);
 #else /* ALTIVEC_USE_REFERENCE_C_CODE */
     vector_u8_t tmp;
     vector_s16_t tmp2, tmp3;
@@ -207,7 +211,7 @@ ALTIVEC_TBL_STOP_COUNT(altivec_idct_add_num, 1);
     vector_u8_t perm1;
     vector_u8_t p0, p1, p;
 
-ALTIVEC_TBL_START_COUNT(altivec_idct_add_num, 1);
+POWERPC_PERF_START_COUNT(altivec_idct_add_num, 1);
 
     IDCT
 
@@ -235,7 +239,7 @@ ALTIVEC_TBL_START_COUNT(altivec_idct_add_num, 1);
     ADD (dest, vx6, perm0)	dest += stride;
     ADD (dest, vx7, perm1)
 
-ALTIVEC_TBL_STOP_COUNT(altivec_idct_add_num, 1);
+POWERPC_PERF_STOP_COUNT(altivec_idct_add_num, 1);
 #endif /* ALTIVEC_USE_REFERENCE_C_CODE */
 }
 

@@ -16,6 +16,12 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+ 
+/**
+ * @file pcm.c
+ * PCM codecs
+ */
+ 
 #include "avcodec.h"
 
 /* from g711.c by SUN microsystems (unrestricted use) */
@@ -39,19 +45,11 @@ static int alaw2linear(unsigned char	a_val)
 
 	a_val ^= 0x55;
 
-	t = (a_val & QUANT_MASK) << 4;
+	t = a_val & QUANT_MASK;
 	seg = ((unsigned)a_val & SEG_MASK) >> SEG_SHIFT;
-	switch (seg) {
-	case 0:
-		t += 8;
-		break;
-	case 1:
-		t += 0x108;
-		break;
-	default:
-		t += 0x108;
-		t <<= seg - 1;
-	}
+	if(seg) t= (t + t + 1 + 32) << (seg + 2);
+	else    t= (t + t + 1     ) << 3;
+
 	return ((a_val & SIGN_BIT) ? t : -t);
 }
 
@@ -73,13 +71,13 @@ static int ulaw2linear(unsigned char	u_val)
 }
 
 /* 16384 entries per table */
-static UINT8 *linear_to_alaw = NULL;
+static uint8_t *linear_to_alaw = NULL;
 static int linear_to_alaw_ref = 0;
 
-static UINT8 *linear_to_ulaw = NULL;
+static uint8_t *linear_to_ulaw = NULL;
 static int linear_to_ulaw_ref = 0;
 
-static void build_xlaw_table(UINT8 *linear_to_xlaw, 
+static void build_xlaw_table(uint8_t *linear_to_xlaw, 
                              int (*xlaw2linear)(unsigned char),
                              int mask) 
 {
@@ -274,12 +272,12 @@ static int pcm_decode_init(AVCodecContext * avctx)
 
 static int pcm_decode_frame(AVCodecContext *avctx,
 			    void *data, int *data_size,
-			    UINT8 *buf, int buf_size)
+			    uint8_t *buf, int buf_size)
 {
     PCMDecode *s = avctx->priv_data;
     int n;
     short *samples;
-    UINT8 *src;
+    uint8_t *src;
 
     samples = data;
     src = buf;
@@ -339,7 +337,7 @@ static int pcm_decode_frame(AVCodecContext *avctx,
         *data_size = 0;
         return -1;
     }
-    *data_size = (UINT8 *)samples - (UINT8 *)data;
+    *data_size = (uint8_t *)samples - (uint8_t *)data;
     return src - buf;
 }
 
@@ -363,7 +361,7 @@ AVCodec name ## _decoder = {                    \
     NULL,                                       \
     NULL,                                       \
     pcm_decode_frame,                           \
-};
+}
 
 PCM_CODEC(CODEC_ID_PCM_S16LE, pcm_s16le);
 PCM_CODEC(CODEC_ID_PCM_S16BE, pcm_s16be);

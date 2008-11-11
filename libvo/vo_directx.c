@@ -28,9 +28,10 @@
 #include "video_out_internal.h"
 #include "fastmemcpy.h"
 #include "../input/input.h"
-#include "../linux/keycodes.h"
+#include "../osdep/keycodes.h"
 #include "../mp_msg.h"
 #include "aspect.h"
+#include "geometry.h"
 
 static LPDIRECTDRAW2        g_lpdd = NULL;          //DirectDraw Object
 static LPDIRECTDRAWSURFACE  g_lpddsPrimary = NULL;  //Primary Surface: viewport through the Desktop
@@ -46,9 +47,9 @@ static uint32_t             ontop=0;                //always in foreground
 static uint32_t image_width, image_height;          //image width and height
 static uint32_t d_image_width, d_image_height;      //image width and height zoomed 
 static uint8_t  *image=NULL;                        //image data
-static uint32_t image_format;                       //image format
+static uint32_t image_format=0;                       //image format
+static uint32_t primary_image_format;
 static uint32_t vm = 0;                             //exclusive mode, allows resolution switching (not implemented yet)
-static uint32_t fs = 0;                             //display in window or fullscreen 
 static uint32_t dstride;                            //surface stride
 static uint32_t nooverlay = 0;                      //NonOverlay mode
 static DWORD    destcolorkey;                       //colorkey for our surface
@@ -57,6 +58,7 @@ static COLORREF windowcolor = RGB(0,0,16);          //windowcolor == colorkey
 extern void mplayer_put_key(int code);              //let mplayer handel the keyevents 
 extern void vo_draw_text(int dxs,int dys,void (*draw_alpha)(int x0,int y0, int w,int h, unsigned char* src, unsigned char *srca, int stride));
 extern int vo_doublebuffering;                      //tribblebuffering    
+extern int vo_fs;
 
 /*****************************************************************************
  * DirectDraw GUIDs.
@@ -87,8 +89,8 @@ static directx_fourcc_caps g_ddpf[] =
 //	{"UYVY ",IMGFMT_UYVY ,0,{sizeof(DDPIXELFORMAT), DDPF_FOURCC,MAKEFOURCC('U','Y','V','Y'),0,0,0,0,0}},
 	{"RGB15",IMGFMT_RGB15,0,{sizeof(DDPIXELFORMAT), DDPF_RGB, 0, 16,  0x0000001F, 0x000003E0, 0x00007C00, 0}},   //RGB 5:5:5
 	{"BGR15",IMGFMT_BGR15,0,{sizeof(DDPIXELFORMAT), DDPF_RGB, 0, 16,  0x00007C00, 0x000003E0, 0x0000001F, 0}},   
-	{"RGB16",IMGFMT_RGB16,0,{sizeof(DDPIXELFORMAT), DDPF_RGB, 0, 16,  0x0000F800, 0x000007E0, 0x0000001F, 0}},   //RGB 5:6:5
-	{"BGR16",IMGFMT_BGR16,0,{sizeof(DDPIXELFORMAT), DDPF_RGB, 0, 16,  0x0000001F, 0x000007E0, 0x0000F800, 0}},  
+	{"RGB16",IMGFMT_RGB16,0,{sizeof(DDPIXELFORMAT), DDPF_RGB, 0, 16,  0x0000001F, 0x000007E0, 0x0000F800, 0}},   //RGB 5:6:5
+    {"BGR16",IMGFMT_BGR16,0,{sizeof(DDPIXELFORMAT), DDPF_RGB, 0, 16,  0x0000F800, 0x000007E0, 0x0000001F, 0}},   
 	{"RGB24",IMGFMT_RGB24,0,{sizeof(DDPIXELFORMAT), DDPF_RGB, 0, 24,  0x000000FF, 0x0000FF00, 0x00FF0000, 0}},   
     {"BGR24",IMGFMT_BGR24,0,{sizeof(DDPIXELFORMAT), DDPF_RGB, 0, 24,  0x00FF0000, 0x0000FF00, 0x000000FF, 0}},  
     {"RGB32",IMGFMT_RGB32,0,{sizeof(DDPIXELFORMAT), DDPF_RGB, 0, 32,  0x000000FF, 0x0000FF00, 0x00FF0000, 0}},  
@@ -232,8 +234,9 @@ static uint32_t Directx_CreateOverlay(uint32_t imgfmt)
 	ddrval = g_lpdd->lpVtbl->CreateSurface(g_lpdd,&ddsdOverlay, &g_lpddsOverlay, NULL);
 	if(ddrval != DD_OK)
 	{
-	   mp_msg(MSGT_VO, MSGL_ERR,"<vo_directx><ERROR>");
-	   switch(ddrval)
+	   if(ddrval == DDERR_INVALIDPIXELFORMAT)mp_msg(MSGT_VO,MSGL_V,"<vo_directx><ERROR> invalid pixelformat: %s\n",g_ddpf[i].img_format_name);
+       else mp_msg(MSGT_VO, MSGL_ERR,"<vo_directx><ERROR>");
+       switch(ddrval)
 	   {
 	      case DDERR_INCOMPATIBLEPRIMARY:
 			 {mp_msg(MSGT_VO, MSGL_ERR,"incompatible primary surface\n");break;}
@@ -243,12 +246,10 @@ static uint32_t Directx_CreateOverlay(uint32_t imgfmt)
 		     {mp_msg(MSGT_VO, MSGL_ERR,"invalid object\n");break;}
 	      case DDERR_INVALIDPARAMS:
 		     {mp_msg(MSGT_VO, MSGL_ERR,"invalid parameters\n");break;}
-	      case DDERR_INVALIDPIXELFORMAT:
-		     {mp_msg(MSGT_VO, MSGL_ERR,"invalid pixelformat: %s\n",g_ddpf[i].img_format_name);break;}
 	      case DDERR_NODIRECTDRAWHW:
 		     {mp_msg(MSGT_VO, MSGL_ERR,"no directdraw hardware\n");break;}
 	      case DDERR_NOEMULATION:
-		     {mp_msg(MSGT_VO, MSGL_ERR,"cant emulate\n");break;}
+		     {mp_msg(MSGT_VO, MSGL_ERR,"can't emulate\n");break;}
 	      case DDERR_NOFLIPHW:
 		     {mp_msg(MSGT_VO, MSGL_ERR,"hardware can't do flip\n");break;}
 	      case DDERR_NOOVERLAYHW:
@@ -290,11 +291,12 @@ static uint32_t Directx_CreateBackpuffer()
 static void uninit(void)
 {
 	if (g_lpddclipper != NULL) g_lpddclipper->lpVtbl->Release(g_lpddclipper);
+	g_lpddclipper = NULL;
 	mp_msg(MSGT_VO, MSGL_DBG3,"<vo_directx><INFO>clipper released\n");
 	if (g_lpddsBack != NULL) g_lpddsBack->lpVtbl->Release(g_lpddsBack);
 	g_lpddsBack = NULL;
 	mp_msg(MSGT_VO, MSGL_DBG3,"<vo_directx><INFO>back surface released\n");
-	if(vo_doublebuffering)
+	if(vo_doublebuffering && !nooverlay)
 	{
 		if (g_lpddsOverlay != NULL)g_lpddsOverlay->lpVtbl->Release(g_lpddsOverlay);
         g_lpddsOverlay = NULL;
@@ -383,7 +385,7 @@ static uint32_t Directx_ManageDisplay(uint32_t width,uint32_t height)
     uint32_t        xscreen = GetSystemMetrics(SM_CXSCREEN);
     uint32_t        yscreen = GetSystemMetrics(SM_CYSCREEN);
 	POINT           point_window;
-	if(fs)
+	if(vo_fs)
 	{
 		/*center and zoom image*/
 		rd_window.top = 0;
@@ -465,7 +467,7 @@ static uint32_t Directx_ManageDisplay(uint32_t width,uint32_t height)
 		rs.right=image_width;
 		rs.top=0;
 		rs.bottom=image_height;
-        if(!fs)rd_window = rd;         /*don't crop the window !!!*/
+        if(!vo_fs)rd_window = rd;         /*don't crop the window !!!*/
         if(rd.left < 0)         //move out left
 		{
            rs.left=(-rd.left*1000)/xstretch1000;
@@ -500,17 +502,17 @@ static uint32_t Directx_ManageDisplay(uint32_t width,uint32_t height)
         if ((capsDrv.dwCaps & DDCAPS_ALIGNBOUNDARYDEST) && capsDrv.dwAlignBoundaryDest)
 		{
 			rd.left = (rd.left + capsDrv.dwAlignBoundaryDest / 2) & -(signed)(capsDrv.dwAlignBoundaryDest);
-	        if(!fs)rd_window.left = (rd_window.left + capsDrv.dwAlignBoundaryDest / 2) & -(signed)(capsDrv.dwAlignBoundaryDest); //don't forget the window
+	        if(!vo_fs)rd_window.left = (rd_window.left + capsDrv.dwAlignBoundaryDest / 2) & -(signed)(capsDrv.dwAlignBoundaryDest); //don't forget the window
 		}
         if ((capsDrv.dwCaps & DDCAPS_ALIGNSIZEDEST) && capsDrv.dwAlignSizeDest)
 		{
 			rd.right = rd.left + ((rd.right - rd.left) & -(signed) (capsDrv.dwAlignSizeDest));
-	        if(!fs)rd_window.right = rd_window.left + ((rd_window.right - rd_window.left) & -(signed) (capsDrv.dwAlignSizeDest)); //don't forget the window
+	        if(!vo_fs)rd_window.right = rd_window.left + ((rd_window.right - rd_window.left) & -(signed) (capsDrv.dwAlignSizeDest)); //don't forget the window
 		}
 		/*create an overlay FX structure to specify a destination color key*/
 		ZeroMemory(&ovfx, sizeof(ovfx));
         ovfx.dwSize = sizeof(ovfx);
-        if(fs)
+        if(vo_fs)
 		{
 			ovfx.dckDestColorkey.dwColorSpaceLowValue = 0; 
             ovfx.dckDestColorkey.dwColorSpaceHighValue = 0;
@@ -527,9 +529,9 @@ static uint32_t Directx_ManageDisplay(uint32_t width,uint32_t height)
         else ontop = 1;
 	}
 	/*calculate window rect with borders*/
-	if(!fs)AdjustWindowRect(&rd_window,WS_OVERLAPPEDWINDOW|WS_SIZEBOX,0);
+	if(!vo_fs)AdjustWindowRect(&rd_window,WS_OVERLAPPEDWINDOW|WS_SIZEBOX,0);
 
-	if((fs) || (!fs && ontop))hWndafter=HWND_TOPMOST;
+	if((vo_fs) || (!vo_fs && ontop))hWndafter=HWND_TOPMOST;
 	else hWndafter=HWND_NOTOPMOST;
 
 	/*display the window*/
@@ -686,6 +688,7 @@ static uint32_t Directx_CheckPrimaryPixelformat()
 			   mp_msg(MSGT_VO, MSGL_V ,"<vo_directx><FORMAT PRIMARY>%i %s supported\n",i,g_ddpf[i].img_format_name);
 			   g_ddpf[i].drv_caps = VFCAP_CSP_SUPPORTED |VFCAP_OSD;
 			   formatcount++;
+               primary_image_format=g_ddpf[i].img_format;     
 		   }
 	   }
 	   i++;
@@ -785,7 +788,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 		        case VK_HOME:
 					{mplayer_put_key(KEY_HOME);break;}
 		        case VK_END:
-					{mplayer_put_key(VK_END);break;}
+					{mplayer_put_key(KEY_END);break;}
 		        case VK_PRIOR:
 			        {mplayer_put_key(KEY_PAGE_UP);break;}
 		        case VK_NEXT:
@@ -808,18 +811,20 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 static uint32_t preinit(const char *arg)
 {
     HINSTANCE hInstance = GetModuleHandle(NULL);
+	HICON mplayericon=NULL;
+    char exedir[MAX_PATH];
     WNDCLASS   wc;
 	if(arg)
 	{
-		if(!strcmp(arg,"noaccel"))
+		if(strstr(arg,"noaccel"))
 		{
 			mp_msg(MSGT_VO,MSGL_V,"<vo_directx><INFO>disabled overlay\n");
 		    nooverlay = 1;
 		}
-        else
+		if(strstr(arg,"ontop"))
 		{
-			mp_msg(MSGT_VO,MSGL_ERR,"<vo_directx><ERROR>unknown subdevice: %s\n",arg);
-	        return ENOSYS;
+			mp_msg(MSGT_VO,MSGL_V,"<vo_directx><INFO>window ontop\n");
+			ontop = 1;
 		}
 	}
 	if (Directx_InitDirectDraw()!= 0)return 1;          //init DirectDraw
@@ -834,13 +839,19 @@ static uint32_t preinit(const char *arg)
        	mp_msg(MSGT_VO, MSGL_V ,"<vo_directx><INFO>using backpuffer\n");
 		nooverlay = 1;
 	}
+    /*load icon from the main app*/
+    if(GetModuleFileName(NULL,exedir,MAX_PATH))
+    {
+         mplayericon = ExtractIcon( hInstance, exedir, 0 );
+  	}
+    if(!mplayericon)mplayericon=LoadIcon(NULL,IDI_APPLICATION);
     wc.style         =  CS_HREDRAW | CS_VREDRAW;
     wc.lpfnWndProc   =  WndProc;
     wc.cbClsExtra    =  0;
     wc.cbWndExtra    =  0;
     wc.hInstance     =  hInstance;
     wc.hCursor       =  LoadCursor(NULL,IDC_ARROW);
-    wc.hIcon         =  LoadIcon(NULL,IDI_APPLICATION);
+    wc.hIcon         =  mplayericon;
     wc.hbrBackground =  CreateSolidBrush(windowcolor);
     wc.lpszClassName =  "Mplayer - Movieplayer for Linux";
     wc.lpszMenuName  =  NULL;
@@ -1032,18 +1043,24 @@ static uint32_t put_image(mp_image_t *mpi){
 static uint32_t
 config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uint32_t options, char *title, uint32_t format)
 {
-	fs = options & 0x01;
+    int wx=-1;
+    int wy=-1;
+	vo_fs = options & 0x01;
 	vm = options & 0x02;
 	image_format =  format;
 	image_width = width;
 	image_height = height;
 	d_image_width = d_width;
 	d_image_height = d_height;
+    nooverlay = 0;
     aspect_save_orig(image_width,image_height);
     aspect_save_prescale(d_image_width,d_image_height);
     aspect_save_screenres(GetSystemMetrics(SM_CXSCREEN),GetSystemMetrics(SM_CYSCREEN));
-	aspect(&d_image_width,&d_image_height,A_NOZOOM);
-	SetWindowText(hWnd,title);
+    geometry(&wx, &wy, &d_image_width, &d_image_height,GetSystemMetrics(SM_CXSCREEN),GetSystemMetrics(SM_CYSCREEN));
+    aspect(&d_image_width,&d_image_height,A_NOZOOM);
+	if(wx !=-1)SetWindowPos(hWnd,NULL, wx, wy,d_image_width,d_image_height,SWP_SHOWWINDOW|SWP_NOOWNERZORDER);
+    SetWindowText(hWnd,title);
+    
 	/*release all surfaces*/
 	if (g_lpddsBack != NULL) g_lpddsBack->lpVtbl->Release(g_lpddsBack);
 	g_lpddsBack = NULL;
@@ -1058,7 +1075,7 @@ config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uin
 	/*set cooperativelevel*/
 	if(vm)  /*exclusive mode*/
 	{	
-		fs=1;
+		vo_fs=1;
 		if (g_lpdd->lpVtbl->SetCooperativeLevel(g_lpdd, hWnd, DDSCL_EXCLUSIVE|DDSCL_FULLSCREEN) != DD_OK)
 		{
 			mp_msg(MSGT_VO, MSGL_FATAL,"<vo_directx><FATAL ERROR>can't set cooperativelevel for exclusive mode");
@@ -1083,7 +1100,7 @@ config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uin
 		}
 	    mp_msg(MSGT_VO, MSGL_V,"<vo_directx><INFO>using normal cooperativelevel\n");
 	}
-	if(fs)
+	if(vo_fs)
 	{
 		/*remove the borders*/
 		SetWindowLong( hWnd, GWL_STYLE, 0 );  
@@ -1098,8 +1115,11 @@ config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uin
     if(Directx_CreatePrimarySurface())return 1;
 	if (!nooverlay && Directx_CreateOverlay(image_format))
 	{
-			nooverlay=1; /*overlay creation failed*/
-			mp_msg(MSGT_VO, MSGL_V,"<vo_directx><WARN>can't use overlay mode => switching to nonoverlay\n");
+			if(format == primary_image_format)nooverlay=1; /*overlay creation failed*/
+			else {
+              mp_msg(MSGT_VO, MSGL_FATAL,"<vo_directx><FATAL ERROR>can't use overlay mode: please use -vo directx:noaccel\n");
+			  return 1;
+            }       
 	}
 	if(nooverlay)
 	{
@@ -1150,15 +1170,15 @@ static uint32_t control(uint32_t request, void *data, ...)
 				uint32_t height = 0;
 				window_placement.length = sizeof(WINDOWPLACEMENT);
                 GetWindowPlacement(hWnd, &window_placement);
-				if(fs)   /*go to windowed*/  
+				if(vo_fs)   /*go to windowed*/  
 				{
-					fs = 0;  
+					vo_fs = 0;  
 		            /*prevent the screen being filled with garbage*/
 		            window_placement.showCmd = SW_SHOWMINIMIZED; 		   
 		            SetWindowPlacement(hWnd,&window_placement);
 		            /*change style and restore the window*/ 
 					SetWindowLong(hWnd,GWL_STYLE,WS_OVERLAPPEDWINDOW|WS_SIZEBOX);
-					window_placement.showCmd = SW_SHOWNORMAL;		   
+					window_placement.showCmd = SW_RESTORE;
 		    		SetWindowPlacement(hWnd,&window_placement );
         			/*restore backgroundcolor*/
 		    		SetClassLongA(hWnd,GCL_HBRBACKGROUND,(int)CreateSolidBrush(windowcolor));
@@ -1174,7 +1194,7 @@ static uint32_t control(uint32_t request, void *data, ...)
 				}
 		        else    /*go to fullscreen*/
 				{
-					fs = 1;
+					vo_fs = 1;
 		            /*remove decoration and maximize*/
 		            SetWindowLong(hWnd,GWL_STYLE,0);       
 		            window_placement.showCmd = SW_SHOWMAXIMIZED;      

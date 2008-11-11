@@ -1,7 +1,4 @@
-
 #include "config.h"
-
-#ifdef NEW_CONFIG
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -16,7 +13,6 @@
 #include "m_option.h"
 #include "m_config.h"
 #include "parser-mecmd.h"
-
 
 void
 m_entry_list_free(m_entry_t* lst) {
@@ -56,16 +52,6 @@ m_config_parse_me_command_line(m_config_t *config, int argc, char **argv)
   char *opt;
   int no_more_opts = 0;
   m_entry_t *lst = NULL, *entry = NULL;
-  void add_file(char* file) {
-    mp_msg(MSGT_CFGPARSER, MSGL_DBG2,"Adding file %s\n",argv[i]);
-    lst = realloc(lst,(nf+2)*sizeof(m_entry_t));
-    lst[nf].name = strdup(file);
-    lst[nf].opts = calloc(2,sizeof(char*));
-    entry = &lst[nf];
-    no = 0;
-    memset(&lst[nf+1],0,sizeof(m_entry_t));
-    nf++;
-  }
 	
 #ifdef MP_DEBUG
   assert(config != NULL);
@@ -100,24 +86,9 @@ m_config_parse_me_command_line(m_config_t *config, int argc, char **argv)
 	mp_msg(MSGT_CFGPARSER, MSGL_DBG3, "this_opt = option: %s\n", opt);
 	mp_opt = m_config_get_option(config,opt);
 	if(!mp_opt) {
-	  tmp = M_OPT_UNKNOW;
-	  mp_msg(MSGT_CFGPARSER, MSGL_ERR, "%s in not an MEncoder option\n",opt);
+	  tmp = M_OPT_UNKNOWN;
+	  mp_msg(MSGT_CFGPARSER, MSGL_ERR, "%s is not an MEncoder option\n",opt);
 	  goto err_out;
-	}
-	// Hack for the -vcd ... options
-	if(strcasecmp(opt,"vcd") == 0)
-	  add_file("VCD Track");
-	if(strcasecmp(opt,"dvd") == 0)
-	  add_file("DVD Title");
-	if(strcasecmp(opt,"tv") == 0 && argv[i + 1]) { // TV is a bit more tricky
-	  char* param = argv[i + 1];
-	  char* on = strstr(param,"on");
-	  for( ; on ; on = strstr(on + 1,"on")) {
-	    if(on[2] != ':' && on[2] != '\0') continue;
-	    if(on != param && *(on - 1) != ':') continue;
-	    add_file("TV Channel");
-	    break;
-	  }
 	}
 	if(!entry || (mp_opt->flags & M_OPT_GLOBAL)){
 	  tmp = m_config_set_option(config, opt, argv[i + 1]);
@@ -135,12 +106,22 @@ m_config_parse_me_command_line(m_config_t *config, int argc, char **argv)
 	    no++;
 	  } else {
 //	    mp_msg(MSGT_CFGPARSER, MSGL_ERR, "m_config_set_option() failed (%d)\n",tmp);
+	    if(tmp == M_OPT_EXIT)
+	      exit(0);
 	    goto err_out;
 	  }
 	}
 	i += tmp;
-      } else /* filename */
-	add_file(argv[i]);
+      } else  {/* filename */
+	mp_msg(MSGT_CFGPARSER, MSGL_DBG2,"Adding file %s\n",argv[i]);
+	lst = realloc(lst,(nf+2)*sizeof(m_entry_t));
+	lst[nf].name = strdup(argv[i]);
+	lst[nf].opts = calloc(2,sizeof(char*));
+	entry = &lst[nf];
+	no = 0;
+	memset(&lst[nf+1],0,sizeof(m_entry_t));
+	nf++;
+      }
   }
 
   if(nf == 0) {
@@ -154,5 +135,3 @@ m_config_parse_me_command_line(m_config_t *config, int argc, char **argv)
    m_entry_list_free(lst);
   return NULL;
 }
-
-#endif

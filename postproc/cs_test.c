@@ -20,12 +20,20 @@
 #include <stdlib.h>
 #include <inttypes.h>
 
+#include "swscale.h"
 #include "rgb2rgb.h"
 #include "../cpudetect.h"
 
 #define SIZE 1000
 #define srcByte 0x55
 #define dstByte 0xBB
+
+static int get_sws_cpuflags()
+{
+    return (gCpuCaps.hasMMX ? SWS_CPU_CAPS_MMX : 0) |
+	(gCpuCaps.hasMMX2 ? SWS_CPU_CAPS_MMX2 : 0) |
+	(gCpuCaps.has3DNow ? SWS_CPU_CAPS_3DNOW : 0);
+}
 
 main(int argc, char **argv)
 {
@@ -41,6 +49,8 @@ main(int argc, char **argv)
 		GetCpuCaps(&gCpuCaps);
 		printf("testing mmx\n");
 	}
+	
+	sws_rgb2rgb_init(get_sws_cpuflags());
 	
 	for(funcNum=0; funcNum<100; funcNum++){
 		int width;
@@ -62,7 +72,7 @@ main(int argc, char **argv)
 					uint8_t *dst= dstBuffer+dstOffset;
 					char *name=NULL;
 					
-					if(failed) break; //dont fill the screen with shit ...
+					if(failed) break; //don't fill the screen with shit ...
 
 					switch(funcNum){
 					case 0:

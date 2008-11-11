@@ -8,6 +8,7 @@
 #include <signal.h>
 
 #include "../wm/ws.h"
+#include "../wm/wsxdnd.h"
 #include "../../config.h"
 #include "../../help_mp.h"
 #include "../../mplayer.h"
@@ -31,58 +32,33 @@
 extern float rel_seek_secs;
 extern int abs_seek_pos;
 
-static int mplGotoTheNext = 1;
+int mplGotoTheNext = 1;
 
 void mplFullScreen( void )
 {
  if ( guiIntfStruct.NoWindow && guiIntfStruct.Playing ) return;
-#if 0
- static int sx,sy;
-// if ( !guiIntfStruct.Playing )
-  {
-   wsVisibleWindow( &appMPlayer.subWindow,wsHideWindow );
-   if ( appMPlayer.subWindow.isFullScreen )
-    {
-     wsResizeWindow( &appMPlayer.subWindow,sx,sy );
-     wsMoveWindow( &appMPlayer.subWindow,True,appMPlayer.sub.x,appMPlayer.sub.y );
-     wsWindowDecoration( &appMPlayer.subWindow,appMPlayer.subWindow.Decorations );
-     appMPlayer.subWindow.isFullScreen=0;
-    }
-    else
-     {
-      sx=appMPlayer.subWindow.Width; sy=appMPlayer.subWindow.Height;
-      wsResizeWindow( &appMPlayer.subWindow,wsMaxX,wsMaxY );
-      wsMoveWindow( &appMPlayer.subWindow,True,0,0 );
-      wsWindowDecoration( &appMPlayer.subWindow,0 );
-      appMPlayer.subWindow.isFullScreen=1;
-     }
-   vo_fs=appMPlayer.subWindow.isFullScreen;     
-   wsVisibleWindow( &appMPlayer.subWindow,wsShowWindow );
-  }// else { vo_x11_fullscreen(); appMPlayer.subWindow.isFullScreen=vo_fs; }
-#else
+
   if ( ( guiIntfStruct.Playing )&&( appMPlayer.subWindow.isFullScreen ) )
    { 
     appMPlayer.subWindow.OldWidth=guiIntfStruct.MovieWidth; appMPlayer.subWindow.OldHeight=guiIntfStruct.MovieHeight; 
     switch ( appMPlayer.sub.x )
      {
-      case -1: appMPlayer.subWindow.OldX=( wsMaxX / 2 ) - ( appMPlayer.subWindow.OldWidth / 2 ); break;
-      case -2: appMPlayer.subWindow.OldX=wsMaxX - appMPlayer.subWindow.OldWidth; break;
+      case -1: appMPlayer.subWindow.OldX=( wsMaxX / 2 ) - ( appMPlayer.subWindow.OldWidth / 2 ) + wsOrgX; break;
+      case -2: appMPlayer.subWindow.OldX=wsMaxX - appMPlayer.subWindow.OldWidth + wsOrgX; break;
       default: appMPlayer.subWindow.OldX=appMPlayer.sub.x; break;
      }
     switch ( appMPlayer.sub.y )
      {
-      case -1: appMPlayer.subWindow.OldY=( wsMaxY / 2 ) - ( appMPlayer.subWindow.OldHeight / 2 ); break;
-      case -2: appMPlayer.subWindow.OldY=wsMaxY - appMPlayer.subWindow.OldHeight; break;
+      case -1: appMPlayer.subWindow.OldY=( wsMaxY / 2 ) - ( appMPlayer.subWindow.OldHeight / 2 ) + wsOrgY; break;
+      case -2: appMPlayer.subWindow.OldY=wsMaxY - appMPlayer.subWindow.OldHeight + wsOrgY; break;
       default: appMPlayer.subWindow.OldY=appMPlayer.sub.y; break;
      }
    }
-  wsFullScreen( &appMPlayer.subWindow );
-  vo_fs=appMPlayer.subWindow.isFullScreen;
+  if ( guiIntfStruct.Playing || gtkShowVideoWindow ) wsFullScreen( &appMPlayer.subWindow );
+  fullscreen=vo_fs=appMPlayer.subWindow.isFullScreen;
   wsSetLayer( wsDisplay,appMPlayer.mainWindow.WindowID,appMPlayer.subWindow.isFullScreen );
-  wsSetLayer( wsDisplay,appMPlayer.menuWindow.WindowID,appMPlayer.subWindow.isFullScreen );
-#endif
+  if ( appMPlayer.menuIsPresent ) wsSetLayer( wsDisplay,appMPlayer.menuWindow.WindowID,appMPlayer.subWindow.isFullScreen );
 
- fullscreen=appMPlayer.subWindow.isFullScreen;
  if ( guiIntfStruct.Playing ) wsSetBackgroundRGB( &appMPlayer.subWindow,0,0,0 );
   else wsSetBackgroundRGB( &appMPlayer.subWindow,appMPlayer.sub.R,appMPlayer.sub.G,appMPlayer.sub.B );
 }
@@ -93,7 +69,7 @@ void mplEnd( void )
 {
  plItem * next;
 
- if ( !mplGotoTheNext ) { mplGotoTheNext=1; return; }
+ if ( !mplGotoTheNext && guiIntfStruct.Playing) { mplGotoTheNext=1; return; }
 
  if ( guiIntfStruct.Playing && (next=gtkSet( gtkGetNextPlItem,0,NULL )) && plLastPlayed != next )
   {
@@ -291,6 +267,36 @@ void mplSetFileName( char * dir,char * name,int type )
  gfree( (void **)&guiIntfStruct.AudioFile );
  gfree( (void **)&guiIntfStruct.Subtitlename );
 }
+
+void mplCurr( void )
+{
+ plItem * curr;
+ int      stop = 0;
+ 
+ if ( guiIntfStruct.Playing == 2 ) return;
+ switch ( guiIntfStruct.StreamType )
+  {
+#ifdef USE_DVDREAD
+   case STREAMTYPE_DVD:
+	break;
+#endif
+#ifdef HAVE_VCD
+   case STREAMTYPE_VCD:
+	break;
+#endif
+   default: 
+	if ( (curr=gtkSet( gtkGetCurrPlItem,0,NULL)) )
+	 {
+	  mplSetFileName( curr->path,curr->name,STREAMTYPE_FILE );
+	  mplGotoTheNext=0;
+	  break;
+	 }
+	return;
+  }
+ if ( stop ) mplEventHandling( evStop,0 );
+ if ( guiIntfStruct.Playing == 1 ) mplEventHandling( evPlay,0 );
+}
+
 
 void mplPrev( void )
 {

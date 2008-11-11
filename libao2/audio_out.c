@@ -44,6 +44,9 @@ extern ao_functions_t audio_out_sgi;
 #ifdef HAVE_WIN32WAVEOUT
 extern ao_functions_t audio_out_win32;
 #endif
+#ifdef MACOSX
+extern ao_functions_t audio_out_macosx;
+#endif
 #ifdef HAVE_DXR2
 extern ao_functions_t audio_out_dxr2;
 #endif
@@ -62,6 +65,9 @@ ao_functions_t* audio_out_drivers[] =
 // native:
 #ifdef HAVE_WIN32WAVEOUT
         &audio_out_win32,
+#endif
+#ifdef MACOSX
+	&audio_out_macosx,
 #endif
 #ifdef USE_OSS_AUDIO
         &audio_out_oss,
@@ -124,7 +130,7 @@ ao_functions_t* init_best_audio_out(char** ao_list,int use_plugin,int rate,int c
 	    if(!strcmp(audio_out->info->short_name,ao)){
 		// name matches, try it
 		if(use_plugin){
-		    audio_out_plugin.control(AOCONTROL_SET_PLUGIN_DRIVER,(int)audio_out);
+		    audio_out_plugin.control(AOCONTROL_SET_PLUGIN_DRIVER,audio_out);
 		    audio_out=&audio_out_plugin;
 		}
 		if(audio_out->init(rate,channels,format,flags))
@@ -140,7 +146,7 @@ ao_functions_t* init_best_audio_out(char** ao_list,int use_plugin,int rate,int c
     for(i=0;audio_out_drivers[i];i++){
 	ao_functions_t* audio_out=audio_out_drivers[i];
 	if(use_plugin){
-	    audio_out_plugin.control(AOCONTROL_SET_PLUGIN_DRIVER,(int)audio_out);
+	    audio_out_plugin.control(AOCONTROL_SET_PLUGIN_DRIVER,audio_out);
 	    audio_out=&audio_out_plugin;
 	}
 	if(audio_out->init(rate,channels,format,flags))

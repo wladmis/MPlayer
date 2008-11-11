@@ -3,7 +3,7 @@
  * Copyright (C) Rik Snel 2001,2002, License GNU GPL v2
  */
 
-/* $Id: vo_zr.c,v 1.22 2002/11/11 15:20:26 alex Exp $ */
+/* $Id: vo_zr.c,v 1.27 2003/08/29 21:42:51 alex Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -25,7 +25,7 @@
 #include "video_out.h"
 #include "video_out_internal.h"
 #include "../mp_msg.h"
-#include "../cfgparser.h"
+#include "../m_option.h"
 #include "fastmemcpy.h"
 
 #include "jpeg_enc.h"
@@ -75,6 +75,7 @@ typedef struct {
 	int off_y, off_c, stride;    /* for use by 'draw slice/frame' */
 
 	unsigned char *buf;   /* the jpeg images will be placed here */
+	unsigned int buf_allocated; /* size of the block actually allocated */
 	jpeg_enc_t *j;
 	unsigned char *y_data, *u_data, *v_data; /* used by the jpeg encoder */
 	int y_stride, u_stride, v_stride; /* these point somewhere in image */
@@ -92,13 +93,13 @@ typedef struct {
 
 static zr_info_t zr_info[ZR_MAX_DEVICES] = {
 	{1, 1, 1, -1, -1, 2, {0, 0, 0, 0, 0}, NULL, 0, VIDEO_MODE_AUTO, 128, NULL, 0, 0, 0, 0, 0, 
-	0, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	0, NULL, 0, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 	{1, 1, 1, -1, -1, 2, {0, 0, 0, 0, 0}, NULL, 0, VIDEO_MODE_AUTO, 128, NULL, 0, 0, 0, 0, 0, 
-	0, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	0, NULL, 0, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 	{1, 1, 1, -1, -1, 2, {0, 0, 0, 0, 0}, NULL, 0, VIDEO_MODE_AUTO, 128, NULL, 0, 0, 0, 0, 0, 
-	0, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	0, NULL, 0, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 	{1, 1, 1, -1, -1, 2, {0, 0, 0, 0, 0}, NULL, 0, VIDEO_MODE_AUTO, 128, NULL, 0, 0, 0, 0, 0, 
-	0, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
+	0, NULL, 0, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
 
 
 
@@ -108,39 +109,37 @@ static zr_info_t zr_info[ZR_MAX_DEVICES] = {
 
 
 int zoran_getcap(zr_info_t *zr) {
-	char* dev;
+	char* dev = NULL;
 
 	if (zr->device)
 		dev = zr->device;
-	else {  /* code borrowed from mjpegtools lavplay.c // 20020416 too */
+	else {
 		struct stat vstat;
+		const char *devs[] = {
+		    "/dev/video",
+		    "/dev/video0",
+		    "/dev/v4l/video0",
+		    "/dev/v4l0",
+		    "/dev/v4l",
+		    NULL
+		};
+		int i = 0;
+		
+		do
+		{
+		    if ((stat(devs[i], &vstat) == 0) && S_ISCHR(vstat.st_mode))
+		    {
+			dev = devs[i];
+			mp_msg(MSGT_VO, MSGL_V, "zr: found video device %s\n", dev);
+			break;
+		    }
+		} while (devs[++i] != NULL);
 
-#undef VIDEV		
-#define VIDEV "/dev/video"		
-		if (stat(VIDEV, &vstat) == 0 && S_ISCHR(vstat.st_mode))
-			dev = VIDEV;
-#undef VIDEV		
-#define VIDEV "/dev/video0"		
-		else if (stat(VIDEV, &vstat) == 0 && S_ISCHR(vstat.st_mode))
-			dev = VIDEV;
-#undef VIDEV		
-#define VIDEV "/dev/v4l/video0"		
-		else if (stat(VIDEV, &vstat) == 0 && S_ISCHR(vstat.st_mode))
-			dev = VIDEV;
-#undef VIDEV		
-#define VIDEV "/dev/v4l0"		
-		else if (stat(VIDEV, &vstat) == 0 && S_ISCHR(vstat.st_mode))
-			dev = VIDEV;
-#undef VIDEV		
-#define VIDEV "/dev/v4l"		
-		else if (stat(VIDEV, &vstat) == 0 && S_ISCHR(vstat.st_mode))
-			dev = VIDEV;
-#undef VIDEV		
-		else {
-			mp_msg(MSGT_VO, MSGL_ERR, "zr: unable to find video device\n");
-			return 1;
+		if (!dev)
+		{
+		    mp_msg(MSGT_VO, MSGL_ERR, "zr: unable to find video device\n");
+		    return 1;
 		}
-		mp_msg(MSGT_VO, MSGL_V, "zr: found video device %s\n", dev);
 	}
 			
 	zr->vdes = open(dev, O_RDWR);
@@ -176,7 +175,7 @@ int zoran_getcap(zr_info_t *zr) {
 	}
 	
 	if (ioctl(zr->vdes, VIDIOCGCAP, &zr->vc) < 0) {
-		mp_msg(MSGT_VO, MSGL_ERR, "zr: error getting video capabilities from %s\n");
+		mp_msg(MSGT_VO, MSGL_ERR, "zr: error getting video capabilities from %s\n", dev);
 		return 1;
 	}
 	mp_msg(MSGT_VO, MSGL_V, "zr: MJPEG card reports maxwidth=%d, maxheight=%d\n", zr->vc.maxwidth, zr->vc.maxheight);
@@ -232,6 +231,8 @@ int init_zoran(zr_info_t *zr, int stretchx, int stretchy) {
 		return 1;
 	}
 
+	/* the buffer count allocated may be different to the request */
+	zr->buf_allocated = zrq.count * zrq.size;
 	zr->buf = (unsigned char*)mmap(0, zrq.count*zrq.size, 
 			PROT_READ|PROT_WRITE, MAP_SHARED, zr->vdes, 0);
 
@@ -239,6 +240,10 @@ int init_zoran(zr_info_t *zr, int stretchx, int stretchy) {
 		mp_msg(MSGT_VO, MSGL_ERR, "zr: error requesting %d buffers of size %d\n", zrq.count, zrq.size);
 		return 1;
 	}
+
+	zr->queue = 0;
+	zr->synco = 0;
+
 	return 0;
 }
 
@@ -256,6 +261,8 @@ void uninit_zoran(zr_info_t *zr) {
 	zr->frame = -1;
 	if (ioctl(zr->vdes, MJPIOC_QBUF_PLAY, &zr->frame) < 0) 
 		mp_msg(MSGT_VO, MSGL_ERR, "zr: error stopping playback of last frame\n");
+	if (munmap(zr->buf,zr->buf_allocated))
+	   mp_msg(MSGT_VO, MSGL_ERR, "zr: error unmapping buffer\n");
 	close(zr->vdes);
 }
 
@@ -297,7 +304,7 @@ static uint32_t config(uint32_t width, uint32_t height, uint32_t d_width,
 	framenum = 0;
 	if (format != IMGFMT_YV12 && format != IMGFMT_YUY2) {
 		printf("vo_zr called with wrong format");
-		exit(1);
+		return 1;
 	}
 	for (i = 0; i < zr_count; i++) {
 		zr_info_t *zr = &zr_info[i];
@@ -637,7 +644,7 @@ static uint32_t draw_slice(uint8_t *srcimg[], int stride[],
 
 /* copied and adapted from vo_aa_parseoption */
 int
-vo_zr_parseoption(struct config * conf, char *opt, char *param){
+vo_zr_parseoption(m_option_t* conf, char *opt, char *param){
     /* got an option starting with zr */
     zr_info_t *zr = &zr_info[zr_parsing];
     int i;
@@ -773,7 +780,7 @@ vo_zr_parseoption(struct config * conf, char *opt, char *param){
     return ERR_NOT_AN_OPTION;
 }
 
-void vo_zr_revertoption(config_t* opt,char* param) {
+void vo_zr_revertoption(m_option_t* opt,char* param) {
 
   zr_info_t *zr = &zr_info[1];
   zr_count = 1;

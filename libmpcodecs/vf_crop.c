@@ -9,9 +9,15 @@
 #include "mp_image.h"
 #include "vf.h"
 
-struct vf_priv_s {
+#include "m_option.h"
+#include "m_struct.h"
+
+static struct vf_priv_s {
     int crop_w,crop_h;
     int crop_x,crop_y;
+} vf_priv_dflt = {
+  -1,-1,
+  -1,-1
 };
 
 extern int opt_screen_size_x;
@@ -62,7 +68,10 @@ static int config(struct vf_instance_s* vf,
 }
 
 static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
-    mp_image_t *dmpi=vf_get_image(vf->next,mpi->imgfmt,
+    mp_image_t *dmpi;
+    if (mpi->flags&MP_IMGFLAG_DRAW_CALLBACK)
+	return vf_next_put_image(vf,vf->dmpi);
+    dmpi=vf_get_image(vf->next,mpi->imgfmt,
 	MP_IMGTYPE_EXPORT, 0,
 	vf->priv->crop_w, vf->priv->crop_h);
     if(mpi->flags&MP_IMGFLAG_PLANAR){
@@ -78,10 +87,52 @@ static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
 	dmpi->planes[0]=mpi->planes[0]+
 	    vf->priv->crop_y*mpi->stride[0]+
 	    vf->priv->crop_x*(mpi->bpp/8);
+	dmpi->planes[1]=mpi->planes[1]; // passthrough rgb8 palette
     }
     dmpi->stride[0]=mpi->stride[0];
     dmpi->width=mpi->width;
     return vf_next_put_image(vf,dmpi);
+}
+
+static void start_slice(struct vf_instance_s* vf, mp_image_t *mpi){
+    vf->dmpi = vf_get_image(vf->next, mpi->imgfmt, mpi->type, mpi->flags,
+	vf->priv->crop_w, vf->priv->crop_h);
+}
+
+static void draw_slice(struct vf_instance_s* vf,
+        unsigned char** src, int* stride, int w,int h, int x, int y){
+    unsigned char *src2[3];
+    src2[0] = src[0];
+    if (vf->dmpi->flags & MP_IMGFLAG_PLANAR) {
+	    src2[1] = src[1];
+	    src2[2] = src[2];
+    }
+    //mp_msg(MSGT_VFILTER, MSGL_V, "crop slice %d %d %d %d ->", w,h,x,y);
+    if ((x -= vf->priv->crop_x) < 0) {
+	x = -x;
+	src2[0] += x;
+	if (vf->dmpi->flags & MP_IMGFLAG_PLANAR) {
+		src2[1] += x>>vf->dmpi->chroma_x_shift;
+		src2[2] += x>>vf->dmpi->chroma_x_shift;
+	}
+	w -= x;
+	x = 0;
+    }
+    if ((y -= vf->priv->crop_y) < 0) {
+	y = -y;
+	src2[0] += y*stride[0];
+	if (vf->dmpi->flags & MP_IMGFLAG_PLANAR) {
+		src2[1] += (y>>vf->dmpi->chroma_y_shift)*stride[1];
+		src2[2] += (y>>vf->dmpi->chroma_y_shift)*stride[2];
+	}
+	h -= y;
+	y = 0;
+    }
+    if (x+w > vf->priv->crop_w) w = vf->priv->crop_w-x;
+    if (y+h > vf->priv->crop_h) h = vf->priv->crop_h-y;
+    //mp_msg(MSGT_VFILTER, MSGL_V, "%d %d %d %d\n", w,h,x,y);
+    if ((w < 0) || (h < 0)) return;
+    vf_next_draw_slice(vf,src2,stride,w,h,x,y);
 }
 
 //===========================================================================//
@@ -89,13 +140,17 @@ static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
 static int open(vf_instance_t *vf, char* args){
     vf->config=config;
     vf->put_image=put_image;
+    vf->start_slice=start_slice;
+    vf->draw_slice=draw_slice;
     vf->default_reqs=VFCAP_ACCEPT_STRIDE;
+    if(!vf->priv) {
     vf->priv=malloc(sizeof(struct vf_priv_s));
     // TODO: parse args ->
     vf->priv->crop_x=
     vf->priv->crop_y=
     vf->priv->crop_w=
     vf->priv->crop_h=-1;
+    } //if(!vf->priv)
     if(args) sscanf(args, "%d:%d:%d:%d", 
     &vf->priv->crop_w,
     &vf->priv->crop_h,
@@ -109,12 +164,29 @@ static int open(vf_instance_t *vf, char* args){
     return 1;
 }
 
+#define ST_OFF(f) M_ST_OFF(struct vf_priv_s,f)
+static m_option_t vf_opts_fields[] = {
+  {"w", ST_OFF(crop_w), CONF_TYPE_INT, M_OPT_MIN,0 ,0, NULL},
+  {"h", ST_OFF(crop_h), CONF_TYPE_INT, M_OPT_MIN,0 ,0, NULL},
+  {"x", ST_OFF(crop_x), CONF_TYPE_INT, M_OPT_MIN,-1 ,0, NULL},
+  {"y", ST_OFF(crop_y), CONF_TYPE_INT, M_OPT_MIN,-1 ,0, NULL},
+  { NULL, NULL, 0, 0, 0, 0,  NULL }
+};
+
+static m_struct_t vf_opts = {
+  "crop",
+  sizeof(struct vf_priv_s),
+  &vf_priv_dflt,
+  vf_opts_fields
+};
+
 vf_info_t vf_info_crop = {
     "cropping",
     "crop",
     "A'rpi",
     "",
-    open
+    open,
+    &vf_opts
 };
 
 //===========================================================================//

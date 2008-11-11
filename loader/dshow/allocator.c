@@ -1,3 +1,4 @@
+#include "config.h"
 #include "allocator.h"
 #include "com.h"
 #include "wine/winerror.h"
@@ -286,8 +287,10 @@ static void MemAllocator_ResetPointer(MemAllocator* This)
 static void MemAllocator_Destroy(MemAllocator* This)
 {
     Debug printf("MemAllocator_Destroy(%p) called  (%d, %d)\n", This, This->refcount, AllocatorKeeper);
+#ifdef WIN32_LOADER
     if (--AllocatorKeeper == 0)
 	UnregisterComClass(&CLSID_MemoryAllocator, MemAllocator_CreateAllocator);
+#endif
     free(This->vt);
     free(This);
 }
@@ -306,7 +309,8 @@ MemAllocator* MemAllocatorCreate()
     This->refcount = 1;
     This->props.cBuffers = 1;
     This->props.cbBuffer = 65536; /* :/ */
-    This->props.cbAlign = This->props.cbPrefix = 0;
+    This->props.cbAlign = 1;
+    This->props.cbPrefix = 0;
 
     This->vt = (IMemAllocator_vt*) malloc(sizeof(IMemAllocator_vt));
 
@@ -337,8 +341,10 @@ MemAllocator* MemAllocatorCreate()
     This->interfaces[0]=IID_IUnknown;
     This->interfaces[1]=IID_IMemAllocator;
 
+#ifdef WIN32_LOADER
     if (AllocatorKeeper++ == 0)
 	RegisterComClass(&CLSID_MemoryAllocator, MemAllocator_CreateAllocator);
+#endif
 
     return This;
 }

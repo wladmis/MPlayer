@@ -533,6 +533,10 @@ static HMODULE WINAPI expGetDriverModuleHandle(DRVR* pdrv)
 #define	MODULE_HANDLE_ddraw	((HMODULE)0x123)
 #define	MODULE_HANDLE_advapi32	((HMODULE)0x124)
 #endif
+#define	MODULE_HANDLE_comdlg32	((HMODULE)0x125)
+#define	MODULE_HANDLE_msvcrt	((HMODULE)0x126)
+#define	MODULE_HANDLE_ole32	((HMODULE)0x127)
+#define	MODULE_HANDLE_winmm	((HMODULE)0x128)
 
 static HMODULE WINAPI expGetModuleHandleA(const char* name)
 {
@@ -929,26 +933,23 @@ static void WINAPI expGetSystemInfo(SYSTEM_INFO* si)
 	if (gCpuCaps.has3DNow)
 	    PF[PF_AMD3D_INSTRUCTIONS_AVAILABLE] = TRUE;
 
-	    switch(gCpuCaps.cpuType)
+	    if (gCpuCaps.cpuType == 4)
 	    {
-		case CPUTYPE_I686:
-		case CPUTYPE_I586:
-		    cachedsi.dwProcessorType = PROCESSOR_INTEL_PENTIUM;
-		    cachedsi.wProcessorLevel = 5;
-		    break;
-		case CPUTYPE_I486:
-		    cachedsi.dwProcessorType = PROCESSOR_INTEL_486;
-		    cachedsi.wProcessorLevel = 4;
-		    break;
-		case CPUTYPE_I386:
-		default:
-		    cachedsi.dwProcessorType = PROCESSOR_INTEL_386;
-		    cachedsi.wProcessorLevel = 3;
-		    break;
+	        cachedsi.dwProcessorType = PROCESSOR_INTEL_486;
+		cachedsi.wProcessorLevel = 4;
+	    }
+	    else if (gCpuCaps.cpuType >= 5)
+	    {
+		cachedsi.dwProcessorType = PROCESSOR_INTEL_PENTIUM;
+		cachedsi.wProcessorLevel = 5;
+	    }
+	    else
+	    {
+	        cachedsi.dwProcessorType = PROCESSOR_INTEL_386;
+		cachedsi.wProcessorLevel = 3;
 	    }
 	    cachedsi.wProcessorRevision = gCpuCaps.cpuStepping;
     	    cachedsi.dwNumberOfProcessors = 1;	/* hardcoded */
-
     }
 #endif
 
@@ -1871,6 +1872,17 @@ static long WINAPI expQueryPerformanceCounter(long long* z)
 }
 
 /*
+ * dummy function RegQueryInfoKeyA(), required by vss codecs
+ */
+static DWORD WINAPI expRegQueryInfoKeyA( HKEY hkey, LPSTR class, LPDWORD class_len, LPDWORD reserved,
+                                         LPDWORD subkeys, LPDWORD max_subkey, LPDWORD max_class,
+                                         LPDWORD values, LPDWORD max_value, LPDWORD max_data,
+                                         LPDWORD security, FILETIME *modif )
+{
+    return;
+}
+
+/*
  * return CPU clock (in kHz), using linux's /proc filesystem (/proc/cpuinfo)
  */
 static double linux_cpuinfo_freq()
@@ -2285,6 +2297,15 @@ static int WINAPI expLoadLibraryA(char* name)
 	return MODULE_HANDLE_advapi32;
 #endif
 
+    if (strcasecmp(name, "comdlg32.dll") == 0 || strcasecmp(name, "comdlg32") == 0)
+	return MODULE_HANDLE_comdlg32;
+    if (strcasecmp(name, "msvcrt.dll") == 0 || strcasecmp(name, "msvcrt") == 0)
+	return MODULE_HANDLE_msvcrt;
+    if (strcasecmp(name, "ole32.dll") == 0 || strcasecmp(name, "ole32") == 0)
+	return MODULE_HANDLE_ole32;
+    if (strcasecmp(name, "winmm.dll") == 0 || strcasecmp(name, "winmm") == 0)
+	return MODULE_HANDLE_winmm;
+
     result=LoadLibraryA(name);
     dbgprintf("Returned LoadLibraryA(0x%x='%s'), def_path=%s => 0x%x\n", name, name, def_path, result);
 
@@ -2318,6 +2339,14 @@ static void* WINAPI expGetProcAddress(HMODULE mod, char* name)
     case MODULE_HANDLE_advapi32:
 	result=LookupExternalByName("advapi32.dll", name); break;
 #endif
+    case MODULE_HANDLE_comdlg32:
+	result=LookupExternalByName("comdlg32.dll", name); break;
+    case MODULE_HANDLE_msvcrt:
+	result=LookupExternalByName("msvcrt.dll", name); break;
+    case MODULE_HANDLE_ole32:
+	result=LookupExternalByName("ole32.dll", name); break;
+    case MODULE_HANDLE_winmm:
+	result=LookupExternalByName("winmm.dll", name); break;
     default:
 	result=GetProcAddress(mod, name);
     }
@@ -4034,6 +4063,12 @@ static char* expstrcpy(char* str1, const char* str2)
     dbgprintf("strcpy(0x%x, 0x%x='%s') => %p\n", str1, str2, str2, result);
     return result;
 }
+static char* expstrncpy(char* str1, const char* str2, size_t count)
+{
+    char* result= strncpy(str1, str2, count);
+    dbgprintf("strncpy(0x%x, 0x%x='%s', %d) => %p\n", str1, str2, str2, count, result);
+    return result;
+}
 static int expstrcmp(const char* str1, const char* str2)
 {
     int result=strcmp(str1, str2);
@@ -4571,6 +4606,12 @@ static void *exprealloc(void *ptr, size_t size)
 	return my_realloc(ptr, size);        
 }
 
+/* Fake GetOpenFileNameA from comdlg32.dll for ViVD codec */
+static WIN_BOOL WINAPI expGetOpenFileNameA(/*LPOPENFILENAMEA*/ void* lpfn)
+{
+    return 1;
+}
+
 struct exports
 {
     char name[64];
@@ -4752,6 +4793,7 @@ struct exports exp_msvcrt[]={
     FF(strchr, -1)
     FF(strlen, -1)
     FF(strcpy, -1)
+    FF(strncpy, -1)
     FF(wcscpy, -1)
     FF(strcmp, -1)
     FF(strncmp, -1)
@@ -4862,6 +4904,7 @@ struct exports exp_advapi32[]={
     FF(RegOpenKeyExA, -1)
     FF(RegQueryValueExA, -1)
     FF(RegSetValueExA, -1)
+    FF(RegQueryInfoKeyA, -1)
 };
 struct exports exp_gdi32[]={
     FF(CreateCompatibleDC, -1)
@@ -4943,6 +4986,13 @@ struct exports exp_pncrt[]={
     {"_adjust_fdiv", -1, (void*)&_adjust_fdiv},
     FF(_ftol,-1)
     FF(_initterm, -1)
+    {"??3@YAXPAX@Z", -1, expdelete},
+    {"??2@YAPAXI@Z", -1, expnew},
+    FF(__dllonexit, -1)
+    FF(strncpy, -1)
+    FF(_CIpow,-1)
+    FF(calloc,-1)
+    FF(memmove, -1)
 };
 #endif
 
@@ -4951,6 +5001,10 @@ struct exports exp_ddraw[]={
     FF(DirectDrawCreate, -1)
 };
 #endif
+
+struct exports exp_comdlg32[]={
+    FF(GetOpenFileNameA, -1)
+};
 
 #define LL(X) \
     {#X".dll", sizeof(exp_##X)/sizeof(struct exports), exp_##X},
@@ -4975,6 +5029,7 @@ struct libs libraries[]={
 #ifdef QTX
     LL(ddraw)
 #endif
+    LL(comdlg32)
 };
 
 static void ext_stubs(void)
@@ -5075,7 +5130,10 @@ void* LookupExternal(const char* library, int ordinal)
 	}
     }
 
-#ifdef LOADLIB_TRY_NATIVE
+#ifndef LOADLIB_TRY_NATIVE
+  /* hack for truespeech and vssh264*/
+  if (!strcmp(library, "tsd32.dll") || !strcmp(library,"vssh264dec.dll"))
+#endif
     /* ok, this is a hack, and a big memory leak. should be fixed. - alex */
     {
 	int hand;
@@ -5103,7 +5161,6 @@ void* LookupExternal(const char* library, int ordinal)
 	       hand, func);
 	return func;
     }
-#endif
 
 no_dll:
     if(pos>150)return 0;
@@ -5139,6 +5196,40 @@ void* LookupExternalByName(const char* library, const char* name)
 	    return libraries[i].exps[j].func;
 	}
     }
+
+#ifndef LOADLIB_TRY_NATIVE
+  /* hack for vss h264 */
+  if (!strcmp(library,"vssh264core.dll"))
+#endif
+    /* ok, this is a hack, and a big memory leak. should be fixed. - alex */
+    {
+	int hand;
+	WINE_MODREF *wm;
+	void *func;
+
+	hand = LoadLibraryA(library);
+	if (!hand)
+	    goto no_dll_byname;
+	wm = MODULE32_LookupHMODULE(hand);
+	if (!wm)
+	{
+	    FreeLibrary(hand);
+	    goto no_dll_byname;
+	}
+	func = PE_FindExportedFunction(wm, name, 0);
+	if (!func)
+	{
+	    printf("No such name in external dll\n");
+	    FreeLibrary((int)hand);
+	    goto no_dll_byname;
+	}
+
+	printf("External dll loaded (offset: 0x%x, func: %p)\n",
+	       hand, func);
+	return func;
+    }
+
+no_dll_byname:
     if(pos>150)return 0;// to many symbols
     strcpy(export_names[pos], name);
     return add_stub();

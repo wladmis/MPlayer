@@ -15,6 +15,7 @@
 #include "../../config.h"
 #include "../../help_mp.h"
 #include "../../libvo/x11_common.h"
+#include "../../libvo/fastmemcpy.h"
 
 #include "../../libmpdemux/stream.h"
 #include "../../mixer.h"
@@ -87,8 +88,8 @@ void mplEventHandling( int msg,float param )
         break;
 
    case evPlayNetwork:
-        if ( guiIntfStruct.Subtitlename ) { free( guiIntfStruct.Subtitlename ); guiIntfStruct.Subtitlename=NULL; }
-	if ( guiIntfStruct.AudioFile ) { free( guiIntfStruct.AudioFile ); guiIntfStruct.AudioFile=NULL; }
+        gfree( (void **)&guiIntfStruct.Subtitlename );
+	gfree( (void **)&guiIntfStruct.AudioFile );
 	guiIntfStruct.StreamType=STREAMTYPE_STREAM;
         goto play;
    case evSetURL:
@@ -277,37 +278,34 @@ set_volume:
          }
         break;
    case evDoubleSize:
+    	btnSet( evFullScreen,btnReleased );
         if ( guiIntfStruct.Playing )
          {
           appMPlayer.subWindow.isFullScreen=True;
-          appMPlayer.subWindow.OldX=( wsMaxX - guiIntfStruct.MovieWidth * 2 ) / 2;
-          appMPlayer.subWindow.OldY=( wsMaxY - guiIntfStruct.MovieHeight * 2 ) / 2;
+          appMPlayer.subWindow.OldX=( wsMaxX - guiIntfStruct.MovieWidth * 2 ) / 2 + wsOrgX;
+          appMPlayer.subWindow.OldY=( wsMaxY - guiIntfStruct.MovieHeight * 2 ) / 2 + wsOrgY;
           appMPlayer.subWindow.OldWidth=guiIntfStruct.MovieWidth * 2; appMPlayer.subWindow.OldHeight=guiIntfStruct.MovieHeight * 2;
           wsFullScreen( &appMPlayer.subWindow );
 	  vo_fs=0;
          }
         break;
    case evNormalSize:
+	btnSet( evFullScreen,btnReleased );
         if ( guiIntfStruct.Playing )
          {
           appMPlayer.subWindow.isFullScreen=True;
-          appMPlayer.subWindow.OldX=( wsMaxX - guiIntfStruct.MovieWidth ) / 2;
-          appMPlayer.subWindow.OldY=( wsMaxY - guiIntfStruct.MovieHeight ) / 2;
+          appMPlayer.subWindow.OldX=( wsMaxX - guiIntfStruct.MovieWidth ) / 2 + wsOrgX;
+          appMPlayer.subWindow.OldY=( wsMaxY - guiIntfStruct.MovieHeight ) / 2 + wsOrgY;
           appMPlayer.subWindow.OldWidth=guiIntfStruct.MovieWidth; appMPlayer.subWindow.OldHeight=guiIntfStruct.MovieHeight;
           wsFullScreen( &appMPlayer.subWindow );
 	  vo_fs=0;
 	  break;
          } else if ( !appMPlayer.subWindow.isFullScreen ) break;
    case evFullScreen:
-        for ( j=0;j<appMPlayer.NumberOfItems + 1;j++ )
-         {
-          if ( appMPlayer.Items[j].msg == evFullScreen )
-           {
-            appMPlayer.Items[j].tmp=!appMPlayer.Items[j].tmp;
-            appMPlayer.Items[j].pressed=appMPlayer.Items[j].tmp;
-           }
-         }
+        if ( !guiIntfStruct.Playing && !gtkShowVideoWindow ) break;
         mplFullScreen();
+	if ( appMPlayer.subWindow.isFullScreen ) btnSet( evFullScreen,btnPressed );
+	 else btnSet( evFullScreen,btnReleased );
         break;
 
    case evSetAspect:

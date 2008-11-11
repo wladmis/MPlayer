@@ -6,11 +6,18 @@
 
 #include "config.h"
 
+#ifndef HAVE_WINSOCK2
+#define closesocket close
+#else
+#include <winsock2.h>
+#endif
+
 #include "url.h"
 #include "http.h"
 #include "asf.h"
 
 #include "stream.h"
+#include "demuxer.h"
 
 #include "network.h"
 
@@ -24,7 +31,7 @@
 extern int verbose;
 
 
-int asf_http_streaming_start( stream_t *stream );
+int asf_http_streaming_start( stream_t *stream, int *demuxer_type );
 int asf_mmst_streaming_start( stream_t *stream );
 
 
@@ -47,7 +54,7 @@ int asf_mmst_streaming_start( stream_t *stream );
 // 		In MPlayer case since HTTP support is more reliable,
 // 		we are doing HTTP first then we try MMST if HTTP fail.
 int
-asf_streaming_start( stream_t *stream ) {
+asf_streaming_start( stream_t *stream, int *demuxer_type) {
 	char proto_s[10];
 	int fd = -1;
 	
@@ -58,7 +65,7 @@ asf_streaming_start( stream_t *stream ) {
 		!strncasecmp( proto_s, "http_proxy", 10)
 		) {
 		mp_msg(MSGT_NETWORK,MSGL_V,"Trying ASF/HTTP...\n");
-		fd = asf_http_streaming_start( stream );
+		fd = asf_http_streaming_start( stream, demuxer_type );
 		if( fd>-1 ) return fd;
 		mp_msg(MSGT_NETWORK,MSGL_V,"  ===> ASF/HTTP failed\n");
 		if( fd==-2 ) return -1;
@@ -495,11 +502,11 @@ asf_http_request(streaming_ctrl_t *streaming_ctrl) {
 			return NULL;
 		}
 		http_set_uri( http_hdr, server_url->url );
-		sprintf( str, "Host: %s:%d", server_url->hostname, server_url->port );
+		sprintf( str, "Host: %.220s:%d", server_url->hostname, server_url->port );
 		url_free( server_url );
 	} else {
 		http_set_uri( http_hdr, url->file );
-		sprintf( str, "Host: %s:%d", url->hostname, url->port );
+		sprintf( str, "Host: %.220s:%d", url->hostname, url->port );
 	}
 	
 	http_set_field( http_hdr, str );
@@ -619,7 +626,7 @@ asf_http_parse_response(asf_http_streaming_ctrl_t *asf_http_ctrl, HTTP_header_t 
 }
 
 int
-asf_http_streaming_start( stream_t *stream ) {
+asf_http_streaming_start( stream_t *stream, int *demuxer_type ) {
 	HTTP_header_t *http_hdr=NULL;
 	URL_t *url = stream->streaming_ctrl->url;
 	asf_http_streaming_ctrl_t *asf_http_ctrl;
@@ -642,20 +649,20 @@ asf_http_streaming_start( stream_t *stream ) {
 
 	do {
 		done = 1;
-		if( fd>0 ) close( fd );
+		if( fd>0 ) closesocket( fd );
 
 		if( !strcasecmp( url->protocol, "http_proxy" ) ) {
 			if( url->port==0 ) url->port = 8080;
 		} else {
 			if( url->port==0 ) url->port = 80;
 		}
-		fd = connect2Server( url->hostname, url->port );
+		fd = connect2Server( url->hostname, url->port, 1);
 		if( fd<0 ) return fd;
 
 		http_hdr = asf_http_request( stream->streaming_ctrl );
 		mp_msg(MSGT_NETWORK,MSGL_DBG2,"Request [%s]\n", http_hdr->buffer );
 		for(i=0; i < (int)http_hdr->buffer_size ; ) {
-			int r = write( fd, http_hdr->buffer+i, http_hdr->buffer_size-i );
+			int r = send( fd, http_hdr->buffer+i, http_hdr->buffer_size-i, 0 );
 			if(r <0) {
 				mp_msg(MSGT_NETWORK,MSGL_ERR,"Socket write error : %s\n",strerror(errno));
 				return -1;
@@ -665,7 +672,7 @@ asf_http_streaming_start( stream_t *stream ) {
 		http_free( http_hdr );
 		http_hdr = http_new_header();
 		do {
-			i = read( fd, buffer, BUFFER_SIZE );
+			i = recv( fd, buffer, BUFFER_SIZE, 0 );
 //printf("read: %d\n", i );
 			if( i<=0 ) {
 				perror("read");
@@ -717,7 +724,7 @@ asf_http_streaming_start( stream_t *stream ) {
 						return -1;
 					}
 				}
-				stream->type = STREAMTYPE_PLAYLIST;
+				*demuxer_type = DEMUXER_TYPE_PLAYLIST;
 				done = 1;
 				break;
 			case ASF_Authenticate_e:
@@ -728,7 +735,7 @@ asf_http_streaming_start( stream_t *stream ) {
 			case ASF_Unknown_e:
 			default:
 				mp_msg(MSGT_NETWORK,MSGL_ERR,"Unknown ASF streaming type\n");
-				close(fd);
+				closesocket(fd);
 				http_free( http_hdr );
 				return -1;
 		}

@@ -16,6 +16,11 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+ 
+/**
+ * @file mp3lameaudio.c
+ * Interface to libmp3lame for mp3 encoding.
+ */
 
 #include "avcodec.h"
 #include "mpegaudio.h"
@@ -94,7 +99,7 @@ int MP3lame_encode_close(AVCodecContext *avctx)
 AVCodec mp3lame_encoder = {
     "mp3",
     CODEC_TYPE_AUDIO,
-    CODEC_ID_MP3LAME,
+    CODEC_ID_MP3,
     sizeof(Mp3AudioContext),
     MP3lame_encode_init,
     MP3lame_encode_frame,

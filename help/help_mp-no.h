@@ -4,23 +4,18 @@
 // ========================= MPlayer hjelp ===========================
 
 #ifdef HELP_MP_DEFINE_STATIC
-static char* banner_text=
-"\n\n"
-"MPlayer " VERSION "(C) 2000-2003 Arpad Gereoffy (se DOCS!)\n"
-"\n";
-
 static char help_text[]=
 "Bruk:    mplayer [valg] [sti/]filnavn\n"
 "\n"
 "Valg:\n"
 " -vo <drv[:dev]> velg video-ut driver og enhet (se '-vo help' for liste)\n"
 " -ao <drv[:dev]> velg lyd-ut driver og enhet (se '-ao help' for liste)\n"
-" -vcd <sporno>   spill VCD (video cd) spor fra enhet i stedet for fil\n"
+" vcd://<sporno>   spill VCD (video cd) spor fra enhet i stedet for fil\n"
 #ifdef HAVE_LIBCSS
 " -dvdauth <dev>  spesifiser DVD enhet for autentikasjon (for krypterte disker)\n"
 #endif
 #ifdef USE_DVDREAD
-" -dvd <tittelno> spill DVD tittel/spor fra enhet i stedet for fil\n"
+" dvd://<tittelno> spill DVD tittel/spor fra enhet i stedet for fil\n"
 #endif
 " -ss <timepos>   søk til gitt (sekunder eller hh:mm:ss) posisjon\n"
 " -nosound        ikke spill av lyd\n"
@@ -80,7 +75,6 @@ static char help_text[]=
 #define MSGTR_TryForceAudioFmt "Prøver å tvinge lyd-codec driver familie %d ...\n"
 #define MSGTR_CantFindAfmtFallback "Kan ikke finne lyd-codec for tvunget driver familie, faller tilbake til andre drivere.\n"
 #define MSGTR_CantFindAudioCodec "Kan ikke finne codec for lydformat 0x%X !\n"
-#define MSGTR_TryUpgradeCodecsConfOrRTFM "*** Prøv å oppgrader %s fra etc/codecs.conf\n*** Hvis det fortsatt ikke virker, les DOCS/CODECS!\n"
 #define MSGTR_CouldntInitAudioCodec "Greide ikke å initialisere lyd-codec! -> nosound\n"
 #define MSGTR_TryForceVideoFmt "Prøver å tvingte video-codec driver familie %d ...\n"
 #define MSGTR_CantFindVideoCodec "Kan ikke finne codec for videoformat 0x%X !\n"

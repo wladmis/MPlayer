@@ -1,20 +1,28 @@
-// Movie Player    v0.90   (C) 2000-2002. by A'rpi/ESP-team & `cat AUTHORS`
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
-#include <sys/ioctl.h>
 // #include <sys/mman.h>
 #include <sys/types.h>
+#ifndef __MINGW32__
+#include <sys/ioctl.h>
 #include <sys/wait.h>
+#else
+#define	SIGHUP	1	/* hangup */
+#define	SIGQUIT	3	/* quit */
+#define	SIGKILL	9	/* kill (cannot be caught or ignored) */
+#define	SIGBUS	10	/* bus error */
+extern int mp_input_win32_slave_cmd_func(int fd,char* dest,int size);
+#endif
+
 #include <sys/time.h>
 #include <sys/stat.h>
 
 #include <signal.h>
 #include <time.h>
 #include <fcntl.h>
+#include <limits.h>
 
 #include <errno.h>
 
@@ -26,12 +34,9 @@
 #define HELP_MP_DEFINE_STATIC
 #include "help_mp.h"
 
-#ifdef NEW_CONFIG
 #include "m_option.h"
 #include "m_config.h"
-#else
-#include "cfgparser.h"
-#endif
+
 #include "cfg-mplayer-def.h"
 
 #ifdef USE_SUB
@@ -42,6 +47,10 @@
 
 #include "libvo/font_load.h"
 #include "libvo/sub.h"
+
+#ifdef HAVE_X11
+#include "libvo/x11_common.h"
+#endif
 
 #include "libao2/audio_out.h"
 #include "libao2/audio_plugin.h"
@@ -63,8 +72,8 @@
 #include "spudec.h"
 #include "vobsub.h"
 
-#include "linux/getch2.h"
-#include "linux/timer.h"
+#include "osdep/getch2.h"
+#include "osdep/timer.h"
 
 #include "cpudetect.h"
 
@@ -88,13 +97,24 @@ static int quiet=0;
 
 #ifdef USE_TV
 #include "libmpdemux/tv.h"
-extern int tv_param_on;
 #endif
+
+#ifdef HAS_DVBIN_SUPPORT
+#include "libmpdemux/dvbin.h"
+static int last_dvb_step = 1;
+#endif
+
 
 //**************************************************************************//
 //             Playtree
 //**************************************************************************//
 #include "playtree.h"
+#include "playtreeparser.h"
+
+#ifdef HAVE_NEW_GUI
+extern int import_playtree_playlist_into_gui(play_tree_t* my_playtree, m_config_t* config);
+extern int import_initial_playtree_into_gui(play_tree_t* my_playtree, m_config_t* config, int enqueue);
+#endif
 
 play_tree_t* playtree;
 play_tree_iter_t* playtree_iter = NULL;
@@ -109,29 +129,32 @@ play_tree_iter_t* playtree_iter = NULL;
 //**************************************************************************//
 //             Config
 //**************************************************************************//
-
-#include "libvo/geometry.h"
-
 m_config_t* mconfig;
 
-#ifdef NEW_CONFIG
 extern play_tree_t*
 m_config_parse_mp_command_line(m_config_t *config, int argc, char **argv);
 extern int
 m_config_parse_config_file(m_config_t* config, char *conffile);
-#endif
 
 //**************************************************************************//
 //             Config file
 //**************************************************************************//
 
-static int cfg_inc_verbose(struct config *conf){ ++verbose; return 0;}
+static int cfg_inc_verbose(m_option_t *conf){ ++verbose; return 0;}
 
-static int cfg_include(struct config *conf, char *filename){
+static int cfg_include(m_option_t *conf, char *filename){
 	return m_config_parse_config_file(mconfig, filename);
 }
 
 #include "get_path.c"
+
+//**************************************************************************//
+//             XScreensaver
+//**************************************************************************//
+
+#ifdef HAVE_X11
+void xscreensaver_heartbeat(float time);
+#endif
 
 //**************************************************************************//
 //**************************************************************************//
@@ -181,6 +204,11 @@ static int output_quality=0;
 float playback_speed=1.0;
 
 int use_gui=0;
+
+#ifdef HAVE_NEW_GUI
+int enqueue=0;
+#endif
+
 #define MAX_OSD_LEVEL 3
 
 int osd_level=1;
@@ -212,11 +240,11 @@ int audio_id=-1;
 int video_id=-1;
 int dvdsub_id=-1;
 int vobsub_id=-1;
-static char* audio_lang=NULL;
-static char* dvdsub_lang=NULL;
+char* audio_lang=NULL;
+char* dvdsub_lang=NULL;
 static char* spudec_ifo=NULL;
-int vcd_track=0;
 char* filename=NULL; //"MI2-Trailer.avi";
+int forced_subs_only=0;
 
 // cache2:
        int stream_cache_size=-1;
@@ -238,7 +266,7 @@ static float c_total=0;
 
 static int softsleep=0;
 
-static float force_fps=0;
+       float force_fps=0;
 static int force_srate=0;
 static int audio_output_format=0;
        int frame_dropping=0; // option  0=no drop  1= drop vo  2= drop decode
@@ -258,7 +286,7 @@ extern int vo_flags;
 // sub:
 char *font_name=NULL;
 float font_factor=0.75;
-char *sub_name=NULL;
+char **sub_name=NULL;
 float sub_delay=0;
 float sub_fps=0;
 int   sub_auto = 1;
@@ -267,7 +295,9 @@ char *vobsub_name=NULL;
 int   subcc_enabled=0;
 int suboverlap_enabled = 1;
 #ifdef USE_SUB
-subtitle* subtitles=NULL;
+sub_data* set_of_subtitles[MAX_SUBTITLE_FILES];
+int set_of_sub_size = 0;
+int set_of_sub_pos = -1;
 float sub_last_pts = -303;
 #endif
 
@@ -401,18 +431,6 @@ static void uninit_player(unsigned int mask){
     vo_spudec=NULL;
   }
 
-#ifdef USE_SUB  
-  if ( subtitles ) 
-   {
-    current_module="sub_free";
-    sub_free( subtitles );
-    if ( sub_name ) free( sub_name );
-    sub_name=NULL;
-    vo_sub=NULL;
-    subtitles=NULL;
-   }
-#endif
-
   if(mask&INITED_AO){
     inited_flags&=~INITED_AO;
     current_module="uninit_ao";
@@ -436,14 +454,10 @@ static void uninit_player(unsigned int mask){
   current_module=NULL;
 }
 
-#ifdef X11_FULLSCREEN
-extern void vo_uninit( void );
-#endif
-
 static void exit_player_with_rc(char* how, int rc){
 
   uninit_player(INITED_ALL);
-#ifdef X11_FULLSCREEN
+#ifdef HAVE_X11
 #ifdef HAVE_NEW_GUI
   if ( !use_gui )
 #endif
@@ -468,7 +482,9 @@ static void exit_sighandler(int x){
   if(sig_count==5 || (inited_flags==0 && sig_count>1)) exit(1);
   if(sig_count>5){
     // can't stop :(
+#ifndef __MINGW32__
     kill(getpid(),SIGKILL);
+#endif
   }
   mp_msg(MSGT_CPLAYER,MSGL_FATAL,"\n" MSGTR_IntBySignal,x,
       current_module?current_module:mp_gettext("unknown")
@@ -506,12 +522,16 @@ void parse_cfgfiles( m_config_t* conf )
 {
 char *conffile;
 int conffile_fd;
-if (m_config_parse_config_file(conf, CONFDIR"/mplayer.conf") < 0)
+if (m_config_parse_config_file(conf, MPLAYER_CONFDIR "/mplayer.conf") < 0)
   exit(1);
 if ((conffile = get_path("")) == NULL) {
   mp_msg(MSGT_CPLAYER,MSGL_WARN,MSGTR_NoHomeDir);
 } else {
+#ifdef __MINGW32__
+  mkdir(conffile);
+#else
   mkdir(conffile, 0777);
+#endif
   free(conffile);
   if ((conffile = get_path("config")) == NULL) {
     mp_msg(MSGT_CPLAYER,MSGL_ERR,MSGTR_GetpathProblem);
@@ -589,6 +609,17 @@ static int libmpdemux_was_interrupted(int eof) {
 
 int playtree_add_playlist(play_tree_t* entry)
 {
+  play_tree_add_bpf(entry,filename);
+
+#ifdef HAVE_NEW_GUI
+  if (use_gui) {
+    if (entry) {
+      import_playtree_playlist_into_gui(entry, mconfig);
+      play_tree_free_list(entry,1);
+    }
+  } else
+#endif
+  {
   if(!entry) {      
     entry = playtree_iter->tree;
     if(play_tree_iter_step(playtree_iter,1,0) != PLAY_TREE_ITER_ENTRY) {
@@ -609,10 +640,61 @@ int playtree_add_playlist(play_tree_t* entry)
     return PT_NEXT_ENTRY;
   }      
   play_tree_remove(entry,1,1);
+  }
   return PT_NEXT_SRC;
 }
 
 static int play_tree_step = 1;
+
+#ifdef USE_SUB
+
+sub_data* subdata = NULL;
+
+void add_subtitles(char *filename, float fps, int silent)
+{
+    sub_data *subd;
+
+    if (filename == NULL) {
+	subd = (sub_data*)malloc(sizeof(sub_data));
+	subd->filename = strdup("none");
+	subd->subtitles = NULL;
+	subd->sub_uses_time = 1;
+	subd->sub_num = 0;
+	subd->sub_errs = 0;
+	set_of_subtitles[set_of_sub_size] = subd;
+	++set_of_sub_size;
+	return;
+    }
+
+    subd = sub_read_file(filename, fps);
+    if(!subd && !silent) 
+        mp_msg(MSGT_CPLAYER, MSGL_ERR, MSGTR_CantLoadSub, filename);
+    if (subd == NULL || set_of_sub_size >= MAX_SUBTITLE_FILES) return;
+    set_of_subtitles[set_of_sub_size] = subd;
+    ++set_of_sub_size;
+    printf("SUB: added subtitle file (%d): %s\n", set_of_sub_size, filename);
+}
+
+void update_set_of_subtitles()
+    // subdata was changed, set_of_sub... have to be updated.
+{
+    int i;
+    if (set_of_sub_size > 0 && subdata == NULL) { // *subdata was deleted
+        for (i = set_of_sub_pos + 1; i < set_of_sub_size; ++i)
+            set_of_subtitles[i-1] = set_of_subtitles[i];
+        set_of_subtitles[set_of_sub_size-1] = NULL;
+        --set_of_sub_size;
+        if (set_of_sub_size > 0) subdata = set_of_subtitles[set_of_sub_pos=0];
+    }
+    else if (set_of_sub_size > 0 && subdata != NULL) { // *subdata was changed
+        set_of_subtitles[set_of_sub_pos] = subdata;
+    }
+    else if (set_of_sub_size <= 0 && subdata != NULL) { // *subdata was added
+        set_of_subtitles[set_of_sub_pos=set_of_sub_size] = subdata;
+        ++set_of_sub_size;
+    }
+}
+#endif
 
 /*
  * In Mac OS X the SDL-lib is built upon Cocoa. The easiest way to
@@ -642,11 +724,13 @@ int eof=0;
 int osd_function=OSD_PLAY;
 int osd_last_pts=-303;
 int osd_show_av_delay = 0;
+int osd_show_text = 0;
 int osd_show_sub_delay = 0;
 int osd_show_sub_pos = 0;
 int osd_show_sub_visibility = 0;
 int osd_show_sub_alignment = 0;
 int osd_show_vobsub_changed = 0;
+int osd_show_sub_changed = 0;
 int osd_show_percentage = 0;
 int osd_show_tv_channel = 25;
 
@@ -655,15 +739,17 @@ int rtc_fd=-1;
 //float a_frame=0;    // Audio
 
 int i;
+char *tmp;
 
 int gui_no_filename=0;
+
 
   srand((int) time(NULL)); 
 
   mp_msg_init();
   mp_msg_set_level(MSGL_STATUS);
 
-  mp_msg(MSGT_CPLAYER,MSGL_INFO,banner_text);
+  mp_msg(MSGT_CPLAYER,MSGL_INFO, "MPlayer " VERSION " (C) 2000-2003 MPlayer Team\n\n");
   /* Test for cpu capabilities (and corresponding OS support) for optimizing */
   GetCpuCaps(&gCpuCaps);
 #ifdef ARCH_X86
@@ -697,6 +783,40 @@ int gui_no_filename=0;
 #endif
 #endif
 
+#if defined(WIN32) && defined(USE_WIN32DLL)
+{  /*make our codec dirs available for LoadLibraryA()*/
+  char tmppath[MAX_PATH*2 + 1];
+  char win32path[MAX_PATH];
+  char realpath[MAX_PATH];
+  int       WINAPI SetEnvironmentVariableA(char*,char*);
+  int       WINAPI GetModuleFileNameA(void*,char*,int);
+#ifdef __CYGWIN__
+  cygwin_conv_to_full_win32_path(WIN32_PATH,win32path);
+  strcpy(tmppath,win32path);
+#ifdef USE_REALCODECS
+  cygwin_conv_to_full_win32_path(REALCODEC_PATH,realpath);
+  sprintf(tmppath,"%s;%s",win32path,realpath);
+#endif /*USE_REALCODECS*/
+#else
+  if(!strstr(WIN32_PATH,":")){
+    GetModuleFileNameA(NULL, win32path, MAX_PATH);
+    strcpy(win32path + strlen(win32path) - strlen("mplayer.exe"), WIN32_PATH);
+  }
+  else strcpy(win32path,WIN32_PATH);
+  strcpy(tmppath,win32path);
+#ifdef USE_REALCODECS
+  if(!strstr(REALCODEC_PATH,":")){
+    GetModuleFileNameA(NULL, realpath, MAX_PATH);
+    strcpy(realpath + strlen(realpath) - strlen("mplayer.exe"), REALCODEC_PATH);
+  }
+  else strcpy(realpath,REALCODEC_PATH);
+  sprintf(tmppath,"%s;%s",win32path,realpath);
+#endif /*USE_REALCODECS*/
+#endif /*__CYGWIN__*/
+  SetEnvironmentVariableA("PATH", tmppath);
+}
+#endif /*WIN32 && USE_WIN32DLL*/
+
 #ifdef USE_TV
   tv_param_immediate = 1;
 #endif
@@ -706,13 +826,7 @@ int gui_no_filename=0;
       (strrchr(argv[0],'/') && !strcmp(strrchr(argv[0],'/'),"/gmplayer") ) )
           use_gui=1;
 
-#ifdef NEW_CONFIG
     mconfig = m_config_new();
-#else
-    playtree = play_tree_new();
-
-    mconfig = m_config_new(playtree);
-#endif
     m_config_register_options(mconfig,mplayer_opts);
     // TODO : add something to let modules register their options
     mp_input_register_options(mconfig);
@@ -722,16 +836,9 @@ int gui_no_filename=0;
     if ( use_gui ) cfg_read();
 #endif
 
-#ifdef NEW_CONFIG
     playtree = m_config_parse_mp_command_line(mconfig, argc, argv);
     if(playtree == NULL)
       exit(1);
-#else
-    if(m_config_parse_command_line(mconfig, argc, argv) < 0) exit(1); // error parsing cmdline
-#endif
-
-    geometryFull(&opt_screen_size_x, &opt_screen_size_y, NULL, NULL,
-	vo_screenwidth, vo_screenheight, vo_screenwidth, vo_screenheight);
 
     playtree = play_tree_cleanup(playtree);
     if(playtree) {
@@ -755,14 +862,22 @@ int gui_no_filename=0;
       mp_msg(MSGT_CPLAYER,MSGL_WARN,MSGTR_GuiNeedsX);
       use_gui=0;
     }
-#endif
-
-    if(vo_plugin_args && vo_plugin_args[0] && strcmp(vo_plugin_args[0],"help")==0){
-      mp_msg(MSGT_CPLAYER, MSGL_INFO, MSGTR_AvailableVideoOutputPlugins);
-      vf_list_plugins();
-      printf("\n");
-      exit(0);
+    if (use_gui && playtree_iter){
+      char cwd[PATH_MAX+2];
+      // Remove Playtree and Playtree-Iter from memory as its not used by gui
+      play_tree_iter_free(playtree_iter);
+      playtree_iter=NULL;
+      
+      if (getcwd(cwd, PATH_MAX) != (char *)NULL)
+      {
+	  strcat(cwd, "/");
+          // Prefix relative paths with current working directory
+          play_tree_add_bpf(playtree, cwd);
+      }      
+      // Import initital playtree into gui
+      import_initial_playtree_into_gui(playtree, mconfig, enqueue);
     }
+#endif
 
     if(video_driver_list && strcmp(video_driver_list[0],"help")==0){
       list_video_out();
@@ -776,7 +891,7 @@ int gui_no_filename=0;
 
 // check codec.conf
 if(!parse_codec_cfg(get_path("codecs.conf"))){
-  if(!parse_codec_cfg(CONFDIR"/codecs.conf")){
+  if(!parse_codec_cfg(MPLAYER_CONFDIR "/codecs.conf")){
     if(!parse_codec_cfg(NULL)){
       mp_msg(MSGT_CPLAYER,MSGL_HINT,MSGTR_CopyCodecsConf);
       exit(0);
@@ -815,6 +930,13 @@ if(!parse_codec_cfg(get_path("codecs.conf"))){
       printf("\n");
       exit(0);
     }
+#ifdef HAVE_X11
+    if(vo_fstype_list && strcmp(vo_fstype_list[0],"help")==0){
+      fstype_help();
+      printf("\n");
+      exit(0);
+    }
+#endif
 
 #ifdef USE_EDL
  {
@@ -913,7 +1035,7 @@ if(!parse_codec_cfg(get_path("codecs.conf"))){
  }
 #endif
 
-    if(!filename && !vcd_track && !dvd_title && !dvd_nav && !tv_param_on){
+    if(!filename){
       if(!use_gui){
 	// no file/vcd/dvd -> show HELP:
 	mp_msg(MSGT_CPLAYER, MSGL_INFO, help_text);
@@ -941,7 +1063,7 @@ if(!parse_codec_cfg(get_path("codecs.conf"))){
       // try default:
        vo_font=read_font_desc(get_path("font/font.desc"),font_factor,verbose>1);
        if(!vo_font)
-       vo_font=read_font_desc(DATADIR"/font/font.desc",font_factor,verbose>1);
+       vo_font=read_font_desc(MPLAYER_DATADIR "/font/font.desc",font_factor,verbose>1);
   }
 #ifdef HAVE_FREETYPE
   if (!vo_font)
@@ -987,17 +1109,31 @@ if(!parse_codec_cfg(get_path("codecs.conf"))){
 #endif
 
 // ========== Init keyboard FIFO (connection to libvo) ============
-make_pipe(&keyb_fifo_get,&keyb_fifo_put);
 
 // Init input system
 current_module = "init_input";
 mp_input_init();
+#ifndef HAVE_NO_POSIX_SELECT
+make_pipe(&keyb_fifo_get,&keyb_fifo_put);
+
 if(keyb_fifo_get > 0)
   mp_input_add_key_fd(keyb_fifo_get,1,NULL,NULL);
+#else
+  mp_input_add_key_fd(-1,0,mplayer_get_key,NULL);
+#endif
 if(slave_mode)
+#ifndef __MINGW32__
    mp_input_add_cmd_fd(0,1,NULL,NULL);
+#else
+  mp_input_add_cmd_fd(0,0,mp_input_win32_slave_cmd_func,NULL);
+#endif
 else if(!use_stdin)
+#ifndef HAVE_NO_POSIX_SELECT
   mp_input_add_key_fd(0,1,NULL,NULL);
+#else
+  mp_input_add_key_fd(0,0,NULL,NULL);
+#endif
+
 inited_flags|=INITED_INPUT;
 current_module = NULL;
 
@@ -1010,8 +1146,8 @@ current_module = NULL;
      if(menu_init(menu_cfg))
        mp_msg(MSGT_CPLAYER,MSGL_INFO,"Menu inited: %s\n", menu_cfg);
      else {
-       if(menu_init(CONFDIR"/menu.conf"))
-         mp_msg(MSGT_CPLAYER,MSGL_INFO,"Menu inited: %s\n", CONFDIR"/menu.conf");
+       if(menu_init(MPLAYER_CONFDIR "/menu.conf"))
+         mp_msg(MSGT_CPLAYER,MSGL_INFO,"Menu inited: %s\n", MPLAYER_CONFDIR"/menu.conf");
        else {
          mp_msg(MSGT_CPLAYER,MSGL_INFO,"Menu init failed\n");
          use_menu = 0;
@@ -1073,7 +1209,7 @@ if(!use_stdin && !slave_mode){
       while ( guiIntfStruct.Playing != 1 )
        {
         mp_cmd_t* cmd;                                                                                   
-	usleep(20000);
+	usec_sleep(20000);
 	guiEventHandling();
 	guiGetEvent( guiReDraw,NULL );
 	if ( (cmd = mp_input_get_cmd(0,0)) != NULL) guiGetEvent( guiIEvent,(char *)cmd->id );
@@ -1126,19 +1262,27 @@ if(!use_stdin && !slave_mode){
       sub_auto=0; // don't do autosub for textsubs if vobsub found
       inited_flags|=INITED_VOBSUB;
       vobsub_set_from_lang(vo_vobsub, dvdsub_lang);
+      // check if vobsub requested only to display forced subtitles
+      forced_subs_only=vobsub_get_forced_subs_flag(vo_vobsub);
     }
 
 //============ Open & Sync STREAM --- fork cache2 ====================
 
   stream=NULL;
   demuxer=NULL;
-  d_audio=NULL;
-  d_video=NULL;
+  if (d_audio) {
+    //free_demuxer_stream(d_audio);
+    d_audio=NULL;
+  }
+  if (d_video) {
+    //free_demuxer_stream(d_video);
+    d_video=NULL;
+  }
   sh_audio=NULL;
   sh_video=NULL;
 
   current_module="open_stream";
-  stream=open_stream(filename,vcd_track,&file_format);
+  stream=open_stream(filename,0,&file_format);
   if(!stream) { // error...
     eof = libmpdemux_was_interrupted(PT_NEXT_ENTRY);
     goto goto_next_file;
@@ -1149,7 +1293,7 @@ if(!use_stdin && !slave_mode){
   if ( use_gui ) guiGetEvent( guiSetStream,(char *)stream );
 #endif
 
-  if(stream->type == STREAMTYPE_PLAYLIST) {
+  if(file_format == DEMUXER_TYPE_PLAYLIST) {
     play_tree_t* entry;
     // Handle playlist
     current_module="handle_playlist";
@@ -1196,9 +1340,17 @@ if(stream_dump_type==5){
   }
   while(!stream->eof){
       len=stream_read(stream,buf,4096);
-      if(len>0) fwrite(buf,len,1,f);
+      if(len>0) {
+        if(fwrite(buf,len,1,f) != 1) {
+          mp_msg(MSGT_MENCODER,MSGL_FATAL,MSGTR_ErrorWritingFile,stream_dump_name);
+          exit_player(MSGTR_Exit_error);
+        }
+      }
   }
-  fclose(f);
+  if(fclose(f)) {
+    mp_msg(MSGT_MENCODER,MSGL_FATAL,MSGTR_ErrorWritingFile,stream_dump_name);
+    exit_player(MSGTR_Exit_error);
+  }
   mp_msg(MSGT_CPLAYER,MSGL_INFO,MSGTR_CoreDumped);
   exit_player_with_rc(MSGTR_Exit_eof, 0);
 }
@@ -1206,14 +1358,14 @@ if(stream_dump_type==5){
 #ifdef USE_DVDREAD
 if(stream->type==STREAMTYPE_DVD){
   current_module="dvd lang->id";
-  if(audio_lang && audio_id==-1) audio_id=dvd_aid_from_lang(stream,audio_lang);
+  if(audio_id==-1) audio_id=dvd_aid_from_lang(stream,audio_lang);
   if(dvdsub_lang && dvdsub_id==-1) dvdsub_id=dvd_sid_from_lang(stream,dvdsub_lang);
   current_module=NULL;
 }
 #endif
 
 #ifdef USE_DVDNAV
-  if (dvd_nav) stream_cache_size=0;	// must disable caching...
+  if (stream->type==STREAMTYPE_DVDNAV) stream_cache_size=0;	// must disable caching...
 #endif
 
 // CACHE2: initial prefill: 20%  later: 5%  (should be set by -cacheopts)
@@ -1224,7 +1376,9 @@ if(stream_cache_size>0){
 }
 
 //============ Open DEMUXERS --- DETECT file type =======================
-
+#ifdef HAS_DVBIN_SUPPORT
+goto_open_demuxer:
+#endif
 current_module="demux_open";
 
 demuxer=demux_open(stream,file_format,audio_id,video_id,dvdsub_id,filename);
@@ -1245,6 +1399,9 @@ if (demuxer && demuxer->type==DEMUXER_TYPE_PLAYLIST)
 
     bname=mp_basename(playlist_entry);
     if ((strlen(bname)>10) && !strncmp(bname,"qt",2) && !strncmp(bname+3,"gateQT",6))
+        continue;
+
+    if (!strncmp(bname,mp_basename(filename),strlen(bname))) // ignoring self-reference
         continue;
 
     entry = play_tree_new();
@@ -1284,9 +1441,19 @@ if (demuxer && demuxer->type==DEMUXER_TYPE_PLAYLIST)
 
 if(!demuxer) 
 {
+#if 0
   play_tree_t* entry;
   // Handle playlist
   current_module="handle_playlist";
+  switch(stream->type){
+  case STREAMTYPE_VCD:
+  case STREAMTYPE_DVD:
+  case STREAMTYPE_DVDNAV:
+  case STREAMTYPE_CDDA:
+  case STREAMTYPE_VCDBINCUE:
+    // don't try to parse raw media as playlist, it's unlikely
+    goto goto_next_file;
+  }
   mp_msg(MSGT_CPLAYER,MSGL_INFO,"Falling back on trying to parse playlist %s...\n",filename);
   stream_reset(stream);
   stream_seek(stream,stream->start_pos);
@@ -1295,6 +1462,7 @@ if(!demuxer)
     mp_msg(MSGT_DEMUXER,MSGL_ERR,MSGTR_FormatNotRecognized);
   else
     eof=playtree_add_playlist(entry);
+#endif
   goto goto_next_file;
 }
 inited_flags|=INITED_DEMUXER;
@@ -1365,7 +1533,7 @@ if(sh_video){
       sh_video->frametime=1.0f/sh_video->fps;
     }
     vo_fps = sh_video->fps;
-#ifdef X11_FULLSCREEN
+#ifdef HAVE_X11
     vo_mouse_timer_const=(int)sh_video->fps;
 #endif
 
@@ -1381,6 +1549,27 @@ fflush(stdout);
 
 if(!sh_video && !sh_audio){
     mp_msg(MSGT_CPLAYER,MSGL_FATAL, MSGTR_NoStreamFound);
+#ifdef HAS_DVBIN_SUPPORT
+	if((stream->type == STREAMTYPE_DVB) && stream->priv)
+	{
+	  dvb_priv_t *priv = (dvb_priv_t*) stream->priv;
+	  if(priv->is_on)
+	  {
+		int dir;
+		int v = last_dvb_step;
+		if(v > 0)
+			dir = DVB_CHANNEL_HIGHER;
+		else
+			dir = DVB_CHANNEL_LOWER;
+			
+		if(dvb_step_channel(priv, dir))
+		{
+	  		uninit_player(INITED_ALL-(INITED_STREAM|INITED_INPUT));
+			goto goto_open_demuxer;
+		}
+	  }
+	}
+#endif	
     goto goto_next_file; // exit_player(MSGTR_Exit_error);
 }
 
@@ -1424,6 +1613,10 @@ if (vo_spudec!=NULL)
 
 }
 
+// Apply current settings for forced subs
+if (vo_spudec!=NULL)
+  spudec_set_forced_subs_only(vo_spudec,forced_subs_only);
+
 #ifdef USE_SUB
 if(sh_video) {
 // after reading video params we should load subtitles because
@@ -1431,19 +1624,31 @@ if(sh_video) {
 // check .sub
   current_module="read_subtitles_file";
   if(sub_name){
-    subtitles=sub_read_file(sub_name, sh_video->fps);
-    if(!subtitles) mp_msg(MSGT_CPLAYER,MSGL_ERR,MSGTR_CantLoadSub,sub_name);
-  } else
+    for (i = 0; sub_name[i] != NULL; ++i) 
+        add_subtitles (sub_name[i], sh_video->fps, 0); 
+  } 
   if(sub_auto) { // auto load sub file ...
-    subtitles=sub_read_file( filename ? sub_filename( get_path("sub/"), filename )
-                                     : "default.sub", sh_video->fps );
+    char **tmp = sub_filenames(get_path("sub/"), filename);
+    char **tmp2 = tmp;
+    while (*tmp2)
+        add_subtitles (*tmp2++, sh_video->fps, 0);
+    free(tmp);
+    if (set_of_sub_size == 0)
+        add_subtitles (get_path("default.sub"), sh_video->fps, 1);
+    if (set_of_sub_size > 0)
+        add_subtitles (NULL, sh_video->fps, 1);
   }
-  if(subtitles && stream_dump_type==3) list_sub_file(subtitles);
-  if(subtitles && stream_dump_type==4) dump_mpsub(subtitles, sh_video->fps);
-  if(subtitles && stream_dump_type==6) dump_srt(subtitles, sh_video->fps);
-  if(subtitles && stream_dump_type==7) dump_microdvd(subtitles, sh_video->fps);
-  if(subtitles && stream_dump_type==8) dump_jacosub(subtitles, sh_video->fps);
-  if(subtitles && stream_dump_type==9) dump_sami(subtitles, sh_video->fps);
+  if (set_of_sub_size > 0)  {
+      //osd_show_sub_changed = sh_video->fps;
+      subdata = set_of_subtitles[set_of_sub_pos=0];
+  
+      if(stream_dump_type==3) list_sub_file(subdata);
+      if(stream_dump_type==4) dump_mpsub(subdata, sh_video->fps);
+      if(stream_dump_type==6) dump_srt(subdata, sh_video->fps);
+      if(stream_dump_type==7) dump_microdvd(subdata, sh_video->fps);
+      if(stream_dump_type==8) dump_jacosub(subdata, sh_video->fps);
+      if(stream_dump_type==9) dump_sami(subdata, sh_video->fps);
+  }
 }
 #endif
 
@@ -1471,7 +1676,7 @@ if(identify) {
     mp_msg(MSGT_GLOBAL,MSGL_INFO,"ID_VIDEO_WIDTH=%d\n", sh_video->disp_w);
     mp_msg(MSGT_GLOBAL,MSGL_INFO,"ID_VIDEO_HEIGHT=%d\n", sh_video->disp_h);
     mp_msg(MSGT_GLOBAL,MSGL_INFO,"ID_VIDEO_FPS=%5.3f\n", sh_video->fps);
-    mp_msg(MSGT_GLOBAL,MSGL_INFO,"ID_VIDEO_ASPECT=%1.2f\n", sh_video->aspect);
+    mp_msg(MSGT_GLOBAL,MSGL_INFO,"ID_VIDEO_ASPECT=%1.4f\n", sh_video->aspect);
   }
   if (sh_audio) {
     if (sh_audio->codec)
@@ -1486,7 +1691,6 @@ if(identify) {
     mp_msg(MSGT_GLOBAL,MSGL_INFO,"ID_AUDIO_NCH=%d\n", sh_audio->channels);
   }
   mp_msg(MSGT_GLOBAL,MSGL_INFO,"ID_LENGTH=%ld\n", demuxer_get_time_length(demuxer));
-  goto goto_next_file;
 }
 
 if(!sh_video) goto main; // audio-only
@@ -1506,11 +1710,14 @@ inited_flags|=INITED_VO;
 }
 
 current_module="init_video_filters";
-
-sh_video->vfilter=(void*)vf_open_filter(NULL,"vo",video_out);
+{
+  char* vf_arg[] = { "_oldargs_", (char*)video_out , NULL };
+  sh_video->vfilter=(void*)vf_open_filter(NULL,"vo",vf_arg);
+}
 #ifdef HAVE_MENU
 if(use_menu) {
-  vf_menu = vf_open_plugin(libmenu_vfs,sh_video->vfilter,"menu",menu_root);
+  char* vf_arg[] = { "_oldargs_", menu_root, NULL };
+  vf_menu = vf_open_plugin(libmenu_vfs,sh_video->vfilter,"menu",vf_arg);
   if(!vf_menu) {
     mp_msg(MSGT_CPLAYER,MSGL_ERR,"Can't open libmenu video filter with root menu %s\n",menu_root);
     use_menu = 0;
@@ -1577,7 +1784,7 @@ current_module="main";
 // If there is no video OSD has to be disabled.
 // In case of playing a playtree we have to restore the
 // old OSD level after playing one or more audio-only files.
-if(!sh_video && osd_level > 0) { // save OSD level only once
+if(!sh_video && osd_level >= 0) { // save OSD level only once
     osd_level_saved = osd_level;
     osd_level = 0;
 } else if (osd_level_saved > -1) { // if there is a saved OSD level, restore it
@@ -1605,6 +1812,7 @@ float time_frame=0; // Timer
 //float num_frames=0;      // number of frames played
 int grab_frames=0;
 char osd_text_buffer[64];
+char osd_show_text_buffer[64];
 int drop_frame=0;     // current dropping status
 int dropped_frames=0; // how many frames dropped since last non-dropped frame
 int too_slow_frame_cnt=0;
@@ -1675,9 +1883,10 @@ if(sh_audio){
 	ao_data.samplerate, ao_data.channels, ao_data.format,
 	audio_out_format_bits(ao_data.format)/8, /* ao_data.bps, */
 	ao_data.outburst*4, ao_data.buffersize)){
-      mp_msg(MSGT_CPLAYER,MSGL_ERR,"Couldn't find matching filter / ao format! -> NOSOUND\n");
-      uninit_player(INITED_ACODEC|INITED_AO); // close codec & ao
-      sh_audio=d_audio->sh=NULL; // -> nosound
+      mp_msg(MSGT_CPLAYER,MSGL_ERR,"Couldn't find matching filter / ao format!\n");
+//      mp_msg(MSGT_CPLAYER,MSGL_ERR,"Couldn't find matching filter / ao format! -> NOSOUND\n");
+//      uninit_player(INITED_ACODEC|INITED_AO); // close codec & ao
+//      sh_audio=d_audio->sh=NULL; // -> nosound
     }
 #endif
   }
@@ -1715,12 +1924,15 @@ if(force_fps && sh_video){
 
 //==================== START PLAYING =======================
 
+if(loop_times>1) loop_times--; else
+if(loop_times==1) loop_times = -1;
+
 mp_msg(MSGT_CPLAYER,MSGL_INFO,MSGTR_StartPlaying);fflush(stdout);
 
 InitTimer();
 
 #ifdef USE_DVDNAV
-if (dvd_nav && stream->type==STREAMTYPE_DVDNAV) {
+if (stream->type==STREAMTYPE_DVDNAV) {
   dvdnav_stream_fullstart((dvdnav_priv_t *)stream->priv);
 }
 #endif
@@ -1791,11 +2003,41 @@ while(sh_audio){
 
 if(!sh_video) {
   // handle audio-only case:
-  if(!quiet) mp_msg(MSGT_AVSYNC,MSGL_STATUS,"A:%6.1f %4.1f%% %d%%   \r"
-		    ,sh_audio->delay-audio_out->get_delay()
+  if(!quiet) {
+      //
+      // convert time to HH:MM:SS.F format
+      //
+      long tenths = 10 * sh_audio->delay-audio_out->get_delay();
+      int hh = (tenths / 36000) % 100;
+      int mm = (tenths / 600) % 60;
+      int ss = (tenths /  10) % 60;
+      int f1 = tenths % 10;
+      char hhmmssf[16]; // only really need 11, but just in case...
+      sprintf( hhmmssf, "%2d:%2d:%2d.%1d", hh, mm, ss, f1);
+      if (0 == hh) {
+        hhmmssf[1] = ' ';
+        hhmmssf[2] = ' ';
+      }
+      // uncomment the next three lines to show leading zero ten-hours
+      // else if (' ' == hhmmssf[0]) {
+      //   hhmmssf[0] = '0';
+      // }
+      if ((0 == hh) && (0 == mm)) {
+        hhmmssf[4] = ' ';
+        hhmmssf[5] = ' ';
+      }
+      else if ((' ' == hhmmssf[3]) && (' ' != hhmmssf[2])) {
+        hhmmssf[3] = '0';
+      }
+      if ((' ' == hhmmssf[6]) && (' ' != hhmmssf[5])) {
+        hhmmssf[6] = '0';
+      }
+             mp_msg(MSGT_AVSYNC,MSGL_STATUS,"A:  %s %4.1f%% %d%%   \r"
+		    ,hhmmssf
 		    ,(sh_audio->delay>0.5)?100.0*audio_time_usage/(double)sh_audio->delay:0
 		    ,cache_fill_status
 		    );
+  }
   if(d_audio->eof) eof = PT_NEXT_ENTRY;
 
 } else {
@@ -2078,9 +2320,9 @@ if(time_frame>0.001 && !(vo_flags&256)){
 	static int drop_message=0;
         float x;
 	AV_delay=(a_pts-delay-audio_delay)-v_pts;
-	if(drop_frame_cnt>50+drop_message*250 && AV_delay>0.5){
+	if(AV_delay>0.5 && drop_frame_cnt>50+drop_message*250){
 	  ++drop_message;
-	  mp_msg(MSGT_AVSYNC,MSGL_ERR,MSGTR_SystemTooSlow);
+	  mp_msg(MSGT_AVSYNC,MSGL_WARN,MSGTR_SystemTooSlow);
 	}
         x=AV_delay*0.1f;
         if(x<-max_pts_correction) x=-max_pts_correction; else
@@ -2186,7 +2428,7 @@ if(auto_quality>0){
 	     if(vf_menu)
 	       vf_menu_pause_update(vf_menu);
 #endif
-             usleep(20000);
+             usec_sleep(20000);
          }
       mp_cmd_free(cmd);
          osd_function=OSD_PLAY;
@@ -2247,7 +2489,8 @@ if (stream->type==STREAMTYPE_DVDNAV && dvd_nav_still)
 
 {
   mp_cmd_t* cmd;
-  while( (cmd = mp_input_get_cmd(0,0)) != NULL) {
+  int brk_cmd = 0;
+  while( !brk_cmd && (cmd = mp_input_get_cmd(0,0)) != NULL) {
     switch(cmd->id) {
     case MP_CMD_SEEK : {
       int v,abs;
@@ -2271,6 +2514,7 @@ if (stream->type==STREAMTYPE_DVDNAV && dvd_nav_still)
 	rel_seek_secs+= v;
 	osd_function= (v > 0) ? OSD_FFW : OSD_REW;
       }
+      brk_cmd = 1;
     } break;
 #ifdef USE_EDL
     case MP_CMD_EDL_MARK:
@@ -2288,6 +2532,7 @@ if (stream->type==STREAMTYPE_DVDNAV && dvd_nav_still)
     } break;
     case MP_CMD_PAUSE : {
       osd_function=OSD_PAUSE;
+      brk_cmd = 1;
     } break;
     case MP_CMD_QUIT : {
       exit_player_with_rc(MSGTR_Exit_quit, 0);
@@ -2299,7 +2544,19 @@ if (stream->type==STREAMTYPE_DVDNAV && dvd_nav_still)
       int n = cmd->args[0].v.i == 0 ? 1 : cmd->args[0].v.i;
       int force = cmd->args[1].v.i;
 
-      if(!force) {
+#ifdef HAVE_NEW_GUI
+     if (use_gui) {
+	int i=0;
+        if (n>0)
+	  for (i=0;i<n;i++)
+	    mplNext();
+        else
+	  for (i=0;i<-1*n;i++)
+	    mplPrev();
+     } else
+#endif
+     {
+      if(!force && playtree_iter) {
 	play_tree_iter_t* i = play_tree_iter_new_copy(playtree_iter);
 	
 	if(play_tree_iter_step(i,n,0) == PLAY_TREE_ITER_ENTRY)
@@ -2309,29 +2566,35 @@ if (stream->type==STREAMTYPE_DVDNAV && dvd_nav_still)
 	eof = (n > 0) ? PT_NEXT_ENTRY : PT_PREV_ENTRY;
       if(eof)
 	play_tree_step = n;
+      brk_cmd = 1;
+     }
     } break;
     case MP_CMD_PLAY_TREE_UP_STEP : {
       int n = cmd->args[0].v.i > 0 ? 1 : -1;
       int force = cmd->args[1].v.i;
 
-      if(!force) {
+      if(!force && playtree_iter) {
 	play_tree_iter_t* i = play_tree_iter_new_copy(playtree_iter);
 	if(play_tree_iter_up_step(i,n,0) == PLAY_TREE_ITER_ENTRY)
 	  eof = (n > 0) ? PT_UP_NEXT : PT_UP_PREV;
 	play_tree_iter_free(i);
       } else
 	eof = (n > 0) ? PT_UP_NEXT : PT_UP_PREV;
+      brk_cmd = 1;
     } break;
     case MP_CMD_PLAY_ALT_SRC_STEP : {
-      if(playtree_iter->num_files > 1) {
+      if(playtree_iter && playtree_iter->num_files > 1) {
 	int v = cmd->args[0].v.i;
 	if(v > 0 && playtree_iter->file < playtree_iter->num_files)
 	  eof = PT_NEXT_SRC;
 	else if(v < 0 && playtree_iter->file > 1)
 	  eof = PT_PREV_SRC;
       }
+      brk_cmd = 1;
     } break;
     case MP_CMD_SUB_DELAY : {
+#ifdef USE_SUB
+    if (sh_video) {
       int abs= cmd->args[1].v.i;
       float v = cmd->args[0].v.f;
       if(abs)
@@ -2339,20 +2602,37 @@ if (stream->type==STREAMTYPE_DVDNAV && dvd_nav_still)
       else
 	sub_delay += v;
       osd_show_sub_delay = 9; // show the subdelay in OSD
+    }
+#endif
     } break;
     case MP_CMD_SUB_STEP : {
+#ifdef USE_SUB
+    if (sh_video) {
       int movement = cmd->args[0].v.i;
-      step_sub(subtitles, sh_video->pts, movement);
+      step_sub(subdata, sh_video->pts, movement);
       osd_show_sub_delay = 9; // show the subdelay in OSD
+    }
+#endif
     } break;
-    case MP_CMD_OSD : 
+    case MP_CMD_OSD :  {
+#ifdef USE_OSD
       if(sh_video) {
 	int v = cmd->args[0].v.i;
 	if(v < 0)
 	  osd_level=(osd_level+1)%(MAX_OSD_LEVEL+1);
 	else
 	  osd_level= v > MAX_OSD_LEVEL ? MAX_OSD_LEVEL : v;
-      } break;
+      }
+#endif
+    } break;
+    case MP_CMD_OSD_SHOW_TEXT :  {
+#ifdef USE_OSD
+      if(osd_level && sh_video){
+	osd_show_text=sh_video->fps; // 1 sec
+        strncpy(osd_show_text_buffer, cmd->args[0].v.s, 64);
+      }
+#endif
+    } break;
     case MP_CMD_VOLUME :  {
       int v = cmd->args[0].v.i;
 
@@ -2392,6 +2672,7 @@ if (stream->type==STREAMTYPE_DVDNAV && dvd_nav_still)
       play_tree_set_child(playtree,e);
       play_tree_iter_step(playtree_iter,0,0);
       eof = PT_NEXT_SRC;
+      brk_cmd = 1;
     } break;
     case MP_CMD_LOADLIST : {
       play_tree_t* e = parse_playlist_file(cmd->args[0].v.s);
@@ -2406,6 +2687,7 @@ if (stream->type==STREAMTYPE_DVDNAV && dvd_nav_still)
 	play_tree_iter_step(playtree_iter,0,0);
 	eof = PT_NEXT_SRC;	
       }
+      brk_cmd = 1;
     } break;
     case MP_CMD_GAMMA :  {
       int v = cmd->args[0].v.i, abs = cmd->args[1].v.i;
@@ -2574,8 +2856,32 @@ if (stream->type==STREAMTYPE_DVDNAV && dvd_nav_still)
 	frame_dropping = v > 2 ? 2 : v;
     } break;
 #ifdef USE_TV
+    case MP_CMD_TV_SET_FREQ :  {
+      if (file_format == DEMUXER_TYPE_TV)
+        tv_set_freq((tvi_handle_t*)(demuxer->priv), cmd->args[0].v.f * 16.0);
+    } break;
+    case MP_CMD_TV_SET_NORM :  {
+      if (file_format == DEMUXER_TYPE_TV)
+        tv_set_norm((tvi_handle_t*)(demuxer->priv), cmd->args[0].v.s);
+    } break;
+    case MP_CMD_TV_SET_BRIGHTNESS :  {
+      if (file_format == DEMUXER_TYPE_TV)
+        tv_set_color_options((tvi_handle_t*)(demuxer->priv), TV_COLOR_BRIGHTNESS, cmd->args[0].v.i);
+    } break;
+    case MP_CMD_TV_SET_HUE :  {
+      if (file_format == DEMUXER_TYPE_TV)
+        tv_set_color_options((tvi_handle_t*)(demuxer->priv), TV_COLOR_HUE, cmd->args[0].v.i);
+    } break;
+    case MP_CMD_TV_SET_SATURATION :  {
+      if (file_format == DEMUXER_TYPE_TV)
+        tv_set_color_options((tvi_handle_t*)(demuxer->priv), TV_COLOR_SATURATION, cmd->args[0].v.i);
+    } break;
+    case MP_CMD_TV_SET_CONTRAST :  {
+      if (file_format == DEMUXER_TYPE_TV)
+        tv_set_color_options((tvi_handle_t*)(demuxer->priv), TV_COLOR_CONTRAST, cmd->args[0].v.i);
+    } break;
     case MP_CMD_TV_STEP_CHANNEL :  {
-      if (tv_param_on == 1) {
+      if (file_format == DEMUXER_TYPE_TV) {
 	int v = cmd->args[0].v.i;
 	if(v > 0){
 	  tv_step_channel((tvi_handle_t*)(demuxer->priv), TV_CHANNEL_HIGHER);
@@ -2595,9 +2901,35 @@ if (stream->type==STREAMTYPE_DVDNAV && dvd_nav_still)
 #endif
 	}
       }
-    } break;
+    } 
+#ifdef HAS_DVBIN_SUPPORT
+	if((stream->type == STREAMTYPE_DVB) && stream->priv)
+	{
+	  dvb_priv_t *priv = (dvb_priv_t*) stream->priv;
+	  if(priv->is_on)
+	  {
+		int dir;
+		int v = cmd->args[0].v.i;
+	    
+		last_dvb_step = v;	
+		if(v > 0)
+			dir = DVB_CHANNEL_HIGHER;
+		else
+			dir = DVB_CHANNEL_LOWER;
+			
+			
+		if(dvb_step_channel(priv, dir))
+		{
+	  		uninit_player(INITED_ALL-(INITED_STREAM|INITED_INPUT));
+			printf("UNINIT COMPLETE\n");
+			goto goto_open_demuxer;
+		}
+	  }
+	}
+#endif	
+    break;
     case MP_CMD_TV_SET_CHANNEL :  {
-      if (tv_param_on == 1) {
+      if (file_format == DEMUXER_TYPE_TV) {
 	tv_set_channel((tvi_handle_t*)(demuxer->priv), cmd->args[0].v.s);
 #ifdef USE_OSD
 	if (tv_channel_list) {
@@ -2607,8 +2939,30 @@ if (stream->type==STREAMTYPE_DVDNAV && dvd_nav_still)
 #endif
       }
     } break;
+#ifdef HAS_DVBIN_SUPPORT	
+  case MP_CMD_DVB_SET_CHANNEL:  
+  {
+	if((stream->type == STREAMTYPE_DVB) && stream->priv)
+	{
+	  dvb_priv_t *priv = (dvb_priv_t*) stream->priv;
+	  if(priv->is_on)
+	  {
+		if(priv->list->current <= cmd->args[0].v.i)
+		    last_dvb_step = 1;
+		else
+		    last_dvb_step = -1;
+
+  		if(dvb_set_channel(priv, cmd->args[0].v.i))
+		{
+	  	  uninit_player(INITED_ALL-(INITED_STREAM|INITED_INPUT));
+		  goto goto_open_demuxer;
+		}
+	  }
+	}
+  }
+#endif	
     case MP_CMD_TV_LAST_CHANNEL :  {
-      if (tv_param_on == 1) {
+      if (file_format == DEMUXER_TYPE_TV) {
 	tv_last_channel((tvi_handle_t*)(demuxer->priv));
 #ifdef USE_OSD
 	if (tv_channel_list) {
@@ -2619,11 +2973,11 @@ if (stream->type==STREAMTYPE_DVDNAV && dvd_nav_still)
       }
     } break;
     case MP_CMD_TV_STEP_NORM :  {
-      if (tv_param_on == 1)
+      if (file_format == DEMUXER_TYPE_TV)
 	tv_step_norm((tvi_handle_t*)(demuxer->priv));
     } break;
     case MP_CMD_TV_STEP_CHANNEL_LIST :  {
-      if (tv_param_on == 1)
+      if (file_format == DEMUXER_TYPE_TV)
 	tv_step_chanlist((tvi_handle_t*)(demuxer->priv));
     } break;
 #endif
@@ -2653,8 +3007,8 @@ if (stream->type==STREAMTYPE_DVDNAV && dvd_nav_still)
 	  vo_osd_progbar_value=vo_panscan*256;
 	  vo_osd_changed(OSDTYPE_PROGBAR);
 #ifdef HAVE_FREETYPE
-	  if (subtitle_autoscale == 2)
-	    // force scaling font to movie width
+	  if (subtitle_autoscale == 2 || subtitle_autoscale == 3)
+	    // force scaling font to movie width or diagonal
 	    force_load_font = 1;
 #endif
         }
@@ -2663,6 +3017,8 @@ if (stream->type==STREAMTYPE_DVDNAV && dvd_nav_still)
     } break;
     case MP_CMD_SUB_POS:
     {
+#ifdef USE_SUB
+      if (sh_video) {
         int v;
 	v = cmd->args[0].v.i;
     
@@ -2671,24 +3027,40 @@ if (stream->type==STREAMTYPE_DVDNAV && dvd_nav_still)
 	if(sub_pos <0) sub_pos=0;
 	vo_osd_changed(OSDTYPE_SUBTITLE);
         osd_show_sub_pos = 9;
-    }	break;
+      }
+#endif
+    } break;
     case MP_CMD_SUB_ALIGNMENT:
     {
+#ifdef USE_SUB
+      if (sh_video) {
     	if (cmd->nargs >= 1)
     	    sub_alignment = cmd->args[0].v.i;
     	else
             sub_alignment = (sub_alignment+1) % 3;
 	osd_show_sub_alignment = 9;
 	vo_osd_changed(OSDTYPE_SUBTITLE);
-	break;
-    }
+      }
+#endif
+    } break;
     case MP_CMD_SUB_VISIBILITY:
     {
+#ifdef USE_SUB
+      if (sh_video) {
 	sub_visibility=1-sub_visibility;
 	osd_show_sub_visibility = 9; // show state of subtitle visibility in OSD
 	vo_osd_changed(OSDTYPE_SUBTITLE);
-	break;
-    }
+      }
+#endif
+    } break;
+    case MP_CMD_GET_SUB_VISIBILITY:
+	{
+#ifdef USE_SUB
+	if (sh_video) {
+		mp_msg(MSGT_GLOBAL,MSGL_INFO,"ANS_SUB_VISIBILITY=%ld\n", sub_visibility);
+	}
+#endif
+	} break;
     case MP_CMD_VOBSUB_LANG:
     if (vo_vobsub)
     {
@@ -2700,8 +3072,23 @@ if (stream->type==STREAMTYPE_DVDNAV && dvd_nav_still)
         if(new_id != vobsub_id)
 	    osd_show_vobsub_changed = 9;
 	vobsub_id = new_id;
-	break;
     }
+#ifdef USE_SUB  
+    else if (set_of_sub_size > 0){ //change subtitle file  
+        set_of_sub_pos = (set_of_sub_pos + 1) % set_of_sub_size;
+        subdata = set_of_subtitles[set_of_sub_pos];
+        osd_show_sub_changed = sh_video->fps;
+        vo_sub = NULL;
+        vo_osd_changed(OSDTYPE_SUBTITLE); 
+    }
+#endif
+        break;
+    case MP_CMD_SUB_FORCED_ONLY:
+      if (vo_spudec) {
+	forced_subs_only = forced_subs_only ? 0 : ~0; // toggle state
+	spudec_set_forced_subs_only(vo_spudec,forced_subs_only);
+      }    
+      break;
     case MP_CMD_SCREENSHOT :
       if(vo_config_count) video_out->control(VOCTRL_SCREENSHOT, NULL);
       break;
@@ -2713,6 +3100,11 @@ if (stream->type==STREAMTYPE_DVDNAV && dvd_nav_still)
 	mp_msg(MSGT_GLOBAL,MSGL_INFO,"ANS_LENGTH=%ld\n", demuxer_get_time_length(demuxer));
     } break;
 
+	case MP_CMD_GET_VO_FULLSCREEN : {
+	if(video_out && vo_config_count)
+		mp_msg(MSGT_GLOBAL,MSGL_INFO,"ANS_VO_FULLSCREEN=%ld\n", vo_fs);
+	} break;
+    
     case MP_CMD_GET_PERCENT_POS : {
 	mp_msg(MSGT_GLOBAL,MSGL_INFO,"ANS_PERCENT_POSITION=%ld\n", demuxer_get_percent_pos(demuxer));
     } break;
@@ -2723,15 +3115,10 @@ if (stream->type==STREAMTYPE_DVDNAV && dvd_nav_still)
       dvdnav_event_t * dvdnav_event = (dvdnav_event_t *)(cmd->args[0].v.v);
 
       /* ignore these events if we're not in dvd_nav mode */
-      if (!dvd_nav) break;
+      if (stream->type != STREAMTYPE_DVDNAV) break;
 
       if (!dvdnav_event) {
         printf("DVDNAV Event NULL?!\n");
-        break;
-      }
-
-      if (stream->type!=STREAMTYPE_DVDNAV) {
-        printf("Got DVDNAV event when not running a DVDNAV stream!?\n");
         break;
       }
 
@@ -2777,7 +3164,7 @@ if (stream->type==STREAMTYPE_DVDNAV && dvd_nav_still)
 
           printf( "######################################## DVDNAV Event: Still Frame: %d sec(s)\n", still_event->length );
           while (dvdnav_stream_sleeping(dvdnav_priv)) {
-            usleep(1000); /* 1ms */
+            usec_sleep(1000); /* 1ms */
           }
           dvdnav_stream_sleep(dvdnav_priv,still_event->length);
         break;
@@ -2900,7 +3287,7 @@ if (stream->type==STREAMTYPE_DVDNAV && dvd_nav_still)
       dvdnav_priv_t * dvdnav_priv=(dvdnav_priv_t*)stream->priv;
 
       /* ignore these events if we're not in dvd_nav mode */
-      if (!dvd_nav) break;
+      if (stream->type != STREAMTYPE_DVDNAV) break;
 
       switch (cmd->args[0].v.i) {
         case MP_CMD_DVDNAV_UP:
@@ -2934,7 +3321,7 @@ if (stream->type==STREAMTYPE_DVDNAV && dvd_nav_still)
       if ( ( use_gui )&&( cmd->id > MP_CMD_GUI_EVENTS ) ) guiGetEvent( guiIEvent,(char *)cmd->id );
        else
 #endif
-      mp_msg(MSGT_CPLAYER, MSGL_V, "Received unknow cmd %s\n",cmd->name);
+      mp_msg(MSGT_CPLAYER, MSGL_V, "Received unknown cmd %s\n",cmd->name);
     }
     }
     mp_cmd_free(cmd);
@@ -3089,7 +3476,7 @@ if(rel_seek_secs || abs_seek_pos){
 
 //================= Update OSD ====================
 #ifdef USE_OSD
-  if(osd_level>=1){
+  if(osd_level>=1 && sh_video){
       int pts=sh_video->pts;
       char osd_text_tmp[64];
       if(pts==osd_last_pts-1) ++pts; else osd_last_pts=pts;
@@ -3106,6 +3493,10 @@ if(rel_seek_secs || abs_seek_pos){
 	  osd_show_tv_channel--;
       } else
 #endif
+      if (osd_show_text) {
+	  snprintf(osd_text_tmp, 63, "%s", osd_show_text_buffer);
+	  osd_show_text--;
+      } else
       if (osd_show_sub_visibility) {
 	  snprintf(osd_text_tmp, 63, "Subtitles: %sabled", sub_visibility?"en":"dis");
 	  osd_show_sub_visibility--;
@@ -3117,6 +3508,20 @@ if(rel_seek_secs || abs_seek_pos){
 	  snprintf(osd_text_tmp, 63, "Subtitles: (%d) %s", vobsub_id, language ? language : "unknown");
 	  osd_show_vobsub_changed--;
       } else
+#ifdef USE_SUB
+      if (osd_show_sub_changed) {
+	  char *tmp2;
+          tmp = subdata->filename;
+	  if ((tmp2 = strrchr(tmp, '/'))) {
+	      tmp = tmp2+1;
+	  }
+	  snprintf(osd_text_tmp, 63, "Sub: (%d) %s%s", 
+                                  set_of_sub_pos + 1,
+                                  strlen(tmp) < 20 ? "" : "...",
+                                  strlen(tmp) < 20 ? tmp : tmp+strlen(tmp)-19);
+	  osd_show_sub_changed--;
+      } else
+#endif
       if (osd_show_sub_delay) {
 	  snprintf(osd_text_tmp, 63, "Sub delay: %d ms", ROUND(sub_delay*1000));
 	  osd_show_sub_delay--;
@@ -3168,24 +3573,36 @@ if(rel_seek_secs || abs_seek_pos){
   
 #ifdef USE_SUB
   // find sub
-  if(subtitles && sh_video->pts>0){
+  if(subdata && sh_video->pts>0){
       float pts=sh_video->pts;
       if(sub_fps==0) sub_fps=sh_video->fps;
       current_module="find_sub";
       if (pts > sub_last_pts || pts < sub_last_pts-1.0 ) {
-         find_sub(subtitles,sub_uses_time?(100*(pts+sub_delay)):((pts+sub_delay)*sub_fps)); // FIXME! frame counter...
+         find_sub(subdata, (pts+sub_delay) * 
+				 (subdata->sub_uses_time ? 100. : sub_fps)); 
+	 // FIXME! frame counter...
          sub_last_pts = pts;
       }
       current_module=NULL;
   }
+#endif
+
+#ifdef HAVE_X11
+if (stop_xscreensaver && sh_video) {
+  current_module="stop_xscreensaver";
+  xscreensaver_heartbeat(sh_video->pts);
+  current_module=NULL;
+}
 #endif
   
   // DVD sub:
 if(vo_config_count && vo_spudec) {
   unsigned char* packet=NULL;
   int len,timestamp;
+  current_module="spudec";
+  spudec_heartbeat(vo_spudec,90000*sh_video->timer);
     // Get a sub packet from the dvd or a vobsub and make a timestamp relative to sh_video->timer
-  int get_sub_packet(void) {
+  while(1) {
     // Vobsub
     len = 0;
     if(vo_vobsub) {
@@ -3194,22 +3611,21 @@ if(vo_config_count && vo_spudec) {
 	len = vobsub_get_packet(vo_vobsub,sh_video->pts+sub_delay+next_frame_time,(void**)&packet,&timestamp);
 	if(len > 0) {
 	  timestamp -= (sh_video->pts + sub_delay - sh_video->timer)*90000;
-	  mp_dbg(MSGT_CPLAYER,MSGL_V,"\rVOB sub: len=%d v_pts=%5.3f v_timer=%5.3f sub=%5.3f ts=%d \n",len,sh_video->pts,sh_video->timer,timestamp / 90000.0);
+	  mp_dbg(MSGT_CPLAYER,MSGL_V,"\rVOB sub: len=%d v_pts=%5.3f v_timer=%5.3f sub=%5.3f ts=%d \n",len,sh_video->pts,sh_video->timer,timestamp / 90000.0,timestamp);
 	}
       }
     } else {
       // DVD sub
       len = ds_get_packet_sub(d_dvdsub,(unsigned char**)&packet);
       if(len > 0) {
-	timestamp = 90000*(sh_video->timer + d_dvdsub->pts + sub_delay - sh_video->pts);
+	float x = d_dvdsub->pts - sh_video->pts;
+	if (x < -10 || x > 10) // prevent missing subs on pts reset
+	  timestamp = 90000*(sh_video->timer + d_dvdsub->pts + sub_delay - sh_video->pts);
+	else timestamp = 90000*(sh_video->timer + sub_delay);
 	mp_dbg(MSGT_CPLAYER,MSGL_V,"\rDVD sub: len=%d  v_pts=%5.3f  s_pts=%5.3f  ts=%d \n",len,sh_video->pts,d_dvdsub->pts,timestamp);
       }
     }
-    return len;
-  }
-  current_module="spudec";
-  spudec_heartbeat(vo_spudec,90000*sh_video->timer);
-  while(get_sub_packet()>0 && packet){
+      if(len<=0 || !packet) break;
       if(timestamp < 0) timestamp = 0;
       spudec_assemble(vo_spudec,packet,len,timestamp);
   }
@@ -3259,6 +3675,18 @@ if(benchmark){
 // time to uninit all, except global stuff:
 uninit_player(INITED_ALL-(INITED_GUI+INITED_INPUT+(fixed_vo?INITED_VO:0)));
 
+#ifdef USE_SUB  
+  if ( set_of_sub_size > 0 ) 
+   {
+    current_module="sub_free";
+    for (i = 0; i < set_of_sub_size; ++i)
+        sub_free( set_of_subtitles[i] );
+    set_of_sub_size = 0;
+    vo_sub=NULL;
+    subdata=NULL;
+   }
+#endif
+
 if(eof == PT_NEXT_ENTRY || eof == PT_PREV_ENTRY) {
   eof = eof == PT_NEXT_ENTRY ? 1 : -1;
   if(play_tree_iter_step(playtree_iter,play_tree_step,0) == PLAY_TREE_ITER_ENTRY) {
@@ -3270,12 +3698,14 @@ if(eof == PT_NEXT_ENTRY || eof == PT_PREV_ENTRY) {
   play_tree_step = 1;
 } else if (eof == PT_UP_NEXT || eof == PT_UP_PREV) {
   eof = eof == PT_UP_NEXT ? 1 : -1;
-  if(play_tree_iter_up_step(playtree_iter,eof,0) == PLAY_TREE_ITER_ENTRY) {
-    eof = 1;
-  } else {
-    play_tree_iter_free(playtree_iter);
-    playtree_iter = NULL;
-  }
+  if ( playtree_iter ) {
+    if(play_tree_iter_up_step(playtree_iter,eof,0) == PLAY_TREE_ITER_ENTRY) {
+     eof = 1;
+    } else {
+      play_tree_iter_free(playtree_iter);
+      playtree_iter = NULL;
+    }
+   }
 } else { // NEXT PREV SRC
      eof = eof == PT_PREV_SRC ? -1 : 1;
 }

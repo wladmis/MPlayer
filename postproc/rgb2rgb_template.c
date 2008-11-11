@@ -241,17 +241,6 @@ static inline void RENAME(rgb15to16)(const uint8_t *src,uint8_t *dst,unsigned sr
     }
 }
 
-static inline void RENAME(bgr24torgb24)(const uint8_t *src, uint8_t *dst, unsigned src_size)
-{
-	unsigned j,i,num_pixels=src_size/3;
-	for(i=0,j=0; j<num_pixels; i+=3,j+=3)
-	{
-		dst[j+0] = src[i+2];
-		dst[j+1] = src[i+1];
-		dst[j+2] = src[i+0];
-	}
-}
-
 static inline void RENAME(rgb16to15)(const uint8_t *src,uint8_t *dst,unsigned src_size)
 {
   register const uint8_t* s=src;
@@ -318,12 +307,46 @@ static inline void RENAME(rgb32to16)(const uint8_t *src, uint8_t *dst, unsigned 
 	uint16_t *d = (uint16_t *)dst;
 	end = s + src_size;
 #ifdef HAVE_MMX
+	mm_end = end - 15;
+#if 1 //is faster only if multiplies are reasonable fast (FIXME figure out on which cpus this is faster, on Athlon its slightly faster)
+	asm volatile(
+		"movq %3, %%mm5			\n\t"
+		"movq %4, %%mm6			\n\t"
+		"movq %5, %%mm7			\n\t"
+		".balign 16			\n\t"
+		"1:				\n\t"
+		PREFETCH" 32(%1)		\n\t"
+		"movd	(%1), %%mm0		\n\t"
+		"movd	4(%1), %%mm3		\n\t"
+		"punpckldq 8(%1), %%mm0		\n\t"
+		"punpckldq 12(%1), %%mm3	\n\t"
+		"movq %%mm0, %%mm1		\n\t"
+		"movq %%mm3, %%mm4		\n\t"
+		"pand %%mm6, %%mm0		\n\t"
+		"pand %%mm6, %%mm3		\n\t"
+		"pmaddwd %%mm7, %%mm0		\n\t"
+		"pmaddwd %%mm7, %%mm3		\n\t"
+		"pand %%mm5, %%mm1		\n\t"
+		"pand %%mm5, %%mm4		\n\t"
+		"por %%mm1, %%mm0		\n\t"	
+		"por %%mm4, %%mm3		\n\t"
+		"psrld $5, %%mm0		\n\t"
+		"pslld $11, %%mm3		\n\t"
+		"por %%mm3, %%mm0		\n\t"
+		MOVNTQ"	%%mm0, (%0)		\n\t"
+		"addl $16, %1			\n\t"
+		"addl $8, %0			\n\t"
+		"cmpl %2, %1			\n\t"
+		" jb 1b				\n\t"
+		: "+r" (d), "+r"(s)
+		: "r" (mm_end), "m" (mask3216g), "m" (mask3216br), "m" (mul3216)
+	);
+#else
 	__asm __volatile(PREFETCH"	%0"::"m"(*src):"memory");
 	__asm __volatile(
 	    "movq	%0, %%mm7\n\t"
 	    "movq	%1, %%mm6\n\t"
 	    ::"m"(red_16mask),"m"(green_16mask));
-	mm_end = end - 15;
 	while(s < mm_end)
 	{
 	    __asm __volatile(
@@ -359,25 +382,15 @@ static inline void RENAME(rgb32to16)(const uint8_t *src, uint8_t *dst, unsigned 
 		d += 4;
 		s += 16;
 	}
+#endif
 	__asm __volatile(SFENCE:::"memory");
 	__asm __volatile(EMMS:::"memory");
 #endif
 	while(s < end)
 	{
-#ifndef WORDS_BIGENDIAN
-		const int b= *s++;
-		const int g= *s++;
-		const int r= *s++;
-#else
-		const int a= *s++; /*skip*/
-		const int r= *s++;
-		const int g= *s++;
-		const int b= *s++;
-#endif		
-		*d++ = (b>>3) | ((g&0xFC)<<3) | ((r&0xF8)<<8);
-#ifndef WORDS_BIGENDIAN
-		s++;
-#endif
+		const int src= *((uint32_t*)s)++;
+		*d++ = ((src&0xFF)>>3) + ((src&0xFC00)>>5) + ((src&0xF80000)>>8);
+//		*d++ = ((src>>3)&0x1F) + ((src>>5)&0x7E0) + ((src>>8)&0xF800);
 	}
 }
 
@@ -437,11 +450,8 @@ static inline void RENAME(rgb32tobgr16)(const uint8_t *src, uint8_t *dst, unsign
 #endif
 	while(s < end)
 	{
-		const int r= *s++;
-		const int g= *s++;
-		const int b= *s++;
-		*d++ = (b>>3) | ((g&0xFC)<<3) | ((r&0xF8)<<8);
-		s++;
+		const int src= *((uint32_t*)s)++;
+		*d++ = ((src&0xF8)<<8) + ((src&0xFC00)>>5) + ((src&0xF80000)>>19);
 	}
 }
 
@@ -455,12 +465,46 @@ static inline void RENAME(rgb32to15)(const uint8_t *src, uint8_t *dst, unsigned 
 	uint16_t *d = (uint16_t *)dst;
 	end = s + src_size;
 #ifdef HAVE_MMX
+	mm_end = end - 15;
+#if 1 //is faster only if multiplies are reasonable fast (FIXME figure out on which cpus this is faster, on Athlon its slightly faster)
+	asm volatile(
+		"movq %3, %%mm5			\n\t"
+		"movq %4, %%mm6			\n\t"
+		"movq %5, %%mm7			\n\t"
+		".balign 16			\n\t"
+		"1:				\n\t"
+		PREFETCH" 32(%1)		\n\t"
+		"movd	(%1), %%mm0		\n\t"
+		"movd	4(%1), %%mm3		\n\t"
+		"punpckldq 8(%1), %%mm0		\n\t"
+		"punpckldq 12(%1), %%mm3	\n\t"
+		"movq %%mm0, %%mm1		\n\t"
+		"movq %%mm3, %%mm4		\n\t"
+		"pand %%mm6, %%mm0		\n\t"
+		"pand %%mm6, %%mm3		\n\t"
+		"pmaddwd %%mm7, %%mm0		\n\t"
+		"pmaddwd %%mm7, %%mm3		\n\t"
+		"pand %%mm5, %%mm1		\n\t"
+		"pand %%mm5, %%mm4		\n\t"
+		"por %%mm1, %%mm0		\n\t"	
+		"por %%mm4, %%mm3		\n\t"
+		"psrld $6, %%mm0		\n\t"
+		"pslld $10, %%mm3		\n\t"
+		"por %%mm3, %%mm0		\n\t"
+		MOVNTQ"	%%mm0, (%0)		\n\t"
+		"addl $16, %1			\n\t"
+		"addl $8, %0			\n\t"
+		"cmpl %2, %1			\n\t"
+		" jb 1b				\n\t"
+		: "+r" (d), "+r"(s)
+		: "r" (mm_end), "m" (mask3215g), "m" (mask3216br), "m" (mul3215)
+	);
+#else
 	__asm __volatile(PREFETCH"	%0"::"m"(*src):"memory");
 	__asm __volatile(
 	    "movq	%0, %%mm7\n\t"
 	    "movq	%1, %%mm6\n\t"
 	    ::"m"(red_15mask),"m"(green_15mask));
-	mm_end = end - 15;
 	while(s < mm_end)
 	{
 	    __asm __volatile(
@@ -496,16 +540,14 @@ static inline void RENAME(rgb32to15)(const uint8_t *src, uint8_t *dst, unsigned 
 		d += 4;
 		s += 16;
 	}
+#endif
 	__asm __volatile(SFENCE:::"memory");
 	__asm __volatile(EMMS:::"memory");
 #endif
 	while(s < end)
 	{
-		const int b= *s++;
-		const int g= *s++;
-		const int r= *s++;
-		*d++ = (b>>3) | ((g&0xF8)<<2) | ((r&0xF8)<<7);
-		s++;
+		const int src= *((uint32_t*)s)++;
+		*d++ = ((src&0xFF)>>3) + ((src&0xF800)>>6) + ((src&0xF80000)>>9);
 	}
 }
 
@@ -565,11 +607,8 @@ static inline void RENAME(rgb32tobgr15)(const uint8_t *src, uint8_t *dst, unsign
 #endif
 	while(s < end)
 	{
-		const int r= *s++;
-		const int g= *s++;
-		const int b= *s++;
-		*d++ = (b>>3) | ((g&0xF8)<<2) | ((r&0xF8)<<7);
-		s++;
+		const int src= *((uint32_t*)s)++;
+		*d++ = ((src&0xF8)<<7) + ((src&0xF800)>>6) + ((src&0xF80000)>>19);
 	}
 }
 
@@ -1187,12 +1226,18 @@ static inline void RENAME(rgb15to32)(const uint8_t *src, uint8_t *dst, unsigned 
 #endif
 	while(s < end)
 	{
+#if 0 //slightly slower on athlon
+		int bgr= *s++;
+		*((uint32_t*)d)++ = ((bgr&0x1F)<<3) + ((bgr&0x3E0)<<6) + ((bgr&0x7C00)<<9);
+#else
+//FIXME this is very likely wrong for bigendian (and the following converters too)
 		register uint16_t bgr;
 		bgr = *s++;
 		*d++ = (bgr&0x1F)<<3;
 		*d++ = (bgr&0x3E0)>>2;
 		*d++ = (bgr&0x7C00)>>7;
 		*d++ = 0;
+#endif
 	}
 }
 
@@ -1295,9 +1340,15 @@ static inline void RENAME(rgb32tobgr32)(const uint8_t *src, uint8_t *dst, unsign
 	unsigned num_pixels = src_size >> 2;
 	for(i=0; i<num_pixels; i++)
 	{
-		dst[4*i + 0] = src[4*i + 2];
-		dst[4*i + 1] = src[4*i + 1];
-		dst[4*i + 2] = src[4*i + 0];
+#ifdef WORDS_BIGENDIAN  
+	  dst[4*i + 1] = src[4*i + 3];
+	  dst[4*i + 2] = src[4*i + 2];
+	  dst[4*i + 3] = src[4*i + 1];
+#else
+	  dst[4*i + 0] = src[4*i + 2];
+	  dst[4*i + 1] = src[4*i + 1];
+	  dst[4*i + 2] = src[4*i + 0];
+#endif
 	}
 #endif
 }
@@ -1371,7 +1422,7 @@ static inline void RENAME(rgb24tobgr24)(const uint8_t *src, uint8_t *dst, unsign
 
 static inline void RENAME(yuvPlanartoyuy2)(const uint8_t *ysrc, const uint8_t *usrc, const uint8_t *vsrc, uint8_t *dst,
 	unsigned int width, unsigned int height,
-	unsigned int lumStride, unsigned int chromStride, unsigned int dstStride, int vertLumPerChroma)
+	int lumStride, int chromStride, int dstStride, int vertLumPerChroma)
 {
 	unsigned y;
 	const unsigned chromWidth= width>>1;
@@ -1409,11 +1460,59 @@ static inline void RENAME(yuvPlanartoyuy2)(const uint8_t *ysrc, const uint8_t *u
 			"addl $8, %%eax			\n\t"
 			"cmpl %4, %%eax			\n\t"
 			" jb 1b				\n\t"
-			::"r"(dst), "r"(ysrc), "r"(usrc), "r"(vsrc), "r" (chromWidth)
+			::"r"(dst), "r"(ysrc), "r"(usrc), "r"(vsrc), "g" (chromWidth)
 			: "%eax"
 		);
 #else
-#if __WORDSIZE >= 64
+
+#if defined ARCH_ALPHA && defined HAVE_MVI
+#define pl2yuy2(n)					\
+	y1 = yc[n];					\
+	y2 = yc2[n];					\
+	u = uc[n];					\
+	v = vc[n];					\
+	asm("unpkbw %1, %0" : "=r"(y1) : "r"(y1));	\
+	asm("unpkbw %1, %0" : "=r"(y2) : "r"(y2));	\
+	asm("unpkbl %1, %0" : "=r"(u) : "r"(u));	\
+	asm("unpkbl %1, %0" : "=r"(v) : "r"(v));	\
+	yuv1 = (u << 8) + (v << 24);			\
+	yuv2 = yuv1 + y2;				\
+	yuv1 += y1;					\
+	qdst[n] = yuv1;					\
+	qdst2[n] = yuv2;
+
+		int i;
+		uint64_t *qdst = (uint64_t *) dst;
+		uint64_t *qdst2 = (uint64_t *) (dst + dstStride);
+		const uint32_t *yc = (uint32_t *) ysrc;
+		const uint32_t *yc2 = (uint32_t *) (ysrc + lumStride);
+		const uint16_t *uc = (uint16_t*) usrc, *vc = (uint16_t*) vsrc;
+		for(i = 0; i < chromWidth; i += 8){
+			uint64_t y1, y2, yuv1, yuv2;
+			uint64_t u, v;
+			/* Prefetch */
+			asm("ldq $31,64(%0)" :: "r"(yc));
+			asm("ldq $31,64(%0)" :: "r"(yc2));
+			asm("ldq $31,64(%0)" :: "r"(uc));
+			asm("ldq $31,64(%0)" :: "r"(vc));
+
+			pl2yuy2(0);
+			pl2yuy2(1);
+			pl2yuy2(2);
+			pl2yuy2(3);
+
+			yc += 4;
+			yc2 += 4;
+			uc += 4;
+			vc += 4;
+			qdst += 4;
+			qdst2 += 4;
+		}
+		y++;
+		ysrc += lumStride;
+		dst += dstStride;
+
+#elif __WORDSIZE >= 64
 		int i;
 		uint64_t *ldst = (uint64_t *) dst;
 		const uint8_t *yc = ysrc, *uc = usrc, *vc = vsrc;
@@ -1463,7 +1562,7 @@ asm(    EMMS" \n\t"
  */
 static inline void RENAME(yv12toyuy2)(const uint8_t *ysrc, const uint8_t *usrc, const uint8_t *vsrc, uint8_t *dst,
 	unsigned int width, unsigned int height,
-	unsigned int lumStride, unsigned int chromStride, unsigned int dstStride)
+	int lumStride, int chromStride, int dstStride)
 {
 	//FIXME interpolate chroma
 	RENAME(yuvPlanartoyuy2)(ysrc, usrc, vsrc, dst, width, height, lumStride, chromStride, dstStride, 2);
@@ -1475,7 +1574,7 @@ static inline void RENAME(yv12toyuy2)(const uint8_t *ysrc, const uint8_t *usrc, 
  */
 static inline void RENAME(yuv422ptoyuy2)(const uint8_t *ysrc, const uint8_t *usrc, const uint8_t *vsrc, uint8_t *dst,
 	unsigned int width, unsigned int height,
-	unsigned int lumStride, unsigned int chromStride, unsigned int dstStride)
+	int lumStride, int chromStride, int dstStride)
 {
 	RENAME(yuvPlanartoyuy2)(ysrc, usrc, vsrc, dst, width, height, lumStride, chromStride, dstStride, 1);
 }
@@ -1487,7 +1586,7 @@ static inline void RENAME(yuv422ptoyuy2)(const uint8_t *ysrc, const uint8_t *usr
  */
 static inline void RENAME(yuy2toyv12)(const uint8_t *src, uint8_t *ydst, uint8_t *udst, uint8_t *vdst,
 	unsigned int width, unsigned int height,
-	unsigned int lumStride, unsigned int chromStride, unsigned int srcStride)
+	int lumStride, int chromStride, int srcStride)
 {
 	unsigned y;
 	const unsigned chromWidth= width>>1;
@@ -1542,7 +1641,7 @@ static inline void RENAME(yuy2toyv12)(const uint8_t *src, uint8_t *ydst, uint8_t
 			"addl $8, %%eax			\n\t"
 			"cmpl %4, %%eax			\n\t"
 			" jb 1b				\n\t"
-			::"r"(src), "r"(ydst), "r"(udst), "r"(vdst), "r" (chromWidth)
+			::"r"(src), "r"(ydst), "r"(udst), "r"(vdst), "g" (chromWidth)
 			: "memory", "%eax"
 		);
 
@@ -1572,7 +1671,7 @@ static inline void RENAME(yuy2toyv12)(const uint8_t *src, uint8_t *ydst, uint8_t
 			"cmpl %4, %%eax			\n\t"
 			" jb 1b				\n\t"
 
-			::"r"(src), "r"(ydst), "r"(udst), "r"(vdst), "r" (chromWidth)
+			::"r"(src), "r"(ydst), "r"(udst), "r"(vdst), "g" (chromWidth)
 			: "memory", "%eax"
 		);
 #else
@@ -1607,7 +1706,7 @@ asm volatile(   EMMS" \n\t"
 
 static inline void RENAME(yvu9toyv12)(const uint8_t *ysrc, const uint8_t *usrc, const uint8_t *vsrc,
 	uint8_t *ydst, uint8_t *udst, uint8_t *vdst,
-	unsigned int width, unsigned int height, unsigned int lumStride, unsigned int chromStride)
+	unsigned int width, unsigned int height, int lumStride, int chromStride)
 {
 	/* Y Plane */
 	memcpy(ydst, ysrc, width*height);
@@ -1619,16 +1718,20 @@ static inline void RENAME(planar2x)(const uint8_t *src, uint8_t *dst, int srcWid
 {
 	int x,y;
 	
+	dst[0]= src[0];
+        
 	// first line
-	for(x=0; x<srcWidth; x++){
-		dst[2*x+0]=
-		dst[2*x+1]= src[x];
+	for(x=0; x<srcWidth-1; x++){
+		dst[2*x+1]= (3*src[x] +   src[x+1])>>2;
+		dst[2*x+2]= (  src[x] + 3*src[x+1])>>2;
 	}
-	dst+= dstStride;
+	dst[2*srcWidth-1]= src[srcWidth-1];
+	
+        dst+= dstStride;
 
 	for(y=1; y<srcHeight; y++){
 #if defined (HAVE_MMX2) || defined (HAVE_3DNOW)
-		const int mmxSize= srcWidth;
+		const int mmxSize= srcWidth&~15;
 		asm volatile(
 			"movl %4, %%eax			\n\t"
 			"1:				\n\t"
@@ -1636,67 +1739,76 @@ static inline void RENAME(planar2x)(const uint8_t *src, uint8_t *dst, int srcWid
 			"movq (%1, %%eax), %%mm1	\n\t"
 			"movq 1(%0, %%eax), %%mm2	\n\t"
 			"movq 1(%1, %%eax), %%mm3	\n\t"
-			"movq %%mm0, %%mm4		\n\t"
-			"movq %%mm1, %%mm5		\n\t"
-			PAVGB" %%mm3, %%mm0		\n\t"
-			PAVGB" %%mm3, %%mm0		\n\t"
-			PAVGB" %%mm4, %%mm3		\n\t"
-			PAVGB" %%mm4, %%mm3		\n\t"
-			PAVGB" %%mm2, %%mm1		\n\t"
-			PAVGB" %%mm2, %%mm1		\n\t"
-			PAVGB" %%mm5, %%mm2		\n\t"
-			PAVGB" %%mm5, %%mm2		\n\t"
-			"movq %%mm3, %%mm4		\n\t"
-			"movq %%mm2, %%mm5		\n\t"
-			"punpcklbw %%mm1, %%mm3		\n\t"
-			"punpckhbw %%mm1, %%mm4		\n\t"
-			"punpcklbw %%mm0, %%mm2		\n\t"
-			"punpckhbw %%mm0, %%mm5		\n\t"
+			"movq -1(%0, %%eax), %%mm4	\n\t"
+			"movq -1(%1, %%eax), %%mm5	\n\t"
+			PAVGB" %%mm0, %%mm5		\n\t"
+			PAVGB" %%mm0, %%mm3		\n\t"
+			PAVGB" %%mm0, %%mm5		\n\t"
+			PAVGB" %%mm0, %%mm3		\n\t"
+			PAVGB" %%mm1, %%mm4		\n\t"
+			PAVGB" %%mm1, %%mm2		\n\t"
+			PAVGB" %%mm1, %%mm4		\n\t"
+			PAVGB" %%mm1, %%mm2		\n\t"
+			"movq %%mm5, %%mm7		\n\t"
+			"movq %%mm4, %%mm6		\n\t"
+			"punpcklbw %%mm3, %%mm5		\n\t"
+			"punpckhbw %%mm3, %%mm7		\n\t"
+			"punpcklbw %%mm2, %%mm4		\n\t"
+			"punpckhbw %%mm2, %%mm6		\n\t"
 #if 1
-			MOVNTQ" %%mm3, (%2, %%eax, 2)	\n\t"
-			MOVNTQ" %%mm4, 8(%2, %%eax, 2)	\n\t"
-			MOVNTQ" %%mm2, (%3, %%eax, 2)	\n\t"
-			MOVNTQ" %%mm5, 8(%3, %%eax, 2)	\n\t"
+			MOVNTQ" %%mm5, (%2, %%eax, 2)	\n\t"
+			MOVNTQ" %%mm7, 8(%2, %%eax, 2)	\n\t"
+			MOVNTQ" %%mm4, (%3, %%eax, 2)	\n\t"
+			MOVNTQ" %%mm6, 8(%3, %%eax, 2)	\n\t"
 #else
-			"movq %%mm3, (%2, %%eax, 2)	\n\t"
-			"movq %%mm4, 8(%2, %%eax, 2)	\n\t"
-			"movq %%mm2, (%3, %%eax, 2)	\n\t"
-			"movq %%mm5, 8(%3, %%eax, 2)	\n\t"
+			"movq %%mm5, (%2, %%eax, 2)	\n\t"
+			"movq %%mm7, 8(%2, %%eax, 2)	\n\t"
+			"movq %%mm4, (%3, %%eax, 2)	\n\t"
+			"movq %%mm6, 8(%3, %%eax, 2)	\n\t"
 #endif
 			"addl $8, %%eax			\n\t"
 			" js 1b				\n\t"
-			:: "r" (src + mmxSize-1), "r" (src + srcStride + mmxSize-1),
+			:: "r" (src + mmxSize  ), "r" (src + srcStride + mmxSize  ),
 			   "r" (dst + mmxSize*2), "r" (dst + dstStride + mmxSize*2),
 			   "g" (-mmxSize)
 			: "%eax"
 
 		);
-		dst[0]= 
-		dst[dstStride]= src[0];
 #else
-		dst[0]= 
-		dst[dstStride]= src[0];
+		const int mmxSize=1;
+#endif
+		dst[0        ]= (3*src[0] +   src[srcStride])>>2;
+		dst[dstStride]= (  src[0] + 3*src[srcStride])>>2;
 
-		for(x=0; x<srcWidth-1; x++){
+		for(x=mmxSize-1; x<srcWidth-1; x++){
 			dst[2*x          +1]= (3*src[x+0] +   src[x+srcStride+1])>>2;
 			dst[2*x+dstStride+2]= (  src[x+0] + 3*src[x+srcStride+1])>>2;
 			dst[2*x+dstStride+1]= (  src[x+1] + 3*src[x+srcStride  ])>>2;
 			dst[2*x          +2]= (3*src[x+1] +   src[x+srcStride  ])>>2;
 		}
-#endif
-		dst[srcWidth*2 -1]= 
-		dst[srcWidth*2 -1 + dstStride]= src[srcWidth-1];
+		dst[srcWidth*2 -1            ]= (3*src[srcWidth-1] +   src[srcWidth-1 + srcStride])>>2;
+		dst[srcWidth*2 -1 + dstStride]= (  src[srcWidth-1] + 3*src[srcWidth-1 + srcStride])>>2;
 
 		dst+=dstStride*2;
 		src+=srcStride;
 	}
-	src-=srcStride;
 	
 	// last line
+#if 1
+	dst[0]= src[0];
+        
+	for(x=0; x<srcWidth-1; x++){
+		dst[2*x+1]= (3*src[x] +   src[x+1])>>2;
+		dst[2*x+2]= (  src[x] + 3*src[x+1])>>2;
+	}
+	dst[2*srcWidth-1]= src[srcWidth-1];
+#else
 	for(x=0; x<srcWidth; x++){
 		dst[2*x+0]=
 		dst[2*x+1]= src[x];
 	}
+#endif
+
 #ifdef HAVE_MMX
 asm volatile(   EMMS" \n\t"
         	SFENCE" \n\t"
@@ -1712,7 +1824,7 @@ asm volatile(   EMMS" \n\t"
  */
 static inline void RENAME(uyvytoyv12)(const uint8_t *src, uint8_t *ydst, uint8_t *udst, uint8_t *vdst,
 	unsigned int width, unsigned int height,
-	unsigned int lumStride, unsigned int chromStride, unsigned int srcStride)
+	int lumStride, int chromStride, int srcStride)
 {
 	unsigned y;
 	const unsigned chromWidth= width>>1;
@@ -1767,7 +1879,7 @@ static inline void RENAME(uyvytoyv12)(const uint8_t *src, uint8_t *ydst, uint8_t
 			"addl $8, %%eax			\n\t"
 			"cmpl %4, %%eax			\n\t"
 			" jb 1b				\n\t"
-			::"r"(src), "r"(ydst), "r"(udst), "r"(vdst), "r" (chromWidth)
+			::"r"(src), "r"(ydst), "r"(udst), "r"(vdst), "g" (chromWidth)
 			: "memory", "%eax"
 		);
 
@@ -1797,7 +1909,7 @@ static inline void RENAME(uyvytoyv12)(const uint8_t *src, uint8_t *ydst, uint8_t
 			"cmpl %4, %%eax			\n\t"
 			" jb 1b				\n\t"
 
-			::"r"(src), "r"(ydst), "r"(udst), "r"(vdst), "r" (chromWidth)
+			::"r"(src), "r"(ydst), "r"(udst), "r"(vdst), "g" (chromWidth)
 			: "memory", "%eax"
 		);
 #else
@@ -1838,7 +1950,7 @@ asm volatile(   EMMS" \n\t"
  */
 static inline void RENAME(rgb24toyv12)(const uint8_t *src, uint8_t *ydst, uint8_t *udst, uint8_t *vdst,
 	unsigned int width, unsigned int height,
-	unsigned int lumStride, unsigned int chromStride, unsigned int srcStride)
+	int lumStride, int chromStride, int srcStride)
 {
 	unsigned y;
 	const unsigned chromWidth= width>>1;
@@ -2134,8 +2246,8 @@ static inline void RENAME(rgb24toyv12)(const uint8_t *src, uint8_t *ydst, uint8_
 }
 
 void RENAME(interleaveBytes)(uint8_t *src1, uint8_t *src2, uint8_t *dest,
-			    unsigned width, unsigned height, unsigned src1Stride,
-			    unsigned src2Stride, unsigned dstStride){
+			    unsigned width, unsigned height, int src1Stride,
+			    int src2Stride, int dstStride){
 	unsigned h;
 
 	for(h=0; h < height; h++)
@@ -2217,10 +2329,11 @@ void RENAME(interleaveBytes)(uint8_t *src1, uint8_t *src2, uint8_t *dest,
 static inline void RENAME(vu9_to_vu12)(const uint8_t *src1, const uint8_t *src2,
 			uint8_t *dst1, uint8_t *dst2,
 			unsigned width, unsigned height,
-			unsigned srcStride1, unsigned srcStride2,
-			unsigned dstStride1, unsigned dstStride2)
+			int srcStride1, int srcStride2,
+			int dstStride1, int dstStride2)
 {
-    unsigned y,x,w,h;
+    unsigned int y,x,h;
+    int w;
     w=width/2; h=height/2;
 #ifdef HAVE_MMX
     asm volatile(
@@ -2233,8 +2346,7 @@ static inline void RENAME(vu9_to_vu12)(const uint8_t *src1, const uint8_t *src2,
 	uint8_t* d=dst1+dstStride1*y;
 	x=0;
 #ifdef HAVE_MMX
-	if(w > 32)
-	for(;x<w;x+=32)
+	for(;x<w-31;x+=32)
 	{
 	    asm volatile(
 		PREFETCH" 32%1\n\t"
@@ -2274,8 +2386,7 @@ static inline void RENAME(vu9_to_vu12)(const uint8_t *src1, const uint8_t *src2,
 	uint8_t* d=dst2+dstStride2*y;
 	x=0;
 #ifdef HAVE_MMX
-	if(w > 32)
-	for(;x<w;x+=32)
+	for(;x<w-31;x+=32)
 	{
 	    asm volatile(
 		PREFETCH" 32%1\n\t"
@@ -2322,35 +2433,27 @@ static inline void RENAME(vu9_to_vu12)(const uint8_t *src1, const uint8_t *src2,
 static inline void RENAME(yvu9_to_yuy2)(const uint8_t *src1, const uint8_t *src2, const uint8_t *src3,
 			uint8_t *dst,
 			unsigned width, unsigned height,
-			unsigned srcStride1, unsigned srcStride2,
-			unsigned srcStride3, unsigned dstStride)
+			int srcStride1, int srcStride2,
+			int srcStride3, int dstStride)
 {
-    unsigned y,x,x2,w,h;
+    unsigned y,x,w,h;
     w=width/2; h=height;
-#ifdef HAVE_MMX
-    asm volatile(
-	PREFETCH" %0\n\t"
-	PREFETCH" %1\n\t"
-	PREFETCH" %2\n\t"
-	::"m"(*(src1+srcStride1)),"m"(*(src2+srcStride2)),"m"(*(src3+srcStride3)):"memory");
-#endif
     for(y=0;y<h;y++){
 	const uint8_t* yp=src1+srcStride1*y;
 	const uint8_t* up=src2+srcStride2*(y>>2);
 	const uint8_t* vp=src3+srcStride3*(y>>2);
 	uint8_t* d=dst+dstStride*y;
-	x2=0;
 	x=0;
 #ifdef HAVE_MMX
-	for(;x<w;x+=8,x2+=32)
+	for(;x<w-7;x+=8)
 	{
 	    asm volatile(
-		PREFETCH" 32%1\n\t"
-		PREFETCH" 32%2\n\t"
-		PREFETCH" 32%3\n\t"
-		"movq	%1, %%mm0\n\t"       /* Y0Y1Y2Y3Y4Y5Y6Y7 */
-		"movq	%2, %%mm1\n\t"       /* U0U1U2U3U4U5U6U7 */
-		"movq	%3, %%mm2\n\t"	     /* V0V1V2V3V4V5V6V7 */
+		PREFETCH" 32(%1, %0)\n\t"
+		PREFETCH" 32(%2, %0)\n\t"
+		PREFETCH" 32(%3, %0)\n\t"
+		"movq	(%1, %0, 4), %%mm0\n\t"       /* Y0Y1Y2Y3Y4Y5Y6Y7 */
+		"movq	(%2, %0), %%mm1\n\t"       /* U0U1U2U3U4U5U6U7 */
+		"movq	(%3, %0), %%mm2\n\t"	     /* V0V1V2V3V4V5V6V7 */
 		"movq	%%mm0, %%mm3\n\t"    /* Y0Y1Y2Y3Y4Y5Y6Y7 */
 		"movq	%%mm1, %%mm4\n\t"    /* U0U1U2U3U4U5U6U7 */
 		"movq	%%mm2, %%mm5\n\t"    /* V0V1V2V3V4V5V6V7 */
@@ -2363,41 +2466,42 @@ static inline void RENAME(yvu9_to_yuy2)(const uint8_t *src1, const uint8_t *src2
 		"punpcklbw %%mm2, %%mm1\n\t" /* U0V0 U0V0 U1V1 U1V1*/
 		"punpcklbw %%mm1, %%mm0\n\t" /* Y0U0 Y1V0 Y2U0 Y3V0*/
 		"punpckhbw %%mm1, %%mm3\n\t" /* Y4U1 Y5V1 Y6U1 Y7V1*/
-		MOVNTQ"	%%mm0, %0\n\t"
-		MOVNTQ"	%%mm3, 8%0\n\t"
+		MOVNTQ"	%%mm0, (%4, %0, 8)\n\t"
+		MOVNTQ"	%%mm3, 8(%4, %0, 8)\n\t"
 		
 		"punpckhbw %%mm2, %%mm6\n\t" /* U2V2 U2V2 U3V3 U3V3*/
-		"movq	8%1, %%mm0\n\t"
+		"movq	8(%1, %0, 4), %%mm0\n\t"
 		"movq	%%mm0, %%mm3\n\t"
 		"punpcklbw %%mm6, %%mm0\n\t" /* Y U2 Y V2 Y U2 Y V2*/
 		"punpckhbw %%mm6, %%mm3\n\t" /* Y U3 Y V3 Y U3 Y V3*/
-		MOVNTQ"	%%mm0, 16%0\n\t"
-		MOVNTQ"	%%mm3, 24%0\n\t"
+		MOVNTQ"	%%mm0, 16(%4, %0, 8)\n\t"
+		MOVNTQ"	%%mm3, 24(%4, %0, 8)\n\t"
 
 		"movq	%%mm4, %%mm6\n\t"
-		"movq	16%1, %%mm0\n\t"
+		"movq	16(%1, %0, 4), %%mm0\n\t"
 		"movq	%%mm0, %%mm3\n\t"
 		"punpcklbw %%mm5, %%mm4\n\t"
 		"punpcklbw %%mm4, %%mm0\n\t" /* Y U4 Y V4 Y U4 Y V4*/
 		"punpckhbw %%mm4, %%mm3\n\t" /* Y U5 Y V5 Y U5 Y V5*/
-		MOVNTQ"	%%mm0, 32%0\n\t"
-		MOVNTQ"	%%mm3, 40%0\n\t"
+		MOVNTQ"	%%mm0, 32(%4, %0, 8)\n\t"
+		MOVNTQ"	%%mm3, 40(%4, %0, 8)\n\t"
 		
 		"punpckhbw %%mm5, %%mm6\n\t"
-		"movq	24%1, %%mm0\n\t"
+		"movq	24(%1, %0, 4), %%mm0\n\t"
 		"movq	%%mm0, %%mm3\n\t"
 		"punpcklbw %%mm6, %%mm0\n\t" /* Y U6 Y V6 Y U6 Y V6*/
 		"punpckhbw %%mm6, %%mm3\n\t" /* Y U7 Y V7 Y U7 Y V7*/
-		MOVNTQ"	%%mm0, 48%0\n\t"
-		MOVNTQ"	%%mm3, 56%0\n\t"
+		MOVNTQ"	%%mm0, 48(%4, %0, 8)\n\t"
+		MOVNTQ"	%%mm3, 56(%4, %0, 8)\n\t"
 
-		:"=m"(d[8*x])
-		:"m"(yp[x2]),"m"(up[x]),"m"(vp[x])
+		: "+r" (x)
+                : "r"(yp), "r" (up), "r"(vp), "r"(d)
 		:"memory");
 	}
 #endif
-	for(;x<w;x++,x2+=4)
+	for(; x<w; x++)
 	{
+	    const int x2= x<<2;
 	    d[8*x+0]=yp[x2];
 	    d[8*x+1]=up[x];
 	    d[8*x+2]=yp[x2+1];

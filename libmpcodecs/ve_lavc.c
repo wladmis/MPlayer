@@ -37,10 +37,10 @@ extern char* passtmpfile;
 #endif
 
 #if LIBAVCODEC_BUILD < 4641
-#error we dont support libavcodec prior to build 4641, get the latest libavcodec CVS
+#error we do not support libavcodec prior to build 4641, get the latest libavcodec CVS
 #endif
 
-#if LIBAVCODEC_BUILD < 4645
+#if LIBAVCODEC_BUILD < 4659
 #warning your version of libavcodec is old, u might want to get a newer one
 #endif
 
@@ -55,7 +55,7 @@ extern int avcodec_inited;
 static char *lavc_param_vcodec = "mpeg4";
 static int lavc_param_vbitrate = -1;
 static int lavc_param_vrate_tolerance = 1000*8;
-static int lavc_param_vhq = 0; /* default is realtime encoding */
+static int lavc_param_mb_decision = 0; /* default is realtime encoding */
 static int lavc_param_v4mv = 0;
 static int lavc_param_vme = 4;
 static int lavc_param_vqscale = 0;
@@ -95,6 +95,7 @@ static int lavc_param_mpeg_quant=0;
 static int lavc_param_fdct=0;
 static int lavc_param_idct=0;
 static char* lavc_param_aspect = NULL;
+static int lavc_param_autoaspect = 0;
 static float lavc_param_lumi_masking= 0.0;
 static float lavc_param_dark_masking= 0.0;
 static float lavc_param_temporal_cplx_masking= 0.0;
@@ -103,7 +104,7 @@ static float lavc_param_p_masking= 0.0;
 static int lavc_param_normalize_aqp= 0;
 static int lavc_param_interlaced_dct= 0;
 static int lavc_param_prediction_method= FF_PRED_LEFT;
-static char *lavc_param_format="YV12";
+static int lavc_param_format= IMGFMT_YV12;
 static int lavc_param_debug= 0;
 static int lavc_param_psnr= 0;
 static int lavc_param_me_pre_cmp= 0;
@@ -114,18 +115,32 @@ static int lavc_param_pre_dia_size= 0;
 static int lavc_param_dia_size= 0;
 static int lavc_param_qpel= 0;
 static int lavc_param_trell= 0;
+static int lavc_param_aic= 0;
+static int lavc_param_umv= 0;
 static int lavc_param_last_pred= 0;
 static int lavc_param_pre_me= 1;
 static int lavc_param_me_subpel_quality= 8;
+static int lavc_param_me_range= 0;
+#if LIBAVCODEC_BUILD >= 4663
+static int lavc_param_ibias= FF_DEFAULT_QUANT_BIAS;
+static int lavc_param_pbias= FF_DEFAULT_QUANT_BIAS;
+#endif
+static int lavc_param_coder= 0;
+static int lavc_param_context= 0;
+static char *lavc_param_intra_matrix = NULL;
+static char *lavc_param_inter_matrix = NULL;
+static int lavc_param_cbp= 0;
+static int lavc_param_mv0= 0;
 
-#include "cfgparser.h"
+#include "m_option.h"
 
 #ifdef USE_LIBAVCODEC
-struct config lavcopts_conf[]={
+m_option_t lavcopts_conf[]={
 	{"vcodec", &lavc_param_vcodec, CONF_TYPE_STRING, 0, 0, 0, NULL},
 	{"vbitrate", &lavc_param_vbitrate, CONF_TYPE_INT, CONF_RANGE, 4, 24000000, NULL},
 	{"vratetol", &lavc_param_vrate_tolerance, CONF_TYPE_INT, CONF_RANGE, 4, 24000000, NULL},
-	{"vhq", &lavc_param_vhq, CONF_TYPE_FLAG, 0, 0, 1, NULL},
+	{"vhq", &lavc_param_mb_decision, CONF_TYPE_FLAG, 0, 0, 1, NULL},
+	{"mbd", &lavc_param_mb_decision, CONF_TYPE_INT, CONF_RANGE, 0, 9, NULL},
 	{"v4mv", &lavc_param_v4mv, CONF_TYPE_FLAG, 0, 0, 1, NULL},
 	{"vme", &lavc_param_vme, CONF_TYPE_INT, CONF_RANGE, 0, 5, NULL},
 	{"vqscale", &lavc_param_vqscale, CONF_TYPE_INT, CONF_RANGE, 1, 31, NULL},
@@ -164,6 +179,7 @@ struct config lavcopts_conf[]={
 	{"vrc_init_cplx", &lavc_param_rc_initial_cplx, CONF_TYPE_FLOAT, CONF_RANGE, 0.0, 9999999.0, NULL},
         {"vfdct", &lavc_param_fdct, CONF_TYPE_INT, CONF_RANGE, 0, 10, NULL},
 	{"aspect", &lavc_param_aspect, CONF_TYPE_STRING, 0, 0, 0, NULL},
+	{"autoaspect", &lavc_param_autoaspect, CONF_TYPE_FLAG, 0, 0, 1, NULL},
 	{"lumi_mask", &lavc_param_lumi_masking, CONF_TYPE_FLOAT, CONF_RANGE, -1.0, 1.0, NULL},
 	{"tcplx_mask", &lavc_param_temporal_cplx_masking, CONF_TYPE_FLOAT, CONF_RANGE, -1.0, 1.0, NULL},
 	{"scplx_mask", &lavc_param_spatial_cplx_masking, CONF_TYPE_FLOAT, CONF_RANGE, -1.0, 1.0, NULL},
@@ -173,7 +189,7 @@ struct config lavcopts_conf[]={
 	{"ildct", &lavc_param_interlaced_dct, CONF_TYPE_FLAG, 0, 0, 1, NULL},
         {"idct", &lavc_param_idct, CONF_TYPE_INT, CONF_RANGE, 0, 20, NULL},
         {"pred", &lavc_param_prediction_method, CONF_TYPE_INT, CONF_RANGE, 0, 20, NULL},
-        {"format", &lavc_param_format, CONF_TYPE_STRING, 0, 0, 0, NULL},
+        {"format", &lavc_param_format, CONF_TYPE_IMGFMT, 0, 0, 0, NULL},
 #if LIBAVCODEC_BUILD >= 4642
         {"debug", &lavc_param_debug, CONF_TYPE_INT, CONF_RANGE, 0, 100000000, NULL},
 #endif 
@@ -193,6 +209,29 @@ struct config lavcopts_conf[]={
 	{"last_pred", &lavc_param_last_pred, CONF_TYPE_INT, CONF_RANGE, 0, 2000, NULL},
 	{"preme", &lavc_param_pre_me, CONF_TYPE_INT, CONF_RANGE, 0, 2000, NULL},
 	{"subq", &lavc_param_me_subpel_quality, CONF_TYPE_INT, CONF_RANGE, 0, 8, NULL},
+	{"me_range", &lavc_param_me_range, CONF_TYPE_INT, CONF_RANGE, 0, 16000, NULL},
+#ifdef CODEC_FLAG_H263P_AIC
+	{"aic", &lavc_param_aic, CONF_TYPE_FLAG, 0, 0, CODEC_FLAG_H263P_AIC, NULL},
+	{"umv", &lavc_param_umv, CONF_TYPE_FLAG, 0, 0, CODEC_FLAG_H263P_UMV, NULL},
+#endif
+#if LIBAVCODEC_BUILD >= 4663
+	{"ibias", &lavc_param_ibias, CONF_TYPE_INT, CONF_RANGE, -512, 512, NULL},
+	{"pbias", &lavc_param_pbias, CONF_TYPE_INT, CONF_RANGE, -512, 512, NULL},
+#endif
+#if LIBAVCODEC_BUILD >= 4669
+	{"coder", &lavc_param_coder, CONF_TYPE_INT, CONF_RANGE, 0, 10, NULL},
+	{"context", &lavc_param_context, CONF_TYPE_INT, CONF_RANGE, 0, 10, NULL},
+#endif
+#if LIBAVCODEC_BUILD >= 4675
+	{"intra_matrix", &lavc_param_intra_matrix, CONF_TYPE_STRING, 0, 0, 0, NULL},
+	{"inter_matrix", &lavc_param_inter_matrix, CONF_TYPE_STRING, 0, 0, 0, NULL},
+#endif
+#if LIBAVCODEC_BUILD >= 4681
+	{"cbp", &lavc_param_cbp, CONF_TYPE_FLAG, 0, 0, CODEC_FLAG_CBP_RD, NULL},
+#endif
+#if LIBAVCODEC_BUILD >= 4683
+	{"mv0", &lavc_param_mv0, CONF_TYPE_FLAG, 0, 0, CODEC_FLAG_MV0, NULL},
+#endif
 	{NULL, NULL, 0, 0, 0, 0, NULL}
 };
 #endif
@@ -232,7 +271,12 @@ static int config(struct vf_instance_s* vf,
     else
 	lavc_venc_context->bit_rate = 800000; /* default */
     lavc_venc_context->bit_rate_tolerance= lavc_param_vrate_tolerance*1000;
-    lavc_venc_context->frame_rate = (float)mux_v->h.dwRate/mux_v->h.dwScale * FRAME_RATE_BASE;
+#if LIBAVCODEC_BUILD >= 4662
+    lavc_venc_context->frame_rate      = mux_v->h.dwRate;
+    lavc_venc_context->frame_rate_base = mux_v->h.dwScale;
+#else
+    lavc_venc_context->frame_rate      = mux_v->h.dwRate*FRAME_RATE_BASE/mux_v->h.dwScale;
+#endif
     lavc_venc_context->qmin= lavc_param_vqmin;
     lavc_venc_context->qmax= lavc_param_vqmax;
 #if LIBAVCODEC_BUILD >= 4646
@@ -279,7 +323,66 @@ static int config(struct vf_instance_s* vf,
 #if LIBAVCODEC_BUILD >= 4652
     lavc_venc_context->me_subpel_quality= lavc_param_me_subpel_quality;
 #endif
-    
+#if LIBAVCODEC_BUILD >= 4659
+    lavc_venc_context->me_range= lavc_param_me_range;
+#endif
+#if LIBAVCODEC_BUILD >= 4663
+    lavc_venc_context->intra_quant_bias= lavc_param_ibias;
+    lavc_venc_context->inter_quant_bias= lavc_param_pbias;
+#endif
+#if LIBAVCODEC_BUILD >= 4669
+    lavc_venc_context->coder_type= lavc_param_coder;
+    lavc_venc_context->context_model= lavc_param_context;
+#endif
+#if LIBAVCODEC_BUILD >= 4675
+    if (lavc_param_intra_matrix)
+    {
+	char *tmp;
+
+	lavc_venc_context->intra_matrix =
+	    malloc(sizeof(*lavc_venc_context->intra_matrix)*64);
+
+	i = 0;
+	while ((tmp = strsep(&lavc_param_intra_matrix, ",")) && (i < 64))
+	{
+	    if (!tmp || (tmp && !strlen(tmp)))
+		break;
+	    lavc_venc_context->intra_matrix[i++] = atoi(tmp);
+	}
+	
+	if (i != 64)
+	{
+	    free(lavc_venc_context->intra_matrix);
+	    lavc_venc_context->intra_matrix = NULL;
+	}
+	else
+	    mp_msg(MSGT_MENCODER, MSGL_V, "Using user specified intra matrix\n");
+    }
+    if (lavc_param_inter_matrix)
+    {
+	char *tmp;
+
+	lavc_venc_context->inter_matrix =
+	    malloc(sizeof(*lavc_venc_context->inter_matrix)*64);
+
+	i = 0;
+	while ((tmp = strsep(&lavc_param_inter_matrix, ",")) && (i < 64))
+	{
+	    if (!tmp || (tmp && !strlen(tmp)))
+		break;
+	    lavc_venc_context->inter_matrix[i++] = atoi(tmp);
+	}
+	
+	if (i != 64)
+	{
+	    free(lavc_venc_context->inter_matrix);
+	    lavc_venc_context->inter_matrix = NULL;
+	}
+	else
+	    mp_msg(MSGT_MENCODER, MSGL_V, "Using user specified inter matrix\n");
+    }
+#endif
+
     p= lavc_param_rc_override_string;
     for(i=0; p; i++){
         int start, end, q;
@@ -337,6 +440,8 @@ static int config(struct vf_instance_s* vf,
 	    return 0;
 	}
     }
+    else if (lavc_param_autoaspect)
+	lavc_venc_context->aspect_ratio = (float)d_width/d_height;
 
     /* keyframe interval */
     if (lavc_param_keyint >= 0) /* != -1 */
@@ -344,13 +449,16 @@ static int config(struct vf_instance_s* vf,
     else
 	lavc_venc_context->gop_size = 250; /* default */
 
-    if (lavc_param_vhq)
+    lavc_venc_context->flags = 0;
+    if (lavc_param_mb_decision)
     {
 	printf("High quality encoding selected (non real time)!\n");
-	lavc_venc_context->flags = CODEC_FLAG_HQ;
+#if LIBAVCODEC_BUILD < 4673
+        lavc_venc_context->flags = CODEC_FLAG_HQ;
+#else
+        lavc_venc_context->mb_decision= lavc_param_mb_decision;
+#endif
     }
-    else
-	lavc_venc_context->flags = 0;
 
 #if LIBAVCODEC_BUILD >= 4647
     lavc_venc_context->me_cmp= lavc_param_me_cmp;
@@ -362,8 +470,12 @@ static int config(struct vf_instance_s* vf,
 #if LIBAVCODEC_BUILD >= 4648
     lavc_venc_context->flags|= lavc_param_trell;
 #endif 
+    lavc_venc_context->flags|= lavc_param_aic;
+    lavc_venc_context->flags|= lavc_param_umv;
     lavc_venc_context->flags|= lavc_param_v4mv ? CODEC_FLAG_4MV : 0;
     lavc_venc_context->flags|= lavc_param_data_partitioning;
+    lavc_venc_context->flags|= lavc_param_cbp;
+    lavc_venc_context->flags|= lavc_param_mv0;
     if(lavc_param_gray) lavc_venc_context->flags|= CODEC_FLAG_GRAY;
 
     if(lavc_param_normalize_aqp) lavc_venc_context->flags|= CODEC_FLAG_NORMALIZE_AQP;
@@ -372,19 +484,37 @@ static int config(struct vf_instance_s* vf,
     lavc_venc_context->flags|= lavc_param_psnr;
 #endif
     lavc_venc_context->prediction_method= lavc_param_prediction_method;
-    if(!strcasecmp(lavc_param_format, "YV12"))
-        lavc_venc_context->pix_fmt= PIX_FMT_YUV420P;
-    else if(!strcasecmp(lavc_param_format, "422P"))
-        lavc_venc_context->pix_fmt= PIX_FMT_YUV422P;
-    else{
-        mp_msg(MSGT_MENCODER,MSGL_ERR,"%s is not a supported format\n", lavc_param_format);
-        return 0;
+    switch(lavc_param_format)
+    {
+	case IMGFMT_YV12:
+	    lavc_venc_context->pix_fmt = PIX_FMT_YUV420P;
+	    break;
+	case IMGFMT_422P:
+	    lavc_venc_context->pix_fmt = PIX_FMT_YUV422P;
+	    break;
+	case IMGFMT_444P:
+	    lavc_venc_context->pix_fmt = PIX_FMT_YUV444P;
+	    break;
+	case IMGFMT_411P:
+	    lavc_venc_context->pix_fmt = PIX_FMT_YUV411P;
+	    break;
+	case IMGFMT_YVU9:
+	    lavc_venc_context->pix_fmt = PIX_FMT_YUV410P;
+	    break;
+	case IMGFMT_BGR32:
+	    lavc_venc_context->pix_fmt = PIX_FMT_RGBA32;
+	    break;
+	default:
+    	    mp_msg(MSGT_MENCODER,MSGL_ERR,"%s is not a supported format\n", vo_format_name(lavc_param_format));
+    	    return 0;
     }
+
+    if(!stats_file) {
     /* lavc internal 2pass bitrate control */
     switch(lavc_param_vpass){
     case 1: 
 	lavc_venc_context->flags|= CODEC_FLAG_PASS1; 
-	stats_file= fopen(passtmpfile, "w");
+	stats_file= fopen(passtmpfile, "wb");
 	if(stats_file==NULL){
 	    mp_msg(MSGT_MENCODER,MSGL_ERR,"2pass failed: filename=%s\n", passtmpfile);
             return 0;
@@ -392,7 +522,7 @@ static int config(struct vf_instance_s* vf,
 	break;
     case 2:
 	lavc_venc_context->flags|= CODEC_FLAG_PASS2; 
-	stats_file= fopen(passtmpfile, "r");
+	stats_file= fopen(passtmpfile, "rb");
 	if(stats_file==NULL){
 	    mp_msg(MSGT_MENCODER,MSGL_ERR,"2pass failed: filename=%s\n", passtmpfile);
             return 0;
@@ -410,6 +540,7 @@ static int config(struct vf_instance_s* vf,
 	}        
 	break;
     }
+    }
 
     lavc_venc_context->me_method = ME_ZERO+lavc_param_vme;
 
@@ -418,6 +549,9 @@ static int config(struct vf_instance_s* vf,
     {
 	printf("Using constant qscale = %d (VBR)\n", lavc_param_vqscale);
 	lavc_venc_context->flags |= CODEC_FLAG_QSCALE;
+#if LIBAVCODEC_BUILD >= 4668
+        lavc_venc_context->global_quality= FF_QUALITY_SCALE * lavc_param_vqscale;
+#endif
 	vf->priv->pic->quality = lavc_param_vqscale;
     }
 
@@ -454,11 +588,27 @@ static int query_format(struct vf_instance_s* vf, unsigned int fmt){
     case IMGFMT_YV12:
     case IMGFMT_IYUV:
     case IMGFMT_I420:
-        if(!strcasecmp(lavc_param_format, "YV12"))
+        if(lavc_param_format == IMGFMT_YV12)
+            return VFCAP_CSP_SUPPORTED | VFCAP_ACCEPT_STRIDE;
+        break;
+    case IMGFMT_411P:
+        if(lavc_param_format == IMGFMT_411P)
             return VFCAP_CSP_SUPPORTED | VFCAP_ACCEPT_STRIDE;
         break;
     case IMGFMT_422P:
-        if(!strcasecmp(lavc_param_format, "422P"))
+        if(lavc_param_format == IMGFMT_422P)
+            return VFCAP_CSP_SUPPORTED | VFCAP_ACCEPT_STRIDE;
+        break;
+    case IMGFMT_444P:
+        if(lavc_param_format == IMGFMT_444P)
+            return VFCAP_CSP_SUPPORTED | VFCAP_ACCEPT_STRIDE;
+        break;
+    case IMGFMT_YVU9:
+        if(lavc_param_format == IMGFMT_YVU9)
+            return VFCAP_CSP_SUPPORTED | VFCAP_ACCEPT_STRIDE;
+        break;
+    case IMGFMT_BGR32:
+        if(lavc_param_format == IMGFMT_BGR32)
             return VFCAP_CSP_SUPPORTED | VFCAP_ACCEPT_STRIDE;
         break;
     }
@@ -485,6 +635,7 @@ static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
 	out_size = avcodec_encode_video(lavc_venc_context, mux_v->buffer, mux_v->buffer_size,
 	    pic);
 
+           
     muxer_write_chunk(mux_v,out_size,lavc_venc_context->coded_frame->key_frame?0x10:0);
         
 #if LIBAVCODEC_BUILD >= 4643
@@ -497,6 +648,8 @@ static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
         static double all_frametime=0.0;
         AVFrame *pic= lavc_venc_context->coded_frame;
         double f= lavc_venc_context->width*lavc_venc_context->height*255.0*255.0;
+	double quality=0.0;
+	int8_t *q;
 
         if(!fvstats) {
             time_t today2;
@@ -512,10 +665,25 @@ static int put_image(struct vf_instance_s* vf, mp_image_t *mpi){
                 /*exit(1);*/
             }
         }
+	
+	// average MB quantizer
+	q = lavc_venc_context->coded_frame->qscale_table;
+	if(q) {
+	    int x, y;
+	    int w = (lavc_venc_context->width+15) >> 4;
+	    int h = (lavc_venc_context->height+15) >> 4;
+	    for( y = 0; y < h; y++ ) {
+		for( x = 0; x < w; x++ )
+		    quality += (double)*(q+x);
+		q += lavc_venc_context->coded_frame->qstride;
+	    }
+	    quality /= w * h;
+	} else 
+	    quality = lavc_venc_context->coded_frame->quality;
 
         fprintf(fvstats, "%6d, %2.2f, %6d, %2.2f, %2.2f, %2.2f, %2.2f %c\n",
             lavc_venc_context->coded_frame->coded_picture_number,
-            lavc_venc_context->coded_frame->quality,
+            quality,
             out_size,
             psnr(lavc_venc_context->coded_frame->error[0]/f),
             psnr(lavc_venc_context->coded_frame->error[1]*4/f),
@@ -537,7 +705,6 @@ static void uninit(struct vf_instance_s* vf){
 #if LIBAVCODEC_BUILD >= 4643
     if(lavc_param_psnr){
         double f= lavc_venc_context->width*lavc_venc_context->height*255.0*255.0;
-        
         f*= lavc_venc_context->coded_frame->coded_picture_number;
         
         printf("PSNR: Y:%2.2f, Cb:%2.2f, Cr:%2.2f, All:%2.2f\n",
@@ -547,6 +714,15 @@ static void uninit(struct vf_instance_s* vf){
             psnr((lavc_venc_context->error[0]+lavc_venc_context->error[1]+lavc_venc_context->error[2])/(f*1.5))
             );
     }
+#endif
+
+#if LIBAVCODEC_BUILD >= 4675
+    if (lavc_venc_context->intra_matrix)
+	free(lavc_venc_context->intra_matrix);
+    lavc_venc_context->intra_matrix = NULL;
+    if (lavc_venc_context->inter_matrix)
+	free(lavc_venc_context->inter_matrix);
+    lavc_venc_context->inter_matrix = NULL;
 #endif
 
     avcodec_close(lavc_venc_context);
@@ -589,6 +765,18 @@ static int vf_open(vf_instance_t *vf, char* args){
 	memset(mux_v->bih, 0, sizeof(BITMAPINFOHEADER)+1000);
 	mux_v->bih->biSize=sizeof(BITMAPINFOHEADER)+1000;
     }
+    else if (lavc_param_vcodec && !strcasecmp(lavc_param_vcodec, "asv1"))
+    {
+	mux_v->bih=malloc(sizeof(BITMAPINFOHEADER)+8);
+	memset(mux_v->bih, 0, sizeof(BITMAPINFOHEADER)+8);
+	mux_v->bih->biSize=sizeof(BITMAPINFOHEADER)+8;
+    }
+    else if (lavc_param_vcodec && !strcasecmp(lavc_param_vcodec, "asv2"))
+    {
+	mux_v->bih=malloc(sizeof(BITMAPINFOHEADER)+8);
+	memset(mux_v->bih, 0, sizeof(BITMAPINFOHEADER)+8);
+	mux_v->bih->biSize=sizeof(BITMAPINFOHEADER)+8;
+    }
     else if (lavc_param_vcodec && !strcasecmp(lavc_param_vcodec, "wmv2"))
     {
 	mux_v->bih=malloc(sizeof(BITMAPINFOHEADER)+4);
@@ -613,12 +801,16 @@ static int vf_open(vf_instance_t *vf, char* args){
 
     if (!strcasecmp(lavc_param_vcodec, "mpeg1") || !strcasecmp(lavc_param_vcodec, "mpeg1video"))
 	mux_v->bih->biCompression = mmioFOURCC('m', 'p', 'g', '1');
+    else if (!strcasecmp(lavc_param_vcodec, "mpeg2") || !strcasecmp(lavc_param_vcodec, "mpeg2video"))
+	mux_v->bih->biCompression = mmioFOURCC('m', 'p', 'g', '2');
     else if (!strcasecmp(lavc_param_vcodec, "h263") || !strcasecmp(lavc_param_vcodec, "h263p"))
 	mux_v->bih->biCompression = mmioFOURCC('h', '2', '6', '3');
     else if (!strcasecmp(lavc_param_vcodec, "rv10"))
 	mux_v->bih->biCompression = mmioFOURCC('R', 'V', '1', '0');
     else if (!strcasecmp(lavc_param_vcodec, "mjpeg"))
 	mux_v->bih->biCompression = mmioFOURCC('M', 'J', 'P', 'G');
+    else if (!strcasecmp(lavc_param_vcodec, "ljpeg"))
+	mux_v->bih->biCompression = mmioFOURCC('L', 'J', 'P', 'G');
     else if (!strcasecmp(lavc_param_vcodec, "mpeg4"))
 	mux_v->bih->biCompression = mmioFOURCC('D', 'I', 'V', 'X');
     else if (!strcasecmp(lavc_param_vcodec, "msmpeg4"))
@@ -631,6 +823,12 @@ static int vf_open(vf_instance_t *vf, char* args){
 	mux_v->bih->biCompression = mmioFOURCC('W', 'M', 'V', '2');
     else if (!strcasecmp(lavc_param_vcodec, "huffyuv"))
 	mux_v->bih->biCompression = mmioFOURCC('H', 'F', 'Y', 'U');
+    else if (!strcasecmp(lavc_param_vcodec, "asv1"))
+	mux_v->bih->biCompression = mmioFOURCC('A', 'S', 'V', '1');
+    else if (!strcasecmp(lavc_param_vcodec, "asv2"))
+	mux_v->bih->biCompression = mmioFOURCC('A', 'S', 'V', '2');
+    else if (!strcasecmp(lavc_param_vcodec, "ffv1"))
+	mux_v->bih->biCompression = mmioFOURCC('F', 'F', 'V', '1');
     else
 	mux_v->bih->biCompression = mmioFOURCC(lavc_param_vcodec[0],
 		lavc_param_vcodec[1], lavc_param_vcodec[2], lavc_param_vcodec[3]); /* FIXME!!! */

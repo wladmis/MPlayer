@@ -36,12 +36,15 @@
 #include "../loader/qtx/qtxsdk/components.h"
 #endif
 
+#ifdef MACOSX
+#include <QuickTime/QuickTime.h>
+#endif
+
 #ifdef HAVE_ZLIB
 #include <zlib.h>
 #endif
 
-// inclusion of fcntl.h cause cygwin gcc crash
-#ifndef __CYGWIN__
+#ifndef _FCNTL_H
 #include <fcntl.h>
 #endif
 
@@ -447,7 +450,7 @@ skip_chunk:
     }
     free(priv);
 
-    if (flags==5) // reference & header sent
+    if ((flags==5) || (flags==7)) // reference & header sent
         return 1;
 
     if(flags==1)
@@ -597,7 +600,10 @@ static void lschunks(demuxer_t* demuxer,int level,off_t endpos,mov_track_t* trak
 		    unsigned int fourcc=stream_read_dword_le(demuxer->stream);
 		    if(len<8) break; // error
 		    mp_msg(MSGT_DEMUX,MSGL_V,"MOV: %*s desc #%d: %.4s  (%d bytes)\n",level,"",i,&fourcc,len-16);
-		    if(!i){
+		    if(fourcc!=trak->fourcc && i)
+			mp_msg(MSGT_DEMUX,MSGL_WARN,MSGTR_MOVvariableFourCC);
+//		    if(!i)
+		    {
 			trak->fourcc=fourcc;
 			// read type specific (audio/video/time/text etc) header
 			// NOTE: trak type is not yet known at this point :(((
@@ -605,8 +611,6 @@ static void lschunks(demuxer_t* demuxer,int level,off_t endpos,mov_track_t* trak
 			trak->stdata=malloc(trak->stdata_len);
 			stream_read(demuxer->stream,trak->stdata,trak->stdata_len);
 		    }
-		    if(fourcc!=trak->fourcc && i)
-			mp_msg(MSGT_DEMUX,MSGL_WARN,MSGTR_MOVvariableFourCC);
 		    if(!stream_seek(demuxer->stream,pos+len)) break;
 		}
 		break;
@@ -898,14 +902,15 @@ static void lschunks(demuxer_t* demuxer,int level,off_t endpos,mov_track_t* trak
 		  }
 		}
 
-		if((trak->stdata[9]==0) && trak->stdata_len >= 36) { // version 0 with extra atoms
-		    int atom_len = char2int(trak->stdata,28);
-		    switch(char2int(trak->stdata,32)) { // atom type
+		if((trak->stdata[9]==0 || trak->stdata[9]==1) && trak->stdata_len >= 36) { // version 0 with extra atoms
+        int adjust = (trak->stdata[9]==1)?48:0;
+		    int atom_len = char2int(trak->stdata,28+adjust);
+		    switch(char2int(trak->stdata,32+adjust)) { // atom type
 		      case MOV_FOURCC('e','s','d','s'): {
 			mp_msg(MSGT_DEMUX, MSGL_INFO, "MOV: Found MPEG4 audio Elementary Stream Descriptor atom (%d)!\n", atom_len);
 			if(atom_len > 8) {
 			  esds_t esds; 				  
-			  if(!mp4_parse_esds(&trak->stdata[36], atom_len-8, &esds)) {
+			  if(!mp4_parse_esds(&trak->stdata[36+adjust], atom_len-8, &esds)) {
 			    
 			    sh->i_bps = esds.avgBitrate/8; 
 
@@ -930,7 +935,7 @@ static void lschunks(demuxer_t* demuxer,int level,off_t endpos,mov_track_t* trak
 		      } break;
 		      default:
 			mp_msg(MSGT_DEMUX, MSGL_INFO, "MOV: Found unknown audio atom %c%c%c%c (%d)!\n",
-			    trak->stdata[32],trak->stdata[33],trak->stdata[34],trak->stdata[35],
+			    trak->stdata[32+adjust],trak->stdata[33+adjust],trak->stdata[34+adjust],trak->stdata[35+adjust],
 			    atom_len);
 		    }
 		}  
@@ -972,7 +977,7 @@ static void lschunks(demuxer_t* demuxer,int level,off_t endpos,mov_track_t* trak
 	    }
 	    case MOV_TRAK_VIDEO: {
 		int i, entry;
-		int flag, start, count_flag, end, palette_count;
+		int flag, start, count_flag, end, palette_count, gray;
 		int hdr_ptr = 76;  // the byte just after depth
 		unsigned char *palette_map;
 		sh_video_t* sh=new_sh_video(demuxer,priv->track_db);
@@ -1000,11 +1005,12 @@ static void lschunks(demuxer_t* demuxer,int level,off_t endpos,mov_track_t* trak
 //      82  char[4]	atom type
 //	86  ...		atom data
 
-#ifdef USE_QTX_CODECS
+#if defined(USE_QTX_CODECS) || defined(MACOSX)
 	{	ImageDescription* id=malloc(8+trak->stdata_len);
 		trak->desc=id;
 		id->idSize=8+trak->stdata_len;
-		id->cType=bswap_32(trak->fourcc);
+//		id->cType=bswap_32(trak->fourcc);
+		id->cType=le2me_32(trak->fourcc);
 		id->version=char2short(trak->stdata,8);
 		id->revisionLevel=char2short(trak->stdata,10);
 		id->vendor=char2int(trak->stdata,12);
@@ -1107,7 +1113,8 @@ static void lschunks(demuxer_t* demuxer,int level,off_t endpos,mov_track_t* trak
 		if(depth>32+8) printf("*** depth = 0x%X\n",depth);
 
 		// palettized?
-		depth&=31; // flag 32 means grayscale
+		gray = 0;
+		if (depth > 32) { depth&=31; gray = 1; } // depth > 32 means grayscale
 		if ((depth == 2) || (depth == 4) || (depth == 8))
 		  palette_count = (1 << depth);
 		else
@@ -1139,13 +1146,24 @@ static void lschunks(demuxer_t* demuxer,int level,off_t endpos,mov_track_t* trak
 		  // load default palette
 		  if (flag & 0x08)
 		  {
-		    mp_msg(MSGT_DEMUX, MSGL_INFO, "Using default QT palette\n");
-		    if (palette_count == 4)
-		      memcpy(palette_map, qt_default_palette_4, 4 * 4);
-		    else if (palette_count == 16)
-		      memcpy(palette_map, qt_default_palette_16, 16 * 4);
-		    if (palette_count == 256)
-		      memcpy(palette_map, qt_default_palette_256, 256 * 4);
+		    if (gray)
+		    {
+		      mp_msg(MSGT_DEMUX, MSGL_INFO, "Using default QT grayscale palette\n");
+		      if (palette_count == 16)
+		        memcpy(palette_map, qt_default_grayscale_palette_16, 16 * 4);
+		      else if (palette_count == 256)
+		        memcpy(palette_map, qt_default_grayscale_palette_256, 256 * 4);
+		    }
+		    else
+		    {
+		      mp_msg(MSGT_DEMUX, MSGL_INFO, "Using default QT colour palette\n");
+		      if (palette_count == 4)
+		        memcpy(palette_map, qt_default_palette_4, 4 * 4);
+		      else if (palette_count == 16)
+		        memcpy(palette_map, qt_default_palette_16, 16 * 4);
+		      else if (palette_count == 256)
+		        memcpy(palette_map, qt_default_palette_256, 256 * 4);
+		    }
 		  }
 		  // load palette from file
 		  else
@@ -1437,9 +1455,13 @@ static void lschunks(demuxer_t* demuxer,int level,off_t endpos,mov_track_t* trak
 		    case MOV_FOURCC('A','l','l','F'):
 		    default:
 		    {
+			if( udta_len>udta_size)
+				udta_len=udta_size;
+			{
 			char dump[udta_len-4];
 			stream_read(demuxer->stream, (char *)&dump, udta_len-4-4);
 			udta_size -= udta_len;
+			}
 		    }
 		}
 	    }
@@ -1664,6 +1686,7 @@ if(trak->pos==0 && trak->stream_header_len>0){
     stream_read(demuxer->stream,dp->buffer+trak->stream_header_len,x);
     free(trak->stream_header);
     trak->stream_header = NULL;
+    trak->stream_header_len = 0;
     dp->pts=pts;
     dp->flags=0;
     dp->pos=pos; // FIXME?

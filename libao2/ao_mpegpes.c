@@ -1,15 +1,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#ifdef DVB_HEAD
+
+#include "../config.h"
+
+#ifdef HAVE_DVB_HEAD
 #define HAVE_DVB 1
 #endif
 
 #ifdef HAVE_DVB
 #include <sys/ioctl.h>
 #endif
-
-#include "../config.h"
 
 #include "audio_out.h"
 #include "audio_out_internal.h"
@@ -23,7 +24,7 @@
 #include <ost/audio.h>
 audioMixer_t dvb_mixer={255,255};
 #else
-#include </linux/dvb/audio.h>
+#include <linux/dvb/audio.h>
 audio_mixer_t dvb_mixer={255,255};
 #endif
 #endif
@@ -48,7 +49,7 @@ LIBAO_EXTERN(mpegpes)
 
 
 // to set/get/query special features/parameters
-static int control(int cmd,int arg){
+static int control(int cmd,void *arg){
 #ifdef HAVE_DVB
     switch(cmd){
 	case AOCONTROL_GET_VOLUME:
@@ -97,6 +98,7 @@ static int init(int rate,int channels,int format,int flags){
 	case AFMT_S16_LE:
 	case AFMT_S16_BE:
 	case AFMT_MPEG:
+	case AFMT_AC3:
 	    ao_data.format=format;
 	    break;
 	default:
@@ -178,7 +180,7 @@ static int play(void* data,int len,int flags){
 	unsigned short *s=data;
 //	if(len>2000) len=2000;
 //	printf("ao_mpegpes: len=%d  \n",len);
-	if(ao_data.format==AFMT_S16_LE)
+	if(ao_data.format==AFMT_S16_LE || ao_data.format==AFMT_AC3)
 	    for(i=0;i<len/2;i++) s[i]=(s[i]>>8)|(s[i]<<8); // le<->be
 	send_lpcm_packet(data,len,0xA0,ao_data.pts,freq_id);
     }

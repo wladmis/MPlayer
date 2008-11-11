@@ -25,6 +25,10 @@
 /* biCompression constant */
 #define BI_RGB        0L
 
+#ifdef STREAMING_LIVE_DOT_COM
+#include "demux_rtp.h"
+#endif
+
 static mp_mpeg_header_t picture;
 
 static int telecine=0;
@@ -82,6 +86,87 @@ switch(d_video->demuxer->file_format){
 #endif
   break;
  }
+ case DEMUXER_TYPE_MPEG4_ES: 
+ case DEMUXER_TYPE_MPEG4_IN_TS: {
+   videobuf_len=0; videobuf_code_len=0;
+   mp_msg(MSGT_DECVIDEO,MSGL_V,"Searching for Video Object Start code... ");fflush(stdout);
+   while(1){
+      int i=sync_video_packet(d_video);
+      if(i<=0x11F) break; // found it!
+      if(!i || !skip_video_packet(d_video)){
+        mp_msg(MSGT_DECVIDEO,MSGL_V,"NONE :(\n");
+	return 0;
+      }
+   }
+   mp_msg(MSGT_DECVIDEO,MSGL_V,"OK!\n");
+   if(!videobuffer) videobuffer=(char*)memalign(8,VIDEOBUFFER_SIZE);
+   if(!videobuffer){ 
+     mp_msg(MSGT_DECVIDEO,MSGL_ERR,MSGTR_ShMemAllocFail);
+     return 0;
+   }
+   mp_msg(MSGT_DECVIDEO,MSGL_V,"Searching for Video Object Layer Start code... ");fflush(stdout);
+   while(1){
+      int i=sync_video_packet(d_video);
+      printf("0x%X\n",i);
+      if(i>=0x120 && i<=0x12F) break; // found it!
+      if(!i || !read_video_packet(d_video)){
+        mp_msg(MSGT_DECVIDEO,MSGL_V,"NONE :(\n");
+	return 0;
+      }
+   }
+   mp_msg(MSGT_DECVIDEO,MSGL_V,"OK!\nSearching for Video Object Plane Start code... ");fflush(stdout);
+   while(1){
+      int i=sync_video_packet(d_video);
+      if(i==0x1B6) break; // found it!
+      if(!i || !read_video_packet(d_video)){
+        mp_msg(MSGT_DECVIDEO,MSGL_V,"NONE :(\n");
+	return 0;
+      }
+   }
+   mp_msg(MSGT_DECVIDEO,MSGL_V,"OK!\n");
+   sh_video->format=0x10000004;
+   break;
+ }
+ case DEMUXER_TYPE_H264_ES: {
+   videobuf_len=0; videobuf_code_len=0;
+   mp_msg(MSGT_DECVIDEO,MSGL_V,"Searching for sequence parameter set... ");fflush(stdout);
+   while(1){
+      int i=sync_video_packet(d_video);
+      if((i&~0x60) == 0x107 && i != 0x107) break; // found it!
+      if(!i || !skip_video_packet(d_video)){
+        mp_msg(MSGT_DECVIDEO,MSGL_V,"NONE :(\n");
+	return 0;
+      }
+   }
+   mp_msg(MSGT_DECVIDEO,MSGL_V,"OK!\n");
+   if(!videobuffer) videobuffer=(char*)memalign(8,VIDEOBUFFER_SIZE);
+   if(!videobuffer){ 
+     mp_msg(MSGT_DECVIDEO,MSGL_ERR,MSGTR_ShMemAllocFail);
+     return 0;
+   }
+   mp_msg(MSGT_DECVIDEO,MSGL_V,"Searching for picture parameter set... ");fflush(stdout);
+   while(1){
+      int i=sync_video_packet(d_video);
+      printf("0x%X\n",i);
+      if((i&~0x60) == 0x108 && i != 0x108) break; // found it!
+      if(!i || !read_video_packet(d_video)){
+        mp_msg(MSGT_DECVIDEO,MSGL_V,"NONE :(\n");
+	return 0;
+      }
+   }
+   mp_msg(MSGT_DECVIDEO,MSGL_V,"OK!\nSearching for Slice... ");fflush(stdout);
+   while(1){
+      int i=sync_video_packet(d_video);
+      if((i&~0x60) == 0x101 || (i&~0x60) == 0x102 || (i&~0x60) == 0x105) break; // found it!
+      if(!i || !read_video_packet(d_video)){
+        mp_msg(MSGT_DECVIDEO,MSGL_V,"NONE :(\n");
+	return 0;
+      }
+   }
+   mp_msg(MSGT_DECVIDEO,MSGL_V,"OK!\n");
+   sh_video->format=0x10000005;
+   break;
+ }
 #ifdef STREAMING_LIVE_DOT_COM
  case DEMUXER_TYPE_RTP:
    // If the RTP stream is a MPEG stream, then we use this code to check
@@ -90,7 +175,9 @@ switch(d_video->demuxer->file_format){
    // otherwise fall through to...
 #endif
  case DEMUXER_TYPE_PVA:
+ case DEMUXER_TYPE_MPEG_TS:
  case DEMUXER_TYPE_MPEG_ES:
+ case DEMUXER_TYPE_MPEG_TY:
  case DEMUXER_TYPE_MPEG_PS: {
 //mpeg_header_parser:
    // Find sequence_header first:
@@ -180,16 +267,16 @@ switch(d_video->demuxer->file_format){
    sh_video->disp_h=picture.display_picture_height;
    // bitrate:
    if(picture.bitrate!=0x3FFFF) // unspecified/VBR ?
-       sh_video->i_bps=1000*picture.bitrate/16;
+       sh_video->i_bps=picture.bitrate * 400 / 8;
    // info:
    mp_dbg(MSGT_DECVIDEO,MSGL_DBG2,"mpeg bitrate: %d (%X)\n",picture.bitrate,picture.bitrate);
-   mp_msg(MSGT_DECVIDEO,MSGL_INFO,"VIDEO:  %s  %dx%d  (aspect %d)  %4.2f fps  %5.1f kbps (%4.1f kbyte/s)\n",
+   mp_msg(MSGT_DECVIDEO,MSGL_INFO,"VIDEO:  %s  %dx%d  (aspect %d)  %5.3f fps  %5.1f kbps (%4.1f kbyte/s)\n",
     picture.mpeg1?"MPEG1":"MPEG2",
     sh_video->disp_w,sh_video->disp_h,
     picture.aspect_ratio_information,
     sh_video->fps,
-    picture.bitrate*0.5f,
-    picture.bitrate/16.0f );
+    sh_video->i_bps * 8 / 1000.0,
+    sh_video->i_bps / 1000.0 );
   break;
  }
 } // switch(file_format)
@@ -197,12 +284,19 @@ switch(d_video->demuxer->file_format){
 return 1;
 }
 
+void ty_processuserdata( unsigned char* buf, int len );
+
 static void process_userdata(unsigned char* buf,int len){
     int i;
     /* if the user data starts with "CC", assume it is a CC info packet */
     if(len>2 && buf[0]=='C' && buf[1]=='C'){
 //    	mp_msg(MSGT_DECVIDEO,MSGL_DBG2,"video.c: process_userdata() detected Closed Captions!\n");
 	if(subcc_enabled) subcc_process_data(buf+2,len-2);
+    }
+    if( len > 2 && buf[ 0 ] == 'T' && buf[ 1 ] == 'Y' )
+    {
+       ty_processuserdata( buf + 2, len - 2 );
+       return;
     }
     if(verbose<2) return;
     printf( "user_data: len=%3d  %02X %02X %02X %02X '",
@@ -226,7 +320,8 @@ int video_read_frame(sh_video_t* sh_video,float* frame_time_ptr,unsigned char** 
     *start=NULL;
 
   if(demuxer->file_format==DEMUXER_TYPE_MPEG_ES || demuxer->file_format==DEMUXER_TYPE_MPEG_PS
-		  || demuxer->file_format==DEMUXER_TYPE_PVA
+		  || demuxer->file_format==DEMUXER_TYPE_PVA || demuxer->file_format==DEMUXER_TYPE_MPEG_TS
+		  || demuxer->file_format==DEMUXER_TYPE_MPEG_TY
 #ifdef STREAMING_LIVE_DOT_COM
     || (demuxer->file_format==DEMUXER_TYPE_RTP && demux_is_mpeg_rtp_stream(demuxer))
 #endif
@@ -300,7 +395,7 @@ int video_read_frame(sh_video_t* sh_video,float* frame_time_ptr,unsigned char** 
 
     telecine_cnt*=0.9; // drift out error
     telecine_cnt+=frame_time-5.0/4.0;
-//    printf("\r telecine = %5.3f     \n",telecine_cnt);
+    mp_msg(MSGT_DECVIDEO,MSGL_DBG2,"\r telecine = %3.1f  %5.3f     \n",frame_time,telecine_cnt);
     
     if(telecine){
 	frame_time=1;
@@ -315,6 +410,26 @@ int video_read_frame(sh_video_t* sh_video,float* frame_time_ptr,unsigned char** 
 	    mp_msg(MSGT_DECVIDEO,MSGL_INFO,MSGTR_EnterTelecineMode,sh_video->fps);
 	    telecine=1;
 	}
+
+  } else if((demuxer->file_format==DEMUXER_TYPE_MPEG4_ES) || (demuxer->file_format==DEMUXER_TYPE_MPEG4_IN_TS)){
+      //
+        while(videobuf_len<VIDEOBUFFER_SIZE-MAX_VIDEO_PACKET_SIZE){
+          int i=sync_video_packet(d_video);
+          if(!read_video_packet(d_video)) return -1; // EOF
+	  if(i==0x1B6) break;
+        }
+	*start=videobuffer; in_size=videobuf_len;
+	videobuf_len=0;
+
+  } else if(demuxer->file_format==DEMUXER_TYPE_H264_ES){
+      //
+        while(videobuf_len<VIDEOBUFFER_SIZE-MAX_VIDEO_PACKET_SIZE){
+          int i=sync_video_packet(d_video);
+          if(!read_video_packet(d_video)) return -1; // EOF
+          if((i&~0x60) == 0x101 || (i&~0x60) == 0x102 || (i&~0x60) == 0x105) break;
+        }
+	*start=videobuffer; in_size=videobuf_len;
+	videobuf_len=0;
 
   } else {
       // frame-based file formats: (AVI,ASF,MOV)
@@ -336,7 +451,9 @@ int video_read_frame(sh_video_t* sh_video,float* frame_time_ptr,unsigned char** 
 
     // override frame_time for variable/unknown FPS formats:
     if(!force_fps) switch(demuxer->file_format){
+      case DEMUXER_TYPE_GIF:
       case DEMUXER_TYPE_REAL:
+      case DEMUXER_TYPE_MATROSKA:
 	if(d_video->pts>0 && pts1>0 && d_video->pts>pts1)
 	  frame_time=d_video->pts-pts1;
         break;
@@ -362,10 +479,13 @@ int video_read_frame(sh_video_t* sh_video,float* frame_time_ptr,unsigned char** 
           // frame_time = 1/25.0;
         }
       }
+      break;
     }
     
     if(demuxer->file_format==DEMUXER_TYPE_MPEG_PS ||
-       demuxer->file_format==DEMUXER_TYPE_MPEG_ES){
+       demuxer->file_format==DEMUXER_TYPE_MPEG_TS ||
+       demuxer->file_format==DEMUXER_TYPE_MPEG_ES ||
+       demuxer->file_format==DEMUXER_TYPE_MPEG_TY){
 
 //	if(pts>0.0001) printf("\r!!! pts: %5.3f [%d] (%5.3f)   \n",pts,picture_coding_type,i_pts);
 

@@ -23,7 +23,7 @@ typedef struct mp_osd_bbox_s {
 typedef struct mp_osd_obj_s {
     struct mp_osd_obj_s* next;
     unsigned char type;
-    unsigned char alignment; // 2 bits: x;y percents, 2 bits: x;y relative to parent; 2 bits: alignment left/right/center
+    unsigned char alignment; // 2 bits: x;y percentages, 2 bits: x;y relative to parent; 2 bits: alignment left/right/center
     unsigned short flags;
     int x,y;
     int dxs,dys;
@@ -103,6 +103,9 @@ extern int sub_visibility;
 extern int suboverlap_enabled;
 extern int sub_bg_color; /* subtitles background color */
 extern int sub_bg_alpha;
+extern int spu_alignment;
+extern int spu_aamode;
+extern float spu_gaussvar;
 
 //extern void vo_draw_text_osd(int dxs,int dys,void (*draw_alpha)(int x0,int y0, int w,int h, unsigned char* src, unsigned char *srca, int stride));
 //extern void vo_draw_text_progbar(int dxs,int dys,void (*draw_alpha)(int x0,int y0, int w,int h, unsigned char* src, unsigned char *srca, int stride));

@@ -1,6 +1,8 @@
 
 #include <string.h>
+#ifndef __MINGW32__
 #include <sys/ioctl.h>
+#endif
 #include <fcntl.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -22,7 +24,7 @@ void mixer_getvolume( float *l,float *r )
   ao_control_vol_t vol;
   *l=0; *r=0;
   if(audio_out){
-    if(CONTROL_OK != audio_out->control(AOCONTROL_GET_VOLUME,(int)&vol))
+    if(CONTROL_OK != audio_out->control(AOCONTROL_GET_VOLUME,&vol))
       return;
     *r=vol.right;
     *l=vol.left;
@@ -34,7 +36,7 @@ void mixer_setvolume( float l,float r )
   ao_control_vol_t vol;
   vol.right=r; vol.left=l;
   if(audio_out){
-    if(CONTROL_OK != audio_out->control(AOCONTROL_SET_VOLUME,(int)&vol))
+    if(CONTROL_OK != audio_out->control(AOCONTROL_SET_VOLUME,&vol))
       return;
   }
  muted=0;

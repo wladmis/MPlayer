@@ -1,16 +1,14 @@
+// $Revision: 1.108 $
 // MASTER FILE. Use this file as base for translations.
 
-// Translated files should be uploaded to ftp://mplayerhq.hu/MPlayer/incoming.
-// Also send a notify message to the mplayer-dev-eng mailing list.
+// Translated files should be sent to the mplayer-dev-eng mailing list or
+// to the help messages maintainer, see DOCS/tech/MAINTAINERS.
+// Please also put a note like "sync'ed with help_mp-en.h XXX" in the header
+// of the translated file so that we see at a glance if it is outdated.
 
 // ========================= MPlayer help ===========================
 
 #ifdef HELP_MP_DEFINE_STATIC
-static char* banner_text=
-"\n\n"
-"MPlayer " VERSION "(C) 2000-2003 Arpad Gereoffy (see DOCS)\n"
-"\n";
-
 static char help_text[]=
 "Usage:   mplayer [options] [url|path/]filename\n"
 "\n"
@@ -18,13 +16,13 @@ static char help_text[]=
 " -vo <drv[:dev]>  select video output driver & device ('-vo help' for a list)\n"
 " -ao <drv[:dev]>  select audio output driver & device ('-ao help' for a list)\n"
 #ifdef HAVE_VCD
-" -vcd <trackno>   play VCD (Video CD) track from device instead of plain file\n"
+" vcd://<trackno>   play VCD (Video CD) track from device instead of plain file\n"
 #endif
 #ifdef HAVE_LIBCSS
 " -dvdauth <dev>   specify DVD device for authentication (for encrypted discs)\n"
 #endif
 #ifdef USE_DVDREAD
-" -dvd <titleno>   play DVD title from device instead of plain file\n"
+" dvd://<titleno>   play DVD title from device instead of plain file\n"
 " -alang/-slang    select DVD audio/subtitle language (by 2-char country code)\n"
 #endif
 " -ss <timepos>    seek to given (seconds or hh:mm:ss) position\n"
@@ -46,7 +44,7 @@ static char help_text[]=
 " p or SPACE       pause movie (press any key to continue)\n"
 " q or ESC         stop playing and quit program\n"
 " + or -           adjust audio delay by +/- 0.1 second\n"
-" o                cycle OSD mode:  none / seekbar / seekbar+timer\n"
+" o                cycle OSD mode:  none / seekbar / seekbar + timer\n"
 " * or /           increase or decrease PCM volume\n"
 " z or x           adjust subtitle delay by +/- 0.1 second\n"
 " r or t           adjust subtitle position up/down, also see -vop expand\n"
@@ -83,7 +81,7 @@ static char help_text[]=
 #define MSGTR_TryForceAudioFmtStr "Trying to force audio codec driver family %s ...\n"
 #define MSGTR_CantFindAfmtFallback "Cannot find audio codec for forced driver family, falling back to other drivers.\n"
 #define MSGTR_CantFindAudioCodec "Cannot find codec for audio format 0x%X.\n"
-#define MSGTR_TryUpgradeCodecsConfOrRTFM "*** Try to upgrade %s from etc/codecs.conf\n*** If it still does not work, read DOCS/codecs.html!\n"
+#define MSGTR_RTFMCodecs "Read DOCS/en/codecs.html!\n"
 #define MSGTR_CouldntInitAudioCodec "Could not initialize audio codec -> no sound.\n"
 #define MSGTR_TryForceVideoFmtStr "Trying to force video codec driver family %s ...\n"
 #define MSGTR_CantFindVideoCodec "Cannot find codec matching selected -vo and video format 0x%X.\n"
@@ -110,8 +108,8 @@ static char help_text[]=
 "  - Try -cache 8192.\n"\
 "- Are you using -cache to play a non-interleaved AVI file?\n"\
 "  - Try -nocache.\n"\
-"Read DOCS/video.html and DOCS/sound.html for tuning/speedup tips.\n"\
-"If none of this helps you, read DOCS/bugreports.html.\n\n"
+"Read DOCS/en/video.html and DOCS/en/sound.html for tuning/speedup tips.\n"\
+"If none of this helps you, read DOCS/en/bugreports.html.\n\n"
 
 #define MSGTR_NoGui "MPlayer was compiled WITHOUT GUI support.\n"
 #define MSGTR_GuiNeedsX "MPlayer GUI requires X11.\n"
@@ -127,6 +125,7 @@ static char help_text[]=
 #define MSGTR_AvailableVideoCodecs "Available video codecs:\n"
 #define MSGTR_AvailableAudioFm "\nAvailable (compiled-in) audio codec families/drivers:\n"
 #define MSGTR_AvailableVideoFm "\nAvailable (compiled-in) video codec families/drivers:\n"
+#define MSGTR_AvailableFsType "Available fullscreen layer change modes:\n"
 #define MSGTR_UsingRTCTiming "Using Linux hardware RTC timing (%ldHz).\n"
 #define MSGTR_CannotReadVideoProperties "Video: Cannot read properties.\n"
 #define MSGTR_NoStreamFound "No stream found.\n"
@@ -138,12 +137,12 @@ static char help_text[]=
 #define MSGTR_AOComment "AO: Comment: %s\n"
 #define MSGTR_Video_NoVideo "Video: no video\n"
 #define MSGTR_NotInitializeVOPorVO "\nFATAL: Could not initialize video filters (-vop) or video output (-vo).\n"
-#define MSGTR_Paused "\n================= PAUSED =================\r"
+#define MSGTR_Paused "\n  =====  PAUSE  =====\r" // no more than 23 characters (status line for audio files)
 #define MSGTR_PlaylistLoadUnable "\nUnable to load playlist %s.\n"
 #define MSGTR_Exit_SIGILL_RTCpuSel \
 "- MPlayer crashed by an 'Illegal Instruction'.\n"\
 "  It may be a bug in our new runtime CPU-detection code...\n"\
-"  Please read DOCS/bugreports.html.\n"
+"  Please read DOCS/en/bugreports.html.\n"
 #define MSGTR_Exit_SIGILL \
 "- MPlayer crashed by an 'Illegal Instruction'.\n"\
 "  It usually happens when you run it on a CPU different than the one it was\n"\
@@ -151,18 +150,17 @@ static char help_text[]=
 #define MSGTR_Exit_SIGSEGV_SIGFPE \
 "- MPlayer crashed by bad usage of CPU/FPU/RAM.\n"\
 "  Recompile MPlayer with --enable-debug and make a 'gdb' backtrace and\n"\
-"  disassembly. For details, see DOCS/bugreports.html#crash.b.\n"
+"  disassembly. For details, see DOCS/en/bugreports.html#crash\n"
 #define MSGTR_Exit_SIGCRASH \
 "- MPlayer crashed. This shouldn't happen.\n"\
-"  It can be a bug in the MPlayer code _or_ in your drivers _or_ in your gcc\n"\
-"  version. If you think it's MPlayer's fault, please read DOCS/bugreports.html\n"\
-"  and follow the instructions there. We can't and won't help unless you provide\n"\
-"  this information when reporting a possible bug.\n"
+"  It can be a bug in the MPlayer code _or_ in your drivers _or_ in your\n"\
+"  gcc version. If you think it's MPlayer's fault, please read\n"\
+"  DOCS/en/bugreports.html and follow the instructions there. We can't and\n"\
+"  won't help unless you provide this information when reporting a possible bug.\n"
 
 
 // mencoder.c:
 
-#define MSGTR_MEncoderCopyright "(C) 2000-2003 Arpad Gereoffy (see DOCS)\n"
 #define MSGTR_UsingPass3ControllFile "Using pass3 control file: %s\n"
 #define MSGTR_MissingFilename "\nFilename missing.\n\n"
 #define MSGTR_CannotOpenFile_Device "Cannot open file/device.\n"
@@ -287,10 +285,10 @@ static char help_text[]=
 #define MSGTR_CantSeekRawAVI "Cannot seek in raw AVI streams. (Index required, try with the -idx switch.)\n"
 #define MSGTR_CantSeekFile "Cannot seek in this file.\n"
 
-#define MSGTR_EncryptedVOB "Encrypted VOB file (not compiled with libcss support)! Read DOCS/cd-dvd.html.\n"
+#define MSGTR_EncryptedVOB "Encrypted VOB file! Read DOCS/en/cd-dvd.html.\n"
 #define MSGTR_EncryptedVOBauth "Encrypted stream but you did not request authentication!\n"
 
-#define MSGTR_MOVcomprhdr "MOV: Compressed headers not (yet) supported.\n"
+#define MSGTR_MOVcomprhdr "MOV: Compressed headers support requires ZLIB!\n"
 #define MSGTR_MOVvariableFourCC "MOV: WARNING: Variable FOURCC detected!?\n"
 #define MSGTR_MOVtooManyTrk "MOV: WARNING: too many tracks"
 #define MSGTR_FoundAudioStream "==> Found audio stream: %d\n"
@@ -483,6 +481,12 @@ static char help_text[]=
 #define MSGTR_EQU_Center "Center"
 #define MSGTR_EQU_Bass "Bass"
 #define MSGTR_EQU_All "All"
+#define MSGTR_EQU_Channel1 "Channel 1:"
+#define MSGTR_EQU_Channel2 "Channel 2:"
+#define MSGTR_EQU_Channel3 "Channel 3:"
+#define MSGTR_EQU_Channel4 "Channel 4:"
+#define MSGTR_EQU_Channel5 "Channel 5:"
+#define MSGTR_EQU_Channel6 "Channel 6:"
 
 // --- playlist
 #define MSGTR_PLAYLIST_Path "Path"
@@ -494,6 +498,7 @@ static char help_text[]=
 #define MSGTR_PREFERENCES_Audio "Audio"
 #define MSGTR_PREFERENCES_Video "Video"
 #define MSGTR_PREFERENCES_SubtitleOSD "Subtitle & OSD"
+#define MSGTR_PREFERENCES_Codecs "Codecs & demuxer"
 #define MSGTR_PREFERENCES_Misc "Misc"
 
 #define MSGTR_PREFERENCES_None "None"
@@ -523,7 +528,6 @@ static char help_text[]=
 #define MSGTR_PREFERENCES_SUB_SRT "Convert the given subtitle to the time based SubViewer (SRT) format"
 #define MSGTR_PREFERENCES_SUB_Overlap "Toggle subtitle overlapping"
 #define MSGTR_PREFERENCES_Font "Font:"
-#define MSGTR_PREFERENCES_Codecs "Codecs & demuxer"
 #define MSGTR_PREFERENCES_FontFactor "Font factor:"
 #define MSGTR_PREFERENCES_PostProcess "Enable postprocessing"
 #define MSGTR_PREFERENCES_AutoQuality "Auto quality: "
@@ -566,6 +570,7 @@ static char help_text[]=
 #define MSGTR_PREFERENCES_FontEncoding19 "Korean charset (CP949)"
 #define MSGTR_PREFERENCES_FontEncoding20 "Thai charset (CP874)"
 #define MSGTR_PREFERENCES_FontEncoding21 "Cyrillic Windows (CP1251)"
+#define MSGTR_PREFERENCES_FontEncoding22 "Slavic/Central European Windows (CP1250)"
 #define MSGTR_PREFERENCES_FontNoAutoScale "No autoscale"
 #define MSGTR_PREFERENCES_FontPropWidth "Proportional to movie width"
 #define MSGTR_PREFERENCES_FontPropHeight "Proportional to movie height"
@@ -576,14 +581,22 @@ static char help_text[]=
 #define MSGTR_PREFERENCES_FontTextScale "Text scale:"
 #define MSGTR_PREFERENCES_FontOSDScale "OSD scale:"
 #define MSGTR_PREFERENCES_Cache "Cache on/off"
-#define MSGTR_PREFERENCES_LoadFullscreen "Start in fullscreen"
 #define MSGTR_PREFERENCES_CacheSize "Cache size: "
+#define MSGTR_PREFERENCES_LoadFullscreen "Start in fullscreen"
+#define MSGTR_PREFERENCES_SaveWinPos "Save window position"
 #define MSGTR_PREFERENCES_XSCREENSAVER "Stop XScreenSaver"
 #define MSGTR_PREFERENCES_PlayBar "Enable playbar"
 #define MSGTR_PREFERENCES_AutoSync "AutoSync on/off"
 #define MSGTR_PREFERENCES_AutoSyncValue "Autosync: "
 #define MSGTR_PREFERENCES_CDROMDevice "CD-ROM device:"
 #define MSGTR_PREFERENCES_DVDDevice "DVD device:"
+#define MSGTR_PREFERENCES_FPS "Movie FPS:"
+#define MSGTR_PREFERENCES_ShowVideoWindow "Show Video Window when inactive"
+
+#define MSGTR_ABOUT_UHU "GUI development sponsored by UHU Linux\n"
+#define MSGTR_ABOUT_CoreTeam "   MPlayer core team:\n"
+#define MSGTR_ABOUT_AdditionalCoders "   Additional coders:\n"
+#define MSGTR_ABOUT_MainTesters "   Main testers:\n"
 
 // --- messagebox
 #define MSGTR_MSGBOX_LABEL_FatalError "Fatal error!"

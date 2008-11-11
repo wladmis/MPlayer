@@ -41,7 +41,11 @@ int demux_mf_fill_buffer(demuxer_t *demuxer){
   stat( mf->names[mf->curr_frame],&fs );
 //  printf( "[demux_mf] frame: %d (%s,%d)\n",mf->curr_frame,mf->names[mf->curr_frame],fs.st_size );
 
+#ifdef WIN32
+  if ( !( f=fopen( mf->names[mf->curr_frame],"rb" ) ) ) return 0;
+#else
   if ( !( f=fopen( mf->names[mf->curr_frame],"r" ) ) ) return 0;
+#endif
   {
    sh_video_t     * sh_video = demuxer->video->sh;
    demux_packet_t * dp = new_demux_packet( fs.st_size );
@@ -63,7 +67,18 @@ demuxer_t* demux_open_mf(demuxer_t* demuxer){
   mf_t         *mf = NULL;
   
   if(!demuxer->stream->url) return NULL;
-  mf=open_mf(demuxer->stream->url);
+
+  if(!mf_type){
+    char* p=strrchr(demuxer->stream->url,'.');
+    if(!p){
+      mp_msg(MSGT_DEMUX, MSGL_INFO, "[demux_mf] file type was not set! (try -mf type=xxx)\n" );
+      free( mf ); return NULL;
+    }
+    mf_type=strdup(p+1);
+    mp_msg(MSGT_DEMUX, MSGL_INFO, "[demux_mf] file type was not set! trying 'type=%s'...\n", mf_type);
+  }
+
+  mf=open_mf(demuxer->stream->url + 5);
   if(!mf) return NULL;
   mf->curr_frame=0;
 
@@ -80,14 +95,16 @@ demuxer_t* demux_open_mf(demuxer_t* demuxer){
   // parent video demuxer stream (this is getting wacky), or else
   // video_read_properties() will choke
   sh_video->ds = demuxer->video;
-
+  
   if ( !strcasecmp( mf_type,"jpg" ) || 
         !(strcasecmp(mf_type, "jpeg"))) sh_video->format = mmioFOURCC('I', 'J', 'P', 'G');
   else 
      if ( !strcasecmp( mf_type,"png" )) sh_video->format = mmioFOURCC('M', 'P', 'N', 'G' );
   else
      if ( !strcasecmp( mf_type,"tga" )) sh_video->format = mmioFOURCC('M', 'T', 'G', 'A' );
-  else { mp_msg(MSGT_DEMUX, MSGL_INFO, "[demux_mf] unknow input file type.\n" ); free( mf ); return NULL; }
+   else
+     if (!strcasecmp( mf_type,"sgi" )) sh_video->format = mmioFOURCC('S', 'G', 'I', '1');
+  else { mp_msg(MSGT_DEMUX, MSGL_INFO, "[demux_mf] unknown input file type.\n" ); free( mf ); return NULL; }
 
   sh_video->disp_w = mf_w;
   sh_video->disp_h = mf_h;

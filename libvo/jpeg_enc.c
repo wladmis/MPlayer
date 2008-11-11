@@ -46,15 +46,15 @@ extern int avcodec_inited;
 /* zr_mjpeg_encode_mb needs access to these tables for the black & white 
  * option */
 typedef struct MJpegContext {
-    UINT8 huff_size_dc_luminance[12];
-    UINT16 huff_code_dc_luminance[12];
-    UINT8 huff_size_dc_chrominance[12];
-    UINT16 huff_code_dc_chrominance[12];
+    uint8_t huff_size_dc_luminance[12];
+    uint16_t huff_code_dc_luminance[12];
+    uint8_t huff_size_dc_chrominance[12];
+    uint16_t huff_code_dc_chrominance[12];
 
-    UINT8 huff_size_ac_luminance[256];
-    UINT16 huff_code_ac_luminance[256];
-    UINT8 huff_size_ac_chrominance[256];
-    UINT16 huff_code_ac_chrominance[256];
+    uint8_t huff_size_ac_luminance[256];
+    uint16_t huff_code_ac_luminance[256];
+    uint8_t huff_size_ac_chrominance[256];
+    uint16_t huff_code_ac_chrominance[256];
 } MJpegContext;
 
 
@@ -75,15 +75,15 @@ static const unsigned short aanscales[64] = {
 
 static void convert_matrix(MpegEncContext *s, int (*qmat)[64], 
 		uint16_t (*qmat16)[64], uint16_t (*qmat16_bias)[64],
-		const UINT16 *quant_matrix, int bias)
+		const uint16_t *quant_matrix, int bias)
 {
     int qscale;
 
     for(qscale=1; qscale<32; qscale++){
         int i;
-	if (s->fdct == ff_jpeg_fdct_islow) {
+	if (s->dsp.fdct == ff_jpeg_fdct_islow) {
 		for (i = 0; i < 64; i++) {
-			const int j = s->idct_permutation[i];
+			const int j = s->dsp.idct_permutation[i];
 			/* 16    <= qscale * quant_matrix[i] <= 7905 
 			 * 19952 <= aanscales[i] *  \
 			 * 	        qscale * quant_matrix[i]     <= 205026 
@@ -94,9 +94,9 @@ static void convert_matrix(MpegEncContext *s, int (*qmat)[64],
 			qmat[qscale][i] = (int)((UINT64_C(1) << (QMAT_SHIFT-3))/
 					(qscale * quant_matrix[j]));
 		}
-	} else if (s->fdct == fdct_ifast) {
+	} else if (s->dsp.fdct == fdct_ifast) {
             for(i=0;i<64;i++) {
-                const int j = s->idct_permutation[i];
+                const int j = s->dsp.idct_permutation[i];
                 /* 16 <= qscale * quant_matrix[i] <= 7905 */
                 /* 19952         <= aanscales[i] * qscale * quant_matrix[i]           <= 249205026 */
                 /* (1<<36)/19952 >= (1<<36)/(aanscales[i] * qscale * quant_matrix[i]) >= (1<<36)/249205026 */
@@ -107,7 +107,7 @@ static void convert_matrix(MpegEncContext *s, int (*qmat)[64],
             }
         } else {
             for(i=0;i<64;i++) {
-		const int j = s->idct_permutation[i];
+		const int j = s->dsp.idct_permutation[i];
                 /* We can safely suppose that 16 <= quant_matrix[i] <= 255
                    So 16           <= qscale * quant_matrix[i]             <= 7905
                    so (1<<19) / 16 >= (1<<19) / (qscale * quant_matrix[i]) >= (1<<19) / 7905
@@ -125,7 +125,7 @@ static void convert_matrix(MpegEncContext *s, int (*qmat)[64],
 }
 
 static inline void encode_dc(MpegEncContext *s, int val, 
-                             UINT8 *huff_size, UINT16 *huff_code)
+                             uint8_t *huff_size, uint16_t *huff_code)
 {
     int mant, nbits;
 
@@ -156,8 +156,8 @@ static void encode_block(MpegEncContext *s, DCTELEM *block, int n)
     int mant, nbits, code, i, j;
     int component, dc, run, last_index, val;
     MJpegContext *m = s->mjpeg_ctx;
-    UINT8 *huff_size_ac;
-    UINT16 *huff_code_ac;
+    uint8_t *huff_size_ac;
+    uint16_t *huff_code_ac;
     
     /* DC coef */
     component = (n <= 3 ? 0 : n - 4 + 1);
@@ -293,12 +293,13 @@ jpeg_enc_t *jpeg_enc_init(int w, int h, int y_psize, int y_rsize,
 			w, h, y_psize, y_rsize, u_psize, 
 			u_rsize, v_psize, v_rsize);
 
-	j = malloc(sizeof(jpeg_enc_t));
+	j = av_malloc(sizeof(jpeg_enc_t));
 	if (j == NULL) return NULL;
 
-	j->s = malloc(sizeof(MpegEncContext));
+	j->s = av_malloc(sizeof(MpegEncContext));
+	memset(j->s,0x00,sizeof(MpegEncContext));
 	if (j->s == NULL) {
-		free(j);
+		av_free(j);
 		return NULL;
 	}
 
@@ -314,6 +315,7 @@ jpeg_enc_t *jpeg_enc_init(int w, int h, int y_psize, int y_rsize,
 	j->s->height = h;
 	j->s->qscale = q;
 
+	j->s->mjpeg_data_only_frames = 0;
 	j->s->out_format = FMT_MJPEG;
 	j->s->intra_only = 1;
 	j->s->encoding = 1;
@@ -343,8 +345,8 @@ jpeg_enc_t *jpeg_enc_init(int w, int h, int y_psize, int y_rsize,
 	}
 
 	if (mjpeg_init(j->s) < 0) {
-		free(j->s);
-		free(j);
+		av_free(j->s);
+		av_free(j);
 		return NULL;
 	}
 
@@ -352,8 +354,8 @@ jpeg_enc_t *jpeg_enc_init(int w, int h, int y_psize, int y_rsize,
 	j->s->avctx = calloc(sizeof(*j->s->avctx), 1);
 
 	if (MPV_common_init(j->s) < 0) {
-		free(j->s);
-		free(j);
+		av_free(j->s);
+		av_free(j);
 		return NULL;
 	}
 
@@ -496,8 +498,8 @@ int jpeg_enc_frame(jpeg_enc_t *j, unsigned char *y_data,
 
 void jpeg_enc_uninit(jpeg_enc_t *j) {
 	mjpeg_close(j->s);
-	free(j->s);
-	free(j);
+	av_free(j->s);
+	av_free(j);
 }
 
 #if 0

@@ -4,11 +4,13 @@
 	Copyright 2000 Eugene Kuznetsov  (divx@euro.ru)
 
 *********************************************************/
-
+#include "config.h"
 #include "guids.h"
 #include "interfaces.h"
 #include "registry.h"
+#ifdef WIN32_LOADER
 #include "../ldt_keeper.h"
+#endif
 
 #ifndef NOAVIFILE_HEADERS
 #include "videodecoder.h"
@@ -47,7 +49,9 @@ struct _DMO_VideoDecoder
 #include <fcntl.h>
 #include <errno.h>
 #include <sys/types.h>
+#ifndef __MINGW32__
 #include <sys/mman.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>  // labs
 
@@ -85,7 +89,7 @@ static ct check[] = {
     {     24, 24, &MEDIASUBTYPE_RGB24, CAP_NONE },
     {     32, 32, &MEDIASUBTYPE_RGB32, CAP_NONE },
 
-    {0},
+    {0,0,NULL,0},
 };
 
 DMO_VideoDecoder * DMO_VideoDecoder_Open(char* dllname, GUID* guid, BITMAPINFOHEADER * format, int flip, int maxauto)
@@ -101,7 +105,9 @@ DMO_VideoDecoder * DMO_VideoDecoder_Open(char* dllname, GUID* guid, BITMAPINFOHE
     this->m_iLastQuality = -1;
     this->m_iMaxAuto = maxauto;
 
+#ifdef WIN32_LOADER
     Setup_LDT_Keeper();
+#endif
 
     //memset(&m_obh, 0, sizeof(m_obh));
     //m_obh.biSize = sizeof(m_obh);
@@ -280,8 +286,8 @@ void DMO_VideoDecoder_StartInternal(DMO_VideoDecoder *this)
     props.cBuffers = 1;
     props.cbBuffer = this->m_sDestType.lSampleSize;
 
-    //don't know how to do this correctly
-    props.cbAlign = props.cbPrefix = 0;
+    props.cbAlign = 1;
+    props.cbPrefix = 0;
     this->m_pDMO_Filter->m_pAll->vt->SetProperties(this->m_pDMO_Filter->m_pAll, &props, &props1);
     this->m_pDMO_Filter->m_pAll->vt->Commit(this->m_pDMO_Filter->m_pAll);
 #endif    
@@ -313,7 +319,9 @@ int DMO_VideoDecoder_DecodeInternal(DMO_VideoDecoder *this, const void* src, int
 //	return -1;
 //    }
 
+#ifdef WIN32_LOADER
     Setup_FS_Segment();
+#endif
 
     bufferin = CMediaBufferCreate(size, (void*)src, size, 0);
     result = this->m_pDMO_Filter->m_pMedia->vt->ProcessInput(this->m_pDMO_Filter->m_pMedia, 0,
@@ -455,8 +463,9 @@ int DMO_VideoDecoder_SetDestFmt(DMO_VideoDecoder *this, int bits, unsigned int c
 	  this->iv.m_obh.biSize = sizeof(BITMAPINFOHEADER);
 	  this->iv.m_obh.biCompression=csp;
 	  this->iv.m_obh.biBitCount=bits;
-	  this->iv.m_obh.biSizeImage=labs(this->iv.m_obh.biBitCount*
-             this->iv.m_obh.biWidth*this->iv.m_obh.biHeight)>>3;
+
+	  this->iv.m_obh.biSizeImage = labs(this->iv.m_obh.biWidth * this->iv.m_obh.biHeight)
+                                       * ((this->iv.m_obh.biBitCount + 7) / 8);
         }
     }
     this->m_sDestType.lSampleSize = this->iv.m_obh.biSizeImage;
@@ -500,7 +509,9 @@ int DMO_VideoDecoder_SetDestFmt(DMO_VideoDecoder *this, int bits, unsigned int c
 	break;
     }
 
+#ifdef WIN32_LOADER
     Setup_FS_Segment();
+#endif
 
 //    if(should_test)
 //	result = this->m_pDMO_Filter->m_pOutputPin->vt->QueryAccept(this->m_pDMO_Filter->m_pOutputPin, &this->m_sDestType);

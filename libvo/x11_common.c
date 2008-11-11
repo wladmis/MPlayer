@@ -13,8 +13,11 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/mman.h>
+#include <signal.h>
 
 #include "video_out.h"
+#include "aspect.h"
+#include "help_mp.h"
 
 #include <X11/Xmd.h>
 #include <X11/Xlib.h>
@@ -31,6 +34,12 @@
 
 #ifdef HAVE_XF86VM
 #include <X11/extensions/xf86vmode.h>
+#include <X11/XF86keysym.h>
+#endif
+
+#ifdef HAVE_XV
+#include <X11/extensions/Xv.h>
+#include <X11/extensions/Xvlib.h>
 #endif
 
 #include "../input/input.h"
@@ -46,14 +55,13 @@
 #define WIN_LAYER_ONTOP                  6
 #define WIN_LAYER_ABOVE_DOCK             10
  
-int ice_layer=WIN_LAYER_ABOVE_DOCK;
-int orig_layer=WIN_LAYER_NORMAL;
+int fs_layer=WIN_LAYER_ABOVE_DOCK;
+static int orig_layer=0;
 
 int stop_xscreensaver=0;
 
 static int dpms_disabled=0;
 static int timeout_save=0;
-static int xscreensaver_was_running=0;
 static int kdescreensaver_was_running=0;
 
 char* mDisplayName=NULL;
@@ -65,23 +73,24 @@ int mLocalDisplay;
 /* output window id */
 int WinID=-1;
 int vo_mouse_autohide = 0;
-int vo_wm_type = -1;
+int vo_wm_type = 0;
+static int vo_fs_type = 0;
+char** vo_fstype_list;
 
 /* if equal to 1 means that WM is a metacity (broken as hell) */
 int metacity_hack = 0;
 
-int net_wm_support = 0;
-
-Atom XA_NET_SUPPORTED;
-Atom XA_NET_WM_STATE;
-Atom XA_NET_WM_STATE_FULLSCREEN;
-Atom XA_NET_WM_STATE_ABOVE;
-Atom XA_NET_WM_STATE_STAYS_ON_TOP;
-Atom XA_NET_WM_PID;
-Atom XA_WIN_PROTOCOLS;
-Atom XA_WIN_LAYER;
-Atom XA_WIN_HINTS;
-Atom XA_BLACKBOX_PID;
+static Atom XA_NET_SUPPORTED;
+static Atom XA_NET_WM_STATE;
+static Atom XA_NET_WM_STATE_FULLSCREEN;
+static Atom XA_NET_WM_STATE_ABOVE;
+static Atom XA_NET_WM_STATE_STAYS_ON_TOP;
+static Atom XA_NET_WM_STATE_BELOW;
+static Atom XA_NET_WM_PID;
+static Atom XA_WIN_PROTOCOLS;
+static Atom XA_WIN_LAYER;
+static Atom XA_WIN_HINTS;
+static Atom XA_BLACKBOX_PID;
 
 #define XA_INIT(x) XA##x = XInternAtom(mDisplay, #x, False)
 
@@ -101,6 +110,8 @@ int xinerama_y = 0;
 XF86VidModeModeInfo **vidmodes=NULL;
 XF86VidModeModeLine modeline;
 #endif
+
+static int vo_x11_get_fs_type(int supported);
 
 void vo_hidecursor ( Display *disp , Window win )
 {
@@ -147,17 +158,54 @@ static int x11_errorhandler(Display *display, XErrorEvent *event)
 #undef MSGLEN
 }
 
-int net_wm_support_state_test( Atom atom )
+void fstype_help(void)
 {
-#define NET_WM_STATE_TEST(x) { if (atom == XA_NET_WM_STATE_##x) { mp_dbg( MSGT_VO,MSGL_STATUS, "[x11] Detected wm supports " #x " state.\n" ); return SUPPORT_##x; } }
+ mp_msg(MSGT_VO, MSGL_INFO, MSGTR_AvailableFsType);
+ 
+ mp_msg(MSGT_VO, MSGL_INFO, "    %-15s %s\n", "none", "don't set fullscreen window layer");
+ mp_msg(MSGT_VO, MSGL_INFO, "    %-15s %s\n", "layer", "use _WIN_LAYER hint with default layer");
+ mp_msg(MSGT_VO, MSGL_INFO, "    %-15s %s\n", "layer=<0..15>", "use _WIN_LAYER hint with a given layer number");
+ mp_msg(MSGT_VO, MSGL_INFO, "    %-15s %s\n", "netwm", "force NETWM style");
+ mp_msg(MSGT_VO, MSGL_INFO, "    %-15s %s\n", "above", "use _NETWM_STATE_ABOVE hint if available");
+ mp_msg(MSGT_VO, MSGL_INFO, "    %-15s %s\n", "below", "use _NETWM_STATE_BELOW hint if available");
+ mp_msg(MSGT_VO, MSGL_INFO, "    %-15s %s\n", "fullscreen", "use _NETWM_STATE_FULLSCREEN hint if availale");
+ mp_msg(MSGT_VO, MSGL_INFO, "    %-15s %s\n", "stays_on_top", "use _NETWM_STATE_STAYS_ON_TOP hint if available");
+ mp_msg(MSGT_VO, MSGL_INFO, "You can also negate the settings with simply putting '-' in the beginning");
+}
+
+static void fstype_dump(int fstype)
+{
+    if (fstype)
+    {
+    mp_msg(MSGT_VO, MSGL_V, "[x11] Current fstype setting honours");
+    if (fstype & vo_wm_LAYER)
+	mp_msg(MSGT_VO, MSGL_V, " LAYER");
+    if (fstype & vo_wm_FULLSCREEN)
+	mp_msg(MSGT_VO, MSGL_V, " FULLSCREEN");
+    if (fstype & vo_wm_STAYS_ON_TOP)
+	mp_msg(MSGT_VO, MSGL_V, " STAYS_ON_TOP");
+    if (fstype & vo_wm_ABOVE)
+	mp_msg(MSGT_VO, MSGL_V, " ABOVE");
+    if (fstype & vo_wm_BELOW)
+	mp_msg(MSGT_VO, MSGL_V, " BELOW");
+    mp_msg(MSGT_VO, MSGL_V, " X atoms\n");	
+    }
+    else
+	mp_msg(MSGT_VO, MSGL_V, "[x11] Current fstype setting doesn't honour any X atoms\n");
+}
+ 
+static int net_wm_support_state_test(Atom atom)
+{
+#define NET_WM_STATE_TEST(x) { if (atom == XA_NET_WM_STATE_##x) { mp_msg( MSGT_VO,MSGL_V, "[x11] Detected wm supports " #x " state.\n" ); return vo_wm_##x; } }
  
  NET_WM_STATE_TEST(FULLSCREEN);
  NET_WM_STATE_TEST(ABOVE);
  NET_WM_STATE_TEST(STAYS_ON_TOP);
- return SUPPORT_NONE;
+ NET_WM_STATE_TEST(BELOW);
+ return 0;
 }
 
-int x11_get_property(Atom type, Atom **args, unsigned long *nitems)
+static int x11_get_property(Atom type, Atom **args, unsigned long *nitems)
 {
   int             format;
   unsigned long   bytesafter;
@@ -167,76 +215,72 @@ int x11_get_property(Atom type, Atom **args, unsigned long *nitems)
                                          (unsigned char **) args ) && *nitems > 0 );
 }
 
-int vo_wm_detect( void )
+static int vo_wm_detect(void)
 {
  int             i;
- int             wm = vo_wm_Unknown;
+ int             wm = 0;
  unsigned long   nitems;
  Atom          * args = NULL;
  
- if ( WinID >= 0 ) return vo_wm_Unknown;
+ if ( WinID >= 0 ) return 0;
  
 // -- supports layers
   if (x11_get_property(XA_WIN_PROTOCOLS, &args, &nitems))
   {
-   mp_dbg( MSGT_VO,MSGL_STATUS,"[x11] Detected wm supports layers.\n" );
+   mp_msg( MSGT_VO,MSGL_V,"[x11] Detected wm supports layers.\n" );
    for (i = 0; i < nitems; i++)
    {
      if ( args[i] == XA_WIN_LAYER) {
-       wm = vo_wm_Layered;
+       wm |= vo_wm_LAYER;
        metacity_hack |= 1;
-     }
-     if ( args[i] == XA_WIN_HINTS)
-       // metacity is the only manager which supports _WIN_LAYER but not _WIN_HINTS
-       // what's more is has broken _WIN_LAYER support
+     } else
+       // metacity is the only manager I know which reports support only for _WIN_LAYER
+       // hint in _WIN_PROTOCOLS (what's more support for it is broken)
        metacity_hack |= 2;
    }
    XFree( args );
-   if (wm && metacity_hack == 3)
-     return wm;
+   if (wm && (metacity_hack == 1))
+   {
+     // metacity reports that it supports layers, but it is not really truth :-)
+     wm ^= vo_wm_LAYER;
+     mp_msg( MSGT_VO,MSGL_V,"[x11] Using workaround for Metacity bugs.\n" );
+   }
   }
 
-  if (metacity_hack == 1)
-   mp_dbg( MSGT_VO,MSGL_STATUS,"[x11] Using workaround for Metacity bugs.\n" );
-  
 // --- netwm 
   if (x11_get_property(XA_NET_SUPPORTED, &args, &nitems))
   {
-   mp_dbg( MSGT_VO,MSGL_STATUS,"[x11] Detected wm is of class NetWM.\n" );
-   net_wm_support = 0;
+   mp_msg( MSGT_VO,MSGL_V,"[x11] Detected wm supports NetWM.\n" );
    for (i = 0; i < nitems; i++)
-     net_wm_support |= net_wm_support_state_test (args[i]);
+     wm |= net_wm_support_state_test (args[i]);
    XFree( args );
-   if (net_wm_support)
+#if 0
+   // ugly hack for broken OpenBox _NET_WM_STATE_FULLSCREEN support
+   // (in their implementation it only changes internal state of window, nothing more!!!)
+   if (wm & vo_wm_FULLSCREEN)
    {
-     // ugly hack for broken OpenBox _NET_WM_STATE_FULLSCREEN support
-     // (in their implementation it only changes internal state of window, nothing more!!!)
-     if (net_wm_support & SUPPORT_FULLSCREEN)
-     {
-        if (x11_get_property(XA_BLACKBOX_PID, &args, &nitems))
+      if (x11_get_property(XA_BLACKBOX_PID, &args, &nitems))
 	{
-           mp_dbg( MSGT_VO,MSGL_STATUS,"[x11] Detected wm is a broken OpenBox.\n" );
-	   net_wm_support=0;
-	   XFree( args );
-           return vo_wm_Unknown;
+           mp_msg( MSGT_VO,MSGL_V,"[x11] Detected wm is a broken OpenBox.\n" );
+           wm ^= vo_wm_FULLSCREEN;
 	}
-	XFree (args);
-     }
-     return vo_wm_NetWM;
+      XFree (args);
    }
+#endif
   }
- 
- if ( wm == vo_wm_Unknown ) mp_dbg( MSGT_VO,MSGL_STATUS,"[x11] Unknown wm type...\n" );
+
+ if ( wm == 0 ) mp_msg( MSGT_VO,MSGL_V,"[x11] Unknown wm type...\n" );
  return wm;
 }    
 
-void vo_init_atoms( void )
+static void init_atoms(void)
 {
  XA_INIT(_NET_SUPPORTED);
  XA_INIT(_NET_WM_STATE);
  XA_INIT(_NET_WM_STATE_FULLSCREEN);
  XA_INIT(_NET_WM_STATE_ABOVE);
  XA_INIT(_NET_WM_STATE_STAYS_ON_TOP);
+ XA_INIT(_NET_WM_STATE_BELOW);
  XA_INIT(_NET_WM_PID);
  XA_INIT(_WIN_PROTOCOLS);
  XA_INIT(_WIN_LAYER);
@@ -279,7 +323,7 @@ int vo_init( void )
  mScreen=DefaultScreen( mDisplay );     // Screen ID.
  mRootWin=RootWindow( mDisplay,mScreen );// Root window ID.
 
- vo_init_atoms();
+ init_atoms();
  
 #ifdef HAVE_XINERAMA
  if(XineramaIsActive(mDisplay))
@@ -367,6 +411,10 @@ int vo_init( void )
 
  vo_wm_type=vo_wm_detect();
 
+ vo_fs_type=vo_x11_get_fs_type(vo_wm_type);
+ 
+ fstype_dump(vo_fs_type);
+
  saver_off(mDisplay);
  return 1;
 }
@@ -386,10 +434,23 @@ void vo_uninit( void )
  mDisplay=NULL;
 }
 
-#include "../linux/keycodes.h"
+#include "../osdep/keycodes.h"
 #include "wskeys.h"
 
 extern void mplayer_put_key(int code);
+
+#ifdef XF86XK_AudioPause
+void vo_x11_putkey_ext(int keysym){
+ switch ( keysym )
+  {
+   case XF86XK_AudioPause:    mplayer_put_key(KEY_XF86_PAUSE); break;
+   case XF86XK_AudioStop:     mplayer_put_key(KEY_XF86_STOP); break;
+   case XF86XK_AudioPrev:     mplayer_put_key(KEY_XF86_PREV); break;
+   case XF86XK_AudioNext:     mplayer_put_key(KEY_XF86_NEXT); break;
+   default:	              break;
+  }
+}
+#endif
 
 void vo_x11_putkey(int key){
  switch ( key )
@@ -408,6 +469,16 @@ void vo_x11_putkey(int key){
    case wsEnd:       mplayer_put_key(KEY_END); break;
    case wsPageUp:    mplayer_put_key(KEY_PAGE_UP); break;
    case wsPageDown:  mplayer_put_key(KEY_PAGE_DOWN); break;
+   case wsF1:        mplayer_put_key(KEY_F+1); break;
+   case wsF2:        mplayer_put_key(KEY_F+2); break;
+   case wsF3:        mplayer_put_key(KEY_F+3); break;
+   case wsF4:        mplayer_put_key(KEY_F+4); break;
+   case wsF5:        mplayer_put_key(KEY_F+5); break;
+   case wsF6:        mplayer_put_key(KEY_F+6); break;
+   case wsF7:        mplayer_put_key(KEY_F+7); break;
+   case wsF8:        mplayer_put_key(KEY_F+8); break;
+   case wsF9:        mplayer_put_key(KEY_F+9); break;
+   case wsF10:       mplayer_put_key(KEY_F+10); break;
    case wsq:
    case wsQ:         mplayer_put_key('q'); break;
    case wsp:
@@ -422,10 +493,62 @@ void vo_x11_putkey(int key){
    case wsDiv:       mplayer_put_key('/'); break;
    case wsLess:      mplayer_put_key('<'); break;
    case wsMore:      mplayer_put_key('>'); break;
+   case wsGray0:     mplayer_put_key(KEY_KP0); break;
+   case wsGrayEnd:
+   case wsGray1:     mplayer_put_key(KEY_KP1); break;
+   case wsGrayDown:
+   case wsGray2:     mplayer_put_key(KEY_KP2); break;
+   case wsGrayPgDn:
+   case wsGray3:     mplayer_put_key(KEY_KP3); break;
+   case wsGrayLeft:
+   case wsGray4:     mplayer_put_key(KEY_KP4); break;
+   case wsGray5Dup:
+   case wsGray5:     mplayer_put_key(KEY_KP5); break;
+   case wsGrayRight:
+   case wsGray6:     mplayer_put_key(KEY_KP6); break;
+   case wsGrayHome:
+   case wsGray7:     mplayer_put_key(KEY_KP7); break;
+   case wsGrayUp:
+   case wsGray8:     mplayer_put_key(KEY_KP8); break;
+   case wsGrayPgUp:
+   case wsGray9:     mplayer_put_key(KEY_KP9); break;
+   case wsGrayDecimal: mplayer_put_key(KEY_KPDEC); break;
+   case wsGrayInsert: mplayer_put_key(KEY_KPINS); break;
+   case wsGrayDelete: mplayer_put_key(KEY_KPDEL); break;
+   case wsGrayEnter: mplayer_put_key(KEY_KPENTER); break;
    case wsm:
    case wsM:	     mplayer_put_key('m'); break;
    case wso:
    case wsO:         mplayer_put_key('o'); break;
+
+   case wsGrave:      mplayer_put_key('`'); break;
+   case wsTilde:      mplayer_put_key('~'); break;
+   case wsExclSign:   mplayer_put_key('!'); break;
+   case wsAt:         mplayer_put_key('@'); break;
+   case wsHash:       mplayer_put_key('#'); break;
+   case wsDollar:     mplayer_put_key('$'); break;
+   case wsPercent:    mplayer_put_key('%'); break;
+   case wsCircumflex: mplayer_put_key('^'); break;
+   case wsAmpersand:  mplayer_put_key('&'); break;
+   case wsobracket:   mplayer_put_key('('); break;
+   case wscbracket:   mplayer_put_key(')'); break;
+   case wsUnder:      mplayer_put_key('_'); break;
+   case wsocbracket:  mplayer_put_key('{'); break;
+   case wsccbracket:  mplayer_put_key('}'); break;
+   case wsColon:      mplayer_put_key(':'); break;
+   case wsSemicolon:  mplayer_put_key(';'); break;
+   case wsDblQuote:   mplayer_put_key('\"'); break;
+   case wsAcute:      mplayer_put_key('\''); break;
+   case wsComma:      mplayer_put_key(','); break;
+   case wsPoint:      mplayer_put_key('.'); break;
+   case wsQuestSign:  mplayer_put_key('?'); break;
+   case wsBSlash:     mplayer_put_key('\\'); break;
+   case wsPipe:       mplayer_put_key('|'); break;
+   case wsEqual:      mplayer_put_key('='); break;
+   case wsosbrackets: mplayer_put_key('['); break;
+   case wscsbrackets: mplayer_put_key(']'); break;
+
+
    default: if((key>='a' && key<='z')||(key>='A' && key<='Z')||
 	       (key>='0' && key<='9')) mplayer_put_key(key);
   }
@@ -529,6 +652,7 @@ void vo_x11_classhint( Display * display,Window window,char *name ){
 
 Window     vo_window = None;
 GC         vo_gc = NULL;
+GC         f_gc  = NULL;
 XSizeHints vo_hint;
 
 #ifdef HAVE_NEW_GUI
@@ -541,6 +665,8 @@ void vo_x11_uninit()
 {
     saver_on(mDisplay);
     if(vo_window!=None) vo_showcursor( mDisplay,vo_window );
+    
+    if (f_gc) { XFreeGC(mDisplay, f_gc); f_gc = NULL; }
 
 #ifdef HAVE_NEW_GUI
     /* destroy window only if it's not controlled by GUI */
@@ -624,6 +750,9 @@ int vo_x11_check_events(Display *mydisplay){
            { 
 	    int key;
             XLookupString( &Event.xkey,buf,sizeof(buf),&keySym,&stat );
+            #ifdef XF86XK_AudioPause
+             vo_x11_putkey_ext( keySym );
+            #endif
 	    key=( (keySym&0xff00) != 0?( (keySym&0x00ff) + 256 ):( keySym ) );
 	    #ifdef HAVE_NEW_GUI
 	     if ( ( use_gui )&&( key == wsEnter ) ) break;
@@ -659,7 +788,6 @@ int vo_x11_check_events(Display *mydisplay){
       case PropertyNotify: 
     	   {
 	    char * name = XGetAtomName( mydisplay,Event.xproperty.atom );
-	    int    wm = vo_wm_Unknown;
 	    
 	    if ( !name ) break;
 	    
@@ -695,7 +823,7 @@ void vo_x11_sizehint( int x, int y, int width, int height, int max )
  XSetWMNormalHints( mDisplay,vo_window,&vo_hint );
 }
 
-int vo_x11_get_gnome_layer (Display * mDisplay, Window win)
+static int vo_x11_get_gnome_layer(Display * mDisplay, Window win)
 {
  Atom type;
  int format;
@@ -708,25 +836,81 @@ int vo_x11_get_gnome_layer (Display * mDisplay, Window win)
                          &bytesafter, (unsigned char **) &args) == Success
      && nitems > 0 && args)
  {
-    mp_msg (MSGT_VO, MSGL_STATUS, "[x11] original window layer is %d.\n", *args);
+    mp_msg (MSGT_VO, MSGL_V, "[x11] original window layer is %d.\n", *args);
     return *args;
  }
  return WIN_LAYER_NORMAL;
 }
 
+//
+Window vo_x11_create_smooth_window( Display *mDisplay, Window mRoot, Visual *vis, int x, int y, unsigned int width, unsigned int height, int depth, Colormap col_map)
+{
+   unsigned long xswamask = CWBackingStore | CWBorderPixel;
+   XSetWindowAttributes xswa;
+   Window ret_win;
+   
+   if (col_map!=CopyFromParent)
+   {
+	   xswa.colormap = col_map;
+	   xswamask|=CWColormap;
+   }	   
+   xswa.background_pixel = 0;
+   xswa.border_pixel = 0;
+   xswa.backing_store = Always;
+   xswa.bit_gravity = StaticGravity;
+   
+   ret_win = XCreateWindow(mDisplay, mRootWin, x, y, width, height, 0, depth,
+		        CopyFromParent, vis, xswamask , &xswa);
+   if (!f_gc) f_gc=XCreateGC (mDisplay, ret_win, 0, 0);
+   XSetForeground (mDisplay, f_gc, 0);
+
+   return ret_win;
+}
+	
+
+void vo_x11_clearwindow_part(Display *mDisplay, Window vo_window, int img_width, int img_height, int use_fs)
+{
+   int u_dheight, u_dwidth, left_ov, left_ov2;
+
+   if (!f_gc) return;
+
+   u_dheight = use_fs?vo_screenheight:vo_dheight;
+   u_dwidth = use_fs?vo_screenwidth:vo_dwidth;
+   if ((u_dheight<=img_height) && (u_dwidth<=img_width)) return;
+
+   left_ov = (u_dheight - img_height)/2;
+   left_ov2 = (u_dwidth - img_width)/2;   
+   
+   XFillRectangle(mDisplay, vo_window, f_gc, 0, 0, u_dwidth, left_ov);
+   XFillRectangle(mDisplay, vo_window, f_gc, 0, u_dheight-left_ov-1, u_dwidth, left_ov+1);
+   
+   if (u_dwidth>img_width)
+   {
+   XFillRectangle(mDisplay, vo_window, f_gc, 0, left_ov, left_ov2, img_height);
+   XFillRectangle(mDisplay, vo_window, f_gc, u_dwidth-left_ov2-1, left_ov, left_ov2, img_height);
+   }
+
+   XFlush(mDisplay);
+}
+
+void vo_x11_clearwindow( Display *mDisplay, Window vo_window )
+{
+   if (!f_gc) return;
+   XFillRectangle(mDisplay, vo_window, f_gc, 0, 0, vo_screenwidth, vo_screenheight);
+   //
+   XFlush(mDisplay);
+}
+      
+
 void vo_x11_setlayer( Display * mDisplay,Window vo_window,int layer )
 {
- if ( WinID >= 0 ) return;
+ if (WinID >= 0) return;
 
- // window manager could be changed during play
- vo_wm_type=vo_wm_detect();
-
- switch ( vo_wm_type )
- { case vo_wm_Layered:
+ if ( vo_fs_type & vo_wm_LAYER )
   {
     XClientMessageEvent xev;
     
-    if (layer) orig_layer=vo_x11_get_gnome_layer( mDisplay, vo_window );
+    if (!orig_layer) orig_layer=vo_x11_get_gnome_layer( mDisplay, vo_window );
 
     memset(&xev, 0, sizeof(xev));
     xev.type = ClientMessage;
@@ -734,15 +918,13 @@ void vo_x11_setlayer( Display * mDisplay,Window vo_window,int layer )
     xev.window = vo_window;
     xev.message_type = XA_WIN_LAYER;
     xev.format = 32;
-    xev.data.l[0] = layer?ice_layer:orig_layer; // if not fullscreen, stay on default layer
+    xev.data.l[0] = layer?fs_layer:orig_layer; // if not fullscreen, stay on default layer
     xev.data.l[1] = CurrentTime;
-    mp_dbg( MSGT_VO,MSGL_STATUS,"[x11] Layered style stay on top ( layer %d ).\n",xev.data.l[0] );
-    printf( "[x11] Layered style stay on top ( layer %d ).\n",xev.data.l[0] );
+    mp_msg( MSGT_VO,MSGL_V,"[x11] Layered style stay on top (layer %d).\n",xev.data.l[0] );
     XSendEvent(mDisplay, mRootWin, False, SubstructureNotifyMask, (XEvent *) &xev);
-    break;
-  }
-  case vo_wm_NetWM:
-  {
+  } else
+ if ( vo_fs_type & vo_wm_NETWM )
+ {
    XClientMessageEvent  xev;
    char *state;
 
@@ -754,38 +936,103 @@ void vo_x11_setlayer( Display * mDisplay,Window vo_window,int layer )
    xev.format=32;
    xev.data.l[0]=layer;
    
-   if (net_wm_support & SUPPORT_ABOVE)
-   {
-     xev.data.l[1]=XA_NET_WM_STATE_ABOVE;
-     XSendEvent( mDisplay,mRootWin,False,SubstructureRedirectMask,(XEvent*)&xev );
-   } else
-   if (net_wm_support & SUPPORT_STAYS_ON_TOP)
-   {
+   if ( vo_fs_type & vo_wm_STAYS_ON_TOP )
      xev.data.l[1]=XA_NET_WM_STATE_STAYS_ON_TOP;
-     XSendEvent( mDisplay,mRootWin,False,SubstructureRedirectMask,(XEvent*)&xev );
-   } else
-   if (net_wm_support & SUPPORT_FULLSCREEN)
-   {
+   else
+   if ( vo_fs_type & vo_wm_ABOVE )
+     xev.data.l[1]=XA_NET_WM_STATE_ABOVE;
+   else
+   if ( vo_fs_type & vo_wm_FULLSCREEN )
      xev.data.l[1]=XA_NET_WM_STATE_FULLSCREEN;
-     XSendEvent( mDisplay,mRootWin,False,SubstructureRedirectMask,(XEvent*)&xev );
-   }
+   else
+   if ( vo_fs_type & vo_wm_BELOW )
+     // This is not fallback. We can safely assume that situation where
+     // only NETWM_STATE_BELOW is supported and others not, doesn't exist.
+     xev.data.l[1]=XA_NET_WM_STATE_BELOW;
+
+   XSendEvent( mDisplay,mRootWin,False,SubstructureRedirectMask,(XEvent*)&xev );
    state = XGetAtomName (mDisplay, xev.data.l[1]);
-   mp_dbg( MSGT_VO,MSGL_STATUS,"[x11] NET style stay on top ( layer %d ). Using state %s.\n",layer,state );
-   printf( "[x11] NET style stay on top ( layer %d ). Using state %s.\n",layer,state );
+   mp_msg( MSGT_VO,MSGL_V,"[x11] NET style stay on top (layer %d). Using state %s.\n",layer,state );
    XFree (state);
-  }
  }
 }
 
+static int vo_x11_get_fs_type(int supported)
+{
+  int i;
+  int type = supported;
+  
+  if (vo_fstype_list) {
+    i = 0;
+    for (i = 0; vo_fstype_list[i]; i++)
+    {
+      int neg = 0;
+      char * arg = vo_fstype_list[i];
+      
+      if (vo_fstype_list[i][0] == '-')
+      {
+        neg = 1;
+	arg = vo_fstype_list[i] + 1;
+      }
+
+      if (!strncmp(arg, "layer", 5))
+      {
+        if (!neg && (arg[5] == '='))
+        {
+          char *endptr = NULL;
+          int layer = strtol(vo_fstype_list[i]+6, &endptr, 10);
+            
+          if (endptr && *endptr == '\0' && layer >= 0 && layer <= 15) 
+            fs_layer = layer;
+        }
+	if (neg)
+    	    type &= ~vo_wm_LAYER;
+	else
+    	    type |= vo_wm_LAYER;
+      }
+      else if (!strcmp(arg, "above"))
+      {
+	if (neg)
+	    type &= ~vo_wm_ABOVE;
+	else
+	    type |= vo_wm_ABOVE;
+      } else if (!strcmp(arg, "fullscreen"))
+      {
+	if (neg)
+	    type &= ~vo_wm_FULLSCREEN;
+	else
+	    type |= vo_wm_FULLSCREEN;
+      } else if (!strcmp(arg, "stays_on_top"))
+      {
+	if (neg)
+	    type &= ~vo_wm_STAYS_ON_TOP;
+	else
+	    type |= vo_wm_STAYS_ON_TOP;
+      } else if (!strcmp(arg, "below"))
+      {
+	if (neg)
+	    type &= ~vo_wm_BELOW;
+	else
+	    type |= vo_wm_BELOW;
+      } else if (!strcmp(arg, "netwm"))
+      {
+	if (neg)
+	    type &= ~vo_wm_NETWM;
+	else
+	    type |= vo_wm_NETWM;
+      } else if (!strcmp(arg, "none")) return 0;
+    }
+  }
+
+  return type;
+}
+ 
 void vo_x11_fullscreen( void )
 {
  int x,y,w,h;
 
  if ( WinID >= 0 ) return;
 
- // window manager could be changed during play
- vo_wm_type=vo_wm_detect();
- 
  if ( vo_fs ){
    // fs->win
    if(vo_dwidth != vo_screenwidth && vo_dheight != vo_screenheight) return;
@@ -800,19 +1047,13 @@ void vo_x11_fullscreen( void )
    vo_old_x=vo_dx; vo_old_y=vo_dy; vo_old_width=vo_dwidth; vo_old_height=vo_dheight;
    x=0; y=0; w=vo_screenwidth; h=vo_screenheight;
  }
- if (net_wm_support!=SUPPORT_FULLSCREEN || metacity_hack==1)
- {
-   vo_x11_decoration( mDisplay,vo_window,(vo_fs) ? 0 : 1 );
-   vo_x11_sizehint( x,y,w,h,0 );
- }
+ vo_x11_decoration( mDisplay,vo_window,(vo_fs) ? 0 : 1 );
+ vo_x11_sizehint( x,y,w,h,0 );
  vo_x11_setlayer( mDisplay,vo_window,vo_fs );
- if (net_wm_support!=SUPPORT_FULLSCREEN || metacity_hack==1)
- {
-   if(vo_wm_type==vo_wm_Unknown && !(vo_fsmode&16))
-  //     XUnmapWindow( mDisplay,vo_window );  // required for MWM
+ if(vo_wm_type==0 && !(vo_fsmode&16))
+//    XUnmapWindow( mDisplay,vo_window );  // required for MWM
       XWithdrawWindow(mDisplay,vo_window,mScreen);
-   XMoveResizeWindow( mDisplay,vo_window,x,y,w,h );
- }
+ XMoveResizeWindow( mDisplay,vo_window,x,y,w,h );
 #ifdef HAVE_XINERAMA
  vo_x11_xinerama_move(mDisplay,vo_window);
 #endif
@@ -820,6 +1061,119 @@ void vo_x11_fullscreen( void )
  XRaiseWindow( mDisplay,vo_window );
  XFlush( mDisplay );
 }
+
+/*
+ * XScreensaver stuff
+ */
+
+static int got_badwindow;
+static XErrorHandler old_handler;
+
+static int badwindow_handler(Display *dpy, XErrorEvent *error)
+{
+    if (error->error_code != BadWindow)
+	return (*old_handler)(dpy, error);
+
+    got_badwindow = True;
+    return 0;
+}
+
+static Window find_xscreensaver_window(Display *dpy)
+{
+    int i;
+    Window root = RootWindowOfScreen(DefaultScreenOfDisplay(dpy));
+    Window root2, parent, *kids;
+    Window retval = 0;
+    Atom xs_version;
+    unsigned int nkids = 0;
+
+    xs_version = XInternAtom(dpy, "_SCREENSAVER_VERSION", True);
+
+    if (!(xs_version != None &&
+          XQueryTree(dpy, root, &root2, &parent, &kids, &nkids) &&
+          kids && nkids)) return 0;
+
+    old_handler = XSetErrorHandler(badwindow_handler);
+
+    for (i = 0; i < nkids; i++) {
+	Atom type;
+	int format;
+	unsigned long nitems, bytesafter;
+	char *v;
+	int status;
+
+        got_badwindow = False;
+	status = XGetWindowProperty(dpy, kids[i], xs_version, 0, 200, False,
+	                            XA_STRING, &type, &format, &nitems,
+	                            &bytesafter, (unsigned char**) &v);
+	XSync(dpy, False);
+	if (got_badwindow) status = BadWindow;
+
+	if (status == Success && type != None) {
+	    retval = kids[i];
+	    break;
+	}
+    }
+    XFree(kids);
+    XSetErrorHandler(old_handler);
+
+    return retval;
+}
+
+static Window xs_windowid = 0;
+static Atom deactivate;
+static Atom screensaver;
+
+static float time_last;
+
+void xscreensaver_heartbeat(float time)
+{
+    XEvent ev;
+
+    if (mDisplay && xs_windowid &&
+	((time - time_last)>30 ||
+	 (time - time_last)<0)) {
+	time_last = time;
+
+	ev.xany.type = ClientMessage;
+	ev.xclient.display = mDisplay;
+	ev.xclient.window = xs_windowid;
+	ev.xclient.message_type = screensaver;
+	ev.xclient.format = 32;
+	memset(&ev.xclient.data, 0, sizeof(ev.xclient.data));
+	ev.xclient.data.l[0] = (long) deactivate;
+
+	mp_msg(MSGT_VO,MSGL_DBG2, "Pinging xscreensaver.\n");
+	XSendEvent(mDisplay, xs_windowid, False, 0L, &ev);
+	XSync(mDisplay, False);
+    }
+}
+
+static void xscreensaver_disable(Display *dpy)
+{
+    mp_msg(MSGT_VO,MSGL_DBG2, "xscreensaver_disable()\n");
+
+    xs_windowid = find_xscreensaver_window(dpy);
+    if (!xs_windowid) {
+	mp_msg(MSGT_VO,MSGL_INFO,
+	       "xscreensaver_disable: Could not find xscreensaver window.\n");
+	return;
+    }
+    mp_msg(MSGT_VO,MSGL_INFO,
+           "xscreensaver_disable: xscreensaver wid=%d.\n", xs_windowid);
+
+    deactivate = XInternAtom(dpy, "DEACTIVATE", False);
+    screensaver = XInternAtom(dpy, "SCREENSAVER", False);
+}
+
+static void xscreensaver_enable(void)
+{
+    xs_windowid = 0;
+}
+
+/*
+ * End of XScreensaver stuff
+ */
 
 void saver_on(Display *mDisplay) {
 
@@ -857,10 +1211,7 @@ void saver_on(Display *mDisplay) {
 	timeout_save=0;
     }
 
-    if (xscreensaver_was_running && stop_xscreensaver) {
-	system("cd /; xscreensaver -no-splash &");
-	xscreensaver_was_running = 0;
-    }
+    if (stop_xscreensaver) xscreensaver_enable();
     if (kdescreensaver_was_running && stop_xscreensaver) {
 	system("dcop kdesktop KScreensaverIface enable true 2>/dev/null >/dev/null");
 	kdescreensaver_was_running = 0;
@@ -896,12 +1247,7 @@ void saver_off(Display *mDisplay) {
 	    XSetScreenSaver(mDisplay, 0, interval, prefer_blank, allow_exp);
     }
 		    // turning off screensaver
-    if (stop_xscreensaver && !xscreensaver_was_running)
-    {
-      xscreensaver_was_running = (system("xscreensaver-command -version 2>/dev/null >/dev/null")==0);
-      if (xscreensaver_was_running)
-	 system("xscreensaver-command -exit 2>/dev/null >/dev/null");    
-    }
+    if (stop_xscreensaver) xscreensaver_disable(mDisplay);
     if (stop_xscreensaver && !kdescreensaver_was_running)
     {
       kdescreensaver_was_running=(system("dcop kdesktop KScreensaverIface isEnabled 2>/dev/null | sed 's/1/true/g' | grep true 2>/dev/null >/dev/null")==0);
@@ -916,8 +1262,8 @@ static int x11_selectinput_errorhandler(Display *display, XErrorEvent *event)
 {
 	if (event->error_code == BadAccess) {
 		selectinput_err = 1;
-		mp_msg(MSGT_VO, MSGL_ERR, "X11 error : BadAccess during XSelectInput Call\n");
-		mp_msg(MSGT_VO, MSGL_ERR, "X11 error : The 'ButtonPressMask' mask of specified window has probably already used by another appication(see man XSelectInput) \n");
+		mp_msg(MSGT_VO, MSGL_ERR, "X11 error: BadAccess during XSelectInput Call\n");
+		mp_msg(MSGT_VO, MSGL_ERR, "X11 error: The 'ButtonPressMask' mask of specified window has probably already used by another appication (see man XSelectInput)\n");
 		/* If you think mplayer should shutdown with this error, comments out following line */
 		return 0;
 	}
@@ -931,11 +1277,15 @@ void vo_x11_selectinput_witherr(Display *display, Window w, long event_mask)
 	XSync(display, False);
 	old_handler = XSetErrorHandler(x11_selectinput_errorhandler);
 	selectinput_err = 0;
-	XSelectInput(display, w, event_mask);
+	if(vo_nomouse_input){
+		XSelectInput(display,w,event_mask & (~(ButtonPressMask | ButtonReleaseMask)));
+	} else {
+		XSelectInput(display, w, event_mask);
+	}
 	XSync(display, False);
 	XSetErrorHandler(old_handler);
 	if (selectinput_err) {
-		mp_msg(MSGT_VO, MSGL_ERR, "X11 error : Mplayer discards mouse control and retry XSelectInput...\n");
+		mp_msg(MSGT_VO, MSGL_ERR, "X11 error: MPlayer discards mouse control (reconfiguring)\n");
 		XSelectInput(display, w, event_mask & (~(ButtonPressMask | ButtonReleaseMask | PointerMotionMask)) );
 	}
 }
@@ -1009,7 +1359,7 @@ void vo_vm_close(Display *dpy)
            for (i=0; i<modecount; i++)
              if ((vidmodes[i]->hdisplay == vo_screenwidth) && (vidmodes[i]->vdisplay == vo_screenheight)) 
                { 
-                 mp_msg(MSGT_VO,MSGL_INFO,"\nReturning to original mode %dx%d\n", vo_screenwidth, vo_screenheight);
+                 mp_msg(MSGT_VO,MSGL_INFO,"Returning to original mode %dx%d\n", vo_screenwidth, vo_screenheight);
                  break;
                }
 
@@ -1201,5 +1551,138 @@ uint32_t vo_x11_get_equalizer(char *name, int *value)
 	else return VO_NOTIMPL;
 	return VO_TRUE;
 }
+#ifdef HAVE_XV
+int vo_xv_set_eq(uint32_t xv_port, char *name, int value)
+{
+    XvAttribute *attributes;
+    int i,howmany, xv_atom;
 
+    mp_dbg(MSGT_VO, MSGL_V, "xv_set_eq called! (%s, %d)\n", name, value);
 
+    /* get available attributes */
+    attributes = XvQueryPortAttributes(mDisplay, xv_port, &howmany);
+    for (i = 0; i < howmany && attributes; i++)
+            if (attributes[i].flags & XvSettable)
+            {
+                xv_atom = XInternAtom(mDisplay, attributes[i].name, True);
+/* since we have SET_DEFAULTS first in our list, we can check if it's available
+   then trigger it if it's ok so that the other values are at default upon query */
+                if (xv_atom != None)
+                {
+		    int hue = 0,port_value,port_min,port_max;
+
+		    if(!strcmp(attributes[i].name,"XV_BRIGHTNESS") &&
+			(!strcasecmp(name, "brightness")))
+				port_value = value;
+		    else
+		    if(!strcmp(attributes[i].name,"XV_CONTRAST") &&
+			(!strcasecmp(name, "contrast")))
+				port_value = value;
+		    else
+		    if(!strcmp(attributes[i].name,"XV_SATURATION") &&
+			(!strcasecmp(name, "saturation")))
+				port_value = value;
+		    else
+		    if(!strcmp(attributes[i].name,"XV_HUE") &&
+			(!strcasecmp(name, "hue")))
+				{ port_value = value; hue=1; }
+		    else
+                    /* Note: since 22.01.2002 GATOS supports these attrs for radeons (NK) */
+		    if(!strcmp(attributes[i].name,"XV_RED_INTENSITY") &&
+			(!strcasecmp(name, "red_intensity")))
+				port_value = value;
+		    else
+		    if(!strcmp(attributes[i].name,"XV_GREEN_INTENSITY") &&
+			(!strcasecmp(name, "green_intensity")))
+				port_value = value;
+		    else
+		    if(!strcmp(attributes[i].name,"XV_BLUE_INTENSITY") &&
+			(!strcasecmp(name, "blue_intensity")))
+				port_value = value;
+		    else continue;
+
+		    port_min = attributes[i].min_value;
+		    port_max = attributes[i].max_value;
+
+		    /* nvidia hue workaround */
+		    if ( hue && port_min == 0 && port_max == 360 ){
+			port_value = (port_value>=0) ? (port_value-100) : (port_value+100);
+		    }
+
+		    // -100 -> min
+		    //   0  -> (max+min)/2
+		    // +100 -> max
+		    port_value = (port_value+100)*(port_max-port_min)/200+port_min;
+                    XvSetPortAttribute(mDisplay, xv_port, xv_atom, port_value);
+		    return(VO_TRUE);
+                }
+	    }
+    return(VO_FALSE);
+}
+
+int vo_xv_get_eq(uint32_t xv_port, char *name, int *value)
+{
+    
+    XvAttribute *attributes;
+    int i,howmany, xv_atom;
+
+    /* get available attributes */
+    attributes = XvQueryPortAttributes(mDisplay, xv_port, &howmany);
+    for (i = 0; i < howmany && attributes; i++)
+            if (attributes[i].flags & XvGettable)
+            {
+                xv_atom = XInternAtom(mDisplay, attributes[i].name, True);
+/* since we have SET_DEFAULTS first in our list, we can check if it's available
+   then trigger it if it's ok so that the other values are at default upon query */
+                if (xv_atom != None)
+                {
+		    int val, port_value=0, port_min, port_max;
+
+		    XvGetPortAttribute(mDisplay, xv_port, xv_atom, &port_value);
+
+		    port_min = attributes[i].min_value;
+		    port_max = attributes[i].max_value;
+		    val=(port_value-port_min)*200/(port_max-port_min)-100;
+		    
+		    if(!strcmp(attributes[i].name,"XV_BRIGHTNESS") &&
+			(!strcasecmp(name, "brightness")))
+				*value = val;
+		    else
+		    if(!strcmp(attributes[i].name,"XV_CONTRAST") &&
+			(!strcasecmp(name, "contrast")))
+				*value = val;
+		    else
+		    if(!strcmp(attributes[i].name,"XV_SATURATION") &&
+			(!strcasecmp(name, "saturation")))
+				*value = val;
+		    else
+		    if(!strcmp(attributes[i].name,"XV_HUE") &&
+			(!strcasecmp(name, "hue"))){
+			/* nasty nvidia detect */
+			if (port_min == 0 && port_max == 360)
+			    *value = (val>=0) ? (val-100) : (val+100);
+			else
+			    *value = val;
+		    } else
+                    /* Note: since 22.01.2002 GATOS supports these attrs for radeons (NK) */
+		    if(!strcmp(attributes[i].name,"XV_RED_INTENSITY") &&
+			(!strcasecmp(name, "red_intensity")))
+				*value = val;
+		    else
+		    if(!strcmp(attributes[i].name,"XV_GREEN_INTENSITY") &&
+			(!strcasecmp(name, "green_intensity")))
+				*value = val;
+		    else
+		    if(!strcmp(attributes[i].name,"XV_BLUE_INTENSITY") &&
+			(!strcasecmp(name, "blue_intensity")))
+				*value = val;
+		    else continue;
+
+		    mp_dbg(MSGT_VO, MSGL_V, "xv_get_eq called! (%s, %d)\n", name, *value);
+		    return(VO_TRUE);
+                }
+	    }
+    return(VO_FALSE);
+}
+
+#endif

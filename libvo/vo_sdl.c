@@ -141,8 +141,8 @@ LIBVO_EXTERN(sdl)
 #include <SDL.h>
 //#include <SDL/SDL_syswm.h>
 
-#if	 defined(HPUX) || defined(sun) && defined(__svr4__)
-/* setenv is missing on solaris and HPUX */
+#if  defined(HPUX) || defined(sgi) || (defined(sun) && defined(__svr4__))
+/* setenv is missing on solaris, IRIX and HPUX */
 static void setenv(const char *name, const char *val, int _xx)
 {
     int len  = strlen(name) + strlen(val) + 2;
@@ -448,7 +448,7 @@ static int sdl_open (void *plugin, void *name)
 	#ifdef SDL_NOHWSURFACE
 		if(verbose) printf("SDL: using software-surface\n");
 		priv->sdlflags = SDL_SWSURFACE|SDL_RESIZABLE|SDL_ASYNCBLIT|SDL_ANYFORMAT;
-		priv->sdlfullflags = SDL_SWSURFACE|SDL_FULLSCREEN|SDL_DOUBLEBUF|SDL_ASYNCBLIT|SDL_ANYFORMAT;
+		priv->sdlfullflags = SDL_SWSURFACE|SDL_FULLSCREEN|SDL_ASYNCBLIT|SDL_ANYFORMAT;
 	#else	
 		/*if((strcmp(priv->driver, "dga") == 0) && (priv->mode)) {
 			if(verbose) printf("SDL: using software-surface\n");
@@ -458,12 +458,15 @@ static int sdl_open (void *plugin, void *name)
 		else {	*/
 			if(verbose) printf("SDL: using hardware-surface\n");
 			priv->sdlflags = SDL_HWSURFACE|SDL_RESIZABLE|SDL_ASYNCBLIT|SDL_HWACCEL/*|SDL_ANYFORMAT*/;
-			priv->sdlfullflags = SDL_HWSURFACE|SDL_FULLSCREEN|SDL_DOUBLEBUF|SDL_ASYNCBLIT|SDL_HWACCEL/*|SDL_ANYFORMAT*/;
+			priv->sdlfullflags = SDL_HWSURFACE|SDL_FULLSCREEN|SDL_ASYNCBLIT|SDL_HWACCEL/*|SDL_ANYFORMAT*/;
 		//}	
 	#endif	
-	
+
+#ifndef AMIGA
+	priv->sdlfullflags |= SDL_DOUBLEBUF;	
 	if (vo_doublebuffering)
 	    priv->sdlflags |= SDL_DOUBLEBUF;
+#endif
 	
 	/* Setup Keyrepeats (500/30 are defaults) */
 	SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, 100 /*SDL_DEFAULT_REPEAT_INTERVAL*/);
@@ -540,6 +543,9 @@ static int sdl_close (void)
 {
 	struct sdl_priv_s *priv = &sdl_priv;
 
+	if (priv->fullmode)
+	    SDL_ShowCursor(1);
+
 	/* Cleanup YUV Overlay structure */
 	if (priv->overlay) {
 		SDL_FreeYUVOverlay(priv->overlay);
@@ -558,7 +564,7 @@ static int sdl_close (void)
 		priv->surface=NULL;
 	}
 	
-	/* DONT attempt to free the fullscreen modes array. SDL_Quit* does this for us */
+	/* DON'T attempt to free the fullscreen modes array. SDL_Quit* does this for us */
 	
 	return 0;
 }
@@ -892,8 +898,8 @@ config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uin
 		||(strcmp(priv->driver, "windib") == 0)
 		||(strcmp(priv->driver, "directx") == 0)
 		||(strcmp(priv->driver, "Quartz") == 0)
-		||((strcmp(priv->driver, "aalib") == 0)
-		&& priv->X)) {
+		||(strcmp(priv->driver, "cgx") == 0)
+		||((strcmp(priv->driver, "aalib") == 0) && priv->X)){
 			if(verbose) printf("SDL: setting windowed mode\n");
             set_video_mode(priv->dstwidth, priv->dstheight, priv->bpp, priv->sdlflags);
 		}
@@ -1159,7 +1165,7 @@ static uint32_t draw_slice(uint8_t *image[], int stride[], int w,int h,int x,int
  *  returns : doesn't return
  **/
 
-#include "../linux/keycodes.h"
+#include "../osdep/keycodes.h"
 extern void mplayer_put_key(int code);
 
 #define shift_key (event.key.keysym.mod==(KMOD_LSHIFT||KMOD_RSHIFT)) 
@@ -1187,6 +1193,8 @@ static void check_events (void)
 			break;
 			
 			case SDL_MOUSEBUTTONDOWN:
+				if(vo_nomouse_input)
+				    break;
 				if(event.button.button == 4 || event.button.button == 5)
 					mplayer_put_key(MOUSE_BASE+event.button.button-1);
 				else
@@ -1194,6 +1202,8 @@ static void check_events (void)
 				break;			    
 		
 			case SDL_MOUSEBUTTONUP:
+				if(vo_nomouse_input)
+				    break;
 				mplayer_put_key(MOUSE_BASE+event.button.button-1);
 				break;
 	
@@ -1250,15 +1260,19 @@ static void check_events (void)
 				}	
 
                                 else switch(keypressed){
-				case SDLK_RETURN:
-					SDL_ShowCursor(1);
-					mplayer_put_key(KEY_ENTER);
-				break;
-                                case SDLK_ESCAPE:
-				case SDLK_q:
-					SDL_ShowCursor(1);
-					mplayer_put_key('q');
-				break;
+				case SDLK_RETURN: mplayer_put_key(KEY_ENTER);break;
+                                case SDLK_ESCAPE: mplayer_put_key(KEY_ESC);break;
+				case SDLK_q: mplayer_put_key('q');break;
+ 				case SDLK_F1: mplayer_put_key(KEY_F+1);break;
+ 				case SDLK_F2: mplayer_put_key(KEY_F+2);break;
+ 				case SDLK_F3: mplayer_put_key(KEY_F+3);break;
+ 				case SDLK_F4: mplayer_put_key(KEY_F+4);break;
+ 				case SDLK_F5: mplayer_put_key(KEY_F+5);break;
+ 				case SDLK_F6: mplayer_put_key(KEY_F+6);break;
+ 				case SDLK_F7: mplayer_put_key(KEY_F+7);break;
+ 				case SDLK_F8: mplayer_put_key(KEY_F+8);break;
+ 				case SDLK_F9: mplayer_put_key(KEY_F+9);break;
+ 				case SDLK_F10: mplayer_put_key(KEY_F+10);break;
                                 /*case SDLK_o: mplayer_put_key('o');break;
                                 case SDLK_SPACE: mplayer_put_key(' ');break;
                                 case SDLK_p: mplayer_put_key('p');break;*/
@@ -1292,16 +1306,25 @@ static void check_events (void)
 				case SDLK_SLASH:
 				case SDLK_KP_DIVIDE: mplayer_put_key('/'); break;
 #endif				
+				case SDLK_KP0: mplayer_put_key(KEY_KP0); break;
+				case SDLK_KP1: mplayer_put_key(KEY_KP1); break;
+				case SDLK_KP2: mplayer_put_key(KEY_KP2); break;
+				case SDLK_KP3: mplayer_put_key(KEY_KP3); break;
+				case SDLK_KP4: mplayer_put_key(KEY_KP4); break;
+				case SDLK_KP5: mplayer_put_key(KEY_KP5); break;
+				case SDLK_KP6: mplayer_put_key(KEY_KP6); break;
+				case SDLK_KP7: mplayer_put_key(KEY_KP7); break;
+				case SDLK_KP8: mplayer_put_key(KEY_KP8); break;
+				case SDLK_KP9: mplayer_put_key(KEY_KP9); break;
+				case SDLK_KP_PERIOD: mplayer_put_key(KEY_KPDEC); break;
+				case SDLK_KP_ENTER: mplayer_put_key(KEY_KPENTER); break;
 				default:
 					//printf("got scancode: %d keysym: %d mod: %d %d\n", event.key.keysym.scancode, keypressed, event.key.keysym.mod);
 					mplayer_put_key(keypressed);
                                 }
                                 
 				break;
-				case SDL_QUIT:
-					SDL_ShowCursor(1);
-					mplayer_put_key('q');
-				break;
+				case SDL_QUIT: mplayer_put_key('q');break;
 		}
 	}
 }

@@ -11,6 +11,7 @@
 /* Design and implementation of different types of digital filters
 
 */
+#include <string.h>
 #include <math.h>
 #include "dsp.h"
 
@@ -369,7 +370,7 @@ void bilinear(_ftype_t* a, _ftype_t* b, _ftype_t* k, _ftype_t fs, _ftype_t *coef
    Note that Butterworth numerator is 1 for all filter sections, which
    means s^2 = 0 and s^1 = 0
 
-   Lets convert standard Butterworth polynomials into this form:
+   Let's convert standard Butterworth polynomials into this form:
 
              0 + 0 + 1                  0 + 0 + 1
    --------------------------- * --------------------------

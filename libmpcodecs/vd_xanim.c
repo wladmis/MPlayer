@@ -4,7 +4,7 @@
   It partly emulates the Xanim codebase.
   You need the -rdynamic flag to use this with gcc.
 
-  (C) 2001-2002 Alex Beregszaszi <alex@naxine.org>
+  (C) 2001-2002 Alex Beregszaszi
             and Arpad Gereoffy <arpi@thot.banki.hu>
 */
 
@@ -40,7 +40,7 @@ LIBVD_EXTERN(xanim)
 #include "mp_msg.h"
 #include "bswap.h"
 
-#include "linux/timer.h"
+#include "osdep/timer.h"
 #include "libvo/fastmemcpy.h"
 
 #if 0

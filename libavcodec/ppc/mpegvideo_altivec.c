@@ -15,11 +15,14 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
- 
+
 #include <stdlib.h>
 #include <stdio.h>
 #include "../dsputil.h"
 #include "../mpegvideo.h"
+
+#include "gcc_fixes.h"
+ 
 #include "dsputil_altivec.h"
 
 // Swaps two variables (used for altivec registers)
@@ -90,6 +93,13 @@ do { \
     vec = vec_splat(vec, 0); \
 }
 
+
+#ifdef CONFIG_DARWIN
+#define FOUROF(a) (a)
+#else
+// slower, for dumb non-apple GCC
+#define FOUROF(a) {a,a,a,a}
+#endif
 int dct_quantize_altivec(MpegEncContext* s, 
                         DCTELEM* data, int n,
                         int qscale, int* overflow)
@@ -97,7 +107,7 @@ int dct_quantize_altivec(MpegEncContext* s,
     int lastNonZero;
     vector float row0, row1, row2, row3, row4, row5, row6, row7;
     vector float alt0, alt1, alt2, alt3, alt4, alt5, alt6, alt7;
-    const vector float zero = (const vector float)(0.0f);
+    const vector float zero = (const vector float)FOUROF(0.);
 
     // Load the data into the row/alt vectors
     {
@@ -141,18 +151,18 @@ int dct_quantize_altivec(MpegEncContext* s,
 		// in the vector local variables, as floats, which we'll use during the
 		// quantize step...
     {
-        const vector float vec_0_298631336 = (vector float)(0.298631336f);
-        const vector float vec_0_390180644 = (vector float)(-0.390180644f);
-        const vector float vec_0_541196100 = (vector float)(0.541196100f);
-        const vector float vec_0_765366865 = (vector float)(0.765366865f);
-        const vector float vec_0_899976223 = (vector float)(-0.899976223f);
-        const vector float vec_1_175875602 = (vector float)(1.175875602f);
-        const vector float vec_1_501321110 = (vector float)(1.501321110f);
-        const vector float vec_1_847759065 = (vector float)(-1.847759065f);
-        const vector float vec_1_961570560 = (vector float)(-1.961570560f);
-        const vector float vec_2_053119869 = (vector float)(2.053119869f);
-        const vector float vec_2_562915447 = (vector float)(-2.562915447f);
-        const vector float vec_3_072711026 = (vector float)(3.072711026f);
+        const vector float vec_0_298631336 = (vector float)FOUROF(0.298631336f);
+        const vector float vec_0_390180644 = (vector float)FOUROF(-0.390180644f);
+        const vector float vec_0_541196100 = (vector float)FOUROF(0.541196100f);
+        const vector float vec_0_765366865 = (vector float)FOUROF(0.765366865f);
+        const vector float vec_0_899976223 = (vector float)FOUROF(-0.899976223f);
+        const vector float vec_1_175875602 = (vector float)FOUROF(1.175875602f);
+        const vector float vec_1_501321110 = (vector float)FOUROF(1.501321110f);
+        const vector float vec_1_847759065 = (vector float)FOUROF(-1.847759065f);
+        const vector float vec_1_961570560 = (vector float)FOUROF(-1.961570560f);
+        const vector float vec_2_053119869 = (vector float)FOUROF(2.053119869f);
+        const vector float vec_2_562915447 = (vector float)FOUROF(-2.562915447f);
+        const vector float vec_3_072711026 = (vector float)FOUROF(3.072711026f);
 
 
         int whichPass, whichHalf;
@@ -306,7 +316,7 @@ int dct_quantize_altivec(MpegEncContext* s,
 				// rounding when we convert to int, instead of flooring.)
         {
             vector signed int biasInt;
-            const vector float negOneFloat = (vector float)(-1.0f);
+            const vector float negOneFloat = (vector float)FOUROF(-1.0f);
             LOAD4(biasInt, biasAddr);
             bias = vec_ctf(biasInt, QUANT_BIAS_SHIFT);
             negBias = vec_madd(bias, negOneFloat, zero);
@@ -461,7 +471,7 @@ int dct_quantize_altivec(MpegEncContext* s,
         // and handle it using the vector unit if we can.  This is the permute used
         // by the altivec idct, so it is common when using the altivec dct.
 
-        if ((lastNonZero > 0) && (s->idct_permutation_type == FF_TRANSPOSE_IDCT_PERM))
+        if ((lastNonZero > 0) && (s->dsp.idct_permutation_type == FF_TRANSPOSE_IDCT_PERM))
         {
             TRANSPOSE8(data0, data1, data2, data3, data4, data5, data6, data7);
         }
@@ -494,15 +504,16 @@ int dct_quantize_altivec(MpegEncContext* s,
     // We handled the tranpose permutation above and we don't
     // need to permute the "no" permutation case.
     if ((lastNonZero > 0) &&
-        (s->idct_permutation_type != FF_TRANSPOSE_IDCT_PERM) &&
-        (s->idct_permutation_type != FF_NO_IDCT_PERM))
+        (s->dsp.idct_permutation_type != FF_TRANSPOSE_IDCT_PERM) &&
+        (s->dsp.idct_permutation_type != FF_NO_IDCT_PERM))
     {
-        ff_block_permute(data, s->idct_permutation,
+        ff_block_permute(data, s->dsp.idct_permutation,
                 s->intra_scantable.scantable, lastNonZero);
     }
 
     return lastNonZero;
 }
+#undef FOUROF
 
 /*
   AltiVec version of dct_unquantize_h263
@@ -511,13 +522,13 @@ int dct_quantize_altivec(MpegEncContext* s,
 void dct_unquantize_h263_altivec(MpegEncContext *s, 
                                  DCTELEM *block, int n, int qscale)
 {
-ALTIVEC_TBL_DECLARE(altivec_dct_unquantize_h263_num, 1);
+POWERPC_PERF_DECLARE(altivec_dct_unquantize_h263_num, 1);
     int i, level, qmul, qadd;
     int nCoeffs;
     
     assert(s->block_last_index[n]>=0);
 
-ALTIVEC_TBL_START_COUNT(altivec_dct_unquantize_h263_num, 1);
+POWERPC_PERF_START_COUNT(altivec_dct_unquantize_h263_num, 1);
     
     qadd = (qscale - 1) | 1;
     qmul = qscale << 1;
@@ -551,7 +562,7 @@ ALTIVEC_TBL_START_COUNT(altivec_dct_unquantize_h263_num, 1);
     }
 #else /* ALTIVEC_USE_REFERENCE_C_CODE */
     {
-      register const vector short vczero = (const vector short)(0);
+      register const vector short vczero = (const vector short)vec_splat_s16(0);
       short __attribute__ ((aligned(16))) qmul8[] =
           {
             qmul, qmul, qmul, qmul,
@@ -630,5 +641,5 @@ ALTIVEC_TBL_START_COUNT(altivec_dct_unquantize_h263_num, 1);
     }
 #endif /* ALTIVEC_USE_REFERENCE_C_CODE */
 
-ALTIVEC_TBL_STOP_COUNT(altivec_dct_unquantize_h263_num, nCoeffs == 63);
+POWERPC_PERF_STOP_COUNT(altivec_dct_unquantize_h263_num, nCoeffs == 63);
 }

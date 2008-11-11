@@ -1,6 +1,8 @@
 #ifndef _MPLAYER_SPUDEC_H
 #define _MPLAYER_SPUDEC_H
 
+#include "libvo/video_out.h"
+
 void spudec_heartbeat(void *this, unsigned int pts100);
 void spudec_assemble(void *this, unsigned char *packet, unsigned int len, unsigned int pts100);
 void spudec_draw(void *this, void (*draw_alpha)(int x0,int y0, int w,int h, unsigned char* src, unsigned char *srca, int stride));
@@ -17,5 +19,6 @@ void spudec_set_hw_spu(void *this, vo_functions_t *hw_spu);
 int spudec_changed(void *this);
 void spudec_calc_bbox(void *me, unsigned int dxs, unsigned int dys, unsigned int* bbox);
 void spudec_draw_scaled(void *me, unsigned int dxs, unsigned int dys, void (*draw_alpha)(int x0,int y0, int w,int h, unsigned char* src, unsigned char *srca, int stride));
+void spudec_set_forced_subs_only(void * const this, const unsigned int flag);
 #endif
 

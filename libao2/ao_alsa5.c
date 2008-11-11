@@ -1,7 +1,7 @@
 /*
   ao_alsa5 - ALSA-0.5.x output plugin for MPlayer
 
-  (C) Alex Beregszaszi <alex@naxine.org>
+  (C) Alex Beregszaszi
 
   Thanks to Arpi for helping me ;)
 */
@@ -21,7 +21,7 @@ static ao_info_t info =
 {
     "ALSA-0.5.x audio output",
     "alsa5",
-    "Alex Beregszaszi <alex@naxine.org>",
+    "Alex Beregszaszi",
     ""
 };
 
@@ -32,7 +32,7 @@ static snd_pcm_format_t alsa_format;
 static int alsa_rate = SND_PCM_RATE_CONTINUOUS;
 
 /* to set/get/query special features/parameters */
-static int control(int cmd, int arg)
+static int control(int cmd, void *arg)
 {
     return(CONTROL_UNKNOWN);
 }
@@ -158,7 +158,7 @@ static int init(int rate_hz, int channels, int format, int flags)
     }
 
     alsa_format.rate = ao_data.samplerate;
-    alsa_format.voices = ao_data.channels*2;
+    alsa_format.voices = ao_data.channels;
     alsa_format.interleave = 1;
 
     if ((err = snd_pcm_open(&alsa_handler, 0, 0, SND_PCM_OPEN_PLAYBACK)) < 0)

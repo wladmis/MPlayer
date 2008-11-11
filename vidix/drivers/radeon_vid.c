@@ -194,7 +194,8 @@ static video_registers_t vregs[] =
   DECLARE_VREG(IDCT_LEVELS),
   DECLARE_VREG(IDCT_AUTH_CONTROL),
   DECLARE_VREG(IDCT_AUTH),
-  DECLARE_VREG(IDCT_CONTROL)
+  DECLARE_VREG(IDCT_CONTROL),
+  DECLARE_VREG(CONFIG_CNTL)
 };
 
 static void * radeon_mmio_base = 0;
@@ -207,6 +208,11 @@ static uint32_t SAVED_OV0_GRAPHICS_KEY_MSK = 0;
 static uint32_t SAVED_OV0_VID_KEY_CLR = 0;
 static uint32_t SAVED_OV0_VID_KEY_MSK = 0;
 static uint32_t SAVED_OV0_KEY_CNTL = 0;
+#if defined(RAGE128) && (WORDS_BIGENDIAN)
+static uint32_t SAVED_CONFIG_CNTL = 0;
+#define APER_0_BIG_ENDIAN_16BPP_SWAP (1<<0)
+#define APER_0_BIG_ENDIAN_32BPP_SWAP (2<<0)
+#endif
 
 #define GETREG(TYPE,PTR,OFFZ)		(*((volatile TYPE*)((PTR)+(OFFZ))))
 #define SETREG(TYPE,PTR,OFFZ,VAL)	(*((volatile TYPE*)((PTR)+(OFFZ))))=VAL
@@ -426,10 +432,10 @@ static void radeon_engine_restore( void )
 				  (pitch64 << 22));
 
     radeon_fifo_wait(1);
-//#if defined(__BIG_ENDIAN)
 #if defined(WORDS_BIGENDIAN)
-    OUTREGP(DP_DATATYPE,
-	    HOST_BIG_ENDIAN_EN, ~HOST_BIG_ENDIAN_EN);
+#ifdef RADEON
+    OUTREGP(DP_DATATYPE, HOST_BIG_ENDIAN_EN, ~HOST_BIG_ENDIAN_EN);
+#endif
 #else
     OUTREGP(DP_DATATYPE, 0, ~HOST_BIG_ENDIAN_EN);
 #endif
@@ -831,6 +837,7 @@ static unsigned short ati_card_ids[] =
  DEVICE_ATI_RADEON_MOBILITY_M72,
  DEVICE_ATI_RADEON_MOBILITY_M6,
  DEVICE_ATI_RADEON_MOBILITY_M62,
+ DEVICE_ATI_RADEON_MOBILITY_U1,
  DEVICE_ATI_RADEON_R200_BB,
  DEVICE_ATI_RADEON_R200_QH,
  DEVICE_ATI_RADEON_R200_QI,
@@ -919,6 +926,11 @@ int vixProbe( int verbose,int force )
 	dname = pci_device_name(VENDOR_ATI,lst[i].device);
 	dname = dname ? dname : "Unknown chip";
 	printf(RADEON_MSG" Found chip: %s\n",dname);
+	if ((lst[i].command & PCI_COMMAND_IO) == 0)
+	{
+		printf("[radeon] Device is disabled, ignoring\n");
+		continue;
+	}
 #ifndef RAGE128	
 	if(idx != -1)
 	{
@@ -936,6 +948,7 @@ int vixProbe( int verbose,int force )
             case DEVICE_ATI_RADEON_VE_QZ:
             case DEVICE_ATI_RADEON_MOBILITY_M6:
             case DEVICE_ATI_RADEON_MOBILITY_M62:
+	    case DEVICE_ATI_RADEON_MOBILITY_U1:
               RadeonFamily = 120;
               break;
               
@@ -1030,6 +1043,15 @@ int vixInit( void )
       printf(RADEON_MSG" Workarounding buggy Radeon Mobility M6 (0 vs. 8MB ram)\n");
       radeon_ram_size = 8192*1024;
   }
+#else
+  /* Rage Mobility (rage128) also has memsize bug */
+  if (radeon_ram_size == 0 &&
+      (def_cap.device_id == DEVICE_ATI_RAGE_MOBILITY_M3 ||
+       def_cap.device_id == DEVICE_ATI_RAGE_MOBILITY_M32))
+  {
+      printf(RADEON_MSG" Workarounding buggy Rage Mobility M3 (0 vs. 8MB ram)\n");
+      radeon_ram_size = 8192*1024;
+  }
 #endif
   if((radeon_mem_base = map_phys_mem(pci_info.base0,radeon_ram_size))==(void *)-1) return ENOMEM;
   memset(&besr,0,sizeof(bes_registers_t));
@@ -1060,6 +1082,19 @@ int vixInit( void )
     }
 #endif
 
+/* XXX: hack, but it works for me (tm) */
+#if defined(RAGE128) && (WORDS_BIGENDIAN)
+    /* code from gatos */
+    {
+	SAVED_CONFIG_CNTL = INREG(CONFIG_CNTL);
+	OUTREG(CONFIG_CNTL, SAVED_CONFIG_CNTL &
+	    ~(APER_0_BIG_ENDIAN_16BPP_SWAP|APER_0_BIG_ENDIAN_32BPP_SWAP));
+	    
+//	printf("saved: %x, current: %x\n", SAVED_CONFIG_CNTL,
+//	    INREG(CONFIG_CNTL));
+    }
+#endif
+
   if(__verbose > 1) radeon_vid_dump_regs();
   return 0;  
 }
@@ -1074,6 +1109,12 @@ void vixDestroy( void )
   OUTREG(OV0_VID_KEY_MSK, SAVED_OV0_VID_KEY_MSK);
   OUTREG(OV0_KEY_CNTL, SAVED_OV0_KEY_CNTL);
   printf(RADEON_MSG" Restored overlay colorkey settings\n");
+
+#if defined(RAGE128) && (WORDS_BIGENDIAN)
+    OUTREG(CONFIG_CNTL, SAVED_CONFIG_CNTL);
+//    printf("saved: %x, restored: %x\n", SAVED_CONFIG_CNTL,
+//	INREG(CONFIG_CNTL));
+#endif
 
   unmap_phys_mem(radeon_mem_base,radeon_ram_size);
   unmap_phys_mem(radeon_mmio_base,0xFFFF);
@@ -1383,6 +1424,14 @@ static int radeon_vid_init_video( vidix_playback_t *config )
     besr.v_inc = (src_h << 20) / dest_h;
     if(radeon_is_interlace()) besr.v_inc *= 2;
     h_inc = (src_w << 12) / dest_w;
+
+    {
+        unsigned int ecp_div;
+        ecp_div = (INPLL(VCLK_ECP_CNTL) >> 8) & 3;
+        h_inc <<= ecp_div;
+    }
+
+
     step_by = 1;
     while(h_inc >= (2 << 12)) {
 	step_by++;
@@ -1447,8 +1496,16 @@ static int radeon_vid_init_video( vidix_playback_t *config )
 	    }
 	    else
 	    {
-		besr.vid_buf_base_adrs_v[i]=((radeon_overlay_off+config->offsets[i]+config->offset.v)&VIF_BUF1_BASE_ADRS_MASK)|VIF_BUF1_PITCH_SEL;
-		besr.vid_buf_base_adrs_u[i]=((radeon_overlay_off+config->offsets[i]+config->offset.u)&VIF_BUF2_BASE_ADRS_MASK)|VIF_BUF2_PITCH_SEL;
+		if (besr.fourcc == IMGFMT_I420 || besr.fourcc == IMGFMT_IYUV)
+		{
+		    besr.vid_buf_base_adrs_u[i]=((radeon_overlay_off+config->offsets[i]+config->offset.v)&VIF_BUF1_BASE_ADRS_MASK)|VIF_BUF1_PITCH_SEL;
+		    besr.vid_buf_base_adrs_v[i]=((radeon_overlay_off+config->offsets[i]+config->offset.u)&VIF_BUF2_BASE_ADRS_MASK)|VIF_BUF2_PITCH_SEL;
+		}
+		else
+		{
+		    besr.vid_buf_base_adrs_v[i]=((radeon_overlay_off+config->offsets[i]+config->offset.v)&VIF_BUF1_BASE_ADRS_MASK)|VIF_BUF1_PITCH_SEL;
+		    besr.vid_buf_base_adrs_u[i]=((radeon_overlay_off+config->offsets[i]+config->offset.u)&VIF_BUF2_BASE_ADRS_MASK)|VIF_BUF2_PITCH_SEL;
+		}
 	    }
 	}
 	config->offset.y = ((besr.vid_buf_base_adrs_y[0])&VIF_BUF0_BASE_ADRS_MASK) - radeon_overlay_off;
@@ -1461,13 +1518,6 @@ static int radeon_vid_init_video( vidix_playback_t *config )
 	{
 	    config->offset.v = ((besr.vid_buf_base_adrs_v[0])&VIF_BUF1_BASE_ADRS_MASK) - radeon_overlay_off;
 	    config->offset.u = ((besr.vid_buf_base_adrs_u[0])&VIF_BUF2_BASE_ADRS_MASK) - radeon_overlay_off;
-	}
-	if(besr.fourcc == IMGFMT_I420 || besr.fourcc == IMGFMT_IYUV)
-	{
-	  uint32_t tmp;
-	  tmp = config->offset.u;
-	  config->offset.u = config->offset.v;
-	  config->offset.v = tmp;
 	}
     }
     else

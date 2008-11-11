@@ -5,13 +5,17 @@
 
 #include "config.h"
 
-#ifdef USE_QTX_CODECS
+#if defined(USE_QTX_CODECS) || defined(MACOSX)
 
 #include "ad_internal.h"
 #include "bswap.h"
 
-#ifdef USE_WIN32DLL
+#ifdef WIN32_LOADER
 #include "ldt_keeper.h"
+#endif
+
+#ifdef MACOSX
+#include <QuickTime/QuickTimeComponents.h>
 #endif
 
 static ad_info_t info =  {
@@ -24,6 +28,7 @@ static ad_info_t info =  {
 
 LIBAD_EXTERN(qtaudio)
 
+#ifdef USE_QTX_CODECS
 typedef struct OpaqueSoundConverter*    SoundConverter;
 typedef unsigned long                   OSType;
 typedef unsigned long                   UnsignedFixed;
@@ -81,7 +86,7 @@ int       WINAPI FreeLibrary(HMODULE);
 static int loader_init()
 {
 
-#ifdef USE_WIN32DLL
+#ifdef WIN32_LOADER
     Setup_LDT_Keeper();
 #endif
     qtml_dll = LoadLibraryA("qtmlClient.dll");
@@ -150,6 +155,7 @@ static int loader_init()
     printf("loader_init DONE???\n");
 	return 0;
 }
+#endif /* USE_QTX_CODECS */
 
 static SoundConverter			   myConverter = NULL;
 static SoundComponentData		   InputFormatInfo,OutputFormatInfo;
@@ -166,15 +172,19 @@ static int preinit(sh_audio_t *sh){
 
     printf("win32 libquicktime loader (c) Sascha Sommer\n");
 
+#ifdef MACOSX
+    EnterMovies();
+#else
     if(loader_init()) return 0; // failed to load DLL
     
     printf("loader_init DONE!\n");
 
-#if 1
     error = InitializeQTML(6+16);
     printf("InitializeQTML:%i\n",error);
     if(error) return 0;
+#endif
     
+#if 1
 	OutputFormatInfo.flags = InputFormatInfo.flags = 0;
 	OutputFormatInfo.sampleCount = InputFormatInfo.sampleCount = 0;
 	OutputFormatInfo.buffer = InputFormatInfo.buffer = NULL;
@@ -258,6 +268,9 @@ static void uninit(sh_audio_t *sh){
 //    FreeLibrary( qtml_dll );
 //    qtml_dll = NULL;
 //    printf("qt dll loader uninit done\n");
+#ifdef MACOSX
+    ExitMovies();
+#endif
 }
 
 static int decode_audio(sh_audio_t *sh,unsigned char *buf,int minlen,int maxlen){

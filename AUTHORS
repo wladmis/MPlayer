@@ -69,7 +69,7 @@ Gyula László (Chass, Tégla) <chass-@freemail.hu>
 Zoltán Márk Vicián (Se7en) <se7en@sch.bme.hu>
     * SVGAlib support in libvo
 
-Alex Beregszaszi (al3x) <alex@naxine.org>
+Alex Beregszaszi (al3x) <alex@fsn.hu>
     * ALSA output driver in libao2
     * vo_ggi output driver in libvo (www.ggi-project.org)
     * XAnim codecs support
@@ -90,6 +90,7 @@ Alex Beregszaszi (al3x) <alex@naxine.org>
     * libmpcodecs / libmpdemux hacking
     * co-patch-maintainer
     * dynamic a/v plugins (external shared ad/vd/.. objects)
+    * millions of bug fixes
 
 Andreas Ackermann (Acki) <asackerm@stud.informatik.uni-erlangen.de>
     * LIRC support (see documentation)
@@ -133,7 +134,7 @@ Nick Kurshev <nickols_k@mail.ru>
 German Gomez Garcia <german@piraos.com>
     * SPDIF AC3 output for SBLive!
 
-Dariusz Pietrzak (Eyck) <eyck@incubus.ar.lublin.pl>
+Dariusz Pietrzak (Eyck) <eyck@ghost.anime.pl>
     * Debian packaging support (see debian/* and the documentation)
     * support for vplayer subtitle format
     * preliminary support for .RT subtitle format
@@ -186,12 +187,12 @@ Adam Tla/lka <atlka@pg.gda.pl>
 Folke Ashberg <folke@ashberg.de>
     * native AAlib driver (-vo aa)
 
-Ivan Kalvatchev <iive@yahoo.com>
+Ivan Kalvachev <iive@yahoo.com>
     * interlaced MPEG2 support (libmpeg2)
     * libvo2 draft
     * configfile parser fixes
 
-pl <p_l@gmx.fr>
+Pierre Lombard (pl) <p_l@gmx.fr>
     * new configure script
     * general code maintaining, fixes, patch committing
 
@@ -208,7 +209,7 @@ Michael Niedermayer <michaelni@gmx.at>
 Sven Goethel <sgoethel@jausoft.com>
     * libvo driver: vo_gl2
 
-joy_ping <joy@pingfm.org>
+Joy Winter <joy@pingfm.org>
     * ao_alsa9 fixes, AC3 passthrough support
 
 Eric Anholt <eanholt@gladstone.uoregon.edu>
@@ -286,6 +287,9 @@ Roberto Togni <rtogni@freemail.it>
     * Open source QT RPZA decoder
     * Open source HuffYUV decoder
     * Open source MSZH/ZLIB decoder
+    * mp_help-it.h updates
+    * Realaudio (ra) demuxer, 14_4 and 28_8 codec support
+    * Misc bugfixes and enhancements
 
 Wojtek Kaniewski <wojtekka@bydg.pdi.net>
     * Mouse wheel support
@@ -314,13 +318,17 @@ Dominik Mierzejewski <dominik@rangers.eu.org>
 
 Diego Biurrun <diego@biurrun.de>
     * documentation reviewer and co-maintainer
+    * console output translation (help_mp-XX.h) maintainer
     * README
     * random trivial fixes
+    * testing, bug reports
+    * homepage improvements
 
 Sascha Sommer <saschasommer@freenet.de>
     * directx VO driver
     * windows waveout AO driver
     * quicktime audio+video decoding, video encoding (using win32 DLLs) support
+    * MinGW port
 
 Sidik Isani <lksi@cfht.hawaii.edu>
     * get_delay() smoothing code (-autosync)
@@ -346,9 +354,10 @@ Andriy N. Gritsenko <andrej@lucky.net>
     * skip-deinterlace video filter
     * MUXER layer, and new MPEG-PS muxer
 
-Joey Parrish <joey@yunamusic.com>
+Joey Parrish <joey@nicewarrior.org>
     * various fixes
-    * -vo gif89 author
+    * -vo gif89a author
+    * gif demuxer author
 
 Juergen Hammelmann <juergen.hammelmann@gmx.de>
     * TOOLS/menvcd author
@@ -406,14 +415,17 @@ Per Wigren <wigren@home.se>
 
 Nicolas Le Gaillart <n@tourmentine.com>
     * French documentation translation
+    * documentation updates and fixes
+    * 2nd half of the documentation HTML --> XML conversion
 
-hephooey@fastmail.fm
+Lu Ran <hephooey@fastmail.fm>
     * Chinese documentation translation
     * Various VOBSUB-related patches
 
 András Mohari <mayday@varoshaza.nagyatad.hu>
     * skin documentation
     * various docs updates and fixes
+    * 1st half of the documentation HTML --> XML conversion
 
 Dénes Balatoni <pnis@coder.hu>
     * xmms inputplugin support
@@ -425,9 +437,6 @@ Oskar Liljeblad <oskar@osk.mine.nu>
 
 Bernd Ernesti <mplayer@lists.veego.de>
     * NetBSD support patches
-
-Michael Halcrow <mah69@email.byu.edu>
-    * EDL 0.5 - edit lists support
 
 Eviv Bulgroz <ebulgroz@yahoo.com>
     * Presets support for mp3lame encoding
@@ -449,6 +458,7 @@ Tomas Hurka <tom@hukatronic.cz>
 Moritz Bunkus <moritz@bunkus.org>
     * various OGM hacks/fixes
     * author of ogm-tools
+    * Matroska demuxer
 
 Filip Kalinski <filon@pld.org.pl>
     * X11 fulscreen switching fixes/cleanup
@@ -460,7 +470,7 @@ Alexander Gottwald <Alexander.Gottwald@informatik.tu-chemnitz.de>
     * various small bugfixes
 
 Andreas Hess <jaska@gmx.net>
-    * upgrading libdvdcss to 1.2.4 in libmpdvdkit2
+    * upgrading libdvdcss in libmpdvdkit2
     * various small bugfixes
 
 Salvador Eduardo Tropea <salvador@inti.gov.ar>
@@ -477,7 +487,16 @@ Attila Kinali <kinali@gmx.net>
     * various small fixes in the x11 code
     * xinerama support
     * documentation
-    
+
+Andoni Zubimendi <andoni@lpsat.net>.
+    * Spanish documentation translation
+
+Juan Martin <nauj27@teleline.es>
+    * Spanish man page translation
+    * Spanish documentation translation
+
+Dmitry Baryshkov <lumag@mplayerhq.hu>
+    * Russian documentation translation
 
 NOTE: If you think you are missing here, feel free to send a patch.
 =====
@@ -553,4 +572,3 @@ Dirk Farin <farin@ti.uni-mannheim.de>
 Adam Williams <broadcast@earthling.net>
     * libmpeg3 (and xmovie) author [MPEG1/MPEG2 video decoder, used in
       v0.1-v0.4]
-

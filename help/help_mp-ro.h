@@ -1,25 +1,20 @@
-// Translated by:  Codre Adrian <codreadrian@softhome.net>
+// Translated by:  Codre Adrian <codreadrian@softhome.net> (address bounces)
 
 // ========================= MPlayer help ===========================
 
 #ifdef HELP_MP_DEFINE_STATIC
-static char* banner_text=
-"\n\n"
-"MPlayer " VERSION "(C) 2000-2001 Arpad Gereoffy (see DOCS!)\n"
-"\n";
-
 static char help_text[]=
 "Folosire:   mplayer [opþiuni] [cale/]fiºier\n"
 "\n"
 "Opþiuni:\n"
 " -vo <drv[:disp]> Ieºirea video: driver&dispozitiv ('-vo help' pentru o listã)\n"
 " -ao <drv[:disp]> Ieºirea audio: driver&dispozitiv ('-ao help' pentru o listã)\n"
-" -vcd <numãr pistã>  foloseºte <pista> de pe dispozitivul VCD în loc de fiºier\n"
+" vcd://<numãr pistã>  foloseºte <pista> de pe dispozitivul VCD în loc de fiºier\n"
 #ifdef HAVE_LIBCSS
 " -dvdauth <disp>  dispozitivul DVD pentru autentificare (la discuri encriptate)\n"
 #endif
 #ifdef USE_DVDREAD
-" -dvd <titlu>  foloseºte titlu/pista de pe dispozitivul DVD în loc de fiºier\n"
+" dvd://<titlu>  foloseºte titlu/pista de pe dispozitivul DVD în loc de fiºier\n"
 #endif
 " -ss <poziþia>   sare la poziþia (secunde sau oo:mm:ss)\n"
 " -nosound        fãrã sunet\n"
@@ -76,7 +71,6 @@ static char help_text[]=
 #define MSGTR_TryForceAudioFmt "Încerc sã forþez utilizarea unui codec audio din familia %d ...\n"
 #define MSGTR_CantFindAfmtFallback "Nu pot sã gãsesc un codec audio pentru familia forþatã, revin la alte drivere.\n"
 #define MSGTR_CantFindAudioCodec "Nu gãsesc un codec audio pentru formatul 0x%X !\n"
-#define MSGTR_TryUpgradeCodecsConfOrRTFM "*** Încercaþi sã înnoiþi %s din etc/codecs.conf\n*** Dacã nu ajutã citiþi DOCS/CODECS!\n"
 #define MSGTR_CouldntInitAudioCodec "Nu pot sã iniþializez codec-ul audio! -> fãrã sunet\n"
 #define MSGTR_TryForceVideoFmt "Încerc sã forþez utilizarea unui codec video din familia %d ...\n"
 #define MSGTR_CantFindVideoCodec "Nu gãsesc un codec video pentru formatul 0x%X !\n"

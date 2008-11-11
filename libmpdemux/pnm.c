@@ -17,7 +17,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
  *
- * $Id: pnm.c,v 1.4 2003/01/10 22:41:49 arpi Exp $
+ * $Id: pnm.c,v 1.9 2003/10/04 17:29:01 gabucino Exp $
  *
  * pnm protocol implementation 
  * based upon code from joschka
@@ -26,9 +26,6 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <assert.h>
-//#include <sys/socket.h>
-//#include <netinet/in.h>
-//#include <netdb.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -36,6 +33,16 @@
 #include <stdlib.h>
 #include <sys/time.h>
 #include <inttypes.h>
+
+#include "config.h"
+#ifndef HAVE_WINSOCK2
+#define closesocket close
+#include <sys/socket.h>
+//#include <netinet/in.h>
+//#include <netdb.h>
+#else
+#include <winsock2.h>
+#endif
 
 #include "pnm.h"
 //#include "libreal/rmff.h"
@@ -141,7 +148,7 @@ const unsigned char pnm_challenge[] = "0990f6b4508b51e801bd6da011ad7b56";
 const unsigned char pnm_timestamp[] = "[15/06/1999:22:22:49 00:00]";
 const unsigned char pnm_guid[]      = "3eac2411-83d5-11d2-f3ea-d7c3a51aa8b0";
 const unsigned char pnm_response[]  = "97715a899cbe41cee00dd434851535bf";
-const unsigned char client_string[] = "WinNT_4.0_6.0.6.45_plus32_MP60_en-US_686l";
+const unsigned char client_string[] = "WinNT_9.0_6.0.6.45_plus32_MP60_en-US_686l";
 
 #define PNM_HEADER_SIZE 11
 const unsigned char pnm_header[] = {
@@ -202,12 +209,16 @@ static int rm_write(int s, const char *buf, int len) {
   while (total < len){ 
     int n;
 
-    n = write (s, &buf[total], len - total);
+    n = send (s, &buf[total], len - total, 0);
 
     if (n > 0)
       total += n;
     else if (n < 0) {
+#ifndef HAVE_WINSOCK2
       if ((timeout>0) && ((errno == EAGAIN) || (errno == EINPROGRESS))) {
+#else
+      if ((timeout>0) && ((errno == EAGAIN) || (WSAGetLastError() == WSAEINPROGRESS))) {
+#endif
         sleep (1); timeout--;
       } else
         return -1;
@@ -238,7 +249,7 @@ static ssize_t rm_read(int fd, void *buf, size_t count) {
       return -1;
     }
     
-    ret=read (fd, ((uint8_t*)buf)+total, count-total);
+    ret=recv (fd, ((uint8_t*)buf)+total, count-total, 0);
 
     if (ret<=0) {
       printf ("input_pnm: read error.\n");
@@ -430,7 +441,7 @@ static void pnm_send_request(pnm_t *p, uint32_t bandwidth) {
 
   /* client id string */
   p->buffer[c]=PNA_CLIENT_STRING;
-  i16=BE_16D((strlen(client_string)-1)); /* dont know why do we have -1 here */
+  i16=BE_16D((strlen(client_string)-1)); /* don't know why do we have -1 here */
   memcpy(&p->buffer[c+1],&i16,2);
   memcpy(&p->buffer[c+3],client_string,strlen(client_string)+1);
   c=c+3+strlen(client_string)+1;
@@ -662,7 +673,7 @@ static int pnm_get_stream_chunk(pnm_t *p) {
   }
 
   /* skip bytewise to next chunk.
-   * seems, that we dont need that, if we send enough
+   * seems, that we don't need that, if we send enough
    * keepalives
    */
   n=0;
@@ -810,7 +821,7 @@ int pnm_peek_header (pnm_t *this, char *data) {
 
 void pnm_close(pnm_t *p) {
 
-  if (p->s >= 0) close(p->s);
+  if (p->s >= 0) closesocket(p->s);
   free(p->path);
   free(p);
 }

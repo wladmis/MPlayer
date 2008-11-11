@@ -1,17 +1,3 @@
-/* Valid values for ANTIALIASING_ALGORITHM:
-  -1: bilinear (similiar to vobsub, fast and good quality)
-   0: none (fastest, most ugly)
-   1: approximate
-   2: full (slowest, best looking)
- */
-#define ANTIALIASING_ALGORITHM -1
-
-/* Valid values for SUBPOS:
-   0: leave the sub on it's original place
-   1: put the sub at the bottom of the picture
- */
-#define SUBPOS 0
-
 /* SPUdec.c
    Skeleton of function spudec_process_controll() is from xine sources.
    Further works:
@@ -34,32 +20,53 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-#if ANTIALIASING_ALGORITHM == 2
 #include <math.h>
-#endif
 #include "libvo/video_out.h"
 #include "spudec.h"
+#include "postproc/swscale.h"
 
 #define MIN(a, b)	((a)<(b)?(a):(b))
 
+/* Valid values for spu_aamode:
+   0: none (fastest, most ugly)
+   1: approximate
+   2: full (slowest)
+   3: bilinear (similiar to vobsub, fast and not too bad)
+   4: uses swscaler gaussian (this is the only one that looks good)
+ */
+
+int spu_aamode = 3;
+int spu_alignment = -1;
+float spu_gaussvar = 1.0;
+extern int sub_pos;
+
 typedef struct packet_t packet_t;
 struct packet_t {
-  unsigned char *data;
-  unsigned int process_pts;   /* When to process the packet */
-  size_t reserve;             /* size of the memory pointed to by packet */
-  unsigned int offset;        /* end of the currently assembled fragment */
-  unsigned int size;          /* size of the packet once all fragments are assembled */
-  unsigned int fragment_pts;  /* PTS of the last fragment for this packet */
-  unsigned int control_start; /* index of start of control data */
+  unsigned char *packet;
+  unsigned int palette[4];
+  unsigned int alpha[4];
+  unsigned int control_start;	/* index of start of control data */
+  unsigned int current_nibble[2]; /* next data nibble (4 bits) to be
+                                     processed (for RLE decoding) for
+                                     even and odd lines */
+  int deinterlace_oddness;	/* 0 or 1, index into current_nibble */
+  unsigned int start_col, end_col;
+  unsigned int start_row, end_row;
+  unsigned int width, height, stride;
+  unsigned int start_pts, end_pts;
   packet_t *next;
 };
 
 typedef struct {
-  packet_t *packets;       /* Linked list of packets sorted by process_pts */
-  packet_t *last_packet;   /* Last packet in linked list */
-
+  packet_t *queue_head;
+  packet_t *queue_tail;
   unsigned int global_palette[16];
   unsigned int orig_frame_width, orig_frame_height;
+  unsigned char* packet;
+  size_t packet_reserve;	/* size of the memory pointed to by packet */
+  unsigned int packet_offset;	/* end of the currently assembled fragment */
+  unsigned int packet_size;	/* size of the packet once all fragments are assembled */
+  unsigned int packet_pts;	/* PTS for this packet */
   unsigned int palette[4];
   unsigned int alpha[4];
   unsigned int cuspal[4];
@@ -69,10 +76,6 @@ typedef struct {
   unsigned int start_col, end_col;
   unsigned int start_row, end_row;
   unsigned int width, height, stride;
-  unsigned int current_nibble[2]; /* next data nibble (4 bits) to be
-                                     processed (for RLE decoding) for
-                                     even and odd lines */
-  int deinterlace_oddness;	/* 0 or 1, index into current_nibble */
   size_t image_size;		/* Size of the image buffer */
   unsigned char *image;		/* Grayscale value */
   unsigned char *aimage;	/* Alpha value */
@@ -86,48 +89,35 @@ typedef struct {
   int font_start_level;  /* Darkest value used for the computed font */
   vo_functions_t *hw_spu;
   int spu_changed;
+  unsigned int forced_subs_only;     /* flag: 0=display all subtitle, !0 display only forced subtitles */
+  unsigned int is_forced_sub;         /* true if current subtitle is a forced subtitle */
 } spudec_handle_t;
 
-/* Add packet to end of list */
-static void spudec_append_packet (spudec_handle_t *this, packet_t *packet)
+static void spudec_queue_packet(spudec_handle_t *this, packet_t *packet)
 {
-  packet->next = NULL;
-  if (this->last_packet == NULL)
-    this->packets = packet;
+  if (this->queue_head == NULL)
+    this->queue_head = packet;
   else
-    this->last_packet->next = packet;
-
-  this->last_packet = packet;
+    this->queue_tail->next = packet;
+  this->queue_tail = packet;
 }
 
-/* Add a new packet to end of the list */
-static void spudec_append_new_packet (spudec_handle_t *this)
+static packet_t *spudec_dequeue_packet(spudec_handle_t *this)
 {
-  packet_t *new_packet = calloc (1, sizeof (packet_t));
+  packet_t *retval = this->queue_head;
 
-  /* Do not process packet yet, so set process time way into the future */
-  new_packet->process_pts = -1L;
+  this->queue_head = retval->next;
+  if (this->queue_head == NULL)
+    this->queue_tail = NULL;
 
-  spudec_append_packet (this, new_packet);
+  return retval;
 }
 
-/* Remove top-most packet and free the memory it used */
-static void spudec_pop_packet (spudec_handle_t *this)
+static void spudec_free_packet(packet_t *packet)
 {
-  packet_t *temp;
-
-  if (this->packets != NULL)
-    {
-      temp = this->packets;
-      this->packets = temp->next;
-      if (temp->data != NULL)
-        free (temp->data);
-      free (temp);
-
-      /* Null last packet pointer if there are no packets in the queue */
-      if (this->packets == NULL)
-        this->last_packet = NULL;
-    }
+  if (packet->packet != NULL)
+    free(packet->packet);
+  free(packet);
 }
 
 static inline unsigned int get_be16(const unsigned char *p)
@@ -140,22 +130,22 @@ static inline unsigned int get_be24(const unsigned char *p)
   return (get_be16(p) << 8) + p[2];
 }
 
-static void next_line(spudec_handle_t *this)
+static void next_line(packet_t *packet)
 {
-  if (this->current_nibble[this->deinterlace_oddness] % 2)
-    this->current_nibble[this->deinterlace_oddness]++;
-  this->deinterlace_oddness = (this->deinterlace_oddness + 1) % 2;
+  if (packet->current_nibble[packet->deinterlace_oddness] % 2)
+    packet->current_nibble[packet->deinterlace_oddness]++;
+  packet->deinterlace_oddness = (packet->deinterlace_oddness + 1) % 2;
 }
 
-static inline unsigned char get_nibble(spudec_handle_t *this, packet_t *packet)
+static inline unsigned char get_nibble(packet_t *packet)
 {
   unsigned char nib;
-  unsigned int *nibblep = this->current_nibble + this->deinterlace_oddness;
+  unsigned int *nibblep = packet->current_nibble + packet->deinterlace_oddness;
   if (*nibblep / 2 >= packet->control_start) {
     mp_msg(MSGT_SPUDEC,MSGL_WARN, "SPUdec: ERROR: get_nibble past end of packet\n");
     return 0;
   }
-  nib = packet->data[*nibblep / 2];
+  nib = packet->packet[*nibblep / 2];
   if (*nibblep % 2)
     nib &= 0xf;
   else
@@ -202,9 +192,11 @@ static inline void spudec_cut_image(spudec_handle_t *this)
 	  this->height = last_y - first_y +1;
   } else {
 	  this->height = 0;
+	  this->image_size = 0;
+	  return;
   }
   
-  //printf("new h %d new start %d (sz %d st %d)---\n\n", this->height, this->start_row, this->image_size, this->stride);
+//  printf("new h %d new start %d (sz %d st %d)---\n\n", this->height, this->start_row, this->image_size, this->stride);
 
   image = malloc(2 * this->stride * this->height);
   if(image){
@@ -225,11 +217,17 @@ static void spudec_process_data(spudec_handle_t *this, packet_t *packet)
   unsigned int cmap[4], alpha[4];
   unsigned int i, x, y;
 
-  this->deinterlace_oddness = 0;
   this->scaled_frame_width = 0;
   this->scaled_frame_height = 0;
+  this->start_col = packet->start_col;
+  this->end_col = packet->end_col;
+  this->start_row = packet->start_row;
+  this->end_row = packet->end_row;
+  this->height = packet->height;
+  this->width = packet->width;
+  this->stride = packet->stride;
   for (i = 0; i < 4; ++i) {
-    alpha[i] = mkalpha(this->alpha[i]);
+    alpha[i] = mkalpha(packet->alpha[i]);
     if (alpha[i] == 0)
       cmap[i] = 0;
     else if (this->custom){
@@ -238,7 +236,7 @@ static void spudec_process_data(spudec_handle_t *this, packet_t *packet)
 	cmap[i] = 256 - alpha[i];
     }
     else {
-      cmap[i] = ((this->global_palette[this->palette[i]] >> 16) & 0xff);
+      cmap[i] = ((this->global_palette[packet->palette[i]] >> 16) & 0xff);
       if (cmap[i] + alpha[i] > 255)
 	cmap[i] = 256 - alpha[i];
     }
@@ -266,21 +264,21 @@ static void spudec_process_data(spudec_handle_t *this, packet_t *packet)
       memset(this->image + y * this->stride + this->width, 0, this->stride - this->width);
     }
 
-  i = this->current_nibble[1];
+  i = packet->current_nibble[1];
   x = 0;
   y = 0;
-  while (this->current_nibble[0] < i
-	 && this->current_nibble[1] / 2 < packet->control_start
+  while (packet->current_nibble[0] < i
+	 && packet->current_nibble[1] / 2 < packet->control_start
 	 && y < this->height) {
     unsigned int len, color;
     unsigned int rle = 0;
-    rle = get_nibble(this, packet);
+    rle = get_nibble(packet);
     if (rle < 0x04) {
-      rle = (rle << 4) | get_nibble(this, packet);
+      rle = (rle << 4) | get_nibble(packet);
       if (rle < 0x10) {
-	rle = (rle << 4) | get_nibble(this, packet);
+	rle = (rle << 4) | get_nibble(packet);
 	if (rle < 0x040) {
-	  rle = (rle << 4) | get_nibble(this, packet);
+	  rle = (rle << 4) | get_nibble(packet);
 	  if (rle < 0x0004)
 	    rle |= ((this->width - x) << 2);
 	}
@@ -295,7 +293,7 @@ static void spudec_process_data(spudec_handle_t *this, packet_t *packet)
     memset(this->aimage + y * this->stride + x, alpha[color], len);
     x += len;
     if (x >= this->width) {
-      next_line(this);
+      next_line(packet);
       x = 0;
       ++y;
     }
@@ -306,19 +304,19 @@ static void spudec_process_data(spudec_handle_t *this, packet_t *packet)
 
 /*
   This function tries to create a usable palette.
-  Is searchs how many non-transparent colors are used and assigns different
+  It determines how many non-transparent colors are used, and assigns different
 gray scale values to each color.
   I tested it with four streams and even got something readable. Half of the
 times I got black characters with white around and half the reverse.
 */
-static void compute_palette(spudec_handle_t *this)
+static void compute_palette(spudec_handle_t *this, packet_t *packet)
 {
   int used[16],i,cused,start,step,color;
 
   memset(used, 0, sizeof(used));
   for (i=0; i<4; i++)
-    if (this->alpha[i]) /* !Transparent? */
-       used[this->palette[i]] = 1;
+    if (packet->alpha[i]) /* !Transparent? */
+       used[packet->palette[i]] = 1;
   for (cused=0, i=0; i<16; i++)
     if (used[i]) cused++;
   if (!cused) return;
@@ -331,8 +329,8 @@ static void compute_palette(spudec_handle_t *this)
   }
   memset(used, 0, sizeof(used));
   for (i=0; i<4; i++) {
-    color = this->palette[i];
-    if (this->alpha[i] && !used[color]) { /* not assigned? */
+    color = packet->palette[i];
+    if (packet->alpha[i] && !used[color]) { /* not assigned? */
        used[color] = 1;
        this->global_palette[color] = start<<16;
        start += step;
@@ -340,90 +338,101 @@ static void compute_palette(spudec_handle_t *this)
   }
 }
 
-static void spudec_process_control(spudec_handle_t *this, packet_t *packet)
+static void spudec_process_control(spudec_handle_t *this, unsigned int pts100)
 {
   int a,b; /* Temporary vars */
   unsigned int date, type;
   unsigned int off;
   unsigned int start_off = 0;
   unsigned int next_off;
-  unsigned int pts100 = packet->process_pts;
+  unsigned int start_pts;
+  unsigned int end_pts;
+  unsigned int current_nibble[2];
+  unsigned int control_start;
+  unsigned int display = 0;
+  unsigned int start_col = 0;
+  unsigned int end_col = 0;
+  unsigned int start_row = 0;
+  unsigned int end_row = 0;
+  unsigned int width = 0;
+  unsigned int height = 0;
+  unsigned int stride = 0;
 
-  packet->control_start = get_be16(packet->data + 2);
-  next_off = packet->control_start;
+  control_start = get_be16(this->packet + 2);
+  next_off = control_start;
   while (start_off != next_off) {
     start_off = next_off;
-    date = get_be16(packet->data + start_off) * 1024;
-    next_off = get_be16(packet->data + start_off + 2);
+    date = get_be16(this->packet + start_off) * 1024;
+    next_off = get_be16(this->packet + start_off + 2);
     mp_msg(MSGT_SPUDEC,MSGL_DBG2, "date=%d\n", date);
     off = start_off + 4;
-    for (type = packet->data[off++]; type != 0xff; type = packet->data[off++]) {
+    for (type = this->packet[off++]; type != 0xff; type = this->packet[off++]) {
       mp_msg(MSGT_SPUDEC,MSGL_DBG2, "cmd=%d  ",type);
       switch(type) {
       case 0x00:
 	/* Menu ID, 1 byte */
 	mp_msg(MSGT_SPUDEC,MSGL_DBG2,"Menu ID\n");
         /* shouldn't a Menu ID type force display start? */
-	//this->start_pts = pts100 + date;
-	//this->end_pts = UINT_MAX;
+	start_pts = pts100 + date;
+	end_pts = UINT_MAX;
+	display = 1;
+	this->is_forced_sub=~0; // current subtitle is forced
 	break;
       case 0x01:
 	/* Start display */
 	mp_msg(MSGT_SPUDEC,MSGL_DBG2,"Start display!\n");
-	this->start_pts = pts100 + date;
-	this->end_pts = UINT_MAX;
+	start_pts = pts100 + date;
+	end_pts = UINT_MAX;
+	display = 1;
+	this->is_forced_sub=0;
 	break;
       case 0x02:
 	/* Stop display */
 	mp_msg(MSGT_SPUDEC,MSGL_DBG2,"Stop display!\n");
-	this->end_pts = pts100 + date;
+	end_pts = pts100 + date;
 	break;
       case 0x03:
 	/* Palette */
-	this->palette[0] = packet->data[off] >> 4;
-	this->palette[1] = packet->data[off] & 0xf;
-	this->palette[2] = packet->data[off + 1] >> 4;
-	this->palette[3] = packet->data[off + 1] & 0xf;
+	this->palette[0] = this->packet[off] >> 4;
+	this->palette[1] = this->packet[off] & 0xf;
+	this->palette[2] = this->packet[off + 1] >> 4;
+	this->palette[3] = this->packet[off + 1] & 0xf;
 	mp_msg(MSGT_SPUDEC,MSGL_DBG2,"Palette %d, %d, %d, %d\n",
 	       this->palette[0], this->palette[1], this->palette[2], this->palette[3]);
 	off+=2;
 	break;
       case 0x04:
 	/* Alpha */
-	this->alpha[0] = packet->data[off] >> 4;
-	this->alpha[1] = packet->data[off] & 0xf;
-	this->alpha[2] = packet->data[off + 1] >> 4;
-	this->alpha[3] = packet->data[off + 1] & 0xf;
-	if (this->auto_palette) { 
-	  compute_palette(this);
-	  this->auto_palette = 0;
-	}
+	this->alpha[0] = this->packet[off] >> 4;
+	this->alpha[1] = this->packet[off] & 0xf;
+	this->alpha[2] = this->packet[off + 1] >> 4;
+	this->alpha[3] = this->packet[off + 1] & 0xf;
 	mp_msg(MSGT_SPUDEC,MSGL_DBG2,"Alpha %d, %d, %d, %d\n",
 	       this->alpha[0], this->alpha[1], this->alpha[2], this->alpha[3]);
 	off+=2;
 	break;
       case 0x05:
 	/* Co-ords */
-	a = get_be24(packet->data + off);
-	b = get_be24(packet->data + off + 3);
-	this->start_col = a >> 12;
-	this->end_col = a & 0xfff;
-	this->width = (this->end_col < this->start_col) ? 0 : this->end_col - this->start_col + 1;
-	this->stride = (this->width + 7) & ~7; /* Kludge: draw_alpha needs width multiple of 8 */
-	this->start_row = b >> 12;
-	this->end_row = b & 0xfff;
-	this->height = (this->end_row < this->start_row) ? 0 : this->end_row - this->start_row /* + 1 */;
+	a = get_be24(this->packet + off);
+	b = get_be24(this->packet + off + 3);
+	start_col = a >> 12;
+	end_col = a & 0xfff;
+	width = (end_col < start_col) ? 0 : end_col - start_col + 1;
+	stride = (width + 7) & ~7; /* Kludge: draw_alpha needs width multiple of 8 */
+	start_row = b >> 12;
+	end_row = b & 0xfff;
+	height = (end_row < start_row) ? 0 : end_row - start_row /* + 1 */;
 	mp_msg(MSGT_SPUDEC,MSGL_DBG2,"Coords  col: %d - %d  row: %d - %d  (%dx%d)\n",
-	       this->start_col, this->end_col, this->start_row, this->end_row,
-	       this->width, this->height);
+	       start_col, end_col, start_row, end_row,
+	       width, height);
 	off+=6;
 	break;
       case 0x06:
 	/* Graphic lines */
-	this->current_nibble[0] = 2 * get_be16(packet->data + off);
-	this->current_nibble[1] = 2 * get_be16(packet->data + off + 2);
+	current_nibble[0] = 2 * get_be16(this->packet + off);
+	current_nibble[1] = 2 * get_be16(this->packet + off + 2);
 	mp_msg(MSGT_SPUDEC,MSGL_DBG2,"Graphic offset 1: %d  offset 2: %d\n",
-	       this->current_nibble[0] / 2, this->current_nibble[1] / 2);
+	       current_nibble[0] / 2, current_nibble[1] / 2);
 	off+=4;
 	break;
       case 0xff:
@@ -438,24 +447,46 @@ static void spudec_process_control(spudec_handle_t *this, packet_t *packet)
       }
     }
   next_control:
-    ;
+    if (display) {
+      packet_t *packet = calloc(1, sizeof(packet_t));
+      int i;
+      packet->start_pts = start_pts;
+      if (end_pts == UINT_MAX && start_off != next_off) {
+	start_pts = pts100 + get_be16(this->packet + next_off) * 1024;
+        packet->end_pts = start_pts - 1;
+      } else packet->end_pts = end_pts;
+      packet->current_nibble[0] = current_nibble[0];
+      packet->current_nibble[1] = current_nibble[1];
+      packet->start_row = start_row;
+      packet->end_row = end_row;
+      packet->start_col = start_col;
+      packet->end_col = end_col;
+      packet->width = width;
+      packet->height = height;
+      packet->stride = stride;
+      packet->control_start = control_start;
+      for (i=0; i<4; i++) {
+	packet->alpha[i] = this->alpha[i];
+	packet->palette[i] = this->palette[i];
+      }
+      packet->packet = malloc(this->packet_size);
+      memcpy(packet->packet, this->packet, this->packet_size);
+      spudec_queue_packet(this, packet);
+    }
   }
 }
 
-static void spudec_decode(spudec_handle_t *this, packet_t *queued_packet)
+static void spudec_decode(spudec_handle_t *this, unsigned int pts100)
 {
   if(this->hw_spu) {
     static vo_mpegpes_t packet = { NULL, 0, 0x20, 0 };
     static vo_mpegpes_t *pkg=&packet;
-    packet.data = queued_packet->data;
-    packet.size = queued_packet->size;
-    packet.timestamp = queued_packet->process_pts;
+    packet.data = this->packet;
+    packet.size = this->packet_size;
+    packet.timestamp = pts100;
     this->hw_spu->draw_frame((uint8_t**)&pkg);
-  } else {
-    spudec_process_control(this, queued_packet);
-    spudec_process_data(this, queued_packet);
-  }
-  this->spu_changed = 1;
+  } else
+    spudec_process_control(this, pts100);
 }
 
 int spudec_changed(void * this)
@@ -464,87 +495,80 @@ int spudec_changed(void * this)
     return (spu->spu_changed || spu->now_pts > spu->end_pts);
 }
 
-void spudec_assemble(void *this, unsigned char *packet_bytes, unsigned int len, unsigned int pts100)
+void spudec_assemble(void *this, unsigned char *packet, unsigned int len, unsigned int pts100)
 {
   spudec_handle_t *spu = (spudec_handle_t*)this;
-  packet_t *last_packet;
-
-  /* Create a new packet if one doesn't exist in the queue */
-  if (spu->last_packet == NULL)
-    spudec_append_new_packet (spu);
-
-  last_packet = spu->last_packet;
-
 //  spudec_heartbeat(this, pts100);
   if (len < 2) {
       mp_msg(MSGT_SPUDEC,MSGL_WARN,"SPUasm: packet too short\n");
       return;
   }
-  if ((last_packet->fragment_pts + 10000) < pts100) {
+  if ((spu->packet_pts + 10000) < pts100) {
     // [cb] too long since last fragment: force new packet
-    last_packet->offset = 0;
+    spu->packet_offset = 0;
   }
-  last_packet->fragment_pts = pts100;
-  if (last_packet->offset == 0) {
-    unsigned int len2 = get_be16(packet_bytes);
+  spu->packet_pts = pts100;
+  if (spu->packet_offset == 0) {
+    unsigned int len2 = get_be16(packet);
     // Start new fragment
-    if (last_packet->reserve < len2) {
-      if (last_packet->data != NULL)
-	free(last_packet->data);
-      last_packet->data = malloc(len2);
-      last_packet->reserve = last_packet->data != NULL ? len2 : 0;
+    if (spu->packet_reserve < len2) {
+      if (spu->packet != NULL)
+	free(spu->packet);
+      spu->packet = malloc(len2);
+      spu->packet_reserve = spu->packet != NULL ? len2 : 0;
     }
-    if (last_packet->data != NULL) {
-      last_packet->size = len2;
+    if (spu->packet != NULL) {
+      spu->packet_size = len2;
       if (len > len2) {
 	mp_msg(MSGT_SPUDEC,MSGL_WARN,"SPUasm: invalid frag len / len2: %d / %d \n", len, len2);
 	return;
       }
-      memcpy(last_packet->data, packet_bytes, len);
-      last_packet->offset = len;
+      memcpy(spu->packet, packet, len);
+      spu->packet_offset = len;
+      spu->packet_pts = pts100;
     }
   } else {
     // Continue current fragment
-    if (last_packet->size < last_packet->offset + len){
+    if (spu->packet_size < spu->packet_offset + len){
       mp_msg(MSGT_SPUDEC,MSGL_WARN,"SPUasm: invalid fragment\n");
-      last_packet->size = last_packet->offset = 0;
+      spu->packet_size = spu->packet_offset = 0;
+      return;
     } else {
-      memcpy(last_packet->data + last_packet->offset, packet_bytes, len);
-      last_packet->offset += len;
+      memcpy(spu->packet + spu->packet_offset, packet, len);
+      spu->packet_offset += len;
     }
   }
 #if 1
   // check if we have a complete packet (unfortunatelly packet_size is bad
   // for some disks)
   // [cb] packet_size is padded to be even -> may be one byte too long
-  if ((last_packet->offset == last_packet->size) ||
-      ((last_packet->offset + 1) == last_packet->size)){
+  if ((spu->packet_offset == spu->packet_size) ||
+      ((spu->packet_offset + 1) == spu->packet_size)){
     unsigned int x=0,y;
-    while(x+4<=last_packet->offset) {
-      y=get_be16(last_packet->data+x+2); // next control pointer
-      mp_msg(MSGT_SPUDEC,MSGL_DBG2,"SPUtest: x=%d y=%d off=%d size=%d\n",x,y,last_packet->offset,last_packet->size);
+    while(x+4<=spu->packet_offset){
+      y=get_be16(spu->packet+x+2); // next control pointer
+      mp_msg(MSGT_SPUDEC,MSGL_DBG2,"SPUtest: x=%d y=%d off=%d size=%d\n",x,y,spu->packet_offset,spu->packet_size);
       if(x>=4 && x==y){		// if it points to self - we're done!
         // we got it!
-	mp_msg(MSGT_SPUDEC,MSGL_DBG2,"SPUgot: off=%d  size=%d \n",last_packet->offset,last_packet->size);
-        break;
+	mp_msg(MSGT_SPUDEC,MSGL_DBG2,"SPUgot: off=%d  size=%d \n",spu->packet_offset,spu->packet_size);
+	spudec_decode(spu, pts100);
+	spu->packet_offset = 0;
+	break;
       }
-      if(y<=x || y>=last_packet->size){ // invalid?
+      if(y<=x || y>=spu->packet_size){ // invalid?
 	mp_msg(MSGT_SPUDEC,MSGL_WARN,"SPUtest: broken packet!!!!! y=%d < x=%d\n",y,x);
-        last_packet->size = last_packet->offset = 0;
-        return;
+        spu->packet_size = spu->packet_offset = 0;
+        break;
       }
       x=y;
     }
-
-    /* Packet is done.  Schedule time to process it and start a new one. */
-    last_packet->process_pts = last_packet->fragment_pts;
-    spudec_append_new_packet (spu);
+    // [cb] packet is done; start new packet
+    spu->packet_offset = 0;
   }
 #else
   if (spu->packet_offset == spu->packet_size) {
-    /* Packet is done.  Schedule time to process it and start a new one. */
-    last_packet->process_pts = last_packet->fragment_pts;
-    spudec_append_new_packet (spu);
+    spudec_decode(spu, pts100);
+    spu->packet_offset = 0;
   }
 #endif
 }
@@ -552,29 +576,45 @@ void spudec_assemble(void *this, unsigned char *packet_bytes, unsigned int len, 
 void spudec_reset(void *this)	// called after seek
 {
   spudec_handle_t *spu = (spudec_handle_t*)this;
+  while (spu->queue_head)
+    spudec_free_packet(spudec_dequeue_packet(spu));
   spu->now_pts = 0;
-  while (spu->packets != NULL)
-    spudec_pop_packet (spu);
+  spu->end_pts = 0;
+  spu->packet_size = spu->packet_offset = 0;
 }
 
 void spudec_heartbeat(void *this, unsigned int pts100)
-{
+{ 
   spudec_handle_t *spu = (spudec_handle_t*) this;
   spu->now_pts = pts100;
 
-  /* Process queued instructions for the current beat */
-  while (spu->packets != NULL && pts100 >= spu->packets->process_pts)
-    {
-      spudec_decode (spu, spu->packets);
-      spudec_pop_packet (spu);
-    }
+  while (spu->queue_head != NULL && pts100 >= spu->queue_head->start_pts) {
+    packet_t *packet = spudec_dequeue_packet(spu);
+    spu->start_pts = packet->start_pts;
+    spu->end_pts = packet->end_pts;
+    if (spu->auto_palette)
+      compute_palette(spu, packet);
+    spudec_process_data(spu, packet);
+    spudec_free_packet(packet);
+    spu->spu_changed = 1;
+  }
 }
 
 int spudec_visible(void *this){
     spudec_handle_t *spu = (spudec_handle_t *)this;
-    int ret=(spu->start_pts <= spu->now_pts && spu->now_pts < spu->end_pts);
+    int ret=(spu->start_pts <= spu->now_pts &&
+	     spu->now_pts < spu->end_pts &&
+	     spu->height > 0);
 //    printf("spu visible: %d  \n",ret);
     return ret;
+}
+
+void spudec_set_forced_subs_only(void * const this, const unsigned int flag)
+{
+  if(this){
+      ((spudec_handle_t *)this)->forced_subs_only=flag;
+      mp_msg(MSGT_SPUDEC,MSGL_DBG2,"SPU: Display only forced subs now %s\n", flag ? "enabled": "disabled");
+  }
 }
 
 void spudec_draw(void *this, void (*draw_alpha)(int x0,int y0, int w,int h, unsigned char* src, unsigned char *srca, int stride))
@@ -605,13 +645,33 @@ void spudec_calc_bbox(void *me, unsigned int dxs, unsigned int dys, unsigned int
     unsigned int scaley = 0x100 * dys / spu->orig_frame_height;
     bbox[0] = spu->start_col * scalex / 0x100;
     bbox[1] = spu->start_col * scalex / 0x100 + spu->width * scalex / 0x100;
-#if SUBPOS == 0
-    bbox[2] = spu->start_row * scaley / 0x100;
-    bbox[3] = spu->start_row * scaley / 0x100 + spu->height * scaley / 0x100;
-#elif SUBPOS == 1
-    bbox[3] = dys -1;
-    bbox[2] = bbox[3] -spu->height * scaley / 0x100;
-#endif
+    switch (spu_alignment) {
+    case 0:
+      bbox[3] = dys*sub_pos/100 + spu->height * scaley / 0x100;
+      if (bbox[3] > dys) bbox[3] = dys;
+      bbox[2] = bbox[3] - spu->height * scaley / 0x100;
+      break;
+    case 1:
+      if (sub_pos < 50) {
+        bbox[2] = dys*sub_pos/100 - spu->height * scaley / 0x200;
+        if (bbox[2] < 0) bbox[2] = 0;
+        bbox[3] = bbox[2] + spu->height;
+      } else {
+        bbox[3] = dys*sub_pos/100 + spu->height * scaley / 0x200;
+        if (bbox[3] > dys) bbox[3] = dys;
+        bbox[2] = bbox[3] - spu->height * scaley / 0x100;
+      }
+      break;
+    case 2:
+      bbox[2] = dys*sub_pos/100 - spu->height * scaley / 0x100;
+      if (bbox[2] < 0) bbox[2] = 0;
+      bbox[3] = bbox[2] + spu->height;
+      break;
+    default: /* -1 */
+      bbox[2] = spu->start_row * scaley / 0x100;
+      bbox[3] = spu->start_row * scaley / 0x100 + spu->height * scaley / 0x100;
+      break;
+    }
   }
 }
 /* transform mplayer's alpha value into an opacity value that is linear */
@@ -627,7 +687,6 @@ typedef struct {
 }scale_pixel;
 
 
-#if ANTIALIASING_ALGORITHM == -1
 static void scale_table(unsigned int start_src, unsigned int start_tar, unsigned int end_src, unsigned int end_tar, scale_pixel * table)
 {
   unsigned int t;
@@ -674,16 +733,48 @@ static void scale_image(int x, int y, scale_pixel* table_x, scale_pixel* table_y
       spu->scaled_image[scaled] = 256 - spu->scaled_aimage[scaled];
   }
 }
-#endif
+
+void sws_spu_image(unsigned char *d1, unsigned char *d2, int dw, int dh, int ds,
+	unsigned char *s1, unsigned char *s2, int sw, int sh, int ss)
+{
+	struct SwsContext *ctx;
+	static SwsFilter filter;
+	static int firsttime = 1;
+	static float oldvar;
+	int i;
+
+	if (!firsttime && oldvar != spu_gaussvar) sws_freeVec(filter.lumH);
+	if (firsttime) {
+		filter.lumH = filter.lumV =
+			filter.chrH = filter.chrV = sws_getGaussianVec(spu_gaussvar, 3.0);
+		sws_normalizeVec(filter.lumH, 1.0);
+		firsttime = 0;
+		oldvar = spu_gaussvar;
+	}
+	
+	ctx=sws_getContext(sw, sh, IMGFMT_Y800, dw, dh, IMGFMT_Y800, SWS_GAUSS, &filter, NULL);
+	sws_scale(ctx,&s1,&ss,0,sh,&d1,&ds);
+	for (i=ss*sh-1; i>=0; i--) if (!s2[i]) s2[i] = 255; //else s2[i] = 1;
+	sws_scale(ctx,&s2,&ss,0,sh,&d2,&ds);
+	for (i=ds*dh-1; i>=0; i--) if (d2[i]==0) d2[i] = 1; else if (d2[i]==255) d2[i] = 0;
+	sws_freeContext(ctx);
+}
 
 void spudec_draw_scaled(void *me, unsigned int dxs, unsigned int dys, void (*draw_alpha)(int x0,int y0, int w,int h, unsigned char* src, unsigned char *srca, int stride))
 {
   spudec_handle_t *spu = (spudec_handle_t *)me;
   scale_pixel *table_x;
   scale_pixel *table_y;
+
   if (spu->start_pts <= spu->now_pts && spu->now_pts < spu->end_pts) {
-    if (spu->orig_frame_width == 0 || spu->orig_frame_height == 0
-	|| (spu->orig_frame_width == dxs && spu->orig_frame_height == dys)) {
+
+    // check if only forced subtitles are requested 
+    if( (spu->forced_subs_only) && !(spu->is_forced_sub) ){ 
+	return;
+    }
+
+    if (!(spu_aamode&16) && (spu->orig_frame_width == 0 || spu->orig_frame_height == 0
+	|| (spu->orig_frame_width == dxs && spu->orig_frame_height == dys))) {
       if (spu->image)
       {
 	draw_alpha(spu->start_col, spu->start_row, spu->width, spu->height,
@@ -729,7 +820,13 @@ void spudec_draw_scaled(void *me, unsigned int dxs, unsigned int dys, void (*dra
 	  if (spu->scaled_width <= 1 || spu->scaled_height <= 1) {
 	    goto nothing_to_do;
 	  }
-#if ANTIALIASING_ALGORITHM == -1
+	  switch(spu_aamode&15) {
+	  case 4:
+	  sws_spu_image(spu->scaled_image, spu->scaled_aimage,
+		  spu->scaled_width, spu->scaled_height, spu->scaled_stride,
+		  spu->image, spu->aimage, spu->width, spu->height, spu->stride);
+	  break;
+	  case 3:
 	  table_x = calloc(spu->scaled_width, sizeof(scale_pixel));
 	  table_y = calloc(spu->scaled_height, sizeof(scale_pixel));
 	  if (!table_x || !table_y) {
@@ -742,7 +839,8 @@ void spudec_draw_scaled(void *me, unsigned int dxs, unsigned int dys, void (*dra
 	      scale_image(x, y, table_x, table_y, spu);
 	  free(table_x);
 	  free(table_y);
-#elif ANTIALIASING_ALGORITHM == 0
+	  break;
+	  case 0:
 	  /* no antialiasing */
 	  for (y = 0; y < spu->scaled_height; ++y) {
 	    int unscaled_y = y * 0x100 / scaley;
@@ -754,7 +852,8 @@ void spudec_draw_scaled(void *me, unsigned int dxs, unsigned int dys, void (*dra
 	      spu->scaled_aimage[scaled_strides + x] = spu->aimage[strides + unscaled_x];
 	    }
 	  }
-#elif ANTIALIASING_ALGORITHM == 1
+	  break;
+	  case 1:
 	  {
 	    /* Intermediate antialiasing. */
 	    for (y = 0; y < spu->scaled_height; ++y) {
@@ -792,7 +891,8 @@ void spudec_draw_scaled(void *me, unsigned int dxs, unsigned int dys, void (*dra
 	      }
 	    }
 	  }
-#else
+	  break;
+	  case 2:
 	  {
 	    /* Best antialiasing.  Very slow. */
 	    /* Any pixel (x, y) represents pixels from the original
@@ -959,17 +1059,33 @@ void spudec_draw_scaled(void *me, unsigned int dxs, unsigned int dys, void (*dra
 	      }
 	    }
 	  }
-#endif
+	  }
 nothing_to_do:
 	  spu->scaled_frame_width = dxs;
 	  spu->scaled_frame_height = dys;
 	}
       }
       if (spu->scaled_image){
-#if SUBPOS == 1
-	/*set subs at the bottom, i don't like to put it at the very bottom, so -1 :)*/
-	spu->scaled_start_row = dys - spu->scaled_height - 1;
-#endif
+        switch (spu_alignment) {
+        case 0:
+          spu->scaled_start_row = dys*sub_pos/100;
+	  if (spu->scaled_start_row + spu->scaled_height > dys)
+	    spu->scaled_start_row = dys - spu->scaled_height;
+	  break;
+	case 1:
+          spu->scaled_start_row = dys*sub_pos/100 - spu->scaled_height/2;
+          if (sub_pos < 50) {
+	    if (spu->scaled_start_row < 0) spu->scaled_start_row = 0;
+	  } else {
+	    if (spu->scaled_start_row + spu->scaled_height > dys)
+	      spu->scaled_start_row = dys - spu->scaled_height;
+	  }
+	  break;
+        case 2:
+          spu->scaled_start_row = dys*sub_pos/100 - spu->scaled_height;
+	  if (spu->scaled_start_row < 0) spu->scaled_start_row = 0;
+	  break;
+	}
 	draw_alpha(spu->scaled_start_col, spu->scaled_start_row, spu->scaled_width, spu->scaled_height,
 		   spu->scaled_image, spu->scaled_aimage, spu->scaled_stride);
 	spu->spu_changed = 0;
@@ -1010,7 +1126,7 @@ void *spudec_new_scaled_vobsub(unsigned int *palette, unsigned int *cuspal, unsi
   spudec_handle_t *this = calloc(1, sizeof(spudec_handle_t));
   if (this){
     //(fprintf(stderr,"VobSub Custom Palette: %d,%d,%d,%d", this->cuspal[0], this->cuspal[1], this->cuspal[2],this->cuspal[3]);
-    this->packets = NULL;
+    this->packet = NULL;
     this->image = NULL;
     this->scaled_image = NULL;
     /* XXX Although the video frame is some size, the SPU frame is
@@ -1029,6 +1145,9 @@ void *spudec_new_scaled_vobsub(unsigned int *palette, unsigned int *cuspal, unsi
       memcpy(this->cuspal, cuspal, sizeof(this->cuspal));
       this->auto_palette = 0;
     }
+    // forced subtitles default: show all subtitles
+    this->forced_subs_only=0;
+    this->is_forced_sub=0;
   }
   else
     mp_msg(MSGT_SPUDEC,MSGL_FATAL, "FATAL: spudec_init: calloc");
@@ -1044,8 +1163,10 @@ void spudec_free(void *this)
 {
   spudec_handle_t *spu = (spudec_handle_t*)this;
   if (spu) {
-    while (spu->packets != NULL)
-      spudec_pop_packet (this);
+    while (spu->queue_head)
+      spudec_free_packet(spudec_dequeue_packet(spu));
+    if (spu->packet)
+      free(spu->packet);
     if (spu->scaled_image)
 	free(spu->scaled_image);
     if (spu->image)

@@ -198,10 +198,10 @@ static void avg_pixels8_xy2_mlib (uint8_t * dest, const uint8_t * ref,
 }
 
 
-static void (*put_pixels_clamped)(const DCTELEM *block, UINT8 *pixels, int line_size);
+static void (*put_pixels_clamped)(const DCTELEM *block, uint8_t *pixels, int line_size);
 
 
-static void add_pixels_clamped_mlib(const DCTELEM *block, UINT8 *pixels, int line_size)
+static void add_pixels_clamped_mlib(const DCTELEM *block, uint8_t *pixels, int line_size)
 {
     mlib_VideoAddBlock_U8_S16(pixels, (mlib_s16 *)block, line_size);
 }
@@ -209,16 +209,21 @@ static void add_pixels_clamped_mlib(const DCTELEM *block, UINT8 *pixels, int lin
 
 /* XXX: those functions should be suppressed ASAP when all IDCTs are
    converted */
-static void ff_idct_put_mlib(UINT8 *dest, int line_size, DCTELEM *data)
+static void ff_idct_put_mlib(uint8_t *dest, int line_size, DCTELEM *data)
 {
     mlib_VideoIDCT8x8_S16_S16 (data, data);
     put_pixels_clamped(data, dest, line_size);
 }
 
-static void ff_idct_add_mlib(UINT8 *dest, int line_size, DCTELEM *data)
+static void ff_idct_add_mlib(uint8_t *dest, int line_size, DCTELEM *data)
 {
     mlib_VideoIDCT8x8_S16_S16 (data, data);
     mlib_VideoAddBlock_U8_S16(dest, (mlib_s16 *)data, line_size);
+}
+
+static void ff_idct_mlib(uint8_t *dest, int line_size, DCTELEM *data)
+{
+    mlib_VideoIDCT8x8_S16_S16 (data, data);
 }
 
 static void ff_fdct_mlib(DCTELEM *data)
@@ -226,7 +231,7 @@ static void ff_fdct_mlib(DCTELEM *data)
     mlib_VideoDCT8x8_S16_S16 (data, data);
 }
 
-void dsputil_init_mlib(DSPContext* c, unsigned mask)
+void dsputil_init_mlib(DSPContext* c, AVCodecContext *avctx)
 {
     c->put_pixels_tab[0][0] = put_pixels16_mlib;
     c->put_pixels_tab[0][1] = put_pixels16_x2_mlib;
@@ -258,12 +263,13 @@ void MPV_common_init_mlib(MpegEncContext *s)
     int i;
 
     if(s->avctx->dct_algo==FF_DCT_AUTO || s->avctx->dct_algo==FF_DCT_MLIB){
-	s->fdct = ff_fdct_mlib;
+	s->dsp.fdct = ff_fdct_mlib;
     }
 
     if(s->avctx->idct_algo==FF_IDCT_AUTO || s->avctx->idct_algo==FF_IDCT_MLIB){
-        s->idct_put= ff_idct_put_mlib;
-        s->idct_add= ff_idct_add_mlib;
-        s->idct_permutation_type= FF_NO_IDCT_PERM;
+        s->dsp.idct_put= ff_idct_put_mlib;
+        s->dsp.idct_add= ff_idct_add_mlib;
+        s->dsp.idct    = ff_idct_mlib;
+        s->dsp.idct_permutation_type= FF_NO_IDCT_PERM;
     }
 }

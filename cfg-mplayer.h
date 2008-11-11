@@ -56,7 +56,6 @@ extern int vo_vsync;
 extern int vo_fsmode;
 extern int vo_dbpp;
 extern int vo_directrendering;
-extern int vd_use_slices;
 extern float vo_panscan;
 /* only used by startup (setting these values from configfile) */
 extern int vo_gamma_brightness;
@@ -80,23 +79,25 @@ extern int ao_pcm_waveheader;
 #ifdef HAVE_X11
 extern char *mDisplayName;
 extern int WinID;
-extern int ice_layer;
+extern int fs_layer;
 extern int stop_xscreensaver;
 extern int vo_x11_keepaspect;
+extern char **vo_fstype_list;
+extern int vo_nomouse_input;
 #endif
 
 #ifdef HAVE_AA
-extern int vo_aa_parseoption(struct config * conf, char *opt, char * param);
-extern void vo_aa_revertoption(config_t* opt,char* param);
+extern int vo_aa_parseoption(m_option_t* conf, char *opt, char * param);
+extern void vo_aa_revertoption(m_option_t* opt,char* param);
 #endif
 
 #ifdef HAVE_ZR
-extern int vo_zr_parseoption(struct config * conf, char *opt, char * param);
-extern void vo_zr_revertoption(config_t* opt,char* pram);
+extern int vo_zr_parseoption(m_option_t* conf, char *opt, char * param);
+extern void vo_zr_revertoption(m_option_t* opt,char* pram);
 #endif
 
 #ifdef HAVE_DXR2
-extern config_t dxr2_opts[];
+extern m_option_t dxr2_opts[];
 #endif
 
 #ifdef STREAMING_LIVE_DOT_COM
@@ -106,6 +107,8 @@ extern int rtspStreamOverTCP;
 
 #ifdef HAVE_NEW_GUI
 extern char * skinName;
+extern int enqueue;
+extern int guiWinID;
 #endif
 
 #ifdef HAVE_ODIVX_POSTPROCESS
@@ -123,16 +126,8 @@ extern int nortc;
 /* from libvo/aspect.c */
 extern float monitor_aspect;
 
-#include "libaf/af.h"
-extern af_cfg_t af_cfg; // Audio filter configuration, defined in libmpcodecs/dec_audio.c
-struct config audio_filter_conf[]={       
-	{"list", &af_cfg.list, CONF_TYPE_STRING_LIST, 0, 0, 0, NULL},
-        {"force", &af_cfg.force, CONF_TYPE_INT, CONF_RANGE, 0, 7, NULL},
-	{NULL, NULL, 0, 0, 0, 0, NULL}
-};
-
 /* Options related to audio out plugins */
-struct config ao_plugin_conf[]={
+m_option_t ao_plugin_conf[]={
 	{"list", &ao_plugin_cfg.plugin_list, CONF_TYPE_STRING, 0, 0, 0, NULL},
 	{"delay", &ao_plugin_cfg.pl_delay_len, CONF_TYPE_INT, CONF_MIN, 0, 0, NULL},
 	{"format", &ao_plugin_cfg.pl_format_type, CONF_TYPE_INT, CONF_MIN, 0, 0, NULL},
@@ -144,7 +139,7 @@ struct config ao_plugin_conf[]={
 };
 
 #ifdef HAVE_JPEG
-struct config jpeg_conf[]={
+m_option_t jpeg_conf[]={
 	{"progressive", &jpeg_progressive_mode, CONF_TYPE_FLAG, 0, 0, 1, NULL},
 	{"noprogressive", &jpeg_progressive_mode, CONF_TYPE_FLAG, 0, 1, 0, NULL},
 	{"baseline", &jpeg_baseline, CONF_TYPE_FLAG, 0, 0, 1, NULL},
@@ -175,7 +170,7 @@ extern char* pp_help;
  * by Folke
  */
 
-static config_t mplayer_opts[]={
+m_option_t mplayer_opts[]={
 	/* name, pointer, type, flags, min, max */
 	{"include", cfg_include, CONF_TYPE_FUNC_PARAM, CONF_NOSAVE, 0, 0, NULL}, /* this don't need anymore to be the first!!! */
 
@@ -184,11 +179,10 @@ static config_t mplayer_opts[]={
             CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
 	{"vo", &video_driver_list, CONF_TYPE_STRING_LIST, 0, 0, 0, NULL},
 	{"ao", &audio_driver_list, CONF_TYPE_STRING_LIST, 0, 0, 0, NULL},
-	{"fixed-vo", &fixed_vo, CONF_TYPE_FLAG, 0, 0, 1, NULL},
+	{"fixed-vo", &fixed_vo, CONF_TYPE_FLAG,CONF_GLOBAL , 0, 1, NULL},
+	{"nofixed-vo", &fixed_vo, CONF_TYPE_FLAG,CONF_GLOBAL, 0, 0, NULL},
 
 	{"aop", ao_plugin_conf, CONF_TYPE_SUBCONFIG, 0, 0, 0, NULL},
-	{"af-adv", audio_filter_conf, CONF_TYPE_SUBCONFIG, 0, 0, 0, NULL},
-	{"af", &af_cfg.list, CONF_TYPE_STRING_LIST, 0, 0, 0, NULL},
 	{"dsp", "Use -ao oss:dsp_path!\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
         {"mixer", &mixer_device, CONF_TYPE_STRING, 0, 0, 0, NULL},
 	{"master", "Option -master has been removed, use -aop list=volume instead.\n", CONF_TYPE_PRINT, 0, 0, 0, NULL},
@@ -273,10 +267,11 @@ static config_t mplayer_opts[]={
 	{"fs", &fullscreen, CONF_TYPE_FLAG, 0, 0, 1, NULL},
 	{"nofs", &fullscreen, CONF_TYPE_FLAG, 0, 1, 0, NULL},
 	// set fullscreen switch method (workaround for buggy WMs)
-	{"fsmode", "option 'fsmode' is obsolete, avoid using it! if you really want it, try -fsmode-dontuse, but don't report bugs with this option used!", CONF_TYPE_PRINT, CONF_RANGE, 0, 31, NULL},
+	{"fsmode", "option 'fsmode' is obsolete, avoid using it! if you really want it, try -fsmode-dontuse, but don't report bugs with this option used!\n", CONF_TYPE_PRINT, CONF_RANGE, 0, 31, NULL},
 	{"fsmode-dontuse", &vo_fsmode, CONF_TYPE_INT, CONF_RANGE, 0, 31, NULL},
 	// set bpp (x11+vm, dga, fbdev, vesa, svga?)
         {"bpp", &vo_dbpp, CONF_TYPE_INT, CONF_RANGE, 0, 32, NULL},
+	{"colorkey", &vo_colorkey, CONF_TYPE_INT, 0, 0, 0, NULL},
 	// double buffering:  (mga/xmga, xv, vidix, vesa, fbdev)
 	{"double", &vo_doublebuffering, CONF_TYPE_FLAG, 0, 0, 1, NULL},
 	{"nodouble", &vo_doublebuffering, CONF_TYPE_FLAG, 0, 1, 0, NULL},
@@ -292,11 +287,13 @@ static config_t mplayer_opts[]={
 	// x11,xv,xmga,xvidix
 	{"wid", &WinID, CONF_TYPE_INT, 0, 0, 0, NULL},
 	{"rootwin", &WinID, CONF_TYPE_FLAG, 0, -1, 0, NULL},
-	{"icelayer", &ice_layer, CONF_TYPE_INT, CONF_RANGE, 0, 15, NULL},
+	{"icelayer", "Use -fstype layer:<number> instead. -icelayer was obsoleted\n", CONF_TYPE_PRINT, 0, 0, 0, NULL},
 	{"stop_xscreensaver", &stop_xscreensaver, CONF_TYPE_FLAG, 0, 0, 1, NULL},
 	{"nostop_xscreensaver", &stop_xscreensaver, CONF_TYPE_FLAG, 0, 1, 0, NULL},
 	{"keepaspect", &vo_x11_keepaspect, CONF_TYPE_FLAG, 0, 0, 1, NULL},
 	{"nokeepaspect", &vo_x11_keepaspect, CONF_TYPE_FLAG, 0, 1, 0, NULL},
+	{"fstype", &vo_fstype_list, CONF_TYPE_STRING_LIST, 0, 0, 0, NULL},
+	{"nomouseinput", &vo_nomouse_input, CONF_TYPE_FLAG,0,0,-1,NULL},
 #endif
 
 #ifdef HAVE_XINERAMA
@@ -314,10 +311,6 @@ static config_t mplayer_opts[]={
 	{"vaa_dr", "Use -dr, -vaa_dr was obsoleted\n", CONF_TYPE_PRINT, 0, 0, 0, NULL},
 	{"vaa_nodr", "Use -nodr, -vaa_nodr was obsoleted\n", CONF_TYPE_PRINT, 0, 0, 0, NULL},
 
-	// draw by slices or whole frame (usefull with libmpeg2/libavcodec)
-	{"slices", &vd_use_slices, CONF_TYPE_FLAG, 0, 0, 1, NULL},
-	{"noslices", &vd_use_slices, CONF_TYPE_FLAG, 0, 1, 0, NULL},
-
 #ifdef HAVE_AA
 	// -vo aa
 	{"aa*",	vo_aa_parseoption,  CONF_TYPE_FUNC_FULL, 0, 0, 0 , &vo_aa_revertoption},
@@ -333,12 +326,10 @@ static config_t mplayer_opts[]={
 #endif
 
 #ifdef STREAMING_LIVE_DOT_COM
-	// -sdp option, specifying that the source is a SDP file
-        {"sdp", &isSDPFile, CONF_TYPE_FLAG, 0, 0, 1, NULL},
+        {"sdp", "-sdp is deprecated, use sdp://file instead.\n", CONF_TYPE_PRINT, 0, 0, 0, NULL},
 	// -rtsp-stream-over-tcp option, specifying TCP streaming of RTP/RTCP
         {"rtsp-stream-over-tcp", &rtspStreamOverTCP, CONF_TYPE_FLAG, 0, 0, 1, NULL},
 #else
-	{"sdp", "SDP file support requires the \"LIVE.COM Streaming Media\" libraries!\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
 	{"rtsp-stream-over-tcp", "RTSP support requires the \"LIVE.COM Streaming Media\" libraries!\n", CONF_TYPE_PRINT, CONF_NOCFG, 0, 0, NULL},
 #endif
 
@@ -357,6 +348,7 @@ static config_t mplayer_opts[]={
 	// these should be moved to -common, and suppot in mencoder too
 	{"vobsub", &vobsub_name, CONF_TYPE_STRING, 0, 0, 0, NULL},
 	{"vobsubid", &vobsub_id, CONF_TYPE_INT, CONF_RANGE, 0, 31, NULL},
+        {"forcedsubsonly", &forced_subs_only,CONF_TYPE_FLAG, 0, 0, 1, NULL},
 
 	{"sstep", &step_sec, CONF_TYPE_INT, CONF_MIN, 0, 0, NULL},
 
@@ -395,6 +387,9 @@ static config_t mplayer_opts[]={
       
 #ifdef HAVE_NEW_GUI
 	{"skin", &skinName, CONF_TYPE_STRING, CONF_GLOBAL, 0, 0, NULL},
+	{"enqueue", &enqueue, CONF_TYPE_FLAG, 0, 0, 1, NULL},
+	{"noenqueue", &enqueue, CONF_TYPE_FLAG, 0, 0, 0, NULL},
+	{"guiwid", &guiWinID, CONF_TYPE_INT, 0, 0, 0, NULL},
 #endif
 
 	{"noloop", &loop_times, CONF_TYPE_FLAG, 0, 0, -1, NULL},

@@ -8,6 +8,7 @@
 #define VCODEC_LIBDV 8
 #define VCODEC_XVID 9
 #define VCODEC_QTVIDEO 10
+#define VCODEC_NUV 11
 
 #define ACODEC_COPY 0
 #define ACODEC_PCM 1
@@ -18,6 +19,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
+#ifdef __MINGW32__
+#define        SIGQUIT 3
+#endif
 #include <sys/time.h>
 
 #include "config.h"
@@ -26,22 +30,12 @@
 #include "mp_msg.h"
 #include "help_mp.h"
 
-static char* banner_text=
-"\n\n"
-"MEncoder " VERSION MSGTR_MEncoderCopyright
-"\n";
-
 #include "cpudetect.h"
 
 #include "codec-cfg.h"
-#ifdef NEW_CONFIG
 #include "m_option.h"
 #include "m_config.h"
 #include "parser-mecmd.h"
-#else
-#include "cfgparser.h"
-#include "playtree.h"
-#endif
 
 #include "libmpdemux/stream.h"
 #include "libmpdemux/demuxer.h"
@@ -75,7 +69,7 @@ static char* banner_text=
 
 #include "libvo/fastmemcpy.h"
 
-#include "linux/timer.h"
+#include "osdep/timer.h"
 
 int vo_doublebuffering=0;
 int vo_directrendering=0;
@@ -91,13 +85,12 @@ extern int cache_fill_status;
 #define cache_fill_status 0
 #endif
 
-int vcd_track=0;
 int audio_id=-1;
 int video_id=-1;
 int dvdsub_id=-1;
 int vobsub_id=-1;
-static char* audio_lang=NULL;
-static char* dvdsub_lang=NULL;
+char* audio_lang=NULL;
+char* dvdsub_lang=NULL;
 static char* spudec_ifo=NULL;
 
 static char** audio_codec_list=NULL;  // override audio codec
@@ -134,7 +127,7 @@ static float audio_preload=0.5;
 static float audio_delay=0.0;
 static int audio_density=2;
 
-static float force_fps=0;
+float force_fps=0;
 static float force_ofps=0; // set to 24 for inverse telecine
 static int skip_limit=-1;
 
@@ -160,7 +153,7 @@ static int play_n_frames_mf=-1;
 // sub:
 char *font_name=NULL;
 float font_factor=0.75;
-char *sub_name=NULL;
+char **sub_name=NULL;
 float sub_delay=0;
 float sub_fps=0;
 int   sub_auto = 0;
@@ -168,9 +161,11 @@ int   subcc_enabled=0;
 int   suboverlap_enabled = 1;
 
 #ifdef USE_SUB
-static subtitle* subtitles=NULL;
+static sub_data* subdata=NULL;
 float sub_last_pts = -303;
 #endif
+
+int auto_expand=1;
 
 // infos are empty by default
 char *info_name=NULL;
@@ -212,22 +207,18 @@ static void  lame_presets_longinfo_dm ( FILE* msgfp );
 
 m_config_t* mconfig;
 
-#ifdef NEW_CONFIG
-extern int
-m_config_parse_config_file(m_config_t* config, char *conffile);
-#endif
+extern int m_config_parse_config_file(m_config_t* config, char *conffile);
 
+static int cfg_inc_verbose(m_option_t *conf){ ++verbose; return 0;}
 
-static int cfg_inc_verbose(struct config *conf){ ++verbose; return 0;}
-
-static int cfg_include(struct config *conf, char *filename){
+static int cfg_include(m_option_t *conf, char *filename){
 	return m_config_parse_config_file(mconfig, filename);
 }
 
 static char *seek_to_sec=NULL;
 static off_t seek_to_byte=0;
 
-static int parse_end_at(struct config *conf, const char* param);
+static int parse_end_at(m_option_t *conf, const char* param);
 //static uint8_t* flip_upside_down(uint8_t* dst, const uint8_t* src, int width, int height);
 
 #include "get_path.c"
@@ -343,12 +334,7 @@ lame_global_flags *lame;
 double v_pts_corr=0;
 double v_timer_corr=0;
 
-#ifdef NEW_CONFIG
 m_entry_t* filelist = NULL;
-#else
-play_tree_t* playtree;
-play_tree_iter_t* playtree_iter;
-#endif
 char* filename=NULL;
 char* frameno_filename="frameno.avi";
 
@@ -359,7 +345,7 @@ unsigned int timer_start;
 
   mp_msg_init();
   mp_msg_set_level(MSGL_STATUS);
-  mp_msg(MSGT_CPLAYER,MSGL_INFO,"%s",banner_text);
+  mp_msg(MSGT_CPLAYER,MSGL_INFO, "MEncoder " VERSION " (C) 2000-2003 MPlayer Team\n\n");
 
   /* Test for cpu capabilities (and corresponding OS support) for optimizing */
   GetCpuCaps(&gCpuCaps);
@@ -368,11 +354,35 @@ unsigned int timer_start;
       gCpuCaps.cpuType,gCpuCaps.hasMMX,gCpuCaps.hasMMX2,
       gCpuCaps.has3DNow, gCpuCaps.has3DNowExt,
       gCpuCaps.hasSSE, gCpuCaps.hasSSE2);
+#ifdef RUNTIME_CPUDETECT
+  mp_msg(MSGT_CPLAYER,MSGL_INFO, MSGTR_CompiledWithRuntimeDetection);
+#else
+  mp_msg(MSGT_CPLAYER,MSGL_INFO, MSGTR_CompiledWithCPUExtensions);
+#ifdef HAVE_MMX
+  mp_msg(MSGT_CPLAYER,MSGL_INFO," MMX");
 #endif
-
+#ifdef HAVE_MMX2
+  mp_msg(MSGT_CPLAYER,MSGL_INFO," MMX2");
+#endif
+#ifdef HAVE_3DNOW
+  mp_msg(MSGT_CPLAYER,MSGL_INFO," 3DNow");
+#endif
+#ifdef HAVE_3DNOWEX
+  mp_msg(MSGT_CPLAYER,MSGL_INFO," 3DNowEx");
+#endif
+#ifdef HAVE_SSE
+  mp_msg(MSGT_CPLAYER,MSGL_INFO," SSE");
+#endif
+#ifdef HAVE_SSE2
+  mp_msg(MSGT_CPLAYER,MSGL_INFO," SSE2");
+#endif
+  mp_msg(MSGT_CPLAYER,MSGL_INFO,"\n\n");
+#endif
+#endif
+  
 // check codec.conf
 if(!parse_codec_cfg(get_path("codecs.conf"))){
-  if(!parse_codec_cfg(CONFDIR"/codecs.conf")){
+  if(!parse_codec_cfg(MPLAYER_CONFDIR "/codecs.conf")){
     if(!parse_codec_cfg(NULL)){
       mp_msg(MSGT_MENCODER,MSGL_HINT,MSGTR_CopyCodecsConf);
       exit(0);
@@ -389,8 +399,6 @@ if(!parse_codec_cfg(get_path("codecs.conf"))){
     else mp_msg(MSGT_DEMUXER,MSGL_ERR,MSGTR_FormatNotRecognized);
   }
 
-  // New config code
-#ifdef NEW_CONFIG
  mconfig = m_config_new();
  m_config_register_options(mconfig,mencoder_opts);
  parse_cfgfiles(mconfig);
@@ -398,28 +406,8 @@ if(!parse_codec_cfg(get_path("codecs.conf"))){
  if(!filelist) mencoder_exit(1, "error parsing cmdline");
  m_entry_set_options(mconfig,&filelist[0]);
  filename = filelist[0].name;
- // Warn the user if he put more than 1 filename ?
-#else
-  playtree = play_tree_new();
-  mconfig = m_config_new(playtree);
-  m_config_register_options(mconfig,mencoder_opts);
-  parse_cfgfiles(mconfig);
 
-  if(m_config_parse_command_line(mconfig, argc, argv) < 0) mencoder_exit(1, "error parsing cmdline");
-  playtree = play_tree_cleanup(playtree);
-  if(playtree) {
-    playtree_iter = play_tree_iter_new(playtree,mconfig);
-    if(playtree_iter) {  
-      if(play_tree_iter_step(playtree_iter,0,0) != PLAY_TREE_ITER_ENTRY) {
-	play_tree_iter_free(playtree_iter);
-	playtree_iter = NULL;
-      }
-      filename = play_tree_iter_get_file(playtree_iter,1);
-    }
-  }
-#endif
-
-  if(!filename && !vcd_track && !dvd_title && !tv_param_on){
+  if(!filename){
 	printf(MSGTR_MissingFilename);
 	mencoder_exit(1,NULL);
   }
@@ -438,14 +426,14 @@ if(!parse_codec_cfg(get_path("codecs.conf"))){
       // try default:
        vo_font=read_font_desc(get_path("font/font.desc"),font_factor,verbose>1);
        if(!vo_font)
-       vo_font=read_font_desc(DATADIR"/font/font.desc",font_factor,verbose>1);
+       vo_font=read_font_desc(MPLAYER_DATADIR "/font/font.desc",font_factor,verbose>1);
   }
 #endif
 #endif
 
   vo_init_osd();
 
-  stream=open_stream(filename,vcd_track,&file_format);
+  stream=open_stream(filename,0,&file_format);
 
   if(!stream){
 	printf(MSGTR_CannotOpenFile_Device);
@@ -583,12 +571,12 @@ vo_spudec=spudec_new_scaled(stream->type==STREAMTYPE_DVD?((dvd_priv_t *)(stream-
 // we know fps so now we can adjust subtitles time to ~6 seconds AST
 // check .sub
 //  current_module="read_subtitles_file";
-  if(sub_name){
-    subtitles=sub_read_file(sub_name, sh_video->fps);
-    if(!subtitles) mp_msg(MSGT_CPLAYER,MSGL_ERR,MSGTR_CantLoadSub,sub_name);
+  if(sub_name && sub_name[0]){
+    subdata=sub_read_file(sub_name[0], sh_video->fps);
+    if(!subdata) mp_msg(MSGT_CPLAYER,MSGL_ERR,MSGTR_CantLoadSub,sub_name[0]);
   } else
   if(sub_auto) { // auto load sub file ...
-    subtitles=sub_read_file( filename ? sub_filename( get_path("sub/"), filename )
+    subdata=sub_read_file( filename ? sub_filenames( get_path("sub/"), filename )[0]
 	                              : "default.sub", sh_video->fps );
   }
 #endif	
@@ -669,13 +657,19 @@ default:
         sh_video->vfilter=vf_open_encoder(NULL,"xvid",(char *)mux_v); break;
     case VCODEC_QTVIDEO:
         sh_video->vfilter=vf_open_encoder(NULL,"qtvideo",(char *)mux_v); break;
+    case VCODEC_NUV:        
+        sh_video->vfilter=vf_open_encoder(NULL,"nuv",(char *)mux_v); break;
+
     }
     if(!mux_v->bih || !sh_video->vfilter){
         mp_msg(MSGT_MENCODER,MSGL_FATAL,MSGTR_EncoderOpenFailed);
         mencoder_exit(1,NULL);
     }
     // append 'expand' filter, it fixes stride problems and renders osd:
-    sh_video->vfilter=vf_open_filter(sh_video->vfilter,"expand","-1:-1:-1:-1:1");
+    if (auto_expand) {
+      char* vf_args[] = { "osd", "1", NULL };
+      sh_video->vfilter=vf_open_filter(sh_video->vfilter,"expand",vf_args);
+    }
     sh_video->vfilter=append_filters(sh_video->vfilter);
 
     mp_msg(MSGT_CPLAYER,MSGL_INFO,"==========================================================================\n");
@@ -739,13 +733,13 @@ case ACODEC_COPY:
     break;
 case ACODEC_PCM:
     printf("CBR PCM audio selected\n");
-    mux_a->h.dwSampleSize=2*sh_audio->channels;
     mux_a->h.dwScale=1;
     mux_a->h.dwRate=force_srate?force_srate:sh_audio->samplerate;
     mux_a->wf=malloc(sizeof(WAVEFORMATEX));
-    mux_a->wf->nBlockAlign=mux_a->h.dwSampleSize;
     mux_a->wf->wFormatTag=0x1; // PCM
     mux_a->wf->nChannels=audio_output_channels?audio_output_channels:sh_audio->channels;
+    mux_a->h.dwSampleSize=2*mux_a->wf->nChannels;
+    mux_a->wf->nBlockAlign=mux_a->h.dwSampleSize;
     mux_a->wf->nSamplesPerSec=mux_a->h.dwRate;
     mux_a->wf->nAvgBytesPerSec=mux_a->h.dwSampleSize*mux_a->wf->nSamplesPerSec;
     mux_a->wf->wBitsPerSample=16;
@@ -890,7 +884,7 @@ if (out_file_format == MUXER_TYPE_MPEG)
 	}
 	}
 
-if(tv_param_on == 1) 
+if(file_format == DEMUXER_TYPE_TV) 
 	{
 	fprintf(stderr,"Forcing audio preload to 0, max pts correction to 0\n");
 	audio_preload = 0.0;
@@ -1105,7 +1099,7 @@ videorate+=(GetTimerMS() - ptimer_start);
 
 if(skip_flag<0){
     // duplicate frame
-	if(!tv_param_on && !verbose) printf(MSGTR_DuplicateFrames,-skip_flag);
+	if(file_format != DEMUXER_TYPE_TV && !verbose) printf(MSGTR_DuplicateFrames,-skip_flag);
     while(skip_flag<0){
 	duplicatedframes++;
 	muxer_write_chunk(mux_v,0,0);
@@ -1114,7 +1108,7 @@ if(skip_flag<0){
 } else
 if(skip_flag>0){
     // skip frame
-	if(!tv_param_on && !verbose) printf(MSGTR_SkipFrame);
+	if(file_format != DEMUXER_TYPE_TV && !verbose) printf(MSGTR_SkipFrame);
 	skippedframes++;
     --skip_flag;
 }
@@ -1215,11 +1209,13 @@ if(sh_audio && !demuxer2){
 
 #ifdef USE_SUB
   // find sub
-  if(subtitles && sh_video->pts>0){
+  if(subdata && sh_video->pts>0){
       float pts=sh_video->pts;
       if(sub_fps==0) sub_fps=sh_video->fps;
       if (pts > sub_last_pts || pts < sub_last_pts-1.0 ) {
-         find_sub(subtitles,sub_uses_time?(100*(pts+sub_delay)):((pts+sub_delay)*sub_fps)); // FIXME! frame counter...
+         find_sub(subdata, (pts+sub_delay) * 
+				 (subdata->sub_uses_time? 100. : sub_fps)); 
+	 // FIXME! frame counter...
          sub_last_pts = pts;
       }
   }
@@ -1301,7 +1297,7 @@ if(stream) free_stream(stream); // kill cache thread
 return interrupted;
 }
 
-static int parse_end_at(struct config *conf, const char* param)
+static int parse_end_at(m_option_t *conf, const char* param)
 {
 
     end_at_type = END_AT_NONE;

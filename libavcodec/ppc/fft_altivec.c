@@ -20,6 +20,8 @@
  */
 #include "../dsputil.h"
 
+#include "gcc_fixes.h"
+
 #include "dsputil_altivec.h"
 
 /*
@@ -60,7 +62,7 @@
  */
 void fft_calc_altivec(FFTContext *s, FFTComplex *z)
 {
-ALTIVEC_TBL_DECLARE(altivec_fft_num, s->nbits >= 6);
+POWERPC_PERF_DECLARE(altivec_fft_num, s->nbits >= 6);
 #ifdef ALTIVEC_USE_REFERENCE_C_CODE
     int ln = s->nbits;
     int	j, np, np2;
@@ -70,7 +72,7 @@ ALTIVEC_TBL_DECLARE(altivec_fft_num, s->nbits >= 6);
     int l;
     FFTSample tmp_re, tmp_im;
     
-ALTIVEC_TBL_START_COUNT(altivec_fft_num, s->nbits >= 6);
+POWERPC_PERF_START_COUNT(altivec_fft_num, s->nbits >= 6);
  
     np = 1 << ln;
 
@@ -135,10 +137,14 @@ ALTIVEC_TBL_START_COUNT(altivec_fft_num, s->nbits >= 6);
         nloops = nloops << 1;
     } while (nblocks != 0);
 
-ALTIVEC_TBL_STOP_COUNT(altivec_fft_num, s->nbits >= 6);
+POWERPC_PERF_STOP_COUNT(altivec_fft_num, s->nbits >= 6);
 
 #else /* ALTIVEC_USE_REFERENCE_C_CODE */
+#ifdef CONFIG_DARWIN
     register const vector float vczero = (const vector float)(0.);
+#else
+    register const vector float vczero = (const vector float){0.,0.,0.,0.};
+#endif
     
     int ln = s->nbits;
     int	j, np, np2;
@@ -147,7 +153,7 @@ ALTIVEC_TBL_STOP_COUNT(altivec_fft_num, s->nbits >= 6);
     FFTComplex *cptr, *cptr1;
     int k;
 
-ALTIVEC_TBL_START_COUNT(altivec_fft_num, s->nbits >= 6);
+POWERPC_PERF_START_COUNT(altivec_fft_num, s->nbits >= 6);
 
     np = 1 << ln;
 
@@ -235,7 +241,7 @@ ALTIVEC_TBL_START_COUNT(altivec_fft_num, s->nbits >= 6);
         nloops = nloops << 1;
     } while (nblocks != 0);
 
-ALTIVEC_TBL_STOP_COUNT(altivec_fft_num, s->nbits >= 6);
+POWERPC_PERF_STOP_COUNT(altivec_fft_num, s->nbits >= 6);
 
 #endif /* ALTIVEC_USE_REFERENCE_C_CODE */
 }

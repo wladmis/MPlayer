@@ -1,4 +1,16 @@
-mplayer (0.90rc2-0) unstable; urgency=low
+mplayer (0.90cvs) unstable; urgency=low
+
+  * this is a placeholder message
+
+ -- Gabucino <gabucino@mplayerhq.hu>  Fri, 7 Feb 2003 23:43:55 +0100
+
+mplayer (0.90rc4-0) unstable; urgency=low
+
+  * new rc-release.
+
+ -- Alex Beregszaszi <alex@naxine.org>  Fri, 7 Feb 2003 23:43:55 +0100
+
+mplayer (0.90rc3-0) unstable; urgency=low
 
   * new release.
 
