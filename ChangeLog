@@ -1,5 +1,11 @@
 MPlayer (1.0)
 
+  pre7try2: August 26, 2005
+
+    Security:
+    * heap overflow in PCM audio decoder fixed
+
+
   pre7: "PatentCounter" April 16, 2005
 
     Security:
