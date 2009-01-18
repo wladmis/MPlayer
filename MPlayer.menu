@@ -1,0 +1,1 @@
+?package(MPlayer): command="/usr/bin/gmplayer" icon="mplayer.xpm" title="MPlayer" longtitle="A movie player" needs="x11" section="Multimedia/Video"

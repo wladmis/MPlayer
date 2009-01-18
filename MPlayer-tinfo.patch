@@ -1,0 +1,16 @@
+--- MPlayer-0.90pre10.orig/configure	2002-11-09 19:44:28 +0200
++++ MPlayer-0.90pre10.new/configure	2002-12-03 11:51:15 +0200
+@@ -2000,11 +2000,11 @@
+ int main(void) { return 0; }
+ EOF
+   _termcap=no
+-  cc_check -ltermcap && _termcap=yes
++  cc_check -ltinfo && _termcap=yes
+ fi
+ if test "$_termcap" = yes ; then
+   _def_termcap='#define USE_TERMCAP 1'
+-  _ld_termcap='-ltermcap'
++  _ld_termcap='-ltinfo'
+ else
+   _def_termcap='#undef USE_TERMCAP'
+ fi

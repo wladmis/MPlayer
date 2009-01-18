@@ -1,0 +1,5 @@
+tar.bz2: @version@rc3:. name=@name@-@version@rc3
+tar.bz2: cp1251-font:. name=cp1251-font base=font
+tar.bz2: default:. name=default
+tar.bz2: w32codec-0.90pre7:. name=w32codec-0.90pre7 base=w32codec-0.90
+copy: *.patch *.menu
