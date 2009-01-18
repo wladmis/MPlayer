@@ -1,5 +1,5 @@
 # -*- rpm-spec -*-
-# $Id: MPlayer,v 1.76 2004/03/31 11:59:42 grigory Exp $
+# $Id: MPlayer,v 1.77 2004/04/12 08:14:51 grigory Exp $
 
 %define COMPAT_GCC 0
 
@@ -21,7 +21,7 @@
 
 Name: MPlayer
 Version: %real_version
-Release: alt7.%pre_release
+Release: alt8.%pre_release
 
 Summary: %name - Video player for LINUX
 License: GPL for all but not for OpenDivX
@@ -154,8 +154,9 @@ myconfig="--prefix=%_prefix \
 	--enable-freetype \
 	--enable-dvdread \
 	--enable-ftp \
-	--enable-divx4linux"
-
+	--enable-divx4linux \
+	--enable-dvb \
+	--with-dvbincdir=/usr/include/dvb/include"
 
 # FIXME 
 %ifarch k6 
@@ -268,6 +269,10 @@ find etc DOCS TOOLS -type f -exec %__chmod 644 {} \;
 %_datadir/%name/Skin/*
 
 %changelog
+* Mon Apr 12 2004 Grigory Milev <week@altlinux.ru> 1.0-alt8.pre3try2
+- added dvb support
+- rebuild with new libxvidcore
+
 * Wed Mar 31 2004 Grigory Milev <week@altlinux.ru> 1.0-alt7.pre3try2
 - remotely exploitable buffer overflow in the HTTP streaming code fixed
 
