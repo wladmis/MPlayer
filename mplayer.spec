@@ -16,7 +16,7 @@
 %endif
 
 %if %cvsbuild
-%global release		%release.%cvsbuild.1
+%global release		%release.%cvsbuild.2
 %global	fversion	cvs-%cvsbuild
 %endif
 
@@ -165,6 +165,7 @@
 %def_enable  esd
 %def_enable  select
 %def_enable  polyp
+%def_enable  libdts
 %def_enable  musepack
 
 %def_enable  gif
@@ -428,6 +429,10 @@ BuildRequires: esound-devel
 
 %if_enabled polyp
 BuildRequires: libpolypaudio libpolypaudio-devel
+%endif
+
+%if_enabled libdts
+BuildRequires: libdts-devel
 %endif
 
 %if_enabled musepack
@@ -994,6 +999,7 @@ LC_MESSAGES=C ; export LC_MESSAGES
 		%{subst_enable esd} \
 		%{subst_enable select} \
 		%{subst_enable polyp} \
+		%{subst_enable libdts} \
 		%{subst_enable musepack} \
 		%{subst_enable gif} \
 		%{subst_enable jpeg} \
@@ -1299,6 +1305,9 @@ unset RPM_PYTHON
 
 
 %changelog
+* Wed Apr 19 2006 Led <led@altlinux.ru> 1.0-alt0.20060417.2
+- enabled libdts
+
 * Mon Apr 17 2006 Led <led@altlinux.ru> 1.0-alt0.20060417.1
 - 20060414 CVS snapshot
 - fixed spec
