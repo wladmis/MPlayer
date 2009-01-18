@@ -16,118 +16,9 @@
 %endif
 
 %if %cvsbuild
-%global release		%release.%cvsbuild.3
+%global release		%release.%cvsbuild.4
 %global	fversion	cvs-%cvsbuild
 %endif
-
-# Conditional build (--enable/--disable option)
-#
-# ... mencoder		- unconditionally enable mencoder
-# ... gui               - unconditionally build gui gtk+ interface
-# ... largefiles	- unconditionally enable large files (>2GB) support
-# ... termcap		- unconditionally enable termcap/tinfo support
-# ... iconv		- unconditionally enable iconv(3) function
-# ... setlocale		- autodetect setlocale
-# --disable lirc	- disable lirc support (default: enabled)
-# ... lircc		- autodetect LIRC Client Daemon input
-# ... joystick		- unconditionally disable joystick support
-# --disable tv		- disable TV Interface (tv/dvb grabbers) (default: enabled)
-# ... tv_v4l            - autodetect Video4Linux TV Interface support
-# ... tv_v4l2		- autodetect Video4Linux2 TV Interface support
-# ... rtc		- unconditionally enable RTC (/dev/rtc) on Linux
-# --disable network	- disable network support (for: http/mms/rtp) (default: enabled)
-# --disable smb		- disable Samba (libsmbclient) support (default: enabled)
-# ... live		- unconditionally disable LIVE.COM Streaming Media support 
-# --disable dvdread	- disable libdvdread support (default: enabled)
-# --disable mpdvdkit	- disable internal mpdvdkit (default: enabled)
-# --disable cdparanoia	- disable support CDDA reading using cdparanoia (default: enabled)
-# --disable freetype	- disable freetype2 font rendering support (default: enabled)
-# --disable fontconfig  - disable font lookup support (default: enabled)
-# ... unrarlib		- unconditionally enable unrar file library
-# --disable menu	- disable OSD menu support (NOT DVD MENU) (default: enabled)
-# ... sortsub		- unconditionally enable subtitles sorting
-# ... fribidi		- unconditionally disable FriBiDi support
-# ... inet6		- autodetect inet6 support
-# ... gethostbyname2	- autodetect missing gethostbyname()
-# ... ftp		- unconditionally enable FTP support
-#
-# --disable cpu_detection - disable runtime CPU detection (default: enabled)
-# --enable  k6		- build K6-optimized package as i586 arch (default: disabled)
-# --disable mmx         - do not build MMX-optimized package (default: build)
-# --disable mmxext	- do not build MMX2-optimized package (default: build)
-# --disable 3dnow	- do not build 3DNow!-enabled package (defaut: build)
-# --disable 3dnowext	- do not build 3DNowEx!-enabled package (defaut: build)
-# --disable sse		- do not build SSE-enabled package (default: build)
-# --disable sse2	- do not build SSE2-enabled package (default: build)
-# --enable  altivec     - build Altivec-enabled package (default: do not build on x86)
-
-# --enable  debug	- enable full debugging info (default: disabled)
-# ... i18n		- unconditinally enable _experimental_ gnu gettext() support
-# --disable dynamic_plugins	- disable dynamic a/v plugins (default: enabled)
-
-#
-# ... 3dfx              - unconditionally disable obsolete /dev/3dfx support
-# --disable aalib	- disable aalib video output (default: enabled)
-# ... bl                - uncoditionally disable Blinkenlights support
-# --disable directfb	- disable DirectFB video output (default: enabled)
-# --disable dvb		- disable DVB-Card output (HEAD version!) (default: FIX: TEMPORARILY DISABLED)
-# ... dxr2              - autodetect DXR2 render support
-# --disable dxr3	- disable DXR3/H+ render support (default: FIX: TEMPORARILY DISABLED)
-# --disable fbdev	- enable FBDev render support (default: enabled) 
-# --enable  ggi		- enable ggi video output (default: disabled)
-# --disable gl		- disable OpenGL video output (default: enabled)
-# ... mga               - unconditionally enabled mga_vid (for Matrox G200/G4x0/G550)
-# ... xmga              - unconditionally enabled mga_vid X Window support
-# --disable sdl		- disable SDL video/audio output (default: enabled)
-# --enable  svga	- enable svgalib video output (default: disabled)
-# ... tdfxfb            - unconditionally disabled tdfxfb (Voodoo 3/banshee) support
-# ... tdfxvid           - unconditionally disabled ??? tdfx vid support
-# --disable tga         - disable targa output support (default: enabled)
-# ... vesa              - autodetect VESA support
-# --disable vidix	- disable vidix video output (default: enabled)
-# ... vm                - unconditionally enabled XF86VidMode support for X11
-# ... x11               - autodetect X11 render support
-# ... xinerama          - autodetect Xinerama support
-# ... xv                - unconditionally enabled Xv render support
-# ... xvmc              - unconditionally enabled XvMC acceleration
-# ... zr                - autodetect ZR360[56]7/ZR36060 support
-
-# ... ossaudio          - autodetect OSS sound support 
-# --disable alsa	- disable ALSA support (default: enabled)
-# --disable arts	- disable aRts support (default: enabled)
-# --disable esd		- disable EsounD support (default: enabled)
-# ... nas               - autodetect NAS sound support
-# --disable select	- disable audio select() support (ALSA and Vortex2 drivers require this option)  (default: enabled)
-
-# --disable gif		- disable GIF89a input/output support (default: enabled)
-# --disable png		- disable PNG input/output support (default: enabled, enabled automatically for GUI)
-# --disable jpeg	- disable JPEG input/output support (default: enabled)
-# --disable lzo		- enable external LZO codec (default: enabled)
-# --disable win32	- disable support for win32 codecs (default: enabled)
-# --disable dshow	- disable support for DirectShow codecs (default: enabled)
-# --disable qtx		- disable support for QuickTime codecs (default: enabled)
-# --enable  xanim	- enable support for XAnim codecs (default: disabled)
-# --disable real	- disable support for RealPlayer codecs (default: enabled)
-# --disable xvid	- disable external xvid codec (default: enabled)
-# --enable  divx4linux	- enable external divx4linux codec (DivX4Linux) (default: disabled)
-# ... opendivx          - unconditionally disabled _old_ OpenDivx codec
-# ... libavcodec        - unconditionally enabled libavcodec
-# --disable fame	- disable fame realtime encoder (default: enabled)
-# --disable vorbis	- disable external Ogg/Vorbis codec (default: enabled)
-# ... tremor		- unconditionally disable integer-only OggVorbis support
-# ... theora		- autodetect Ogg/Theora
-# --disable matroska	- disable support for Matroska files (default: enabled)
-# --enable  internal_matroska - enable internal support for Matroska (default: use external)
-# --disable faad	- disable FAAD2(AAC) codec (default: enabled)
-# --enable  internal_faad  - enable internal FAAD2 codec (default: use external)
-# --disable libdv       - disable libdv 0.9.5 en/decoding support (default: enabled)
-# --disable mad		- disable MAD support (default: enabled)
-# --disable xmms	- disable XMMS input plugins support (default: enabled)
-
-# FLAC support is in ffmpeg, so there's no need in libmpflac and external library
-# Obsolete:
-# --enable  flac	- disable FLAC codec (default: disabled)
-# --enable  external_flac  - enable external FLAC codec (default: use internal, BTW: WHY?!)
 
 %def_enable  shared_ffmpeg
 
@@ -188,7 +79,7 @@
 %def_disable internal_faad
 %def_enable  libdv
 %def_enable  mad
-%def_enable  xmms
+%def_disable  xmms
 %def_enable  jack
 %def_enable  cpu_detection
 %def_enable  mmx
@@ -216,7 +107,7 @@
 # The language to use in mplayer: all or, one of: cz de dk en es fr hu nl no pl ro ru
 %define	mplang		en
 
-%define win32_libdir	%_libdir/%bname/w32codec
+%define win32_libdir	%_libdir/w32codec
 %define xanim_libdir	%_libdir/xanim
 %define real_libdir	%_libdir/real
 
@@ -279,6 +170,7 @@ Source1:  ffmpeg-%ffmpeg_version.tar.bz2
 %endif
 Source2:  %bname.menu
 Source3:  cp1251-font.tar.bz2
+Source4:  standard-1.9.tar.bz2
 Source5:  mplayer.sh
 Source6:  http://icculus.org/~jcspray/gnome-mplayer-32.png
 Source7:  http://icculus.org/~jcspray/gnome-mplayer-48.png
@@ -351,7 +243,6 @@ BuildRequires: libsmbclient-devel >= 3.0.3-alt1
 
 %if_enabled dvdread
 BuildRequires: libdvdread-devel 
-#BuildRequires: libdvdcss-devel libdvdnav-devel
 %endif
 
 %if_enabled live
@@ -577,10 +468,6 @@ BuildRequires: cpp >= 3.2 gcc >= 3.2 gcc-c++ >= 3.2
 %force_disable dvbhead
 %endif
 
-# if %%WITH_FFMPEG_DYNAMIC
-# BuildRequires: ffmpeg-devel
-# endif
-
 Autoreq: yes, noperl
 
 %description
@@ -629,7 +516,7 @@ Summary:  %bname is the Unix video player (GUI version)
 Summary(ru_RU.KOI8-R): %bname - это настоящий видеоплеер (GUI вариант)
 License:  GPL for all but not for OpenDivX
 Group:    Video
-Requires: %bname-skin %bname-console = %real_version
+Requires: %bname-console = %real_version
 Provides: %bname = %real_version
 Provides: %bname = %base_version
 BuildRequires: glib2-devel libgtk+2-devel
@@ -1216,7 +1103,6 @@ popd
 
 
 %install
-
 %if %cvsbuild
 find . -name CVS | xargs rm -rf
 %endif
@@ -1225,6 +1111,9 @@ find . -name CVS | xargs rm -rf
 
 pushd %buildroot%_bindir
 ln -sf mplayer gmplayer
+install -d -m 0755 %buildroot%_datadir/%bname/skins
+tar -C %buildroot%_datadir/%bname/skins -xjf %SOURCE4
+ln -sf standard %buildroot%_datadir/%bname/skins/default
 popd
 
 default_vo=xv
@@ -1353,6 +1242,8 @@ unset RPM_PYTHON
 %_liconsdir/%bname.png
 %_datadir/applications/mplayer.desktop
 %_datadir/pixmaps/*
+%_datadir/%bname/skins/standard
+%_datadir/%bname/skins/default
 
 
 %files -n mencoder
@@ -1460,6 +1351,12 @@ unset RPM_PYTHON
 
 
 %changelog
+* Wed May 24 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060515.4
+- disabled xmms
+- enabled gtk+2.0 GUI
+- added default (standard) skin to %gui_name package
+- cleaned up spec
+
 * Tue May 23 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060515.3
 - enabled shared FFmpeg libs
 
