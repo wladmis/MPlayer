@@ -6,8 +6,8 @@
 %define fversion	%real_version
 
 # Used only for CVS builds
-%define cvsbuild 20060417
-%define ffmpeg_version cvs-20060417
+%define cvsbuild 20060420
+%define ffmpeg_version cvs-20060420
 
 %ifdef pre_release
 %global real_version	%real_version%pre_release
@@ -16,7 +16,7 @@
 %endif
 
 %if %cvsbuild
-%global release		%release.%cvsbuild.2
+%global release		%release.%cvsbuild.1
 %global	fversion	cvs-%cvsbuild
 %endif
 
@@ -677,14 +677,105 @@ Requires: %bname = %base_version
 MEncoder a movie encoder for Unix and is a part of the MPlayer package.
 
 
-%package doc
+%package docs
 Group: Video
-Summary: MPlayer docs
-Summary(ru_RU.KOI8-R): %bname-doc - документация к пакету %bname
-Requires: %bname = %base_version
+Summary: MPlayer all docs
+Requires: %bname-doc-en = %version-%release
+Requires: %bname-doc-de = %version-%release
+Requires: %bname-doc-cs = %version-%release
+Requires: %bname-doc-es = %version-%release
+Requires: %bname-doc-fr = %version-%release
+Requires: %bname-doc-hu = %version-%release
+Requires: %bname-doc-it = %version-%release
+#Requires: %bname-doc-pl = %version-%release
+Requires: %bname-doc-ru = %version-%release
+Requires: %bname-doc-zh = %version-%release
 
-%description doc
-MPlayer docs
+%description docs
+MPlayer all docs.
+
+
+%package doc-en
+Group: Video
+Summary: MPlayer English docs
+Obsoletes: MPlayer-doc
+Provides: MPlayer-doc
+
+%description doc-en
+MPlayer English docs.
+
+
+%package doc-cs
+Group: Video
+Summary: MPlayer Czesh docs
+
+%description doc-cs
+MPlayer Czesh docs.
+
+
+%package doc-de
+Group: Video
+Summary: MPlayer German docs
+
+%description doc-de
+MPlayer German docs.
+
+
+%package doc-es
+Group: Video
+Summary: MPlayer Spanish docs
+
+%description doc-es
+MPlayer Spanish docs.
+
+
+%package doc-fr
+Group: Video
+Summary: MPlayer French docs
+
+%description doc-fr
+MPlayer French docs.
+
+
+%package doc-hu
+Group: Video
+Summary: MPlayer Hungarian docs
+
+%description doc-hu
+MPlayer Hungarian docs.
+
+
+%package doc-it
+Group: Video
+Summary: MPlayer Italian docs
+
+%description doc-it
+MPlayer Italian docs.
+
+
+#package doc-pl
+#Group: Video
+#Summary: MPlayer Polish docs
+#
+#description doc-pl
+#MPlayer Polish docs.
+
+
+%package doc-ru
+Group: Video
+Summary: MPlayer Russian docs
+
+%description doc-ru
+MPlayer Russian docs.
+
+
+%package doc-zh
+Group: Video
+Summary: MPlayer Taiwan Chinese docs
+
+%description doc-zh
+MPlayer Taiwan Chinese docs.
+
 
 %if_enabled freetype
 %package -n %bname-fonts
@@ -1078,8 +1169,8 @@ pushd DOCS/xml
 cp -fL %_sysconfdir/sgml/catalog ./
 echo 'CATALOG "/usr/share/xml/xml-iso-entities-8879.1986/catalog"' >> ./catalog
 ./configure
-#error build pl, fr docs
-for lang in cs en es hu ru; do
+#error build pl docs
+for lang in cs de en es fr hu ru; do
     make html-chunked-$lang
 done
 popd
@@ -1155,16 +1246,16 @@ echo ".so mplayer.1" > %buildroot%_man1dir/mencoder.1
 
 # docs
 bzip2 --best --force --keep -- ChangeLog
-for l in cs es fr hu it pl sv zh; do
+for l in cs de es fr hu it pl sv zh; do
     install -pD -m 0644 DOCS/man/$l/mplayer.1 %buildroot%_mandir/$l/man1/mplayer.1
     ln -s mplayer.1 %buildroot%_mandir/$l/man1/mencoder.1
 done
-for l in de it zh; do
+for l in it zh; do
     install -d %buildroot%_docdir/%name-doc-%version/$l
     install -m 0644 DOCS/$l/*.html %buildroot%_docdir/%name-doc-%version/$l/
 done
 #for l in cs en es fr hu pl ru; do
-for l in cs en es hu ru; do
+for l in cs de en es fr hu ru; do
     install -d %buildroot%_docdir/%name-doc-%version/$l
     install -m 0644 DOCS/HTML/$l/{*.htm,*.css} %buildroot%_docdir/%name-doc-%version/$l/
 done
@@ -1231,16 +1322,43 @@ unset RPM_PYTHON
 %_bindir/mencoder
 
 
-%files doc
-%_docdir/%name-doc-%version/de
+%files doc-en
 %_docdir/%name-doc-%version/en
+
+
+%files doc-de
+%_docdir/%name-doc-%version/de
+
+
+%files doc-cs
 %_docdir/%name-doc-%version/cs
+
+
+%files doc-es
 %_docdir/%name-doc-%version/es
-#_docdir/%name-doc-%version/fr
+
+
+%files doc-fr
+%_docdir/%name-doc-%version/fr
+
+
+%files doc-hu
 %_docdir/%name-doc-%version/hu
+
+
+%files doc-it
 %_docdir/%name-doc-%version/it
+
+
+#files doc-pl
 #_docdir/%name-doc-%version/pl
+
+
+%files doc-ru
 %_docdir/%name-doc-%version/ru
+
+
+%files doc-zh
 %_docdir/%name-doc-%version/zh
 
 
@@ -1305,11 +1423,17 @@ unset RPM_PYTHON
 
 
 %changelog
+* Thu Apr 20 2006 Led <led@altlinux.ru> 1.0-alt0.20060420.1
+- 20060420 CVS snapshot
+- fixed %%changelog
+- added fr docs and de HTML docs
+- splited docs to languages
+
 * Wed Apr 19 2006 Led <led@altlinux.ru> 1.0-alt0.20060417.2
 - enabled libdts
 
 * Mon Apr 17 2006 Led <led@altlinux.ru> 1.0-alt0.20060417.1
-- 20060414 CVS snapshot
+- 20060417 CVS snapshot
 - fixed spec
 
 * Tue Apr 04 2006 Led <led@altlinux.ru> 1.0-alt0.20060331.2
