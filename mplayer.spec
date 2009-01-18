@@ -1,5 +1,5 @@
 # -*- rpm-spec -*-
-# $Id: MPlayer,v 1.91 2004/07/15 15:10:37 grigory Exp $
+# $Id: MPlayer,v 1.92 2004/07/22 05:43:22 grigory Exp $
 
 %define COMPAT_GCC 0
 
@@ -21,7 +21,7 @@
 
 Name: MPlayer
 Version: %real_version
-Release: alt12.%pre_release
+Release: alt13.%pre_release
 
 Summary: %name - Video player for LINUX
 License: GPL for all but not for OpenDivX
@@ -126,6 +126,14 @@ Requires: MPlayer >= 0.90
 
 %description gui
 GUI for MPlayer and default skin
+
+%package doc
+Summary: Documentation for MPlayer
+Group: Video
+Requires: MPlayer >= 0.90
+
+%description doc
+Documentation for MPlayer and tools
 
 %prep
 %setup -q -n %name-%real_version%pre_release
@@ -249,7 +257,7 @@ find etc DOCS TOOLS -type f -exec %__chmod 644 {} \;
 %__ln_s -f mplayer %buildroot%_bindir/gmplayer
 
 %files
-%doc etc DOCS TOOLS README
+%doc etc README
 %dir %_sysconfdir/%name
 %dir %_libdir/vidix
 %dir %_datadir/%name
@@ -270,7 +278,13 @@ find etc DOCS TOOLS -type f -exec %__chmod 644 {} \;
 %_iconsdir/*
 %_datadir/%name/Skin/*
 
+%files doc
+%doc DOCS TOOLS
+
 %changelog
+* Thu Jul 22 2004 Grigory Milev <week@altlinux.ru> 1.0-alt13.pre5
+- move docs to separated package
+
 * Thu Jul 15 2004 Grigory Milev <week@altlinux.ru> 1.0-alt12.pre5
 - new version released
 - For more changes view package ChangeLog
