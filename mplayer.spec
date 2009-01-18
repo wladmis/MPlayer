@@ -1,10 +1,10 @@
 # -*- rpm-spec -*-
-# $Id: MPlayer,v 1.97 2004/12/17 11:51:41 grigory Exp $
+# $Id: MPlayer,v 1.112 2005/01/28 11:32:47 grigory Exp $
 
 %define base_version	1.0
 %define real_version	%base_version
-%define release		alt16
-%define pre_release	pre5
+%define release		alt17
+%define pre_release	pre6a
 %define skin_version	1.7
 %define skin_release	alt1
 
@@ -205,7 +205,6 @@
 %def_enable  fame
 %def_enable  vorbis
 %def_enable  matroska
-%def_disable internal_matroska
 %def_enable  faad
 %def_disable internal_faad
 %def_enable  libdv
@@ -252,7 +251,7 @@
 
 Name:     %console_name
 Version:  %base_version
-Release: %release.1
+Release:  %release
 
 Summary:  %bname is the Unix video player (console version)
 Summary(ru_RU.KOI8-R): %bname - это настоящий видеоплеер (консольный вариант)
@@ -292,12 +291,12 @@ Patch12:  MPlayer-1.0pre5-alt-gcc-check.patch
 Patch13:  MPlayer-1.0pre5-nodebug.patch
 #Patch14:  mplayer-lavc.patch
 #Patch15:  mplayer-gui.patch
-Patch16:  MPlayer-1.0pre5-warnings.patch
-Patch17:  MPlayer-1.0pre5-loader.patch
-Patch18:  mplayer-loader-printf.patch
+# Patch16:  MPlayer-1.0pre5-warnings.patch
+# Patch17:  MPlayer-1.0pre5-loader.patch
+# Patch18:  mplayer-loader-printf.patch
 Patch19:  mplayer-libmpdvdkit2.patch
-Patch20:  MPlayer-1.0pre4-printf-format.patch
-Patch21:  MPlayer-1.0pre5-warnings-printf.patch
+# Patch20:  MPlayer-1.0pre4-printf-format.patch
+# Patch21:  MPlayer-1.0pre5-warnings-printf.patch
 
 # termcap/tinfo
 BuildRequires: libtinfo-devel
@@ -438,12 +437,6 @@ BuildRequires: libfame-devel
 
 %if_enabled vorbis
 BuildRequires: libogg-devel libvorbis-devel
-%endif
-
-%if_enabled matroska
-%if_disabled internal_matroska
-BuildRequires: libebml-devel libmatroska-devel
-%endif
 %endif
 
 %if_enabled faad
@@ -736,6 +729,14 @@ Provides: %bname-vidix-driver = %version-%release
 %description -n %bname-vidix-rage128
 VIDIX driver for ATI Rage128.
 
+%package -n %bname-vidix-savage
+Group: Video
+Summary: VIDIX driver for ATI Savage
+Provides: %bname-vidix-driver = %version-%release
+
+%description -n %bname-vidix-savage
+VIDIX driver for ATI Savage.
+
 %package -n %bname-vidix-nvidia
 Group: Video
 Summary: VIDIX driver for nVidia chips (experimental)
@@ -752,13 +753,21 @@ Provides: %bname-vidix-driver = %version-%release
 %description -n %bname-vidix-sis
 VIDIX driver for SiS chips (experimental)
 
+%package -n %bname-vidix-unichrome
+Group: Video
+Summary: VIDIX driver for Unichrome
+Provides: %bname-vidix-driver = %version-%release
+
+%description -n %bname-vidix-unichrome
+VIDIX driver for Unichrome.
+
 %package -n %bname-skin-default
 Summary: Default skin for %gui_name
 Summary(ru_RU.KOI8-R): Базовая "шкурка" для %gui_name
 Group: Video
 Provides: %bname-skin
 Version: %skin_version
-Release: %skin_release.1
+Release: %skin_release
 %description -n %bname-skin-default
 Default skin for %gui_name
 
@@ -779,7 +788,7 @@ cp -ar ffmpeg/libavcodec .
 %patch1 -p1
 %patch2 -p0
 %patch3 -p1
-%patch4 -p1
+#%patch4 -p1
 %patch5 -p1
 %patch6 -p1
 
@@ -793,17 +802,17 @@ echo "#define VERSION \\"%real_version-RPM-\$1\\"" >version.h
 EOF
 chmod +x version.sh
 %endif
-%patch12 -p1
+#%patch12 -p1
 
-%patch13 -p1 -b .nodebug
-#%patch14 -p1 -b .lavc
+# %patch13 -p1 -b .nodebug
+# %patch14 -p1 -b .lavc
 #%{!?_without_gui:%patch15 -p1 -b .gui}
-%patch16 -p1 -b .warn
-%patch17 -p1 -b .loader
-%patch18 -p1 -b .loader-printf
+# %patch16 -p1 -b .warn
+# %patch17 -p1 -b .loader
+# %patch18 -p1 -b .loader-printf
 %patch19 -p1 -b .mpdvdkit2
-%patch20 -p1 -b .printf-format
-%patch21 -p1 -b .printf
+# %patch20 -p1 -b .printf-format
+# %patch21 -p1 -b .printf
 
 
 %__subst 's/\(ldconfig\)/\#\1/g' libdha/Makefile
@@ -950,17 +959,8 @@ LC_MESSAGES=C ; export LC_MESSAGES
 		--disable-opendivx \
 		--enable-libavcodec \
 		%{subst_enable vorbis} \
-%if_enabled matroska
-%if_enabled internal_matroska
-		--enable-internal-matroska \
-		--disable-external-matroska \
-%else
+%if_disabled matroska
 		--disable-internal-matroska \
-		--enable-external-matroska \
-%endif
-%else
-		--disable-internal-matroska \
-		--disable-external-matroska \
 %endif
 %if_enabled faad
 %if_enabled internal_faad
@@ -1130,11 +1130,12 @@ unset RPM_PYTHON
 %_bindir/gmplayer
 %dir %_datadir/%bname
 %dir %_datadir/%bname/Skin
-
 %_iconsdir/%bname.png
 %_miconsdir/%bname.png
 %_liconsdir/%bname.png
 %_menudir/*
+%_datadir/applications/mplayer.desktop
+%_datadir/pixmaps/mplayer-desktop.xpm
 
 %files -n %bname-skin-default
 %dir %_datadir/%bname/Skin
@@ -1144,6 +1145,8 @@ unset RPM_PYTHON
 %doc DOCS/tech/encoding-tips.txt DOCS/tech/swscaler_filters.txt
 %doc DOCS/tech/swscaler_methods.txt DOCS/tech/colorspaces.txt
 %_bindir/mencoder
+
+%set_verify_elf_method textrel=relaxed
 
 %files doc
 %doc DOCS/tech/hwac3.txt DOCS/tech/mpsub.sub DOCS/tech/slave.txt
@@ -1197,17 +1200,28 @@ unset RPM_PYTHON
 %files -n %bname-vidix-rage128
 %_libdir/vidix/rage128_vid.so
 
+%files -n %bname-vidix-savage
+%_libdir/vidix/savage_vid.so
+
 %files -n %bname-vidix-sis
 %_libdir/vidix/sis_vid.so
 %endif
 
+%files -n %bname-vidix-unichrome
+%_libdir/vidix/unichrome_vid.so
 
 %changelog
+* Fri Jan 28 2005 Grigory Milev <week@altlinux.ru> 1.0-alt17.pre6a
+- new version released
+
 * Thu Jan 20 2005 ALT QA Team Robot <qa-robot@altlinux.org> 1.0-alt16.pre5.1
 - Rebuilt with libstdc++.so.6.
 
 * Fri Dec 17 2004 Grigory Milev <week@altlinux.ru> 1.0-alt16.pre5
 - rebuild with new directfb
+
+* Fri Dec 17 2004 ALT QA Team Robot <qa-robot@altlinux.org> 1.0-alt15.pre5.1
+- Rebuilt with libdirectfb-0.9.so.21.
 
 * Mon Nov 22 2004 Grigory Milev <week@altlinux.ru> 1.0-alt15.pre5
 - temporary disable smb client support, due build troubles
