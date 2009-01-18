@@ -252,7 +252,7 @@
 
 Name:     %console_name
 Version:  %base_version
-Release:  %release
+Release: %release.1
 
 Summary:  %bname is the Unix video player (console version)
 Summary(ru_RU.KOI8-R): %bname - это настоящий видеоплеер (консольный вариант)
@@ -758,7 +758,7 @@ Summary(ru_RU.KOI8-R): Базовая "шкурка" для %gui_name
 Group: Video
 Provides: %bname-skin
 Version: %skin_version
-Release: %skin_release
+Release: %skin_release.1
 %description -n %bname-skin-default
 Default skin for %gui_name
 
@@ -1203,6 +1203,9 @@ unset RPM_PYTHON
 
 
 %changelog
+* Fri Dec 17 2004 ALT QA Team Robot <qa-robot@altlinux.org> 1.0-alt15.pre5.1
+- Rebuilt with libdirectfb-0.9.so.21.
+
 * Mon Nov 22 2004 Grigory Milev <week@altlinux.ru> 1.0-alt15.pre5
 - temporary disable smb client support, due build troubles
 
