@@ -6,8 +6,8 @@
 %define fversion	%real_version
 
 # Used only for CVS builds
-%define cvsbuild 20060426
-%define ffmpeg_version cvs-20060426
+%define cvsbuild 20060503
+%define ffmpeg_version cvs-20060503
 
 %ifdef pre_release
 %global real_version	%real_version%pre_release
@@ -34,7 +34,6 @@
 # --disable tv		- disable TV Interface (tv/dvb grabbers) (default: enabled)
 # ... tv_v4l            - autodetect Video4Linux TV Interface support
 # ... tv_v4l2		- autodetect Video4Linux2 TV Interface support
-# ... edl		- unconditionally enable EDL (edit decision list) support
 # ... rtc		- unconditionally enable RTC (/dev/rtc) on Linux
 # --disable network	- disable network support (for: http/mms/rtp) (default: enabled)
 # --disable smb		- disable Samba (libsmbclient) support (default: enabled)
@@ -306,6 +305,7 @@ Patch25:  MPlayer-1.0pre7try2-libdir_fix.patch
 Patch26:  %name-cvs-20060220-configure.patch.gz
 %if %cvsbuild
 Patch27:  %name-cvs-20060331-builddocs.patch.gz
+Patch28:  %name-cvs-20060503-docs.patch.bz2
 %endif
 
 
@@ -687,7 +687,7 @@ Requires: %bname-doc-es = %version-%release
 Requires: %bname-doc-fr = %version-%release
 Requires: %bname-doc-hu = %version-%release
 Requires: %bname-doc-it = %version-%release
-#Requires: %bname-doc-pl = %version-%release
+Requires: %bname-doc-pl = %version-%release
 Requires: %bname-doc-ru = %version-%release
 Requires: %bname-doc-zh = %version-%release
 
@@ -753,12 +753,12 @@ Summary: MPlayer Italian docs
 MPlayer Italian docs.
 
 
-#package doc-pl
-#Group: Video
-#Summary: MPlayer Polish docs
-#
-#description doc-pl
-#MPlayer Polish docs.
+%package doc-pl
+Group: Video
+Summary: MPlayer Polish docs
+
+%description doc-pl
+MPlayer Polish docs.
 
 
 %package doc-ru
@@ -954,6 +954,7 @@ chmod +x version.sh
 %if %cvsbuild
 %patch26 -p1
 %patch27 -p1
+%patch28 -p1
 %endif
 
 %__subst 's/\(ldconfig\)/\#\1/g' libdha/Makefile
@@ -1007,6 +1008,8 @@ export CFLAGS
 LC_MESSAGES=C ; export LC_MESSAGES
 
 ./configure \
+		--disable-debug \
+		--disable-profile \
 		--enable-gui \
 		--enable-termcap \
 		--with-termcaplib=tinfo \
@@ -1025,7 +1028,6 @@ LC_MESSAGES=C ; export LC_MESSAGES
 		%{subst_enable lirc} \
 		--disable-joystick \
 		%{subst_enable tv} \
-		--enable-edl \
 		--enable-rtc \
 		%{subst_enable network} \
 		%{subst_enable smb} \
@@ -1143,7 +1145,6 @@ LC_MESSAGES=C ; export LC_MESSAGES
 # 		--disable-flac \
 # 		--disable-external-flac \
 # %endif
-cp configure.log configure.log.save
 
 %ifarch %ix86
 %make_build
@@ -1169,8 +1170,7 @@ pushd DOCS/xml
 cp -fL %_sysconfdir/sgml/catalog ./
 echo 'CATALOG "/usr/share/xml/xml-iso-entities-8879.1986/catalog"' >> ./catalog
 ./configure
-#error build pl docs
-for lang in cs de en es fr hu ru; do
+for lang in cs de en es fr hu pl ru; do
     make html-chunked-$lang
 done
 popd
@@ -1254,8 +1254,7 @@ for l in it zh; do
     install -d %buildroot%_docdir/%name-doc-%version/$l
     install -m 0644 DOCS/$l/*.html %buildroot%_docdir/%name-doc-%version/$l/
 done
-#for l in cs en es fr hu pl ru; do
-for l in cs de en es fr hu ru; do
+for l in cs de en es fr hu pl ru; do
     install -d %buildroot%_docdir/%name-doc-%version/$l
     install -m 0644 DOCS/HTML/$l/{*.htm,*.css} %buildroot%_docdir/%name-doc-%version/$l/
 done
@@ -1350,8 +1349,8 @@ unset RPM_PYTHON
 %_docdir/%name-doc-%version/it
 
 
-#files doc-pl
-#_docdir/%name-doc-%version/pl
+%files doc-pl
+%_docdir/%name-doc-%version/pl
 
 
 %files doc-ru
@@ -1423,9 +1422,16 @@ unset RPM_PYTHON
 
 
 %changelog
+* Wed May 03 2006 Led <led@altlinux.ru> 1.0-alt0.20060503.1
+- 20060503 CVS snapshot
+- fixed %%changelog
+- fixed configure parameters in spec
+- added %name-cvs-20060503-docs.patch
+- enabled pl docs
+
 * Wed Apr 26 2006 Led <led@altlinux.ru> 1.0-alt0.20060426.1
 - 20060426 CVS snapshot
-- disabled polyp becouse changes in it's API
+- disabled polyp because changes in it's API
 - replaced mmx2 with mmxext and 3dnowex with 3dnowext in configure parameters
 - fixed spec
 
