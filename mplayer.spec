@@ -1,9 +1,9 @@
 # -*- rpm-spec -*-
-# $Id: MPlayer,v 1.95 2004/08/17 14:27:14 grigory Exp $
+# $Id: MPlayer,v 1.96 2004/11/22 11:28:06 grigory Exp $
 
 %define base_version	1.0
 %define real_version	%base_version
-%define release		alt14
+%define release		alt15
 %define pre_release	pre5
 %define skin_version	1.7
 %define skin_release	alt1
@@ -154,7 +154,7 @@
 %def_enable  lirc
 %def_enable  tv
 %def_enable  network
-%def_enable  smb
+%def_disable  smb
 %def_enable  dvdread
 %def_enable  mpdvdkit
 %def_enable  cdparanoia
@@ -1203,6 +1203,9 @@ unset RPM_PYTHON
 
 
 %changelog
+* Mon Nov 22 2004 Grigory Milev <week@altlinux.ru> 1.0-alt15.pre5
+- temporary disable smb client support, due build troubles
+
 * Tue Aug 17 2004 Grigory Milev <week@altlinux.ru> 1.0-alt14.pre5
 - rebuild from A.Morozov spec
 
