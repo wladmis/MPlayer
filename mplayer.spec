@@ -6,8 +6,8 @@
 %define fversion	%real_version
 
 # Used only for CVS builds
-%define cvsbuild 20060420
-%define ffmpeg_version cvs-20060420
+%define cvsbuild 20060426
+%define ffmpeg_version cvs-20060426
 
 %ifdef pre_release
 %global real_version	%real_version%pre_release
@@ -55,9 +55,9 @@
 # --disable cpu_detection - disable runtime CPU detection (default: enabled)
 # --enable  k6		- build K6-optimized package as i586 arch (default: disabled)
 # --disable mmx         - do not build MMX-optimized package (default: build)
-# --disable mmx2	- do not build MMX2-optimized package (default: build)
+# --disable mmxext	- do not build MMX2-optimized package (default: build)
 # --disable 3dnow	- do not build 3DNow!-enabled package (defaut: build)
-# --disable 3dnowex	- do not build 3DNowEx!-enabled package (defaut: build)
+# --disable 3dnowext	- do not build 3DNowEx!-enabled package (defaut: build)
 # --disable sse		- do not build SSE-enabled package (default: build)
 # --disable sse2	- do not build SSE2-enabled package (default: build)
 # --enable  altivec     - build Altivec-enabled package (default: do not build on x86)
@@ -164,7 +164,7 @@
 %def_enable  arts
 %def_enable  esd
 %def_enable  select
-%def_enable  polyp
+%def_disable polyp
 %def_enable  libdts
 %def_enable  musepack
 
@@ -190,9 +190,9 @@
 %def_enable  jack
 %def_enable  cpu_detection
 %def_enable  mmx
-%def_enable  mmx2
+%def_enable  mmxext
 %def_enable  3dnow
-%def_enable  3dnowex
+%def_enable  3dnowext
 %def_enable  sse
 %def_enable  sse2
 %def_disable  i18n
@@ -269,11 +269,11 @@ Requires: urw-fonts
 %endif
 %endif
 
-Packager: Grigory Milev <week@altlinux.ru>
-
 Source0:  %bname-%fversion.tar.bz2
+# cvs -z9 -d:pserver:anonymous@mplayerhq.hu:/cvsroot/mplayer checkout -P -d MPlayer main
 %if %cvsbuild
 Source1:  ffmpeg-%ffmpeg_version.tar.bz2
+# cvs -z9 -d:pserver:anonymous@mplayerhq.hu:/cvsroot/ffmpeg checkout -P -d ffmpeg ffmpeg
 %endif
 Source2:  %bname.menu
 Source3:  cp1251-font.tar.bz2
@@ -428,7 +428,7 @@ BuildRequires: esound-devel
 %endif
 
 %if_enabled polyp
-BuildRequires: libpolypaudio libpolypaudio-devel
+BuildRequires: libpolypaudio = 0.7 libpolypaudio-devel = 0.7
 %endif
 
 %if_enabled libdts
@@ -1047,9 +1047,9 @@ LC_MESSAGES=C ; export LC_MESSAGES
 		--disable-runtime-cpudetection \
 %endif
 		%{subst_enable mmx} \
-		%{subst_enable mmx2} \
+		%{subst_enable mmxext} \
 		%{subst_enable 3dnow} \
-		%{subst_enable 3dnowex} \
+		%{subst_enable 3dnowext} \
 		%{subst_enable sse} \
 		%{subst_enable sse2} \
 		%{subst_enable altivec} \
@@ -1423,6 +1423,12 @@ unset RPM_PYTHON
 
 
 %changelog
+* Wed Apr 26 2006 Led <led@altlinux.ru> 1.0-alt0.20060426.1
+- 20060426 CVS snapshot
+- disabled polyp becouse changes in it's API
+- replaced mmx2 with mmxext and 3dnowex with 3dnowext in configure parameters
+- fixed spec
+
 * Thu Apr 20 2006 Led <led@altlinux.ru> 1.0-alt0.20060420.1
 - 20060420 CVS snapshot
 - fixed %%changelog
