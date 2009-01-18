@@ -1,10 +1,10 @@
 # -*- rpm-spec -*-
-# $Id: MPlayer,v 1.112 2005/01/28 11:32:47 grigory Exp $
+# $Id: MPlayer,v 1.120 2005/04/21 05:28:34 grigory Exp $
 
 %define base_version	1.0
 %define real_version	%base_version
-%define release		alt17
-%define pre_release	pre6a
+%define release		alt20
+%define pre_release	pre7
 %define skin_version	1.7
 %define skin_release	alt1
 
@@ -174,7 +174,7 @@
 %def_disable debug
 %def_enable  dynamic_plugins
 
-%def_enable  aalib
+%def_disable aalib
 %def_enable  directfb
 %def_enable  dvb
 %def_disable  dxr3
@@ -204,12 +204,14 @@
 %def_disable divx4linux
 %def_enable  fame
 %def_enable  vorbis
+%def_enable  theora
 %def_enable  matroska
 %def_enable  faad
 %def_disable internal_faad
 %def_enable  libdv
 %def_enable  mad
 %def_enable  xmms
+%def_enable  jack
 #%%def_enable  flac
 #%%def_disable external_flac
 
@@ -298,6 +300,8 @@ Patch19:  mplayer-libmpdvdkit2.patch
 # Patch20:  MPlayer-1.0pre4-printf-format.patch
 # Patch21:  MPlayer-1.0pre5-warnings-printf.patch
 
+BuildRequires: xorg-x11-devel xorg-x11-mesaGL
+
 # termcap/tinfo
 BuildRequires: libtinfo-devel
 BuildRequires: pkgconfig
@@ -308,7 +312,7 @@ BuildRequires: liblirc-devel
 %endif
 
 %if_enabled tv
-#BuildRequires:
+BuildRequires: glibc-kernheaders
 %endif
 
 # tv_v4l
@@ -383,6 +387,9 @@ BuildRequires: svgalib-devel
 
 # vidix
 
+%if_enabled jack
+BuildRequires: jackit-devel
+%endif
 
 %if_enabled alsa
 BuildRequires: libalsa-devel
@@ -437,6 +444,10 @@ BuildRequires: libfame-devel
 
 %if_enabled vorbis
 BuildRequires: libogg-devel libvorbis-devel
+%endif
+
+%if_enabled theora
+BuildRequires: libtheora-devel
 %endif
 
 %if_enabled faad
@@ -895,6 +906,10 @@ LC_MESSAGES=C ; export LC_MESSAGES
 		%{subst_enable fontconfig} \
 		--enable-unrarlib \
 		%{subst_enable menu} \
+%if_enabled tv
+		--enable-tv-v4l \
+		--enable-tv-v4l2 \
+%endif
 %if_enabled cpu_detection
 		--enable-runtime-cpudetection \
 %else
@@ -959,6 +974,7 @@ LC_MESSAGES=C ; export LC_MESSAGES
 		--disable-opendivx \
 		--enable-libavcodec \
 		%{subst_enable vorbis} \
+		%{subst_enable theora} \
 %if_disabled matroska
 		--disable-internal-matroska \
 %endif
@@ -1211,6 +1227,18 @@ unset RPM_PYTHON
 %_libdir/vidix/unichrome_vid.so
 
 %changelog
+* Thu Apr 21 2005 Grigory Milev <week@altlinux.ru> 1.0-alt20.pre7
+- fixed build requires
+
+* Mon Apr 18 2005 Grigory Milev <week@altlinux.ru> 1.0-alt19.pre7
+- new version released
+- build with v4l
+- due compilation errors, temporary build with out aa lib
+
+* Fri Apr 08 2005 Grigory Milev <week@altlinux.ru> 1.0-alt18.pre6a
+- add theora support
+- add jack support
+
 * Fri Jan 28 2005 Grigory Milev <week@altlinux.ru> 1.0-alt17.pre6a
 - new version released
 
@@ -1404,10 +1432,5 @@ unset RPM_PYTHON
 
 * Wed Dec 26 2001 Grigory Milev <week@altlinux.ru>  0.60pre1-alt1
 - Initial build for ALT Linux distribution.
-
-
-
-
-
 
 
