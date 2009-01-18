@@ -1,4 +1,4 @@
 tar.bz2: @version@pre5:. name=@name@-@version@pre5
 tar.bz2: cp1251-font:. name=cp1251-font base=font
 tar.bz2: default-1.7:. name=default-1.7 base=default
-copy: *.patch *.menu *.sh
+copy: *.patch *.menu *.sh *.png

@@ -1,0 +1,21 @@
+diff -urN MPlayer-1.0pre4.orig/configure MPlayer-1.0pre4/configure
+--- MPlayer-1.0pre4.orig/configure	2004-05-03 12:12:43 +0700
++++ MPlayer-1.0pre4/configure	2004-05-03 12:31:50 +0700
+@@ -2549,6 +2549,17 @@
+   _termcap=no
+   cc_check -ltermcap && _termcap=yes && _ld_termcap='-ltermcap'
+   cc_check -ltinfo && _termcap=yes && _ld_termcap='-ltinfo'
++elif test "$_termcap" = yes ; then
++  cat > $TMPC <<EOF
++int main(void) { return 0; }
++EOF
++  if test -n "$_ld_termcap" ; then
++    cc_check "$_ld_termcap" || die "Unable to link with $_ld_termcap"
++  else
++    cc_check -ltinfo && _ld_termcap='-ltinfo'
++    test -z "$_ld_termcap" && cc_check -ltermcap && _ld_termcap='-ltermcap'
++    test -z "$_ld_termcap" && die "Unable to find termcap lib"
++  fi
+ fi
+ if test "$_termcap" = yes ; then
+   _def_termcap='#define USE_TERMCAP 1'
