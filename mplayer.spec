@@ -1,5 +1,5 @@
 # -*- rpm-spec -*-
-# $Id: MPlayer,v 1.84 2004/06/28 16:10:56 grigory Exp $
+# $Id: MPlayer,v 1.91 2004/07/15 15:10:37 grigory Exp $
 
 %define COMPAT_GCC 0
 
@@ -17,11 +17,11 @@
 %define codec w32codec
 
 %define real_version 1.0
-%define pre_release pre4
+%define pre_release pre5
 
 Name: MPlayer
 Version: %real_version
-Release: alt11.%pre_release
+Release: alt12.%pre_release
 
 Summary: %name - Video player for LINUX
 License: GPL for all but not for OpenDivX
@@ -42,15 +42,17 @@ Patch2: %name-dvd-ru.patch
 # If you have divx4linux uncoment next line
 #BuildRequires: divx4linux
 
-# Automatically added by buildreq on Fri Sep 05 2003
+# Automatically added by buildreq on Thu Jul 15 2004
+BuildRequires: glib-devel ms-fonts-ttf pkgconfig univga-fonts-bitmap dmtr40in-fonts
+
 BuildRequires: XFree86-devel XFree86-libs aalib-devel directfb-devel esound-devel
-BuildRequires: freetype2-devel gcc3.2-c++ glib2-devel gtk+-devel libGLwrapper
+BuildRequires: freetype2-devel glib2-devel gtk+-devel libGLwrapper
 BuildRequires: libalsa-devel libaudio-devel libaudiofile-devel libcdparanoia-devel
 BuildRequires: libdirectfb libdv-devel libdvdcss-devel libjpeg-devel liblame-devel
-BuildRequires: libogg-devel libpng3-devel libslang libvorbis-devel libungif-devel
+BuildRequires: libogg-devel libpng-devel libslang libvorbis-devel libungif-devel
 BuildRequires: xvid-devel zlib-devel
 
-BuildRequires: libtinfo-devel fontconfig freetype2 libexpat
+BuildRequires: libtinfo-devel fontconfig fontconfig-devel freetype2 libexpat
 BuildRequires: libdvdread-devel libdvdnav-devel
 BuildRequires: kernel-headers-dvb
 
@@ -60,7 +62,7 @@ BuildRequires: liblirc-devel
 %if %COMPAT_GCC
 BuildRequires: cpp2.95 gcc2.95
 %else
-BuildRequires: cpp3.2 gcc3.2
+BuildRequires: cpp3.3 gcc3.3 gcc3.3-c++
 %endif
 
 %if %WITH_ARTS
@@ -145,7 +147,6 @@ myconfig="--prefix=%_prefix \
 	--enable-ossaudio \
 	--enable-gui \
 	--enable-vidix \
-	--enable-i18n \
 	--enable-iconv \
 	--language=en \
 	--enable-i18n \
@@ -270,6 +271,10 @@ find etc DOCS TOOLS -type f -exec %__chmod 644 {} \;
 %_datadir/%name/Skin/*
 
 %changelog
+* Thu Jul 15 2004 Grigory Milev <week@altlinux.ru> 1.0-alt12.pre5
+- new version released
+- For more changes view package ChangeLog
+
 * Mon Jun 28 2004 Grigory Milev <week@altlinux.ru> 1.0-alt11.pre4
 - fix build requires for dvb support
 
