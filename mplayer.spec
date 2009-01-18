@@ -9,7 +9,7 @@
 %define ffmpeg_version cvs-20060519
 
 %if %cvsbuild
-%global release		%release.%cvsbuild.3
+%global release		%release.%cvsbuild.4
 %global	fversion	cvs-%cvsbuild
 %endif
 
@@ -929,6 +929,7 @@ LC_MESSAGES=C ; export LC_MESSAGES
 %endif
 		%{subst_enable aa} \
 		%{subst_enable caca} \
+		%{subst_enable fbdev} \
 		%{subst_enable directfb} \
 		--disable-dvb \
 		%{subst_enable dvbhead} \
@@ -1303,6 +1304,9 @@ unset RPM_PYTHON
 
 
 %changelog
+* Fri Jun 02 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060519.4
+- fixed fbdev support
+
 * Wed May 31 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060519.3
 - added menu file
 - cleaned up spec
