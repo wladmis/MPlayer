@@ -16,7 +16,7 @@
 %endif
 
 %if %cvsbuild
-%global release		%release.%cvsbuild.2
+%global release		%release.%cvsbuild.3
 %global	fversion	cvs-%cvsbuild
 %endif
 
@@ -128,6 +128,8 @@
 # Obsolete:
 # --enable  flac	- disable FLAC codec (default: disabled)
 # --enable  external_flac  - enable external FLAC codec (default: use internal, BTW: WHY?!)
+
+%def_enable  shared_ffmpeg
 
 %def_enable  lirc
 %def_enable  tv
@@ -323,6 +325,10 @@ BuildRequires: docbook-style-dsssl openjade xsltproc
 BuildRequires: libtinfo-devel
 BuildRequires: pkgconfig
 #
+
+%if_enabled shared_ffmpeg
+BuildRequires: libffmpeg-devel
+%endif
 
 %if_enabled lirc
 BuildRequires: liblirc-devel
@@ -916,9 +922,13 @@ VIDIX driver for Unichrome.
 %prep
 %if %cvsbuild
 # CVS Build
+%if_enabled shared_ffmpeg
+%setup -q -n %fname-%fversion
+%else
 %setup -q -n %fname-%fversion -a 1
 # needed with CVS snapshots
 mv ffmpeg-%ffmpeg_version/libav{codec,format,util} .
+%endif
 %else
 # A Release Build
 %setup -q -n %fname-%fversion
@@ -1018,6 +1028,25 @@ LC_MESSAGES=C ; export LC_MESSAGES
 		--enable-gui \
 		--enable-termcap \
 		--with-termcaplib=tinfo \
+%if_enabled shared_ffmpeg
+		--disable-libavcodec \
+		--disable-libavformat \
+		--disable-libavutil \
+		--disable-libpostproc \
+		--enable-libavcodec_so \
+		--enable-libavformat_so \
+		--enable-libavutil_so \
+		--enable-libpostproc_so \
+%else
+		--disable-libavcodec_so \
+		--disable-libavformat_so \
+		--disable-libavutil_so \
+		--disable-libpostproc_so \
+		--enable-libavcodec \
+		--enable-libavformat \
+		--enable-libavutil \
+		--enable-libpostproc \
+%endif
 		%{subst_enable png} \
 		--enable-mencoder \
 		%{subst_enable libfame} \
@@ -1119,7 +1148,6 @@ LC_MESSAGES=C ; export LC_MESSAGES
 		%{subst_enable x264} \
 		%{subst_enable divx4linux} \
 		--disable-opendivx \
-		--enable-libavcodec \
 		%{subst_enable vorbis} \
 		%{subst_enable speex} \
 		%{subst_enable theora} \
@@ -1432,6 +1460,9 @@ unset RPM_PYTHON
 
 
 %changelog
+* Tue May 23 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060515.3
+- enabled shared FFmpeg libs
+
 * Mon May 15 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060515.2
 - enabled live.com support
 
