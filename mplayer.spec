@@ -3,16 +3,16 @@
 
 %define base_version	1.0
 %define real_version	%base_version
-%define release		alt20
-%define pre_release	pre7
+%define release		alt22
+%define pre_release	pre7try2
 %define skin_version	1.7
 %define skin_release	alt1
 
 %define fversion	%real_version
 
 # Used only for CVS builds
-#%%define cvsbuild 20031202
-#%%define ffmpeg_version 20031202
+# define cvsbuild 20031202
+# define ffmpeg_version 20031202
 
 %ifdef pre_release
 %global real_version	%real_version%pre_release
@@ -20,11 +20,11 @@
 %global fversion	%base_version%pre_release
 %endif
 
-%ifdef cvsbuild
-%global	real_version	%real_version%pre_release
-%global release		%release.%cvsbuild
-%global	fversion	%cvsbuild
-%endif
+#ifdef cvsbuild
+#global	real_version	%real_version%pre_release
+#global release		%release.%cvsbuild
+#global	fversion	%cvsbuild
+#endif
 
 # Conditional build (--enable/--disable option)
 #
@@ -271,9 +271,9 @@ Requires: urw-fonts
 %endif
 
 Source0:  %bname-%fversion.tar.bz2
-%ifdef %cvsbuild
-Source1:  http://prdownloads.sourceforge.net/ffmpeg/ffmpeg-%ffmpeg_version.tar.bz2
-%endif
+#ifdef %cvsbuild
+#Source1:  http://prdownloads.sourceforge.net/ffmpeg/ffmpeg-%ffmpeg_version.tar.bz2
+#endif
 Source2:  %bname.menu
 Source3:  cp1251-font.tar.bz2
 Source4:  default-%skin_version.tar.bz2
@@ -299,6 +299,7 @@ Patch13:  MPlayer-1.0pre5-nodebug.patch
 Patch19:  mplayer-libmpdvdkit2.patch
 # Patch20:  MPlayer-1.0pre4-printf-format.patch
 # Patch21:  MPlayer-1.0pre5-warnings-printf.patch
+Patch23:  ad_pcm_fix_20050826.diff
 
 BuildRequires: xorg-x11-devel xorg-x11-mesaGL
 
@@ -786,15 +787,15 @@ Default skin for %gui_name
 Базовый вариант интерфейса ("шкурка") для %gui_name
 
 %prep
-%ifdef cvsbuild
+#ifdef cvsbuild
 # CVS Build
-%setup -q -n %fname-%fversion -a 1
-# needed with CVS snapshots
-cp -ar ffmpeg/libavcodec .
-%else
+#setup -q -n %fname-%fversion -a 1
+## needed with CVS snapshots
+#cp -ar ffmpeg/libavcodec .
+#else
 # A Release Build
 %setup -q -n %fname-%fversion
-%endif
+#endif
 
 %patch1 -p1
 %patch2 -p0
@@ -824,7 +825,7 @@ chmod +x version.sh
 %patch19 -p1 -b .mpdvdkit2
 # %patch20 -p1 -b .printf-format
 # %patch21 -p1 -b .printf
-
+# %patch23 -p0
 
 %__subst 's/\(ldconfig\)/\#\1/g' libdha/Makefile
 
@@ -1139,7 +1140,6 @@ unset RPM_PYTHON
 %_datadir/%bname/font
 %endif
 %endif
-
 %_man1dir/*
 
 %files -n %gui_name
@@ -1227,6 +1227,12 @@ unset RPM_PYTHON
 %_libdir/vidix/unichrome_vid.so
 
 %changelog
+* Sat Nov 26 2005 Grigory Milev <week@altlinux.ru> 1.0-alt22.pre7try2
+- update to bugfix version
+
+* Tue Aug 30 2005 Eugene Ostapets <eostapets@altlinux.ru> 1.0-alt21.pre7
+- fix CAN-2005-2718
+
 * Thu Apr 21 2005 Grigory Milev <week@altlinux.ru> 1.0-alt20.pre7
 - fixed build requires
 
