@@ -1,9 +1,9 @@
 # -*- rpm-spec -*-
-# $Id: MPlayer,v 1.96 2004/11/22 11:28:06 grigory Exp $
+# $Id: MPlayer,v 1.97 2004/12/17 11:51:41 grigory Exp $
 
 %define base_version	1.0
 %define real_version	%base_version
-%define release		alt15
+%define release		alt16
 %define pre_release	pre5
 %define skin_version	1.7
 %define skin_release	alt1
@@ -252,7 +252,7 @@
 
 Name:     %console_name
 Version:  %base_version
-Release: %release.1
+Release:  %release
 
 Summary:  %bname is the Unix video player (console version)
 Summary(ru_RU.KOI8-R): %bname - это настоящий видеоплеер (консольный вариант)
@@ -758,7 +758,7 @@ Summary(ru_RU.KOI8-R): Базовая "шкурка" для %gui_name
 Group: Video
 Provides: %bname-skin
 Version: %skin_version
-Release: %skin_release.1
+Release: %skin_release
 %description -n %bname-skin-default
 Default skin for %gui_name
 
@@ -1203,8 +1203,8 @@ unset RPM_PYTHON
 
 
 %changelog
-* Fri Dec 17 2004 ALT QA Team Robot <qa-robot@altlinux.org> 1.0-alt15.pre5.1
-- Rebuilt with libdirectfb-0.9.so.21.
+* Fri Dec 17 2004 Grigory Milev <week@altlinux.ru> 1.0-alt16.pre5
+- rebuild with new directfb
 
 * Mon Nov 22 2004 Grigory Milev <week@altlinux.ru> 1.0-alt15.pre5
 - temporary disable smb client support, due build troubles
