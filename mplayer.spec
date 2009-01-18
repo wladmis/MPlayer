@@ -16,7 +16,7 @@
 %endif
 
 %if %cvsbuild
-%global release		%release.%cvsbuild.4
+%global release		%release.%cvsbuild.5
 %global	fversion	cvs-%cvsbuild
 %endif
 
@@ -519,6 +519,7 @@ Group:    Video
 Requires: %bname-console = %real_version
 Provides: %bname = %real_version
 Provides: %bname = %base_version
+Obsoletes: %bname-skin-default
 BuildRequires: glib2-devel libgtk+2-devel
 %if_enabled sdl
 Requires: libSDL >= 1.1.7
@@ -1351,6 +1352,9 @@ unset RPM_PYTHON
 
 
 %changelog
+* Thu May 25 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060515.5
+- rebuild for libffmpeg
+
 * Wed May 24 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060515.4
 - disabled xmms
 - enabled gtk+2.0 GUI
