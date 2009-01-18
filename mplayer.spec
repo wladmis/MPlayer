@@ -1,19 +1,13 @@
-# -*- rpm-spec -*-
-# $Id: MPlayer,v 1.120 2005/04/21 05:28:34 grigory Exp $
-
 %define base_version	1.0
 %define real_version	%base_version
-%define release		alt23
-%define pre_release	pre7try2
+%define release		0
+#define pre_release	pre7try2
 
 %define fversion	%real_version
 
 # Used only for CVS builds
-# define cvsbuild 20031202
-# define ffmpeg_version 20031202
-
-%define cvsbuild 0
-%define ffmpeg_version 0
+%define cvsbuild 20060331
+%define ffmpeg_version cvs-20060331
 
 %ifdef pre_release
 %global real_version	%real_version%pre_release
@@ -21,11 +15,10 @@
 %global fversion	%base_version%pre_release
 %endif
 
-#if %cvsbuild
-#global	real_version	%real_version%pre_release
-#global release		%release.%cvsbuild
-#global	fversion	%cvsbuild
-#endif
+%if %cvsbuild
+%global release		%release.%cvsbuild.2
+%global	fversion	cvs-%cvsbuild
+%endif
 
 # Conditional build (--enable/--disable option)
 #
@@ -147,13 +140,15 @@
 %def_enable  freetype
 %def_enable  fontconfig
 %def_enable  menu
+%def_enable  enca
 
-%def_enable  k6
+%def_disable k6
 %def_disable altivec
 %def_disable debug
 %def_enable  dynamic_plugins
 
-%def_disable aalib
+%def_enable  aalib
+%def_enable  caca
 %def_enable  directfb
 %def_enable  dvb
 %def_disable dxr3
@@ -161,7 +156,7 @@
 %def_disable ggi
 %def_enable  gl
 %def_enable  sdl
-%def_disable svga
+%def_enable  svga
 %def_enable  tga
 %def_enable  vidix
 
@@ -169,6 +164,8 @@
 %def_enable  arts
 %def_enable  esd
 %def_enable  select
+%def_enable  polyp
+%def_enable  musepack
 
 %def_enable  gif
 %def_enable  png
@@ -177,9 +174,11 @@
 %def_disable xanim
 %def_enable  real
 %def_enable  xvid
+%def_enable  x264
 %def_disable divx4linux
 %def_enable  fame
 %def_enable  vorbis
+%def_enable  speex
 %def_enable  theora
 %def_enable  matroska
 %def_enable  faad
@@ -188,13 +187,15 @@
 %def_enable  mad
 %def_enable  xmms
 %def_enable  jack
-%def_enable cpu_detection
-%def_enable mmx
-%def_enable mmx2
-%def_enable 3dnow
-%def_enable 3dnowex
-%def_enable sse
-%def_enable sse2
+%def_enable  cpu_detection
+%def_enable  mmx
+%def_enable  mmx2
+%def_enable  3dnow
+%def_enable  3dnowex
+%def_enable  sse
+%def_enable  sse2
+%def_enable  i18n
+%def_disable fribidi
 #%%def_enable  flac
 #%%def_disable external_flac
 
@@ -250,7 +251,7 @@
 
 Name:     %console_name
 Version:  %base_version
-Release:  %release
+Release:  alt%release
 
 Summary:  %bname is the Unix video player (console version)
 Summary(ru_RU.KOI8-R): %bname - это настоящий видеоплеер (консольный вариант)
@@ -270,9 +271,9 @@ Requires: urw-fonts
 Packager: Grigory Milev <week@altlinux.ru>
 
 Source0:  %bname-%fversion.tar.bz2
-#if %cvsbuild
-#Source1:  http://prdownloads.sourceforge.net/ffmpeg/ffmpeg-%ffmpeg_version.tar.bz2
-#endif
+%if %cvsbuild
+Source1:  ffmpeg-%ffmpeg_version.tar.bz2
+%endif
 Source2:  %bname.menu
 Source3:  cp1251-font.tar.bz2
 Source5:  mplayer.sh
@@ -285,6 +286,7 @@ Patch3:   MPlayer-1.0pre4-alt-explicit_gif.patch
 Patch4:   MPlayer-1.0pre5-alt-translation.patch
 Patch5:   MPlayer-1.0pre4-alt-explicit_termcap.patch
 Patch6:   MPlayer-1.0pre4-alt-artsc_ldflags.patch
+Patch7:   MPlayer-1.0pre7-aalib.patch
 Patch11:  mplayer-rpm-cvs.patch
 Patch12:  MPlayer-1.0pre5-alt-gcc-check.patch
 
@@ -300,8 +302,20 @@ Patch19:  mplayer-libmpdvdkit2.patch
 Patch23:  ad_pcm_fix_20050826.diff
 Patch24:  MPlayer-1.0pre7try2-xmmslibs_fix.patch
 Patch25:  MPlayer-1.0pre7try2-libdir_fix.patch
+Patch26:  %name-cvs-20060220-configure.patch.gz
+%if %cvsbuild
+Patch27:  %name-cvs-20060331-builddocs.patch.gz
+%endif
 
-BuildRequires: xorg-x11-devel xorg-x11-mesaGL
+
+BuildRequires: libXinerama-devel libXt-devel libXvMC-devel libXxf86dga-devel
+BuildRequires: libXxf86vm-devel
+BuildRequires: mawk libmesa-devel
+BuildRequires: libncurses-devel libslang-devel
+%if %cvsbuild
+BuildRequires: docbook-style-dsssl openjade xsltproc
+%endif
+#BuildRequires: fribidi libfribidi-devel
 
 # termcap/tinfo
 BuildRequires: libtinfo-devel
@@ -339,11 +353,15 @@ BuildRequires: libcdparanoia-devel
 %endif
 
 %if_enabled freetype
-BuildRequires: freetype2-devel >= 2.0.9
+BuildRequires: libfreetype-devel >= 2.0.9
 %endif
 
 %if_enabled fontconfig
 BuildRequires: fontconfig-devel
+%endif
+
+%if_enabled enca
+BuildRequires: libenca-devel
 %endif
 
 
@@ -351,8 +369,12 @@ BuildRequires: fontconfig-devel
 BuildRequires: aalib-devel
 %endif
 
+%if_enabled caca
+BuildRequires: libcaca-devel
+%endif
+
 %if_enabled directfb
-BuildRequires: directfb-devel
+BuildRequires: libdirectfb-devel
 %endif
 
 %if_enabled dvb
@@ -389,7 +411,7 @@ BuildRequires: svgalib-devel
 # vidix
 
 %if_enabled jack
-BuildRequires: jackit-devel libbio2jack-devel
+BuildRequires: jackit-devel
 %endif
 
 %if_enabled alsa
@@ -404,13 +426,21 @@ BuildRequires: libarts-devel
 BuildRequires: esound-devel
 %endif
 
+%if_enabled polyp
+BuildRequires: libpolypaudio libpolypaudio-devel
+%endif
+
+%if_enabled musepack
+BuildRequires: libmpcdec-devel >= 1.2.1
+%endif
+
 
 %if_enabled gif
 BuildRequires: libungif-devel
 %endif
 
 %if_enabled png
-BuildRequires: libpng3-devel
+BuildRequires: libpng-devel
 %endif
 
 %if_enabled jpeg
@@ -432,7 +462,11 @@ BuildRequires: liblzo-devel
 # real
 
 %if_enabled xvid
-BuildRequires: xvid-devel
+BuildRequires: libxvid-devel
+%endif
+
+%if_enabled x264
+BuildRequires: libx264-devel
 %endif
 
 %if_enabled divx4linux
@@ -445,6 +479,10 @@ BuildRequires: libfame-devel
 
 %if_enabled vorbis
 BuildRequires: libogg-devel libvorbis-devel
+%endif
+
+%if_enabled speex
+BuildRequires: libspeex-devel
 %endif
 
 %if_enabled theora
@@ -469,11 +507,14 @@ BuildRequires: libmad-devel
 BuildRequires: libxmms-devel
 %endif
 
+%if_enabled fribidi
+BuildRequires: libfribidi-devel fribidi
+%endif
+
 #if_enabled external_flac
 #BuildRequires: libflac-devel
 #endif
 
-# Automatically added by buildreq on Fri Sep 05 2003
 # Manually edited by AM
 BuildRequires: zlib-devel
 
@@ -575,9 +616,7 @@ Group:    Video
 Requires: %bname-skin %bname-console = %real_version
 Provides: %bname = %real_version
 Provides: %bname = %base_version
-BuildRequires: XFree86-devel XFree86-libs gtk+-devel glib-devel
-BuildRequires: libpng3-devel
-Requires: gtk+ >= 1.2.0
+BuildRequires: glib2-devel libgtk+2-devel
 %if_enabled sdl
 Requires: libSDL >= 1.1.7
 %endif
@@ -774,22 +813,23 @@ Provides: %bname-vidix-driver = %version-%release
 VIDIX driver for Unichrome.
 
 %prep
-#if %cvsbuild
+%if %cvsbuild
 # CVS Build
-#setup -q -n %fname-%fversion -a 1
-## needed with CVS snapshots
-#cp -ar ffmpeg/libavcodec .
-#else
+%setup -q -n %fname-%fversion -a 1
+# needed with CVS snapshots
+mv ffmpeg-%ffmpeg_version/libav{codec,format,util} .
+%else
 # A Release Build
 %setup -q -n %fname-%fversion
-#endif
+%endif
 
 %patch1 -p1
-%patch2 -p0
+##%patch2 -p0
 %patch3 -p1
 #%patch4 -p1
-%patch5 -p1
+##%patch5 -p1
 %patch6 -p1
+%patch7 -p1
 
 # Patches 11/12 are mutually exclusive
 %if %cvsbuild
@@ -809,12 +849,16 @@ chmod +x version.sh
 # %patch16 -p1 -b .warn
 # %patch17 -p1 -b .loader
 # %patch18 -p1 -b .loader-printf
-%patch19 -p1 -b .mpdvdkit2
+##%patch19 -p1 -b .mpdvdkit2
 # %patch20 -p1 -b .printf-format
 # %patch21 -p1 -b .printf
 # %patch23 -p0
 %patch24 -p1
 %patch25 -p1
+%if %cvsbuild
+%patch26 -p1
+%patch27 -p1
+%endif
 
 %__subst 's/\(ldconfig\)/\#\1/g' libdha/Makefile
 
@@ -870,7 +914,7 @@ LC_MESSAGES=C ; export LC_MESSAGES
 		--enable-gui \
 		--enable-termcap \
 		--with-termcaplib=tinfo \
-		--enable-png \
+		%{subst_enable png} \
 		--enable-mencoder \
 		%{subst_enable libfame} \
 		--cc=$CC \
@@ -917,13 +961,14 @@ LC_MESSAGES=C ; export LC_MESSAGES
 		--enable-debug=3 \
 %endif
 		--language=%mplang \
-		--enable-i18n \
+		%{subst_enable i18n} \
 %if_enabled dynamic_plugins
 		--enable-dynamic-plugins \
 %else
 		--disable-dynamic-plugins \
 %endif
 		%{subst_enable aa} \
+		%{subst_enable caca} \
 		%{subst_enable directfb} \
 		--disable-dvb \
 		%{subst_enable dvbhead} \
@@ -941,7 +986,7 @@ LC_MESSAGES=C ; export LC_MESSAGES
 		--disable-tdfxfb \
 		--disable-tdfxvid \
 		%{subst_enable tga} \
-		%{subst_enable vidix} \
+		%{?enable_vidix:--disable-external-vidix} \
 		--enable-vm \
 		--enable-xv \
 		--enable-xvmc \
@@ -949,6 +994,8 @@ LC_MESSAGES=C ; export LC_MESSAGES
 		%{subst_enable arts} \
 		%{subst_enable esd} \
 		%{subst_enable select} \
+		%{subst_enable polyp} \
+		%{subst_enable musepack} \
 		%{subst_enable gif} \
 		%{subst_enable jpeg} \
 		%{subst_enable liblzo} \
@@ -961,10 +1008,12 @@ LC_MESSAGES=C ; export LC_MESSAGES
 		%{subst_enable real} \
 %{?_enable_real:	--with-reallibdir=%real_libdir} \
 		%{subst_enable xvid} \
+		%{subst_enable x264} \
 		%{subst_enable divx4linux} \
 		--disable-opendivx \
 		--enable-libavcodec \
 		%{subst_enable vorbis} \
+		%{subst_enable speex} \
 		%{subst_enable theora} \
 %if_disabled matroska
 		--disable-internal-matroska \
@@ -983,7 +1032,8 @@ LC_MESSAGES=C ; export LC_MESSAGES
 %endif
 		%{subst_enable libdv} \
 		%{subst_enable mad} \
-		%{subst_enable xmms}
+		%{subst_enable xmms} \
+		%{subst_enable fribidi}
 
 # %if_enabled flac
 # 		--enable-flac \
@@ -996,6 +1046,7 @@ LC_MESSAGES=C ; export LC_MESSAGES
 # 		--disable-flac \
 # 		--disable-external-flac \
 # %endif
+cp configure.log configure.log.save
 
 %ifarch %ix86
 %make_build
@@ -1009,12 +1060,25 @@ make
 popd
 %endif
 
+pushd TOOLS
+#make
+# can't build vivodump subrip
+%make 302m_convert 360m_convert alaw-gen asfinfo avi-fix avisubdump bios2dump dump_mp4 mem2dump movinfo png2raw
+popd
+
 %if %cvsbuild
 # build HTML documentation from XML files
 pushd DOCS/xml
-make build-html-chunked
+cp -fL %_sysconfdir/sgml/catalog ./
+echo 'CATALOG "/usr/share/xml/xml-iso-entities-8879.1986/catalog"' >> ./catalog
+./configure
+#error build pl docs
+for lang in cs en es fr hu ru; do
+    make html-chunked-$lang
+done
 popd
 %endif
+
 
 %install
 
@@ -1046,68 +1110,83 @@ ln -sf ../fonts/default/Type1/n019003l.pfb ./subfont.ttf
 popd
 %else
 # Russian font, that uses to show subscriptions 
-%__tar xjf %SOURCE3 -C %buildroot%_datadir/%bname
+tar xjf %SOURCE3 -C %buildroot%_datadir/%bname
 %endif
 %endif
 
-%__install -m 0644 etc/{codecs,input}.conf \
-	%buildroot%_sysconfdir/%bname/
+install -m 0644 etc/{codecs,input}.conf %buildroot%_sysconfdir/%bname/
 
 %if_enabled menu
-%__install -m 0644 etc/menu.conf \
-	%buildroot%_sysconfdir/%bname/
+install -m 0644 etc/menu.conf %buildroot%_sysconfdir/%bname/
 %if_enabled dvb
-%__install -m 0644 etc/dvb-menu.conf \
-	%buildroot%_sysconfdir/%bname/
+install -m 0644 etc/dvb-menu.conf %buildroot%_sysconfdir/%bname/
 %endif
 %endif
 
 %if_enabled freetype
 # install tools
 pushd TOOLS/subfont-c
-%__mkdir_p %buildroot%_datadir/%bname/fonts/{osd,encodings}
+install -d %buildroot%_datadir/%bname/fonts/{osd,encodings}
 install osd/{gen.py,osd.pfb,README,runme} %buildroot%_datadir/%bname/fonts/osd/
 install encodings/* %buildroot%_datadir/%bname/fonts/encodings/
 install -m 0755 subfont %buildroot%_bindir/mplayer_subfont
 popd
 %endif
 
-%__mkdir_p %buildroot%_sysconfdir/bashrc.d
+install -d %buildroot%_sysconfdir/bashrc.d
 
-%__install -m 0755 %SOURCE5 %buildroot%_sysconfdir/bashrc.d/
+install -m 0755 %SOURCE5 %buildroot%_sysconfdir/bashrc.d/
 
 # Menus
-%__install -p -m0644 -D %SOURCE6 %buildroot%_iconsdir/%bname.png
-%__install -p -m0644 -D %SOURCE7 %buildroot%_liconsdir/%bname.png
-%__install -p -m0644 -D %SOURCE8 %buildroot%_miconsdir/%bname.png
-find etc DOCS TOOLS -type f -exec %__chmod 644 {} \;
+install -p -m0644 -D %SOURCE6 %buildroot%_iconsdir/%bname.png
+install -p -m0644 -D %SOURCE7 %buildroot%_liconsdir/%bname.png
+install -p -m0644 -D %SOURCE8 %buildroot%_miconsdir/%bname.png
+find etc DOCS -type f -exec chmod 644 {} \;
 
 # add mencoder.1 man-link
 rm -f %buildroot%_man1dir/mencoder.1 ||:
 echo ".so mplayer.1" > %buildroot%_man1dir/mencoder.1
 
-# install international manpages and man-links
-#for dir in de es fr hu pl zh ; do
-#install -d $RPM_BUILD_ROOT%{_mandir}/$dir/man1
-#mv DOCS/man/$dir/mplayer.1 $RPM_BUILD_ROOT%{_mandir}/$dir/man1
-#echo ".so mplayer.1" > $RPM_BUILD_ROOT%{_mandir}/$dir/man1/mencoder.1
-#done
+# docs
+bzip2 --best --force --keep -- ChangeLog
+for l in cs es fr hu it pl sv zh; do
+    install -pD -m 0644 DOCS/man/$l/mplayer.1 %buildroot%_mandir/$l/man1/mplayer.1
+    ln -s mplayer.1 %buildroot%_mandir/$l/man1/mencoder.1
+done
+for l in de it zh; do
+    install -d %buildroot%_docdir/%name-doc-%version/$l
+    install -m 0644 DOCS/$l/*.html %buildroot%_docdir/%name-doc-%version/$l/
+done
+#for l in cs en es fr hu pl ru; do
+for l in cs en es fr hu ru; do
+    install -d %buildroot%_docdir/%name-doc-%version/$l
+    install -m 0644 DOCS/HTML/$l/{*.htm,*.css} %buildroot%_docdir/%name-doc-%version/$l/
+done
+install -d %buildroot%_docdir/%name-doc-%version/en/tech/realcodecs
+install -m 0644 DOCS/tech/{MAINTAINERS,TODO,*.txt,mpsub.sub,playtree,wishlist} %buildroot%_docdir/%name-doc-%version/en/tech/
+install -pD -m 0644 DOCS/tech/playtree-hun %buildroot%_docdir/%name-doc-%version/hu/tech/playtree
+install -m 0644 DOCS/tech/realcodecs/{TODO,*.txt} %buildroot%_docdir/%name-doc-%version/en/tech/realcodecs/
 
 # a tribute to clever python support
 unset RPM_PYTHON
 
+
 %post -n %bname-vidix -p /sbin/ldconfig
 
+
 %postun -n %bname-vidix -p /sbin/ldconfig
+
 
 %post -n %gui_name
 %update_menus
 
+
 %postun -n %gui_name
 %clean_menus
 
+
 %files -n %console_name
-%doc README AUTHORS
+%doc README AUTHORS ChangeLog.*
 %_bindir/mplayer
 %dir %_sysconfdir/%bname
 %config %_sysconfdir/%bname/codecs.conf
@@ -1129,6 +1208,8 @@ unset RPM_PYTHON
 %endif
 %endif
 %_man1dir/*
+%_mandir/*/man1/*
+
 
 %files -n %gui_name
 %_bindir/gmplayer
@@ -1139,26 +1220,23 @@ unset RPM_PYTHON
 %_datadir/applications/mplayer.desktop
 %_datadir/pixmaps/mplayer-desktop.xpm
 
+
 %files -n mencoder
-%doc DOCS/tech/encoding-tips.txt DOCS/tech/swscaler_filters.txt
-%doc DOCS/tech/swscaler_methods.txt DOCS/tech/colorspaces.txt
 %_bindir/mencoder
 
-%set_verify_elf_method textrel=relaxed
 
 %files doc
-%doc DOCS/tech/hwac3.txt DOCS/tech/mpsub.sub DOCS/tech/slave.txt
-%doc DOCS/tech/subcp.txt
-# HTML and XML-generated docs
-%doc DOCS/HTML/en
-%lang(de) %doc %dir DOCS/de
-%lang(es) %doc %dir DOCS/HTML/es
-%lang(fr) %doc %dir DOCS/HTML/fr
-%lang(hu) %doc %dir DOCS/HTML/hu
-%lang(it) %doc %dir DOCS/it
-%lang(pl) %doc %dir DOCS/HTML/pl
-%lang(ru_RU.KOI8-R) %doc %dir DOCS/HTML/ru
-%lang(zh) %doc %dir DOCS/zh
+%_docdir/%name-doc-%version/de
+%_docdir/%name-doc-%version/en
+%_docdir/%name-doc-%version/cs
+%_docdir/%name-doc-%version/es
+%_docdir/%name-doc-%version/fr
+%_docdir/%name-doc-%version/hu
+%_docdir/%name-doc-%version/it
+#_docdir/%name-doc-%version/pl
+%_docdir/%name-doc-%version/ru
+%_docdir/%name-doc-%version/zh
+
 
 %if_enabled freetype
 %files -n %bname-fonts
@@ -1172,43 +1250,65 @@ unset RPM_PYTHON
 %_datadir/%bname/fonts/encodings/runme-kr
 %endif
 
+
 %if_enabled vidix
 %files -n %bname-vidix
 %_libdir/libdha.so*
 
+
 %files -n %bname-vidix-trident
 %_libdir/vidix/cyberblade_vid.so
 
+
 %files -n %bname-vidix-mach64
 %_libdir/vidix/mach64_vid.so
+
 
 %files -n %bname-vidix-mga
 %_libdir/vidix/mga_crtc2_vid.so
 %_libdir/vidix/mga_vid.so
 
+
 %files -n %bname-vidix-nvidia
 %_libdir/vidix/nvidia_vid.so
+
 
 %files -n %bname-vidix-permedia
 %_libdir/vidix/pm3_vid.so
 
+
 %files -n %bname-vidix-radeon
 %_libdir/vidix/radeon_vid.so
+
 
 %files -n %bname-vidix-rage128
 %_libdir/vidix/rage128_vid.so
 
+
 %files -n %bname-vidix-savage
 %_libdir/vidix/savage_vid.so
+
 
 %files -n %bname-vidix-sis
 %_libdir/vidix/sis_vid.so
 %endif
 
+
 %files -n %bname-vidix-unichrome
 %_libdir/vidix/unichrome_vid.so
 
+
 %changelog
+* Tue Apr 04 2006 Led <led@altlinux.ru> 1.0-alt0.20060331.2
+- enabled musepack
+
+* Fri Mar 31 2006 Led <led@altlinux.ru> 1.0-alt0.20060331.1
+- CVS snapshot
+- upgraded spec
+- added configure and builddocs patches
+- enabled svgalib, aalib, caca, png, speex, enca, polyp
+- enabled x264 for mencoder
+
 * Thu Jan 26 2006 ALT QA Team Robot <qa-robot@altlinux.org> 1.0-alt23.pre7try2
 - Packaged skins separately.
 
