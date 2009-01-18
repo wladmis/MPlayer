@@ -1,5 +1,5 @@
 # -*- rpm-spec -*-
-# $Id: MPlayer,v 1.75 2004/03/25 13:30:52 grigory Exp $
+# $Id: MPlayer,v 1.76 2004/03/31 11:59:42 grigory Exp $
 
 %define COMPAT_GCC 0
 
@@ -17,11 +17,11 @@
 %define codec w32codec
 
 %define real_version 1.0
-%define pre_release pre3
+%define pre_release pre3try2
 
 Name: MPlayer
 Version: %real_version
-Release: alt6.%pre_release
+Release: alt7.%pre_release
 
 Summary: %name - Video player for LINUX
 License: GPL for all but not for OpenDivX
@@ -268,6 +268,9 @@ find etc DOCS TOOLS -type f -exec %__chmod 644 {} \;
 %_datadir/%name/Skin/*
 
 %changelog
+* Wed Mar 31 2004 Grigory Milev <week@altlinux.ru> 1.0-alt7.pre3try2
+- remotely exploitable buffer overflow in the HTTP streaming code fixed
+
 * Thu Mar 25 2004 Grigory Milev <week@altlinux.ru> 1.0-alt6.pre3
 - rebuild with glib2
 
