@@ -6,8 +6,8 @@
 %define fversion	%real_version
 
 # Used only for CVS builds
-%define cvsbuild 20060414
-%define ffmpeg_version cvs-20060414
+%define cvsbuild 20060417
+%define ffmpeg_version cvs-20060417
 
 %ifdef pre_release
 %global real_version	%real_version%pre_release
@@ -1072,8 +1072,8 @@ pushd DOCS/xml
 cp -fL %_sysconfdir/sgml/catalog ./
 echo 'CATALOG "/usr/share/xml/xml-iso-entities-8879.1986/catalog"' >> ./catalog
 ./configure
-#error build pl docs
-for lang in cs en es fr hu ru; do
+#error build pl, fr docs
+for lang in cs en es hu ru; do
     make html-chunked-$lang
 done
 popd
@@ -1158,7 +1158,7 @@ for l in de it zh; do
     install -m 0644 DOCS/$l/*.html %buildroot%_docdir/%name-doc-%version/$l/
 done
 #for l in cs en es fr hu pl ru; do
-for l in cs en es fr hu ru; do
+for l in cs en es hu ru; do
     install -d %buildroot%_docdir/%name-doc-%version/$l
     install -m 0644 DOCS/HTML/$l/{*.htm,*.css} %buildroot%_docdir/%name-doc-%version/$l/
 done
@@ -1230,7 +1230,7 @@ unset RPM_PYTHON
 %_docdir/%name-doc-%version/en
 %_docdir/%name-doc-%version/cs
 %_docdir/%name-doc-%version/es
-%_docdir/%name-doc-%version/fr
+#_docdir/%name-doc-%version/fr
 %_docdir/%name-doc-%version/hu
 %_docdir/%name-doc-%version/it
 #_docdir/%name-doc-%version/pl
@@ -1299,7 +1299,7 @@ unset RPM_PYTHON
 
 
 %changelog
-* Mon Apr 17 2006 Led <led@altlinux.ru> 1.0-alt0.20060414.1
+* Mon Apr 17 2006 Led <led@altlinux.ru> 1.0-alt0.20060417.1
 - 20060414 CVS snapshot
 - fixed spec
 
