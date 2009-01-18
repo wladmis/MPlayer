@@ -3,10 +3,8 @@
 
 %define base_version	1.0
 %define real_version	%base_version
-%define release		alt22.1
+%define release		alt23
 %define pre_release	pre7try2
-%define skin_version	1.7
-%define skin_release	alt1
 
 %define fversion	%real_version
 
@@ -277,7 +275,6 @@ Source0:  %bname-%fversion.tar.bz2
 #endif
 Source2:  %bname.menu
 Source3:  cp1251-font.tar.bz2
-Source4:  default-%skin_version.tar.bz2
 Source5:  mplayer.sh
 Source6:  http://icculus.org/~jcspray/gnome-mplayer-32.png
 Source7:  http://icculus.org/~jcspray/gnome-mplayer-48.png
@@ -776,19 +773,6 @@ Provides: %bname-vidix-driver = %version-%release
 %description -n %bname-vidix-unichrome
 VIDIX driver for Unichrome.
 
-%package -n %bname-skin-default
-Summary: Default skin for %gui_name
-Summary(ru_RU.KOI8-R): Базовая "шкурка" для %gui_name
-Group: Video
-Provides: %bname-skin
-Version: %skin_version
-Release: %skin_release
-%description -n %bname-skin-default
-Default skin for %gui_name
-
-%description -n %bname-skin-default -l ru_RU.KOI8-R
-Базовый вариант интерфейса ("шкурка") для %gui_name
-
 %prep
 #if %cvsbuild
 # CVS Build
@@ -1044,10 +1028,6 @@ pushd %buildroot%_bindir
 ln -sf mplayer gmplayer
 popd
 
-# Default Skin for gmplayer
-%__mkdir_p %buildroot%_datadir/%bname/Skin
-%__tar xjf %SOURCE4 -C %buildroot%_datadir/%bname/Skin
-
 default_vo=xv
 
 sed -e 's/include =.*//' < etc/example.conf \
@@ -1153,16 +1133,11 @@ unset RPM_PYTHON
 %files -n %gui_name
 %_bindir/gmplayer
 %dir %_datadir/%bname
-%dir %_datadir/%bname/Skin
 %_iconsdir/%bname.png
 %_miconsdir/%bname.png
 %_liconsdir/%bname.png
 %_datadir/applications/mplayer.desktop
 %_datadir/pixmaps/mplayer-desktop.xpm
-
-%files -n %bname-skin-default
-%dir %_datadir/%bname/Skin
-%_datadir/%bname/Skin/default
 
 %files -n mencoder
 %doc DOCS/tech/encoding-tips.txt DOCS/tech/swscaler_filters.txt
@@ -1234,6 +1209,9 @@ unset RPM_PYTHON
 %_libdir/vidix/unichrome_vid.so
 
 %changelog
+* Thu Jan 26 2006 ALT QA Team Robot <qa-robot@altlinux.org> 1.0-alt23.pre7try2
+- Packaged skins separately.
+
 * Fri Jan 13 2006 LAKostis <lakostis at altlinux.ru> 1.0-alt22.1.pre7try2
 - NMU;
 - x86_64 fixes;
