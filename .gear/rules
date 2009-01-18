@@ -1,6 +1,6 @@
-tar.bz2: 20060503:. name=@name@-cvs-20060503
+tar.bz2: 20060515:. name=@name@-cvs-20060515
 tar.bz2: cp1251-font:. name=cp1251-font base=font
-tar.bz2: ffmpeg-20060503:. name=ffmpeg-cvs-20060503
+tar.bz2: ffmpeg-20060515:. name=ffmpeg-cvs-20060515
 copy: *.menu *.sh *.png *.diff MPlayer-1.0*.patch MPlayer-dvd-ru.patch mplayer-*.patch
 gzip: MPlayer-cvs-*-configure.patch MPlayer-cvs-*-builddocs.patch
 bzip2: MPlayer-cvs-*-docs.patch

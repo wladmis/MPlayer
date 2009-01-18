@@ -1,22 +1,3 @@
-diff -urN MPlayer-cvs-20060503.orig/DOCS/xml/fr/encoding-guide.xml MPlayer-cvs-20060503/DOCS/xml/fr/encoding-guide.xml
---- MPlayer-cvs-20060503.orig/DOCS/xml/fr/encoding-guide.xml	2006-05-03 14:51:48 +0300
-+++ MPlayer-cvs-20060503/DOCS/xml/fr/encoding-guide.xml	2006-05-03 18:12:10 +0300
-@@ -967,7 +967,6 @@
-   </orderedlist>
- </para>
- <para>
--<<<<<<< encoding-guide.xml
-   D'anciens guides recommandaient de choisir le débit et la résolution en se basant
-   sur la notion de "bits par pixel", mais ce n'est généralement pas valide à cause des raisons ci-dessus.
-   Il semble préférable d'estimer que le débit est proportionnel à la racine carrée de la résolution, de telle sorte
-@@ -988,7 +987,6 @@
-   De plus, pour un film donné, le résultat variera en fonction du bruit, des détails, 
-   du degré de mouvement, etc.. Il est futile de donner des recommandations générales 
-   du style: un nombre de bits par longueur de diagonale (similaire au bit par pixel, 
-->>>>>>> 1.8
-   en utilisant la racine carrée).
- </para>
- <para>
 diff -urN MPlayer-cvs-20060503.orig/DOCS/xml/pl/bugs.xml MPlayer-cvs-20060503/DOCS/xml/pl/bugs.xml
 --- MPlayer-cvs-20060503.orig/DOCS/xml/pl/bugs.xml	2005-07-22 23:25:40 +0300
 +++ MPlayer-cvs-20060503/DOCS/xml/pl/bugs.xml	2006-05-03 18:37:42 +0300

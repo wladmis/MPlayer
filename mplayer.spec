@@ -6,8 +6,8 @@
 %define fversion	%real_version
 
 # Used only for CVS builds
-%define cvsbuild 20060503
-%define ffmpeg_version cvs-20060503
+%define cvsbuild 20060515
+%define ffmpeg_version cvs-20060515
 
 %ifdef pre_release
 %global real_version	%real_version%pre_release
@@ -249,15 +249,15 @@
 
 %define COMPAT_GCC 0
 
-Name:     %console_name
-Version:  %base_version
-Release:  alt%release
-
-Summary:  %bname is the Unix video player (console version)
+Name: %console_name
+Version: %base_version
+Release: alt%release
+Serial: 1
+Summary: %bname is the Unix video player (console version)
 Summary(ru_RU.KOI8-R): %bname - это настоящий видеоплеер (консольный вариант)
 License: GPL for all but not for OpenDivX
-Group:    Video
-URL:      http://www.mplayerhq.hu
+Group: Video
+URL: http://www.mplayerhq.hu
 Provides: %bname = %real_version
 Provides: %bname = %base_version
 # KPlayer doesn't work well w/ GUI-enabled version
@@ -268,49 +268,49 @@ Requires: urw-fonts
 %endif
 %endif
 
-Source0:  %bname-%fversion.tar.bz2
+Source0: %bname-%fversion.tar.bz2
 # cvs -z9 -d:pserver:anonymous@mplayerhq.hu:/cvsroot/mplayer checkout -P -d MPlayer main
 %if %cvsbuild
-Source1:  ffmpeg-%ffmpeg_version.tar.bz2
+Source1: ffmpeg-%ffmpeg_version.tar.bz2
 # cvs -z9 -d:pserver:anonymous@mplayerhq.hu:/cvsroot/ffmpeg checkout -P -d ffmpeg ffmpeg
 %endif
-Source2:  %bname.menu
-Source3:  cp1251-font.tar.bz2
-Source5:  mplayer.sh
-Source6:  http://icculus.org/~jcspray/gnome-mplayer-32.png
-Source7:  http://icculus.org/~jcspray/gnome-mplayer-48.png
-Source8:  http://icculus.org/~jcspray/gnome-mplayer-16.png
-Patch1:   MPlayer-1.0pre5-alt-external_fame.patch
-Patch2:   MPlayer-dvd-ru.patch
-Patch3:   MPlayer-1.0pre4-alt-explicit_gif.patch
-Patch4:   MPlayer-1.0pre5-alt-translation.patch
-Patch5:   MPlayer-1.0pre4-alt-explicit_termcap.patch
-Patch6:   MPlayer-1.0pre4-alt-artsc_ldflags.patch
-Patch7:   MPlayer-1.0pre7-aalib.patch
-Patch11:  mplayer-rpm-cvs.patch
-Patch12:  MPlayer-1.0pre5-alt-gcc-check.patch
+Source2: %bname.menu
+Source3: cp1251-font.tar.bz2
+Source5: mplayer.sh
+Source6: http://icculus.org/~jcspray/gnome-mplayer-32.png
+Source7: http://icculus.org/~jcspray/gnome-mplayer-48.png
+Source8: http://icculus.org/~jcspray/gnome-mplayer-16.png
+Patch1: MPlayer-1.0pre5-alt-external_fame.patch
+Patch2: MPlayer-dvd-ru.patch
+Patch3:  MPlayer-1.0pre4-alt-explicit_gif.patch
+Patch4: MPlayer-1.0pre5-alt-translation.patch
+Patch5: MPlayer-1.0pre4-alt-explicit_termcap.patch
+Patch6: MPlayer-1.0pre4-alt-artsc_ldflags.patch
+Patch7: MPlayer-1.0pre7-aalib.patch
+Patch11: mplayer-rpm-cvs.patch
+Patch12: MPlayer-1.0pre5-alt-gcc-check.patch
 
-Patch13:  MPlayer-1.0pre5-nodebug.patch
+Patch13: MPlayer-1.0pre5-nodebug.patch
 #Patch14:  mplayer-lavc.patch
 #Patch15:  mplayer-gui.patch
 # Patch16:  MPlayer-1.0pre5-warnings.patch
 # Patch17:  MPlayer-1.0pre5-loader.patch
 # Patch18:  mplayer-loader-printf.patch
-Patch19:  mplayer-libmpdvdkit2.patch
+Patch19: mplayer-libmpdvdkit2.patch
 # Patch20:  MPlayer-1.0pre4-printf-format.patch
 # Patch21:  MPlayer-1.0pre5-warnings-printf.patch
-Patch23:  ad_pcm_fix_20050826.diff
-Patch24:  MPlayer-1.0pre7try2-xmmslibs_fix.patch
-Patch25:  MPlayer-1.0pre7try2-libdir_fix.patch
-Patch26:  %name-cvs-20060220-configure.patch.gz
+Patch23: ad_pcm_fix_20050826.diff
+Patch24: MPlayer-1.0pre7try2-xmmslibs_fix.patch
+Patch25: MPlayer-1.0pre7try2-libdir_fix.patch
+Patch26: %name-cvs-20060220-configure.patch.gz
 %if %cvsbuild
-Patch27:  %name-cvs-20060331-builddocs.patch.gz
-Patch28:  %name-cvs-20060503-docs.patch.bz2
+Patch27: %name-cvs-20060331-builddocs.patch.gz
+Patch28: %name-cvs-20060506-docs.patch.bz2
 %endif
 
 
-BuildRequires: libXinerama-devel libXt-devel libXvMC-devel libXxf86dga-devel
-BuildRequires: libXxf86vm-devel
+BuildRequires: libXinerama-devel libXt-devel libXvMC-devel
+BuildRequires: libXxf86dga-devel libXxf86vm-devel
 BuildRequires: mawk libmesa-devel
 BuildRequires: libncurses-devel libslang-devel
 %if %cvsbuild
@@ -1422,6 +1422,10 @@ unset RPM_PYTHON
 
 
 %changelog
+* Mon May 15 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060515.1
+- 20060515 CVS snapshot
+- cleanup %name-cvs-20060506-docs.patch
+
 * Wed May 03 2006 Led <led@altlinux.ru> 1.0-alt0.20060503.1
 - 20060503 CVS snapshot
 - fixed %%changelog
@@ -1680,5 +1684,3 @@ unset RPM_PYTHON
 
 * Wed Dec 26 2001 Grigory Milev <week@altlinux.ru>  0.60pre1-alt1
 - Initial build for ALT Linux distribution.
-
-
