@@ -1,0 +1,134 @@
+section = movieplayer
+
+ window = main
+
+  ;base=bitmap,x,y
+  ; x:            | y:
+  ;  -  0: left   |  -  0: top
+  ;  - -1: center |  - -1: center
+  ;  - -2: right  |  - -2: bottom
+  base = main, -2, -2
+  ;button=bitmap,x,y,sx,sy,msg
+  ; 1. bitmap: pressed  | x,y: position in window
+  ; 2. bitmap: released | msg: name of system message
+  ; 3. bitmap: disabled | sx,sy: size of button
+  button = exit,    334,  0, 20, 14, evExit
+  button = iconify, 313,  0, 20, 14, evIconify
+
+  button = prev,     40, 59, 14, 11, evPrev
+  button = next,     83, 59, 14, 11, evNext
+
+  button = play,     18, 59, 16, 10, evPlaySwitchToPause
+  button = pause,    19, 59, 16, 10, evPauseSwitchToPlay
+  button = stop,      5, 59, 12, 10, evStop
+  button = load,    115, 48, 30, 11, evLoad
+  button = subload, 156, 48, 30, 11, evLoadSubtitle
+  button = plb,     197, 48, 30, 11, evPlaylist
+  button = eqb,     238, 48, 30, 11, evEqualizer
+  button = fsb,     279, 48, 30, 11, evFullScreen
+
+  button = back,     55, 59, 13, 11, evBackward10sec
+  button = forward,  69, 59, 13, 11, evForward10sec
+
+  button = about,    14,  4, 94, 14, evAbout
+
+  ; hpotmeter=buttonbitmaps,sx,sy,phasebitmaps,phases,default value,x,y,sx,sy,msg
+  hpotmeter = pos, 14, 9, NULL, 100,  0, 117, 63, 187, 9, evSetMoviePosition
+  hpotmeter = pos, 14, 9, NULL, 100, 50, 310, 63,  42, 9, evSetBalance
+
+  ; potmeter=phasebitmaps,phases,default value,x,y,sx,sy,msg
+  potmeter =volume, 51, 0, 311, 17, 40, 40, evSetVolume
+
+  ; font=fontname,fontid
+  font = symbols, symbols
+  font = font,    font
+
+  ; dynamic label
+  ; dlabel=x,y,sx,align,fontid,string ...
+  ;  align: 0: right 1: center 2: left
+  ;  str: $1  = hh:mm:ss
+  ;       $2  = mmmm:ss
+  ;       $3  = hh
+  ;       $4  = mm
+  ;       $5  = ss
+  ;       $6  = movie length, hh:mm:ss
+  ;       $7  = movie length, mmmm:ss
+  ;       $v  = volume, xxx.xx%
+  ;       $V  = volume, xxx.x
+  ;       $b  = balance, xxx.xx%
+  ;       $B  = balance, xxx.x
+  ;       $$  = draw $
+  ;       $a  = audio type ( nosound: char n, mono: char m, stereo: char t, etc )
+  ;       $t  = track number
+  ;       $o  = filename
+  ;       $f  = filename with lower case
+  ;       $F  = filename with upper case
+  ;
+  ;       $T  = stream type ( file: f, video cd: v, dvd: d, url: u ), if
+  ;              font contain needed symbol.
+  ;       $l  = draw play symbol, if mplayer is playing movie and font
+  ;              contain playing symbol. ( char l )
+  ;       $s  = draw stop symbol, if mplayer not playing movie and font
+  ;              contain stop symbol. ( char s )
+  ;       $e  = draw pause symbol, if playing is paused and font contain
+  ;              pause symbol ( char e )
+  dlabel = 121, 10, 180, 1,    font, "$t - $o  [$1]   "
+  dlabel =  40, 27,  62, 0, symbols, "$1"
+  dlabel =  25, 27,   9, 0, symbols, "$l"
+  dlabel =  25, 27,   9, 0, symbols, "$s"
+  dlabel =  25, 27,   9, 0, symbols, "$e"
+;  dlabel = 121, 25,  92, 1,    font, "volume $v"
+;  dlabel = 210, 25,  99, 1,    font, "balance $b"
+  dlabel = 275, 25,  25, 1, symbols, "$a"
+  dlabel = 117, 25,  50, 1, symbols, "$T"
+
+  ; static label
+  ; slabel=x,y,fontid,string ...
+  ; slabel =  10, 10, symbols, "12345 - 67890"
+  ; slabel = 120, 10,    font, "Eyes on Me"
+
+ end
+
+ window = sub
+
+  ;base=bitmap,x,y,sx,sy
+  ; x:            | y:
+  ;  -  0: left   |  -  0: top
+  ;  - -1: center |  - -1: center
+  ;  - -2: right  |  - -2: bottom
+  base = sub,-1,-1
+  ; background=r,g,b
+  ; window background color, default is black
+  ; only subwindow, and decimal numbers
+  background = 93,134,168
+
+ end
+
+ window = menu
+
+  ; base=bitmap
+  base = menu
+
+  ; selected=bitmap
+  selected = menus
+
+  ; menu = x,y,width,height,msg
+  menu = 3,   6, 122, 14, evAbout
+  menu = 3,  28, 122, 14, evLoad
+  menu = 3,  43, 122, 14, evNone         ; Add playlist
+  menu = 3,  60, 122, 14, evPlay
+  menu = 3,  84, 122, 14, evPlaylist
+  menu = 3, 100, 122, 14, evEqualizer
+
+  menu = 3, 116, 122, 14, evSkinBrowser
+  menu = 3, 140, 122, 14, evPreferences
+;  menu = 3, 156, 122, 14, evNone
+  menu = 3, 180, 122, 14, evNormalSize
+  menu = 3, 196, 122, 14, evDoubleSize
+  menu = 3, 212, 122, 14, evFullScreen
+  menu = 3, 228, 122, 14, evIconify
+  menu = 3, 244, 122, 14, evExit
+ end
+
+end
+
