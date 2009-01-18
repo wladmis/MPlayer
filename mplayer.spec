@@ -1,5 +1,5 @@
 # -*- rpm-spec -*-
-# $Id: MPlayer,v 1.77 2004/04/12 08:14:51 grigory Exp $
+# $Id: MPlayer,v 1.78 2004/04/30 07:15:42 grigory Exp $
 
 %define COMPAT_GCC 0
 
@@ -17,11 +17,11 @@
 %define codec w32codec
 
 %define real_version 1.0
-%define pre_release pre3try2
+%define pre_release pre4
 
 Name: MPlayer
 Version: %real_version
-Release: alt8.%pre_release
+Release: alt9.%pre_release
 
 Summary: %name - Video player for LINUX
 License: GPL for all but not for OpenDivX
@@ -269,6 +269,9 @@ find etc DOCS TOOLS -type f -exec %__chmod 644 {} \;
 %_datadir/%name/Skin/*
 
 %changelog
+* Fri Apr 30 2004 Grigory Milev <week@altlinux.ru> 1.0-alt9.pre4
+- new version released
+
 * Mon Apr 12 2004 Grigory Milev <week@altlinux.ru> 1.0-alt8.pre3try2
 - added dvb support
 - rebuild with new libxvidcore
