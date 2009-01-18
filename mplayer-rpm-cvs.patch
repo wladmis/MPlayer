@@ -1,9 +1,0 @@
---- MPlayer-20031118/version.sh.r	Sun Jul 13 20:50:17 2003
-+++ MPlayer-20031118/version.sh	Tue Nov 18 22:38:27 2003
-@@ -28,4 +28,4 @@
- if test "$1" ; then
-  extra="-$1"
- fi
--echo "#define VERSION \"dev-CVS-${last_cvs_update}${extra}\"" >version.h
-+echo "#define VERSION \"dev-RPM-CVS-${last_cvs_update}${extra}\"" >version.h
-

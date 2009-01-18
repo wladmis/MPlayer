@@ -6,8 +6,8 @@
 %define fversion	%real_version
 
 # Used only for CVS builds
-%define cvsbuild 20060515
-%define ffmpeg_version cvs-20060515
+%define cvsbuild 20060519
+%define ffmpeg_version cvs-20060519
 
 %ifdef pre_release
 %global real_version	%real_version%pre_release
@@ -16,7 +16,7 @@
 %endif
 
 %if %cvsbuild
-%global release		%release.%cvsbuild.5
+%global release		%release.%cvsbuild.1
 %global	fversion	cvs-%cvsbuild
 %endif
 
@@ -182,7 +182,7 @@ Patch4:   MPlayer-1.0pre5-alt-translation.patch
 Patch5:   MPlayer-1.0pre4-alt-explicit_termcap.patch
 Patch6:   MPlayer-1.0pre4-alt-artsc_ldflags.patch
 Patch7:   MPlayer-1.0pre7-aalib.patch
-Patch11:  mplayer-rpm-cvs.patch
+#Patch11:  mplayer-rpm-cvs.patch
 Patch12:  MPlayer-1.0pre5-alt-gcc-check.patch
 
 Patch13:  MPlayer-1.0pre5-nodebug.patch
@@ -830,18 +830,6 @@ mv ffmpeg-%ffmpeg_version/libav{codec,format,util} .
 %patch6 -p1
 %patch7 -p1
 
-# Patches 11/12 are mutually exclusive
-%if %cvsbuild
-%patch11 -p1 -b .r
-%else
-cat >version.sh <<EOF
-#!/bin/sh
-echo "#define VERSION \\"%real_version-RPM-\$1\\"" >version.h
-EOF
-chmod +x version.sh
-%endif
-#%patch12 -p1
-
 # %patch13 -p1 -b .nodebug
 # %patch14 -p1 -b .lavc
 #%{!?_without_gui:%patch15 -p1 -b .gui}
@@ -1352,6 +1340,10 @@ unset RPM_PYTHON
 
 
 %changelog
+* Thu May 25 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060519.1
+- 20060519 CVS snapshot
+- removed mplayer-rpm-cvs.patch
+
 * Thu May 25 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060515.5
 - rebuild for libffmpeg
 
