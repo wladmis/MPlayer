@@ -1,14 +1,10 @@
 # -*- rpm-spec -*-
-# $Id: MPlayer,v 1.31 2003/01/20 13:01:53 grigory Exp $
+# $Id: MPlayer,v 1.70 2003/10/07 12:38:59 grigory Exp $
 
-%define real_version 0.90
-%define real_release rc3
-%define real_name %name-%real_version%real_release
-
-%define COMPAT_GCC 1
+%define COMPAT_GCC 0
 
 # Optional features
-%define WITH_LIRC 0
+%define WITH_LIRC 1
 %define WITH_DXR 0
 
 %define WITH_FFMPEG_STATIC 1
@@ -18,25 +14,25 @@
 
 %define WITH_SDL 1
 
-%define codec_name w32codec
-%define codec_version 0.90
-%define codec %codec_name-%codec_version
+%define codec w32codec
+
+%define real_version 1.0
+%define pre_release pre2
 
 Name: MPlayer
 Version: %real_version
-Release: alt11.%real_release
+Release: alt3.%pre_release
 
 Summary: %name - Video player for LINUX
 License: GPL for all but not for OpenDivX
 Group: Video
-URL: http://mplayer.dev.hu
+URL: http://www.mplayerhq.hu
 
-Source0: %real_name.tar.bz2
-Source1: %{codec}pre7.tar.bz2
+Source0: %name-%version%pre_release.tar.bz2
 Source2: %name.menu
 Source3: cp1251-font.tar.bz2
-Source4: default.tar.bz2
-Patch0: %name-cfgparser.patch
+Source4: default-1.7.tar.bz2
+Source5: mplayer.sh
 Patch1: %name-tinfo.patch
 
 # REMOVE ME
@@ -45,18 +41,24 @@ Patch1: %name-tinfo.patch
 # If you have divx4linux uncoment next line
 #BuildRequires: divx4linux
 
-BuildRequires: aalib-devel directfb-devel esound fontconfig freetype2 glib-devel libarts-devel libaudiofile
-BuildRequires: libdirectfb libdv-devel libexpat libjpeg-devel libslang libungif-devel
-BuildRequires: XFree86-devel XFree86-libs libpng-devel zlib-devel gtk+-devel
-BuildRequires: libalsa2-devel libvorbis-devel libogg-devel liblame-devel libtinfo-devel
-# libtinfo-devel  libtermcap-devel
+# Automatically added by buildreq on Fri Sep 05 2003
+BuildRequires: XFree86-devel XFree86-libs aalib-devel directfb-devel esound-devel
+BuildRequires: freetype2-devel gcc3.2-c++ glib-devel gtk+-devel libGLwrapper
+BuildRequires: libalsa-devel libaudio-devel libaudiofile-devel libcdparanoia-devel
+BuildRequires: libdirectfb libdv-devel libdvdcss-devel libjpeg-devel liblame-devel
+BuildRequires: libogg-devel libpng3-devel libslang libungif-devel libvorbis-devel
+BuildRequires: xvid-devel zlib-devel
+
+BuildRequires: libtinfo-devel fontconfig freetype2 libexpat
+BuildRequires: libdvdread-devel libdvdnav-devel
 
 %if %WITH_LIRC
 BuildRequires: liblirc-devel
 %endif
 %if %COMPAT_GCC
 BuildRequires: cpp2.95 gcc2.95
-# compat-gcc-c++ 
+%else
+BuildRequires: cpp3.2 gcc3.2
 %endif
 
 %if %WITH_ARTS
@@ -65,6 +67,10 @@ BuildRequires: libarts-devel
 
 %if %WITH_SDL
 BuildRequires: libSDL-devel, libSDL_mixer-devel
+%endif
+
+%if %WITH_FFMPEG_DYNAMIC
+BuildRequires: ffmpeg-devel
 %endif
 
 Autoreq: yes, noperl
@@ -100,16 +106,6 @@ win32 DLL кодеками. Вы можете смотреть VCD, DVD и даже DivX фильмы. Другая
 английскими, кирилическими, чешскими, корейскими шрифтами и OSD
 (On Screen Display - надписи на картинке)?
 
-%package -n %codec_name
-Version: %codec_version
-Release: alt1
-Summary: Win32 codecs for MPlayer
-Group: Video
-
-%description -n %codec_name
-w32 video codecs
-
-
 %package fonts
 Summary: Fonts for MPlayer
 Group: Video
@@ -128,8 +124,7 @@ Requires: MPlayer >= 0.90
 GUI for MPlayer and default skin
 
 %prep
-%setup -q -n %real_name
-%patch0 -p1
+%setup -q -n %name-%real_version%pre_release
 %__subst 's/\(ldconfig\)/\#\1/g' libdha/Makefile
 %__subst 's|$(LIBDIR)/mplayer/vidix|$(LIBBINDIR)/vidix/|g' vidix/drivers/Makefile
 %__subst 's|\(/lib/\)mplayer/\(vidix/\)|\1\2|' libvo/Makefile
@@ -140,8 +135,8 @@ myconfig="--prefix=%_prefix \
 	--confdir=%_sysconfdir/%name \
 	--datadir=%_datadir/%name \
 	--with-win32libdir=%_libdir/%codec \
+	--with-extraincdir=/usr/include/dvdcss:/usr/include/dvdnav:/usr/include/dvdread \
 	--enable-runtime-cpudetection \
-	--enable-fbdev=nocopy \
 	--enable-mmx \
 	--enable-alsa \
 	--enable-ossaudio \
@@ -149,7 +144,16 @@ myconfig="--prefix=%_prefix \
 	--enable-vidix \
 	--enable-i18n \
 	--enable-iconv \
-	--language=en"
+	--language=en \
+	--enable-i18n \
+	--enable-nas \
+	--enable-dynamic-plugins \
+	--enable-largefiles \
+	--enable-freetype \
+	--enable-dvdread \
+	--enable-ftp \
+	--enable-divx4linux"
+
 
 # FIXME 
 %ifarch k6 
@@ -163,9 +167,13 @@ myconfig="$myconfig --disable-3dnow --disable-3dnowex"
 %endif
 
 %ifarch i686
-myconfig="$myconfig --enable-mmx2 --enable-sse"
+myconfig="$myconfig --enable-mmx2 --enable-sse --enable-sse2"
+%else
+%ifarch i586
+myconfig="$myconfig --enable-mmx2 --enable-sse --enable-sse2"
 %else
 myconfig="$myconfig --disable-mmx2 --disable-sse"
+%endif
 %endif
 
 %if %COMPAT_GCC
@@ -204,10 +212,10 @@ myconfig="$myconfig --disable-dxr3"
 # no configure macro here 'cause suboptimal cflags
 ./configure $myconfig
 
-%__make
+echo | %__make
 
 %install 
-%__mkdir_p %buildroot%_libdir
+%__mkdir_p %buildroot{%_libdir,%_sysconfdir/bashrc.d}
 %makeinstall \
 	BINDIR=%buildroot%_bindir \
 	MANDIR=%buildroot%_mandir \
@@ -217,8 +225,7 @@ myconfig="$myconfig --disable-dxr3"
 
 find etc DOCS TOOLS -type f -exec %__chmod 644 {} \;
 
-# Codecs
-%__tar xjf %SOURCE1 -C %buildroot%_libdir
+%__install -m0644 etc/*.conf %buildroot%_sysconfdir/%name/
 
 # Menus
 %__install -p -m0644 -D %SOURCE2 %buildroot%_menudir/%name
@@ -230,6 +237,9 @@ find etc DOCS TOOLS -type f -exec %__chmod 644 {} \;
 # Default Skin for gmplayer
 %__tar xjf %SOURCE4 -C %buildroot%_datadir/%name/Skin
 
+# bashrc.d mplayer profile, added soundwrapper
+%__install -p -m 0755 %SOURCE5 %buildroot%_sysconfdir/bashrc.d/
+
 # Delete dublicated binaries, they identical
 %__ln_s -f mplayer %buildroot%_bindir/gmplayer
 
@@ -239,14 +249,11 @@ find etc DOCS TOOLS -type f -exec %__chmod 644 {} \;
 %dir %_libdir/vidix
 %dir %_datadir/%name
 %config %_sysconfdir/%name/*
+%_sysconfdir/bashrc.d/*
 %_bindir/m*
 %_man1dir/*
 %_libdir/*.so*
 %_libdir/vidix/*
-
-%files -n %codec_name
-%dir %_libdir/%codec
-%_libdir/%codec/*
 
 %files fonts
 %_datadir/%name/font*
@@ -259,6 +266,53 @@ find etc DOCS TOOLS -type f -exec %__chmod 644 {} \;
 %_datadir/%name/Skin/*
 
 %changelog
+* Tue Oct  7 2003 Grigory Milev <week@altlinux.ru> 1.0-alt3.pre2
+- new version released
+
+* Fri Sep 26 2003 Grigory Milev <week@altlinux.ru> 1.0-alt2.pre1.cvs20030926
+- build cvs version with fixed "Exploitable remote buffer overflow vulnerability"
+- move w32codec to separated package
+
+* Fri Sep  5 2003 Grigory Milev <week@altlinux.ru> 1.0-alt1.pre1
+- new version released
+
+* Wed Aug 27 2003 Grigory Milev <week@altlinux.ru> 0.91-alt21
+- rebuild with new xvid
+
+* Fri Aug 22 2003 Grigory Milev <week@altlinux.ru> 0.91-alt20
+- new version released
+- updated default skin
+
+* Tue Jul 29 2003 Grigory Milev <week@altlinux.ru> 0.90-alt20
+- rebuild with nas support
+
+* Wed Jun 11 2003 Grigory Milev <week@altlinux.ru> 0.90-alt19
+- Rebuild with Lirc enabled
+
+* Mon May 19 2003 Grigory Milev <week@altlinux.ru> 0.90-alt18
+- fixed bug with mplayer bash alias, now don't close bash
+  after mplayer exit
+- can't build with libdvdnav (temporary removed)
+
+* Thu Apr 24 2003 Grigory Milev <week@altlinux.ru> 0.90-alt17
+- rebuild with new directfb
+- rebuild with libdvdnav and libdvdread
+
+* Mon Apr 14 2003 Grigory Milev <week@altlinux.ru> 0.90-alt16
+- working with soundwrapper
+
+* Wed Apr  9 2003 Grigory Milev <week@altlinux.ru> 0.90-alt15
+- stable version released
+
+* Wed Mar 19 2003 Grigory Milev <week@altlinux.ru> 0.90-alt14.rc5
+- new version released
+
+* Wed Feb 12 2003 Grigory Milev <week@altlinux.ru> 0.90-alt13.rc4
+- new version released
+
+* Thu Jan 30 2003 Grigory Milev <week@altlinux.ru> 0.90-alt12.rc3
+- recompile with esound support
+
 * Mon Jan 20 2003 Grigory Milev <week@altlinux.ru> 0.90-alt11.rc3
 - new version released
 - build with English menus, for compatible with non KOI8-R locales
