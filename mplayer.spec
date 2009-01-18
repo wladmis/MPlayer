@@ -1,7 +1,6 @@
 %define base_version	1.0
 %define real_version	%base_version
 %define release		0
-#define pre_release	pre7try2
 
 %define fversion	%real_version
 
@@ -9,14 +8,8 @@
 %define cvsbuild 20060519
 %define ffmpeg_version cvs-20060519
 
-%ifdef pre_release
-%global real_version	%real_version%pre_release
-%global release		%release.%pre_release
-%global fversion	%base_version%pre_release
-%endif
-
 %if %cvsbuild
-%global release		%release.%cvsbuild.1
+%global release		%release.%cvsbuild.2
 %global	fversion	cvs-%cvsbuild
 %endif
 
@@ -57,7 +50,7 @@
 %def_enable  arts
 %def_enable  esd
 %def_enable  select
-%def_disable polyp
+%def_enable  polyp
 %def_enable  libdts
 %def_enable  musepack
 
@@ -90,8 +83,6 @@
 %def_enable  sse2
 %def_disable  i18n
 %def_disable fribidi
-#%%def_enable  flac
-#%%def_disable external_flac
 
 %ifnarch %ix86
 %force_disable win32
@@ -131,11 +122,6 @@
 %check_def	internal_faad
 %endif
 
-#if_disabled flac
-#force_disable	external_flac
-#check_def	external_flac
-#endif
-
 %define bname		MPlayer
 %define fname		MPlayer
 %define gui_name	%bname-gui
@@ -148,7 +134,7 @@ Version:  %base_version
 Release:  alt%release
 Serial: 1
 Summary:  %bname is the Unix video player (console version)
-Summary(ru_RU.KOI8-R): %bname - ÜÔÏ ÎÁÓÔÏÑÝÉÊ ×ÉÄÅÏÐÌÅÅÒ (ËÏÎÓÏÌØÎÙÊ ×ÁÒÉÁÎÔ)
+Summary(ru_RU.CP1251): %bname - ýòî íàñòîÿùèé âèäåîïëååð (êîíñîëüíûé âàðèàíò)
 License: GPL for all but not for OpenDivX
 Group:    Video
 URL:      http://www.mplayerhq.hu
@@ -175,6 +161,7 @@ Source5:  mplayer.sh
 Source6:  http://icculus.org/~jcspray/gnome-mplayer-32.png
 Source7:  http://icculus.org/~jcspray/gnome-mplayer-48.png
 Source8:  http://icculus.org/~jcspray/gnome-mplayer-16.png
+Source9:  ao_polyp.c.bz2
 Patch1:   MPlayer-1.0pre5-alt-external_fame.patch
 Patch2:   MPlayer-dvd-ru.patch
 Patch3:   MPlayer-1.0pre4-alt-explicit_gif.patch
@@ -182,18 +169,10 @@ Patch4:   MPlayer-1.0pre5-alt-translation.patch
 Patch5:   MPlayer-1.0pre4-alt-explicit_termcap.patch
 Patch6:   MPlayer-1.0pre4-alt-artsc_ldflags.patch
 Patch7:   MPlayer-1.0pre7-aalib.patch
-#Patch11:  mplayer-rpm-cvs.patch
 Patch12:  MPlayer-1.0pre5-alt-gcc-check.patch
-
 Patch13:  MPlayer-1.0pre5-nodebug.patch
-#Patch14:  mplayer-lavc.patch
-#Patch15:  mplayer-gui.patch
-# Patch16:  MPlayer-1.0pre5-warnings.patch
-# Patch17:  MPlayer-1.0pre5-loader.patch
-# Patch18:  mplayer-loader-printf.patch
 Patch19:  mplayer-libmpdvdkit2.patch
-# Patch20:  MPlayer-1.0pre4-printf-format.patch
-# Patch21:  MPlayer-1.0pre5-warnings-printf.patch
+Patch22:  MPlayer-cvs-20060519-polyp0.8.patch.gz
 Patch23:  ad_pcm_fix_20050826.diff
 Patch24:  MPlayer-1.0pre7try2-xmmslibs_fix.patch
 Patch25:  MPlayer-1.0pre7try2-libdir_fix.patch
@@ -206,12 +185,11 @@ Patch28:  %name-cvs-20060506-docs.patch.bz2
 
 BuildRequires: libXinerama-devel libXt-devel libXvMC-devel libXxf86dga-devel
 BuildRequires: libXxf86vm-devel
-BuildRequires: mawk libmesa-devel
+BuildRequires: awk libmesa-devel
 BuildRequires: libncurses-devel libslang-devel
 %if %cvsbuild
 BuildRequires: docbook-style-dsssl openjade xsltproc
 %endif
-#BuildRequires: fribidi libfribidi-devel
 
 # termcap/tinfo
 BuildRequires: libtinfo-devel
@@ -229,12 +207,6 @@ BuildRequires: liblirc-devel
 %if_enabled tv
 BuildRequires: glibc-kernheaders
 %endif
-
-# tv_v4l
-
-# tv_v4l2
-
-# network
 
 %if_enabled smb
 # Earlier builds conflicts w/ glibc-2.3
@@ -309,10 +281,6 @@ BuildRequires: libSDL_mixer-devel
 BuildRequires: svgalib-devel
 %endif
 
-# tga
-
-# vidix
-
 %if_enabled jack
 BuildRequires: jackit-devel
 %endif
@@ -330,7 +298,7 @@ BuildRequires: esound-devel
 %endif
 
 %if_enabled polyp
-BuildRequires: libpolypaudio-devel = 0.7
+BuildRequires: libpolypaudio-devel >= 0.9
 %endif
 
 %if_enabled libdts
@@ -357,16 +325,6 @@ BuildRequires: libjpeg-devel
 %if_enabled lzo
 BuildRequires: liblzo-devel
 %endif
-
-# win32
-
-# dshow
-
-# qtx
-
-# xanim
-
-# real
 
 %if_enabled xvid
 BuildRequires: libxvid-devel
@@ -489,31 +447,31 @@ It also supports video grabbing from V4L devices.
 This package provides only console version of the MPlayer. Install
 %gui_name *instead* if you need a nice skinnable GUI player
 
-%description -l ru_RU.KOI8-R
-MPlayer - ÜÔÏ ×ÉÄÅÏÐÒÏÉÇÒÙ×ÁÔÅÌØ, ËÏÔÏÒÙÊ ÐÏÄÄÅÒÖÉ×ÁÅÔ ÛÉÒÏËÉÊ ÓÐÅËÔÒ
-ÆÏÒÍÁÔÏ× ÆÁÊÌÏ×, × ÔÏÍ ÞÉÓÌÅ AVI, MPEG É Quicktime. ÷ ÎÅÇÏ ×ËÌÀÞÅÎÏ
-ÍÎÏÖÅÓÔ×Ï ÁÕÄÉÏ- É ×ÉÄÅÏËÏÄÅËÏ×, ÏÐÔÉÍÉÚÉÒÏ×ÁÎÎÙÈ ÄÌÑ MMX, SSE, 3DNow!
-É.Ô.Ð. ëÒÏÍÅ ÜÔÏÇÏ, ÉÍÅÅÔÓÑ ×ÏÚÍÏÖÎÏÓÔØ ÉÓÐÏÌØÚÏ×ÁÎÉÑ ×ÎÅÛÎÉÈ ËÏÄÅËÏ×:
-XAnim, RealPlayer É Win32. òÅÁÌÉÚÏ×ÁÎÙ ÏÓÎÏ×ÎÙÅ ÆÕÎËÃÉÉ ÄÌÑ
-ÐÒÏÉÇÒÙ×ÁÎÉÑ VCD/DVD, ×ËÌÀÞÁÑ ÓÕÂÔÉÔÒÙ DVD, Á ÔÁËÖÅ ÍÎÏÖÅÓÔ×Á ÄÒÕÇÉÈ
-ÔÅËÓÔÏ×ÙÈ ÆÏÒÍÁÔÏ× ÓÕÂÔÉÔÒÏ×.
+%description -l ru_RU.CP1251
+MPlayer - ýòî âèäåîïðîèãðûâàòåëü, êîòîðûé ïîääåðæèâàåò øèðîêèé ñïåêòð
+ôîðìàòîâ ôàéëîâ, â òîì ÷èñëå AVI, MPEG è Quicktime. Â íåãî âêëþ÷åíî
+ìíîæåñòâî àóäèî- è âèäåîêîäåêîâ, îïòèìèçèðîâàííûõ äëÿ MMX, SSE, 3DNow!
+è.ò.ï. Êðîìå ýòîãî, èìååòñÿ âîçìîæíîñòü èñïîëüçîâàíèÿ âíåøíèõ êîäåêîâ:
+XAnim, RealPlayer è Win32. Ðåàëèçîâàíû îñíîâíûå ôóíêöèè äëÿ
+ïðîèãðûâàíèÿ VCD/DVD, âêëþ÷àÿ ñóáòèòðû DVD, à òàêæå ìíîæåñòâà äðóãèõ
+òåêñòîâûõ ôîðìàòîâ ñóáòèòðîâ.
 
-ðÏÄÄÅÒÖÉ×ÁÀÔÓÑ ÐÒÁËÔÉÞÅÓËÉ ×ÓÅ ÓÐÏÓÏÂÙ ×Ù×ÏÄÁ ÉÚÏÂÒÁÖÅÎÉÑ É Ú×ÕËÁ ×
-ÀÎÉËÓÏÐÏÄÏÂÎÙÈ ÓÉÓÔÅÍÁÈ. éÍÅÀÔÓÑ ÎÉÚËÏÕÒÏ×ÎÅ×ÙÅ ÓÐÅÃÉÁÌÉÚÁÒÏ×ÁÎÎÙÅ
-ÄÒÁÊ×ÅÒÁ ÄÌÑ ÎÅËÏÔÏÒÙÈ ×ÉÄÅÏËÁÒÔ: Matrox, Nvidia, 3Dfx, Radeon,
-Mach64, Permedia3, - ÁÐÐÁÒÁÔÎÏÇÏ ÄÅËÏÄÉÒÏ×ÁÎÉÑ AC3, Á ÔÁËÖÅ ÎÅÓËÏÌØËÉÈ
-ÐÌÁÔ, ÁÐÐÁÒÁÔÎÏ ÄÅËÏÄÉÒÕÀÝÉÈ MPEG, ÔÁËÉÈ ËÁË DVB É DXR3/Hollywood+.
+Ïîääåðæèâàþòñÿ ïðàêòè÷åñêè âñå ñïîñîáû âûâîäà èçîáðàæåíèÿ è çâóêà â
+þíèêñîïîäîáíûõ ñèñòåìàõ. Èìåþòñÿ íèçêîóðîâíåâûå ñïåöèàëèçàðîâàííûå
+äðàéâåðà äëÿ íåêîòîðûõ âèäåîêàðò: Matrox, Nvidia, 3Dfx, Radeon,
+Mach64, Permedia3, - àïïàðàòíîãî äåêîäèðîâàíèÿ AC3, à òàêæå íåñêîëüêèõ
+ïëàò, àïïàðàòíî äåêîäèðóþùèõ MPEG, òàêèõ êàê DVB è DXR3/Hollywood+.
 
-ëÒÏÍÅ ÜÔÏÇÏ, MPlayer ÓÐÏÓÏÂÅÎ ÚÁÈ×ÁÔÙ×ÁÔØ ÓÉÇÎÁÌ Ó ÕÓÔÒÏÊÓÔ× V4L.
+Êðîìå ýòîãî, MPlayer ñïîñîáåí çàõâàòûâàòü ñèãíàë ñ óñòðîéñòâ V4L.
 
-üÔÏÔ ÐÁËÅÔ ÓÏÄÅÒÖÉÔ ÔÏÌØËÏ ËÏÎÓÏÌØÎÕÀ ×ÅÒÓÉÀ MPlayer. ÷ÁÍ ÓÌÅÄÕÅÔ
-ÕÓÔÁÎÁ×ÌÉ×ÁÔØ ÐÁËÅÔ %gui_name *×ÍÅÓÔÏ* ÄÁÎÎÏÇÏ ÐÁËÅÔÁ, ÅÓÌÉ ÷ÁÍ
-ÔÒÅÂÕÅÔÓÑ ×ÉÄÅÏÐÒÏÉÇÒÙ×ÁÔÅÌØ Ó ÈÏÒÏÛÉÍ ÎÁÓÔÒÁÉ×ÁÅÍÙÍ GUI (ÇÒÁÆÉÞÅÓËÉÍ
-ÉÎÔÅÒÆÅÊÓÏÍ ÐÏÌØÚÏ×ÁÔÅÌÑ)
+Ýòîò ïàêåò ñîäåðæèò òîëüêî êîíñîëüíóþ âåðñèþ MPlayer. Âàì ñëåäóåò
+óñòàíàâëèâàòü ïàêåò %gui_name *âìåñòî* äàííîãî ïàêåòà, åñëè Âàì
+òðåáóåòñÿ âèäåîïðîèãðûâàòåëü ñ õîðîøèì íàñòðàèâàåìûì GUI (ãðàôè÷åñêèì
+èíòåðôåéñîì ïîëüçîâàòåëÿ)
 
 %package -n %gui_name
 Summary:  %bname is the Unix video player (GUI version)
-Summary(ru_RU.KOI8-R): %bname - ÜÔÏ ÎÁÓÔÏÑÝÉÊ ×ÉÄÅÏÐÌÅÅÒ (GUI ×ÁÒÉÁÎÔ)
+Summary(ru_RU.CP1251): %bname - ýòî íàñòîÿùèé âèäåîïëååð (GUI âàðèàíò)
 License:  GPL for all but not for OpenDivX
 Group:    Video
 Requires: %bname-console = %real_version
@@ -545,31 +503,31 @@ This package provides GUI version of the MPlayer. A console-only
 version with trimmed down dependencies is also available as
 %console_name
 
-%description -n %gui_name -l ru_RU.KOI8-R
-MPlayer - ÜÔÏ ×ÉÄÅÏÐÒÏÉÇÒÙ×ÁÔÅÌØ, ËÏÔÏÒÙÊ ÐÏÄÄÅÒÖÉ×ÁÅÔ ÛÉÒÏËÉÊ ÓÐÅËÔÒ
-ÆÏÒÍÁÔÏ× ÆÁÊÌÏ×, × ÔÏÍ ÞÉÓÌÅ AVI, MPEG É Quicktime. ÷ ÎÅÇÏ ×ËÌÀÞÅÎÏ
-ÍÎÏÖÅÓÔ×Ï ÁÕÄÉÏ- É ×ÉÄÅÏËÏÄÅËÏ×, ÏÐÔÉÍÉÚÉÒÏ×ÁÎÎÙÈ ÄÌÑ MMX, SSE, 3DNow!
-É.Ô.Ð. ëÒÏÍÅ ÜÔÏÇÏ, ÉÍÅÅÔÓÑ ×ÏÚÍÏÖÎÏÓÔØ ÉÓÐÏÌØÚÏ×ÁÎÉÑ ×ÎÅÛÎÉÈ ËÏÄÅËÏ×:
-XAnim, RealPlayer É Win32. òÅÁÌÉÚÏ×ÁÎÙ ÏÓÎÏ×ÎÙÅ ÆÕÎËÃÉÉ ÄÌÑ
-ÐÒÏÉÇÒÙ×ÁÎÉÑ VCD/DVD, ×ËÌÀÞÁÑ ÓÕÂÔÉÔÒÙ DVD, Á ÔÁËÖÅ ÍÎÏÖÅÓÔ×Á ÄÒÕÇÉÈ
-ÔÅËÓÔÏ×ÙÈ ÆÏÒÍÁÔÏ× ÓÕÂÔÉÔÒÏ×.
+%description -n %gui_name -l ru_RU.CP1251
+MPlayer - ýòî âèäåîïðîèãðûâàòåëü, êîòîðûé ïîääåðæèâàåò øèðîêèé ñïåêòð
+ôîðìàòîâ ôàéëîâ, â òîì ÷èñëå AVI, MPEG è Quicktime. Â íåãî âêëþ÷åíî
+ìíîæåñòâî àóäèî- è âèäåîêîäåêîâ, îïòèìèçèðîâàííûõ äëÿ MMX, SSE, 3DNow!
+è.ò.ï. Êðîìå ýòîãî, èìååòñÿ âîçìîæíîñòü èñïîëüçîâàíèÿ âíåøíèõ êîäåêîâ:
+XAnim, RealPlayer è Win32. Ðåàëèçîâàíû îñíîâíûå ôóíêöèè äëÿ
+ïðîèãðûâàíèÿ VCD/DVD, âêëþ÷àÿ ñóáòèòðû DVD, à òàêæå ìíîæåñòâà äðóãèõ
+òåêñòîâûõ ôîðìàòîâ ñóáòèòðîâ.
 
-ðÏÄÄÅÒÖÉ×ÁÀÔÓÑ ÐÒÁËÔÉÞÅÓËÉ ×ÓÅ ÓÐÏÓÏÂÙ ×Ù×ÏÄÁ ÉÚÏÂÒÁÖÅÎÉÑ É Ú×ÕËÁ ×
-ÀÎÉËÓÏÐÏÄÏÂÎÙÈ ÓÉÓÔÅÍÁÈ. éÍÅÀÔÓÑ ÎÉÚËÏÕÒÏ×ÎÅ×ÙÅ ÓÐÅÃÉÁÌÉÚÁÒÏ×ÁÎÎÙÅ
-ÄÒÁÊ×ÅÒÁ ÄÌÑ ÎÅËÏÔÏÒÙÈ ×ÉÄÅÏËÁÒÔ: Matrox, Nvidia, 3Dfx, Radeon,
-Mach64, Permedia3, - ÁÐÐÁÒÁÔÎÏÇÏ ÄÅËÏÄÉÒÏ×ÁÎÉÑ AC3, Á ÔÁËÖÅ ÎÅÓËÏÌØËÉÈ
-ÐÌÁÔ, ÁÐÐÁÒÁÔÎÏ ÄÅËÏÄÉÒÕÀÝÉÈ MPEG, ÔÁËÉÈ ËÁË DVB É DXR3/Hollywood+.
+Ïîääåðæèâàþòñÿ ïðàêòè÷åñêè âñå ñïîñîáû âûâîäà èçîáðàæåíèÿ è çâóêà â
+þíèêñîïîäîáíûõ ñèñòåìàõ. Èìåþòñÿ íèçêîóðîâíåâûå ñïåöèàëèçàðîâàííûå
+äðàéâåðà äëÿ íåêîòîðûõ âèäåîêàðò: Matrox, Nvidia, 3Dfx, Radeon,
+Mach64, Permedia3, - àïïàðàòíîãî äåêîäèðîâàíèÿ AC3, à òàêæå íåñêîëüêèõ
+ïëàò, àïïàðàòíî äåêîäèðóþùèõ MPEG, òàêèõ êàê DVB è DXR3/Hollywood+.
 
-ëÒÏÍÅ ÜÔÏÇÏ, MPlayer ÓÐÏÓÏÂÅÎ ÚÁÈ×ÁÔÙ×ÁÔØ ÓÉÇÎÁÌ Ó ÕÓÔÒÏÊÓÔ× V4L.
+Êðîìå ýòîãî, MPlayer ñïîñîáåí çàõâàòûâàòü ñèãíàë ñ óñòðîéñòâ V4L.
 
-üÔÏÔ ÐÁËÅÔ ÓÏÄÅÒÖÉÔ ×ÅÒÓÉÀ MPlayer c GUI (ÇÒÁÆÉÞÅÓËÉÍ ÉÎÔÅÒÆÅÊÓÏÍ).
-ôÁËÖÅ ÉÍÅÅÔÓÑ %console_name - ËÏÎÓÏÌØÎÁÑ ×ÅÒÓÉÑ ÐÁËÅÔÁ Ó ÍÅÎØÛÉÍ
-ÞÉÓÌÏÍ ÚÁ×ÉÓÉÍÏÓÔÅÊ.
+Ýòîò ïàêåò ñîäåðæèò âåðñèþ MPlayer c GUI (ãðàôè÷åñêèì èíòåðôåéñîì).
+Òàêæå èìååòñÿ %console_name - êîíñîëüíàÿ âåðñèÿ ïàêåòà ñ ìåíüøèì
+÷èñëîì çàâèñèìîñòåé.
 
 %package -n mencoder
 Group: Video
 Summary: MEncoder is a movie encoder for Unix.
-Summary(ru_RU.KOI8-R): MEncoder - ÜÔÏ ËÏÄÉÒÏ×ÝÉË ÆÉÌØÍÏ× ÄÌÑ Unix.
+Summary(ru_RU.CP1251): MEncoder - ýòî êîäèðîâùèê ôèëüìîâ äëÿ Unix.
 Requires: %bname = %base_version
 
 %description -n mencoder
@@ -710,22 +668,22 @@ Basic features:
 * Unlike v4l it provides interface for video playback
 * Unlike linux's drivers it uses the math library
 
-%description -n %bname-vidix -l ru_RU.KOI8-R
-VIDIX - ÜÔÏ ÁÂÂÒÅ×ÉÁÔÕÒÁ ÄÌÑ VIDeo Interface for *niX (÷éäÅÏ éÎÔÅÒÆÅÊÓ
-ÄÌÑ ÀÎÉëóÏÐÏÄÏÂÎÙÈ ÏÐÅÒÁÃÉÏÎÎÙÈ ÓÉÓÔÅÍ)
+%description -n %bname-vidix -l ru_RU.CP1251
+VIDIX - ýòî àááðåâèàòóðà äëÿ VIDeo Interface for *niX (ÂÈÄåî Èíòåðôåéñ
+äëÿ þíèÊÑîïîäîáíûõ îïåðàöèîííûõ ñèñòåì)
 
-VIDIX ÂÙÌ ÓÐÒÏÅËÔÉÒÏ×ÁÎ É ÒÁÚÒÁÂÏÔÁÎ ËÁË ÉÎÔÅÒÆÅÊÓ ÄÌÑ ÂÙÓÔÒÙÈ
-ÄÒÁÊ×ÅÒÏ× ÕÒÏ×ÎÑ ÐÒÉÌÏÖÅÎÉÑ ÄÌÑ DGA (Direct Graphics Access - ÐÒÑÍÏÊ
-ÄÏÓÔÕÐ Ë ÇÒÁÆÉËÅ). ðÒÅÄÐÏÌÁÇÁÌÏÓØ, ÞÔÏ ÜÔÉ ÄÒÁÊ×ÅÒÁ ÂÕÄÕÔ ÔÁËÖÅ
-ÐÅÒÅÎÏÓÉÍÙ ËÁË É X11 (ÎÅ ÔÏÌØËÏ ÎÁ ÀÎÉËÓ).
+VIDIX áûë ñïðîåêòèðîâàí è ðàçðàáîòàí êàê èíòåðôåéñ äëÿ áûñòðûõ
+äðàéâåðîâ óðîâíÿ ïðèëîæåíèÿ äëÿ DGA (Direct Graphics Access - ïðÿìîé
+äîñòóï ê ãðàôèêå). Ïðåäïîëàãàëîñü, ÷òî ýòè äðàéâåðà áóäóò òàêæå
+ïåðåíîñèìû êàê è X11 (íå òîëüêî íà þíèêñ).
 
-ïÓÎÏ×ÎÙÅ ÈÁÒÁËÔÅÒÉÓÔÉËÉ:
-* üÔÏ ÐÅÒÅÎÏÓÉÍÏÅ ÒÁÚ×ÉÔÉÅ ÔÅÈÎÏÌÏÇÉÉ mga_vid, ÒÁÂÏÔÁÀÝÅÅ ÎÁ ÕÒÏ×ÎÅ
-  ÐÒÉÌÏÖÅÎÉÑ
-* ÷ ÏÔÌÉÞÉÅ ÏÔ X11 ÏÎ ÐÒÅÄÏÓÔÁ×ÌÑÅÔ DGA ×ÅÚÄÅ, ÇÄÅ ÜÔÏ ×ÏÚÍÏÖÎÏ
-* ÷ ÏÔÌÉÞÉÅ ÏÔ v4l ÏÎ ÐÒÅÄÏÓÔÁ×ÌÑÅÔ ÉÎÔÅÒÆÅÊÓ ÄÌÑ ×ÏÓÐÒÏÉÚ×ÅÄÅÎÉÑ
-  ×ÉÄÅÏ
-* ÷ ÏÔÌÉÞÉÅ ÏÔ ÄÒÁÊ×ÅÒÏ× ÌÉÎÕËÓ ÏÎ ÉÓÐÏÌØÚÕÅÔ ÂÉÂÌÉÏÔÅËÕ math
+Îñíîâíûå õàðàêòåðèñòèêè:
+* Ýòî ïåðåíîñèìîå ðàçâèòèå òåõíîëîãèè mga_vid, ðàáîòàþùåå íà óðîâíå
+  ïðèëîæåíèÿ
+* Â îòëè÷èå îò X11 îí ïðåäîñòàâëÿåò DGA âåçäå, ãäå ýòî âîçìîæíî
+* Â îòëè÷èå îò v4l îí ïðåäîñòàâëÿåò èíòåðôåéñ äëÿ âîñïðîèçâåäåíèÿ
+  âèäåî
+* Â îòëè÷èå îò äðàéâåðîâ ëèíóêñ îí èñïîëüçóåò áèáëèîòåêó math
 
 %package -n %bname-vidix-trident
 Group: Video
@@ -823,23 +781,10 @@ mv ffmpeg-%ffmpeg_version/libav{codec,format,util} .
 %endif
 
 %patch1 -p1
-##%patch2 -p0
 %patch3 -p1
-#%patch4 -p1
-##%patch5 -p1
 %patch6 -p1
 %patch7 -p1
-
-# %patch13 -p1 -b .nodebug
-# %patch14 -p1 -b .lavc
-#%{!?_without_gui:%patch15 -p1 -b .gui}
-# %patch16 -p1 -b .warn
-# %patch17 -p1 -b .loader
-# %patch18 -p1 -b .loader-printf
-##%patch19 -p1 -b .mpdvdkit2
-# %patch20 -p1 -b .printf-format
-# %patch21 -p1 -b .printf
-# %patch23 -p0
+%patch22 -p1
 %patch24 -p1
 %patch25 -p1
 %if %cvsbuild
@@ -847,6 +792,7 @@ mv ffmpeg-%ffmpeg_version/libav{codec,format,util} .
 %patch27 -p1
 %patch28 -p1
 %endif
+bzip2 -dcf %SOURCE9 > libao2/ao_polyp.c
 
 %__subst 's/\(ldconfig\)/\#\1/g' libdha/Makefile
 
@@ -1048,17 +994,6 @@ LC_MESSAGES=C ; export LC_MESSAGES
 		%{subst_enable fribidi}
 #		%{subst_enable i18n} \
 
-# %if_enabled flac
-# 		--enable-flac \
-# %if_disabled external_flac
-# 		--disable-external-flac	\
-# %else
-# 		--enable-external-flac \
-# %endif
-# %else
-# 		--disable-flac \
-# 		--disable-external-flac \
-# %endif
 
 %ifarch %ix86
 %make_build
@@ -1340,6 +1275,11 @@ unset RPM_PYTHON
 
 
 %changelog
+* Tue May 30 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060519.2
+- cleaned up spec
+- enabled polyp (thanx icesik and polypaudio's author)
+- added MPlayer-cvs-20060519-polyp0.8.patch
+
 * Thu May 25 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060519.1
 - 20060519 CVS snapshot
 - removed mplayer-rpm-cvs.patch

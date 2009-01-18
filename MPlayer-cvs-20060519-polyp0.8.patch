@@ -1,0 +1,33 @@
+diff -urN MPlayer-cvs-20060519.orig/configure MPlayer-cvs-20060519/configure
+--- MPlayer-cvs-20060519.orig/configure	2006-05-20 20:08:21 +0300
++++ MPlayer-cvs-20060519/configure	2006-05-30 15:38:54 +0300
+@@ -4846,15 +4846,15 @@
+ echocheck "Polyp"
+ if test "$_polyp" = auto ; then
+   _polyp=no
+-  if pkg-config --exists 'polyplib >= 0.6 polyplib-error >= 0.6 polyplib-mainloop >= 0.6' ; then
++  if pkg-config --exists 'polyplib >= 0.9' ; then
+ 
+ cat > $TMPC << EOF
+ #include <polyp/polyplib.h>
+ #include <polyp/mainloop.h>
+-#include <polyp/polyplib-error.h>
++#include <polyp/error.h>
+ int main(void) { return 0; }
+ EOF
+-cc_check `pkg-config --libs --cflags polyplib polyplib-error polyplib-mainloop` && tmp_run && _polyp=yes
++cc_check `pkg-config --libs --cflags polyplib` && tmp_run && _polyp=yes
+ 
+   fi
+ fi
+@@ -4864,8 +4864,8 @@
+   _def_polyp='#define USE_POLYP 1'
+   _aosrc="$_aosrc ao_polyp.c"
+   _aomodules="polyp $_aomodules"
+-  _ld_polyp=`pkg-config --libs polyplib polyplib-error polyplib-mainloop`
+-  _inc_polyp=`pkg-config --cflags polyplib polyplib-error polyplib-mainloop`
++  _ld_polyp=`pkg-config --libs polyplib`
++  _inc_polyp=`pkg-config --cflags polyplib`
+ else
+   _def_polyp='#undef USE_POLYP'
+   _noaomodules="polyp $_noaomodules"
