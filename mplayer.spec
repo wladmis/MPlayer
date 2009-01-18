@@ -1,5 +1,5 @@
 # -*- rpm-spec -*-
-# $Id: MPlayer,v 1.70 2003/10/07 12:38:59 grigory Exp $
+# $Id: MPlayer,v 1.71 2004/01/19 13:24:26 grigory Exp $
 
 %define COMPAT_GCC 0
 
@@ -17,11 +17,11 @@
 %define codec w32codec
 
 %define real_version 1.0
-%define pre_release pre2
+%define pre_release pre3
 
 Name: MPlayer
 Version: %real_version
-Release: alt3.%pre_release
+Release: alt4.%pre_release
 
 Summary: %name - Video player for LINUX
 License: GPL for all but not for OpenDivX
@@ -266,6 +266,9 @@ find etc DOCS TOOLS -type f -exec %__chmod 644 {} \;
 %_datadir/%name/Skin/*
 
 %changelog
+* Mon Jan 19 2004 Grigory Milev <week@altlinux.ru> 1.0-alt4.pre3
+- next pre-release
+
 * Tue Oct  7 2003 Grigory Milev <week@altlinux.ru> 1.0-alt3.pre2
 - new version released
 
