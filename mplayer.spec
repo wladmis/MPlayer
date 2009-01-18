@@ -9,7 +9,7 @@
 %define ffmpeg_version cvs-20060519
 
 %if %cvsbuild
-%global release		%release.%cvsbuild.4
+%global release		%release.%cvsbuild.5
 %global	fversion	cvs-%cvsbuild
 %endif
 
@@ -219,7 +219,7 @@ BuildRequires: libdvdread-devel
 %endif
 
 %if_enabled live
-BuildRequires: liblive-devel = 0.0.0-alt0.2006.05.15
+BuildRequires: liblive-devel >= 0.0.0-alt0.2006.05.15
 %endif
 
 # mpdvdkit
@@ -1115,7 +1115,7 @@ audio/x-pn-windows-acm;image/vnd.rn-realpix;video/vnd.rn-realvideo
 __MENU__
 
 #Icons
-install -p -m0644 -D %SOURCE6 %buildroot%_iconsdir/%bname.png
+install -p -m0644 -D %SOURCE6 %buildroot%_niconsdir/%bname.png
 install -p -m0644 -D %SOURCE7 %buildroot%_liconsdir/%bname.png
 install -p -m0644 -D %SOURCE8 %buildroot%_miconsdir/%bname.png
 find etc DOCS -type f -exec chmod 644 {} \;
@@ -1190,7 +1190,7 @@ unset RPM_PYTHON
 %files -n %gui_name
 %_bindir/gmplayer
 %dir %_datadir/%bname
-%_iconsdir/%bname.png
+%_niconsdir/%bname.png
 %_miconsdir/%bname.png
 %_liconsdir/%bname.png
 %_datadir/applications/mplayer.desktop
@@ -1304,6 +1304,10 @@ unset RPM_PYTHON
 
 
 %changelog
+* Wed Jun 07 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060519.5
+- rebuild with new libdc1394
+- fixed BuildRequires
+
 * Fri Jun 02 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060519.4
 - fixed fbdev support
 
