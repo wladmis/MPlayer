@@ -6,8 +6,8 @@
 %define fversion	%real_version
 
 # Used only for CVS builds
-%define cvsbuild 20060331
-%define ffmpeg_version cvs-20060331
+%define cvsbuild 20060414
+%define ffmpeg_version cvs-20060414
 
 %ifdef pre_release
 %global real_version	%real_version%pre_release
@@ -16,7 +16,7 @@
 %endif
 
 %if %cvsbuild
-%global release		%release.%cvsbuild.2
+%global release		%release.%cvsbuild.1
 %global	fversion	cvs-%cvsbuild
 %endif
 
@@ -194,7 +194,7 @@
 %def_enable  3dnowex
 %def_enable  sse
 %def_enable  sse2
-%def_enable  i18n
+%def_disable  i18n
 %def_disable fribidi
 #%%def_enable  flac
 #%%def_disable external_flac
@@ -961,7 +961,6 @@ LC_MESSAGES=C ; export LC_MESSAGES
 		--enable-debug=3 \
 %endif
 		--language=%mplang \
-		%{subst_enable i18n} \
 %if_enabled dynamic_plugins
 		--enable-dynamic-plugins \
 %else
@@ -1034,6 +1033,7 @@ LC_MESSAGES=C ; export LC_MESSAGES
 		%{subst_enable mad} \
 		%{subst_enable xmms} \
 		%{subst_enable fribidi}
+#		%{subst_enable i18n} \
 
 # %if_enabled flac
 # 		--enable-flac \
@@ -1218,7 +1218,7 @@ unset RPM_PYTHON
 %_miconsdir/%bname.png
 %_liconsdir/%bname.png
 %_datadir/applications/mplayer.desktop
-%_datadir/pixmaps/mplayer-desktop.xpm
+%_datadir/pixmaps/*
 
 
 %files -n mencoder
@@ -1299,6 +1299,10 @@ unset RPM_PYTHON
 
 
 %changelog
+* Mon Apr 17 2006 Led <led@altlinux.ru> 1.0-alt0.20060414.1
+- 20060414 CVS snapshot
+- fixed spec
+
 * Tue Apr 04 2006 Led <led@altlinux.ru> 1.0-alt0.20060331.2
 - enabled musepack
 
