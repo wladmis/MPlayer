@@ -16,7 +16,7 @@
 %endif
 
 %if %cvsbuild
-%global release		%release.%cvsbuild.1
+%global release		%release.%cvsbuild.2
 %global	fversion	cvs-%cvsbuild
 %endif
 
@@ -134,6 +134,7 @@
 %def_enable  network
 %def_disable smb
 %def_enable  dvdread
+%def_enable  live
 %def_enable  mpdvdkit
 %def_enable  cdparanoia
 %def_enable  freetype
@@ -249,15 +250,15 @@
 
 %define COMPAT_GCC 0
 
-Name: %console_name
-Version: %base_version
-Release: alt%release
+Name:     %console_name
+Version:  %base_version
+Release:  alt%release
 Serial: 1
-Summary: %bname is the Unix video player (console version)
+Summary:  %bname is the Unix video player (console version)
 Summary(ru_RU.KOI8-R): %bname - это настоящий видеоплеер (консольный вариант)
 License: GPL for all but not for OpenDivX
-Group: Video
-URL: http://www.mplayerhq.hu
+Group:    Video
+URL:      http://www.mplayerhq.hu
 Provides: %bname = %real_version
 Provides: %bname = %base_version
 # KPlayer doesn't work well w/ GUI-enabled version
@@ -268,49 +269,49 @@ Requires: urw-fonts
 %endif
 %endif
 
-Source0: %bname-%fversion.tar.bz2
+Source0:  %bname-%fversion.tar.bz2
 # cvs -z9 -d:pserver:anonymous@mplayerhq.hu:/cvsroot/mplayer checkout -P -d MPlayer main
 %if %cvsbuild
-Source1: ffmpeg-%ffmpeg_version.tar.bz2
+Source1:  ffmpeg-%ffmpeg_version.tar.bz2
 # cvs -z9 -d:pserver:anonymous@mplayerhq.hu:/cvsroot/ffmpeg checkout -P -d ffmpeg ffmpeg
 %endif
-Source2: %bname.menu
-Source3: cp1251-font.tar.bz2
-Source5: mplayer.sh
-Source6: http://icculus.org/~jcspray/gnome-mplayer-32.png
-Source7: http://icculus.org/~jcspray/gnome-mplayer-48.png
-Source8: http://icculus.org/~jcspray/gnome-mplayer-16.png
-Patch1: MPlayer-1.0pre5-alt-external_fame.patch
-Patch2: MPlayer-dvd-ru.patch
-Patch3:  MPlayer-1.0pre4-alt-explicit_gif.patch
-Patch4: MPlayer-1.0pre5-alt-translation.patch
-Patch5: MPlayer-1.0pre4-alt-explicit_termcap.patch
-Patch6: MPlayer-1.0pre4-alt-artsc_ldflags.patch
-Patch7: MPlayer-1.0pre7-aalib.patch
-Patch11: mplayer-rpm-cvs.patch
-Patch12: MPlayer-1.0pre5-alt-gcc-check.patch
+Source2:  %bname.menu
+Source3:  cp1251-font.tar.bz2
+Source5:  mplayer.sh
+Source6:  http://icculus.org/~jcspray/gnome-mplayer-32.png
+Source7:  http://icculus.org/~jcspray/gnome-mplayer-48.png
+Source8:  http://icculus.org/~jcspray/gnome-mplayer-16.png
+Patch1:   MPlayer-1.0pre5-alt-external_fame.patch
+Patch2:   MPlayer-dvd-ru.patch
+Patch3:   MPlayer-1.0pre4-alt-explicit_gif.patch
+Patch4:   MPlayer-1.0pre5-alt-translation.patch
+Patch5:   MPlayer-1.0pre4-alt-explicit_termcap.patch
+Patch6:   MPlayer-1.0pre4-alt-artsc_ldflags.patch
+Patch7:   MPlayer-1.0pre7-aalib.patch
+Patch11:  mplayer-rpm-cvs.patch
+Patch12:  MPlayer-1.0pre5-alt-gcc-check.patch
 
-Patch13: MPlayer-1.0pre5-nodebug.patch
+Patch13:  MPlayer-1.0pre5-nodebug.patch
 #Patch14:  mplayer-lavc.patch
 #Patch15:  mplayer-gui.patch
 # Patch16:  MPlayer-1.0pre5-warnings.patch
 # Patch17:  MPlayer-1.0pre5-loader.patch
 # Patch18:  mplayer-loader-printf.patch
-Patch19: mplayer-libmpdvdkit2.patch
+Patch19:  mplayer-libmpdvdkit2.patch
 # Patch20:  MPlayer-1.0pre4-printf-format.patch
 # Patch21:  MPlayer-1.0pre5-warnings-printf.patch
-Patch23: ad_pcm_fix_20050826.diff
-Patch24: MPlayer-1.0pre7try2-xmmslibs_fix.patch
-Patch25: MPlayer-1.0pre7try2-libdir_fix.patch
-Patch26: %name-cvs-20060220-configure.patch.gz
+Patch23:  ad_pcm_fix_20050826.diff
+Patch24:  MPlayer-1.0pre7try2-xmmslibs_fix.patch
+Patch25:  MPlayer-1.0pre7try2-libdir_fix.patch
+Patch26:  %name-cvs-20060220-configure.patch.gz
 %if %cvsbuild
-Patch27: %name-cvs-20060331-builddocs.patch.gz
-Patch28: %name-cvs-20060506-docs.patch.bz2
+Patch27:  %name-cvs-20060331-builddocs.patch.gz
+Patch28:  %name-cvs-20060506-docs.patch.bz2
 %endif
 
 
-BuildRequires: libXinerama-devel libXt-devel libXvMC-devel
-BuildRequires: libXxf86dga-devel libXxf86vm-devel
+BuildRequires: libXinerama-devel libXt-devel libXvMC-devel libXxf86dga-devel
+BuildRequires: libXxf86vm-devel
 BuildRequires: mawk libmesa-devel
 BuildRequires: libncurses-devel libslang-devel
 %if %cvsbuild
@@ -345,6 +346,10 @@ BuildRequires: libsmbclient-devel >= 3.0.3-alt1
 %if_enabled dvdread
 BuildRequires: libdvdread-devel 
 #BuildRequires: libdvdcss-devel libdvdnav-devel
+%endif
+
+%if_enabled live
+BuildRequires: liblive-devel = 0.0.0-alt0.2006.05.15
 %endif
 
 # mpdvdkit
@@ -428,7 +433,7 @@ BuildRequires: esound-devel
 %endif
 
 %if_enabled polyp
-BuildRequires: libpolypaudio = 0.7 libpolypaudio-devel = 0.7
+BuildRequires: libpolypaudio-devel = 0.7
 %endif
 
 %if_enabled libdts
@@ -988,7 +993,7 @@ VERSION=`gcc -dumpversion | cut -d '.' -f 1,2 | sed -e 's/\.//'`
 if test -n "$VERSION" -a $VERSION -gt 32 ; then
 	CC=gcc
 else
-	for CC in gcc-3.4 gcc-3.3 gcc-3.2 gcc-badversion; do
+	for CC in gcc-4.1 gcc-4.0 gcc-3.4 gcc-3.3 gcc-3.2 gcc-badversion; do
 		if which $CC >/dev/null; then
 			break
 		fi
@@ -1031,8 +1036,13 @@ LC_MESSAGES=C ; export LC_MESSAGES
 		--enable-rtc \
 		%{subst_enable network} \
 		%{subst_enable smb} \
-		--disable-live \
 		%{subst_enable dvdread} \
+%if_enabled live
+		--enable-live \
+		--with-livelibdir=%_libdir/live \
+%else
+		--disable-live \
+%endif
 		%{subst_enable mpdvdkit} \
 		%{subst_enable cdparanoia} \
 		%{subst_enable freetype} \
@@ -1422,6 +1432,9 @@ unset RPM_PYTHON
 
 
 %changelog
+* Mon May 15 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060515.2
+- enabled live.com support
+
 * Mon May 15 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060515.1
 - 20060515 CVS snapshot
 - cleanup %name-cvs-20060506-docs.patch
@@ -1684,3 +1697,5 @@ unset RPM_PYTHON
 
 * Wed Dec 26 2001 Grigory Milev <week@altlinux.ru>  0.60pre1-alt1
 - Initial build for ALT Linux distribution.
+
+
