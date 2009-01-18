@@ -1,5 +1,5 @@
 # -*- rpm-spec -*-
-# $Id: MPlayer,v 1.78 2004/04/30 07:15:42 grigory Exp $
+# $Id: MPlayer,v 1.84 2004/06/28 16:10:56 grigory Exp $
 
 %define COMPAT_GCC 0
 
@@ -21,7 +21,7 @@
 
 Name: MPlayer
 Version: %real_version
-Release: alt10.%pre_release
+Release: alt11.%pre_release
 
 Summary: %name - Video player for LINUX
 License: GPL for all but not for OpenDivX
@@ -47,11 +47,12 @@ BuildRequires: XFree86-devel XFree86-libs aalib-devel directfb-devel esound-deve
 BuildRequires: freetype2-devel gcc3.2-c++ glib2-devel gtk+-devel libGLwrapper
 BuildRequires: libalsa-devel libaudio-devel libaudiofile-devel libcdparanoia-devel
 BuildRequires: libdirectfb libdv-devel libdvdcss-devel libjpeg-devel liblame-devel
-BuildRequires: libogg-devel libpng3-devel libslang libungif-devel libvorbis-devel
+BuildRequires: libogg-devel libpng3-devel libslang libvorbis-devel libungif-devel
 BuildRequires: xvid-devel zlib-devel
 
 BuildRequires: libtinfo-devel fontconfig freetype2 libexpat
 BuildRequires: libdvdread-devel libdvdnav-devel
+BuildRequires: kernel-headers-dvb
 
 %if %WITH_LIRC
 BuildRequires: liblirc-devel
@@ -269,6 +270,9 @@ find etc DOCS TOOLS -type f -exec %__chmod 644 {} \;
 %_datadir/%name/Skin/*
 
 %changelog
+* Mon Jun 28 2004 Grigory Milev <week@altlinux.ru> 1.0-alt11.pre4
+- fix build requires for dvb support
+
 * Mon Jun 07 2004 Yuri N. Sedunov <aris@altlinux.ru> 1.0-alt10.pre4
 - rebuild against libdv-0.102
 
@@ -428,6 +432,7 @@ find etc DOCS TOOLS -type f -exec %__chmod 644 {} \;
 
 * Wed Dec 26 2001 Grigory Milev <week@altlinux.ru>  0.60pre1-alt1
 - Initial build for ALT Linux distribution.
+
 
 
 
