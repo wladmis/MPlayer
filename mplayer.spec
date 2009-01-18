@@ -1,5 +1,5 @@
 # -*- rpm-spec -*-
-# $Id: MPlayer,v 1.71 2004/01/19 13:24:26 grigory Exp $
+# $Id: MPlayer,v 1.74 2004/01/27 13:10:09 grigory Exp $
 
 %define COMPAT_GCC 0
 
@@ -21,7 +21,7 @@
 
 Name: MPlayer
 Version: %real_version
-Release: alt4.%pre_release
+Release: alt5.%pre_release
 
 Summary: %name - Video player for LINUX
 License: GPL for all but not for OpenDivX
@@ -34,6 +34,7 @@ Source3: cp1251-font.tar.bz2
 Source4: default-1.7.tar.bz2
 Source5: mplayer.sh
 Patch1: %name-tinfo.patch
+Patch2: %name-dvd-ru.patch
 
 # REMOVE ME
 #BuildArch: i686
@@ -125,6 +126,7 @@ GUI for MPlayer and default skin
 
 %prep
 %setup -q -n %name-%real_version%pre_release
+%patch2 -p0
 %__subst 's/\(ldconfig\)/\#\1/g' libdha/Makefile
 %__subst 's|$(LIBDIR)/mplayer/vidix|$(LIBBINDIR)/vidix/|g' vidix/drivers/Makefile
 %__subst 's|\(/lib/\)mplayer/\(vidix/\)|\1\2|' libvo/Makefile
@@ -266,6 +268,9 @@ find etc DOCS TOOLS -type f -exec %__chmod 644 {} \;
 %_datadir/%name/Skin/*
 
 %changelog
+* Fri Jan 23 2004 Grigory Milev <week@altlinux.ru> 1.0-alt5.pre3
+- added patch for multiplier dvd soudn tracs (thanx Kachalov Anton)
+
 * Mon Jan 19 2004 Grigory Milev <week@altlinux.ru> 1.0-alt4.pre3
 - next pre-release
 
