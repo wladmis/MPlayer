@@ -21,7 +21,7 @@
 
 Name: MPlayer
 Version: %real_version
-Release: alt9.%pre_release
+Release: alt10.%pre_release
 
 Summary: %name - Video player for LINUX
 License: GPL for all but not for OpenDivX
@@ -269,6 +269,9 @@ find etc DOCS TOOLS -type f -exec %__chmod 644 {} \;
 %_datadir/%name/Skin/*
 
 %changelog
+* Mon Jun 07 2004 Yuri N. Sedunov <aris@altlinux.ru> 1.0-alt10.pre4
+- rebuild against libdv-0.102
+
 * Fri Apr 30 2004 Grigory Milev <week@altlinux.ru> 1.0-alt9.pre4
 - new version released
 
