@@ -1,5 +1,5 @@
 # -*- rpm-spec -*-
-# $Id: MPlayer,v 1.74 2004/01/27 13:10:09 grigory Exp $
+# $Id: MPlayer,v 1.75 2004/03/25 13:30:52 grigory Exp $
 
 %define COMPAT_GCC 0
 
@@ -21,7 +21,7 @@
 
 Name: MPlayer
 Version: %real_version
-Release: alt5.%pre_release
+Release: alt6.%pre_release
 
 Summary: %name - Video player for LINUX
 License: GPL for all but not for OpenDivX
@@ -44,7 +44,7 @@ Patch2: %name-dvd-ru.patch
 
 # Automatically added by buildreq on Fri Sep 05 2003
 BuildRequires: XFree86-devel XFree86-libs aalib-devel directfb-devel esound-devel
-BuildRequires: freetype2-devel gcc3.2-c++ glib-devel gtk+-devel libGLwrapper
+BuildRequires: freetype2-devel gcc3.2-c++ glib2-devel gtk+-devel libGLwrapper
 BuildRequires: libalsa-devel libaudio-devel libaudiofile-devel libcdparanoia-devel
 BuildRequires: libdirectfb libdv-devel libdvdcss-devel libjpeg-devel liblame-devel
 BuildRequires: libogg-devel libpng3-devel libslang libungif-devel libvorbis-devel
@@ -268,6 +268,9 @@ find etc DOCS TOOLS -type f -exec %__chmod 644 {} \;
 %_datadir/%name/Skin/*
 
 %changelog
+* Thu Mar 25 2004 Grigory Milev <week@altlinux.ru> 1.0-alt6.pre3
+- rebuild with glib2
+
 * Fri Jan 23 2004 Grigory Milev <week@altlinux.ru> 1.0-alt5.pre3
 - added patch for multiplier dvd soudn tracs (thanx Kachalov Anton)
 
