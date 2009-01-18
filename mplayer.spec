@@ -9,7 +9,7 @@
 %define ffmpeg_version cvs-20060519
 
 %if %cvsbuild
-%global release		%release.%cvsbuild.2
+%global release		%release.%cvsbuild.3
 %global	fversion	cvs-%cvsbuild
 %endif
 
@@ -129,6 +129,7 @@
 
 %define COMPAT_GCC 0
 
+%define Name MPlayer
 Name:     %console_name
 Version:  %base_version
 Release:  alt%release
@@ -470,6 +471,7 @@ Mach64, Permedia3, - аппаратного декодирования AC3, а также нескольких
 интерфейсом пользователя)
 
 %package -n %gui_name
+%define gname gmplayer
 Summary:  %bname is the Unix video player (GUI version)
 Summary(ru_RU.CP1251): %bname - это настоящий видеоплеер (GUI вариант)
 License:  GPL for all but not for OpenDivX
@@ -1086,6 +1088,32 @@ install -d %buildroot%_sysconfdir/bashrc.d
 install -m 0755 %SOURCE5 %buildroot%_sysconfdir/bashrc.d/
 
 # Menus
+iconv -f cp1251 -t utf-8 > %buildroot%_desktopdir/%bname.desktop <<__MENU__
+[Desktop Entry]
+Version=1.0
+Encoding=UTF-8
+Name=%Name
+GenericName=Movie player
+Exec=%gname
+X-MultipleArgs=true
+Icon=%bname
+Terminal=false
+Type=Application
+StartupNotify=true
+Categories=GTK;Application;AudioVideo;
+MimeType=video/mpeg;video/msvideo;video/quicktime;video/x-avi;\
+video/x-ms-asf;video/x-ms-wmv;video/x-msvideo;application/x-ogg;\
+application/ogg;audio/x-mp3;audio/x-mpeg;video/x-mpeg;video/x-fli;\
+audio/x-wav;audio/x-mpegurl;audio/x-scpls;audio/x-ms-asx;\
+application/vnd.rn-realmedia;audio/x-real-audio;audio/x-pn-realaudio;\
+application/x-flac;audio/x-flac;application/x-shockwave-flash;\
+audio/mpeg;audio/x-ms-asf;audio/x-m4a;audio/x-ms-wax;video/dv;\
+video/x-anim;video/x-flc;misc/ultravox;application/x-matroska;\
+audio/vnd.rn-realaudio;audio/x-pn-aiff;audio/x-pn-au;audio/x-pn-wav;\
+audio/x-pn-windows-acm;image/vnd.rn-realpix;video/vnd.rn-realvideo
+__MENU__
+
+#Icons
 install -p -m0644 -D %SOURCE6 %buildroot%_iconsdir/%bname.png
 install -p -m0644 -D %SOURCE7 %buildroot%_liconsdir/%bname.png
 install -p -m0644 -D %SOURCE8 %buildroot%_miconsdir/%bname.png
@@ -1275,6 +1303,10 @@ unset RPM_PYTHON
 
 
 %changelog
+* Wed May 31 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060519.3
+- added menu file
+- cleaned up spec
+
 * Tue May 30 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060519.2
 - cleaned up spec
 - enabled polyp (thanx icesik and polypaudio's author)
