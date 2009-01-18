@@ -3,7 +3,7 @@
 
 %define base_version	1.0
 %define real_version	%base_version
-%define release		alt22
+%define release		alt22.1
 %define pre_release	pre7try2
 %define skin_version	1.7
 %define skin_release	alt1
@@ -14,13 +14,16 @@
 # define cvsbuild 20031202
 # define ffmpeg_version 20031202
 
+%define cvsbuild 0
+%define ffmpeg_version 0
+
 %ifdef pre_release
 %global real_version	%real_version%pre_release
 %global release		%release.%pre_release
 %global fversion	%base_version%pre_release
 %endif
 
-#ifdef cvsbuild
+#if %cvsbuild
 #global	real_version	%real_version%pre_release
 #global release		%release.%cvsbuild
 #global	fversion	%cvsbuild
@@ -136,25 +139,10 @@
 # --enable  flac	- disable FLAC codec (default: disabled)
 # --enable  external_flac  - enable external FLAC codec (default: use internal, BTW: WHY?!)
 
-%ifnarch %ix86
-%force_disable win32
-%force_disable cpu_detection
-%force_disable mmx
-%force_disable mmx2
-%force_disable 3dnow
-%force_disable 3dnowex
-%force_disable sse
-%force_disable sse2
-%endif
-
-%ifnarch ppc
-%force_disable altivec
-%endif
-
 %def_enable  lirc
 %def_enable  tv
 %def_enable  network
-%def_disable  smb
+%def_disable smb
 %def_enable  dvdread
 %def_enable  mpdvdkit
 %def_enable  cdparanoia
@@ -162,14 +150,7 @@
 %def_enable  fontconfig
 %def_enable  menu
 
-%def_enable  cpu_detection
 %def_enable  k6
-%def_enable  mmx
-%def_enable  mmx2
-%def_enable  3dnow
-%def_enable  3dnowex
-%def_enable  sse
-%def_enable  sse2
 %def_disable altivec
 %def_disable debug
 %def_enable  dynamic_plugins
@@ -177,7 +158,7 @@
 %def_disable aalib
 %def_enable  directfb
 %def_enable  dvb
-%def_disable  dxr3
+%def_disable dxr3
 %def_enable  fbdev
 %def_disable ggi
 %def_enable  gl
@@ -195,9 +176,6 @@
 %def_enable  png
 %def_enable  jpeg
 %def_enable  lzo
-%def_enable  win32
-%def_enable  dshow
-%def_enable  qtx
 %def_disable xanim
 %def_enable  real
 %def_enable  xvid
@@ -212,8 +190,26 @@
 %def_enable  mad
 %def_enable  xmms
 %def_enable  jack
+%def_enable cpu_detection
+%def_enable mmx
+%def_enable mmx2
+%def_enable 3dnow
+%def_enable 3dnowex
+%def_enable sse
+%def_enable sse2
 #%%def_enable  flac
 #%%def_disable external_flac
+
+%ifnarch %ix86
+%force_disable win32
+%check_def win32
+%else
+%def_enable win32
+%endif
+
+%ifnarch ppc
+%force_disable altivec
+%endif
 
 # The language to use in mplayer: all or, one of: cz de dk en es fr hu nl no pl ro ru
 %define	mplang		en
@@ -227,6 +223,9 @@
 %force_disable	qtx
 %check_def	dshow
 %check_def	qtx
+%else
+%def_enable	dshow
+%def_enable	qtx
 %endif
 
 %if_disabled matroska
@@ -270,8 +269,10 @@ Requires: urw-fonts
 %endif
 %endif
 
+Packager: Grigory Milev <week@altlinux.ru>
+
 Source0:  %bname-%fversion.tar.bz2
-#ifdef %cvsbuild
+#if %cvsbuild
 #Source1:  http://prdownloads.sourceforge.net/ffmpeg/ffmpeg-%ffmpeg_version.tar.bz2
 #endif
 Source2:  %bname.menu
@@ -300,6 +301,8 @@ Patch19:  mplayer-libmpdvdkit2.patch
 # Patch20:  MPlayer-1.0pre4-printf-format.patch
 # Patch21:  MPlayer-1.0pre5-warnings-printf.patch
 Patch23:  ad_pcm_fix_20050826.diff
+Patch24:  MPlayer-1.0pre7try2-xmmslibs_fix.patch
+Patch25:  MPlayer-1.0pre7try2-libdir_fix.patch
 
 BuildRequires: xorg-x11-devel xorg-x11-mesaGL
 
@@ -356,7 +359,7 @@ BuildRequires: directfb-devel
 %endif
 
 %if_enabled dvb
-BuildRequires: kernel-headers-dvb
+BuildRequires: linux-libc-headers
 %endif
 
 %if_enabled dxr3
@@ -389,7 +392,7 @@ BuildRequires: svgalib-devel
 # vidix
 
 %if_enabled jack
-BuildRequires: jackit-devel
+BuildRequires: jackit-devel libbio2jack-devel
 %endif
 
 %if_enabled alsa
@@ -520,7 +523,7 @@ BuildRequires: cpp >= 3.2 gcc >= 3.2 gcc-c++ >= 3.2
 %force_disable dvbhead
 %endif
 
-# if %WITH_FFMPEG_DYNAMIC
+# if %%WITH_FFMPEG_DYNAMIC
 # BuildRequires: ffmpeg-devel
 # endif
 
@@ -787,7 +790,7 @@ Default skin for %gui_name
 Базовый вариант интерфейса ("шкурка") для %gui_name
 
 %prep
-#ifdef cvsbuild
+#if %cvsbuild
 # CVS Build
 #setup -q -n %fname-%fversion -a 1
 ## needed with CVS snapshots
@@ -805,7 +808,7 @@ Default skin for %gui_name
 %patch6 -p1
 
 # Patches 11/12 are mutually exclusive
-%ifdef cvsbuild
+%if %cvsbuild
 %patch11 -p1 -b .r
 %else
 cat >version.sh <<EOF
@@ -826,6 +829,8 @@ chmod +x version.sh
 # %patch20 -p1 -b .printf-format
 # %patch21 -p1 -b .printf
 # %patch23 -p0
+%patch24 -p1
+%patch25 -p1
 
 %__subst 's/\(ldconfig\)/\#\1/g' libdha/Makefile
 
@@ -890,6 +895,7 @@ LC_MESSAGES=C ; export LC_MESSAGES
 		--datadir=%_datadir/%bname \
 		--mandir=%_mandir \
 		--confdir=%_sysconfdir/%bname \
+		--libdir=%_libdir \
 		--enable-largefiles \
 		--enable-iconv \
 		%{subst_enable lirc} \
@@ -995,7 +1001,6 @@ LC_MESSAGES=C ; export LC_MESSAGES
 		%{subst_enable mad} \
 		%{subst_enable xmms}
 
-
 # %if_enabled flac
 # 		--enable-flac \
 # %if_disabled external_flac
@@ -1008,7 +1013,11 @@ LC_MESSAGES=C ; export LC_MESSAGES
 # 		--disable-external-flac \
 # %endif
 
+%ifarch %ix86
 %make_build
+%else
+%__make # x86_64 smp incompatible.
+%endif
 
 %if_enabled freetype
 pushd TOOLS/subfont-c
@@ -1016,7 +1025,7 @@ make
 popd
 %endif
 
-%ifdef cvsbuild
+%if %cvsbuild
 # build HTML documentation from XML files
 pushd DOCS/xml
 make build-html-chunked
@@ -1025,7 +1034,7 @@ popd
 
 %install
 
-%ifdef cvsbuild
+%if %cvsbuild
 find . -name CVS | xargs rm -rf
 %endif
 
@@ -1088,7 +1097,6 @@ popd
 %__install -m 0755 %SOURCE5 %buildroot%_sysconfdir/bashrc.d/
 
 # Menus
-%__install -p -m0644 -D %SOURCE2 %buildroot%_menudir/%bname
 %__install -p -m0644 -D %SOURCE6 %buildroot%_iconsdir/%bname.png
 %__install -p -m0644 -D %SOURCE7 %buildroot%_liconsdir/%bname.png
 %__install -p -m0644 -D %SOURCE8 %buildroot%_miconsdir/%bname.png
@@ -1149,7 +1157,6 @@ unset RPM_PYTHON
 %_iconsdir/%bname.png
 %_miconsdir/%bname.png
 %_liconsdir/%bname.png
-%_menudir/*
 %_datadir/applications/mplayer.desktop
 %_datadir/pixmaps/mplayer-desktop.xpm
 
@@ -1227,6 +1234,14 @@ unset RPM_PYTHON
 %_libdir/vidix/unichrome_vid.so
 
 %changelog
+* Fri Jan 13 2006 LAKostis <lakostis at altlinux.ru> 1.0-alt22.1.pre7try2
+- NMU;
+- x86_64 fixes;
+- fix jackd builddep;
+- fix unparseable macros;
+- remove old menu files;
+- remove kernel-headers-dvb deps, move to linux-libc-headers.
+
 * Sat Nov 26 2005 Grigory Milev <week@altlinux.ru> 1.0-alt22.pre7try2
 - update to bugfix version
 
