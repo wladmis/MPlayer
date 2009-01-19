@@ -1,7 +1,16 @@
-diff -urN mplayer-svn-r19447.orig/configure mplayer-svn-r19447/configure
---- mplayer-svn-r19447.orig/configure	2006-08-19 13:05:32 +0300
-+++ mplayer-svn-r19447/configure	2006-08-21 17:24:13 +0300
-@@ -4130,6 +4130,8 @@
+diff -urN mplayer-svn-r20022.orig/configure mplayer-svn-r20022/configure
+--- mplayer-svn-r20022.orig/configure	2006-10-02 13:09:55 +0300
++++ mplayer-svn-r20022/configure	2006-10-04 20:21:17 +0300
+@@ -3247,7 +3247,7 @@
+ 
+ 
+ echocheck "termios"
+-if test "$_termios" = auto ; then
++if test "$_termios" != no ; then
+   cat > $TMPC <<EOF
+ #include <sys/termios.h>
+ int main(void) { return 0; }
+@@ -4156,6 +4156,8 @@
    _def_aa='#define HAVE_AA 1'
    if cygwin ; then
      _ld_aa=`aalib-config --libs | cut -d " " -f 2,5,6`
@@ -10,7 +19,7 @@ diff -urN mplayer-svn-r19447.orig/configure mplayer-svn-r19447/configure
    fi
    _vosrc="$_vosrc vo_aa.c"
    _vomodules="aa $_vomodules"
-@@ -4154,7 +4156,7 @@
+@@ -4183,7 +4185,7 @@
  if test "$_caca" = yes ; then
    _def_caca='#define HAVE_CACA 1'
    _inc_extra="$_inc_extra `caca-config --cflags`"
@@ -19,7 +28,7 @@ diff -urN mplayer-svn-r19447.orig/configure mplayer-svn-r19447/configure
    _vosrc="$_vosrc vo_caca.c"
    _vomodules="caca $_vomodules"
  else
-@@ -4844,7 +4846,7 @@
+@@ -4873,7 +4875,7 @@
  
  
  echocheck "JACK"
@@ -28,7 +37,7 @@ diff -urN mplayer-svn-r19447.orig/configure mplayer-svn-r19447/configure
    _jack=yes
  
  cat > $TMPC << EOF
-@@ -4871,7 +4873,7 @@
+@@ -4900,7 +4902,7 @@
  echores "$_jack"
  
  echocheck "OpenAL"
@@ -37,7 +46,7 @@ diff -urN mplayer-svn-r19447.orig/configure mplayer-svn-r19447/configure
    _openal=no
  cat > $TMPC << EOF
  #include <AL/al.h>
-@@ -5315,7 +5317,7 @@
+@@ -5361,7 +5363,7 @@
      _res_comment="freetype support needed"
  fi
  echocheck "fontconfig"
@@ -46,7 +55,7 @@ diff -urN mplayer-svn-r19447.orig/configure mplayer-svn-r19447/configure
          cat > $TMPC << EOF
  #include <stdio.h>
  #include <fontconfig/fontconfig.h>
-@@ -5868,7 +5870,7 @@
+@@ -5906,7 +5908,7 @@
  
  if x86 && not qnx; then
  
@@ -55,7 +64,7 @@ diff -urN mplayer-svn-r19447.orig/configure mplayer-svn-r19447/configure
      if test -z "$_win32libdir" ; then
        for I in "$_libdir/codecs" "$_libdir/win32" /usr/local/lib/codecs /usr/lib/codecs /usr/local/lib/win32 /usr/lib/win32 ; do
          if test -d "$I" ; then
-@@ -7160,6 +7162,9 @@
+@@ -7286,6 +7288,9 @@
  if test "$_vidix_internal" = yes || test "$_vidix_external" = yes ; then
    _vidix=yes
    _def_vidix='#define CONFIG_VIDIX 1'
@@ -65,7 +74,7 @@ diff -urN mplayer-svn-r19447.orig/configure mplayer-svn-r19447/configure
  else
    _vidix=no
    _def_vidix='#undef CONFIG_VIDIX'
-@@ -7169,7 +7174,7 @@
+@@ -7295,7 +7300,7 @@
    _def_vidix_pfx="#define MP_VIDIX_PFX \"$_libdir\" \"/mplayer/vidix/\" "
  elif test "$_vidix_external" = yes ; then
    _ld_vidix_external="-lvidix"
@@ -74,7 +83,7 @@ diff -urN mplayer-svn-r19447.orig/configure mplayer-svn-r19447/configure
  fi
  
  if test "$_vidix" = yes; then
-@@ -8068,6 +8073,7 @@
+@@ -8221,6 +8226,7 @@
  /* enables / disables VIDIX usage */
  $_def_vidix
  $_def_vidix_pfx

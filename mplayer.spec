@@ -6,8 +6,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 %define prerel %nil
-%define svnrev 20016
-%define ffmpeg_svnrev 6287
+%define svnrev 20022
+%define ffmpeg_svnrev 6545
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -19,7 +19,7 @@
 %def_enable largefiles
 %def_disable devfs
 %def_enable termcap
-%def_disable termios
+%def_enable termios
 %def_enable iconv
 %def_enable langinfo
 %def_enable lirc
@@ -190,7 +190,6 @@
 #----------------------	END OF PARAMETERS ---------------------------------------
 
 %{?_disable_mencoder:%set_disable lame}
-%{?_enable_termcap:%set_disable termios}
 
 %if_disabled tv
 %set_disable v4l1
@@ -272,7 +271,7 @@
 Name: %lname
 #Serial: 1
 Version: 1.0
-%define rel 29
+%define rel 30
 %define subrel 1
 %ifdef svnrev
 Release: alt%rel.%svnrev.%subrel
@@ -329,7 +328,7 @@ Patch17: %lname-svn-r19912-ext_ffmpeg.patch.bz2
 Patch21: %Name-svn-20060607-vf_mcdeint.patch.gz
 Patch22: %lname-svn-r19389-polyp0.8.patch.gz
 Patch25: %lname-svn-r19982-doc-cs.patch.gz
-Patch26: %lname-svn-r19467-configure.patch.gz
+Patch26: %lname-svn-r20022-configure.patch.gz
 %{?svnrev:Patch27: %Name-cvs-20060331-builddocs.patch.gz}
 
 BuildRequires: %awk pkgconfig libncurses-devel libslang-devel zlib-devel
@@ -888,7 +887,7 @@ pushd ffmpeg-svn-%ffmpeg_svnrev
 %patch9 -p1
 popd
 %endif
-mv ffmpeg-svn-%ffmpeg_svnrev/lib{av{codec,format,util},postproc} .
+mv ffmpeg-svn-r%ffmpeg_svnrev/lib{av{codec,format,util},postproc} .
 %endif
 %else
 %setup -q -n %Name-%pkgver
@@ -1424,6 +1423,12 @@ unset RPM_PYTHON
 
 
 %changelog
+* Wed Oct 04 2006 Led <led@altlinux.ru> 1.0-alt30.20022.1
+- new SVN snapshot (revision 20022)
+- fixed console control:
+  + updated %lname-svn-r20022-configure.patch
+  + enabled termios
+
 * Mon Oct 02 2006 Led <led@altlinux.ru> 1.0-alt29.20016.1
 - new SVN snapshot (revision 20016)
 - fixed Conflicts in mencoder package
