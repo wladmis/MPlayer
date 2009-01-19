@@ -535,9 +535,9 @@ diff -urN MPlayer-svn-20060704.orig/libmpdemux/demuxer.c MPlayer-svn-20060704/li
 +#ifdef HAVE_DIRAC
 +  &demuxer_desc_dirac,
 +#endif
-   NULL
- };
- 
+ #ifdef HAVE_XMMS
+   &demuxer_desc_xmms,
+ #endif
 diff -urN MPlayer-svn-20060704.orig/libmpdemux/demuxer.h MPlayer-svn-20060704/libmpdemux/demuxer.h
 --- MPlayer-svn-20060704.orig/libmpdemux/demuxer.h	2006-06-13 15:12:29 +0300
 +++ MPlayer-svn-20060704/libmpdemux/demuxer.h	2006-07-04 20:59:34 +0300

@@ -1,0 +1,34 @@
+--- MPlayer-svn-20060630/vidix/Makefile.orig	2006-07-06 19:41:05 +0300
++++ MPlayer-svn-20060630/vidix/Makefile	2006-07-06 19:45:22 +0300
+@@ -1,4 +1,5 @@
+-LIBNAME = libvidix.so
++LIBNAME = libvidix.a
++LIBNAME_SO = libvidix.so
+ BINDIR = $(prefix)/lib
+ INCDIR = $(prefix)/include/vidix
+ SUBDIRS = drivers
+@@ -21,9 +22,13 @@
+ all:	$(SUBDIRS) $(LIBNAME)
+ 	$(DO_MAKE)
+ 
+-$(LIBNAME):	$(OBJS)
++$(LIBNAME_SO):	$(OBJS)
+ 	$(LD) -shared -soname $(LIBNAME) -o $(LIBNAME) $(OBJS) -lc -ldl
+ 
++$(LIBNAME):	$(OBJS)
++	$(AR) r $(LIBNAME) $(OBJS)
++	$(RANLIB) $(LIBNAME)
++
+ clean:
+ 	rm -f *.o $(LIBNAME) *~
+ 	$(DO_MAKE)
+@@ -39,6 +44,9 @@
+ 	$(CC) -MM $(CFLAGS) $(SRCS) 1>.depend
+ 
+ install:
++	$(MAKE) -C drivers install
++	
++installall:
+ 	$(DO_MAKE)
+ 	mkdir -p $(BINDIR)
+ 	install -m 755 -s -p $(LIBNAME) $(BINDIR)

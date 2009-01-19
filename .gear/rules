@@ -1,6 +1,7 @@
-tar.bz2: r18902:. name=@name@-svn-20060705
+tar.bz2: r18929:. name=@name@-svn-20060707
 tar.bz2: cp1251-font:. name=cp1251-font base=font
 tar.bz2: standard-1.9:. name=standard-1.9 base=standard
+tar.bz2: vidix-0.9.9.1:. name=vidix-0.9.9.1
 copy: *.sh MPlayer-1.0*.patch
-gzip: MPlayer-cvs-*.patch MPlayer-svn-200606*.patch MPlayer-dvd-ru-*.patch
+gzip: MPlayer-cvs-*.patch MPlayer-svn-200606*.patch MPlayer-dvd-ru-*.patch vidix-*.patch
 bzip2: *.c MPlayer-svn-*_dirac-*.patch

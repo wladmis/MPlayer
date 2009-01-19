@@ -1,0 +1,22 @@
+--- MPlayer-svn-20060630/vidix/Makefile.orig	2006-07-07 01:41:16 +0300
++++ MPlayer-svn-20060630/vidix/Makefile	2006-07-07 01:43:11 +0300
+@@ -19,7 +19,9 @@
+ .c.o:
+ 	$(CC) -c $(CFLAGS) -o $@ $<
+ 
+-all:	$(SUBDIRS) $(LIBNAME)
++all:	$(LIBNAME)
++
++every:	$(SUBDIRS) $(LIBNAME)
+ 	$(DO_MAKE)
+ 
+ $(LIBNAME_SO):	$(OBJS)
+@@ -44,6 +46,8 @@
+ 	$(CC) -MM $(CFLAGS) $(SRCS) 1>.depend
+ 
+ install:
++
++installdrivers:
+ 	$(MAKE) -C drivers install
+ 	
+ installall:
