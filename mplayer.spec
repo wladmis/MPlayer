@@ -273,7 +273,7 @@
 Name: %lname
 Serial: 1
 Version: 1.0
-%define altrel 1
+%define altrel 2
 %ifdef svnrev
 Release: alt1.%svnrev.%altrel
 %define pkgver svn-r%svnrev
@@ -344,7 +344,7 @@ BuildRequires: cpp >= 3.3 gcc >= 3.3 gcc-c++ >= 3.3
 %{?_enable_pvr:BuildRequires: linux-libc-headers}
 %{?_enable_rtc:BuildRequires: linux-libc-headers}
 %{?_enable_smb:BuildRequires: libsmbclient-devel >= 3.0.3}
-%{?_enable_live:BuildRequires: liblive-devel >= 0.0.0-alt0.2006.05.15}
+%{?_enable_live:BuildRequires: liblive555-devel >= 0.0.0-alt0.2006.05.15}
 %{?_enable_dvdnav:BuildRequires: libdvdnav-devel}
 %{?_enable_dvdread:BuildRequires: libdvdread-devel}
 %{?_enable_mpdvdkit:BuildRequires: linux-libc-headers}
@@ -362,7 +362,7 @@ BuildRequires: cpp >= 3.3 gcc >= 3.3 gcc-c++ >= 3.3
 %{?_enable_lzo:BuildRequires: liblzo-devel}
 %{?_enable_xvid:BuildRequires: libxvid-devel}
 %{?_enable_x264:BuildRequires: libx264-devel}
-%{?_enable_shared_ffmpeg:BuildRequires: libffmpeg-devel >= 1:0.5.0-alt0.20060713.1}
+%{?_enable_shared_ffmpeg:BuildRequires: libffmpeg-devel >= 0.5.0}
 %{?_enable_fame:BuildRequires: libfame-devel}
 %{?_enable_tremor_external:BuildRequires: libtremor-devel}
 %{?_enable_vorbis:BuildRequires: libvorbis-devel}
@@ -1235,16 +1235,14 @@ X-MultipleArgs=true
 StartupNotify=true
 __MENU__
 
-%if_enabled mencoder
-rm -f %buildroot%_man1dir/mencoder.1 ||:
-echo ".so %lname.1" > %buildroot%_man1dir/mencoder.1
-%endif
-
 # docs
 bzip2 --best --force --keep -- ChangeLog
-for l in cs de es fr hu it pl sv zh; do
+for l in $(ls DOCS/man | grep -v 'en'); do
     install -pD -m 0644 DOCS/man/$l/%lname.1 %buildroot%_mandir/$l/man1/%lname.1
+    %{?_enable_mencoder:install -m 0644 DOCS/man/$l/%lname.1 %buildroot%_mandir/$l/man1/mencoder.1}
 done
+rm -f %buildroot%_man1dir/mencoder.1
+%{?_enable_mencoder:install -m 0644 DOCS/man/en/%lname.1 %buildroot%_man1dir/mencoder.1}
 for l in it zh; do
     install -d %buildroot%_docdir/%name-doc-%version/$l
     install -m 0644 DOCS/$l/*.html %buildroot%_docdir/%name-doc-%version/$l/
@@ -1262,8 +1260,10 @@ install -m 0644 DOCS/tech/realcodecs/{TODO,*.txt} %buildroot%_docdir/%name-doc-%
 for l in po/*.gmo; do
 install -pD -m 0644 $l %buildroot%_datadir/locale/$(basename $l .gmo)/LC_MESSAGES/%name.mo
 done
-%find_lang %name
 %endif
+
+%find_lang --with-man %lname
+%{?_enable_mencoder:%find_lang --with-man mencoder}
 
 # a tribute to clever python support
 unset RPM_PYTHON
@@ -1280,7 +1280,7 @@ unset RPM_PYTHON
 %endif
 
 
-%files
+%files -f %lname.lang
 %doc README AUTHORS ChangeLog.*
 %_bindir/%lname
 %{?_enable_freetype:%_bindir/%{lname}_subfont}
@@ -1299,8 +1299,6 @@ unset RPM_PYTHON
 %_datadir/%name/font
 %endif
 %endif
-%_man1dir/*
-%_mandir/*/man1/*
 
 
 %if_enabled gui
@@ -1329,7 +1327,7 @@ unset RPM_PYTHON
 
 
 %if_enabled mencoder
-%files -n mencoder
+%files -n mencoder -f mencoder.lang
 %_bindir/mencoder
 %endif
 
@@ -1425,6 +1423,10 @@ unset RPM_PYTHON
 
 
 %changelog
+* Fri Sep 08 2006 Led <led@altlinux.ru> 1:1.0-alt1.19700.2
+- fixed BuildRequires
+- fixed install mans
+
 * Thu Sep 07 2006 Led <led@altlinux.ru> 1:1.0-alt1.19700.1
 - new SVN snapshot (revision 19700)
 
