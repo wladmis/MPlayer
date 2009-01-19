@@ -6,8 +6,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 %define prerel %nil
-%define svnrev 19912
-%define ffmpeg_svnrev 6290
+%define svnrev 19982
+%define ffmpeg_svnrev 6331
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -270,15 +270,14 @@
 %define lname mplayer
 %define Name MPlayer
 Name: %lname
-#Serial: 1
+Serial: 1
 Version: 1.0
-%define rel 28
-%define subrel 1
+%define altrel 1
 %ifdef svnrev
-Release: alt%rel.%svnrev.%subrel
+Release: alt1.%svnrev.%altrel
 %define pkgver svn-r%svnrev
 %else
-Release: alt%rel
+Release: alt%altrel
 %define pkgver %version%prerel
 %endif
 Summary: Media player
@@ -328,6 +327,7 @@ Patch16: %Name-1.0pre8-udev.patch.gz
 Patch17: %lname-svn-r19912-ext_ffmpeg.patch.bz2
 Patch21: %Name-svn-20060607-vf_mcdeint.patch.gz
 Patch22: %lname-svn-r19389-polyp0.8.patch.gz
+Patch25: %lname-svn-r19982-doc-cs.patch.gz
 Patch26: %lname-svn-r19467-configure.patch.gz
 %{?svnrev:Patch27: %Name-cvs-20060331-builddocs.patch.gz}
 
@@ -514,7 +514,7 @@ Mach64, Permedia3, - аппаратного декодирования AC3, а также нескольких
 Group: Video
 Summary: Font utils for the %Name
 Requires: %name
-Conflicts: %Name-fonts %Name
+Conflicts: %Name-fonts %lname-fonts < 1.0-alt0.20060719.1
 
 %description fontutils
 Font utils for use with %Name.
@@ -908,6 +908,7 @@ mv ffmpeg-svn-%ffmpeg_svnrev/lib{av{codec,format,util},postproc} .
 %patch21 -p1
 %{?_enable_polyp:%{?_disable_old_polyp:%patch22 -p1}}
 %ifdef svnrev
+%patch25 -p1
 %patch26 -p1
 %patch27 -p1
 %endif
@@ -1419,8 +1420,9 @@ unset RPM_PYTHON
 
 
 %changelog
-* Mon Sep 25 2006 Led <led@altlinux.ru> 1.0-alt28.19912.1
-- rebuild for Sisyphus
+* Tue Sep 26 2006 Led <led@altlinux.ru> 1:1.0-alt1.19982.1
+- new SVN snapshot (revision 19982)
+- added %lname-svn-r19982-doc-cs.patch
 
 * Wed Sep 20 2006 Led <led@altlinux.ru> 1:1.0-alt1.19912.1
 - new SVN snapshot (revision 19912)
