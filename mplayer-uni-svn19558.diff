@@ -1,0 +1,405 @@
+diff -urN mplayer-svn-r19558.orig/codec-cfg.c mplayer-svn-r19558/codec-cfg.c
+--- mplayer-svn-r19558.orig/codec-cfg.c	2006-07-17 10:28:57 +0300
++++ mplayer-svn-r19558/codec-cfg.c	2006-08-28 15:58:05 +0300
+@@ -178,6 +178,7 @@
+ 		{"ZRMJPEGIT", IMGFMT_ZRMJPEGIT},
+ 		{"ZRMJPEGIB", IMGFMT_ZRMJPEGIB},
+ 
++		{"VLD_MPEG2",IMGFMT_XVMC_VLD_MPEG2},
+ 		{"IDCT_MPEG2",IMGFMT_XVMC_IDCT_MPEG2},
+ 		{"MOCO_MPEG2",IMGFMT_XVMC_MOCO_MPEG2},
+ 
+diff -urN mplayer-svn-r19558.orig/configure mplayer-svn-r19558/configure
+--- mplayer-svn-r19558.orig/configure	2006-08-28 14:40:34 +0300
++++ mplayer-svn-r19558/configure	2006-08-28 16:09:02 +0300
+@@ -422,7 +422,8 @@
+   --with-xmmsplugindir=DIR XMMS plugins in DIR
+   --with-xmmslibdir=DIR    libxmms.so.1 in DIR
+   --with-cdparanoialibdir=DIR  cdparanoia libraries (libcdda_*) in DIR (*)
+-  --with-xvmclib=NAME      name of adapter-specific library (e.g. XvMCNVIDIA)
++  --with-xvmclib=NAME      name of adapter-specific library
++                           (e.g. XvMCNVIDIA/I810XvMC/viaXvMC/viaXvMCPro)
+ 
+   --with-freetype-config=PATH path to freetype-config
+                               (e.g. /opt/bin/freetype-config)
+@@ -3833,33 +3834,88 @@
+ echores "$_xv"
+ 
+ 
+-echocheck "XvMC"
+-if test "$_xv" = yes && test "$_xvmc" != no ; then
+-  _xvmc=no
+-  cat > $TMPC <<EOF
+-#include <X11/Xlib.h>
++xvmc_check()
++{
++  if test "$_xvmcvld" = yes; then
++    _xvmcinc="vldXvMC.h"
++  else
++    _xvmcinc="XvMClib.h"
++  fi
++
++  echo "#include <X11/Xlib.h>
+ #include <X11/extensions/Xvlib.h>
+-#include <X11/extensions/XvMClib.h>
++#include <X11/extensions/$_xvmcinc>
+ int main(void) { 
+   (void) XvMCQueryExtension(0,0,0);
+   (void) XvMCCreateContext(0,0,0,0,0,0,0);
+-  return 0; }
+-EOF
+-  for _ld_tmp in $_xvmclib XvMCNVIDIA XvMCW I810XvMC ; do
+-    cc_check -lXvMC -l$_ld_tmp $_ld_xv $_ld_x11 && _xvmc=yes && _xvmclib="$_ld_tmp" && break
+-  done
+-fi
+-if test "$_xvmc" = yes ; then
+-  _def_xvmc='#define HAVE_XVMC 1'
+-  _ld_xvmc="-lXvMC -l$_xvmclib"
+-  _vosrc="$_vosrc vo_xvmc.c"
+-  _vomodules="xvmc $_vomodules"
+-  _res_comment="using $_xvmclib"
+-else
+-  _def_xvmc='#undef HAVE_XVMC'
+-  _novomodules="xvmc $_novomodules"
++  return 0; }" > $TMPC
++
++  _success=0
++  cc_check $_inc_x11 -lXvMC -l$_xvmclib $_ld_xv $_ld_x11 && _success=1
++  return $_ok
++}
++ 
++# Note: here we try to determine what xvmc capability is available
++# if the xvmc wrapper is available then we link to that, also we
++# check whether we can include the vld (slice) level xvmc include file
++if test "$_x11" = yes && test "$_xv" = yes && test "$_xvmc" != no ; then
++  _xvmc=no
++ 
++# No explicit xvmc lib specified so try and find one
++  if test "$_xvmclib" = ""; then
++# Try with the xvmc wrapper+vld first
++    echocheck "XvMC (Wrapper+vld)"
++    _xvmclib="XvMCW"
++    _xvmcvld=yes
++    xvmc_check && _xvmc=yes
++    echores $_xvmc
++
++# Try with the xvmc wrapper
++    if test "$_xvmc" = no ; then
++      echocheck "XvMC (Wrapper)"
++      _xvmcvld=no
++      xvmc_check && _xvmc=yes
++      echores $_xvmc
++    fi
++
++# Try with the nvidia lib
++    if test "$_xvmc" = no ; then
++      echocheck "XvMC (NVIDIA)"
++      _xvmclib="XvMCNVIDIA"
++      xvmc_check && _xvmc=yes
++      echores $_xvmc
++    fi
++  else
++# check for specified xvmc lib
++    echocheck "XvMC vld+("$_xvmclib")"
++    _xvmcvld=yes
++    xvmc_check && _xvmc=yes
++    echores $_xvmc
++
++    if test "$_xvmc" = no ; then
++      echocheck "XvMC ("$_xvmclib")"
++      _xvmcvld=no
++      xvmc_check && _xvmc=yes
++      echores $_xvmc
++    fi
++  fi
++
++  if test "$_xvmc" = yes ; then
++    _def_xvmc='#define HAVE_XVMC 1'
++    _ld_xvmc="-lXvMC -l$_xvmclib"
++    _vosrc="$_vosrc vo_xvmc.c"
++    _vomodules="xvmc $_vomodules"
++  else
++    _novomodules="xvmc $_novomodules"
++    _def_xvmc='#undef HAVE_XVMC'
++  fi
++
++  if test "$_xvmcvld" = yes; then
++    _def_xvmc_vld='#define HAVE_XVMC_VLD 1'
++  else
++    _def_xvmc_vld='#undef HAVE_XVMC_VLD'
++  fi
+ fi
+-echores "$_xvmc"
+ 
+ 
+ echocheck "Xinerama"
+@@ -8111,6 +8167,7 @@
+ $_def_x11
+ $_def_xv
+ $_def_xvmc
++$_def_xvmc_vld
+ $_def_vm
+ $_def_xf86keysym
+ $_def_xinerama
+diff -urN mplayer-svn-r19558.orig/etc/codecs.conf mplayer-svn-r19558/etc/codecs.conf
+--- mplayer-svn-r19558.orig/etc/codecs.conf	2006-08-17 13:36:39 +0300
++++ mplayer-svn-r19558/etc/codecs.conf	2006-08-28 15:58:13 +0300
+@@ -124,6 +124,7 @@
+   fourcc mx5p        ; MPEG IMX 625/50 (50 Mb/s)
+   driver ffmpeg
+   dll "mpegvideo_xvmc"
++  out VLD_MPEG2
+   out IDCT_MPEG2
+   out MOCO_MPEG2
+ 
+diff -urN mplayer-svn-r19558.orig/libmpcodecs/img_format.c mplayer-svn-r19558/libmpcodecs/img_format.c
+--- mplayer-svn-r19558.orig/libmpcodecs/img_format.c	2006-07-17 10:28:51 +0300
++++ mplayer-svn-r19558/libmpcodecs/img_format.c	2006-08-28 15:58:20 +0300
+@@ -65,6 +65,7 @@
+ 	case IMGFMT_ZRMJPEGIB: return("Zoran MJPEG bottom field first");
+ 	case IMGFMT_XVMC_MOCO_MPEG2: return("MPEG1/2 Motion Compensation");
+ 	case IMGFMT_XVMC_IDCT_MPEG2: return("MPEG1/2 Motion Compensation and IDCT");
++	case IMGFMT_XVMC_VLD_MPEG2: return("MPEG1/2 Motion Compensation and VLD");
+     }
+     return("Unknown");
+ }
+diff -urN mplayer-svn-r19558.orig/libmpcodecs/img_format.h mplayer-svn-r19558/libmpcodecs/img_format.h
+--- mplayer-svn-r19558.orig/libmpcodecs/img_format.h	2006-07-17 10:28:51 +0300
++++ mplayer-svn-r19558/libmpcodecs/img_format.h	2006-08-28 15:58:24 +0300
+@@ -106,6 +106,7 @@
+ //these are chroma420
+ #define IMGFMT_XVMC_MOCO_MPEG2 (IMGFMT_XVMC|0x02)
+ #define IMGFMT_XVMC_IDCT_MPEG2 (IMGFMT_XVMC|0x82)
++#define IMGFMT_XVMC_VLD_MPEG2 (IMGFMT_XVMC|0x42)
+ 
+ typedef struct {
+     void* data;
+diff -urN mplayer-svn-r19558.orig/libmpcodecs/vd_ffmpeg.c mplayer-svn-r19558/libmpcodecs/vd_ffmpeg.c
+--- mplayer-svn-r19558.orig/libmpcodecs/vd_ffmpeg.c	2006-08-17 13:36:27 +0300
++++ mplayer-svn-r19558/libmpcodecs/vd_ffmpeg.c	2006-08-28 15:59:06 +0300
+@@ -153,6 +153,8 @@
+         case IMGFMT_XVMC_IDCT_MPEG2:
+         case IMGFMT_XVMC_MOCO_MPEG2:
+             if(avctx->pix_fmt==PIX_FMT_XVMC_MPEG2_IDCT) return CONTROL_TRUE;
++        case IMGFMT_XVMC_VLD_MPEG2:
++            if(avctx->pix_fmt==PIX_FMT_XVMC_MPEG2_VLD) return CONTROL_TRUE;
+ #endif
+ 	}
+         return CONTROL_FALSE;
+@@ -479,6 +481,7 @@
+ #ifdef HAVE_XVMC
+         case PIX_FMT_XVMC_MPEG2_MC:ctx->best_csp=IMGFMT_XVMC_MOCO_MPEG2;break;
+         case PIX_FMT_XVMC_MPEG2_IDCT:ctx->best_csp=IMGFMT_XVMC_IDCT_MPEG2;break;
++        case PIX_FMT_XVMC_MPEG2_VLD:ctx->best_csp=IMGFMT_XVMC_VLD_MPEG2;break;
+ #endif
+ 	default:
+ 	    ctx->best_csp=0;
+@@ -854,7 +857,11 @@
+         avctx->get_buffer= mc_get_buffer;
+         avctx->release_buffer= mc_release_buffer;
+         avctx->draw_horiz_band = mc_render_slice;
++        if (avctx->xvmc_acceleration != 4)
+         mp_msg(MSGT_DECVIDEO, MSGL_INFO, MSGTR_MPCODECS_XVMCAcceleratedMPEG2);
++        else
++            printf("vd_ffmpeg: XVMC-VLD accelerated MPEG2\n");
++
+         assert(ctx->do_dr1);//these are must to!
+         assert(ctx->do_slices); //it is (vo_)ffmpeg bug if this fails
+         avctx->flags|= CODEC_FLAG_EMU_EDGE;//do i need that??!!
+diff -urN mplayer-svn-r19558.orig/libvo/vo_xvmc.c mplayer-svn-r19558/libvo/vo_xvmc.c
+--- mplayer-svn-r19558.orig/libvo/vo_xvmc.c	2006-07-03 14:16:55 +0300
++++ mplayer-svn-r19558/libvo/vo_xvmc.c	2006-08-28 15:59:33 +0300
+@@ -24,6 +24,10 @@
+ #include <X11/extensions/Xvlib.h>
+ #include <X11/extensions/XvMClib.h>
+ 
++#ifdef HAVE_XVMC_VLD
++#include <X11/extensions/vldXvMC.h>
++#endif
++
+ #include "x11_common.h"
+ #include "xvmc_render.h"
+ 
+@@ -113,7 +117,7 @@
+   "XVideo Motion Compensation",
+   "xvmc",
+   "Ivan Kalvachev <iive@users.sf.net>",
+-  ""
++  "Ivor Hewitt <ivor@ivor.org> - VIA VLD support"
+ };
+ 
+ LIBVO_EXTERN(xvmc);
+@@ -186,7 +190,23 @@
+ }
+ //end of vo_xv shm/xvimage code
+ 
++int hasVLDAcceleration()
++{
++#ifdef HAVE_XVMC_VLD
++    return XVMC_VLD == (surface_info.mc_type & XVMC_VLD);
++#else
++    return 0;
++#endif
++}            
++
+ static int xvmc_check_surface_format(uint32_t format, XvMCSurfaceInfo * surf_info){
++#ifdef HAVE_XVMC_VLD
++    if (format == IMGFMT_XVMC_VLD_MPEG2 ){
++        if( surf_info->mc_type != (XVMC_VLD|XVMC_MPEG_2) ) return -1;
++        if( surf_info->chroma_format != XVMC_CHROMA_FORMAT_420 ) return -1;
++        return 0;
++    }
++#endif
+    if ( format == IMGFMT_XVMC_IDCT_MPEG2 ){ 
+       if( surf_info->mc_type != (XVMC_IDCT|XVMC_MPEG_2) ) return -1;
+       if( surf_info->chroma_format != XVMC_CHROMA_FORMAT_420 ) return -1;
+@@ -471,6 +491,8 @@
+    if(surface_info.chroma_format == XVMC_CHROMA_FORMAT_444)
+       blocks_per_macroblock = 12;
+ 
++if (!hasVLDAcceleration())
++{
+    rez = XvMCCreateBlocks(mDisplay,&ctx,numblocks*blocks_per_macroblock,&data_blocks);
+    if( rez != Success ){
+       XvMCDestroyContext(mDisplay,&ctx);
+@@ -486,6 +508,8 @@
+    }
+    printf("vo_xvmc: mv_blocks allocated\n");
+ 
++}
++
+    if(surface_render==NULL)
+       surface_render=malloc(MAX_SURFACES*sizeof(xvmc_render_state_t));//easy mem debug
+    memset(surface_render,0,MAX_SURFACES*sizeof(xvmc_render_state_t));
+@@ -504,6 +528,11 @@
+       surface_render[i].chroma_format = surface_info.chroma_format;
+       surface_render[i].unsigned_intra = (surface_info.flags & XVMC_INTRA_UNSIGNED) == XVMC_INTRA_UNSIGNED;
+       surface_render[i].p_surface = &surface_array[i];
++
++      surface_render[i].state = 0;
++      surface_render[i].disp = mDisplay;
++      surface_render[i].ctx = &ctx;
++
+       if( mp_msg_test(MSGT_VO,MSGL_DBG4) )
+           printf("vo_xvmc: surface[%d] = %p .rndr=%p\n",i,&surface_array[i], &surface_render[i]);
+    }
+@@ -1137,9 +1166,11 @@
+ 
+    if( number_of_surfaces ){
+ 
++      if (!hasVLDAcceleration())
++      {
+       XvMCDestroyMacroBlocks(mDisplay,&mv_blocks);
+       XvMCDestroyBlocks(mDisplay,&data_blocks);
+-
++      }
+       for(i=0; i<number_of_surfaces; i++)
+       {
+          XvMCHideSurface(mDisplay,&surface_array[i]);//it doesn't hurt, I hope
+@@ -1217,6 +1248,17 @@
+    assert( rndr != NULL );
+    assert( rndr->magic == MP_XVMC_RENDER_MAGIC );
+ 
++   if (hasVLDAcceleration())
++   {
++        rez = XvMCPutSlice2(mDisplay,&ctx,(char*)rndr->slice_data,
++                            rndr->slice_datalen,
++                            rndr->slice_code);
++        if (rez)
++           printf("vo_xxmc::slice Error %d\n",rez);
++
++   }
++   else
++   {
+    rez = XvMCRenderSurface(mDisplay,&ctx,rndr->picture_structure,
+              		   rndr->p_surface,
+                            rndr->p_past_surface,
+@@ -1228,7 +1270,7 @@
+    if(rez != Success)
+    {
+    int i;
+-      printf("vo_xvmc::slice: RenderSirface returned %d\n",rez);
++      printf("vo_xvmc::slice: RenderSurface returned %d\n",rez);
+ 
+       printf("vo_xvmc::slice: pict=%d,flags=%x,start_blocks=%d,num_blocks=%d\n",
+              rndr->picture_structure,rndr->flags,rndr->start_mv_blocks_num,
+@@ -1256,6 +1298,7 @@
+    rez = XvMCFlushSurface(mDisplay, rndr->p_surface);
+    assert(rez==Success);
+ 
++}
+ //   rndr->start_mv_blocks_num += rndr->filled_mv_blocks_num;
+    rndr->start_mv_blocks_num = 0;
+    rndr->filled_mv_blocks_num = 0;
+@@ -1348,8 +1391,16 @@
+ 
+ // these are shared!! so watch out
+ // do call RenderSurface before overwriting
++if (!hasVLDAcceleration())
++{
+    mpi->planes[0] = (char*)data_blocks.blocks;   
+    mpi->planes[1] = (char*)mv_blocks.macro_blocks;
++}
++else
++{
++   mpi->planes[0] = 1;
++   mpi->planes[1] = 0;
++}
+    mpi->priv =
+    mpi->planes[2] = (char*)rndr;
+ 
+diff -urN mplayer-svn-r19558.orig/Makefile mplayer-svn-r19558/Makefile
+--- mplayer-svn-r19558.orig/Makefile	2006-08-28 14:40:34 +0300
++++ mplayer-svn-r19558/Makefile	2006-08-28 15:58:36 +0300
+@@ -200,7 +200,9 @@
+ ifeq ($(TREMOR_INTERNAL),yes)
+ PARTS += tremor
+ endif
+-
++ifeq ($(HAVE_XVMC_ACCEL),yes)
++CODEC_LIBS += $(X_LIB)
++endif
+ ALL_PRG = $(PRG)
+ ifeq ($(MENCODER),yes)
+ ALL_PRG += $(PRG_MENCODER)
+diff -urN mplayer-svn-r19558.orig/xvmc_render.h mplayer-svn-r19558/xvmc_render.h
+--- mplayer-svn-r19558.orig/xvmc_render.h	2006-06-13 15:12:34 +0300
++++ mplayer-svn-r19558/xvmc_render.h	2006-08-28 15:58:53 +0300
+@@ -5,6 +5,9 @@
+ #include <X11/extensions/Xvlib.h>
+ #include <X11/extensions/XvMClib.h>
+ 
++#ifdef HAVE_XVMC_VLD
++#include <X11/extensions/vldXvMC.h>
++#endif
+ 
+ //the surface should be shown, video driver manipulate this
+ #define MP_XVMC_STATE_DISPLAY_PENDING 1
+@@ -27,7 +30,20 @@
+   int idct;//does we use IDCT acceleration?
+   int chroma_format;//420,422,444
+   int unsigned_intra;//+-128 for intra pictures after clip
++
++#ifdef HAVE_XVMC_VLD
++  int reserved1[3];
++  // These are for the XVMC VLD slice interface
++  int pict_type; //this is for skipping frames
++  int   slice_code; 
++  int   slice_datalen;
++  unsigned char *slice_data;
++  Display *disp;
++  XvMCContext *ctx;
++#else
+   int reserved1[12];//future extenstions (e.g. gmc,qpel)
++#endif
++  
+   void * p_osd_target_surface_render;//pointer to the surface where subpicture is rendered
+   XvMCSurface* p_surface;//pointer to rendered surface, never changed
+ 
+@@ -47,4 +63,6 @@
+   
+   int next_free_data_block_num;//used in add_mv_block, pointer to next free block
+ 
++
++
+ } xvmc_render_state_t;

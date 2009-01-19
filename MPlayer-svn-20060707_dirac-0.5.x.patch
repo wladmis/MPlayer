@@ -1,0 +1,798 @@
+diff -urN MPlayer-svn-20060704.orig/configure MPlayer-svn-20060704/configure
+--- MPlayer-svn-20060704.orig/configure	2006-07-03 14:16:58 +0300
++++ MPlayer-svn-20060704/configure	2006-07-04 20:59:34 +0300
+@@ -293,6 +293,7 @@
+   --disable-amr_nb       disable amr narrowband, floating point [autodetect]
+   --disable-amr_nb-fixed disable amr narrowband, fixed point [autodetect]
+   --disable-amr_wb       disable amr wideband, floating point [autodetect]
++  --enable-dirac         build with Dirac support [autodetect]
+   --disable-codec=CODEC  disable specified codec
+   --enable-codec=CODEC   dnable specified codec
+   
+@@ -1690,6 +1691,7 @@
+ _ftp=yes
+ _musepack=auto
+ _vstream=auto
++_dirac=auto
+ _pthreads=yes
+ _rpath=no
+ for ac_option do
+@@ -2009,6 +2011,9 @@
+ 
+   --enable-sortsub) _sortsub=yes ;;
+   --disable-sortsub) _sortsub=no ;;
++  
++  --enable-dirac) _dirac=yes ;;
++  --disable-dirac) _dirac=no ;;
+ 
+   --charset=*)
+     _charset=`echo $ac_option | cut -d '=' -f 2`
+@@ -7313,6 +7318,53 @@
+ fi
+ echores "$_lircc"
+ 
++echocheck "Dirac support (version 5.2!)"
++if test "$_dirac" = auto ; then
++  _dirac=no
++  cat > $TMPC << EOF
++#include <libdirac_decoder/dirac_parser.h>
++#include <string.h>
++int main(void) 
++{ 
++  /* dirac is in flux, make sure that all interface routines and 
++   * datatypes exist and work the way we expect it, so we don't break
++   * mplayer */
++  dirac_decoder_t *decoder;
++  unsigned char *yuv[3];
++  char buffer[1024];
++  dirac_chroma_t chroma;
++  dirac_frame_type_t frame;
++  dirac_seqparams_t seq_params;
++  dirac_frameparams_t frame_params;
++  dirac_framebuf_t frame_buf;
++  DecoderState state;
++
++  decoder = dirac_decoder_init(0);
++
++  /* we don't want to execute this kind of nonsense; just for making sure
++   * that compilation works... */
++  memset(&buffer, 0, sizeof(buffer));
++  dirac_buffer (decoder, buffer, buffer + sizeof(buffer));
++  state = dirac_parse (decoder);
++  dirac_set_buf (decoder, yuv, NULL);
++  dirac_skip(decoder, 1);
++  dirac_decoder_close(decoder);
++  return 0;
++}
++EOF
++  cc_check `pkg-config --cflags dirac` `pkg-config --libs dirac` -lstdc++ && _dirac=yes
++fi
++if test "$_dirac" = yes ; then
++  _def_dirac='#define HAVE_DIRAC 1'
++  _codecmodules="libdirac $_codecmodules"
++  _inc_dirac=`pkg-config --cflags dirac`
++  _ld_dirac="`pkg-config --libs dirac` -lstdc++"
++else
++  _def_dirac='#undef HAVE_DIRAC'
++  _nocodecmodules="libdirac $_nocodecmodules"
++fi
++echores "$_dirac"
++
+ #############################################################################
+ echo "Creating config.mak"
+ cat > config.mak << EOF
+@@ -7497,6 +7549,7 @@
+ SPEEX_LIB = $_ld_speex
+ LIBTHEORA = $_theora
+ THEORA_LIB = $_ld_theora
++LIBDIRAC = $_dirac
+ FAAD_LIB = $_ld_faad
+ INTERNAL_FAAD = $_faad_internal
+ SMBSUPPORT_LIB = $_ld_smb
+@@ -7519,6 +7572,8 @@
+ AMR_NB=$_amr_nb
+ AMR_NB_FIXED=$_amr_nb_fixed
+ AMR_WB=$_amr_wb
++DIRAC_LIB = $_ld_dirac
++DIRAC_INC = $_inc_dirac
+ `echo $_libavcodecs | tr '[a-z] ' '[A-Z]\n' | sed 's/^/CONFIG_/;s/$/=yes/'`
+ CONFIG_FAAC=$_faac
+ CONFIG_XVID=$_lavc_xvid
+@@ -8112,6 +8167,9 @@
+ /* enable OggTheora support */
+ $_def_theora
+ 
++/* enable Dirac support */
++$_def_dirac
++
+ /* enable FAAD (AAC) support */
+ $_def_faad
+ $_def_faad_internal
+diff -urN MPlayer-svn-20060704.orig/etc/codecs.conf MPlayer-svn-20060704/etc/codecs.conf
+--- MPlayer-svn-20060704.orig/etc/codecs.conf	2006-06-13 15:12:30 +0300
++++ MPlayer-svn-20060704/etc/codecs.conf	2006-07-04 20:59:34 +0300
+@@ -287,6 +287,16 @@
+   driver theora
+   dll libtheora
+   out YV12
++  
++videocodec dirac
++  info "Dirac (libdirac_decoder)"
++  comment "work in progress"
++  status working
++  fourcc drac
++  format 0x20000001
++  driver dirac
++;  dll "libmpeg2"
++  out IYUV,422P
+ 
+ ; prefer native codecs over win32?
+ ; the win32 codecs probably are (better) optimized and support direct
+diff -urN MPlayer-svn-20060704.orig/libmpcodecs/Makefile MPlayer-svn-20060704/libmpcodecs/Makefile
+--- MPlayer-svn-20060704.orig/libmpcodecs/Makefile	2006-06-22 14:19:47 +0300
++++ MPlayer-svn-20060704/libmpcodecs/Makefile	2006-07-04 20:59:34 +0300
+@@ -104,6 +104,9 @@
+ ifeq ($(LIBTHEORA),yes)
+ VIDEO_SRCS+=vd_theora.c
+ endif
++ifeq ($(LIBDIRAC),yes)
++VIDEO_SRCS+=vd_dirac.c
++endif
+ ifeq ($(DIVX),yes)
+ VIDEO_SRCS+=vd_odivx.c
+   ifneq ($(OPENDIVX),yes)
+@@ -329,6 +332,7 @@
+           $(LIBAV_INC) \
+           $(EXTRA_INC) \
+           $(X264_INC) \
++          $(DIRAC_INC) \
+           $(XVID_INC) \
+           -D_GNU_SOURCE \
+ 
+diff -urN MPlayer-svn-20060704.orig/libmpcodecs/vd.c MPlayer-svn-20060704/libmpcodecs/vd.c
+--- MPlayer-svn-20060704.orig/libmpcodecs/vd.c	2006-06-22 14:19:47 +0300
++++ MPlayer-svn-20060704/libmpcodecs/vd.c	2006-07-04 20:59:34 +0300
+@@ -52,6 +52,7 @@
+ extern vd_functions_t mpcodecs_vd_libdv;
+ extern vd_functions_t mpcodecs_vd_lzo;
+ extern vd_functions_t mpcodecs_vd_qtvideo;
++extern vd_functions_t mpcodecs_vd_dirac;
+ 
+ vd_functions_t* mpcodecs_vd_drivers[] = {
+         &mpcodecs_vd_null,
+@@ -107,6 +108,9 @@
+ #if defined(USE_QTX_CODECS) || defined(MACOSX)
+ 	&mpcodecs_vd_qtvideo,
+ #endif
++#ifdef HAVE_DIRAC
++	&mpcodecs_vd_dirac,
++#endif
+ 	NULL
+ };
+ 
+diff -urN MPlayer-svn-20060704.orig/libmpcodecs/vd_dirac.c MPlayer-svn-20060704/libmpcodecs/vd_dirac.c
+--- MPlayer-svn-20060704.orig/libmpcodecs/vd_dirac.c	1970-01-01 03:00:00 +0300
++++ MPlayer-svn-20060704/libmpcodecs/vd_dirac.c	2006-07-04 20:59:34 +0300
+@@ -0,0 +1,169 @@
++#include <stdio.h>
++#include <stdlib.h>
++
++#include "config.h"
++#ifdef HAVE_DIRAC
++#include "mp_msg.h"
++
++#include "vd_internal.h"
++
++static vd_info_t info = 
++{
++	"Dirac Video decoder v0.5.2",
++	"dirac",
++	"Dirac <dirac@rd.bbc.co.uk",
++	"Dirac",
++	"native"
++};
++
++LIBVD_EXTERN(dirac)
++#include <libdirac_decoder/dirac_parser.h>
++
++// to set/get/query special features/parameters
++static int control(sh_video_t *sh,int cmd,void* arg,...)
++{
++	return CONTROL_UNKNOWN;
++}
++
++// init driver
++static int init(sh_video_t *sh)
++{
++	dirac_decoder_t *diracdec ;
++
++	/*
++	* initialise cpu acceleration stuff when we have it in Dirac
++	*/
++
++	/*
++	* initialise decoder
++	*/
++	diracdec = dirac_decoder_init(verbose > 4);
++
++	if (!diracdec)
++		return 0;
++
++	sh->context = diracdec;
++
++	return 1;
++}
++
++// uninit driver
++static void uninit(sh_video_t *sh)
++{
++	dirac_decoder_t *diracdec = sh->context;
++	if (diracdec)
++		dirac_decoder_close (diracdec);
++}
++
++// decode a frame
++static mp_image_t* decode(sh_video_t *sh,void* data,int len,int flags)
++{
++	dirac_decoder_t *diracdec = sh->context;
++	mp_image_t* mpi=NULL;
++	int drop_frame, framedrop=flags&3;
++	unsigned char *buf[3];
++
++
++	if(len<=0) return 0; // skipped null frame
++
++	dirac_buffer (diracdec, data, data+len);
++
++	while (1)
++	{
++		DecoderState state = dirac_parse (diracdec);
++
++		switch (state)
++		{
++		case STATE_BUFFER:
++			return 0;
++
++		case STATE_SEQUENCE:
++			mp_msg(MSGT_DECVIDEO,MSGL_DBG2,"Dirac: STATE_SEQUENCE width=%d height=%d\n", diracdec->seq_params.width, diracdec->seq_params.height);
++			if (diracdec->seq_params.chroma == format422)
++			{
++				if(!mpcodecs_config_vo(sh, 
++					diracdec->seq_params.width, 
++					diracdec->seq_params.height, 
++					IMGFMT_422P))
++					return 0;
++			}
++			else
++			{
++				if(!mpcodecs_config_vo(sh, 
++					diracdec->seq_params.width, 
++					diracdec->seq_params.height, 
++					IMGFMT_IYUV))
++					return 0;
++			}
++			buf[0] = (unsigned char *)malloc (diracdec->seq_params.width * diracdec->seq_params.height);
++			buf[1] = (unsigned char *)malloc (diracdec->seq_params.chroma_width * diracdec->seq_params.chroma_height);
++			buf[2] = (unsigned char *)malloc (diracdec->seq_params.chroma_width * diracdec->seq_params.chroma_height);
++
++			if (!buf[0] || !buf[1] || !buf[2])
++			{
++				free(buf[0]);
++				free(buf[1]);
++				free(buf[2]);
++				return 0;
++			}
++			dirac_set_buf(diracdec, buf, mpi);
++			break;
++	
++		case STATE_SEQUENCE_END:
++			mp_msg(MSGT_DECVIDEO,MSGL_DBG2,"Dirac: STATE_SEQUENCE_END\n");
++			free (diracdec->fbuf->buf[0]);
++			free (diracdec->fbuf->buf[1]);
++			free (diracdec->fbuf->buf[2]);
++			break;
++	
++		case STATE_PICTURE_AVAIL:
++			mp_msg(MSGT_DECVIDEO,MSGL_DBG2,"Dirac: STATE_PICTURE_AVAIL fnum=%d ftype=%s\n", 
++			diracdec->frame_params.fnum, 
++			diracdec->frame_params.ftype == I_frame ? "I_frame" : 
++				(diracdec->frame_params.ftype == L1_frame ? 
++					"L1_frame" : "L2_frame"));
++			mpi=mpcodecs_get_image(sh, MP_IMGTYPE_EXPORT, 0, sh->disp_w, sh->disp_h);
++			if (mpi)
++			{
++				mpi->planes[0] = diracdec->fbuf->buf[0];
++				mpi->stride[0] = diracdec->seq_params.width;
++				mpi->planes[1] = diracdec->fbuf->buf[1];
++				mpi->stride[1] = diracdec->seq_params.chroma_width;
++				mpi->planes[2] = diracdec->fbuf->buf[2];
++				mpi->stride[2] = diracdec->seq_params.chroma_width;
++				return mpi;
++			}
++		case STATE_PICTURE_START:
++			mp_msg(MSGT_DECVIDEO,MSGL_DBG2,"Dirac: STATE_PICTURE_START fnum=%d ftype=%s\n", 
++			diracdec->frame_params.fnum, 
++			diracdec->frame_params.ftype == I_frame ? "I_frame" : 
++				(diracdec->frame_params.ftype == L1_frame ? 
++					"L1_frame" : "L2_frame"));
++			sh->pts =  (diracdec->frame_params.fnum+1)*sh->frametime;
++			drop_frame = framedrop && (diracdec->frame_params.ftype == L2_frame);
++			drop_frame |= framedrop>=2;
++			if (drop_frame)
++			{
++				mp_msg(MSGT_DECVIDEO,MSGL_DBG2,"      Skipping frame\n");
++				dirac_skip(diracdec, 1);
++			}
++			else
++				dirac_skip(diracdec, 0);
++			break;
++		
++		case STATE_INVALID:
++			mp_msg(MSGT_DECVIDEO,MSGL_DBG2,"Dirac: STATE_INVALID");
++			free (diracdec->fbuf->buf[0]);
++			free (diracdec->fbuf->buf[1]);
++			free (diracdec->fbuf->buf[2]);
++			return 0;
++			break;
++
++		default:
++			break;
++		}
++	}
++	return 0;
++}
++
++#endif
+diff -urN MPlayer-svn-20060704.orig/libmpdemux/demux_dirac.c MPlayer-svn-20060704/libmpdemux/demux_dirac.c
+--- MPlayer-svn-20060704.orig/libmpdemux/demux_dirac.c	1970-01-01 03:00:00 +0300
++++ MPlayer-svn-20060704/libmpdemux/demux_dirac.c	2006-07-04 20:58:13 +0300
+@@ -0,0 +1,168 @@
++#include <stdio.h>
++#include <stdlib.h>
++#include <unistd.h>
++#include <assert.h>
++#include "config.h"
++
++#ifdef HAVE_DIRAC
++#include "mp_msg.h"
++#include "help_mp.h"
++
++#include "stream.h"
++#include "demuxer.h"
++#include "stheader.h"
++
++#include <libdirac_decoder/dirac_parser.h>
++
++int dirac_check_file(demuxer_t *demuxer)
++{
++	unsigned char tmp_buffer[4096];
++	int bytes_read;
++	dirac_decoder_t *diracdec;
++	DecoderState state;
++	int ret_stat = 0;
++
++	mp_msg(MSGT_DEMUX,MSGL_V,"Checking for Dirac\n");
++	diracdec = dirac_decoder_init(verbose);
++
++	if (diracdec ==NULL)
++		return 0;
++
++	while(1)
++	{
++		bytes_read = stream_read(demuxer->stream,tmp_buffer, 4096);
++		if (bytes_read == 0)
++			break;
++		dirac_buffer (diracdec, tmp_buffer, tmp_buffer + bytes_read);
++
++		state = dirac_parse (diracdec);
++		switch (state)
++		{
++		case STATE_BUFFER:
++			break;
++
++		case STATE_SEQUENCE:
++			ret_stat = 1;
++			break;
++
++		default:
++			break;
++
++		}
++		if (ret_stat)
++			break;
++	}
++
++	dirac_decoder_close(diracdec);
++	stream_reset(demuxer->stream);
++	stream_seek(demuxer->stream, 0);
++
++	return ret_stat;
++}
++
++int demux_dirac_open(demuxer_t *demuxer)
++{
++	unsigned char tmp_buffer[4096];
++	int bytes_read;
++	dirac_decoder_t *diracdec;
++	DecoderState state;
++	int ret_stat = 0;
++
++	mp_msg(MSGT_DEMUX,MSGL_V,"Opening Dirac stream\n");
++	diracdec = dirac_decoder_init(verbose);
++	if (diracdec ==NULL)
++		return 0;
++
++	stream_reset(demuxer->stream);
++	stream_seek(demuxer->stream, 0);
++	
++
++	while(1)
++	{
++		bytes_read = stream_read(demuxer->stream,tmp_buffer, 4096);
++		if (bytes_read == 0)
++			break;
++		dirac_buffer (diracdec, tmp_buffer, tmp_buffer + bytes_read);
++
++		state = dirac_parse (diracdec);
++		switch (state)
++		{
++		case STATE_BUFFER:
++			break;
++
++		case STATE_SEQUENCE:
++			ret_stat = 1;
++			break;
++
++		default:
++			break;
++
++		}
++		if (ret_stat)
++			break;
++	}
++	if (ret_stat)
++	{
++		sh_video_t *sh_video = new_sh_video(demuxer, 0);
++		/* FIXME: set seekable to 1 after including code for seek */
++		demuxer->seekable = 0;
++		demuxer->video->sh = sh_video;
++		sh_video->ds = demuxer->video;
++		/* FIXME: defined in codecs.conf. Do we need to get a unique
++		 * number from somebody!!!
++		 */
++		sh_video->format = 0x20000001;
++		sh_video->disp_w = diracdec->seq_params.width;
++		sh_video->disp_h = diracdec->seq_params.height;
++		sh_video->fps = diracdec->seq_params.frame_rate.numerator / 
++		                diracdec->seq_params.frame_rate.denominator;
++		sh_video->frametime = 1.0/sh_video->fps;
++	}
++
++	dirac_decoder_close(diracdec);
++	stream_reset(demuxer->stream);
++	stream_seek(demuxer->stream, 0);
++
++	return ret_stat;
++}
++
++int demux_dirac_fill_buffer(demuxer_t *demuxer, demux_stream_t *ds)
++{
++	demux_packet_t* dp_video=NULL;
++	unsigned char tmp_buffer[4096];
++
++	int bytes_read;
++	bytes_read = stream_read(demuxer->stream,tmp_buffer, 4096);
++	if (bytes_read)
++	{
++		dp_video=new_demux_packet(bytes_read);
++		memmove(dp_video->buffer, tmp_buffer, bytes_read);
++		dp_video->flags=0;
++		dp_video->pos=stream_tell(demuxer->stream);
++		ds_add_packet(demuxer->video,dp_video);
++		return 1;
++	}
++	return 0;
++}
++
++extern void demux_close_dirac(demuxer_t* demuxer)
++{
++	return;
++}
++
++demuxer_desc_t demuxer_desc_dirac = {
++  "Dirac demuxer",
++  "dir",
++  "dir",
++  "?",
++  "",
++  DEMUXER_TYPE_DIRAC,
++  1, // safe autodetect
++  dirac_check_file,
++  demux_dirac_fill_buffer,
++  demux_dirac_open,
++  demux_close_dirac,
++  NULL,
++  NULL
++};
++#endif
+diff -urN MPlayer-svn-20060704.orig/libmpdemux/demuxer.c MPlayer-svn-20060704/libmpdemux/demuxer.c
+--- MPlayer-svn-20060704.orig/libmpdemux/demuxer.c	2006-06-20 13:10:58 +0300
++++ MPlayer-svn-20060704/libmpdemux/demuxer.c	2006-07-04 20:59:34 +0300
+@@ -66,6 +66,9 @@
+ extern demuxer_desc_t demuxer_desc_lavf;
+ #endif
+ extern demuxer_desc_t demuxer_desc_aac;
++#ifdef HAVE_DIRAC
++extern demuxer_desc_t demuxer_desc_dirac;
++#endif
+ 
+ demuxer_desc_t* demuxer_list[] = {
+   &demuxer_desc_rawaudio,
+@@ -123,6 +126,9 @@
+   &demuxer_desc_lavf,
+ #endif
+   &demuxer_desc_aac,
++#ifdef HAVE_DIRAC
++  &demuxer_desc_dirac,
++#endif
+ #ifdef HAVE_XMMS
+   &demuxer_desc_xmms,
+ #endif
+diff -urN MPlayer-svn-20060704.orig/libmpdemux/demuxer.h MPlayer-svn-20060704/libmpdemux/demuxer.h
+--- MPlayer-svn-20060704.orig/libmpdemux/demuxer.h	2006-06-13 15:12:29 +0300
++++ MPlayer-svn-20060704/libmpdemux/demuxer.h	2006-07-04 20:59:34 +0300
+@@ -50,11 +50,12 @@
+ #define DEMUXER_TYPE_MPC 40
+ #define DEMUXER_TYPE_MPEG_PES 41
+ #define DEMUXER_TYPE_MPEG_GXF 42
++#define DEMUXER_TYPE_DIRAC 43
+ 
+ // This should always match the higest demuxer type number.
+ // Unless you want to disallow users to force the demuxer to some types
+ #define DEMUXER_TYPE_MIN 0
+-#define DEMUXER_TYPE_MAX 42
++#define DEMUXER_TYPE_MAX 43
+ 
+ #define DEMUXER_TYPE_DEMUXERS (1<<16)
+ // A virtual demuxer type for the network code
+diff -urN MPlayer-svn-20060704.orig/libmpdemux/Makefile MPlayer-svn-20060704/libmpdemux/Makefile
+--- MPlayer-svn-20060704.orig/libmpdemux/Makefile	2006-06-29 14:01:49 +0300
++++ MPlayer-svn-20060704/libmpdemux/Makefile	2006-07-04 20:59:34 +0300
+@@ -87,6 +87,7 @@
+         demux_vqf.c \
+         demux_y4m.c \
+         demux_mkv.c ebml.c \
++        demux_dirac.c parse_dirac.c
+ 
+ ifeq ($(HAVE_DVD),yes)
+ SRCS += stream_dvd.c
+@@ -164,7 +165,7 @@
+ OBJS	= $(SRCS:.c=.o)
+ OBJS   += $(CPLUSPLUSSRCS:.cpp=.o)
+ INCLUDE = -I.. -I../loader $(CSS_INC) $(EXTRA_INC) $(LIBAV_INC)
+-CFLAGS  = $(OPTFLAGS) $(INCLUDE) $(XMMS_CFLAGS) $(CDPARANOIA_INC) $(DVB_INC)
++CFLAGS  = $(OPTFLAGS) $(INCLUDE) $(XMMS_CFLAGS) $(CDPARANOIA_INC) $(DVB_INC) $(DIRAC_INC)
+ CPLUSPLUSFLAGS  = $(CFLAGS) $(CPLUSPLUSINCLUDE) -D__STDC_LIMIT_MACROS
+ CPLUSPLUS = $(CC)
+ 
+diff -urN MPlayer-svn-20060704.orig/libmpdemux/parse_dirac.c MPlayer-svn-20060704/libmpdemux/parse_dirac.c
+--- MPlayer-svn-20060704.orig/libmpdemux/parse_dirac.c	1970-01-01 03:00:00 +0300
++++ MPlayer-svn-20060704/libmpdemux/parse_dirac.c	2006-07-04 20:59:34 +0300
+@@ -0,0 +1,154 @@
++#include <stdio.h>
++#include <stdlib.h>
++#include <unistd.h>
++
++#include "config.h"
++#include "mp_msg.h"
++#include "help_mp.h"
++
++#include "stream.h"
++#include "demuxer.h"
++#include "parse_dirac.h"
++
++#define DIRAC_VIDEOBUFFER_SIZE 0x100000
++
++static unsigned char* dirac_videobuffer = 0;
++static int dirac_videobuf_len =0;
++static unsigned char dirac_videobuf_code[5];
++static int dirac_videobuf_code_len = 0;
++
++int dirac_sync_video_packet (demux_stream_t *ds)
++{
++	int skipped = 0;
++	dirac_videobuf_len = 0;
++	while(dirac_videobuf_code_len<5)
++	{
++		dirac_videobuf_code[dirac_videobuf_code_len++]=demux_getc(ds);
++	}
++	while (1)
++	{
++		int c;
++		if(dirac_videobuf_code[0]==0x42 && dirac_videobuf_code[1]==0x42 && dirac_videobuf_code[2]==0x43 && dirac_videobuf_code[3]==0x44)
++		{
++			break;
++		}
++		++skipped;
++		dirac_videobuffer[0] = dirac_videobuf_code[0]=dirac_videobuf_code[1];
++		dirac_videobuffer[1] = dirac_videobuf_code[1]=dirac_videobuf_code[2];
++		dirac_videobuffer[2] = dirac_videobuf_code[2]=dirac_videobuf_code[3];
++		dirac_videobuffer[3] = dirac_videobuf_code[3]=dirac_videobuf_code[4];
++		c = demux_getc(ds);
++		if (c < 0 )
++			return 0;
++		dirac_videobuffer[4] = dirac_videobuf_code[4]=c;
++		dirac_videobuf_len = 5;
++	}
++	return dirac_videobuf_code[4];
++}
++
++// RAP Frame start = 0xD7
++// Non-RAP I Frame start = 0xD6
++// L1 Frame start = 0xD4
++// L2 Frame start = 0xD7
++#define FRAME_START(c) ((c) == 0xD4 || (c) == 0xD5 || (c) == 0xD6 || (c) == 0xD7)
++
++int dirac_read_video_frame (demux_stream_t *ds, unsigned char** start)
++{
++	int in_frame = 0;
++	unsigned int shift = 0xffffffff;
++	int msg_type = 0xFF;
++
++
++	if (!dirac_videobuffer)
++	{
++		dirac_videobuffer = (unsigned char *)malloc(DIRAC_VIDEOBUFFER_SIZE);
++		if(!dirac_videobuffer)
++		{
++			mp_msg(MSGT_DECVIDEO,MSGL_ERR,MSGTR_ShMemAllocFail);
++			return 0;
++		}
++	}
++
++	*start = dirac_videobuffer;
++
++	while (msg_type != 0 && msg_type == 0xFF)
++		msg_type = dirac_sync_video_packet(ds);
++
++	if (msg_type == 0)
++		return -1;
++
++
++	//dirac_videobuf_len = 0;
++	//for (i = 0; i < dirac_videobuf_code_len; i++)
++	//{
++	//	dirac_videobuffer[dirac_videobuf_len++] = dirac_videobuf_code[i];
++	//}
++
++	/* find start of frame */
++	while (!in_frame)
++	{
++		int byte;
++		if (FRAME_START(msg_type))
++		{
++			in_frame = 1;
++			break;
++		}
++	
++		byte = demux_getc(ds);
++		if (byte < 0)
++		{
++			dirac_videobuf_code_len = 0;
++			if (dirac_videobuf_len)
++				return dirac_videobuf_len;
++			else
++				return -1;
++		}
++
++		dirac_videobuffer[dirac_videobuf_len++] = byte;
++		if (shift == 0x42424344)
++		{
++			if (FRAME_START(byte))
++			{
++				in_frame = 1;
++				break;
++			}
++		}
++		shift = (shift << 8 ) | byte;
++	}
++
++	/* find end of frame */
++	shift = 0xffffffff;
++	dirac_videobuf_code_len = 0;
++	while (in_frame)
++	{
++		int byte;
++		byte = demux_getc(ds);
++		if (byte < 0)
++			return dirac_videobuf_len;
++
++		dirac_videobuffer[dirac_videobuf_len++] = byte;
++		if (shift == 0x42424344)
++		{
++			if (byte != 0xFF)
++			{
++				in_frame = 0;
++				dirac_videobuf_code_len = 5;
++				dirac_videobuf_code[0] = 0x42;
++				dirac_videobuf_code[1] = 0x42;
++				dirac_videobuf_code[2] = 0x43;
++				dirac_videobuf_code[3] = 0x44;
++				dirac_videobuf_code[4] = byte;
++				break;
++			}
++		}
++		shift = (shift << 8 ) | byte;
++	}
++	//return dirac_videobuf_len - dirac_videobuf_code_len;
++	return dirac_videobuf_len;
++}
++
++/* TODO: */
++int dirac_skip_video_frame(demux_stream_t *ds)
++{
++	return 0;
++}
+diff -urN MPlayer-svn-20060704.orig/libmpdemux/parse_dirac.h MPlayer-svn-20060704/libmpdemux/parse_dirac.h
+--- MPlayer-svn-20060704.orig/libmpdemux/parse_dirac.h	1970-01-01 03:00:00 +0300
++++ MPlayer-svn-20060704/libmpdemux/parse_dirac.h	2006-07-04 20:59:34 +0300
+@@ -0,0 +1,10 @@
++
++#define MAX_VIDEO_PACKET_SIZE (224*1024+4)
++#define VIDEOBUFFER_SIZE 0x100000
++
++// return: packet length. set *start to start of packet
++int dirac_read_video_frame(demux_stream_t *ds, unsigned char **start);
++
++// return: next packet code
++int dirac_skip_video_frame(demux_stream_t *ds);
++
+diff -urN MPlayer-svn-20060704.orig/libmpdemux/video.c MPlayer-svn-20060704/libmpdemux/video.c
+--- MPlayer-svn-20060704.orig/libmpdemux/video.c	2006-07-03 14:16:58 +0300
++++ MPlayer-svn-20060704/libmpdemux/video.c	2006-07-04 20:59:34 +0300
+@@ -17,6 +17,7 @@
+ #include "demuxer.h"
+ #include "stheader.h"
+ #include "parse_es.h"
++#include "parse_dirac.h"
+ #include "mpeg_hdr.h"
+ 
+ /* sub_cc (closed captions)*/
+@@ -547,6 +548,9 @@
+         }
+ 	*start=videobuffer; in_size=videobuf_len;
+ 	videobuf_len=0;
++	
++  } else if(demuxer->file_format==DEMUXER_TYPE_DIRAC){
++  	in_size = dirac_read_video_frame(d_video, start);
+ 
+   } else {
+       // frame-based file formats: (AVI,ASF,MOV)
+@@ -633,6 +637,8 @@
+ 	    }
+ 	}
+ //	printf("\rIII pts: %5.3f [%d] (%5.3f)   \n",d_video->pts2,picture_coding_type,i_pts);
++    } else if (demuxer->file_format==DEMUXER_TYPE_DIRAC){
++ 	   sh_video->pts+=frame_time;
+     } else
+ 	sh_video->pts=d_video->pts;
+     
+diff -urN MPlayer-svn-20060704.orig/Makefile MPlayer-svn-20060704/Makefile
+--- MPlayer-svn-20060704.orig/Makefile	2006-07-03 14:16:58 +0300
++++ MPlayer-svn-20060704/Makefile	2006-07-04 20:59:34 +0300
+@@ -105,6 +105,7 @@
+              $(X264_LIB) \
+              $(MUSEPACK_LIB) \
+              $(SPEEX_LIB) \
++             $(DIRAC_LIB)
+ 
+ COMMON_LIBS = libmpcodecs/libmpcodecs.a \
+               $(W32_LIB) \
+@@ -141,6 +142,7 @@
+          $(XVID_INC) \
+          $(LIBAV_INC) \
+          $(LIBCDIO_INC) \
++         $(DIRAC_INC)
+ 
+ #CFLAGS += -Wall
+ 
