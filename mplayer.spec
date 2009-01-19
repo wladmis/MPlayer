@@ -25,7 +25,7 @@
 %def_enable langinfo
 %def_enable lirc
 %def_disable lircc
-%def_disable joystick
+%def_enable joystick
 %def_enable xf86keysym
 %def_enable tv
 %def_enable v4l1
@@ -37,7 +37,7 @@
 %def_disable winsock2
 %def_disable smb
 %def_enable live
-%def_disable dvdnav
+%def_enable dvdnav
 %def_enable dvdread
 %def_enable mpdvdkit
 %def_enable cdparanoia
@@ -88,7 +88,7 @@
 %def_enable mad
 %def_disable toolame
 %def_disable twolame
-%def_disable xmms
+%def_enable xmms
 %def_enable mp3lib
 %def_enable liba52
 %def_enable libdts
@@ -130,7 +130,7 @@
 %def_disable zr
 %def_disable bl
 %def_enable tdfxvid
-%def_disable tga
+%def_enable tga
 %def_enable pnm
 %def_enable md5sum
 
@@ -212,7 +212,7 @@
 %endif
 
 %if_disabled gtk1
-%set_disable xmms
+#set_disable xmms
 %endif
 
 %if_disabled freetype
@@ -253,7 +253,7 @@
 Name: %lname
 Serial: 1
 Version: 1.0
-%define altrel 1
+%define altrel 2
 %ifdef svnrev
 Release: alt1.%svnrev.%altrel
 %define pkgver svn-r%svnrev
@@ -268,7 +268,7 @@ License: GPL
 Group: Video
 URL: http://www.mplayerhq.hu
 %if %name != %Name
-Provides: %Name
+Provides: %Name = %serial:%version-%release
 Obsoletes: %Name
 %endif
 %if_enabled freetype
@@ -1347,6 +1347,10 @@ unset RPM_PYTHON
 
 
 %changelog
+* Sat Aug 19 2006 Led <led@altlinux.ru> 1:1.0-alt1.19447.2
+- anabled: dvdnav, joystick, tga, xmms
+- fixed Provides
+
 * Sat Aug 19 2006 Led <led@altlinux.ru> 1:1.0-alt1.19447.1
 - new SVN snapshot (revision 19447)
   + support for chapters seeking in dvd:// stream
