@@ -6,8 +6,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 %define prerel %nil
-%define svnrev 20288
-%define ffmpeg_svnrev 6723
+%define svnrev 20300
+%define ffmpeg_svnrev 6731
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -100,7 +100,7 @@
 %def_enable libmpeg2
 %def_enable musepack
 %def_disable dirac
-%def_disable nut
+%def_enable nut
 
 # Video output:
 %def_enable vidix
@@ -292,6 +292,7 @@ Obsoletes: %Name
 %if_enabled freetype
 %{?_disable_fontconfig:Requires: fonts-type1-urw}
 Conflicts: %Name-fonts < 1.0-alt28
+Obsoletes: %Name-fonts
 %else
 Requires: %name-fonts
 %endif
@@ -326,7 +327,7 @@ Patch16: %Name-1.0pre8-udev.patch.gz
 Patch17: %lname-svn-r20117-ext_ffmpeg.patch.bz2
 Patch21: %Name-svn-20060607-vf_mcdeint.patch.gz
 Patch22: %lname-svn-r19389-polyp0.8.patch.gz
-Patch26: %lname-svn-r20022-configure.patch.gz
+Patch26: %lname-svn-r20300-configure.patch.gz
 %{?svnrev:Patch27: %Name-cvs-20060331-builddocs.patch.gz}
 
 BuildRequires: %awk pkgconfig libncurses-devel libslang-devel zlib-devel
@@ -374,6 +375,7 @@ BuildRequires: cpp >= 3.3 gcc >= 3.3 gcc-c++ >= 3.3
 %{?_enable_libmpeg2:BuildRequires: libmpeg2-devel}
 %{?_enable_musepack:BuildRequires: libmpcdec-devel >= 1.2.1}
 %{?_enable_dirac:BuildRequires: libdirac-devel}
+%{?_enable_nut:BuildRequires: libnut-devel}
 
 %if %vidixlib == ext
 BuildRequires: libvidix-devel
@@ -1432,12 +1434,8 @@ unset RPM_PYTHON
 
 
 %changelog
-* Wed Oct 18 2006 Led <led@altlinux.ru> 1.0-alt32.20288.1
-- cleaned up spec
-- fixed Provides for %lname-gui package
-
-* Tue Oct 17 2006 Led <led@altlinux.ru> 1.0-alt31.20277.1
-- new SVN snapshot (revision 20277):
+* Thu Oct 19 2006 Led <led@altlinux.ru> 1.0-alt32.20300.1
+- new SVN snapshot (revision 20300):
   + Russian documentation translation synced and almost finished
   + bicubic OpenGL scaling works with ATI cards
   + md5sum switched to use libavutil md5 implementation
@@ -1462,6 +1460,10 @@ unset RPM_PYTHON
     save and load cache setting correctly
     working audio stream selection for Ogg and Matroska files
     xinerama fixes
+- cleaned up spec
+- fixed Provides for %lname-gui package
+- enabled nut
+- updated %lname-svn-r20300-configure.patch
 
 * Fri Oct 13 2006 Led <led@altlinux.ru> 1.0-alt31.20190.1
 - new SVN snapshot (revision 20190):
