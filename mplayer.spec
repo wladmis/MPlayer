@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 %define prerel %nil
-%define svnrev 19447
-%define ffmpeg_svnrev 6005
+%define svnrev 19467
+%define ffmpeg_svnrev 6022
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -177,8 +177,8 @@
 # Other parameters
 %def_without soundwrapper
 %def_with htmldocs
-%define default_vo %{subst_o xmga}%{subst_o_pre x vidix}%{subst_o xv}%{subst_o gl2}%{subst_o gl}%{subst_o sdl}%{subst_o x11}%{subst_o mga}%{subst_o dfbmga}%{subst_o tdfxfb}%{subst_o 3dfx}%{subst_o s3fb}%{subst_o_pre c vidix}%{subst_o_post fbdev 2}%{subst_o vesa}%{subst_o caca}%{subst_o aa}null
-%define default_ao %{subst_o polyp}%{subst_o alsa}%{subst_o oss}%{subst_o openal}%{subst_o sdl}%{subst_o nas}null
+%define default_vo %{subst_o xmga}%{subst_o xv}%{subst_o sdl}%{subst_o gl2}%{subst_o gl}%{subst_o x11}%{subst_o_pre x vidix}%{subst_o mga}%{subst_o dfbmga}%{subst_o tdfxfb}%{subst_o 3dfx}%{subst_o s3fb}%{subst_o_pre c vidix}%{subst_o_post fbdev 2}%{subst_o vesa}%{subst_o caca}%{subst_o aa}null
+%define default_ao %{subst_o alsa}%{subst_o oss}%{subst_o openal}%{subst_o sdl}%{subst_o polyp}%{subst_o nas}null
 
 #----------------------	END OF PARAMETERS ---------------------------------------
 
@@ -209,10 +209,6 @@
 
 %if_disabled ffmpeg
 %set_disable ffmpeg_shared
-%endif
-
-%if_disabled gtk1
-#set_disable xmms
 %endif
 
 %if_disabled freetype
@@ -253,7 +249,7 @@
 Name: %lname
 Serial: 1
 Version: 1.0
-%define altrel 2
+%define altrel 1
 %ifdef svnrev
 Release: alt1.%svnrev.%altrel
 %define pkgver svn-r%svnrev
@@ -268,7 +264,7 @@ License: GPL
 Group: Video
 URL: http://www.mplayerhq.hu
 %if %name != %Name
-Provides: %Name = %serial:%version-%release
+Provides: %Name = %{?serail:%serial:}%version-%release
 Obsoletes: %Name
 %endif
 %if_enabled freetype
@@ -293,6 +289,7 @@ Patch1: %Name-svn-20060710-alt-external_fame.patch.gz
 Patch2: %lname-dvd-ru-svn19389.patch.gz
 Patch3: %Name-1.0pre4-alt-explicit_gif.patch
 Patch4: %lname-svn-r19427-libdha.patch.gz
+Patch5: %lname-svn-r19447-vo_vidix.patch.gz
 Patch6: %lname-svn-r19389-alt-artsc_ldflags.patch.gz
 Patch7: %Name-svn-20060707_dirac-0.5.x.patch.bz2
 Patch8: %lname-svn-r19389-ext_libswscale.patch.bz2
@@ -305,7 +302,7 @@ Patch16: %Name-1.0pre8-udev.patch.gz
 Patch17: %lname-svn-r19389-ext_ffmpeg.patch.gz
 Patch21: %Name-svn-20060607-vf_mcdeint.patch.gz
 Patch22: %lname-svn-r19389-polyp0.8.patch.gz
-Patch26: %lname-svn-r19447-configure.patch.gz
+Patch26: %lname-svn-r19467-configure.patch.gz
 %{?svnrev:Patch27: %Name-cvs-20060331-builddocs.patch.gz}
 
 BuildRequires: awk pkgconfig libncurses-devel libslang-devel zlib-devel
@@ -438,7 +435,7 @@ Requires: %name >= 1.0
 Provides: %gname
 Obsoletes: %Name-skin-default
 %if %name != %Name
-Provides: %Name-gui = %version-%release
+Provides: %Name-gui = %{?serial:%serial:}%version-%release
 Obsoletes: %Name-gui
 %endif
 %if_enabled gtk1
@@ -857,6 +854,7 @@ mv ffmpeg-svn-%ffmpeg_svnrev/lib{av{codec,format,util},postproc} .
 %patch2 -p1
 %patch3 -p1
 %patch4 -p1
+%patch5 -p1
 %patch6 -p1
 %{?_enabl_dirac:%patch7 -p1}
 %if %swscalelib == ext
@@ -1018,10 +1016,10 @@ export LC_MESSAGES=C
 		%{subst_enable musepack} \
 		%{?_enable_dirac:--enable-dirac} \
 %if_enabled vidix
-%if %vidixlib == int
-		--disable-vidix-external --enable-vidix-internal \
-%else
+%if %vidixlib == ext
 		--enable-vidix-external --disable-vidix-internal \
+%else
+		--disable-vidix-external --enable-vidix-internal \
 %endif
 %else
 		--disable-vidix-external --disable-vidix-internal \
@@ -1054,7 +1052,6 @@ export LC_MESSAGES=C
 		%{subst_enable tdfxfb} \
 		%{subst_enable s3fb} \
 		%{subst_enable directfb} \
-		%{?_enable_directfb:--with-extraincdir=%_includedir/directfb} \
 		%{subst_enable zr} \
 		%{subst_enable bl} \
 		%{subst_enable tdfxvid} \
@@ -1095,6 +1092,7 @@ export LC_MESSAGES=C
 		%{subst_enable sighandler} \
 		%{subst_enable_to gdb crash-debug} \
 		%{subst_enable_to dynamic_plugins dynamic-plugins} \
+		--with-extraincdir=%_includedir/vidix:%_includedir/directfb
 
 %ifnarch x86_64
 make
@@ -1347,9 +1345,17 @@ unset RPM_PYTHON
 
 
 %changelog
+* Mon Aug 21 2006 Led <led@altlinux.ru> 1:1.0-alt1.19467.1
+- new SVN snapshot (revision 19467)
+  + support for chapters seeking in dvdnav:// stream
+- updated %lname-svn-r19467-configure.patch
+- fixed %lname.conf
+- fixed %%changelog
+
 * Sat Aug 19 2006 Led <led@altlinux.ru> 1:1.0-alt1.19447.2
-- anabled: dvdnav, joystick, tga, xmms
+- enabled: dvdnav, joystick, tga, xmms
 - fixed Provides
+- added %lname-svn-r19447-vo_vidix.patch
 
 * Sat Aug 19 2006 Led <led@altlinux.ru> 1:1.0-alt1.19447.1
 - new SVN snapshot (revision 19447)

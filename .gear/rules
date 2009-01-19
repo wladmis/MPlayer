@@ -1,5 +1,5 @@
-tar.bz2: r19447:. name=@name@-svn-r19447
+tar.bz2: r19467:. name=@name@-svn-r19467
 tar.bz2: standard-1.9:. name=standard-1.9 base=standard
 copy: *.sh *-explicit_gif.patch *-libdir_fix.patch *-xmmslibs_fix.patch
-gzip: *.in *.diff *-udev.patch *-builddocs.patch *-vf_mcdeint.patch *-external_fame.patch *-configure.patch *-vbe.patch *-artsc_ldflags.patch *-ext_ffmpeg.patch *-polyp0.8.patch mplayer-dvd-ru-*.patch *-libdha.patch
+gzip: *.in *.diff *-udev.patch *-builddocs.patch *-vf_mcdeint.patch *-external_fame.patch *-configure.patch *-vbe.patch *-artsc_ldflags.patch *-ext_ffmpeg.patch *-polyp0.8.patch mplayer-dvd-ru-*.patch *-libdha.patch *-vo_vidix.patch
 bzip2: *.c *_dirac-*.patch *-ext_libswscale.patch

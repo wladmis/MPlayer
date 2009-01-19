@@ -1,24 +1,6 @@
 diff -urN mplayer-svn-r19447.orig/configure mplayer-svn-r19447/configure
 --- mplayer-svn-r19447.orig/configure	2006-08-19 13:05:32 +0300
-+++ mplayer-svn-r19447/configure	2006-08-19 17:44:37 +0300
-@@ -3814,7 +3814,7 @@
- 
- 
- echocheck "Xv"
--if test "$_x11" = yes && test "$_xv" = auto ; then
-+if test "$_x11" = yes && test "$_xv" != no ; then
-   cat > $TMPC <<EOF
- #include <X11/Xlib.h>
- #include <X11/extensions/Xvlib.h>
-@@ -3870,7 +3870,7 @@
- 
- 
- echocheck "Xinerama"
--if test "$_x11" = yes && test "$_xinerama" = auto ; then
-+if test "$_x11" = yes && test "$_xinerama" != no ; then
-   cat > $TMPC <<EOF
- #include <X11/Xlib.h>
- #include <X11/extensions/Xinerama.h>
++++ mplayer-svn-r19447/configure	2006-08-21 17:24:13 +0300
 @@ -4130,6 +4130,8 @@
    _def_aa='#define HAVE_AA 1'
    if cygwin ; then
@@ -73,7 +55,17 @@ diff -urN mplayer-svn-r19447.orig/configure mplayer-svn-r19447/configure
      if test -z "$_win32libdir" ; then
        for I in "$_libdir/codecs" "$_libdir/win32" /usr/local/lib/codecs /usr/lib/codecs /usr/local/lib/win32 /usr/lib/win32 ; do
          if test -d "$I" ; then
-@@ -7169,7 +7171,7 @@
+@@ -7160,6 +7162,9 @@
+ if test "$_vidix_internal" = yes || test "$_vidix_external" = yes ; then
+   _vidix=yes
+   _def_vidix='#define CONFIG_VIDIX 1'
++  if test "$_vidix_external" = yes ; then
++    _def_vidix_ext='#define VIDIX_EXT 1'
++  fi
+ else
+   _vidix=no
+   _def_vidix='#undef CONFIG_VIDIX'
+@@ -7169,7 +7174,7 @@
    _def_vidix_pfx="#define MP_VIDIX_PFX \"$_libdir\" \"/mplayer/vidix/\" "
  elif test "$_vidix_external" = yes ; then
    _ld_vidix_external="-lvidix"
@@ -82,3 +74,11 @@ diff -urN mplayer-svn-r19447.orig/configure mplayer-svn-r19447/configure
  fi
  
  if test "$_vidix" = yes; then
+@@ -8068,6 +8073,7 @@
+ /* enables / disables VIDIX usage */
+ $_def_vidix
+ $_def_vidix_pfx
++$_def_vidix_ext
+ 
+ /* enables / disables new input joystick support */
+ $_def_joystick
