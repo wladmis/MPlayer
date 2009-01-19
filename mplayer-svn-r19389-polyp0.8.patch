@@ -1,7 +1,7 @@
-diff -urN MPlayer-cvs-20060519.orig/configure MPlayer-cvs-20060519/configure
---- MPlayer-cvs-20060519.orig/configure	2006-05-20 20:08:21 +0300
-+++ MPlayer-cvs-20060519/configure	2006-05-30 15:38:54 +0300
-@@ -4846,15 +4846,15 @@
+diff -urN mplayer-svn-r19389.orig/configure mplayer-svn-r19389/configure
+--- mplayer-svn-r19389.orig/configure	2006-08-13 22:37:15 +0300
++++ mplayer-svn-r19389/configure	2006-08-17 14:18:33 +0300
+@@ -4810,15 +4810,15 @@
  echocheck "Polyp"
  if test "$_polyp" = auto ; then
    _polyp=no
@@ -20,14 +20,14 @@ diff -urN MPlayer-cvs-20060519.orig/configure MPlayer-cvs-20060519/configure
  
    fi
  fi
-@@ -4864,8 +4864,8 @@
+@@ -4828,8 +4828,8 @@
    _def_polyp='#define USE_POLYP 1'
    _aosrc="$_aosrc ao_polyp.c"
    _aomodules="polyp $_aomodules"
 -  _ld_polyp=`pkg-config --libs polyplib polyplib-error polyplib-mainloop`
--  _inc_polyp=`pkg-config --cflags polyplib polyplib-error polyplib-mainloop`
+-  _inc_extra="$_inc_extra `pkg-config --cflags polyplib polyplib-error polyplib-mainloop`"
 +  _ld_polyp=`pkg-config --libs polyplib`
-+  _inc_polyp=`pkg-config --cflags polyplib`
++  _inc_extra="$_inc_extra `pkg-config --cflags polyplib`"
  else
    _def_polyp='#undef USE_POLYP'
    _noaomodules="polyp $_noaomodules"

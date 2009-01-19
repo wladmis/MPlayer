@@ -1,16 +1,14 @@
 %define set_disable() %{expand:%%force_disable %{1}} %{expand:%%undefine _enable_%{1}}
 %define set_enable() %{expand:%%force_enable %{1}} %{expand:%%undefine _disable_%{1}}
 %define set_enables() %{expand:%%force_enable %*}
-%define subst_enable_with() %{expand:%%{?_enable_%{1}:--enable-%{2}}} %{expand:%%{?_disable_%{1}:--disable-%{2}}}
+%define subst_enable_to() %{expand:%%{?_enable_%{1}:--enable-%{2}}} %{expand:%%{?_disable_%{1}:--disable-%{2}}}
 %define subst_o() %{expand:%%{?_enable_%{1}:%{1},}}
 %define subst_o_pre() %{expand:%%{?_enable_%{2}:%{1}%{2},}}
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 %define prerel 0
-%define svndate 20060720
-%define svnrev 19140
-%define ffmpeg_svndate 20060720
-%define ffmpeg_svnrev 5792
+%define svnrev 19389
+%define ffmpeg_svnrev 5996
 %define vidixver 0.9.9.1
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
@@ -31,7 +29,7 @@
 %def_disable joystick
 %def_enable xf86keysym
 %def_enable tv
-%def_enable v4l
+%def_enable v4l1
 %def_enable v4l2
 %def_disable bsdbt848
 %def_disable pvr
@@ -116,6 +114,7 @@
 %def_disable directx
 %def_disable dxr2
 %def_disable dxr3
+%def_disable ivtv
 %def_enable dvb
 %def_enable dvbhead
 %def_enable mga
@@ -153,11 +152,13 @@
 %def_enable select
 
 # Miscellaneous options:
+%define swscalelib ext
 %def_enable cpu_detection
 %define ccomp gcc
 %define asm as
 %define charset cp1251
-%define language uk ru en bg cs de dk el es fr hu it ja ko mk nl no pl ro sk sv tr pt_BR zh_CN zh_TW
+#define language uk ru en bg cs de dk el es fr hu it ja ko mk nl no pl ro sk sv tr pt_BR zh_CN zh_TW
+%define language all
 
 # Advanced options:
 %def_enable mmx
@@ -193,7 +194,7 @@
 %endif
 
 %if_disabled tv
-%set_disable v4l
+%set_disable v4l1
 %set_disable v4l2
 %set_disable bsdbt848
 %set_disable pvr
@@ -268,11 +269,11 @@ Name: %lname
 Serial: 1
 Version: 1.0
 %define altrel 1
-%if %svndate
-Release: alt0.%svndate.%altrel
-%define pkgver svn-%svndate
+%ifdef svnrev
+Release: alt1.%svnrev.%altrel
+%define pkgver svn-r%svnrev
 %else
-%if %prerel
+%ifdef prerel
 Release: alt0.%altrel
 %define pkgver %version%prerel
 %else
@@ -297,15 +298,14 @@ Conflicts: %Name-fonts %lname-fonts < 1.0-alt0.20060719.1
 Requires: %name-fonts
 %endif
 
-%ifdef svndate
-Source0: %Name-svn-%svndate.tar.bz2
+%ifdef svnrev
+Source0: %lname-svn-r%svnrev.tar.bz2
 %else
 Source0: %Name-%version%prerel.tar.bz2
 %endif
 # svn checkout svn.mplayerhq.hu/mplayer/trunk
-%ifdef svndate
-%{?_disable_shared_ffmpeg:Source1: ffmpeg-svn-%ffmpeg_svndate.tar.bz2}
-# svn checkout svn.mplayerhq.hu/ffmpeg/trunk
+%ifdef ffmpeg_svnrev
+%{?_disable_shared_ffmpeg:Source1: ffmpeg-svn-r%ffmpeg_svnrev.tar.bz2}
 %endif
 Source2: ao_polyp.c.bz2
 Source3: %lname.sh
@@ -314,29 +314,32 @@ Source5: %lname.conf.in.gz
 # http://vidix.sourceforge.net
 %{?_enable_vidix_int_drivers:Source6: vidix-%vidixver.tar.bz2}
 Patch1: %Name-svn-20060710-alt-external_fame.patch.gz
-Patch2: %Name-dvd-ru-20060705.patch.gz
+Patch2: %lname-dvd-ru-svn19389.patch.gz
 Patch3: %Name-1.0pre4-alt-explicit_gif.patch
 Patch4: %Name-svn-20060707-ext_vidix_drivers-0.9.9.1.patch.bz2
 Patch5: vidix-0.9.9.1-pm3_vid.patch.gz
-Patch6: %Name-1.0pre4-alt-artsc_ldflags.patch
+Patch6: %lname-svn-r19389-alt-artsc_ldflags.patch.gz
 Patch7: %Name-svn-20060707_dirac-0.5.x.patch.bz2
+Patch8: %lname-svn-r19389-ext_libswscale.patch.bz2
 %{?_disable_shared_ffmpeg:Patch9: ffmpeg-svn-20060630-dirac-0.5.x.patch.bz2}
 %{?_disable_vidix_int_drivers:Patch10: %Name-svn-20060630-vidix_ext_drivers.patch.gz}
 Patch11: %Name-svn-20060630-vidix_0.9.9.1.patch.gz
-Patch12: %lname-uni-20060710.diff.gz
+Patch12: %lname-uni-svn19389.diff.gz
 Patch13: %Name-svn-20060711-vbe.patch.gz
 Patch14: %Name-1.0pre7try2-xmmslibs_fix.patch
 Patch15: %Name-1.0pre7try2-libdir_fix.patch
+Patch16: %Name-1.0pre8-udev.patch.gz
+Patch17: %lname-svn-r19389-ext_ffmpeg.patch.gz
 Patch21: %Name-svn-20060607-vf_mcdeint.patch.gz
-Patch22: %Name-cvs-20060519-polyp0.8.patch.gz
+Patch22: %lname-svn-r19389-polyp0.8.patch.gz
 Patch26: %Name-svn-20060711-configure.patch.gz
-%if %svndate
+%ifdef svnrev
 Patch27: %Name-cvs-20060331-builddocs.patch.gz
 %endif
 
 BuildRequires: awk pkgconfig libncurses-devel libslang-devel zlib-devel
 BuildRequires: cpp >= 3.3 gcc >= 3.3 gcc-c++ >= 3.3
-%if %svndate
+%ifdef svnrev
 BuildRequires: docbook-style-dsssl openjade xsltproc
 %endif
 
@@ -863,17 +866,17 @@ VIDIX driver for framebuffer.
 
 
 %prep
-%if %svndate
+%if %svnrev
 %if_enabled shared_ffmpeg
-%setup -q -n %Name-%pkgver
+%setup -q -n %lname-%pkgver
 %else
-%setup -q -n %Name-%pkgver -a 1
+%setup -q -n %lname-%pkgver -a 1
 %if_enabled dirac
-pushd ffmpeg-svn-%ffmpeg_svndate
+pushd ffmpeg-svn-%ffmpeg_svnrev
 %patch9 -p1
 popd
 %endif
-mv ffmpeg-svn-%ffmpeg_svndate/lib{av{codec,format,util},postproc} .
+mv ffmpeg-svn-%ffmpeg_svnrev/lib{av{codec,format,util},postproc} .
 %endif
 %else
 %setup -q -n %Name-%pkgver
@@ -890,8 +893,9 @@ mv vidix-%vidixver/vidix ./
 %patch4 -p1
 %{!?_disable_vidix_int_drivers:%patch5 -p1}
 %patch6 -p1
-%if_enabled dirac
-%patch7 -p1
+%{?_enabl_dirac:%patch7 -p1}
+%if %swscalelib == ext
+%patch8 -p1
 %endif
 %{?_disable_vidix_int_drivers:%patch11 -p1}
 %{?_disable_vidix_int_drivers:%patch10 -p1}
@@ -899,9 +903,11 @@ mv vidix-%vidixver/vidix ./
 %patch13 -p1
 %patch14 -p1
 %patch15 -p1
+%patch16 -p1
+%patch17 -p1
 %patch21 -p1
 %{?_enable_polyp:%patch22 -p1}
-%if %svndate
+%ifdef svnrev
 %patch26 -p1
 %patch27 -p1
 %endif
@@ -925,8 +931,8 @@ subst 's,/%lname\(/vidix/\),\1,' configure
 %endif
 %{?_enable_dvdnav:subst 's|\(\<\)\(dvdnav\)\(\.h\>\)|\1\2/\2\3|' configure}
 
-%if %svndate
-subst 's|"libavutil/md5.h"|<ffmpeg/md5.h>|' libvo/vo_md5sum.c
+%ifdef svnrev
+subst 's/UNKNOWN/r%svnrev/' version.sh
 # iconv pl docs
 pushd DOCS/xml/pl
 for f in $(grep -H -l ' encoding="utf-8"' *.xml); do
@@ -940,10 +946,9 @@ popd
 %build
 %if_disabled debug
 %define _optlevel 4
-CFLAGS="%optflags"; export CFLAGS
+export CFLAGS="%optflags"
 %endif
-LC_MESSAGES=C
-export LC_MESSAGES
+export LC_MESSAGES=C
 ./configure \
 		--prefix=%_prefix \
 		--bindir=%_bindir \
@@ -955,7 +960,7 @@ export LC_MESSAGES
 		%{subst_enable gui} \
 		%{subst_enable gtk1} \
 		%{subst_enable largefiles} \
-		%{subst_enable_with devfs linux-devfs} \
+		%{subst_enable_to devfs linux-devfs} \
 		%{subst_enable termcap} \
 		%{?_enable_termcap:--with-termcaplib=%termcaplib} \
 		%{subst_enable termios} \
@@ -966,9 +971,9 @@ export LC_MESSAGES
 		%{subst_enable joystick} \
 		%{subst_enable xf86keysym} \
 		%{subst_enable tv} \
-		%{subst_enable_with v4l tv-v4l} \
-		%{subst_enable_with v4l2 tv-v4l2} \
-		%{subst_enable_with bsdbt848 tv-bsdbt848} \
+		%{subst_enable_to v4l1 tv-v4l1} \
+		%{subst_enable_to v4l2 tv-v4l2} \
+		%{subst_enable_to bsdbt848 tv-bsdbt848} \
 		%{subst_enable pvr} \
 		%{subst_enable rtc} \
 		%{subst_enable network} \
@@ -984,30 +989,26 @@ export LC_MESSAGES
 		%{subst_enable freetype} \
 		%{subst_enable fontconfig} \
 		%{subst_enable unrarlib} \
-		%{subst_enable_with osdmenu menu} \
+		%{subst_enable_to osdmenu menu} \
 		%{subst_enable sortsub} \
 		%{subst_enable fribidi} \
 		%{?_enable_fribidi:--with-fribidi-config="pkg-config fribidi"} \
 		%{subst_enable enca} \
 		%{subst_enable macosx} \
-		%{subst_enable_with macosx_finder macosx-finder-support} \
-		%{subst_enable_with macosx_bundle macosx-bundle} \
-		%{subst_enable_with IPv6 inet6} \
+		%{subst_enable_to macosx_finder macosx-finder-support} \
+		%{subst_enable_to macosx_bundle macosx-bundle} \
+		%{subst_enable_to IPv6 inet6} \
 		%{subst_enable gethostbyname2} \
 		%{subst_enable ftp} \
 		%{subst_enable vstream} \
 		%{subst_enable pthreads} \
 		%{subst_enable ass} \
-%if_enabled rpath
-		--enable-rpath \
-%else
-		--disable-rpath \
-%endif
+		%{subst_enable rpath} \
 		%{subst_enable gif} \
 		%{subst_enable png} \
 		%{subst_enable jpeg} \
 		%{subst_enable libcdio} \
-		%{subst_enable_with lzo liblzo} \
+		%{subst_enable_to lzo liblzo} \
 		%{subst_enable win32} \
 		%{?_enable_win32:--with-win32libdir=%win32_libdir} \
 		%{subst_enable qtx} \
@@ -1047,11 +1048,11 @@ export LC_MESSAGES
 		--disable-libavutil_so \
 		--disable-libpostproc_so \
 %endif
-		%{subst_enable_with fame libfame} \
-		%{subst_enable_with tremor_internal tremor-internal} \
-		%{subst_enable_with tremor_low tremor-low} \
-		%{subst_enable_with tremor_external tremor-external} \
-		%{subst_enable vorbis} \
+		%{subst_enable_to fame libfame} \
+		%{subst_enable_to tremor_internal tremor-internal} \
+		%{subst_enable_to tremor_low tremor-low} \
+		%{subst_enable_to tremor_external tremor-external} \
+		%{subst_enable_to vorbis libvorbis} \
 		%{subst_enable speex} \
 		%{subst_enable theora} \
 		%{?_enabled_faad_int:--enable-faad-internal --disable-faad-external} \
@@ -1070,8 +1071,8 @@ export LC_MESSAGES
 		%{subst_enable musepack} \
 		%{?_enable_dirac:--enable-dirac} \
 %if_enabled vidix
-		%{subst_enable_with vidix_ext vidix-external} \
-		%{subst_enable_with vidix_int vidix-internal} \
+		%{subst_enable_to vidix_ext vidix-external} \
+		%{subst_enable_to vidix_int vidix-internal} \
 %else
 		--disable-vidix-external --disable-vidix-internal \
 %endif
@@ -1087,8 +1088,8 @@ export LC_MESSAGES
 		%{subst_enable directx} \
 		%{subst_enable dxr2} \
 		%{subst_enable dxr3} \
+		%{subst_enable ivtv} \
 		%{subst_enable dvb} \
-		%{?_enabled-dvd:--with-dvbincdir=/usr/include/dvb/include} \
 		%{subst_enable dvbhead} \
 		%{subst_enable mga} \
 	        %{subst_enable xmga} \
@@ -1103,6 +1104,7 @@ export LC_MESSAGES
 		%{subst_enable tdfxfb} \
 		%{subst_enable s3fb} \
 		%{subst_enable directfb} \
+		%{?_enable_directfb:--with-extraincdir=%_includedir/directfb} \
 		%{subst_enable zr} \
 		%{subst_enable bl} \
 		%{subst_enable tdfxvid} \
@@ -1110,7 +1112,7 @@ export LC_MESSAGES
 		%{subst_enable pnm} \
 		%{subst_enable md5sum} \
 		%{subst_enable alsa} \
-		%{subst_enable_with oss ossaudio} \
+		%{subst_enable_to oss ossaudio} \
 		%{subst_enable arts} \
 		%{subst_enable esd} \
 		%{subst_enable polyp} \
@@ -1119,9 +1121,9 @@ export LC_MESSAGES
 		%{subst_enable nas} \
 		%{subst_enable sgiaudio} \
 		%{subst_enable sunaudio} \
-		%{subst_enable_with waveout win32waveout} \
+		%{subst_enable_to waveout win32waveout} \
 		%{subst_enable select} \
-		%{subst_enable_with cpu_detection runtime-cpudetection} \
+		%{subst_enable_to cpu_detection runtime-cpudetection} \
 		--cc=%ccomp \
 		--as=%asm \
 		--charset=%charset \
@@ -1141,11 +1143,10 @@ export LC_MESSAGES
 %endif
 		%{subst_enable prifile} \
 		%{subst_enable sighandler} \
-		%{subst_enable_with gdb crash-debug} \
-		%{subst_enable_with dynamic_plugins dynamic-plugins} \
+		%{subst_enable_to gdb crash-debug} \
+		%{subst_enable_to dynamic_plugins dynamic-plugins} \
 
-%if %svnrev
-[ -f .svn/entries ] || echo '#define VERSION "dev-SVN-r%svnrev-4.1.1"' > version.h
+%ifdef svnrev
 %endif
 %ifnarch x86_64
 make
@@ -1171,7 +1172,7 @@ echo "fontconfig = no" >> etc/%lname.conf
 # can't build vivodump subrip
 %make_build -C TOOLS 302m_convert 360m_convert alaw-gen asfinfo avi-fix avisubdump bios2dump dump_mp4 mem2dump movinfo png2raw
 
-%if %svndate
+%if %svnrev
 # build HTML documentation from XML files
 pushd DOCS/xml
 cp -fL %_sysconfdir/sgml/catalog ./
@@ -1418,6 +1419,15 @@ unset RPM_PYTHON
 
 
 %changelog
+* Thu Aug 17 2006 Led <led@altlinux.ru> 1:1.0-alt1.19389.1
+- fixed spec
+- fixed configure parameters (renaming and removed in upstream)
+- new release numbering (therewith SVN revision)
+- enabled external libswscale (libffmpeg)
+- added %Name-1.0pre8-udev.patch
+- fixed directfb ability
+- added %lname-svn-r19389-ext_ffmpeg.patch
+
 * Thu Jul 20 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060720.1
 - new SVN snapshot (revision 19134)
 - fixed lapses in %%changelog and %%description

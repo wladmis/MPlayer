@@ -1,6 +1,6 @@
 diff -urN MPlayer-svn-20060705.orig/libmpdemux/stream_dvd.c MPlayer-svn-20060705/libmpdemux/stream_dvd.c
---- MPlayer-svn-20060705.orig/libmpdemux/stream_dvd.c	2006-07-03 14:16:58 +0300
-+++ MPlayer-svn-20060705/libmpdemux/stream_dvd.c	2006-07-05 16:47:49 +0300
+--- MPlayer-svn-20060705.orig/stream/stream_dvd.c	2006-07-03 14:16:58 +0300
++++ MPlayer-svn-20060705/stream/stream_dvd.c	2006-07-05 16:47:49 +0300
 @@ -142,15 +142,19 @@
  
  int dvd_aid_from_lang(stream_t *stream, unsigned char* lang) {
