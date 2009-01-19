@@ -4,7 +4,7 @@
 
 %define base_version	1.0
 %define real_version	%base_version
-%define release		1
+%define release		alt25
 
 %define fversion	%real_version
 
@@ -13,7 +13,7 @@
 %define ffmpeg_version svn-20060626
 
 %if %cvsbuild
-%global release		0.%cvsbuild.%release
+%global release		%release.%cvsbuild
 %global	fversion	svn-%cvsbuild
 %endif
 
@@ -136,8 +136,7 @@
 %define Name MPlayer
 Name:     %console_name
 Version:  %base_version
-Release:  alt%release
-Serial: 1
+Release:  %release
 Summary:  %bname is the Unix video player (console version)
 Summary(ru_RU.CP1251): %bname - это настоящий видеоплеер (консольный вариант)
 License: GPL for all but not for OpenDivX
@@ -180,6 +179,7 @@ Patch25:  MPlayer-1.0pre7try2-libdir_fix.patch
 Patch26:  MPlayer-svn-20060621-configure.patch.gz
 %if %cvsbuild
 Patch27:  %name-cvs-20060331-builddocs.patch.gz
+Patch28:  %name-cvs-20060506-docs.patch.bz2
 %endif
 
 
@@ -782,7 +782,7 @@ VIDIX driver for Unichrome.
 %else
 %setup -q -n %fname-%fversion -a 1
 # needed with CVS snapshots
-mv ffmpeg-%ffmpeg_version/libav{codec,format,util} .
+%__mv ffmpeg-%ffmpeg_version/libav{codec,format,util} .
 %endif
 %else
 # A Release Build
@@ -799,24 +799,16 @@ mv ffmpeg-%ffmpeg_version/libav{codec,format,util} .
 %if %cvsbuild
 %patch26 -p1
 %patch27 -p1
+%patch28 -p1
 %endif
-bzip2 -dcf %SOURCE9 > libao2/ao_polyp.c
+%__bzip2 -dcf %SOURCE9 > libao2/ao_polyp.c
 
-subst 's/\(ldconfig\)/\#\1/g' libdha/Makefile
+%__subst 's/\(ldconfig\)/\#\1/g' libdha/Makefile
 
 # I hope that vidix drivers are really as portable as it was claimed above
-subst 's|$(LIBDIR)/mplayer/vidix|$(LIBDIR)/vidix/|g' vidix/drivers/Makefile
-subst 's|\(/lib/\)mplayer/\(vidix/\)|\1\2|' libvo/Makefile
-subst 's|/mplayer\(/vidix/\)|\1|' libvo/vosub_vidix.c
-
-# iconv pl docs
-pushd DOCS/xml/pl
-for f in $(grep -H -l ' encoding="utf-8"' *.xml); do
-    mv -f $f xml.utf8
-    sed -e '1 s/ encoding="utf-8"/ encoding="iso-8859-2"/' xml.utf8 | iconv -c -f utf-8 -t ISO-8859-2 > $f
-done
-rm -f xml.utf8
-popd
+%__subst 's|$(LIBDIR)/mplayer/vidix|$(LIBDIR)/vidix/|g' vidix/drivers/Makefile
+%__subst 's|\(/lib/\)mplayer/\(vidix/\)|\1\2|' libvo/Makefile
+%__subst 's|/mplayer\(/vidix/\)|\1|' libvo/vosub_vidix.c
 
 %build
 %if_disabled debug
@@ -1014,7 +1006,7 @@ LC_MESSAGES=C ; export LC_MESSAGES
 
 %if_enabled freetype
 pushd TOOLS/subfont-c
-make
+%__make
 popd
 %endif
 
@@ -1027,11 +1019,11 @@ popd
 %if %cvsbuild
 # build HTML documentation from XML files
 pushd DOCS/xml
-cp -fL %_sysconfdir/sgml/catalog ./
+%__cp -fL %_sysconfdir/sgml/catalog ./
 echo 'CATALOG "/usr/share/xml/xml-iso-entities-8879.1986/catalog"' >> ./catalog
-./configure
+%configure
 for lang in cs de en es fr hu pl ru; do
-    make html-chunked-$lang
+    %__make html-chunked-$lang
 done
 popd
 %endif
@@ -1041,15 +1033,15 @@ popd
 %makeinstall DESTDIR=%buildroot 
 
 pushd %buildroot%_bindir
-ln -sf mplayer gmplayer
-install -d -m 0755 %buildroot%_datadir/%bname/skins
-tar -C %buildroot%_datadir/%bname/skins -xjf %SOURCE4
-ln -sf standard %buildroot%_datadir/%bname/skins/default
+%__ln_s -f mplayer gmplayer
+%__install -d -m 0755 %buildroot%_datadir/%bname/skins
+%__tar -C %buildroot%_datadir/%bname/skins -xjf %SOURCE4
+%__ln_s -f standard %buildroot%_datadir/%bname/skins/default
 popd
 
 default_vo=xv
 
-sed -e 's/include =.*//' < etc/example.conf \
+%__sed -e 's/include =.*//' < etc/example.conf \
 	| sed -e 's/fs=yes/# fs=yes/' \
 	| sed -e "s/# vo=xv/vo=$default_vo/" \
 	| sed -e 's|/usr/local/share/mplayer|%_datadir/%bname|g' \
@@ -1061,39 +1053,39 @@ echo "fontconfig = yes" >> %buildroot%_sysconfdir/%bname/mplayer.conf
 echo "fontconfig = no" >> %buildroot%_sysconfdir/%bname/mplayer.conf
 %if_enabled freetype
 pushd %buildroot%_datadir/%bname
-ln -sf ../fonts/default/Type1/n019003l.pfb ./subfont.ttf
+%__ln_s -f ../fonts/default/Type1/n019003l.pfb ./subfont.ttf
 popd
 %else
 # Russian font, that uses to show subscriptions 
-tar xjf %SOURCE3 -C %buildroot%_datadir/%bname
+%__tar xjf %SOURCE3 -C %buildroot%_datadir/%bname
 %endif
 %endif
 
-install -m 0644 etc/{codecs,input}.conf %buildroot%_sysconfdir/%bname/
+%__install -m 0644 etc/{codecs,input}.conf %buildroot%_sysconfdir/%bname/
 
 %if_enabled menu
-install -m 0644 etc/menu.conf %buildroot%_sysconfdir/%bname/
+%__install -m 0644 etc/menu.conf %buildroot%_sysconfdir/%bname/
 %if_enabled dvb
-install -m 0644 etc/dvb-menu.conf %buildroot%_sysconfdir/%bname/
+%__install -m 0644 etc/dvb-menu.conf %buildroot%_sysconfdir/%bname/
 %endif
 %endif
 
 %if_enabled freetype
 # install tools
 pushd TOOLS/subfont-c
-install -d %buildroot%_datadir/%bname/fonts/{osd,encodings}
-install osd/{gen.py,osd.pfb,README,runme} %buildroot%_datadir/%bname/fonts/osd/
-install encodings/* %buildroot%_datadir/%bname/fonts/encodings/
-install -m 0755 subfont %buildroot%_bindir/mplayer_subfont
+%__install -d %buildroot%_datadir/%bname/fonts/{osd,encodings}
+%__install osd/{gen.py,osd.pfb,README,runme} %buildroot%_datadir/%bname/fonts/osd/
+%__install encodings/* %buildroot%_datadir/%bname/fonts/encodings/
+%__install -m 0755 subfont %buildroot%_bindir/mplayer_subfont
 popd
 %endif
 
-install -d %buildroot%_sysconfdir/bashrc.d
+%__install -d %buildroot%_sysconfdir/bashrc.d
 
-install -m 0755 %SOURCE5 %buildroot%_sysconfdir/bashrc.d/
+%__install -m 0755 %SOURCE5 %buildroot%_sysconfdir/bashrc.d/
 
 # Menus
-mv %buildroot%_desktopdir/mplayer.desktop %buildroot%_desktopdir/%bname.desktop
+%__mv %buildroot%_desktopdir/mplayer.desktop %buildroot%_desktopdir/%bname.desktop
 iconv -f cp1251 -t utf-8 >> %buildroot%_desktopdir/%bname.desktop <<__MENU__
 Version=1.0
 GenericName[uk]=Програвач мультимедіа
@@ -1105,27 +1097,27 @@ __MENU__
 find etc DOCS -type f -exec chmod 644 {} \;
 
 # add mencoder.1 man-link
-rm -f %buildroot%_man1dir/mencoder.1 ||:
+%__rm -f %buildroot%_man1dir/mencoder.1 ||:
 echo ".so mplayer.1" > %buildroot%_man1dir/mencoder.1
 
 # docs
-bzip2 --best --force --keep -- ChangeLog
+%__bzip2 --best --force --keep -- ChangeLog
 for l in cs de es fr hu it pl sv zh; do
-    install -pD -m 0644 DOCS/man/$l/mplayer.1 %buildroot%_mandir/$l/man1/mplayer.1
-    ln -s mplayer.1 %buildroot%_mandir/$l/man1/mencoder.1
+    %__install -pD -m 0644 DOCS/man/$l/mplayer.1 %buildroot%_mandir/$l/man1/mplayer.1
+    %__ln_s mplayer.1 %buildroot%_mandir/$l/man1/mencoder.1
 done
 for l in it zh; do
-    install -d %buildroot%_docdir/%name-doc-%version/$l
-    install -m 0644 DOCS/$l/*.html %buildroot%_docdir/%name-doc-%version/$l/
+    %__install -d %buildroot%_docdir/%name-doc-%version/$l
+    %__install -m 0644 DOCS/$l/*.html %buildroot%_docdir/%name-doc-%version/$l/
 done
 for l in cs de en es fr hu pl ru; do
-    install -d %buildroot%_docdir/%name-doc-%version/$l
-    install -m 0644 DOCS/HTML/$l/{*.htm,*.css} %buildroot%_docdir/%name-doc-%version/$l/
+    %__install -d %buildroot%_docdir/%name-doc-%version/$l
+    %__install -m 0644 DOCS/HTML/$l/{*.htm,*.css} %buildroot%_docdir/%name-doc-%version/$l/
 done
-install -d %buildroot%_docdir/%name-doc-%version/en/tech/realcodecs
-install -m 0644 DOCS/tech/{MAINTAINERS,TODO,*.txt,mpsub.sub,playtree,wishlist} %buildroot%_docdir/%name-doc-%version/en/tech/
-install -pD -m 0644 DOCS/tech/playtree-hun %buildroot%_docdir/%name-doc-%version/hu/tech/playtree
-install -m 0644 DOCS/tech/realcodecs/{TODO,*.txt} %buildroot%_docdir/%name-doc-%version/en/tech/realcodecs/
+%__install -d %buildroot%_docdir/%name-doc-%version/en/tech/realcodecs
+%__install -m 0644 DOCS/tech/{MAINTAINERS,TODO,*.txt,mpsub.sub,playtree,wishlist} %buildroot%_docdir/%name-doc-%version/en/tech/
+%__install -pD -m 0644 DOCS/tech/playtree-hun %buildroot%_docdir/%name-doc-%version/hu/tech/playtree
+%__install -m 0644 DOCS/tech/realcodecs/{TODO,*.txt} %buildroot%_docdir/%name-doc-%version/en/tech/realcodecs/
 
 # a tribute to clever python support
 unset RPM_PYTHON
@@ -1133,17 +1125,14 @@ unset RPM_PYTHON
 
 %post -n %bname-vidix -p /sbin/ldconfig
 
-
 %postun -n %bname-vidix -p /sbin/ldconfig
 
 
 %post -n %gui_name
 %update_menus
 
-
 %postun -n %gui_name
 %clean_menus
-
 
 %files -n %console_name
 %doc README AUTHORS ChangeLog.*
@@ -1170,7 +1159,6 @@ unset RPM_PYTHON
 %_man1dir/*
 %_mandir/*/man1/*
 
-
 %files -n %gui_name
 %_bindir/gmplayer
 %dir %_datadir/%bname
@@ -1183,46 +1171,35 @@ unset RPM_PYTHON
 %files -n mencoder
 %_bindir/mencoder
 
-
 %files doc-en
 %_docdir/%name-doc-%version/en
-
 
 %files doc-de
 %_docdir/%name-doc-%version/de
 
-
 %files doc-cs
 %_docdir/%name-doc-%version/cs
-
 
 %files doc-es
 %_docdir/%name-doc-%version/es
 
-
 %files doc-fr
 %_docdir/%name-doc-%version/fr
-
 
 %files doc-hu
 %_docdir/%name-doc-%version/hu
 
-
 %files doc-it
 %_docdir/%name-doc-%version/it
-
 
 %files doc-pl
 %_docdir/%name-doc-%version/pl
 
-
 %files doc-ru
 %_docdir/%name-doc-%version/ru
 
-
 %files doc-zh
 %_docdir/%name-doc-%version/zh
-
 
 %if_enabled freetype
 %files -n %bname-fonts
@@ -1236,58 +1213,52 @@ unset RPM_PYTHON
 %_datadir/%bname/fonts/encodings/runme-kr
 %endif
 
-
 %if_enabled vidix
 %files -n %bname-vidix
 %_libdir/libdha.so*
 
-
 %files -n %bname-vidix-trident
 %_libdir/vidix/cyberblade_vid.so
 
-
 %files -n %bname-vidix-mach64
 %_libdir/vidix/mach64_vid.so
-
 
 %files -n %bname-vidix-mga
 %_libdir/vidix/mga_crtc2_vid.so
 %_libdir/vidix/mga_vid.so
 
-
 %files -n %bname-vidix-nvidia
 %_libdir/vidix/nvidia_vid.so
-
 
 %files -n %bname-vidix-permedia
 %_libdir/vidix/pm3_vid.so
 
-
 %files -n %bname-vidix-radeon
 %_libdir/vidix/radeon_vid.so
-
 
 %files -n %bname-vidix-rage128
 %_libdir/vidix/rage128_vid.so
 
-
 %files -n %bname-vidix-savage
 %_libdir/vidix/savage_vid.so
-
 
 %files -n %bname-vidix-sis
 %_libdir/vidix/sis_vid.so
 %endif
-
 
 %files -n %bname-vidix-unichrome
 %_libdir/vidix/unichrome_vid.so
 
 
 %changelog
+* Thu Jun 29 2006 Grigory Milev <week@altlinux.ru> 1.0-alt25.20060626
+- using build from Led (greate thanx for him)
+- remove serial
+- make old style release, for simple updating
+- minor clean up spec
+
 * Mon Jun 26 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060626.1
 - new SVN sbapshot (revision 18821)
-- removed MPlayer-cvs-20060506-docs.patch, used sed & iconv instead
 
 * Fri Jun 23 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060623.1
 - new SVN sbapshot (revision 18791)
