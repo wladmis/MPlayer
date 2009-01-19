@@ -274,7 +274,7 @@
 %define Name MPlayer
 Name: %lname
 Version: 1.0
-%define rel 35.2
+%define rel 35.3
 %define subrel 1
 %ifdef svnrev
 Release: alt%rel.%svnrev.%subrel
@@ -1526,6 +1526,9 @@ unset RPM_PYTHON
 
 
 %changelog
+* Mon Nov 20 2006 Led <led@altlinux.ru> 1.0-alt35.3
+- rebuild with new libnut
+
 * Mon Nov 13 2006 Led <led@altlinux.ru> 1.0-alt35.2
 - rebuilt with new libnut:
   + added %lname-1.0rc1-demux_nut.patch
