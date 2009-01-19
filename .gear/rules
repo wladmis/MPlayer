@@ -1,4 +1,4 @@
-tar.bz2: r18781:. name=@name@-svn-20060622
+tar.bz2: r18791:. name=@name@-svn-20060623
 tar.bz2: cp1251-font:. name=cp1251-font base=font
 tar.bz2: ffmpeg-r5508:. name=ffmpeg-svn-20060622
 tar.bz2: standard-1.9:. name=standard-1.9 base=standard

@@ -9,7 +9,7 @@
 %define fversion	%real_version
 
 # Used only for CVS builds
-%define cvsbuild 20060622
+%define cvsbuild 20060623
 %define ffmpeg_version svn-20060622
 
 %if %cvsbuild
@@ -1278,6 +1278,9 @@ unset RPM_PYTHON
 
 
 %changelog
+* Fri Jun 23 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060623.1
+- new SVN sbapshot (revision 18791)
+
 * Thu Jun 22 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060622.1
 - new SVN sbapshot (revision 18781)
 - returned mplayer.sh (soundwrapper)
