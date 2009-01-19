@@ -4,13 +4,13 @@
 
 %define base_version	1.0
 %define real_version	%base_version
-%define release		2
+%define release		1
 
 %define fversion	%real_version
 
 # Used only for CVS builds
-%define cvsbuild 20060620
-%define ffmpeg_version svn-20060620
+%define cvsbuild 20060622
+%define ffmpeg_version svn-20060622
 
 %if %cvsbuild
 %global release		0.%cvsbuild.%release
@@ -68,11 +68,11 @@
 %def_enable  x264
 %def_disable divx4linux
 %def_enable  fame
-%def_enable openal
-%def_disable vorbis
+%def_enable  openal
+%def_enable  vorbis
 %def_disable tremor_internal
 %def_disable tremor_low
-%def_enable  tremor_external
+%def_disable tremor_external
 %def_enable  speex
 %def_enable  theora
 %def_enable  faad
@@ -88,18 +88,8 @@
 %def_enable  3dnowext
 %def_enable  sse
 %def_enable  sse2
-%def_disable  i18n
+%def_disable i18n
 %def_disable fribidi
-
-%if_enabled vorbis
-%set_disable tremor_internal
-%set_disable tremor_low
-%set_disable tremor_external
-%endif
-
-%if_disabled vorbis
-%set_disable openal
-%endif
 
 %if_enabled tremor_external
 %set_disable tremor_low
@@ -124,13 +114,11 @@
 %define real_libdir	%_libdir/real
 
 %if_disabled win32
-%force_disable	dshow
-%force_disable	qtx
-%check_def	dshow
-%check_def	qtx
+%set_disable	directx
+%set_disable	qtx
 %else
-%def_enable	dshow
-%def_enable	qtx
+%set_enable	directx
+%set_enable	qtx
 %endif
 
 %if_disabled faad
@@ -173,7 +161,7 @@ Source1:  ffmpeg-%ffmpeg_version.tar.bz2
 %endif
 Source3:  cp1251-font.tar.bz2
 Source4:  standard-1.9.tar.bz2
-#Source5:  mplayer.sh
+Source5:  mplayer.sh
 Source9:  ao_polyp.c.bz2
 Patch1:   MPlayer-svn-20060620-alt-external_fame.patch.gz
 Patch2:   MPlayer-dvd-ru.patch
@@ -181,7 +169,6 @@ Patch3:   MPlayer-1.0pre4-alt-explicit_gif.patch
 Patch4:   MPlayer-1.0pre5-alt-translation.patch
 Patch5:   MPlayer-1.0pre4-alt-explicit_termcap.patch
 Patch6:   MPlayer-1.0pre4-alt-artsc_ldflags.patch
-Patch7:   MPlayer-1.0pre7-aalib.patch
 Patch12:  MPlayer-1.0pre5-alt-gcc-check.patch
 Patch13:  MPlayer-1.0pre5-nodebug.patch
 Patch19:  mplayer-libmpdvdkit2.patch
@@ -190,7 +177,7 @@ Patch22:  MPlayer-cvs-20060519-polyp0.8.patch.gz
 Patch23:  ad_pcm_fix_20050826.diff
 Patch24:  MPlayer-1.0pre7try2-xmmslibs_fix.patch
 Patch25:  MPlayer-1.0pre7try2-libdir_fix.patch
-Patch26:  %name-cvs-20060220-configure.patch.gz
+Patch26:  MPlayer-svn-20060621-configure.patch.gz
 %if %cvsbuild
 Patch27:  %name-cvs-20060331-builddocs.patch.gz
 Patch28:  %name-cvs-20060506-docs.patch.bz2
@@ -356,8 +343,16 @@ BuildRequires: divx4linux-devel
 BuildRequires: libfame-devel
 %endif
 
+%if_enabled openal
+BuildRequires: libopenal-devel
+%endif
+
 %if_enabled vorbis
 BuildRequires: libogg-devel libvorbis-devel
+%endif
+
+%if_enabled tremor_external
+BuildRequires: libtremor-devel
 %endif
 
 %if_enabled speex
@@ -798,7 +793,6 @@ mv ffmpeg-%ffmpeg_version/libav{codec,format,util} .
 %patch1 -p1 
 %patch3 -p1
 %patch6 -p1
-%patch7 -p1
 %patch21 -p1
 %patch22 -p1
 %patch24 -p1
@@ -920,11 +914,7 @@ LC_MESSAGES=C ; export LC_MESSAGES
 		--enable-tv-v4l \
 		--enable-tv-v4l2 \
 %endif
-%if_enabled cpu_detection
-		--enable-runtime-cpudetection \
-%else
-		--disable-runtime-cpudetection \
-%endif
+		%{subst_enable_with cpu_detection runtime-cpudetection} \
 		%{subst_enable mmx} \
 		%{subst_enable mmxext} \
 		%{subst_enable 3dnow} \
@@ -936,11 +926,7 @@ LC_MESSAGES=C ; export LC_MESSAGES
 		--enable-debug=3 \
 %endif
 		--language=%mplang \
-%if_enabled dynamic_plugins
-		--enable-dynamic-plugins \
-%else
-		--disable-dynamic-plugins \
-%endif
+		%{subst_enable_with dynamic_plugins dynamic-plugins} \
 		%{subst_enable aa} \
 		%{subst_enable caca} \
 		%{subst_enable fbdev} \
@@ -976,13 +962,13 @@ LC_MESSAGES=C ; export LC_MESSAGES
 		%{subst_enable jpeg} \
 		%{subst_enable liblzo} \
 		%{subst_enable win32} \
-%{?_enable_win32:	--with-win32libdir=%win32_libdir} \
-		%{subst_enable dshow} \
+		%{?_enable_win32:--with-win32libdir=%win32_libdir} \
+		%{subst_enable directx} \
 		%{subst_enable qtx} \
 		%{subst_enable xanim} \
-%{?_enable_xanim:	--with-xanimlibdir=%xanim_libdir} \
+		%{?_enable_xanim:--with-xanimlibdir=%xanim_libdir} \
 		%{subst_enable real} \
-%{?_enable_real:	--with-reallibdir=%real_libdir} \
+		%{?_enable_real:--with-reallibdir=%real_libdir} \
 		%{subst_enable xvid} \
 		%{subst_enable x264} \
 		%{subst_enable divx4linux} \
@@ -1097,7 +1083,7 @@ popd
 
 install -d %buildroot%_sysconfdir/bashrc.d
 
-#install -m 0755 %SOURCE5 %buildroot%_sysconfdir/bashrc.d/
+install -m 0755 %SOURCE5 %buildroot%_sysconfdir/bashrc.d/
 
 # Menus
 mv %buildroot%_desktopdir/mplayer.desktop %buildroot%_desktopdir/%bname.desktop
@@ -1165,7 +1151,7 @@ unset RPM_PYTHON
 %config(noreplace) %verify(not size mtime md5) %_sysconfdir/%bname/dvb-menu.conf
 %endif
 %endif
-#_sysconfdir/bashrc.d/*
+%_sysconfdir/bashrc.d/*
 %dir %_datadir/%bname
 %if_disabled fontconfig
 %if_enabled freetype
@@ -1292,9 +1278,19 @@ unset RPM_PYTHON
 
 
 %changelog
-* Tue Jun 20 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060620.2
+* Thu Jun 22 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060622.1
+- new SVN sbapshot (revision 18781)
+- returned mplayer.sh (soundwrapper)
+- cleaned up spec
+
+* Wed Jun 21 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060621.1
+- new SVN sbapshot (revision 18766)
 - added macroses
-- enabled external tremor libs instead of libvorbis
+- enabled external tremor
+- force enabled openal
+- MPlayer-cvs-20060220-configure.patch merged with
+  MPlayer-1.0pre7-aalib.patch and some additions to
+  MPlayer-svn-20060621-configure.patch
 
 * Tue Jun 20 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060620.1
 - new SVN sbapshot (revision 18760)
