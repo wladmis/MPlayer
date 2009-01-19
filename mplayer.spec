@@ -1,6 +1,10 @@
+%define set_disable() %{expand:%%force_disable %{1}} %{expand:%%undefine _enable_%{1}}
+%define set_enable() %{expand:%%force_enable %{1}} %{expand:%%undefine _disable_%{1}}
+%define subst_enable_with() %{expand:%%{?_enable_%{1}:--enable-%{2}}} %{expand:%%{?_disable_%{1}:--disable-%{2}}}
+
 %define base_version	1.0
 %define real_version	%base_version
-%define release		1
+%define release		2
 
 %define fversion	%real_version
 
@@ -64,14 +68,18 @@
 %def_enable  x264
 %def_disable divx4linux
 %def_enable  fame
-%def_enable  vorbis
+%def_enable openal
+%def_disable vorbis
+%def_disable tremor_internal
+%def_disable tremor_low
+%def_enable  tremor_external
 %def_enable  speex
 %def_enable  theora
 %def_enable  faad
 %def_disable internal_faad
 %def_enable  libdv
 %def_enable  mad
-%def_disable  xmms
+%def_disable xmms
 %def_enable  jack
 %def_enable  cpu_detection
 %def_enable  mmx
@@ -82,6 +90,20 @@
 %def_enable  sse2
 %def_disable  i18n
 %def_disable fribidi
+
+%if_enabled vorbis
+%set_disable tremor_internal
+%set_disable tremor_low
+%set_disable tremor_external
+%endif
+
+%if_disabled vorbis
+%set_disable openal
+%endif
+
+%if_enabled tremor_external
+%set_disable tremor_low
+%endif
 
 %ifnarch %ix86
 %force_disable win32
@@ -965,7 +987,11 @@ LC_MESSAGES=C ; export LC_MESSAGES
 		%{subst_enable x264} \
 		%{subst_enable divx4linux} \
 		--disable-opendivx \
+		%{subst_enable openal} \
 		%{subst_enable vorbis} \
+		%{subst_enable_with tremor_internal tremor-internal} \
+		%{subst_enable_with tremor_low tremor-low} \
+		%{subst_enable_with tremor_external tremor-external} \
 		%{subst_enable speex} \
 		%{subst_enable theora} \
 %if_enabled faad
@@ -1266,6 +1292,10 @@ unset RPM_PYTHON
 
 
 %changelog
+* Tue Jun 20 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060620.2
+- added macroses
+- enabled external tremor libs instead of libvorbis
+
 * Tue Jun 20 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060620.1
 - new SVN sbapshot (revision 18760)
 - fixed spec
