@@ -4,7 +4,7 @@
 
 %define base_version	1.0
 %define real_version	%base_version
-%define release		1
+%define release		3
 
 %define fversion	%real_version
 
@@ -18,83 +18,83 @@
 
 %define vidixver 0.9.9.1
 
-%def_enable  shared_ffmpeg
+%def_enable shared_ffmpeg
 
-%def_enable  lirc
-%def_enable  tv
-%def_enable  network
+%def_enable lirc
+%def_enable tv
+%def_enable network
 %def_disable smb
-%def_enable  dvdread
-%def_enable  live
-%def_enable  mpdvdkit
-%def_enable  cdparanoia
-%def_enable  freetype
-%def_enable  fontconfig
-%def_enable  menu
-%def_enable  enca
+%def_enable dvdread
+%def_enable live
+%def_enable mpdvdkit
+%def_enable cdparanoia
+%def_enable freetype
+%def_enable fontconfig
+%def_enable menu
+%def_enable enca
 
 %def_disable k6
 %def_disable altivec
 %def_disable debug
-%def_enable  dynamic_plugins
+%def_enable dynamic_plugins
 
-%def_enable  aalib
-%def_enable  caca
-%def_enable  directfb
-%def_enable  dvb
+%def_enable aalib
+%def_enable caca
+%def_enable directfb
+%def_enable dvb
 %def_disable dxr3
-%def_enable  fbdev
+%def_enable fbdev
 %def_disable ggi
-%def_enable  gl
-%def_enable  sdl
-%def_enable  svga
-%def_enable  tga
-%def_enable  vidix
+%def_enable gl
+%def_enable sdl
+%def_enable svga
+%def_enable tga
+%def_enable vidix
 %def_disable vidix_ext
-%def_enable  vidix_int
+%def_enable vidix_int
 %def_disable vidix_int_drivers
 
-%def_enable  alsa
-%def_enable  arts
-%def_enable  esd
-%def_enable  select
-%def_enable  polyp
-%def_enable  libdts
-%def_enable  musepack
+%def_enable alsa
+%def_enable arts
+%def_enable esd
+%def_enable select
+%def_enable polyp
+%def_enable libdts
+%def_enable musepack
 
-%def_enable  gif
-%def_enable  png
-%def_enable  jpeg
-%def_enable  lzo
+%def_enable gif
+%def_enable png
+%def_enable jpeg
+%def_enable lzo
 %def_disable xanim
-%def_enable  real
-%def_enable  xvid
-%def_enable  x264
+%def_enable real
+%def_enable xvid
+%def_enable x264
 %def_disable divx4linux
-%def_enable  fame
-%def_enable  openal
-%def_enable  vorbis
+%def_enable fame
+%def_enable openal
+%def_enable vorbis
 %def_disable tremor_internal
 %def_disable tremor_low
 %def_disable tremor_external
-%def_enable  speex
-%def_enable  theora
-%def_enable  faad
-%def_enable  dirac
+%def_enable speex
+%def_enable theora
+%def_enable faad
+%def_disable dirac
 %def_disable internal_faad
-%def_enable  libdv
-%def_enable  mad
+%def_enable libdv
+%def_enable mad
 %def_disable xmms
 %def_disable dvdnav
 %def_without dvdmenu
-%def_enable  jack
-%def_enable  cpu_detection
-%def_enable  mmx
-%def_enable  mmxext
-%def_enable  3dnow
-%def_enable  3dnowext
-%def_enable  sse
-%def_enable  sse2
+%def_enable jack
+%def_enable cpu_detection
+%def_enable mmx
+%def_enable mmxext
+%def_enable 3dnow
+%def_enable 3dnowext
+%def_enable sse
+%def_enable sse2
 %def_disable fribidi
 
 %if_disabled vidix
@@ -186,12 +186,11 @@ Source0:  %bname-%fversion.tar.bz2
 Source3: cp1251-font.tar.bz2
 Source4: standard-1.9.tar.bz2
 Source5: mplayer.sh
-Source6: vidix-%vidixver.tar.bz2
 Source9: ao_polyp.c.bz2
 Patch1: MPlayer-svn-20060620-alt-external_fame.patch.gz
 Patch2: MPlayer-dvd-ru-20060705.patch.gz
 Patch3: MPlayer-1.0pre4-alt-explicit_gif.patch
-Patch4: MPlayer-svn-20060630-vidix_0.9.9.1.patch.gz
+Patch4: MPlayer-svn-20060707-ext_vidix_drivers-0.9.9.1.patch.bz2
 Patch5: vidix-0.9.9.1-pm3_vid.patch.gz
 Patch6: MPlayer-1.0pre4-alt-artsc_ldflags.patch
 #Patch7: MPlayer-1.0pre7_dirac-0.5.x.patch
@@ -200,6 +199,7 @@ Patch7: MPlayer-svn-20060707_dirac-0.5.x.patch.bz2
 %{?_with_dvdmenu:Patch8: navmplayer-20060630.patch.bz2}
 %{?_disable_shared_ffmpeg:Patch9: ffmpeg-svn-20060630-dirac-0.5.x.patch.bz2}
 Patch10: MPlayer-svn-20060630-vidix_ext_drivers.patch.gz
+Patch11: MPlayer-svn-20060630-vidix_0.9.9.1.patch.gz
 Patch21: MPlayer-svn-20060607-vf_mcdeint.patch.gz
 Patch22: MPlayer-cvs-20060519-polyp0.8.patch.gz
 Patch24: MPlayer-1.0pre7try2-xmmslibs_fix.patch
@@ -224,7 +224,7 @@ BuildRequires: pkgconfig
 #
 
 %if_enabled shared_ffmpeg
-BuildRequires: libffmpeg-devel >= 0.5.0-alt0.20060703.1
+BuildRequires: libffmpeg-devel >= 1:0.5.0-alt0.20060703.1
 %endif
 
 %if_enabled lirc
@@ -854,9 +854,9 @@ VIDIX driver for framebuffer.
 %if %cvsbuild
 # CVS Build
 %if_enabled shared_ffmpeg
-%setup -q -n %fname-%fversion%{?_with_dvdmenu: -a 2} -a 6
+%setup -q -n %fname-%fversion%{?_with_dvdmenu: -a 2}
 %else
-%setup -q -n %fname-%fversion -a 1%{?_with_dvdmenu: -a 2} -a 6
+%setup -q -n %fname-%fversion -a 1%{?_with_dvdmenu: -a 2}
 # needed with CVS snapshots
 %if_enabled dirac
 pushd ffmpeg-%ffmpeg_version
@@ -867,10 +867,8 @@ mv ffmpeg-%ffmpeg_version/libav{codec,format,util} .
 %endif
 %else
 # A Release Build
-%setup -q -n %fname-%fversion -a 6
+%setup -q -n %fname-%fversion
 %endif
-rm -rf vidix
-mv vidix-%vidixver/vidix ./
 
 %if_with dvdmenu
 for d in codecs demux dvdnav; do
@@ -891,6 +889,7 @@ done
 %if_enabled dirac
 %patch7 -p1
 %endif
+%{?_disable_vidix_int_drivers:%patch11 -p1}
 %{?_disable_vidix_int_drivers:%patch10 -p1}
 %patch21 -p1
 %{?_enable_polyp:%patch22 -p1}
@@ -902,11 +901,11 @@ done
 %endif
 %{?_enable_polyp:bzip2 -dcf %SOURCE9 > libao2/ao_polyp.c}
 
-rm -rf libdha/*
 %if_enabled vidix_int_drivers
 mv vidix-%vidixver/libdha/* libdha/
 subst 's/\(ldconfig\)/\#\1/g' libdha/Makefile
 %else
+mv libdha/Makefile libdha/Makefile.orig
 cat > libdha/Makefile <<__MAKE__
 all:
 
@@ -1119,9 +1118,7 @@ LC_MESSAGES=C ; export LC_MESSAGES
 		--disable-faad-internal \
 		--disable-faad-external \
 %endif
-%if_enabled dirac
-		%{subst_enable dirac} \
-%endif
+		%{?_enable dirac:%{subst_enable dirac}} \
 		%{subst_enable libdv} \
 		%{subst_enable mad} \
 		%{subst_enable xmms} \
@@ -1425,6 +1422,13 @@ unset RPM_PYTHON
 
 
 %changelog
+* Mon Jul 10 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060707.3
+- replaced vidix-0.9.9.1.tar.bz2 with
+  MPlayer-svn-20060707-ext_vidix_drivers-0.9.9.1.patch
+
+* Sat Jul 08 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060707.2
+- disabled dirac
+
 * Fri Jul 07 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060707.1
 - new SVN sbapshot (revision 18929)
 - fixed spec

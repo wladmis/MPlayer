@@ -1,0 +1,791 @@
+diff -urN MPlayer-svn-20060707.orig/DOCS/tech/vidix.txt MPlayer-svn-20060707/DOCS/tech/vidix.txt
+--- MPlayer-svn-20060707.orig/DOCS/tech/vidix.txt	2006-06-13 15:11:39 +0300
++++ MPlayer-svn-20060707/DOCS/tech/vidix.txt	2006-07-10 13:32:05 +0300
+@@ -142,6 +142,99 @@
+ 
+ All other functions are optionaly.
+ 
++BUSMASTERING
++************
++
++Busmastering is technique to implement data transfer through DMA.
++This technique is intended to free CPU for other useful work to
++speedup movie playback. The speedup will be different on different
++CPUs OSes and videocards. Only thing which SHOULD be implemented
++it's the fact that frame should be transfered faster than 1/fps.
++(I.e. faster than 33ms for 30 fps or faster than 40ms for 25 fps)
++VIDIX implementation of BM (busmastering) is slightly specific.
++During driver development you should keep in mind the next rules:
++1. BM is implemented as parallel process which should work
++   simultaneously with frame decoding.
++2. To have possibility to use busmastering by non-ROOT users
++   driver should rather call functions from libdha than from libc.
++   (Example: driver should call bm_lock_mem instead of mlock)
++3. To speedup data transfer player will pass pointer to the DMA buffer
++   which will have the same structure (planes and strides) as video memory
++   (In this connexion driver should allocate frames in video memory
++   same as if BM would not be implemented).
++
++Interface:
++~~~~~~~~~~
++
++The interface of BM is implemented through 2 functions:
++  vixPlaybackCopyFrame
++  vixQueryDMAStatus
++
++
++vixPlaybackCopyFrame 
++
++should prepare engine to copy frame from
++system memory into video framebuffer. After that driver should
++send command into engine to start data transfer and return
++control immediatedly.
++
++The structure vidix_dma_s in details:
++
++typedef struct vidix_dma_s
++{
++	/* 
++	app -> driver. 
++	Virtual address of source.
++	Note: source buffer is allocated by using malloc
++	or memalign();
++	*/
++	void *		src;
++	/* 
++	app -> driver. 
++	Destinition offset within of video memory.
++	It will point offset within of YUV memory where
++	destinition data should be stored.
++	*/
++	unsigned 	dest_offset;
++	/* app -> driver. Size of data to be transfered in bytes. */
++	unsigned 	size;
++	/*
++	can accept ORed values of BM_DMA* definitions
++	BM_DMA_ASYNC -	default value which indicates that transactiion
++			should work asynchronously.
++	BM_DMA_SYNC - 	may be ignored due speedup reasons
++	BM_DMA_FIXED_BUFFS - indicates that player was started by ROOT
++			and source DMA buffers were already locked in memory
++			through mlock().
++	/* app -> driver: idx of src buffer.
++		    if BM_DMA_FIXED_BUFFS flags is set then this field
++		    indicates which from buffers currently is passed
++		    into driver. This field maybe ignored by driver but
++		    it would be better to use that for minor speedup
++		    of engine preparing. */
++	unsigned 	idx;
++	/* for internal use by driver.
++	   Driver may use them on its opinion  */
++	void *		internal[VID_PLAY_MAXFRAMES];
++}vidix_dma_t;
++
++
++vixQueryDMAStatus
++
++should check out DMA status and return 1 if BM is busy
++and 0 otherwise. Note: this function shouldn't wait any
++changes in DMA state.
++
++A few words about of non-linux systems
++~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
++Well, there is only one problem which stops us to use BM on
++nono-linux systems: it's lacking of possibility to perform
++convertion from virtual to physical address in user-space.
++This problem is sloved by so-called dhahelper driver for
++linux. What about of other OSes then this driver requires
++to be ported first. (Of course, except of DOS and DOS32
++where these convertions are unnecessary).
++
+ Useful links:
+ ~~~~~~~~~~~~~
+ Guide to DTV		http://www.digitaltelevision.com/dtvbook/toc.shtml
+@@ -149,5 +242,6 @@
+ MPEG			http://www.mpeg.org/MPEG/index.html
+ Analog colors		http://www.miranda.com/en/app_notes/TN/TN-05/TN-05.htm
+ 
+-Please send your suggestions, reports, feedback to mplayer-dev-eng@mplayerhq.hu
++Please send your suggestions, reports, feedback to mplayerxp-general@lists.sourceforge.net
++
+ Best regards! Nick Kurshev.
+diff -urN MPlayer-svn-20060707.orig/vidix/fourcc.h MPlayer-svn-20060707/vidix/fourcc.h
+--- MPlayer-svn-20060707.orig/vidix/fourcc.h	2006-06-13 15:10:57 +0300
++++ MPlayer-svn-20060707/vidix/fourcc.h	2006-07-10 13:32:05 +0300
+@@ -36,6 +36,7 @@
+ #define IMGFMT_IYUV    vid_fourcc('I','Y','U','V') /* 12  YUV 4:2:0 */
+ #define IMGFMT_CLPL    vid_fourcc('C','L','P','L') /* 12            */
+ #define IMGFMT_Y800    vid_fourcc('Y','8','0','0') /* 8   Y   Grayscale */
++#define IMGFMT_NV12    vid_fourcc('N','V','1','2') /* 8   Y   Grayscale */
+ #define IMGFMT_Y8      vid_fourcc('Y','8',' ',' ') /* 8   Y   Grayscale */
+ 
+ /* Packed YUV Formats */
+@@ -59,6 +60,9 @@
+ #define IMGFMT_CLJR    vid_fourcc('C','L','J','R') /* 7.9 YUV 4:1:1 */
+ #define IMGFMT_YUVP    vid_fourcc('Y','U','V','P') /* 24 Y0U0Y1V0 */
+ #define IMGFMT_UYVP    vid_fourcc('U','Y','V','P') /* 24 U0Y0V0Y1 */
++#define IMGFMT_411P    vid_fourcc('4','1','1','P') /* 12 alias of Y41B */
++#define IMGFMT_422P    vid_fourcc('4','2','2','P') /* 16 alias of Y42B */
++#define IMGFMT_444P    vid_fourcc('4','4','4','P') /* 24 alias of Y44B */
+ 
+ /*  Vendor-specific formats   */
+ #define IMGFMT_WNVA    vid_fourcc('W','N','V','A') /* Winnov hw compress */
+diff -urN MPlayer-svn-20060707.orig/vidix/Makefile MPlayer-svn-20060707/vidix/Makefile
+--- MPlayer-svn-20060707.orig/vidix/Makefile	2006-06-13 15:10:57 +0300
++++ MPlayer-svn-20060707/vidix/Makefile	2002-06-05 10:36:59 +0300
+@@ -1,11 +1,15 @@
+-LIBNAME = libvidix.a
++LIBNAME = libvidix.so
++BINDIR = $(prefix)/lib
++INCDIR = $(prefix)/include/vidix
++SUBDIRS = drivers
++DO_MAKE = @ for i in $(SUBDIRS); do $(MAKE) -C $$i $@ || exit; done
+ 
+ include ../config.mak
+ 
+ SRCS    = vidixlib.c
+ OBJS	= $(SRCS:.c=.o)
+ 
+-CFLAGS  = $(OPTFLAGS)
++CFLAGS  = $(OPTFLAGS) -W -Wall
+ 
+ .SUFFIXES: .c .o
+ 
+@@ -14,34 +18,46 @@
+ .c.o:
+ 	$(CC) -c $(CFLAGS) -o $@ $<
+ 
+-all:	$(SUBDIRS) $(LIBNAME) do_drivers
+-
+-do_drivers:
+-	$(MAKE) -C drivers
++all:	$(SUBDIRS) $(LIBNAME)
++	$(DO_MAKE)
+ 
+ $(LIBNAME):	$(OBJS)
+-	$(AR) r $(LIBNAME) $(OBJS)
+-	$(RANLIB) $(LIBNAME)
++	$(LD) -shared -soname $(LIBNAME) -o $(LIBNAME) $(OBJS) -lc -ldl
+ 
+ clean:
+-	rm -f *.o *.a *~
+-	$(MAKE) -C drivers clean
++	rm -f *.o $(LIBNAME) *~
++	$(DO_MAKE)
+ 
+-distclean: clean
+-	rm -f .depend test
+-	$(MAKE) -C drivers distclean
++distclean:
++	rm -f test *.o $(LIBNAME) *~ .depend
++	$(DO_MAKE)
+ 
+ dep:    depend
+-	$(MAKE) -C drivers dep
++	$(DO_MAKE)
+ 
+ depend:
+ 	$(CC) -MM $(CFLAGS) $(SRCS) 1>.depend
+ 
+ install:
+-	$(MAKE) -C drivers install
++	$(DO_MAKE)
++	mkdir -p $(BINDIR)
++	install -m 755 -s -p $(LIBNAME) $(BINDIR)
++ifeq ($(TARGET_OS),OpenBSD)
++	$(LDCONFIG) -R
++else
++	$(LDCONFIG)
++endif
++	mkdir -p $(INCDIR)
++	install -m 644 fourcc.h $(INCDIR)/fourcc.h
++	install -m 644 vidix.h $(INCDIR)/vidix.h
++	install -m 644 vidixlib.h $(INCDIR)/vidixlib.h
+ 
+ uninstall:
+-	$(MAKE) -C drivers uninstall
++	$(DO_MAKE)
++	rm -f $(BINDIR)/$(LIBNAME)
++	rmdir -p --ignore-fail-on-non-empty $(BINDIR)
++	rm -f $(INCDIR)/*
++	rmdir -p --ignore-fail-on-non-empty $(INCDIR)
+ 
+ #
+ # include dependency files if they exist
+diff -urN MPlayer-svn-20060707.orig/vidix/vidix.h MPlayer-svn-20060707/vidix/vidix.h
+--- MPlayer-svn-20060707.orig/vidix/vidix.h	2006-06-13 15:10:57 +0300
++++ MPlayer-svn-20060707/vidix/vidix.h	2006-07-10 13:32:05 +0300
+@@ -33,8 +33,10 @@
+ 			             device_id (danger but useful for new devices)
+ 			   Returns 0 if ok else errno */
+ extern int	vixProbe( int verbose, int force );
+-			/* Initializes driver. Returns 0 if ok else errno */
+-extern int	vixInit( void );
++			/* Initializes driver.
++			   args	    - specifies driver specific parameters
++			   Returns 0 if ok else errno */
++extern int	vixInit( const char *args );
+ 			/* Destroys driver */
+ extern void	vixDestroy( void );
+ 
+@@ -56,6 +58,10 @@
+ #define FLAG_NONE		0x00000000 /* No flags defined */
+ #define FLAG_DMA		0x00000001 /* Card can use DMA */
+ #define FLAG_EQ_DMA		0x00000002 /* Card can use DMA only if src pitch == dest pitch */
++#define FLAG_SYNC_DMA           0x00000004 /* Possible to wait for DMA
++					    * to finish.  See
++					    * BM_DMA_SYNC and
++					    * BM_DMA_BLOCK below */
+ #define FLAG_UPSCALER		0x00000010 /* Card supports hw upscaling */
+ #define FLAG_DOWNSCALER		0x00000020 /* Card supports hw downscaling */
+ #define FLAG_SUBPIC		0x00001000 /* Card supports DVD subpictures */
+@@ -72,7 +78,9 @@
+ 
+ typedef struct vidix_fourcc_s
+ {
+-	unsigned fourcc;
++	unsigned fourcc;		/* input: requested fourcc */
++	unsigned srcw;			/* input: hint: width of source */
++	unsigned srch;			/* input: hint: height of source */
+ #define VID_DEPTH_NONE		0x0000
+ #define VID_DEPTH_1BPP		0x0001
+ #define VID_DEPTH_2BPP		0x0002
+@@ -83,7 +91,7 @@
+ #define VID_DEPTH_16BPP		0x0040
+ #define VID_DEPTH_24BPP		0x0080
+ #define VID_DEPTH_32BPP		0x0100
+-	unsigned depth;
++	unsigned depth;			/* output: screen depth for given fourcc */
+ #define VID_CAP_NONE			0x0000
+ #define VID_CAP_EXPAND			0x0001 /* if overlay can be bigger than source */
+ #define VID_CAP_SHRINK			0x0002 /* if overlay can be smaller than source */
+@@ -96,7 +104,7 @@
+ #define VID_CAP_COLORKEY_ISOVERLAY	0x0100 /* colorkey is checked against overlay */
+ #define VID_CAP_ALPHAKEY_ISMAIN		0x0200 /* alphakey is checked against framebuffer */
+ #define VID_CAP_ALPHAKEY_ISOVERLAY	0x0400 /* alphakey is checked against overlay */
+-	unsigned flags;
++	unsigned flags;			/* output: capability */
+ }vidix_fourcc_t;
+ 
+ 			/* Returns 0 if ok else errno */
+@@ -104,7 +112,7 @@
+ 
+ typedef struct vidix_yuv_s
+ {
+-	unsigned y,u,v;
++	unsigned y,u,v,a;
+ }vidix_yuv_t;
+ 
+ typedef struct vidix_rect_s
+@@ -150,7 +158,7 @@
+ 	/* memory model */
+ 	unsigned	frame_size;		/* driver -> app: destinition frame size */
+ 	unsigned	num_frames;		/* app -> driver: after call: driver -> app */
+-#define VID_PLAY_MAXFRAMES 64		/* reasonable limitation for decoding ahead */
++#define VID_PLAY_MAXFRAMES 1024			/* unreal limitation */
+ 	unsigned	offsets[VID_PLAY_MAXFRAMES];	/* driver -> app */
+ 	vidix_yuv_t	offset;			/* driver -> app: relative offsets within frame for yuv planes */
+ 	void*		dga_addr;		/* driver -> app: linear address */
+@@ -243,16 +251,23 @@
+ 
+ typedef struct vidix_dma_s
+ {
+-	vidix_slice_t	src;                    /* app -> driver */
+-	vidix_slice_t	dest;			/* app -> driver */
+-#define LVO_DMA_NOSYNC		0
+-#define LVO_DMA_SYNC		1       /* means: wait vsync or hsync */
+-	unsigned	flags;			/* app -> driver */
++	void *		src;		/* app -> driver. Virtual address of source */
++	unsigned 	dest_offset;	/* app -> driver. Destinition offset within of video memory */
++	unsigned 	size;		/* app -> driver. Size of transaction */
++#define BM_DMA_ASYNC		0
++#define BM_DMA_SYNC		1	/* await previous dma transfer completion */
++#define BM_DMA_FIXED_BUFFS	2	/* app -> driver: app uses buffers which are fixed in memory  */
++#define BM_DMA_BLOCK            4       /* block until the transfer is complete */
++	unsigned	flags;		/* app -> driver */
++	unsigned 	idx;		/* app -> driver: idx of src buffer */
++	void *		internal[VID_PLAY_MAXFRAMES];	/* for internal use by driver */
+ }vidix_dma_t;
+ 
+ 			/* Returns 0 if ok else errno */
+-extern int 	vixPlaybackCopyFrame( const vidix_dma_t * );
++extern int 	vixPlaybackCopyFrame( vidix_dma_t * );
+ 
++			/* Returns 0 if DMA is available else errno (EBUSY) */
++extern int	vixQueryDMAStatus( void );
+ /*
+    This structure is introdused to support OEM effects like:
+    - sharpness
+@@ -284,6 +299,12 @@
+ 			/* Returns 0 if ok else errno */
+ extern int	vixSetOemEffect( const vidix_oem_fx_t * );
+ 
++#ifdef VIDIX_BUILD_STATIC
++#define VIDIX_NAME(name) VIDIX_STATIC##name
++#else
++#define VIDIX_NAME(name) name
++#endif
++
+ #ifdef __cplusplus
+ }
+ #endif
+diff -urN MPlayer-svn-20060707.orig/vidix/vidixlib.c MPlayer-svn-20060707/vidix/vidixlib.c
+--- MPlayer-svn-20060707.orig/vidix/vidixlib.c	2006-06-13 15:10:57 +0300
++++ MPlayer-svn-20060707/vidix/vidixlib.c	2006-07-10 13:32:05 +0300
+@@ -21,32 +21,13 @@
+ #include <errno.h>
+ #include <string.h>
+ 
+-#ifndef WIN32
+ #include <dlfcn.h> /* GLIBC specific. Exists under cygwin too! */
+-#else
+-#include <windows.h>
+-#define dlsym(h,s) GetProcAddress(h,s)
+-#define dlopen(h,s) LoadLibrary(h)
+-#define dlclose(h) FreeLibrary(h)
+-static char* dlerror(){
+- char errormsg[10];
+- sprintf(errormsg,"%i\n",GetLastError());
+- return errormsg;
+-}
+-#endif
+-
+-
+ #include <dirent.h>
+ 
+-#if defined(__OpenBSD__) && !defined(__ELF__)
+-#define dlsym(h,s) dlsym(h, "_" s)
+-#endif
+-
+ #include "vidixlib.h"
+ #include "../bswap.h"
+-#include "../config.h" 
+ 
+-static char drv_name[FILENAME_MAX];
++#define t_vdl(p) (((vdl_stream_t *)p))
+ 
+ typedef struct vdl_stream_s
+ {
+@@ -57,7 +38,7 @@
+ 	int 	(*playback_on)( void );
+ 	int 	(*playback_off)( void );
+         /* Functions below can be missed in driver ;) */
+-	int	(*init)(void);
++	int	(*init)(const char *);
+ 	void    (*destroy)(void);
+ 	int 	(*frame_sel)( unsigned frame_idx );
+ 	int 	(*get_eq)( vidix_video_eq_t * );
+@@ -65,6 +46,7 @@
+ 	int 	(*get_deint)( vidix_deinterlace_t * );
+ 	int 	(*set_deint)( const vidix_deinterlace_t * );
+ 	int 	(*copy_frame)( const vidix_dma_t * );
++	int 	(*query_dma)( void );
+ 	int 	(*get_gkey)( vidix_grkey_t * );
+ 	int 	(*set_gkey)( const vidix_grkey_t * );
+ 	int 	(*get_num_fx)( unsigned * );
+@@ -72,33 +54,65 @@
+ 	int 	(*set_fx)( const vidix_oem_fx_t * );
+ }vdl_stream_t;
+ 
+-#define t_vdl(p) (((vdl_stream_t *)p))
++static char drv_name[FILENAME_MAX];
++static int dl_idx = -1;
++/* currently available driver for static linking */
++static const char* const drv_snames[] = {
++#ifdef VIDIX_BUILD_STATIC
++  "genfb_",
++  "mach64_",
++  "mga_crtc2_",
++  "mga_",
++  "nvidia_",
++  "pm2_",
++  "pm3_",
++  "radeo_",
++  "rage128_",
++#endif
++  NULL
++};
+ 
+ extern unsigned   vdlGetVersion( void )
+ {
+    return VIDIX_VERSION;
+ }
+ 
++static void* dlsymm(void* handle, const char* fce)
++{
++  char b[100];
++#if defined(__OpenBSD__) && !defined(__ELF__)
++  b[0] = '_';
++  b[1] = 0;
++#else
++  b[0] = 0;
++#endif
++  if (dl_idx >= 0) strcat(b, drv_snames[dl_idx]);
++  strcat(b, fce);
++  //printf("Handle %p  %s\n", handle, b);
++  return dlsym(handle, b);
++}
++
+ static int vdl_fill_driver(VDL_HANDLE stream)
+ {
+-  t_vdl(stream)->init		= dlsym(t_vdl(stream)->handle,"vixInit");
+-  t_vdl(stream)->destroy	= dlsym(t_vdl(stream)->handle,"vixDestroy");
+-  t_vdl(stream)->get_caps	= dlsym(t_vdl(stream)->handle,"vixGetCapability");
+-  t_vdl(stream)->query_fourcc	= dlsym(t_vdl(stream)->handle,"vixQueryFourcc");
+-  t_vdl(stream)->config_playback= dlsym(t_vdl(stream)->handle,"vixConfigPlayback");
+-  t_vdl(stream)->playback_on	= dlsym(t_vdl(stream)->handle,"vixPlaybackOn");
+-  t_vdl(stream)->playback_off	= dlsym(t_vdl(stream)->handle,"vixPlaybackOff");
+-  t_vdl(stream)->frame_sel	= dlsym(t_vdl(stream)->handle,"vixPlaybackFrameSelect");
+-  t_vdl(stream)->get_eq	= dlsym(t_vdl(stream)->handle,"vixPlaybackGetEq");
+-  t_vdl(stream)->set_eq	= dlsym(t_vdl(stream)->handle,"vixPlaybackSetEq");
+-  t_vdl(stream)->get_gkey	= dlsym(t_vdl(stream)->handle,"vixGetGrKeys");
+-  t_vdl(stream)->set_gkey	= dlsym(t_vdl(stream)->handle,"vixSetGrKeys");
+-  t_vdl(stream)->get_deint	= dlsym(t_vdl(stream)->handle,"vixPlaybackGetDeint");
+-  t_vdl(stream)->set_deint	= dlsym(t_vdl(stream)->handle,"vixPlaybackSetDeint");
+-  t_vdl(stream)->copy_frame	= dlsym(t_vdl(stream)->handle,"vixPlaybackCopyFrame");
+-  t_vdl(stream)->get_num_fx	= dlsym(t_vdl(stream)->handle,"vixQueryNumOemEffects");
+-  t_vdl(stream)->get_fx		= dlsym(t_vdl(stream)->handle,"vixGetOemEffect");
+-  t_vdl(stream)->set_fx		= dlsym(t_vdl(stream)->handle,"vixSetOemEffect");
++  t_vdl(stream)->init		= dlsymm(t_vdl(stream)->handle,"vixInit");
++  t_vdl(stream)->destroy	= dlsymm(t_vdl(stream)->handle,"vixDestroy");
++  t_vdl(stream)->get_caps	= dlsymm(t_vdl(stream)->handle,"vixGetCapability");
++  t_vdl(stream)->query_fourcc	= dlsymm(t_vdl(stream)->handle,"vixQueryFourcc");
++  t_vdl(stream)->config_playback= dlsymm(t_vdl(stream)->handle,"vixConfigPlayback");
++  t_vdl(stream)->playback_on	= dlsymm(t_vdl(stream)->handle,"vixPlaybackOn");
++  t_vdl(stream)->playback_off	= dlsymm(t_vdl(stream)->handle,"vixPlaybackOff");
++  t_vdl(stream)->frame_sel	= dlsymm(t_vdl(stream)->handle,"vixPlaybackFrameSelect");
++  t_vdl(stream)->get_eq	= dlsymm(t_vdl(stream)->handle,"vixPlaybackGetEq");
++  t_vdl(stream)->set_eq	= dlsymm(t_vdl(stream)->handle,"vixPlaybackSetEq");
++  t_vdl(stream)->get_gkey	= dlsymm(t_vdl(stream)->handle,"vixGetGrKeys");
++  t_vdl(stream)->set_gkey	= dlsymm(t_vdl(stream)->handle,"vixSetGrKeys");
++  t_vdl(stream)->get_deint	= dlsymm(t_vdl(stream)->handle,"vixPlaybackGetDeint");
++  t_vdl(stream)->set_deint	= dlsymm(t_vdl(stream)->handle,"vixPlaybackSetDeint");
++  t_vdl(stream)->copy_frame	= dlsymm(t_vdl(stream)->handle,"vixPlaybackCopyFrame");
++  t_vdl(stream)->query_dma	= dlsymm(t_vdl(stream)->handle,"vixQueryDMAStatus");
++  t_vdl(stream)->get_num_fx	= dlsymm(t_vdl(stream)->handle,"vixQueryNumOemEffects");
++  t_vdl(stream)->get_fx		= dlsymm(t_vdl(stream)->handle,"vixGetOemEffect");
++  t_vdl(stream)->set_fx		= dlsymm(t_vdl(stream)->handle,"vixSetOemEffect");
+   /* check driver viability */
+   if(!( t_vdl(stream)->get_caps && t_vdl(stream)->query_fourcc &&
+ 	t_vdl(stream)->config_playback && t_vdl(stream)->playback_on &&
+@@ -123,25 +137,38 @@
+   unsigned (*_ver)(void);
+   int      (*_probe)(int,int);
+   int      (*_cap)(vidix_capability_t*);
+-  strlcpy(drv_name,path, sizeof( drv_name ));
+-  strlcat(drv_name,name, sizeof( drv_name ));
++  strncpy(drv_name,path,sizeof(drv_name));
++  drv_name[sizeof(drv_name) - 1] = '\0';
++  strncat(drv_name,name,sizeof(drv_name) - strlen(drv_name) - 1);
+   if(verbose) printf("vidixlib: PROBING: %s\n",drv_name);
+-  if(!(t_vdl(stream)->handle = dlopen(drv_name,RTLD_LAZY|RTLD_GLOBAL)))
++
+   {
+-    if(verbose) printf("vidixlib: %s not driver: %s\n",drv_name,dlerror());
+-    return 0;
++    const char* slash = strrchr(drv_name, '/');
++    if (slash) {
++      for (dl_idx = 0; drv_snames[dl_idx]; dl_idx++) {
++	if (!strncmp(slash + 1, drv_snames[dl_idx], strlen(drv_snames[dl_idx])))
++	  break; // locate the name
++      }
++      if (!drv_snames[dl_idx]) dl_idx = -1;
++    }
+   }
+-  _ver = dlsym(t_vdl(stream)->handle,"vixGetVersion");
+-  _probe = dlsym(t_vdl(stream)->handle,"vixProbe");
+-  _cap = dlsym(t_vdl(stream)->handle,"vixGetCapability");
+-  if(_ver) 
++  if (dl_idx < 0)
++    if(!(t_vdl(stream)->handle = dlopen(drv_name,RTLD_LAZY|RTLD_GLOBAL))) {
++      if(verbose) printf("vidixlib: %s not driver: %s\n",drv_name,dlerror());
++      return 0;
++    }
++  _ver = dlsymm(t_vdl(stream)->handle,"vixGetVersion");
++  _probe = dlsymm(t_vdl(stream)->handle,"vixProbe");
++  _cap = dlsymm(t_vdl(stream)->handle,"vixGetCapability");
++  if(_ver)
+   {
+-    if((*_ver)() != VIDIX_VERSION) 
+-    { 
++    if((*_ver)() != VIDIX_VERSION)
++    {
+       if(verbose) printf("vidixlib: %s has wrong version\n",drv_name);
+       err:
+       dlclose(t_vdl(stream)->handle);
+       t_vdl(stream)->handle = 0;
++      dl_idx = -1;
+       return 0;
+      }
+   }
+@@ -173,10 +200,10 @@
+   while(!done)
+   {
+     name = readdir(dstream);
+-    if(name) 
+-    { 
++    if(name)
++    {
+       if(name->d_name[0] != '.')
+-	if(vdl_probe_driver(stream,path,name->d_name,cap,verbose)) break; 
++	if(vdl_probe_driver(stream,path,name->d_name,cap,verbose)) break;
+     }
+     else done = 1;
+   }
+@@ -187,6 +214,7 @@
+ VDL_HANDLE vdlOpen(const char *path,const char *name,unsigned cap,int verbose)
+ {
+   vdl_stream_t *stream;
++  const char *drv_args=NULL;
+   int errcode;
+   if(!(stream = malloc(sizeof(vdl_stream_t)))) return NULL;
+   memset(stream,0,sizeof(vdl_stream_t));
+@@ -195,29 +223,40 @@
+     unsigned (*ver)(void);
+     int (*probe)(int,int);
+     unsigned version = 0;
+-    strlcpy(drv_name,path, sizeof( drv_name ));
+-    strlcat(drv_name,name, sizeof( drv_name ));
+-    if(!(t_vdl(stream)->handle = dlopen(drv_name,RTLD_NOW|RTLD_GLOBAL)))
++    unsigned char *arg_sep;
++    arg_sep = strchr(name,':');
++    if(arg_sep) { *arg_sep='\0'; drv_args = &arg_sep[1]; }
++    strncpy(drv_name,path,sizeof(drv_name));
++    drv_name[sizeof(drv_name) - 1] = '\0';
++    strncat(drv_name,name,sizeof(drv_name) - strlen(drv_name) - 1);
+     {
+-      if (verbose)
+-	printf("vidixlib: dlopen error: %s\n", dlerror());
+-      err:
+-      free(stream);
+-      return NULL;
++      const char* slash = strrchr(drv_name, '/');
++      if (slash) {
++	for (dl_idx = 0; drv_snames[dl_idx]; dl_idx++) {
++	  if (!strncmp(slash + 1, drv_snames[dl_idx], strlen(drv_snames[dl_idx])))
++	    break; // locate the name
++	}
++	if (!drv_snames[dl_idx]) dl_idx = -1;
++      }
+     }
+-    ver = dlsym(t_vdl(stream)->handle,"vixGetVersion");
++    if (dl_idx < 0)
++      if(!(t_vdl(stream)->handle = dlopen(drv_name,RTLD_NOW|RTLD_GLOBAL)))
++      {
++	if (verbose)
++	  printf("vidixlib: dlopen error: %s\n", dlerror());
++	err:
++          vdlClose(stream);
++	  return NULL;
++      }
++    ver = dlsymm(t_vdl(stream)->handle,"vixGetVersion");
+     if(ver) version = (*ver)();
+     if(version != VIDIX_VERSION)
+-    {
+-      drv_err:
+-      if(t_vdl(stream)->handle) dlclose(t_vdl(stream)->handle);
+       goto err;
+-    }
+-    probe = dlsym(t_vdl(stream)->handle,"vixProbe");
+-    if(probe) { if((*probe)(verbose,PROBE_FORCE)!=0) goto drv_err; }
+-    else goto drv_err;
++    probe = dlsymm(t_vdl(stream)->handle,"vixProbe");
++    if(probe) { if((*probe)(verbose,PROBE_FORCE)!=0) goto err; }
++    else goto err;
+     fill:
+-    if(!vdl_fill_driver(stream)) goto drv_err;
++    if(!vdl_fill_driver(stream)) goto err;
+     goto ok;
+   }
+   else
+@@ -225,18 +264,18 @@
+     {
+       if(verbose) printf("vidixlib: will use %s driver\n",drv_name);
+       goto fill;
+-    }  
++    }
+     else goto err;
+   ok:
+   if(t_vdl(stream)->init)
+   {
+    if(verbose) printf("vidixlib: Attempt to initialize driver at: %p\n",t_vdl(stream)->init);
+-   if((errcode=t_vdl(stream)->init())!=0)
++   if((errcode=t_vdl(stream)->init(drv_args))!=0)
+    {
+     if(verbose) printf("vidixlib: Can't init driver: %s\n",strerror(errcode));
+-    goto drv_err;
++    goto err;
+    }
+-  } 
++  }
+   if(verbose) printf("vidixlib: '%s'successfully loaded\n",drv_name);
+   return stream;
+ }
+@@ -244,9 +283,10 @@
+ void vdlClose(VDL_HANDLE stream)
+ {
+   if(t_vdl(stream)->destroy) t_vdl(stream)->destroy();
+-  dlclose(t_vdl(stream)->handle);
++  if(t_vdl(stream)->handle) dlclose(t_vdl(stream)->handle);
+   memset(stream,0,sizeof(vdl_stream_t)); /* <- it's not stupid */
+   free(stream);
++  dl_idx = -1;
+ }
+ 
+ int  vdlGetCapability(VDL_HANDLE handle, vidix_capability_t *cap)
+@@ -303,11 +343,16 @@
+   return t_vdl(handle)->set_eq ? t_vdl(handle)->set_eq(e) : ENOSYS;
+ }
+ 
+-int  vdlPlaybackCopyFrame(VDL_HANDLE handle, const vidix_dma_t * f)
++int  vdlPlaybackCopyFrame(VDL_HANDLE handle, vidix_dma_t * f)
+ {
+   return t_vdl(handle)->copy_frame ? t_vdl(handle)->copy_frame(f) : ENOSYS;
+ }
+ 
++int  vdlQueryDMAStatus(VDL_HANDLE handle )
++{
++  return t_vdl(handle)->query_dma ? t_vdl(handle)->query_dma() : ENOSYS;
++}
++
+ int 	  vdlGetGrKeys(VDL_HANDLE handle, vidix_grkey_t * k)
+ {
+   return t_vdl(handle)->get_gkey ? t_vdl(handle)->get_gkey(k) : ENOSYS;
+@@ -342,3 +387,95 @@
+ {
+   return t_vdl(handle)->set_fx ? t_vdl(handle)->set_fx(f) : ENOSYS;
+ }
++
++/* ABI related extensions */
++vidix_capability_t *	vdlAllocCapabilityS( void )
++{
++    vidix_capability_t *retval;
++    retval=malloc(sizeof(vidix_capability_t));
++    if(retval) memset(retval,0,sizeof(vidix_capability_t));
++    return retval;
++}
++
++vidix_fourcc_t *		vdlAllocFourccS( void )
++{
++    vidix_fourcc_t *retval;
++    retval=malloc(sizeof(vidix_fourcc_t));
++    if(retval) memset(retval,0,sizeof(vidix_fourcc_t));
++    return retval;
++}
++
++vidix_yuv_t *		vdlAllocYUVS( void )
++{
++    vidix_yuv_t *retval;
++    retval=malloc(sizeof(vidix_yuv_t));
++    if(retval) memset(retval,0,sizeof(vidix_yuv_t));
++    return retval;
++}
++
++vidix_rect_t *		vdlAllocRectS( void )
++{
++    vidix_rect_t *retval;
++    retval=malloc(sizeof(vidix_rect_t));
++    if(retval) memset(retval,0,sizeof(vidix_rect_t));
++    return retval;
++}
++
++vidix_playback_t *	vdlAllocPlaybackS( void )
++{
++    vidix_playback_t *retval;
++    retval=malloc(sizeof(vidix_playback_t));
++    if(retval) memset(retval,0,sizeof(vidix_playback_t));
++    return retval;
++}
++
++vidix_grkey_t *		vdlAllocGrKeyS( void )
++{
++    vidix_grkey_t *retval;
++    retval=malloc(sizeof(vidix_grkey_t));
++    if(retval) memset(retval,0,sizeof(vidix_grkey_t));
++    return retval;
++}
++
++vidix_video_eq_t *	vdlAllocVideoEqS( void )
++{
++    vidix_video_eq_t *retval;
++    retval=malloc(sizeof(vidix_video_eq_t));
++    if(retval) memset(retval,0,sizeof(vidix_video_eq_t));
++    return retval;
++}
++
++vidix_deinterlace_t *	vdlAllocDeinterlaceS( void )
++{
++    vidix_deinterlace_t *retval;
++    retval=malloc(sizeof(vidix_deinterlace_t));
++    if(retval) memset(retval,0,sizeof(vidix_deinterlace_t));
++    return retval;
++}
++
++vidix_dma_t *		vdlAllocDmaS( void )
++{
++    vidix_dma_t *retval;
++    retval=malloc(sizeof(vidix_dma_t));
++    if(retval) memset(retval,0,sizeof(vidix_dma_t));
++    return retval;
++}
++
++vidix_oem_fx_t *		vdlAllocOemFxS( void )
++{
++    vidix_oem_fx_t *retval;
++    retval=malloc(sizeof(vidix_oem_fx_t));
++    if(retval) memset(retval,0,sizeof(vidix_oem_fx_t));
++    return retval;
++}
++
++void	vdlFreeCapabilityS(vidix_capability_t * _this) { free(_this); }
++void 	vdlFreeFourccS( vidix_fourcc_t * _this ) { free(_this); }
++void	vdlFreePlaybackS( vidix_playback_t * _this ) { free(_this); }
++void	vdlFreeYUVS( vidix_yuv_t * _this) { free(_this); }
++void	vdlFreeRectS( vidix_rect_t * _this) { free(_this); }
++void	vdlFreeGrKeyS( vidix_grkey_t * _this) { free(_this); }
++void	vdlFreeVideoEqS( vidix_video_eq_t * _this) { free(_this); }
++void	vdlFreeDeinterlaceS( vidix_deinterlace_t * _this) { free(_this); }
++void	vdlFreeDmaS( vidix_dma_t * _this) { free(_this); }
++void	vdlFreeOemFxS( vidix_oem_fx_t * _this) { free(_this); }
+diff -urN MPlayer-svn-20060707.orig/vidix/vidixlib.h MPlayer-svn-20060707/vidix/vidixlib.h
+--- MPlayer-svn-20060707.orig/vidix/vidixlib.h	2006-06-13 15:10:57 +0300
++++ MPlayer-svn-20060707/vidix/vidixlib.h	2006-07-10 13:32:05 +0300
+@@ -89,7 +89,37 @@
+ 
+ 
+ 			/* Returns 0 if ok else errno */
+-extern int	  vdlPlaybackCopyFrame(VDL_HANDLE, const vidix_dma_t * );
++extern int	  vdlPlaybackCopyFrame(VDL_HANDLE, vidix_dma_t * );
++
++			/* Returns 0 if DMA is available else errno (EBUSY) */
++extern int	  vdlQueryDMAStatus( VDL_HANDLE );
++
++/*
++  ABI related extensions.
++  Note: you should use this functions if you are using shared version
++  of vidix.
++*/
++extern vidix_capability_t *	vdlAllocCapabilityS( void );
++extern vidix_fourcc_t *		vdlAllocFourccS( void );
++extern vidix_playback_t *	vdlAllocPlaybackS( void );
++extern vidix_yuv_t *		vdlAllocYUVS( void );
++extern vidix_rect_t *		vdlAllocRectS( void );
++extern vidix_grkey_t *		vdlAllocGrKeyS( void );
++extern vidix_video_eq_t *	vdlAllocVideoEqS( void );
++extern vidix_deinterlace_t *	vdlAllocDeinterlaceS( void );
++extern vidix_dma_t *		vdlAllocDmaS( void );
++extern vidix_oem_fx_t *		vdlAllocOemFxS( void );
++
++extern void	vdlFreeCapabilityS(vidix_capability_t * );
++extern void 	vdlFreeFourccS( vidix_fourcc_t * );
++extern void	vdlFreePlaybackS( vidix_playback_t * );
++extern void	vdlFreeYUVS( vidix_yuv_t * );
++extern void	vdlFreeRectS( vidix_rect_t * );
++extern void	vdlFreeGrKeyS( vidix_grkey_t * );
++extern void	vdlFreeVideoEqS( vidix_video_eq_t * );
++extern void	vdlFreeDeinterlaceS( vidix_deinterlace_t * );
++extern void	vdlFreeDmaS( vidix_dma_t * );
++extern void	vdlFreeOemFxS( vidix_oem_fx_t * );
+ 
+ #ifdef __cplusplus
+ }
