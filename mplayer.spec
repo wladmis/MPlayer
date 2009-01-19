@@ -7,8 +7,9 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 %define prerel 0
-%define svndate 20060717
-%define ffmpeg_svndate 20060717
+%define svndate 20060719
+%define svnrev 19134
+%define ffmpeg_svndate 20060719
 %define vidixver 0.9.9.1
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
@@ -156,7 +157,6 @@
 %define asm as
 %define charset cp1251
 %define language uk ru en bg cs de dk el es fr hu it ja ko mk nl no pl ro sk sv tr pt_BR zh_CN zh_TW
-%set_enables en es fr hu pl ru
 
 # Advanced options:
 %def_enable mmx
@@ -176,7 +176,7 @@
 %define termcaplib tinfo
 
 # Other parameters
-%def_with soundwrapper
+%def_without soundwrapper
 %def_with htmldocs
 %define default_vo %{subst_o xmga}%{subst_o_pre x vidix}%{subst_o xv}%{subst_o gl2}%{subst_o gl}%{subst_o sdl}%{subst_o x11}%{subst_o mga}%{subst_o dfbmga}%{subst_o tdfxfb}%{subst_o 3dfx}%{subst_o s3fb}%{subst_o_pre c vidix}%{subst_o_post fbdev 2}%{subst_o vesa}%{subst_o caca}%{subst_o aa}null
 %define default_ao %{subst_o polyp}%{subst_o alsa}%{subst_o oss}%{subst_o openal}%{subst_o sdl}%{subst_o nas}null
@@ -214,6 +214,10 @@
 
 %if_disabled gtk1
 %set_disable xmms
+%endif
+
+%if_disabled freetype
+%set_disable fontconfig
 %endif
 
 %if_disabled vidix
@@ -285,7 +289,12 @@ URL: http://www.mplayerhq.hu
 Provides: %Name
 Obsoletes: %Name
 %endif
-%{?_disable_fontconfig:%{?_enable_freetype:Requires: urw-fonts}}
+%if_enabled freetype
+%{?_disable_fontconfig:Requires: fonts-type1-urw}
+Conflicts: %Name-fonts %lname-fonts < 1.0-alt0.20060719.1
+%else
+Requires: %name-fonts
+%endif
 
 %ifdef svndate
 Source0: %Name-svn-%svndate.tar.bz2
@@ -298,12 +307,11 @@ Source0: %Name-%version%prerel.tar.bz2
 # svn checkout svn.mplayerhq.hu/ffmpeg/trunk
 %endif
 Source2: ao_polyp.c.bz2
-Source3: cp1251-font.tar.bz2
+Source3: %lname.sh
 Source4: standard-1.9.tar.bz2
 Source5: %lname.conf.in.gz
-%{?_enable_vidix_int_drivers:Source6: vidix-%vidixver.tar.bz2}
-Source7: %lname.sh
 # http://vidix.sourceforge.net
+%{?_enable_vidix_int_drivers:Source6: vidix-%vidixver.tar.bz2}
 Patch1: %Name-svn-20060710-alt-external_fame.patch.gz
 Patch2: %Name-dvd-ru-20060705.patch.gz
 Patch3: %Name-1.0pre4-alt-explicit_gif.patch
@@ -431,7 +439,7 @@ XAnim, RealPlayer и Win32. Реализованы основные функции для
 текстовых форматов субтитров.
 
 Поддерживаются практически все способы вывода изображения и звука в
-юниксоподобных системах. Имеются низкоуровневые специализарованные
+юниксоподобных системах. Имеются низкоуровневые специализированные
 драйвера для некоторых видеокарт: Matrox, Nvidia, 3Dfx, Radeon,
 Mach64, Permedia3, - аппаратного декодирования AC3, а также нескольких
 плат, аппаратно декодирующих MPEG, таких как DVB и DXR3/Hollywood+.
@@ -488,7 +496,7 @@ XAnim, RealPlayer и Win32. Реализованы основные функции для
 проигрывания VCD/DVD, включая субтитры DVD, а также множества других
 текстовых форматов субтитров.
 Поддерживаются практически все способы вывода изображения и звука в
-юниксоподобных системах. Имеются низкоуровневые специализарованные
+юниксоподобных системах. Имеются низкоуровневые специализированные
 драйвера для некоторых видеокарт: Matrox, Nvidia, 3Dfx, Radeon,
 Mach64, Permedia3, - аппаратного декодирования AC3, а также нескольких
 плат, аппаратно декодирующих MPEG, таких как DVB и DXR3/Hollywood+.
@@ -496,6 +504,18 @@ Mach64, Permedia3, - аппаратного декодирования AC3, а также нескольких
 Этот пакет содержит версию %Name c GUI (графическим интерфейсом).
 Также имеется %name - консольная версия пакета с меньшим числом
 зависимостей.
+%endif
+
+
+%if_enabled freetype
+%package fontutils
+Group: Video
+Summary: Font utils for the %Name
+Requires: %name
+Conflicts: %Name-fonts %lname-fonts < 1.0-alt0.20060719.1
+
+%description fontutils
+Font utils for use with %Name.
 %endif
 
 
@@ -514,7 +534,7 @@ MEncoder a movie encoder for Unix and is a part of the %name package.
 Group: Video
 Summary: %Name all docs
 Requires: %name-doc-en
-#Requires: %name-doc-de
+Requires: %name-doc-de
 Requires: %name-doc-cs
 Requires: %name-doc-es
 Requires: %name-doc-fr
@@ -652,23 +672,6 @@ Obsoletes: %Name-doc-zh
 
 %description doc-zh
 %Name Taiwan Chinese docs.
-
-
-%if_enabled freetype
-%package fonts
-Group: Video 
-Summary: fonts and font tools for the %Name
-Requires: %name
-%if %name != %Name
-Provides: %Name-fonts
-Obsoletes: %Name-fonts
-%endif
-
-%description fonts
-Fonts and font tools for use with %Name.
-Currently included:
-  * %{lname}_subfont - a tool for creating OSD fonts
-%endif
 
 
 %if_enabled vidix_int
@@ -1140,6 +1143,9 @@ export LC_MESSAGES
 		%{subst_enable_with gdb crash-debug} \
 		%{subst_enable_with dynamic_plugins dynamic-plugins} \
 
+%if %svnrev
+[ -f .svn/entries ] || echo '#define VERSION "dev-SVN-r%svnrev-4.1.1"' > version.h
+%endif
 %ifnarch x86_64
 make
 %else
@@ -1170,9 +1176,7 @@ pushd DOCS/xml
 cp -fL %_sysconfdir/sgml/catalog ./
 echo 'CATALOG "/usr/share/xml/xml-iso-entities-8879.1986/catalog"' >> ./catalog
 ./configure
-#FIXME! Can't build de docs now :(
-#for lang in cs de en es fr hu pl ru; do
-for lang in cs en es fr hu pl ru; do
+for lang in cs de en es fr hu pl ru; do
     make html-chunked-$lang
 done
 popd
@@ -1186,32 +1190,25 @@ install -d -m 0755 %buildroot%_datadir/%name/skins
 tar -C %buildroot%_datadir/%name/skins -xjf %SOURCE4
 ln -s standard %buildroot%_datadir/%name/skins/default
 
-%if_disabled fontconfig
-%if_enabled freetype
-ln -s ../fonts/default/Type1/n019003l.pfb %buildroot%_datadir/%name/subfont.ttf
-%else
-# Russian font, that uses to show subscriptions 
-tar -C %buildroot%_datadir/%name -xjf %SOURCE3
-%endif
-%endif
+%{?_enable_freetype:%{?_disable_fontconfig:ln -s ../fonts/default/Type1/n019003l.pfb %buildroot%_datadir/%name/subfont.ttf}}
 
 install -m 0644 etc/{codecs,input,%lname}.conf %buildroot%_sysconfdir/%name/
 
-%if_enabled osdmenu
-install -m 0644 etc/menu.conf %buildroot%_sysconfdir/%name/
-%if_enabled dvb
-install -m 0644 etc/dvb-menu.conf %buildroot%_sysconfdir/%name/
-%endif
-%endif
+%{?_enable_osdmenu:install -m 0644 etc/menu.conf %buildroot%_sysconfdir/%name/}
+%{?_enable_dvb:install -m 0644 etc/dvb-menu.conf %buildroot%_sysconfdir/%name/}
 
 %if_enabled freetype
 install -d %buildroot%_datadir/%name/fonts/{osd,encodings}
-install -m 0644 TOOLS/subfont-c/osd/{gen.py,osd.pfb,README,runme} %buildroot%_datadir/%name/fonts/osd/
-install -m 0644 TOOLS/subfont-c/encodings/* %buildroot%_datadir/%name/fonts/encodings/
+install -m 0644 TOOLS/subfont-c/font.desc.tail %buildroot%_datadir/%name/fonts/
+install -m 0755 TOOLS/subfont-c/{fontgen,runme} %buildroot%_datadir/%name/fonts/
+install -m 0644 TOOLS/subfont-c/osd/osd.pfb %buildroot%_datadir/%name/fonts/osd/
+install -m 0755 TOOLS/subfont-c/osd/{gen.py,runme} %buildroot%_datadir/%name/fonts/osd/
+install -m 0644 TOOLS/subfont-c/encodings/{osd-%lname,runme-kr} %buildroot%_datadir/%name/fonts/encodings/
+install -m 0755 TOOLS/subfont-c/encodings/charmap2enc %buildroot%_datadir/%name/fonts/encodings/
 install -m 0755 TOOLS/subfont-c/subfont %buildroot%_bindir/%{lname}_subfont
 %endif
 
-%{?_with_soundwrapper:install -pD -m 0755 %SOURCE7 %buildroot%_sysconfdir/bashrc.d/%lname.sh}
+%{?_with_soundwrapper:install -pD -m 0755 %SOURCE3 %buildroot%_sysconfdir/bashrc.d/%lname.sh}
 
 # Menus
 [ "%name" = "%lname" ] || mv %buildroot%_desktopdir/%lname.desktop %buildroot%_desktopdir/%name.desktop
@@ -1236,8 +1233,7 @@ for l in it zh; do
     install -d %buildroot%_docdir/%name-doc-%version/$l
     install -m 0644 DOCS/$l/*.html %buildroot%_docdir/%name-doc-%version/$l/
 done
-#for l in cs de en es fr hu pl ru; do
-for l in cs en es fr hu pl ru; do
+for l in cs de en es fr hu pl ru; do
     install -d %buildroot%_docdir/%name-doc-%version/$l
     install -m 0644 DOCS/HTML/$l/{*.htm,*.css} %buildroot%_docdir/%name-doc-%version/$l/
 done
@@ -1271,16 +1267,13 @@ unset RPM_PYTHON
 %files
 %doc README AUTHORS ChangeLog.*
 %_bindir/%lname
+%{?_enable_freetype:%_bindir/%{lname}_subfont}
 %dir %_sysconfdir/%name
 %config %_sysconfdir/%name/codecs.conf
 %config(noreplace) %verify(not size mtime md5) %_sysconfdir/%name/%lname.conf
 %config(noreplace) %verify(not size mtime md5) %_sysconfdir/%name/input.conf
-%if_enabled osdmenu
-%config(noreplace) %verify(not size mtime md5) %_sysconfdir/%name/menu.conf
-%if_enabled dvb
-%config(noreplace) %verify(not size mtime md5) %_sysconfdir/%name/dvb-menu.conf
-%endif
-%endif
+%{?_enable_osdmenu:%config(noreplace) %verify(not size mtime md5) %_sysconfdir/%name/menu.conf}
+%{?_enable_dvb:%config(noreplace) %verify(not size mtime md5) %_sysconfdir/%name/dvb-menu.conf}
 %{?_with_soundwrapper:%_sysconfdir/bashrc.d/*}
 %dir %_datadir/%name
 %if_disabled fontconfig
@@ -1305,6 +1298,20 @@ unset RPM_PYTHON
 %endif
 
 
+%if_enabled freetype
+%files fontutils
+%_bindir/%{lname}_subfont
+%dir %_datadir/%name/fonts
+%dir %_datadir/%name/fonts/osd
+%dir %_datadir/%name/fonts/encodings
+%_datadir/%name/fonts/fontgen
+%_datadir/%name/fonts/runme
+%_datadir/%name/fonts/font.desc.tail
+%_datadir/%name/fonts/osd/*
+%_datadir/%name/fonts/encodings/*
+%endif
+
+
 %if_enabled mencoder
 %files -n mencoder
 %_bindir/mencoder
@@ -1319,8 +1326,8 @@ unset RPM_PYTHON
 %_docdir/%name-doc-%version/cs
 
 
-#files doc-de
-#_docdir/%name-doc-%version/de
+%files doc-de
+%_docdir/%name-doc-%version/de
 
 
 %files doc-es
@@ -1349,22 +1356,6 @@ unset RPM_PYTHON
 
 %files doc-zh
 %_docdir/%name-doc-%version/zh
-
-
-%if_enabled freetype
-%files fonts
-%_bindir/%{lname}_subfont
-%dir %_datadir/%name/fonts
-%dir %_datadir/%name/fonts/osd
-%dir %_datadir/%name/fonts/encodings
-%_datadir/%name/fonts/osd/gen.py
-%_datadir/%name/fonts/osd/osd.pfb
-%_datadir/%name/fonts/osd/README
-%_datadir/%name/fonts/osd/runme
-%_datadir/%name/fonts/encodings/charmap2enc
-%_datadir/%name/fonts/encodings/osd-%lname
-%_datadir/%name/fonts/encodings/runme-kr
-%endif
 
 
 %if_enabled vidix_int
@@ -1426,27 +1417,36 @@ unset RPM_PYTHON
 
 
 %changelog
+* Thu Jul 20 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060719.1
+- new SVN snapshot (revision 19134)
+- fixed lapses in %%changelog and %%description
+- removed %name-fonts package
+- without soundwrapper
+- making correct version.h
+- removed %name-fonts
+- added %name-fontutils
+
 * Mon Jul 17 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060717.1
-- new SVN sbapshot (revision 19126)
+- new SVN snapshot (revision 19126)
 - removed divx4linux and opendivx (upstream)
 
 * Mon Jul 17 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060714.1
-- new SVN sbapshot (revision 19058)
+- new SVN snapshot (revision 19058)
 - cleaned up spec
 - changed base package name to %lname
 
 * Thu Jul 13 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060713.1
-- new SVN sbapshot (revision 19047)
+- new SVN snapshot (revision 19047)
 - cleaned up spec
 - changed %%name to %lname
 
 * Thu Jul 13 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060712.1
-- new SVN sbapshot (revision 19018)
+- new SVN snapshot (revision 19018)
 - enabled fribidi
 - fixed configure parameters
 
 * Wed Jul 12 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060711.1
-- new SVN sbapshot (revision 19001)
+- new SVN snapshot (revision 19001)
 - updated %Name-svn-20060711-configure.patch
 - many changes in spec
 - enabled libmpeg2, md5sum, 3dfx, tdfxfb
@@ -1456,7 +1456,7 @@ unset RPM_PYTHON
 - added %lname-uni-20060710.diff
 
 * Mon Jul 10 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060710.1
-- new SVN sbapshot (revision 18986)
+- new SVN snapshot (revision 18986)
 - updated %Name-svn-20060710-alt-external_fame.patch
 - enabled ass (internal SSA/ASS subtitles support)
 - fixed spec
@@ -1469,7 +1469,7 @@ unset RPM_PYTHON
 - disabled dirac
 
 * Fri Jul 07 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060707.1
-- new SVN sbapshot (revision 18929)
+- new SVN snapshot (revision 18929)
 - fixed spec
 - updated %Name-svn-20060707_dirac-0.5.x.patch
 
@@ -1496,27 +1496,27 @@ unset RPM_PYTHON
 - enabled dirac
 
 * Fri Jun 30 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060630.1
-- new SVN sbapshot (revision 18853)
+- new SVN snapshot (revision 18853)
 - enabled dvdnav
 - fixed dvdnav detect
 
 * Thu Jun 29 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060629.1
-- new SVN sbapshot (revision 18847)
+- new SVN snapshot (revision 18847)
 
 * Mon Jun 26 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060626.1
-- new SVN sbapshot (revision 18821)
+- new SVN snapshot (revision 18821)
 - removed %Name-cvs-20060506-docs.patch, used sed & iconv instead
 
 * Fri Jun 23 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060623.1
-- new SVN sbapshot (revision 18791)
+- new SVN snapshot (revision 18791)
 
 * Thu Jun 22 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060622.1
-- new SVN sbapshot (revision 18781)
+- new SVN snapshot (revision 18781)
 - returned %name.sh (soundwrapper)
 - cleaned up spec
 
 * Wed Jun 21 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060621.1
-- new SVN sbapshot (revision 18766)
+- new SVN snapshot (revision 18766)
 - added macroses
 - enabled external tremor
 - force enabled openal
@@ -1525,14 +1525,14 @@ unset RPM_PYTHON
   %Name-svn-20060621-configure.patch
 
 * Tue Jun 20 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060620.1
-- new SVN sbapshot (revision 18760)
+- new SVN snapshot (revision 18760)
 - fixed spec
 - updated %Name-svn-20060620-alt-external_fame.patch
 - fixed configure parameters
 - cleaned up spec
 
 * Tue Jun 13 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060613.1
-- new SVN sbapshot (revision 18698)
+- new SVN snapshot (revision 18698)
 - removed additional icons
 - fixed .desktop file
 - removed %name.sh (soundwrapper)
