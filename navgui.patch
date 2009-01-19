@@ -1,0 +1,497 @@
+--- Gui/app.h	2006-06-12 22:13:45.000000000 +0200
++++ Gui/app.h	2006-06-12 23:52:08.000000000 +0200
+@@ -62,6 +62,10 @@
+ #define evSetVideo	    46
+ #define evSetSubtitle       47
+ // 48 ...
++//#ifdef USE_DVDNAV
++#define evPlayDVDNAV	    49
++#define evMenuDVDNAV	    50
++//#endif
+ 
+ #define evExit              1000
+ 
+@@ -81,6 +85,12 @@
+ #define evSubtitleLoaded  5011
+ #define evSetVCDTrack     5012
+ #define evSetURL          5013
++//#ifdef USE_DVDNAV
++#define evSetDVDNAVAudio     5014
++#define evSetDVDNAVSubtitle  5015
++#define evSetDVDNAVTitle     5016
++#define evSetDVDNAVChapter   5017
++//#endif
+ 
+ #define evFName           7000
+ #define evMovieTime       7001
+--- Gui/interface.h	2006-06-12 22:13:45.000000000 +0200
++++ Gui/interface.h	2006-06-12 23:52:08.000000000 +0200
+@@ -11,6 +11,9 @@
+ #ifdef USE_DVDREAD
+  #include "libmpdemux/stream.h"
+ #endif
++#ifdef USE_DVDNAV
++ #include "libmpdemux/stream_dvdnav.h"
++#endif
+ 
+ typedef struct
+ {
+@@ -51,6 +54,22 @@
+ } guiDVDStruct;
+ #endif
+ 
++#ifdef USE_DVDNAV
++typedef struct
++{
++ int titles;
++ int chapters;
++ int angles;
++ int current_chapter;
++ int current_title;
++ int current_angle;
++ int nr_of_audio_channels;
++ stream_language_t audio_streams[32];
++ int nr_of_subtitles;
++ stream_language_t subtitles[32];
++} guiDVDNAVStruct;
++#endif
++
+ typedef struct
+ {
+  int message;
+@@ -73,6 +92,13 @@
+    int			Chapter;
+ #endif
+ 
++#ifdef USE_DVDNAV
++   guiDVDNAVStruct      DVDNAV;
++   int			NavTitle;
++   int			NavAngle;
++   int			NavChapter;
++#endif
++
+ #ifdef HAVE_VCD
+    int    VCDTracks;
+ #endif
+@@ -132,6 +158,9 @@
+ #define guiSetDemuxer       15
+ #define guiSetParameters    16
+ #define guiSetAfilter       17
++#ifdef USE_DVDNAV
++#define guiSetDVDNAV        18
++#endif
+ 
+ #define guiSetStop  0
+ #define guiSetPlay  1
+@@ -140,6 +169,9 @@
+ #define guiDVD      	1
+ #define guiVCD		2
+ #define guiFilenames	4
++#ifdef USE_DVDNAV
++#define guiDVDNAV      	8
++#endif
+ #define guiALL		0xffffffff
+ 
+ extern char *get_path(char *filename); 
+--- Gui/interface.c	2006-06-12 22:13:45.000000000 +0200
++++ Gui/interface.c	2006-06-12 23:52:08.000000000 +0200
+@@ -546,6 +546,9 @@
+ #ifdef USE_DVDREAD
+  dvd_priv_t * dvdp = (dvd_priv_t *) arg;
+ #endif 
++#ifdef USE_DVDNAV
++ dvdnav_priv_t * dvdnavp = (dvdnav_priv_t *) arg;
++#endif
+ 
+  switch ( type )
+   {
+@@ -614,6 +617,23 @@
+         guiIntfStruct.Track=dvd_title + 1;
+         break;
+ #endif
++#ifdef USE_DVDNAV
++   case guiSetDVDNAV:
++        guiIntfStruct.DVDNAV.titles=dvdnavp->titles_nr;
++        guiIntfStruct.DVDNAV.chapters=dvdnavp->chapters_nr;
++        guiIntfStruct.DVDNAV.current_title=dvdnavp->title;
++        guiIntfStruct.DVDNAV.current_chapter=dvdnavp->part;
++
++        guiIntfStruct.DVDNAV.nr_of_audio_channels=dvdnavp->nr_of_channels;
++        memcpy( guiIntfStruct.DVDNAV.audio_streams,
++		dvdnavp->audio_streams,
++		sizeof( dvdnavp->audio_streams ) );
++        guiIntfStruct.DVDNAV.nr_of_subtitles=dvdnavp->nr_of_subtitles;
++        memcpy( guiIntfStruct.DVDNAV.subtitles,
++		dvdnavp->subtitles,
++		sizeof( dvdnavp->subtitles ) );
++        break;
++#endif
+    case guiSetStream:
+ 	guiIntfStruct.StreamType=stream->type;
+ 	switch( stream->type )
+@@ -623,6 +643,11 @@
+ 	       guiGetEvent( guiSetDVD,(char *)stream->priv );
+ 	       break;
+ #endif
++#ifdef USE_DVDNAV
++	  case STREAMTYPE_DVDNAV:
++	       guiGetEvent( guiSetDVDNAV,(char *)stream->priv );
++	       break;
++#endif
+ #ifdef HAVE_VCD
+ 	  case STREAMTYPE_VCD: 
+ 	       {
+@@ -773,6 +798,17 @@
+ 	       dvd_angle=guiIntfStruct.Angle;
+ 	       break;
+ #endif
++#ifdef USE_DVDNAV
++	  case STREAMTYPE_DVDNAV:
++	       {
++	        char tmp[512];
++		sprintf( tmp,"dvdnav://");
++		guiSetFilename( guiIntfStruct.Filename,tmp );
++	       }
++	       dvd_chapter=guiIntfStruct.Chapter;
++	       dvd_angle=guiIntfStruct.Angle;
++	       break;
++#endif
+ 	 }
+ 	//if ( guiIntfStruct.StreamType != STREAMTYPE_PLAYLIST ) // Does not make problems anymore!
+ 	 {	
+@@ -1138,6 +1174,10 @@
+ #ifdef USE_DVDREAD
+ 	if ( (unsigned int)vparam & guiDVD ) memset( &guiIntfStruct.DVD,0,sizeof( guiDVDStruct ) );
+ #endif
++#ifdef USE_DVDNAV
++	if ( (unsigned int)vparam & guiDVDNAV )
++	    memset( &guiIntfStruct.DVDNAV,0,sizeof( guiDVDNAVStruct ) );
++#endif
+ #ifdef HAVE_VCD
+ 	if ( (unsigned int)vparam & guiVCD ) guiIntfStruct.VCDTracks=0;
+ #endif
+--- Gui/mplayer/mw.c	2006-06-12 22:13:45.000000000 +0200
++++ Gui/mplayer/mw.c	2006-06-12 23:52:08.000000000 +0200
+@@ -133,6 +133,16 @@
+         guiIntfStruct.StreamType=STREAMTYPE_DVD;
+ 	goto play;
+ #endif
++#ifdef USE_DVDNAV
++   case evPlayDVDNAV:
++        guiIntfStruct.DVDNAV.current_title=1;
++        guiIntfStruct.DVDNAV.current_chapter=1;
++        guiIntfStruct.DVDNAV.current_angle=1;
++play_dvdnav_2:
++	gtkSet( gtkClearStruct,0,(void *)(guiALL - guiDVDNAV) );
++	guiIntfStruct.StreamType=STREAMTYPE_DVDNAV;
++	goto play;
++#endif
+    case evPlay:
+    case evPlaySwitchToPause:
+ play:
+@@ -182,6 +192,21 @@
+ 		} 
+                break;
+ #endif
++#ifdef USE_DVDNAV
++          case STREAMTYPE_DVDNAV:
++	       gtkSet( gtkClearStruct,0,
++		    (void *)(guiALL - guiDVDNAV - guiFilenames) );
++	       if ( !dvd_device ) dvd_device=gstrdup( DEFAULT_DVD_DEVICE );
++	       mplSetFileName( NULL,dvd_device,STREAMTYPE_DVDNAV );
++	       if ( guiIntfStruct.Playing != 2 )
++	        {
++		 guiIntfStruct.Title=guiIntfStruct.DVDNAV.current_title;
++		 guiIntfStruct.Chapter=guiIntfStruct.DVDNAV.current_chapter;
++		 guiIntfStruct.Angle=guiIntfStruct.DVDNAV.current_angle;
++                 guiIntfStruct.DiskChanged=1;
++		}
++               break;
++#endif
+          }
+ 	guiIntfStruct.NewPlay=1;
+         mplPlay();
+@@ -206,6 +231,30 @@
+         goto play_dvd_2;
+         break;
+ #endif
++#ifdef USE_DVDNAV
++   case evSetDVDNAVSubtitle:
++        dvdsub_id=iparam;
++	dvdnav_go_spu=1;
++        break;
++   case evSetDVDNAVAudio:
++        audio_id=iparam;
++	dvdnav_go_audio=1;
++        break;
++   case evSetDVDNAVChapter:
++	dvdnav_go_part=iparam;
++        guiIntfStruct.DVDNAV.current_chapter=iparam;
++        break;
++   case evSetDVDNAVTitle:
++	dvdnav_go_title=iparam;
++        guiIntfStruct.DVDNAV.current_title=iparam;
++	guiIntfStruct.DVDNAV.current_chapter=1;
++	guiIntfStruct.DVDNAV.current_angle=1;
++        break;
++   case evMenuDVDNAV:
++	dvdnav_go_menu=1;
++        guiIntfStruct.DVDNAV.current_chapter=iparam;
++        break;
++#endif
+ 
+    case evPause:
+    case evPauseSwitchToPlay:
+@@ -345,6 +394,10 @@
+ 	  default: movie_aspect=-1;
+ 	 }
+ 	wsClearWindow( appMPlayer.subWindow );
++#ifdef USE_DVDNAV
++	if ( guiIntfStruct.StreamType == STREAMTYPE_DVDNAV ) goto play_dvdnav_2;
++	  else
++#endif
+ #ifdef USE_DVDREAD
+ 	if ( guiIntfStruct.StreamType == STREAMTYPE_DVD || guiIntfStruct.StreamType == STREAMTYPE_VCD ) goto play_dvd_2;
+ 	 else 
+--- Gui/mplayer/sw.c	2006-06-12 22:13:45.000000000 +0200
++++ Gui/mplayer/sw.c	2006-06-12 23:52:08.000000000 +0200
+@@ -19,6 +19,15 @@
+ extern int             sx,sy;
+ extern int             i,pot;
+ 
++#ifdef USE_DVDNAV
++extern int	dvdnav_window_width;
++extern int	dvdnav_window_height;
++extern int	dvdnav_mouse_x;
++extern int	dvdnav_mouse_y;
++extern int	dvdnav_mouse_button;
++extern int	dvdnav_mouse_set;
++#endif
++
+ void mplSubDraw( void )
+ {
+  if ( appMPlayer.subWindow.State == wsWindowClosed ) exit_player( MSGTR_Exit_quit );
+@@ -65,8 +74,25 @@
+           sx=X; sy=Y;
+           msButton=wsPLMouseButton;
+           mplSubMoved=0;
++#ifdef USE_DVDNAV
++	    if (dvdnav_mouse_set!=2) {
++	    dvdnav_window_width=appMPlayer.subWindow.Width;
++	    dvdnav_window_height=appMPlayer.subWindow.Height;
++	    dvdnav_mouse_x=X;
++	    dvdnav_mouse_y=Y;
++	    dvdnav_mouse_button=1;
++	    dvdnav_mouse_set=1;}
++#endif
+           break;
+    case wsMoveMouse:
++#ifdef USE_DVDNAV
++	    if (dvdnav_mouse_set!=2) {
++	    dvdnav_window_width=appMPlayer.subWindow.Width;
++	    dvdnav_window_height=appMPlayer.subWindow.Height;
++	    dvdnav_mouse_x=X;
++	    dvdnav_mouse_y=Y;
++	    dvdnav_mouse_set=1;}
++#endif
+           switch ( msButton )
+            {
+             case wsPLMouseButton:
+--- Gui/mplayer/common.c	2006-06-12 22:13:45.000000000 +0200
++++ Gui/mplayer/common.c	2006-06-12 23:52:08.000000000 +0200
+@@ -61,6 +61,15 @@
+             else strlcat( tmp,MSGTR_NoChapter,tmplen );
+           break;
+ #endif
++#ifdef USE_DVDNAV
++   case STREAMTYPE_DVDNAV:
++          if ( guiIntfStruct.DVDNAV.current_chapter )
++	    snprintf(tmp,tmplen,MSGTR_Chapter,
++		guiIntfStruct.DVDNAV.current_chapter );
++            else
++	    strlcat( tmp,MSGTR_NoChapter,tmplen );
++          break;
++#endif
+ #ifdef HAVE_VCD
+    case STREAMTYPE_VCD:
+         snprintf( tmp,tmplen,MSGTR_VCDTrack,guiIntfStruct.Track );
+@@ -164,6 +173,10 @@
+ #ifdef USE_DVDREAD
+              case STREAMTYPE_DVD:    strlcat( trbuf,"d",sizeof( trbuf ) ); break;
+ #endif
++#ifdef USE_DVDNAV
++             case STREAMTYPE_DVDNAV: strlcat( trbuf,"d",sizeof( trbuf ) );
++	       break;
++#endif
+              default:                strlcat( trbuf," ",sizeof( trbuf ) ); break;
+             }
+            break;
+--- Gui/mplayer/play.c	2006-06-12 22:13:45.000000000 +0200
++++ Gui/mplayer/play.c	2006-06-12 23:52:08.000000000 +0200
+@@ -95,6 +95,11 @@
+      guiIntfStruct.DVD.current_chapter=1;
+      guiIntfStruct.DVD.current_angle=1;
+ #endif
++#ifdef USE_DVDNAV
++     guiIntfStruct.DVDNAV.current_title=1;
++     guiIntfStruct.DVDNAV.current_chapter=1;
++     guiIntfStruct.DVDNAV.current_angle=1;
++#endif
+ 
+      if ( !appMPlayer.subWindow.isFullScreen && gtkShowVideoWindow)
+       {
+@@ -282,6 +287,10 @@
+    case STREAMTYPE_DVD:
+ 	break;
+ #endif
++#ifdef USE_DVDNAV
++   case STREAMTYPE_DVDNAV:
++	break;
++#endif
+ #ifdef HAVE_VCD
+    case STREAMTYPE_VCD:
+ 	break;
+@@ -318,6 +327,16 @@
+ 	guiIntfStruct.Track=guiIntfStruct.DVD.current_title;
+ 	break;
+ #endif
++#ifdef USE_DVDNAV
++   case STREAMTYPE_DVDNAV:
++	if ( --guiIntfStruct.DVDNAV.current_chapter == 0 )
++	 {
++	  guiIntfStruct.DVDNAV.current_chapter=1;
++	  if ( --guiIntfStruct.DVDNAV.current_title <= 0 ) { guiIntfStruct.DVDNAV.current_title=1; stop=1; }
++	 }
++	guiIntfStruct.Track=guiIntfStruct.DVDNAV.current_title;
++	break;
++#endif
+ #ifdef HAVE_VCD
+    case STREAMTYPE_VCD:
+ 	if ( --guiIntfStruct.Track == 0 ) { guiIntfStruct.Track=1; stop=1; }
+@@ -354,6 +373,16 @@
+ 	guiIntfStruct.Track=guiIntfStruct.DVD.current_title;
+ 	break;
+ #endif
++#ifdef USE_DVDNAV
++   case STREAMTYPE_DVDNAV:
++	if ( guiIntfStruct.DVDNAV.current_chapter++ == guiIntfStruct.DVDNAV.chapters )
++	 {
++	  guiIntfStruct.DVDNAV.current_chapter=1;
++	  if ( ++guiIntfStruct.DVDNAV.current_title > guiIntfStruct.DVDNAV.titles ) { guiIntfStruct.DVDNAV.current_title=guiIntfStruct.DVDNAV.titles; stop=1; }
++	 }
++	guiIntfStruct.Track=guiIntfStruct.DVDNAV.current_title;
++	break;
++#endif
+ #ifdef HAVE_VCD
+    case STREAMTYPE_VCD:
+ 	if ( ++guiIntfStruct.Track > guiIntfStruct.VCDTracks ) { guiIntfStruct.Track=guiIntfStruct.VCDTracks; stop=1; }
+--- Gui/mplayer/gtk/menu.c	2006-06-12 22:13:45.000000000 +0200
++++ Gui/mplayer/gtk/menu.c	2006-06-12 23:52:08.000000000 +0200
+@@ -380,6 +380,9 @@
+ extern int global_sub_size;
+ 
+ GtkWidget * DVDSubMenu;
++#ifdef USE_DVDNAV
++GtkWidget * DVDNAVSubMenu;
++#endif
+ GtkWidget * DVDTitleMenu;
+ GtkWidget * DVDChapterMenu;
+ GtkWidget * DVDAudioLanguageMenu;
+@@ -410,6 +413,9 @@
+ #ifdef USE_DVDREAD
+     AddMenuItem( window1, (const char*)playdvd_xpm, SubMenu,MSGTR_MENU_PlayDVD, evPlayDVD );
+ #endif
++#ifdef USE_DVDNAV
++    AddMenuItem( window1, (const char*)playdvd_xpm, SubMenu,MSGTR_MENU_PlayDVDNAV, evPlayDVDNAV );
++#endif
+     AddMenuItem( window1, (const char*)url_xpm, SubMenu,MSGTR_MENU_PlayURL, evSetURL );
+     AddMenuItem( window1, (const char*)sub_xpm, SubMenu,MSGTR_MENU_LoadSubtitle"   ", evLoadSubtitle );
+     AddMenuItem( window1, (const char*)delsub_xpm, SubMenu,MSGTR_MENU_DropSubtitle,evDropSubtitle );
+@@ -527,6 +533,87 @@
+         gtk_widget_set_sensitive( MenuItem,FALSE );
+        }
+ #endif
++#ifdef USE_DVDNAV
++   DVDNAVSubMenu=AddSubMenu( window1, (const char*)dvd_xpm, Menu,MSGTR_MENU_DVDNAV );
++    AddMenuItem( window1, (const char*)playdvd_xpm, DVDNAVSubMenu,MSGTR_MENU_PlayDisc"    ", evPlayDVDNAV );
++    MenuItem=AddMenuItem( window1, (const char*)prefs_xpm, DVDNAVSubMenu,MSGTR_MENU_MenuDVDNAV"    ", evMenuDVDNAV );
++    if (guiIntfStruct.DVDNAV.current_title==0)
++        gtk_widget_set_sensitive( MenuItem,FALSE ); else
++        gtk_widget_set_sensitive( MenuItem,TRUE );
++//    AddMenuItem( DVDNAVSubMenu,MSGTR_MENU_ShowDVDMenu, evNone );
++    AddSeparator( DVDNAVSubMenu );
++    DVDTitleMenu=AddSubMenu( window1, (const char*)title_xpm, DVDNAVSubMenu,MSGTR_MENU_Titles );
++     if ( guiIntfStruct.DVDNAV.titles )
++      {
++       char tmp[32]; int i;
++       for ( i=1 ; i<= guiIntfStruct.DVDNAV.titles;i++ )
++        {
++         snprintf( tmp,32,MSGTR_MENU_Title,i);
++         AddMenuCheckItem( window1, (const char*)empty1px_xpm, DVDTitleMenu,tmp,
++			   guiIntfStruct.DVDNAV.current_title == i,
++			   (i << 16) + evSetDVDNAVTitle );
++        }
++      }
++      else
++       {
++        MenuItem=AddMenuItem( window1, (const char*)empty_xpm, DVDTitleMenu,MSGTR_MENU_None,evNone );
++        gtk_widget_set_sensitive( MenuItem,FALSE );
++       }
++    DVDChapterMenu=AddSubMenu( window1, (const char*)chapter_xpm, DVDNAVSubMenu,MSGTR_MENU_Chapters );
++     if ( guiIntfStruct.DVDNAV.chapters )
++      {
++       char tmp[32]; int i;
++       for ( i=1;i <= guiIntfStruct.DVDNAV.chapters;i++ )
++        {
++         snprintf( tmp,32,MSGTR_MENU_Chapter,i );
++         AddMenuCheckItem( window1, (const char*)empty1px_xpm, DVDChapterMenu,tmp,guiIntfStruct.DVDNAV.current_chapter == i,
++			   ( i << 16 ) + evSetDVDNAVChapter );
++        }
++      }
++      else
++       {
++        MenuItem=AddMenuItem( window1, (const char*)empty_xpm, DVDChapterMenu,MSGTR_MENU_None,evNone );
++        gtk_widget_set_sensitive( MenuItem,FALSE );
++       }
++    DVDAudioLanguageMenu=AddSubMenu( window1, (const char*)tongue_xpm, DVDNAVSubMenu,MSGTR_MENU_AudioLanguages );
++     if ( guiIntfStruct.DVDNAV.nr_of_audio_channels )
++      {
++       char tmp[64]; int i, id = guiIntfStruct.demuxer ? ((demuxer_t *)guiIntfStruct.demuxer)->audio->id : audio_id;
++       for ( i=0;i < guiIntfStruct.DVDNAV.nr_of_audio_channels;i++ )
++        {
++	 snprintf( tmp,64,"%s - %s %s",GetLanguage( guiIntfStruct.DVDNAV.audio_streams[i].language ),
++	   ChannelTypes[ guiIntfStruct.DVDNAV.audio_streams[i].type ],
++	   ChannelNumbers[ guiIntfStruct.DVDNAV.audio_streams[i].channels ] );
++//	 if ( id == -1 ) id=audio_id; //guiIntfStruct.DVD.audio_streams[i].id;
++         AddMenuCheckItem( window1, (const char*)dolby_xpm, DVDAudioLanguageMenu,tmp,
++			   id == guiIntfStruct.DVDNAV.audio_streams[i].id,
++			   ( guiIntfStruct.DVDNAV.audio_streams[i].id << 16 ) + evSetDVDNAVAudio );
++        }
++      }
++      else
++       {
++        MenuItem=AddMenuItem( window1, (const char*)empty_xpm, DVDAudioLanguageMenu,MSGTR_MENU_None,evNone );
++        gtk_widget_set_sensitive( MenuItem,FALSE );
++       }
++    DVDSubtitleLanguageMenu=AddSubMenu( window1, (const char*)tonguebla_xpm, DVDNAVSubMenu,MSGTR_MENU_SubtitleLanguages );
++     if ( guiIntfStruct.DVDNAV.nr_of_subtitles )
++      {
++       char tmp[64]; int i;
++       AddMenuItem( window1, (const char*)empty1px_xpm, DVDSubtitleLanguageMenu,MSGTR_MENU_None,( (unsigned short)-1 << 16 ) + evSetDVDNAVSubtitle );
++       for ( i=0;i < guiIntfStruct.DVDNAV.nr_of_subtitles;i++ )
++        {
++	 snprintf( tmp,64,"%s",GetLanguage( guiIntfStruct.DVDNAV.subtitles[i].language ) );
++         AddMenuCheckItem( window1, (const char*)empty1px_xpm, DVDSubtitleLanguageMenu,tmp,
++			   dvdsub_id == guiIntfStruct.DVDNAV.subtitles[i].id,
++			   ( guiIntfStruct.DVDNAV.subtitles[i].id << 16 ) + evSetDVDNAVSubtitle );
++        }
++      }
++      else
++       {
++        MenuItem=AddMenuItem( window1, (const char*)empty_xpm, DVDSubtitleLanguageMenu,MSGTR_MENU_None,evNone );
++        gtk_widget_set_sensitive( MenuItem,FALSE );
++       }
++#endif
+ 
+ //  if ( guiIntfStruct.Playing )
+    {

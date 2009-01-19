@@ -1,0 +1,128 @@
+--- DOCS/man/en/mplayer.1	2006-06-12 22:14:08.000000000 +0200
++++ DOCS/man/en/mplayer.1	2006-06-12 23:52:04.000000000 +0200
+@@ -75,6 +75,13 @@
+ .in
+ .B mplayer
+ 'in +\n[.k]u
++.I dvdnav://[title]
++[options]
++.
++.br
++.in
++.B mplayer
++'in +\n[.k]u
+ .I vcd://track[/device]
+ .
+ .br
+@@ -219,6 +226,11 @@
+ .B gmplayer
+ is MPlayer with a graphical user interface.
+ It has the same options as MPlayer.
++.sp 0
++.PD 0
++.I NOTE with dvdnav:
++To the selection of the DVD menu the mouse ONLY works here!
++.sp 1
+ .PP
+ Usage examples to get you started quickly can be found at the end
+ of this man page.
+@@ -408,6 +420,25 @@
+ .PD 1
+ .
+ .TP
++.B keyboard control with dvdnav
++.PD 0
++.RS
++.IPs K\ \ \ \ 
++Navigation up in DVD Menu
++.IPs J\ \ \ \ 
++Navigation down in DVD Menu
++.IPs H\ \ \ \ 
++Navigation left in DVD Menu
++.IPs L\ \ \ \ 
++Navigation right in DVD Menu
++.IPs S\ \ \ \ 
++DVD Menu select
++.IPs M\ \ \ \ 
++Go to DVD Root Menu
++.RE
++.PD 1
++.
++.TP
+ .B mouse control
+ .PD 0
+ .RS
+@@ -415,6 +446,8 @@
+ Seek backward/\:forward 1 minute.
+ .IPs "button 5 and button 6"
+ Decrease/\:increase volume.
++.IPs "button 1"
++DVD menu select (only gmplayer).
+ .RE
+ .PD 1
+ .
+@@ -979,6 +1012,12 @@
+ three letter language codes while OGM uses a free-form identifier.
+ MPlayer prints the available languages when run in verbose (\-v) mode.
+ .sp 1
++.I NOTE with dvdnav:
++If the DVD menu exists then only set default audio language. 
++If the menu program in DVD doesn't support it because of this
++function can't work. 
++.PD 0
++.sp 1
+ .I EXAMPLE:
+ .PD 0
+ .RSs
+@@ -1759,6 +1798,12 @@
+ three letter language codes while OGM uses a free-form identifier.
+ MPlayer prints the available languages when run in verbose (\-v) mode.
+ .sp 1
++.I NOTE with dvdnav:
++If the DVD menu exists then only set default audio language. 
++If the menu program in DVD doesn't support it because of this
++function can't work. 
++.PD 0
++.sp 1
+ .I EXAMPLE:
+ .PD 0
+ .RSs
+@@ -2020,6 +2065,38 @@
+ .
+ .
+ .
++.
++.SH "DVDNAV OPTIONS"
++.
++.
++.TP
++.B \-mlang <language code>
++Select DVD menu language (default: en).
++.
++.TP
++.B \-dvdnav-menutype <0\-2>
++Specifies a DVD menu buttons type.
++.PD 0
++.RSs
++.IPs 0
++SPU menu buttons (default)
++.IPs 1
++Simple light box.
++.IPs 2
++SPU and simple light box.
++.RE
++.PD 1
++.
++.TP
++.B \-dvdnav-nocolor-spu
++Disable SPU color with display DVD menu buttons.
++.
++.TP
++.B \-dvdnav-force-menu
++If nothing SPU buttons then show simple menu box.
++.
++.
++.
+ .SH "AUDIO OUTPUT OPTIONS (MPLAYER ONLY)"
+ .
+ .TP

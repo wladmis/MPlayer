@@ -1,0 +1,166 @@
+########################
+# MPlayer DVDNAV patch #
+########################
+
+Implemented:
+------------
+    - You choose the title with parameters that it will play (eg. mplayer dvdnav://1)
+    - dvdnav stream can open in other device
+	(using: "-dvd-device" options)
+    - dvdnav is using libmpdvdkit2 (CSS)
+    - You can set the nav menu language 
+	(using: "-mlang" options)
+    - it drawes the menu button with simple light box
+	(using: "-dvdnav-menutype 1" or "-dvdnav-menutype 2" options)
+    - it drawes the menu button with spu (partially)
+	(using: "-dvdnav-menutype 0" or "-dvdnav-menutype 2" options)
+    - selection the subtitle language with "vobsub_lang" command ('j')
+    - the still frame works too (partially)
+    - waiting time length at still frame event
+    - the nav menu settings can be used to (partially)
+	(settings: audio and subtitle language)
+    - can be used with gmplayer
+	(using: "Open... -> Play DVDNAV..." or "DVDNAV -> Open disc...")
+    - menu selection can be used with mouse in gmplayer (partially)
+    - root menu selection can be used with gmplayer
+	(using: "DVDNAV -> Main menu")
+    - audio language selection can be used in gmplayer
+	(using: "DVDNAV -> Audio languages -> xxx")
+    - subtitle language selection can be used in gmplayer
+	(using: "DVDNAV -> Subtitle languages -> xxx")
+    - the query of the time length of title stream
+    - in the spudec_draw_scaled() the nav button spu of the resizing
+    - color spu menu button
+
+Not implemented:
+----------------
+    - the skip of the first play domain
+    - the selection of the angle with parameters
+    - the selection of the angle with nav menu
+    - dvdnav using with "-indentify" parameters
+    - chache using
+    - You can set the dvdnav audio and subtitle language.
+	(using: "-alang" and "-slang" options)
+    - You choose the chapter with parameters that it will play.
+	(using: "-chapter" options)
+
+Known BUGs:
+-----------
+    - ...
+
+Installing a MPlayer dvdnav patch:
+----------------------
+    1. Copy stream_dvdnav.c & stream_dvdnav.h files to libmpdemux directory
+    2. Copy vd_videostill.c & vd_videostill.h files to libmpcodecs directory
+    3. Create libmpdvdnav directory
+    4. Copy this file to libmpdvdnav directory:
+	Makefile
+	libdvdnav_changes.diff
+        vm.h
+	vmcmd.h
+	vmcmd.c
+	vm.c
+	settings.c
+	searching.c
+	remap.h
+	remap.c
+	read_cache.h
+	read_cache.c
+	navigation.c
+	highlight.c
+	dvd_types.h
+	dvdnav_internal.h
+	dvdnav.h
+	dvdnav_events.h
+	dvdnav.c
+	decoder.h
+	decoder.c
+	config.h
+    5. patch mplayer with navmplayer.patch file
+    6. optional Gui: patch with navgui.patch file
+    7. reconfigure with ./configure --enable-dvdnav ...
+
+New options:
+------------
+    -mlang           select DVD menu language (by 2-char country code)
+    -dvdnav-menutype set DVD menu button type: 0: spu, 1: simple box, 2: spu & simple box
+    -dvdnav-trace    if the build is done with USE_MPDVDNAV_TRACE (--enable-dvdnav-trace) option
+		     then the mplayer printers the libdvdnav trace messages
+    -dvdnav-force-menu   enable force menu (if not spu then display simple box)
+    -dvdnav-noforce-menu disable force menu
+    
+New libdvdnav functions (in stream_dvdnav):
+-------------------------------------------
+    dvdnav_status_t dvdnav_still_back(dvdnav_t *self);
+    dvdnav_status_t dvdnav_wait_back(dvdnav_t *self);
+    dvdnav_status_t dvdnav_wait_still_clear(dvdnav_t *self);
+    dvdnav_status_t dvdnav_is_still_cell(dvdnav_t *self, int *flag);
+    dvdnav_status_t dvdnav_get_pgc(dvdnav_t *self, int *pg_num);
+    dvdnav_status_t dvdnav_button_select_auto_action(dvdnav_t *self, int mode);
+    dvdnav_status_t dvdnav_get_audio_attr(dvdnav_t *self, uint8_t audio_mum, audio_attr_t *audio_attr);
+    dvdnav_status_t dvdnav_get_spu_attr(dvdnav_t *self, uint8_t audio_mum, subp_attr_t *subp_attr);
+    
+    Get audio_attr and subp_attr with language code, audio format determination.
+    All printf(STDOUT, ... ) was converted into mp_msg(MSGT_CPLAYER,MSGL_INFO, ... )
+    All printerr( ... ) was converted into mp_msg(MSGT_CPLAYER,MSGL_ERR, ... )
+    All dprintf( ... ) was converted into mp_msg(MSGT_CPLAYER,MSGL_DB2, ... )
+    
+Main modifications:
+-------------------
+	    #ifdef USE_MPDVDNAV
+		...
+	    #else
+		...
+	    #endif
+	or
+	    #ifndef USE_MPDVDNAV
+		...
+	    #endif
+
+    libmpdemux/demuxec.c:
+	If stream eof (DVDNAV_STILL_FRAME) or "Too many audio/video packets in the buffer..." not problem then
+	    stream->type=STERAMTYPE_DVDNAV: no message, but return with eof.
+    spudec.c:
+	spudec_handle_t structure expansion with nav menu part image and parameters
+	spudec_process_data() nav menu is set then using nav button palette (packet->alpha and packet->palette)
+	int spudec_dvdnav_menu_box(void *this) cut nav button area with only button area draw to display
+    libvo/sub.c:
+	OSDTYPE_DVDNAV new type with show simple light box in nav button area
+    libmpcodecs/dec_video.c:
+	new function (replaced decode_video function) decode_video_still: 
+	    int decode_video_still(sh_video_t *sh_video,unsigned char *start,int in_size,int drop_frame,int enable_still)
+	If enable_still and in_size<0 then draw stored frame image in (mp_image_t) smpi.
+	If enable_still and in_size>0 and correct decode frame image then store image in (mp_image_t) smpi.
+    	    (It will use copy_mpi() or other solution?)
+    mplayer.c:
+	uninit_player() if set dvdnav_continue_play then not close stream and vo.
+	main() play video (decode a frame) if eof video_read_frame() call decode_video_still and continue.
+	main() after key events dvdnav event processing code:
+	    get event in dvdnav_priv->stream_dvdnav_event_t structure
+	    processing:
+		if cell_change and new title then set dvdnav_continue_play and goto_next_file.
+	    clear  dvdnav_priv->stream_dvdnav_event_t structure
+    Gui/interface.c:
+	guiIntfStruct.DVDNAV settings by dvdnav_priv
+    Gui/mplayer/mw.c:
+	evSetDVDNAVSubtitle: set dvdsub_id, dvdnav_go_spu and then it doesn't reopen stream
+	evSetDVDNAVAudio: set audio_id, dvdnav_go_audio and then it doesn't reopen stream
+	evSetDVDNAVChapter: set dvdnav_go_part and then it doesn't reopen stream
+	evSetDVDNAVTitle: set dvdnav_go_title and then it doesn't reopen stream
+	evMenuDVDNAV: set dvdnav_go_menu and then it doesn't reopen stream
+	dvdnav_go_... will be processed by dvdnav event handler in mplayer.c
+    Gui/mplayer/sw.c:
+	store's window size in dvdnav_window_width and dvdnav_window_height
+	store's mouse position in dvdnav_mouse_x and dvdnav_mouse_y
+	store's mouse button event in dvdnav_mouse_button
+	dvdnav_window_... and dvdnav_mouse_... will be processed by dvdnav_mouse() in dvdnav_stream.c
+    Gui/mplayer/gtk/menu.c:
+	Creates DVDNAVSubMenu just like DVDSubMenu, but addes a new item it's "Main menu" too.
+
+Useful links:
+-------------
+    SourceForge.net: DVD tools for Linux (libdvdnav-0.1.10):
+    http://sourceforge.net/projects/dvd/
+
+I am sorry to say that my English knowledge isn't good.
+Best regards! Ötvös Attila (Attila, Otvos).
