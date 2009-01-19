@@ -9,8 +9,8 @@
 %define fversion	%real_version
 
 # Used only for CVS builds
-%define cvsbuild 20060623
-%define ffmpeg_version svn-20060622
+%define cvsbuild 20060626
+%define ffmpeg_version svn-20060626
 
 %if %cvsbuild
 %global release		0.%cvsbuild.%release
@@ -180,7 +180,6 @@ Patch25:  MPlayer-1.0pre7try2-libdir_fix.patch
 Patch26:  MPlayer-svn-20060621-configure.patch.gz
 %if %cvsbuild
 Patch27:  %name-cvs-20060331-builddocs.patch.gz
-Patch28:  %name-cvs-20060506-docs.patch.bz2
 %endif
 
 
@@ -800,7 +799,6 @@ mv ffmpeg-%ffmpeg_version/libav{codec,format,util} .
 %if %cvsbuild
 %patch26 -p1
 %patch27 -p1
-%patch28 -p1
 %endif
 bzip2 -dcf %SOURCE9 > libao2/ao_polyp.c
 
@@ -810,6 +808,15 @@ subst 's/\(ldconfig\)/\#\1/g' libdha/Makefile
 subst 's|$(LIBDIR)/mplayer/vidix|$(LIBDIR)/vidix/|g' vidix/drivers/Makefile
 subst 's|\(/lib/\)mplayer/\(vidix/\)|\1\2|' libvo/Makefile
 subst 's|/mplayer\(/vidix/\)|\1|' libvo/vosub_vidix.c
+
+# iconv pl docs
+pushd DOCS/xml/pl
+for f in $(grep -H -l ' encoding="utf-8"' *.xml); do
+    mv -f $f xml.utf8
+    sed -e '1 s/ encoding="utf-8"/ encoding="iso-8859-2"/' xml.utf8 | iconv -c -f utf-8 -t ISO-8859-2 > $f
+done
+rm -f xml.utf8
+popd
 
 %build
 %if_disabled debug
@@ -1278,6 +1285,10 @@ unset RPM_PYTHON
 
 
 %changelog
+* Mon Jun 26 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060626.1
+- new SVN sbapshot (revision 18821)
+- removed MPlayer-cvs-20060506-docs.patch, used sed & iconv instead
+
 * Fri Jun 23 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060623.1
 - new SVN sbapshot (revision 18791)
 
