@@ -1,6 +1,6 @@
-diff -urN MPlayer-1.0rc1.orig/configure MPlayer-1.0rc1/configure
---- MPlayer-1.0rc1.orig/configure	2006-10-23 01:32:31 +0300
-+++ MPlayer-1.0rc1/configure	2006-10-31 01:23:28 +0200
+diff -urN mplayer-svn-r20448.orig/configure mplayer-svn-r20448/configure
+--- mplayer-svn-r20448.orig/configure	2006-10-25 19:49:07 +0300
++++ mplayer-svn-r20448/configure	2006-10-27 02:11:20 +0300
 @@ -277,10 +277,12 @@
    --disable-libavcodec   disable libavcodec [autodetect]
    --disable-libavformat  disable libavformat [autodetect]
@@ -23,7 +23,7 @@ diff -urN MPlayer-1.0rc1.orig/configure MPlayer-1.0rc1/configure
  _libavcodec_mpegaudio_hp=yes
  _libfame=auto
  _mencoder=yes
-@@ -1971,6 +1975,10 @@
+@@ -1967,6 +1971,10 @@
    --disable-libpostproc)	_libpostproc=no		;;
    --enable-libpostproc_so)	_libpostproc_so=yes	;;
    --disable-libpostproc_so)	_libpostproc_so=no	;;
@@ -34,7 +34,7 @@ diff -urN MPlayer-1.0rc1.orig/configure MPlayer-1.0rc1/configure
    --enable-libavcodec_mpegaudio_hp)	_libavcodec_mpegaudio_hp=yes	;;
    --disable-libavcodec_mpegaudio_hp)	_libavcodec_mpegaudio_hp=no	;;
  
-@@ -6172,6 +6180,15 @@
+@@ -6168,6 +6176,15 @@
  fi
  echores "$_libpostproc"
  
@@ -50,7 +50,7 @@ diff -urN MPlayer-1.0rc1.orig/configure MPlayer-1.0rc1/configure
  
  if test "$_libavutil" != yes ; then
  echocheck "FFmpeg libavutil (dynamic)"
-@@ -6269,6 +6286,26 @@
+@@ -6265,6 +6282,26 @@
  echores "$_libpostproc_so"
  fi #if test "$_libpostproc" != yes ; then
  
@@ -77,7 +77,7 @@ diff -urN MPlayer-1.0rc1.orig/configure MPlayer-1.0rc1/configure
  _def_libavutil='#undef USE_LIBAVUTIL'
  _def_libavutil_so='#undef USE_LIBAVUTIL_SO'
  if test "$_libavutil" = yes ; then
-@@ -6335,6 +6372,19 @@
+@@ -6331,6 +6368,19 @@
    fi
  fi
  
@@ -97,7 +97,7 @@ diff -urN MPlayer-1.0rc1.orig/configure MPlayer-1.0rc1/configure
  echocheck "md5sum support"
  if test "$_md5sum" = yes; then
    _def_md5sum="#define HAVE_MD5SUM"
-@@ -7562,8 +7612,9 @@
+@@ -7543,8 +7593,8 @@
  QTX_CODECS = $_qtx
  REAL_CODECS = $_real
  XANIM_CODECS = $_xanim
@@ -105,11 +105,10 @@ diff -urN MPlayer-1.0rc1.orig/configure MPlayer-1.0rc1/configure
 -AV_LIB = $_ld_libavformat  $_ld_libavcodec  $_ld_libavutil  $_ld_libpostproc
 +AV_DEP = $_dep_libavformat $_dep_libavcodec $_dep_libavutil $_dep_libpostproc $_dep_libswscale
 +AV_LIB = $_ld_libavformat  $_ld_libavcodec  $_ld_libavutil  $_ld_libpostproc  $_ld_libswscale
-+SWSCALE_LIB = $_ld_libswscale
  CONFIG_LIBAVUTIL = $_libavutil
  CONFIG_LIBAVUTIL_SO = $_libavutil_so
  CONFIG_LIBAVCODEC = $_libavcodec
-@@ -7572,6 +7622,9 @@
+@@ -7553,6 +7603,9 @@
  CONFIG_LIBAVFORMAT_SO = $_libavformat_so
  CONFIG_LIBPOSTPROC = $_libpostproc
  CONFIG_LIBPOSTPROC_SO = $_libpostproc_so
@@ -119,7 +118,7 @@ diff -urN MPlayer-1.0rc1.orig/configure MPlayer-1.0rc1/configure
  ZORAN = $_zr
  FAME = $_libfame
  FAME_LIB = $_ld_libfame
-@@ -7964,6 +8017,9 @@
+@@ -7945,6 +7998,9 @@
  $_def_libpostproc
  $_def_libpostproc_so
  
@@ -129,9 +128,9 @@ diff -urN MPlayer-1.0rc1.orig/configure MPlayer-1.0rc1/configure
  /* Win32 DLL support */
  $_def_win32
  #define WIN32_PATH "$_win32libdir"
-diff -urN MPlayer-1.0rc1.orig/fmt-conversion.h MPlayer-1.0rc1/fmt-conversion.h
---- MPlayer-1.0rc1.orig/fmt-conversion.h	2006-10-23 01:32:31 +0300
-+++ MPlayer-1.0rc1/fmt-conversion.h	2006-10-31 01:23:28 +0200
+diff -urN mplayer-svn-r20448.orig/fmt-conversion.h mplayer-svn-r20448/fmt-conversion.h
+--- mplayer-svn-r20448.orig/fmt-conversion.h	2006-09-24 19:47:48 +0300
++++ mplayer-svn-r20448/fmt-conversion.h	2006-10-27 02:09:49 +0300
 @@ -1,4 +1,8 @@
 +#ifdef USE_LIBAVUTIL_SO
 +#include <ffmpeg/avutil.h>
@@ -141,9 +140,9 @@ diff -urN MPlayer-1.0rc1.orig/fmt-conversion.h MPlayer-1.0rc1/fmt-conversion.h
  #include "img_format.h"
  
  enum PixelFormat imgfmt2pixfmt(int fmt)
-diff -urN MPlayer-1.0rc1.orig/Gui/wm/ws.c MPlayer-1.0rc1/Gui/wm/ws.c
---- MPlayer-1.0rc1.orig/Gui/wm/ws.c	2006-10-23 01:32:24 +0300
-+++ MPlayer-1.0rc1/Gui/wm/ws.c	2006-10-31 01:23:28 +0200
+diff -urN mplayer-svn-r20448.orig/Gui/wm/ws.c mplayer-svn-r20448/Gui/wm/ws.c
+--- mplayer-svn-r20448.orig/Gui/wm/ws.c	2006-07-12 16:44:27 +0300
++++ mplayer-svn-r20448/Gui/wm/ws.c	2006-10-27 02:09:49 +0300
 @@ -24,8 +24,13 @@
  #include "ws.h"
  #include "wsxdnd.h"
@@ -158,9 +157,9 @@ diff -urN MPlayer-1.0rc1.orig/Gui/wm/ws.c MPlayer-1.0rc1/Gui/wm/ws.c
  #include "../libmpcodecs/vf_scale.h"
  #include "../mp_msg.h"
  #include "../help_mp.h"
-diff -urN MPlayer-1.0rc1.orig/libmpcodecs/vf_halfpack.c MPlayer-1.0rc1/libmpcodecs/vf_halfpack.c
---- MPlayer-1.0rc1.orig/libmpcodecs/vf_halfpack.c	2006-10-23 01:32:24 +0300
-+++ MPlayer-1.0rc1/libmpcodecs/vf_halfpack.c	2006-10-31 01:23:28 +0200
+diff -urN mplayer-svn-r20448.orig/libmpcodecs/vf_halfpack.c mplayer-svn-r20448/libmpcodecs/vf_halfpack.c
+--- mplayer-svn-r20448.orig/libmpcodecs/vf_halfpack.c	2006-08-17 13:36:26 +0300
++++ mplayer-svn-r20448/libmpcodecs/vf_halfpack.c	2006-10-27 02:09:49 +0300
 @@ -12,7 +12,12 @@
  #include "vf.h"
  
@@ -174,9 +173,9 @@ diff -urN MPlayer-1.0rc1.orig/libmpcodecs/vf_halfpack.c MPlayer-1.0rc1/libmpcode
  
  struct vf_priv_s {
  	int field;
-diff -urN MPlayer-1.0rc1.orig/libmpcodecs/vf_palette.c MPlayer-1.0rc1/libmpcodecs/vf_palette.c
---- MPlayer-1.0rc1.orig/libmpcodecs/vf_palette.c	2006-10-23 01:32:24 +0300
-+++ MPlayer-1.0rc1/libmpcodecs/vf_palette.c	2006-10-31 01:23:28 +0200
+diff -urN mplayer-svn-r20448.orig/libmpcodecs/vf_palette.c mplayer-svn-r20448/libmpcodecs/vf_palette.c
+--- mplayer-svn-r20448.orig/libmpcodecs/vf_palette.c	2006-07-03 14:16:54 +0300
++++ mplayer-svn-r20448/libmpcodecs/vf_palette.c	2006-10-27 02:09:49 +0300
 @@ -11,7 +11,11 @@
  #include "mp_image.h"
  #include "vf.h"
@@ -189,9 +188,9 @@ diff -urN MPlayer-1.0rc1.orig/libmpcodecs/vf_palette.c MPlayer-1.0rc1/libmpcodec
  
  //===========================================================================//
  
-diff -urN MPlayer-1.0rc1.orig/libmpcodecs/vf_qp.c MPlayer-1.0rc1/libmpcodecs/vf_qp.c
---- MPlayer-1.0rc1.orig/libmpcodecs/vf_qp.c	2006-10-23 01:32:24 +0300
-+++ MPlayer-1.0rc1/libmpcodecs/vf_qp.c	2006-10-31 01:23:28 +0200
+diff -urN mplayer-svn-r20448.orig/libmpcodecs/vf_qp.c mplayer-svn-r20448/libmpcodecs/vf_qp.c
+--- mplayer-svn-r20448.orig/libmpcodecs/vf_qp.c	2006-06-13 15:10:35 +0300
++++ mplayer-svn-r20448/libmpcodecs/vf_qp.c	2006-10-27 02:09:49 +0300
 @@ -37,9 +37,15 @@
  // Needed to bring in lrintf.
  #define HAVE_AV_CONFIG_H
@@ -208,9 +207,9 @@ diff -urN MPlayer-1.0rc1.orig/libmpcodecs/vf_qp.c MPlayer-1.0rc1/libmpcodecs/vf_
  
  /* FIXME: common.h defines printf away when HAVE_AV_CONFIG
   * is defined, but mp_image.h needs printf.
-diff -urN MPlayer-1.0rc1.orig/libmpcodecs/vf_rgb2bgr.c MPlayer-1.0rc1/libmpcodecs/vf_rgb2bgr.c
---- MPlayer-1.0rc1.orig/libmpcodecs/vf_rgb2bgr.c	2006-10-23 01:32:24 +0300
-+++ MPlayer-1.0rc1/libmpcodecs/vf_rgb2bgr.c	2006-10-31 01:23:28 +0200
+diff -urN mplayer-svn-r20448.orig/libmpcodecs/vf_rgb2bgr.c mplayer-svn-r20448/libmpcodecs/vf_rgb2bgr.c
+--- mplayer-svn-r20448.orig/libmpcodecs/vf_rgb2bgr.c	2006-07-03 14:16:54 +0300
++++ mplayer-svn-r20448/libmpcodecs/vf_rgb2bgr.c	2006-10-27 02:09:49 +0300
 @@ -11,7 +11,12 @@
  #include "vf.h"
  
@@ -224,9 +223,9 @@ diff -urN MPlayer-1.0rc1.orig/libmpcodecs/vf_rgb2bgr.c MPlayer-1.0rc1/libmpcodec
  
  //===========================================================================//
  
-diff -urN MPlayer-1.0rc1.orig/libmpcodecs/vf_sab.c MPlayer-1.0rc1/libmpcodecs/vf_sab.c
---- MPlayer-1.0rc1.orig/libmpcodecs/vf_sab.c	2006-10-23 01:32:24 +0300
-+++ MPlayer-1.0rc1/libmpcodecs/vf_sab.c	2006-10-31 01:23:28 +0200
+diff -urN mplayer-svn-r20448.orig/libmpcodecs/vf_sab.c mplayer-svn-r20448/libmpcodecs/vf_sab.c
+--- mplayer-svn-r20448.orig/libmpcodecs/vf_sab.c	2006-09-18 11:03:58 +0300
++++ mplayer-svn-r20448/libmpcodecs/vf_sab.c	2006-10-27 02:09:49 +0300
 @@ -29,12 +29,20 @@
  #include <malloc.h>
  #endif
@@ -248,9 +247,9 @@ diff -urN MPlayer-1.0rc1.orig/libmpcodecs/vf_sab.c MPlayer-1.0rc1/libmpcodecs/vf
  #include "vf_scale.h"
  
  
-diff -urN MPlayer-1.0rc1.orig/libmpcodecs/vf_scale.c MPlayer-1.0rc1/libmpcodecs/vf_scale.c
---- MPlayer-1.0rc1.orig/libmpcodecs/vf_scale.c	2006-10-23 01:32:24 +0300
-+++ MPlayer-1.0rc1/libmpcodecs/vf_scale.c	2006-10-31 01:23:28 +0200
+diff -urN mplayer-svn-r20448.orig/libmpcodecs/vf_scale.c mplayer-svn-r20448/libmpcodecs/vf_scale.c
+--- mplayer-svn-r20448.orig/libmpcodecs/vf_scale.c	2006-09-18 11:03:58 +0300
++++ mplayer-svn-r20448/libmpcodecs/vf_scale.c	2006-10-27 02:09:49 +0300
 @@ -13,7 +13,11 @@
  #include "fmt-conversion.h"
  
@@ -263,9 +262,9 @@ diff -urN MPlayer-1.0rc1.orig/libmpcodecs/vf_scale.c MPlayer-1.0rc1/libmpcodecs/
  #include "vf_scale.h"
  
  #include "m_option.h"
-diff -urN MPlayer-1.0rc1.orig/libmpcodecs/vf_screenshot.c MPlayer-1.0rc1/libmpcodecs/vf_screenshot.c
---- MPlayer-1.0rc1.orig/libmpcodecs/vf_screenshot.c	2006-10-23 01:32:24 +0300
-+++ MPlayer-1.0rc1/libmpcodecs/vf_screenshot.c	2006-10-31 01:23:28 +0200
+diff -urN mplayer-svn-r20448.orig/libmpcodecs/vf_screenshot.c mplayer-svn-r20448/libmpcodecs/vf_screenshot.c
+--- mplayer-svn-r20448.orig/libmpcodecs/vf_screenshot.c	2006-09-18 11:03:58 +0300
++++ mplayer-svn-r20448/libmpcodecs/vf_screenshot.c	2006-10-27 02:09:49 +0300
 @@ -22,7 +22,11 @@
  #include "vf_scale.h"
  
@@ -278,9 +277,9 @@ diff -urN MPlayer-1.0rc1.orig/libmpcodecs/vf_screenshot.c MPlayer-1.0rc1/libmpco
  
  struct vf_priv_s {
      int frameno;
-diff -urN MPlayer-1.0rc1.orig/libmpcodecs/vf_smartblur.c MPlayer-1.0rc1/libmpcodecs/vf_smartblur.c
---- MPlayer-1.0rc1.orig/libmpcodecs/vf_smartblur.c	2006-10-23 01:32:24 +0300
-+++ MPlayer-1.0rc1/libmpcodecs/vf_smartblur.c	2006-10-31 01:23:28 +0200
+diff -urN mplayer-svn-r20448.orig/libmpcodecs/vf_smartblur.c mplayer-svn-r20448/libmpcodecs/vf_smartblur.c
+--- mplayer-svn-r20448.orig/libmpcodecs/vf_smartblur.c	2006-09-18 11:03:58 +0300
++++ mplayer-svn-r20448/libmpcodecs/vf_smartblur.c	2006-10-27 02:09:49 +0300
 @@ -29,12 +29,21 @@
  #include <malloc.h>
  #endif
@@ -303,9 +302,9 @@ diff -urN MPlayer-1.0rc1.orig/libmpcodecs/vf_smartblur.c MPlayer-1.0rc1/libmpcod
  #include "vf_scale.h"
  
  //===========================================================================//
-diff -urN MPlayer-1.0rc1.orig/libmpcodecs/vf_yuy2.c MPlayer-1.0rc1/libmpcodecs/vf_yuy2.c
---- MPlayer-1.0rc1.orig/libmpcodecs/vf_yuy2.c	2006-10-23 01:32:24 +0300
-+++ MPlayer-1.0rc1/libmpcodecs/vf_yuy2.c	2006-10-31 01:23:28 +0200
+diff -urN mplayer-svn-r20448.orig/libmpcodecs/vf_yuy2.c mplayer-svn-r20448/libmpcodecs/vf_yuy2.c
+--- mplayer-svn-r20448.orig/libmpcodecs/vf_yuy2.c	2006-07-03 14:16:54 +0300
++++ mplayer-svn-r20448/libmpcodecs/vf_yuy2.c	2006-10-27 02:09:49 +0300
 @@ -12,7 +12,11 @@
  #include "vf.h"
  
@@ -318,9 +317,9 @@ diff -urN MPlayer-1.0rc1.orig/libmpcodecs/vf_yuy2.c MPlayer-1.0rc1/libmpcodecs/v
  #include "vf_scale.h"
  
  //===========================================================================//
-diff -urN MPlayer-1.0rc1.orig/libswscale/swscale-example.c MPlayer-1.0rc1/libswscale/swscale-example.c
---- MPlayer-1.0rc1.orig/libswscale/swscale-example.c	2006-10-23 01:32:29 +0300
-+++ MPlayer-1.0rc1/libswscale/swscale-example.c	2006-10-31 01:23:28 +0200
+diff -urN mplayer-svn-r20448.orig/libswscale/swscale-example.c mplayer-svn-r20448/libswscale/swscale-example.c
+--- mplayer-svn-r20448.orig/libswscale/swscale-example.c	2006-10-09 11:28:56 +0300
++++ mplayer-svn-r20448/libswscale/swscale-example.c	2006-10-27 02:09:49 +0300
 @@ -25,7 +25,11 @@
  #include <stdarg.h>
  
@@ -333,9 +332,9 @@ diff -urN MPlayer-1.0rc1.orig/libswscale/swscale-example.c MPlayer-1.0rc1/libsws
  #include "swscale.h"
  #include "swscale_internal.h"
  #include "rgb2rgb.h"
-diff -urN MPlayer-1.0rc1.orig/libswscale/swscale_internal.h MPlayer-1.0rc1/libswscale/swscale_internal.h
---- MPlayer-1.0rc1.orig/libswscale/swscale_internal.h	2006-10-23 01:32:29 +0300
-+++ MPlayer-1.0rc1/libswscale/swscale_internal.h	2006-10-31 01:23:28 +0200
+diff -urN mplayer-svn-r20448.orig/libswscale/swscale_internal.h mplayer-svn-r20448/libswscale/swscale_internal.h
+--- mplayer-svn-r20448.orig/libswscale/swscale_internal.h	2006-10-25 19:49:06 +0300
++++ mplayer-svn-r20448/libswscale/swscale_internal.h	2006-10-27 02:09:49 +0300
 @@ -28,7 +28,11 @@
  #include <altivec.h>
  #endif
@@ -348,9 +347,9 @@ diff -urN MPlayer-1.0rc1.orig/libswscale/swscale_internal.h MPlayer-1.0rc1/libsw
  
  #ifdef CONFIG_DARWIN
  #define AVV(x...) (x)
-diff -urN MPlayer-1.0rc1.orig/libvo/mga_common.c MPlayer-1.0rc1/libvo/mga_common.c
---- MPlayer-1.0rc1.orig/libvo/mga_common.c	2006-10-23 01:32:26 +0300
-+++ MPlayer-1.0rc1/libvo/mga_common.c	2006-10-31 01:23:28 +0200
+diff -urN mplayer-svn-r20448.orig/libvo/mga_common.c mplayer-svn-r20448/libvo/mga_common.c
+--- mplayer-svn-r20448.orig/libvo/mga_common.c	2006-07-03 14:16:55 +0300
++++ mplayer-svn-r20448/libvo/mga_common.c	2006-10-27 02:09:49 +0300
 @@ -1,7 +1,11 @@
  
  #include "fastmemcpy.h"
@@ -363,9 +362,9 @@ diff -urN MPlayer-1.0rc1.orig/libvo/mga_common.c MPlayer-1.0rc1/libvo/mga_common
  #include "libmpcodecs/vf_scale.h"
  #include "mp_msg.h"
  #include "help_mp.h"
-diff -urN MPlayer-1.0rc1.orig/libvo/sub.c MPlayer-1.0rc1/libvo/sub.c
---- MPlayer-1.0rc1.orig/libvo/sub.c	2006-10-23 01:32:26 +0300
-+++ MPlayer-1.0rc1/libvo/sub.c	2006-10-31 01:23:31 +0200
+diff -urN mplayer-svn-r20448.orig/libvo/sub.c mplayer-svn-r20448/libvo/sub.c
+--- mplayer-svn-r20448.orig/libvo/sub.c	2006-08-17 13:36:33 +0300
++++ mplayer-svn-r20448/libvo/sub.c	2006-10-27 02:09:49 +0300
 @@ -14,7 +14,12 @@
  #include "font_load.h"
  #include "sub.h"
@@ -379,9 +378,9 @@ diff -urN MPlayer-1.0rc1.orig/libvo/sub.c MPlayer-1.0rc1/libvo/sub.c
  
  #define NEW_SPLITTING
  
-diff -urN MPlayer-1.0rc1.orig/libvo/vo_aa.c MPlayer-1.0rc1/libvo/vo_aa.c
---- MPlayer-1.0rc1.orig/libvo/vo_aa.c	2006-10-23 01:32:26 +0300
-+++ MPlayer-1.0rc1/libvo/vo_aa.c	2006-10-31 01:23:31 +0200
+diff -urN mplayer-svn-r20448.orig/libvo/vo_aa.c mplayer-svn-r20448/libvo/vo_aa.c
+--- mplayer-svn-r20448.orig/libvo/vo_aa.c	2006-07-10 14:48:33 +0300
++++ mplayer-svn-r20448/libvo/vo_aa.c	2006-10-27 02:09:49 +0300
 @@ -27,7 +27,11 @@
  #include "video_out.h"
  #include "video_out_internal.h"
@@ -394,9 +393,9 @@ diff -urN MPlayer-1.0rc1.orig/libvo/vo_aa.c MPlayer-1.0rc1/libvo/vo_aa.c
  #include "libmpcodecs/vf_scale.h"
  #include "font_load.h"
  #include "sub.h"
-diff -urN MPlayer-1.0rc1.orig/libvo/vo_vesa.c MPlayer-1.0rc1/libvo/vo_vesa.c
---- MPlayer-1.0rc1.orig/libvo/vo_vesa.c	2006-10-23 01:32:26 +0300
-+++ MPlayer-1.0rc1/libvo/vo_vesa.c	2006-10-31 01:23:31 +0200
+diff -urN mplayer-svn-r20448.orig/libvo/vo_vesa.c mplayer-svn-r20448/libvo/vo_vesa.c
+--- mplayer-svn-r20448.orig/libvo/vo_vesa.c	2006-08-28 14:40:31 +0300
++++ mplayer-svn-r20448/libvo/vo_vesa.c	2006-10-27 02:09:49 +0300
 @@ -47,7 +47,11 @@
  #endif
  #include "mp_msg.h"
@@ -409,9 +408,9 @@ diff -urN MPlayer-1.0rc1.orig/libvo/vo_vesa.c MPlayer-1.0rc1/libvo/vo_vesa.c
  #include "libmpcodecs/vf_scale.h"
  
  
-diff -urN MPlayer-1.0rc1.orig/libvo/vo_x11.c MPlayer-1.0rc1/libvo/vo_x11.c
---- MPlayer-1.0rc1.orig/libvo/vo_x11.c	2006-10-23 01:32:26 +0300
-+++ MPlayer-1.0rc1/libvo/vo_x11.c	2006-10-31 01:23:31 +0200
+diff -urN mplayer-svn-r20448.orig/libvo/vo_x11.c mplayer-svn-r20448/libvo/vo_x11.c
+--- mplayer-svn-r20448.orig/libvo/vo_x11.c	2006-10-25 19:49:02 +0300
++++ mplayer-svn-r20448/libvo/vo_x11.c	2006-10-27 02:09:49 +0300
 @@ -38,7 +38,11 @@
  #include "fastmemcpy.h"
  #include "sub.h"
@@ -424,30 +423,37 @@ diff -urN MPlayer-1.0rc1.orig/libvo/vo_x11.c MPlayer-1.0rc1/libvo/vo_x11.c
  #include "libmpcodecs/vf_scale.h"
  #define MODE_RGB  0x1
  #define MODE_BGR  0x2
-diff -urN MPlayer-1.0rc1.orig/libvo/vo_yuv4mpeg.c MPlayer-1.0rc1/libvo/vo_yuv4mpeg.c
---- MPlayer-1.0rc1.orig/libvo/vo_yuv4mpeg.c	2006-10-23 01:32:26 +0300
-+++ MPlayer-1.0rc1/libvo/vo_yuv4mpeg.c	2006-10-31 01:25:37 +0200
-@@ -39,7 +39,11 @@
+diff -urN mplayer-svn-r20448.orig/libvo/vo_yuv4mpeg.c mplayer-svn-r20448/libvo/vo_yuv4mpeg.c
+--- mplayer-svn-r20448.orig/libvo/vo_yuv4mpeg.c	2006-10-26 12:45:00 +0300
++++ mplayer-svn-r20448/libvo/vo_yuv4mpeg.c	2006-10-27 02:09:49 +0300
+@@ -39,10 +39,19 @@
  #include "sub.h"
  
  #include "fastmemcpy.h"
 +#ifdef USE_LIBSWSCALE_SO
 +#include <ffmpeg/swscale.h>
++#include <ffmpeg/rgb2rgb.h>
 +#else
  #include "libswscale/swscale.h"
+ #include "libswscale/rgb2rgb.h"
 +#endif
  #include "libmpcodecs/vf_scale.h"
++#ifdef USE_LIBAVUTIL_SO
++#include <ffmpeg/rational.h>
++#else
+ #include "libavutil/rational.h"
++#endif
  
  static vo_info_t info = 
-diff -urN MPlayer-1.0rc1.orig/Makefile MPlayer-1.0rc1/Makefile
---- MPlayer-1.0rc1.orig/Makefile	2006-10-23 01:32:31 +0300
-+++ MPlayer-1.0rc1/Makefile	2006-10-31 01:23:31 +0200
-@@ -132,7 +132,7 @@
+ {
+diff -urN mplayer-svn-r20448.orig/Makefile mplayer-svn-r20448/Makefile
+--- mplayer-svn-r20448.orig/Makefile	2006-10-17 16:03:25 +0300
++++ mplayer-svn-r20448/Makefile	2006-10-27 02:09:49 +0300
+@@ -132,7 +132,6 @@
                libaf/libaf.a \
                libmpdemux/libmpdemux.a \
                stream/stream.a \
 -              libswscale/libswscale.a \
-+              $(SWSCALE_LIB) \
                osdep/libosdep.a \
                $(EXTRA_LIB)\
                $(DVDREAD_LIB) \
@@ -459,9 +465,9 @@ diff -urN MPlayer-1.0rc1.orig/Makefile MPlayer-1.0rc1/Makefile
                input/libinput.a \
                libvo/libvo.a \
                libaf/libaf.a \
-diff -urN MPlayer-1.0rc1.orig/spudec.c MPlayer-1.0rc1/spudec.c
---- MPlayer-1.0rc1.orig/spudec.c	2006-10-23 01:32:31 +0300
-+++ MPlayer-1.0rc1/spudec.c	2006-10-31 01:23:31 +0200
+diff -urN mplayer-svn-r20448.orig/spudec.c mplayer-svn-r20448/spudec.c
+--- mplayer-svn-r20448.orig/spudec.c	2006-09-18 11:04:02 +0300
++++ mplayer-svn-r20448/spudec.c	2006-10-27 02:09:49 +0300
 @@ -23,8 +23,17 @@
  #include <math.h>
  #include "libvo/video_out.h"
@@ -480,9 +486,9 @@ diff -urN MPlayer-1.0rc1.orig/spudec.c MPlayer-1.0rc1/spudec.c
  
  #define MIN(a, b)	((a)<(b)?(a):(b))
  
-diff -urN MPlayer-1.0rc1.orig/TOOLS/Makefile MPlayer-1.0rc1/TOOLS/Makefile
---- MPlayer-1.0rc1.orig/TOOLS/Makefile	2006-10-23 01:32:30 +0300
-+++ MPlayer-1.0rc1/TOOLS/Makefile	2006-10-31 01:23:31 +0200
+diff -urN mplayer-svn-r20448.orig/TOOLS/Makefile mplayer-svn-r20448/TOOLS/Makefile
+--- mplayer-svn-r20448.orig/TOOLS/Makefile	2006-08-17 13:36:37 +0300
++++ mplayer-svn-r20448/TOOLS/Makefile	2006-10-27 02:09:49 +0300
 @@ -27,8 +27,7 @@
  
  subrip: subrip.c

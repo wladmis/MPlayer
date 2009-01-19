@@ -57,5 +57,5 @@ if (length(msgid[i])!=0) {
 
 
 END {
-for (i in msgid) if (length(msgid[i])!=0) print "# " i "\n" "msgid " "\"" msgid[i] "\"\n" "msgstr " "\"" msgstr[i] "\"\n"
+for (i in msgstr) print "# " i "\n" "msgid " "\"" msgid[i] "\"\n" "msgstr " "\"" msgstr[i] "\"\n"
 }
