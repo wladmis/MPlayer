@@ -6,7 +6,7 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 %define prerel %nil
-%define svnrev 20022
+%define svnrev 20117
 %define ffmpeg_svnrev 6545
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
@@ -160,7 +160,6 @@
 %define ccomp gcc
 %define asm as
 %define charset UTF-8
-#define language uk ru en bg cs de dk el es fr hu it ja ko mk nl no pl ro sk sv tr pt_BR zh_CN zh_TW
 %define language all
 
 # Advanced options:
@@ -271,7 +270,7 @@
 Name: %lname
 #Serial: 1
 Version: 1.0
-%define rel 30
+%define rel 31
 %define subrel 1
 %ifdef svnrev
 Release: alt%rel.%svnrev.%subrel
@@ -324,10 +323,9 @@ Patch13: %Name-svn-20060711-vbe.patch.gz
 Patch14: %Name-1.0pre7try2-xmmslibs_fix.patch
 Patch15: %lname-svn-r19671-pulseaudio.patch.bz2
 Patch16: %Name-1.0pre8-udev.patch.gz
-Patch17: %lname-svn-r19912-ext_ffmpeg.patch.bz2
+Patch17: %lname-svn-r20117-ext_ffmpeg.patch.bz2
 Patch21: %Name-svn-20060607-vf_mcdeint.patch.gz
 Patch22: %lname-svn-r19389-polyp0.8.patch.gz
-Patch25: %lname-svn-r19982-doc-cs.patch.gz
 Patch26: %lname-svn-r20022-configure.patch.gz
 %{?svnrev:Patch27: %Name-cvs-20060331-builddocs.patch.gz}
 
@@ -911,7 +909,6 @@ mv ffmpeg-svn-r%ffmpeg_svnrev/lib{av{codec,format,util},postproc} .
 %patch21 -p1
 %{?_enable_polyp:%{?_disable_old_polyp:%patch22 -p1}}
 %ifdef svnrev
-%patch25 -p1
 %patch26 -p1
 %patch27 -p1
 %endif
@@ -937,6 +934,9 @@ install -d -m 0755 po
 gzip -dc %SOURCE6 > po/mp_help2msg.awk
 gzip -dc %SOURCE7 > po/mp_msg2po.awk
 %endif
+
+subst 's|\\/\\/|//|g' help/help_mp-zh_CN.h
+
 
 %build
 %if_disabled debug
@@ -1168,12 +1168,14 @@ echo "fontconfig = yes" >> etc/%lname.conf
 %else
 echo "fontconfig = no" >> etc/%lname.conf
 %endif
+echo "utf8 = yes" >> etc/%lname.conf
 
 %{?_enable_freetype:make -C TOOLS/subfont-c}
 
 # can't build vivodump subrip
 %make_build -C TOOLS 302m_convert 360m_convert alaw-gen asfinfo avi-fix avisubdump bios2dump dump_mp4 mem2dump movinfo png2raw
 
+%if_with htmldocs
 %if %svnrev
 # build HTML documentation from XML files
 pushd DOCS/xml
@@ -1185,6 +1187,7 @@ echo 'CATALOG "/usr/share/xml/xml-iso-entities-8879.1986/catalog"' >> ./catalog
 #    make html-chunked-$lang
 #done
 popd
+%endif
 %endif
 
 %if_enabled nls
@@ -1242,8 +1245,10 @@ for l in $(ls DOCS/man | grep -v 'en'); do
     install -pD -m 0644 DOCS/man/$l/%lname.1 %buildroot%_mandir/$l/man1/%lname.1
     %{?_enable_mencoder:install -m 0644 DOCS/man/$l/%lname.1 %buildroot%_mandir/$l/man1/mencoder.1}
 done
+%find_lang --with-man %lname %lname-man
 rm -f %buildroot%_man1dir/mencoder.1
 %{?_enable_mencoder:install -m 0644 DOCS/man/en/%lname.1 %buildroot%_man1dir/mencoder.1}
+%if_with htmldocs
 for l in it zh; do
     install -d %buildroot%_docdir/%name-doc-%version/$l
     install -m 0644 DOCS/$l/*.html %buildroot%_docdir/%name-doc-%version/$l/
@@ -1252,9 +1257,10 @@ for l in cs de en es fr hu pl ru; do
     install -d %buildroot%_docdir/%name-doc-%version/$l
     install -m 0644 DOCS/HTML/$l/{*.htm,*.css} %buildroot%_docdir/%name-doc-%version/$l/
 done
+install -pD -m 0644 DOCS/tech/playtree-hun %buildroot%_docdir/%name-doc-%version/hu/tech/playtree
+%endif
 install -d %buildroot%_docdir/%name-doc-%version/en/tech/realcodecs
 install -m 0644 DOCS/tech/{MAINTAINERS,TODO,*.txt,mpsub.sub,playtree,wishlist} %buildroot%_docdir/%name-doc-%version/en/tech/
-install -pD -m 0644 DOCS/tech/playtree-hun %buildroot%_docdir/%name-doc-%version/hu/tech/playtree
 install -m 0644 DOCS/tech/realcodecs/{TODO,*.txt} %buildroot%_docdir/%name-doc-%version/en/tech/realcodecs/
 
 %if_enabled nls
@@ -1263,7 +1269,7 @@ install -pD -m 0644 $l %buildroot%_datadir/locale/$(basename $l .gmo)/LC_MESSAGE
 done
 %endif
 
-%find_lang --with-man %lname
+%find_lang %lname
 %{?_enable_mencoder:%find_lang --with-man mencoder}
 
 # a tribute to clever python support
@@ -1281,7 +1287,7 @@ unset RPM_PYTHON
 %endif
 
 
-%files
+%files -f %lname-man.lang
 %doc README AUTHORS ChangeLog.*
 %_bindir/%lname
 %dir %_sysconfdir/%name
@@ -1336,6 +1342,7 @@ unset RPM_PYTHON
 %_docdir/%name-doc-%version/en
 
 
+%if_with htmldocs
 %files doc-cs
 %_docdir/%name-doc-%version/cs
 
@@ -1370,6 +1377,7 @@ unset RPM_PYTHON
 
 %files doc-zh
 %_docdir/%name-doc-%version/zh
+%endif
 
 
 %if %vidixlib == int
@@ -1423,6 +1431,14 @@ unset RPM_PYTHON
 
 
 %changelog
+* Mon Oct 09 2006 Led <led@altlinux.ru> 1.0-alt31.20117.1
+- new SVN snapshot (revision 20117)
+- updated %lname-svn-r20117-ext_ffmpeg.patch
+- returned %name's mans
+- removed %lname-svn-r19982-doc-cs.patch (fixed in upstream)
+- fixed %lname.conf (used default utf8 subtitles encoding)
+- fixed spec
+
 * Wed Oct 04 2006 Led <led@altlinux.ru> 1.0-alt30.20022.1
 - new SVN snapshot (revision 20022)
 - fixed console control:

@@ -30,7 +30,7 @@ sub(/[^[:blank:]]+[[:blank:]]+/, "")
 
 
 BEGIN {
-if (ARGC==0) {
+if (ARGC==1) {
     print "Usage: " ARGV[0] " <msgid-file> [<msgstr-file>]"
     exit
 } else {
