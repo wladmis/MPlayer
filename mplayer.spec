@@ -274,7 +274,7 @@
 %define Name MPlayer
 Name: %lname
 Version: 1.0
-%define rel 35
+%define rel 35.1
 %define subrel 1
 %ifdef svnrev
 Release: alt%rel.%svnrev.%subrel
@@ -1524,6 +1524,9 @@ unset RPM_PYTHON
 
 
 %changelog
+* Wed Nov 08 2006 Led <led@altlinux.ru> 1.0-alt35.1
+- rebuild with new libavformat
+
 * Tue Nov 07 2006 Led <led@altlinux.ru> 1.0-alt35
 - build docs with xsltproc instead of openjade
   + updated %lname-svn-r20544-builddocs.patch
