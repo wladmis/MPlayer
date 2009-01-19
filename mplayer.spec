@@ -1,13 +1,14 @@
 %define set_disable() %{expand:%%force_disable %{1}} %{expand:%%undefine _enable_%{1}}
 %define set_enable() %{expand:%%force_enable %{1}} %{expand:%%undefine _disable_%{1}}
+%define set_enables() %{expand:%%force_enable %*}
 %define subst_enable_with() %{expand:%%{?_enable_%{1}:--enable-%{2}}} %{expand:%%{?_disable_%{1}:--disable-%{2}}}
 %define subst_o() %{expand:%%{?_enable_%{1}:%{1},}}
 %define subst_o_pre() %{expand:%%{?_enable_%{2}:%{1}%{2},}}
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 %define prerel 0
-%define svndate 20060714
-%define ffmpeg_svndate 20060714
+%define svndate 20060717
+%define ffmpeg_svndate 20060717
 %define vidixver 0.9.9.1
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
@@ -71,8 +72,6 @@
 %def_enable real
 %def_enable xvid
 %def_enable x264
-%def_disable divx4linux
-%def_disable opendivx
 %def_enable ffmpeg
 %def_enable shared_ffmpeg
 %def_enable fame
@@ -157,6 +156,7 @@
 %define asm as
 %define charset cp1251
 %define language uk ru en bg cs de dk el es fr hu it ja ko mk nl no pl ro sk sv tr pt_BR zh_CN zh_TW
+%set_enables en es fr hu pl ru
 
 # Advanced options:
 %def_enable mmx
@@ -278,7 +278,7 @@ Release: alt%altrel
 Summary: Media player
 Summary(uk_UA.CP1251): Медіаплейер
 Summary(ru_RU.CP1251): Медиаплейер
-License: GPL%{?_enable_opendivx: for all but not for OpenDivX}
+License: GPL
 Group: Video
 URL: http://www.mplayerhq.hu
 %if %name != %Name
@@ -356,8 +356,6 @@ BuildRequires: docbook-style-dsssl openjade xsltproc
 %{?_enable_lzo:BuildRequires: liblzo-devel}
 %{?_enable_xvid:BuildRequires: libxvid-devel}
 %{?_enable_x264:BuildRequires: libx264-devel}
-%{?_enable_divx4linux:BuildRequires: divx4linux-devel}
-%{?_enable_opendivx:BuildRequires: libopendivx-devel}
 %{?_enable_shared_ffmpeg:BuildRequires: libffmpeg-devel >= 1:0.5.0-alt0.20060713.1}
 %{?_enable_fame:BuildRequires: libfame-devel}
 %{?_enable_tremor_external:BuildRequires: libtremor-devel}
@@ -516,7 +514,7 @@ MEncoder a movie encoder for Unix and is a part of the %name package.
 Group: Video
 Summary: %Name all docs
 Requires: %name-doc-en
-Requires: %name-doc-de
+#Requires: %name-doc-de
 Requires: %name-doc-cs
 Requires: %name-doc-es
 Requires: %name-doc-fr
@@ -1015,8 +1013,6 @@ export LC_MESSAGES
 		%{?_enable_real:--with-reallibdir=%real_libdir} \
 		%{subst_enable xvid} \
 		%{subst_enable x264} \
-		%{subst_enable divx4linux} \
-		%{subst_enable opendivx} \
 %if_enabled ffmpeg
 %if_enabled shared_ffmpeg
 		--disable-libavcodec \
@@ -1174,7 +1170,9 @@ pushd DOCS/xml
 cp -fL %_sysconfdir/sgml/catalog ./
 echo 'CATALOG "/usr/share/xml/xml-iso-entities-8879.1986/catalog"' >> ./catalog
 ./configure
-for lang in cs de en es fr hu pl ru; do
+#FIXME! Can't build de docs now :(
+#for lang in cs de en es fr hu pl ru; do
+for lang in cs en es fr hu pl ru; do
     make html-chunked-$lang
 done
 popd
@@ -1238,7 +1236,8 @@ for l in it zh; do
     install -d %buildroot%_docdir/%name-doc-%version/$l
     install -m 0644 DOCS/$l/*.html %buildroot%_docdir/%name-doc-%version/$l/
 done
-for l in cs de en es fr hu pl ru; do
+#for l in cs de en es fr hu pl ru; do
+for l in cs en es fr hu pl ru; do
     install -d %buildroot%_docdir/%name-doc-%version/$l
     install -m 0644 DOCS/HTML/$l/{*.htm,*.css} %buildroot%_docdir/%name-doc-%version/$l/
 done
@@ -1316,12 +1315,12 @@ unset RPM_PYTHON
 %_docdir/%name-doc-%version/en
 
 
-%files doc-de
-%_docdir/%name-doc-%version/de
-
-
 %files doc-cs
 %_docdir/%name-doc-%version/cs
+
+
+#files doc-de
+#_docdir/%name-doc-%version/de
 
 
 %files doc-es
@@ -1427,6 +1426,10 @@ unset RPM_PYTHON
 
 
 %changelog
+* Mon Jul 17 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060717.1
+- new SVN sbapshot (revision 19126)
+- removed divx4linux and opendivx (upstream)
+
 * Mon Jul 17 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060714.1
 - new SVN sbapshot (revision 19058)
 - cleaned up spec
