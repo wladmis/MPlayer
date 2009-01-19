@@ -7,7 +7,7 @@
 
 %define prerel %nil
 %define svnrev 20016
-%define ffmpeg_svnrev 6411
+%define ffmpeg_svnrev 6287
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -270,14 +270,15 @@
 %define lname mplayer
 %define Name MPlayer
 Name: %lname
-Serial: 1
+#Serial: 1
 Version: 1.0
-%define altrel 1
+%define rel 29
+%define subrel 1
 %ifdef svnrev
-Release: alt1.%svnrev.%altrel
+Release: alt%rel.%svnrev.%subrel
 %define pkgver svn-r%svnrev
 %else
-Release: alt%altrel
+Release: alt%rel
 %define pkgver %version%prerel
 %endif
 Summary: Media player
@@ -292,7 +293,7 @@ Obsoletes: %Name
 %endif
 %if_enabled freetype
 %{?_disable_fontconfig:Requires: fonts-type1-urw}
-Conflicts: %Name-fonts %lname-fonts < 1.0-alt0.20060719.1
+Conflicts: %Name-fonts < 1.0-alt28
 %else
 Requires: %name-fonts
 %endif
@@ -514,8 +515,8 @@ Mach64, Permedia3, - аппаратного декодирования AC3, а также нескольких
 Group: Video
 Summary: Font utils for the %Name
 Requires: %name
-Conflicts: %Name-fonts
-Conflicts: %lname-fonts < 1.0-alt0.20060719.1
+Conflicts: %Name-fonts < 1.0-alt28
+Conflicts: %Name < 1.0-alt28
 
 %description fontutils
 Font utils for use with %Name.
@@ -527,8 +528,7 @@ Font utils for use with %Name.
 Group: Video
 Summary: Movie encoder for Unix.
 Summary(ru_RU.CP1251): Кодировщик фильмов для Unix.
-Conflicts: %Name < 0:1.0-alt28
-Conflicts: %lname < 0:1.0-alt28
+Conflicts: %Name < 1.0-alt28
 
 %description -n mencoder
 MEncoder a movie encoder for Unix and is a part of the %name package.
@@ -870,6 +870,7 @@ VIDIX driver for VIA CLE266 Unichrome.
 %package i18n
 Group: Video
 Summary: Languages support for %Name
+Provides: mencoder-i18n = %version-%release
 
 %description i18n
 Languages support for %Name.
@@ -1423,13 +1424,13 @@ unset RPM_PYTHON
 
 
 %changelog
-* Mon Oct 02 2006 Led <led@altlinux.ru> 1:1.0-alt1.20016.1
+* Mon Oct 02 2006 Led <led@altlinux.ru> 1.0-alt29.20016.1
 - new SVN snapshot (revision 20016)
 - fixed Conflicts in mencoder package
-
-* Tue Sep 26 2006 Led <led@altlinux.ru> 1:1.0-alt1.19982.1
-- new SVN snapshot (revision 19982)
 - added %lname-svn-r19982-doc-cs.patch
+
+* Mon Sep 25 2006 Led <led@altlinux.ru> 1.0-alt28.19912.1
+- rebuild for Sisyphus
 
 * Wed Sep 20 2006 Led <led@altlinux.ru> 1:1.0-alt1.19912.1
 - new SVN snapshot (revision 19912)
