@@ -4,13 +4,13 @@
 
 %define base_version	1.0
 %define real_version	%base_version
-%define release		1
+%define release		3
 
 %define fversion	%real_version
 
 # Used only for CVS builds
 %define cvsbuild 20060630
-%define ffmpeg_version svn-20060630
+%define ffmpeg_version svn-20060705
 
 %if %cvsbuild
 %global release		0.%cvsbuild.%release
@@ -76,11 +76,13 @@
 %def_enable  speex
 %def_enable  theora
 %def_enable  faad
+%def_enable  dirac
 %def_disable internal_faad
 %def_enable  libdv
 %def_enable  mad
 %def_disable xmms
-%def_enable  dvdnav
+%def_disable dvdnav
+%def_without dvdmenu
 %def_enable  jack
 %def_enable  cpu_detection
 %def_enable  mmx
@@ -89,7 +91,6 @@
 %def_enable  3dnowext
 %def_enable  sse
 %def_enable  sse2
-%def_disable i18n
 %def_disable fribidi
 
 %if_enabled tremor_external
@@ -157,30 +158,30 @@ Requires: urw-fonts
 Source0:  %bname-%fversion.tar.bz2
 # svn checkout svn.mplayerhq.hu/mplayer/trunk
 %if %cvsbuild
-Source1:  ffmpeg-%ffmpeg_version.tar.bz2
+%{?_disable_shared_ffmpeg:Source1: ffmpeg-%ffmpeg_version.tar.bz2}
 # svn checkout svn.mplayerhq.hu/ffmpeg/trunk
 %endif
-Source3:  cp1251-font.tar.bz2
-Source4:  standard-1.9.tar.bz2
-Source5:  mplayer.sh
-Source9:  ao_polyp.c.bz2
-Patch1:   MPlayer-svn-20060620-alt-external_fame.patch.gz
-Patch2:   MPlayer-dvd-ru.patch
-Patch3:   MPlayer-1.0pre4-alt-explicit_gif.patch
-Patch4:   MPlayer-1.0pre5-alt-translation.patch
-Patch5:   MPlayer-1.0pre4-alt-explicit_termcap.patch
-Patch6:   MPlayer-1.0pre4-alt-artsc_ldflags.patch
-Patch12:  MPlayer-1.0pre5-alt-gcc-check.patch
-Patch13:  MPlayer-1.0pre5-nodebug.patch
-Patch19:  mplayer-libmpdvdkit2.patch
-Patch21:  MPlayer-svn-20060607-vf_mcdeint.patch.gz
-Patch22:  MPlayer-cvs-20060519-polyp0.8.patch.gz
-Patch23:  ad_pcm_fix_20050826.diff
-Patch24:  MPlayer-1.0pre7try2-xmmslibs_fix.patch
-Patch25:  MPlayer-1.0pre7try2-libdir_fix.patch
-Patch26:  MPlayer-svn-20060630-configure.patch.gz
+%{?_with_dvdmenu:Source2: mplayer-dvdnav-20060614-patch.tar.bz2}
+Source3: cp1251-font.tar.bz2
+Source4: standard-1.9.tar.bz2
+Source5: mplayer.sh
+Source9: ao_polyp.c.bz2
+Patch1: MPlayer-svn-20060620-alt-external_fame.patch.gz
+Patch2: MPlayer-dvd-ru-20060705.patch.gz
+Patch3: MPlayer-1.0pre4-alt-explicit_gif.patch
+Patch6: MPlayer-1.0pre4-alt-artsc_ldflags.patch
+#Patch7: MPlayer-1.0pre7_dirac-0.5.x.patch
+#Patch7: MPlayer-1.0pre7try2_dirac-0.6.x.patch
+Patch7: MPlayer-svn-20060704_dirac-0.5.x.patch.bz2
+%{?_with_dvdmenu:Patch8: navmplayer-20060630.patch.bz2}
+%{?_disable_shared_ffmpeg:Patch9: ffmpeg-svn-20060630-dirac-0.5.x.patch.bz2}
+Patch21: MPlayer-svn-20060607-vf_mcdeint.patch.gz
+Patch22: MPlayer-cvs-20060519-polyp0.8.patch.gz
+Patch24: MPlayer-1.0pre7try2-xmmslibs_fix.patch
+Patch25: MPlayer-1.0pre7try2-libdir_fix.patch
+Patch26: MPlayer-svn-20060621-configure.patch.gz
 %if %cvsbuild
-Patch27:  %name-cvs-20060331-builddocs.patch.gz
+Patch27: MPlayer-cvs-20060331-builddocs.patch.gz
 %endif
 
 
@@ -198,7 +199,7 @@ BuildRequires: pkgconfig
 #
 
 %if_enabled shared_ffmpeg
-BuildRequires: libffmpeg-devel
+BuildRequires: libffmpeg-devel >= 0.5.0-alt0.20060703.1
 %endif
 
 %if_enabled lirc
@@ -206,7 +207,7 @@ BuildRequires: liblirc-devel
 %endif
 
 %if_enabled tv
-BuildRequires: glibc-kernheaders
+BuildRequires: linux-libc-headers
 %endif
 
 %if_enabled smb
@@ -270,7 +271,7 @@ BuildRequires: libggi-devel
 %endif
 
 %if_enabled gl
-BuildRequires: Mesa-devel
+BuildRequires: libmesa-devel
 %endif
 
 %if_enabled sdl
@@ -303,7 +304,7 @@ BuildRequires: libpolypaudio-devel >= 0.9
 %endif
 
 %if_enabled libdts
-BuildRequires: libdts-devel
+BuildRequires: libdca-devel
 %endif
 
 %if_enabled musepack
@@ -367,6 +368,10 @@ BuildRequires: libtheora-devel
 %if_disabled internal_faad
 BuildRequires: libfaad-devel
 %endif
+%endif
+
+%if_enabled dirac
+BuildRequires: libdirac-devel
 %endif
 
 %if_enabled libdv
@@ -783,10 +788,15 @@ VIDIX driver for Unichrome.
 %if %cvsbuild
 # CVS Build
 %if_enabled shared_ffmpeg
-%setup -q -n %fname-%fversion
+%setup -q -n %fname-%fversion %{?_with_dvdmenu: -a 2}
 %else
-%setup -q -n %fname-%fversion -a 1
+%setup -q -n %fname-%fversion -a 1 %{?_with_dvdmenu: -a 2}
 # needed with CVS snapshots
+%if_enabled dirac
+pushd ffmpeg-%ffmpeg_version
+%patch9 -p1
+popd
+%endif
 mv ffmpeg-%ffmpeg_version/libav{codec,format,util} .
 %endif
 %else
@@ -794,27 +804,42 @@ mv ffmpeg-%ffmpeg_version/libav{codec,format,util} .
 %setup -q -n %fname-%fversion
 %endif
 
-%patch1 -p1 
+%if_with dvdmenu
+for d in codecs demux dvdnav; do
+    mkdir -p libmp$d
+    mv mplayer-dvdnav-patch/mplayer-add/libmp$d/* ./libmp$d/
+done
+for p in doc gui; do
+    patch -p0 < mplayer-dvdnav-patch/nav$p.patch
+done
+%patch8 -p1
+%endif
+%patch1 -p1
+%patch2 -p1
 %patch3 -p1
 %patch6 -p1
+%if_enabled dirac
+%patch7 -p1
+%endif
 %patch21 -p1
-%patch22 -p1
+%{?_enable_polyp:%patch22 -p1}
 %patch24 -p1
 %patch25 -p1
 %if %cvsbuild
 %patch26 -p1
 %patch27 -p1
 %endif
-bzip2 -dcf %SOURCE9 > libao2/ao_polyp.c
+%{?_enable_polyp:bzip2 -dcf %SOURCE9 > libao2/ao_polyp.c}
 
 subst 's/\(ldconfig\)/\#\1/g' libdha/Makefile
+%if_enabled vidix
+subst 's,\(.*\)\/mplayer\/vidix,\1/vidix,g' vidix/drivers/Makefile
+subst 's,/mplayer\(/vidix/\),\1,' configure
+%endif
+%{?_enable_dvdnav:subst 's|\(\<\)\(dvdnav\)\(\.h\>\)|\1\2/\2\3|' configure}
 
-# I hope that vidix drivers are really as portable as it was claimed above
-subst 's|$(LIBDIR)/mplayer/vidix|$(LIBDIR)/vidix/|g' vidix/drivers/Makefile
-subst 's|\(/lib/\)mplayer/\(vidix/\)|\1\2|' libvo/Makefile
-subst 's|/mplayer\(/vidix/\)|\1|' libvo/vosub_vidix.c
-subst 's|\(\<\)\(dvdnav\)\(\.h\>\)|\1\2/\2\3|' configure
-
+%if %cvsbuild
+subst 's|"libavutil/md5.h"|<ffmpeg/md5.h>|' libvo/vo_md5sum.c
 # iconv pl docs
 pushd DOCS/xml/pl
 for f in $(grep -H -l ' encoding="utf-8"' *.xml); do
@@ -823,6 +848,7 @@ for f in $(grep -H -l ' encoding="utf-8"' *.xml); do
 done
 rm -f xml.utf8
 popd
+%endif
 
 %build
 %if_disabled debug
@@ -1005,9 +1031,13 @@ LC_MESSAGES=C ; export LC_MESSAGES
 		--disable-faad-internal \
 		--disable-faad-external \
 %endif
+		%{subst_enable dirac} \
 		%{subst_enable libdv} \
 		%{subst_enable mad} \
 		%{subst_enable xmms} \
+%if_enabled dvdnav
+		--with-dvdnavdir=%_includedir/dvdnav \
+%endif
 		%{subst_enable dvdnav} \
 		%{subst_enable fribidi}
 #		%{subst_enable i18n} \
@@ -1292,10 +1322,21 @@ unset RPM_PYTHON
 
 
 %changelog
+* Fri Jun 30 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060630.3
+- don't include ffmpeg tarball if shared_ffmpeg enabled (default)
+- updated MPlayer-dvd-ru patch
+- cleaned up bogus patches
+- fixed spec
+- fixed libvo/vo_md5sum.c
+- trying dvdmenu (disabled by deafult)
+- some fixes from LAKostis (vidix prefixes, bogus buildrequires)
+- added MPlayer-svn-20060704_dirac-0.5.x.patch
+- enabled dirac
+
 * Fri Jun 30 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060630.1
 - new SVN sbapshot (revision 18853)
 - enabled dvdnav
-- updated MPlayer-svn-20060630-configure.patch
+- fixed dvdnav detect
 
 * Thu Jun 29 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060629.1
 - new SVN sbapshot (revision 18847)
