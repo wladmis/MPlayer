@@ -270,14 +270,15 @@
 %define lname mplayer
 %define Name MPlayer
 Name: %lname
-Serial: 1
+#Serial: 1
 Version: 1.0
-%define altrel 1
+%define rel 28
+%define subrel 1
 %ifdef svnrev
-Release: alt1.%svnrev.%altrel
+Release: alt%rel.%svnrev.%subrel
 %define pkgver svn-r%svnrev
 %else
-Release: alt%altrel
+Release: alt%rel
 %define pkgver %version%prerel
 %endif
 Summary: Media player
@@ -513,7 +514,7 @@ Mach64, Permedia3, - аппаратного декодирования AC3, а также нескольких
 Group: Video
 Summary: Font utils for the %Name
 Requires: %name
-Conflicts: %Name-fonts %lname-fonts < 1.0-alt0.20060719.1
+Conflicts: %Name-fonts %Name
 
 %description fontutils
 Font utils for use with %Name.
@@ -1418,6 +1419,9 @@ unset RPM_PYTHON
 
 
 %changelog
+* Mon Sep 25 2006 Led <led@altlinux.ru> 1.0-alt28.19912.1
+- rebuild for Sisyphus
+
 * Wed Sep 20 2006 Led <led@altlinux.ru> 1:1.0-alt1.19912.1
 - new SVN snapshot (revision 19912)
 - merged %lname-svn-r19389-ext_libswscale.patch to
