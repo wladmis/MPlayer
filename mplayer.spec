@@ -6,8 +6,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 %define prerel %nil
-%define svnrev 19982
-%define ffmpeg_svnrev 6331
+%define svnrev 20016
+%define ffmpeg_svnrev 6411
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -514,7 +514,8 @@ Mach64, Permedia3, - аппаратного декодирования AC3, а также нескольких
 Group: Video
 Summary: Font utils for the %Name
 Requires: %name
-Conflicts: %Name-fonts %lname-fonts < 1.0-alt0.20060719.1
+Conflicts: %Name-fonts
+Conflicts: %lname-fonts < 1.0-alt0.20060719.1
 
 %description fontutils
 Font utils for use with %Name.
@@ -526,6 +527,8 @@ Font utils for use with %Name.
 Group: Video
 Summary: Movie encoder for Unix.
 Summary(ru_RU.CP1251): Кодировщик фильмов для Unix.
+Conflicts: %Name < 0:1.0-alt28
+Conflicts: %lname < 0:1.0-alt28
 
 %description -n mencoder
 MEncoder a movie encoder for Unix and is a part of the %name package.
@@ -1420,6 +1423,10 @@ unset RPM_PYTHON
 
 
 %changelog
+* Mon Oct 02 2006 Led <led@altlinux.ru> 1:1.0-alt1.20016.1
+- new SVN snapshot (revision 20016)
+- fixed Conflicts in mencoder package
+
 * Tue Sep 26 2006 Led <led@altlinux.ru> 1:1.0-alt1.19982.1
 - new SVN snapshot (revision 19982)
 - added %lname-svn-r19982-doc-cs.patch
