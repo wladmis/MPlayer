@@ -1,14 +1,13 @@
 %define set_disable() %{expand:%%force_disable %{1}} %{expand:%%undefine _enable_%{1}}
 %define set_enable() %{expand:%%force_enable %{1}} %{expand:%%undefine _disable_%{1}}
-%define set_enables() %{expand:%%force_enable %*}
 %define subst_enable_to() %{expand:%%{?_enable_%{1}:--enable-%{2}}} %{expand:%%{?_disable_%{1}:--disable-%{2}}}
 %define subst_o() %{expand:%%{?_enable_%{1}:%{1},}}
 %define subst_o_pre() %{expand:%%{?_enable_%{2}:%{1}%{2},}}
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 %define prerel %nil
-%define svnrev 19794
-%define ffmpeg_svnrev 6226
+%define svnrev 19833
+%define ffmpeg_svnrev 6245
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -1423,8 +1422,12 @@ unset RPM_PYTHON
 
 
 %changelog
+* Thu Sep 14 2006 Led <led@altlinux.ru> 1:1.0-alt1.19833.1
+- new SVN snapshot (revision 19833)
+
 * Mon Sep 11 2006 Led <led@altlinux.ru> 1:1.0-alt1.19794.1
 - new SVN snapshot (revision 19794)
+- cleaned up spec
 
 * Fri Sep 08 2006 Led <led@altlinux.ru> 1:1.0-alt1.19734.1
 - new SVN snapshot (revision 19734)
