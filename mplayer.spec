@@ -1,15 +1,15 @@
 %define base_version	1.0
 %define real_version	%base_version
-%define release		0
+%define release		1
 
 %define fversion	%real_version
 
 # Used only for CVS builds
-%define cvsbuild 20060613
-%define ffmpeg_version svn-20060613
+%define cvsbuild 20060620
+%define ffmpeg_version svn-20060620
 
 %if %cvsbuild
-%global release		%release.%cvsbuild.1
+%global release		0.%cvsbuild.%release
 %global	fversion	svn-%cvsbuild
 %endif
 
@@ -67,7 +67,6 @@
 %def_enable  vorbis
 %def_enable  speex
 %def_enable  theora
-%def_enable  matroska
 %def_enable  faad
 %def_disable internal_faad
 %def_enable  libdv
@@ -112,11 +111,6 @@
 %def_enable	qtx
 %endif
 
-%if_disabled matroska
-%force_disable	internal_matroska
-%check_def	internal_matroska
-%endif
-
 %if_disabled faad
 %force_disable	internal_faad
 %check_def	internal_faad
@@ -159,7 +153,7 @@ Source3:  cp1251-font.tar.bz2
 Source4:  standard-1.9.tar.bz2
 #Source5:  mplayer.sh
 Source9:  ao_polyp.c.bz2
-Patch1:   MPlayer-1.0pre5-alt-external_fame.patch
+Patch1:   MPlayer-svn-20060620-alt-external_fame.patch.gz
 Patch2:   MPlayer-dvd-ru.patch
 Patch3:   MPlayer-1.0pre4-alt-explicit_gif.patch
 Patch4:   MPlayer-1.0pre5-alt-translation.patch
@@ -779,7 +773,7 @@ mv ffmpeg-%ffmpeg_version/libav{codec,format,util} .
 %setup -q -n %fname-%fversion
 %endif
 
-%patch1 -p1
+%patch1 -p1 
 %patch3 -p1
 %patch6 -p1
 %patch7 -p1
@@ -945,7 +939,7 @@ LC_MESSAGES=C ; export LC_MESSAGES
 		--disable-tdfxfb \
 		--disable-tdfxvid \
 		%{subst_enable tga} \
-		%{?enable_vidix:--disable-external-vidix} \
+		%{?enable_vidix:--disable-vidix-external} \
 		--enable-vm \
 		--enable-xv \
 		--enable-xvmc \
@@ -974,20 +968,17 @@ LC_MESSAGES=C ; export LC_MESSAGES
 		%{subst_enable vorbis} \
 		%{subst_enable speex} \
 		%{subst_enable theora} \
-%if_disabled matroska
-		--disable-internal-matroska \
-%endif
 %if_enabled faad
 %if_enabled internal_faad
-		--enable-internal-faad \
-		--disable-external-faad \
+		--enable-faad-internal \
+		--disable-faad-external \
 %else
-		--disable-internal-faad \
-		--enable-external-faad \
+		--disable-faad-internal \
+		--enable-faad-external \
 %endif
 %else
-		--disable-internal-faad \
-		--disable-external-faad \
+		--disable-faad-internal \
+		--disable-faad-external \
 %endif
 		%{subst_enable libdv} \
 		%{subst_enable mad} \
@@ -1275,6 +1266,13 @@ unset RPM_PYTHON
 
 
 %changelog
+* Tue Jun 20 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060620.1
+- new SVN sbapshot (revision 18760)
+- fixed spec
+- updated MPlayer-svn-20060620-alt-external_fame.patch
+- fixed configure parameters
+- cleaned up spec
+
 * Tue Jun 13 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060613.1
 - new SVN sbapshot (revision 18698)
 - removed additional icons

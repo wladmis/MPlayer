@@ -1,6 +1,6 @@
-tar.bz2: r18689:. name=@name@-svn-20060613
+tar.bz2: r18760:. name=@name@-svn-20060620
 tar.bz2: cp1251-font:. name=cp1251-font base=font
-tar.bz2: ffmpeg-r5468:. name=ffmpeg-svn-20060613
+tar.bz2: ffmpeg-r5498:. name=ffmpeg-svn-20060620
 tar.bz2: standard-1.9:. name=standard-1.9 base=standard
 copy: *.diff MPlayer-1.0*.patch MPlayer-dvd-ru.patch mplayer-*.patch
 gzip: MPlayer-cvs-*-configure.patch MPlayer-cvs-*-builddocs.patch MPlayer-cvs-*-polyp0.8.patch MPlayer-svn-*.patch
