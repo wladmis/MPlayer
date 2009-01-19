@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 %define prerel %nil
-%define svnrev 19558
-%define ffmpeg_svnrev 6022
+%define svnrev 19595
+%define ffmpeg_svnrev 6125
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -30,6 +30,10 @@
 %def_enable tv
 %def_enable v4l1
 %def_enable v4l2
+%def_enable radio
+%def_enable radio_v4l1
+%def_enable radio_v4l2
+%def_enable radio_capture
 %def_disable bsdbt848
 %def_disable pvr
 %def_enable rtc
@@ -271,7 +275,7 @@
 Name: %lname
 Serial: 1
 Version: 1.0
-%define altrel 3
+%define altrel 1
 %ifdef svnrev
 Release: alt1.%svnrev.%altrel
 %define pkgver svn-r%svnrev
@@ -335,6 +339,7 @@ BuildRequires: cpp >= 3.3 gcc >= 3.3 gcc-c++ >= 3.3
 %{?_enable_termcap:BuildRequires: libtinfo-devel}
 %{?_enable_lirc:BuildRequires: liblirc-devel}
 %{?_enable_tv:BuildRequires: linux-libc-headers}
+%{?_enable_radio:BuildRequires: linux-libc-headers}
 %{?_enable_pvr:BuildRequires: linux-libc-headers}
 %{?_enable_rtc:BuildRequires: linux-libc-headers}
 %{?_enable_smb:BuildRequires: libsmbclient-devel >= 3.0.3}
@@ -940,6 +945,10 @@ export LC_MESSAGES=C
 		%{subst_enable tv} \
 		%{subst_enable_to v4l1 tv-v4l1} \
 		%{subst_enable_to v4l2 tv-v4l2} \
+                %{subst_enable radio} \
+		%{subst_enable_to radio_v4l1 radio-v4l} \
+		%{subst_enable_to radio_v4l2 radio-v4l2} \
+		%{subst_enable_to radio_capture radio-capture} \
 		%{subst_enable_to bsdbt848 tv-bsdbt848} \
 		%{subst_enable pvr} \
 		%{subst_enable rtc} \
@@ -1368,6 +1377,11 @@ unset RPM_PYTHON
 
 
 %changelog
+* Wed Aug 30 2006 Led <led@altlinux.ru> 1:1.0-alt1.19595.1
+- new SVN snapshot (revision 19595):
+  + Radio support (radio://)
+- enabled radio
+
 * Wed Aug 30 2006 Led <led@altlinux.ru> 1:1.0-alt1.19558.3
 - rebuild with external vidix from MPlayer's SVN
 
