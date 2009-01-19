@@ -5,9 +5,9 @@
 %define subst_o_pre() %{expand:%%{?_enable_%{2}:%{1}%{2},}}
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
-%define prerel %nil
-%define svnrev 20300
-%define ffmpeg_svnrev 6731
+%define prerel rc1
+#define svnrev 20395
+%define ffmpeg_svnrev 6769
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -270,7 +270,7 @@
 %define Name MPlayer
 Name: %lname
 Version: 1.0
-%define rel 32
+%define rel 33
 %define subrel 1
 %ifdef svnrev
 Release: alt%rel.%svnrev.%subrel
@@ -316,6 +316,7 @@ Patch4: %lname-svn-r19427-libdha.patch.gz
 Patch5: %lname-svn-r19447-vo_vidix.patch.gz
 Patch6: %lname-svn-r19389-alt-artsc_ldflags.patch.gz
 Patch7: %Name-svn-20060707_dirac-0.5.x.patch.bz2
+%{?_disable_shared_ffmpeg:Patch8: ffmpeg-uni-svn-r6110.patch.gz}
 %{?_disable_shared_ffmpeg:Patch9: ffmpeg-svn-20060630-dirac-0.5.x.patch.bz2}
 Patch10: %lname-svn-r19558-generic-x86_64.patch.gz
 Patch11: %lname-svn-r19595-nls.patch.gz
@@ -327,7 +328,7 @@ Patch16: %Name-1.0pre8-udev.patch.gz
 Patch17: %lname-svn-r20117-ext_ffmpeg.patch.bz2
 Patch21: %Name-svn-20060607-vf_mcdeint.patch.gz
 Patch22: %lname-svn-r19389-polyp0.8.patch.gz
-Patch26: %lname-svn-r20300-configure.patch.gz
+Patch26: %lname-1.0rc1-configure.patch.gz
 %{?svnrev:Patch27: %Name-cvs-20060331-builddocs.patch.gz}
 
 BuildRequires: %awk pkgconfig libncurses-devel libslang-devel zlib-devel
@@ -877,7 +878,7 @@ Languages support for %Name.
 
 
 %prep
-%if %svnrev
+%ifdef svnrev
 %if_enabled shared_ffmpeg
 %setup -q -n %lname-%pkgver
 %else
@@ -899,21 +900,19 @@ mv ffmpeg-svn-r%ffmpeg_svnrev/lib{av{codec,format,util},postproc} .
 %patch4 -p1
 %patch5 -p1
 %patch6 -p1
-%{?_enabl_dirac:%patch7 -p1}
+%{?_enable_dirac:%patch7 -p1}
+%{?_disable_shared_ffmpeg:%patch8 -p1}
 %patch10 -p1
 %patch11 -p1
 %patch12 -p1
 %patch13 -p1
 %patch14 -p1
 %patch15 -p1
-%patch16 -p1
 %patch17 -p1
 %patch21 -p1
 %{?_enable_polyp:%{?_disable_old_polyp:%patch22 -p1}}
-%ifdef svnrev
 %patch26 -p1
-%patch27 -p1
-%endif
+%{?svnrev:%patch27 -p1}
 %{?_enable_polyp:%{?_disable_old_polyp:sed -e 's/\([Pp]\)ulse/\1olyp/g' -e 's/PULSE/POLYP/g' libao2/ao_pulse.c > libao2/ao_polyp.c}}
 
 subst 's/\(ldconfig\)/\#\1/g' libdha/Makefile
@@ -943,16 +942,16 @@ subst 's|\\/\\/|//|g' help/help_mp-zh_CN.h
 %build
 %if_disabled debug
 %define _optlevel 4
+%add_optflags -fomit-frame-pointer -ffast-math
 export CFLAGS="%optflags"
 %endif
-export LC_MESSAGES=C
 ./configure \
 		--prefix=%_prefix \
 		--bindir=%_bindir \
-		--datadir=%_datadir/%name \
 		--mandir=%_mandir \
-		--confdir=%_sysconfdir/%name \
 		--libdir=%_libdir \
+		--datadir=%_datadir/%name \
+		--confdir=%_sysconfdir/%name \
 		%{subst_enable mencoder} \
 		%{subst_enable gui} \
 		%{subst_enable gtk1} \
@@ -1178,7 +1177,7 @@ echo "utf8 = yes" >> etc/%lname.conf
 %make_build -C TOOLS 302m_convert 360m_convert alaw-gen asfinfo avi-fix avisubdump bios2dump dump_mp4 mem2dump movinfo png2raw
 
 %if_with htmldocs
-%if %svnrev
+%ifdef svnrev
 # build HTML documentation from XML files
 pushd DOCS/xml
 cp -fL %_sysconfdir/sgml/catalog ./
@@ -1250,13 +1249,13 @@ done
 rm -f %buildroot%_man1dir/mencoder.1
 %{?_enable_mencoder:install -m 0644 DOCS/man/en/%lname.1 %buildroot%_man1dir/mencoder.1}
 %if_with htmldocs
-for l in it zh; do
+for l in %{?svnrev:it} zh; do
     install -d %buildroot%_docdir/%name-doc-%version/$l
     install -m 0644 DOCS/$l/*.html %buildroot%_docdir/%name-doc-%version/$l/
 done
 for l in cs de en es fr hu pl ru; do
     install -d %buildroot%_docdir/%name-doc-%version/$l
-    install -m 0644 DOCS/HTML/$l/{*.htm,*.css} %buildroot%_docdir/%name-doc-%version/$l/
+    install -m 0644 DOCS/HTML/$l/{*.htm%{!?svnrev:l},*.css} %buildroot%_docdir/%name-doc-%version/$l/
 done
 install -pD -m 0644 DOCS/tech/playtree-hun %buildroot%_docdir/%name-doc-%version/hu/tech/playtree
 %endif
@@ -1366,8 +1365,10 @@ unset RPM_PYTHON
 %_docdir/%name-doc-%version/hu
 
 
+%ifdef svnrev
 %files doc-it
 %_docdir/%name-doc-%version/it
+%endif
 
 
 %files doc-pl
@@ -1434,6 +1435,12 @@ unset RPM_PYTHON
 
 
 %changelog
+* Mon Oct 23 2006 Led <led@altlinux.ru> 1.0-alt33
+- 1.0rc1
+- removed %Name-1.0pre8-udev.patch (fixed in upstream)
+- cleaned up and fixed spec
+- updated %lname-1.0rc1-configure.patch
+
 * Thu Oct 19 2006 Led <led@altlinux.ru> 1.0-alt32.20300.1
 - new SVN snapshot (revision 20300):
   + Russian documentation translation synced and almost finished

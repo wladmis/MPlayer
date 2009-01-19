@@ -1,5 +1,5 @@
-tar.bz2: r20300:. name=@name@-svn-r20300
+tar.bz2: @version@rc1:. name=MPlayer-@version@rc1
 tar.bz2: standard-1.9:. name=standard-1.9 base=standard
 copy: *.sh *-explicit_gif.patch *-xmmslibs_fix.patch
-gzip: *.in *.diff *.awk *-udev.patch *-builddocs.patch *-vf_mcdeint.patch *-external_fame.patch *-configure.patch *-vbe.patch *-artsc_ldflags.patch *-polyp0.8.patch mplayer-dvd-ru-*.patch *-libdha.patch *-vo_vidix.patch *-x86_64.patch *-nls.patch
+gzip: *.in *.diff *.awk *-vf_mcdeint.patch *-external_fame.patch *-configure.patch *-vbe.patch *-artsc_ldflags.patch *-polyp0.8.patch mplayer-dvd-ru-*.patch *-libdha.patch *-vo_vidix.patch *-x86_64.patch *-nls.patch *-udev.patch
 bzip2: *_dirac-*.patch *-pulseaudio.patch *-ext_ffmpeg.patch
