@@ -1,16 +1,25 @@
-diff -urN MPlayer-svn-20060711.orig/configure MPlayer-svn-20060711/configure
---- MPlayer-svn-20060711.orig/configure	2006-07-10 14:48:37 +0300
-+++ MPlayer-svn-20060711/configure	2006-07-12 13:44:14 +0300
-@@ -4147,6 +4147,8 @@
+diff -urN mplayer-svn-r19416.orig/configure mplayer-svn-r19416/configure
+--- mplayer-svn-r19416.orig/configure	2006-08-17 13:36:39 +0300
++++ mplayer-svn-r19416/configure	2006-08-17 18:45:51 +0300
+@@ -4128,6 +4128,8 @@
    _def_aa='#define HAVE_AA 1'
    if cygwin ; then
      _ld_aa=`aalib-config --libs | cut -d " " -f 2,5,6`
 +  else
-+    _ld_aa='-laa'
++    _ld_aa=`aalib-config --libs | cut -d " " -f 1,2,4-6`
    fi
    _vosrc="$_vosrc vo_aa.c"
    _vomodules="aa $_vomodules"
-@@ -4877,7 +4879,7 @@
+@@ -4152,7 +4154,7 @@
+ if test "$_caca" = yes ; then
+   _def_caca='#define HAVE_CACA 1'
+   _inc_extra="$_inc_extra `caca-config --cflags`"
+-  _ld_caca=`caca-config --libs`
++  _ld_caca=`caca-config --libs | cut -d " " -f 1-4`
+   _vosrc="$_vosrc vo_caca.c"
+   _vomodules="caca $_vomodules"
+ else
+@@ -4842,7 +4844,7 @@
  
  
  echocheck "JACK"
@@ -19,7 +28,7 @@ diff -urN MPlayer-svn-20060711.orig/configure MPlayer-svn-20060711/configure
    _jack=yes
  
  cat > $TMPC << EOF
-@@ -4904,7 +4906,7 @@
+@@ -4869,7 +4871,7 @@
  echores "$_jack"
  
  echocheck "OpenAL"
@@ -28,16 +37,7 @@ diff -urN MPlayer-svn-20060711.orig/configure MPlayer-svn-20060711/configure
    _openal=no
  cat > $TMPC << EOF
  #include <AL/al.h>
-@@ -5232,7 +5234,7 @@
-    _inc_extra="$_inc_extra `$_dvdnavconfig --cflags`"
-   fi
-   if test -n "$_dvdnavdir" ; then
--   _inc_extra="$_inc_extra -I$_dvdnavdir"
-+   _inc_extra="$_inc_extra $_dvdnavdir"
-   fi
-   _inputmodules="dvdnav $_inputmodules"
- else
-@@ -5367,7 +5369,7 @@
+@@ -5313,7 +5315,7 @@
      _res_comment="freetype support needed"
  fi
  echocheck "fontconfig"

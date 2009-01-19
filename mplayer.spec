@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 %define prerel 0
-%define svnrev 19389
-%define ffmpeg_svnrev 5996
+%define svnrev 19416
+%define ffmpeg_svnrev 6005
 %define vidixver 0.9.9.1
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
@@ -304,9 +304,7 @@ Source0: %lname-svn-r%svnrev.tar.bz2
 Source0: %Name-%version%prerel.tar.bz2
 %endif
 # svn checkout svn.mplayerhq.hu/mplayer/trunk
-%ifdef ffmpeg_svnrev
-%{?_disable_shared_ffmpeg:Source1: ffmpeg-svn-r%ffmpeg_svnrev.tar.bz2}
-%endif
+%{?ffmpeg_svnrev:%{?_disable_shared_ffmpeg:Source1: ffmpeg-svn-r%ffmpeg_svnrev.tar.bz2}}
 Source2: ao_polyp.c.bz2
 Source3: %lname.sh
 Source4: standard-1.9.tar.bz2
@@ -332,16 +330,12 @@ Patch16: %Name-1.0pre8-udev.patch.gz
 Patch17: %lname-svn-r19389-ext_ffmpeg.patch.gz
 Patch21: %Name-svn-20060607-vf_mcdeint.patch.gz
 Patch22: %lname-svn-r19389-polyp0.8.patch.gz
-Patch26: %Name-svn-20060711-configure.patch.gz
-%ifdef svnrev
-Patch27: %Name-cvs-20060331-builddocs.patch.gz
-%endif
+Patch26: %lname-svn-r19416-configure.patch.gz
+%{?svnrev:Patch27: %Name-cvs-20060331-builddocs.patch.gz}
 
 BuildRequires: awk pkgconfig libncurses-devel libslang-devel zlib-devel
 BuildRequires: cpp >= 3.3 gcc >= 3.3 gcc-c++ >= 3.3
-%ifdef svnrev
-BuildRequires: docbook-style-dsssl openjade xsltproc
-%endif
+%{?svnrev:BuildRequires: docbook-style-dsssl openjade xsltproc}
 
 %{?_enable_lame:BuildRequires: liblame-devel}
 %{?_enable_termcap:BuildRequires: libtinfo-devel}
@@ -389,8 +383,8 @@ BuildRequires: docbook-style-dsssl openjade xsltproc
 %{?_enable_vesa:BuildRequires: libvbe-devel}
 %{?_enable_svga:BuildRequires: svgalib-devel}
 %{?_enable_sdl:BuildRequires: libSDL-devel >= 1.1.7 libSDL_mixer-devel}
-%{?_enable_aa:BuildRequires: aalib-devel}
-%{?_enable_caca:BuildRequires: libcaca-devel}
+%{?_enable_aa:BuildRequires: aalib-devel libgpm-devel libslang-devel libX11-devel}
+%{?_enable_caca:BuildRequires: libcaca-devel libslang-devel libX11-devel}
 %{?_enable_ggi:BuildRequires: libggi-devel}
 %{?_enable_dxr3:BuildRequires: libdxr3-devel}
 %{?_enable_xv:BuildRequires: libXv-devel}
@@ -932,7 +926,7 @@ subst 's,/%lname\(/vidix/\),\1,' configure
 %{?_enable_dvdnav:subst 's|\(\<\)\(dvdnav\)\(\.h\>\)|\1\2/\2\3|' configure}
 
 %ifdef svnrev
-subst 's/UNKNOWN/r%svnrev/' version.sh
+subst 's/UNKNOWN/%svnrev/' version.sh
 # iconv pl docs
 pushd DOCS/xml/pl
 for f in $(grep -H -l ' encoding="utf-8"' *.xml); do
@@ -1146,8 +1140,6 @@ export LC_MESSAGES=C
 		%{subst_enable_to gdb crash-debug} \
 		%{subst_enable_to dynamic_plugins dynamic-plugins} \
 
-%ifdef svnrev
-%endif
 %ifnarch x86_64
 make
 %else
@@ -1419,7 +1411,15 @@ unset RPM_PYTHON
 
 
 %changelog
+* Thu Aug 17 2006 Led <led@altlinux.ru> 1:1.0-alt1.19416.1
+- new SVN snapshot (revision 19416)
+- fixed and updated mplayer-svn-r19416-configure.patch
+- fixed %%changelog
+- cleaned up spec
+- fixed BuildRequires
+
 * Thu Aug 17 2006 Led <led@altlinux.ru> 1:1.0-alt1.19389.1
+- new SVN snapshot (revision 19389)
 - fixed spec
 - fixed configure parameters (renaming and removed in upstream)
 - new release numbering (therewith SVN revision)
