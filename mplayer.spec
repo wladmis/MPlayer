@@ -6,8 +6,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 %define prerel %nil
-%define svnrev 19833
-%define ffmpeg_svnrev 6245
+%define svnrev 19838
+%define ffmpeg_svnrev 6252
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -272,7 +272,7 @@
 Name: %lname
 Serial: 1
 Version: 1.0
-%define altrel 2
+%define altrel 1
 %ifdef svnrev
 Release: alt1.%svnrev.%altrel
 %define pkgver svn-r%svnrev
@@ -1282,7 +1282,6 @@ unset RPM_PYTHON
 %files
 %doc README AUTHORS ChangeLog.*
 %_bindir/%lname
-%{?_enable_freetype:%_bindir/%{lname}_subfont}
 %dir %_sysconfdir/%name
 %config %_sysconfdir/%name/codecs.conf
 %config(noreplace) %verify(not size mtime md5) %_sysconfdir/%name/%lname.conf
@@ -1422,7 +1421,8 @@ unset RPM_PYTHON
 
 
 %changelog
-* Fri Sep 15 2006 Led <led@altlinux.ru> 1:1.0-alt1.19833.2
+* Fri Sep 15 2006 Led <led@altlinux.ru> 1:1.0-alt1.19838.1
+- new SVN snapshot (revision 19838)
 - fixed %%files section
 
 * Thu Sep 14 2006 Led <led@altlinux.ru> 1:1.0-alt1.19833.1
