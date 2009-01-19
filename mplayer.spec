@@ -4,19 +4,18 @@
 
 %define base_version	1.0
 %define real_version	%base_version
-%define release		5
+%define release		1
 
 %define fversion	%real_version
 
-%define cvsbuild 20060630
-%define ffmpeg_version svn-20060705
+# Used only for CVS builds
+%define cvsbuild 20060704
+%define ffmpeg_version svn-20060704
 
 %if %cvsbuild
 %global release		0.%cvsbuild.%release
 %global	fversion	svn-%cvsbuild
 %endif
-
-%define vidixver 0.9.9.1
 
 %def_enable  shared_ffmpeg
 
@@ -50,9 +49,6 @@
 %def_enable  svga
 %def_enable  tga
 %def_enable  vidix
-%def_disable vidix_ext
-%def_enable  vidix_int
-%def_disable vidix_int_drivers
 
 %def_enable  alsa
 %def_enable  arts
@@ -85,7 +81,7 @@
 %def_enable  libdv
 %def_enable  mad
 %def_disable xmms
-%def_disable dvdnav
+%def_enable  dvdnav
 %def_without dvdmenu
 %def_enable  jack
 %def_enable  cpu_detection
@@ -95,24 +91,8 @@
 %def_enable  3dnowext
 %def_enable  sse
 %def_enable  sse2
+%def_disable i18n
 %def_disable fribidi
-
-%if_disabled vidix
-%set_disable vidix_ext
-%set_disable vidix_int
-%set_disable vidix_int_drivers
-%endif
-%if_disabled vidix_int
-%if_disabled vidix_ext
-%set_disable vidix
-%endif
-%endif
-%if_enabled vidix_int
-%set_disable vidix_ext
-%endif
-%if_enabled vidix_ext
-%set_disable vidix_int_drivers
-%endif
 
 %if_enabled tremor_external
 %set_disable tremor_low
@@ -179,34 +159,36 @@ Requires: urw-fonts
 Source0:  %bname-%fversion.tar.bz2
 # svn checkout svn.mplayerhq.hu/mplayer/trunk
 %if %cvsbuild
-%{?_disable_shared_ffmpeg:Source1: ffmpeg-%ffmpeg_version.tar.bz2}
+Source1:  ffmpeg-%ffmpeg_version.tar.bz2
 # svn checkout svn.mplayerhq.hu/ffmpeg/trunk
 %endif
-%{?_with_dvdmenu:Source2: mplayer-dvdnav-20060614-patch.tar.bz2}
-Source3: cp1251-font.tar.bz2
-Source4: standard-1.9.tar.bz2
-Source5: mplayer.sh
-Source6: vidix-%vidixver.tar.bz2
-Source9: ao_polyp.c.bz2
-Patch1: MPlayer-svn-20060620-alt-external_fame.patch.gz
-Patch2: MPlayer-dvd-ru-20060705.patch.gz
-Patch3: MPlayer-1.0pre4-alt-explicit_gif.patch
-Patch4: MPlayer-svn-20060630-vidix_0.9.9.1.patch.gz
-Patch5: vidix-0.9.9.1-pm3_vid.patch.gz
-Patch6: MPlayer-1.0pre4-alt-artsc_ldflags.patch
-#Patch7: MPlayer-1.0pre7_dirac-0.5.x.patch
-#Patch7: MPlayer-1.0pre7try2_dirac-0.6.x.patch
-Patch7: MPlayer-svn-20060704_dirac-0.5.x.patch.bz2
-%{?_with_dvdmenu:Patch8: navmplayer-20060630.patch.bz2}
-%{?_disable_shared_ffmpeg:Patch9: ffmpeg-svn-20060630-dirac-0.5.x.patch.bz2}
-Patch10: MPlayer-svn-20060630-vidix_ext_drivers.patch.gz
-Patch21: MPlayer-svn-20060607-vf_mcdeint.patch.gz
-Patch22: MPlayer-cvs-20060519-polyp0.8.patch.gz
-Patch24: MPlayer-1.0pre7try2-xmmslibs_fix.patch
-Patch25: MPlayer-1.0pre7try2-libdir_fix.patch
-Patch26: MPlayer-svn-20060621-configure.patch.gz
+Source2:  mplayer-dvdnav-20060614-patch.tar.bz2
+Source3:  cp1251-font.tar.bz2
+Source4:  standard-1.9.tar.bz2
+Source5:  mplayer.sh
+Source9:  ao_polyp.c.bz2
+Patch1:   MPlayer-svn-20060620-alt-external_fame.patch.gz
+Patch2:   MPlayer-dvd-ru.patch
+Patch3:   MPlayer-1.0pre4-alt-explicit_gif.patch
+Patch4:   MPlayer-1.0pre5-alt-translation.patch
+Patch5:   MPlayer-1.0pre4-alt-explicit_termcap.patch
+Patch6:   MPlayer-1.0pre4-alt-artsc_ldflags.patch
+#Patch7:   MPlayer-1.0pre7_dirac-0.5.x.patch
+#Patch7:   MPlayer-1.0pre7try2_dirac-0.6.x.patch
+Patch7:   MPlayer-svn-20060704_dirac-0.5.x.patch.bz2
+Patch8:   navmplayer-20060630.patch.bz2
+Patch9:   ffmpeg-svn-20060630-dirac-0.5.x.patch.bz2
+Patch12:  MPlayer-1.0pre5-alt-gcc-check.patch
+Patch13:  MPlayer-1.0pre5-nodebug.patch
+Patch19:  mplayer-libmpdvdkit2.patch
+Patch21:  MPlayer-svn-20060607-vf_mcdeint.patch.gz
+Patch22:  MPlayer-cvs-20060519-polyp0.8.patch.gz
+Patch23:  ad_pcm_fix_20050826.diff
+Patch24:  MPlayer-1.0pre7try2-xmmslibs_fix.patch
+Patch25:  MPlayer-1.0pre7try2-libdir_fix.patch
+Patch26:  MPlayer-svn-20060621-configure.patch.gz
 %if %cvsbuild
-Patch27: MPlayer-cvs-20060331-builddocs.patch.gz
+Patch27:  %name-cvs-20060331-builddocs.patch.gz
 %endif
 
 
@@ -417,10 +399,6 @@ BuildRequires: libdvdnav-devel
 
 %if_enabled fribidi
 BuildRequires: libfribidi-devel fribidi
-%endif
-
-%if_enabled vidix_ext
-BuildRequires: libvidix-devel
 %endif
 
 #if_enabled external_flac
@@ -696,8 +674,6 @@ Currently included:
 * mplayer_subfont	a tool for creating OSD fonts
 %endif
 
-
-%if_enabled vidix_int
 %package -n %bname-vidix
 Group: Video 
 Summary: VIDeo Interface for *nIX
@@ -735,26 +711,21 @@ VIDIX был спроектирован и разработан как интерфейс дл€ быстрых
   видео
 * ¬ отличие от драйверов линукс он использует библиотеку math
 
-
-%if_enabled vidix_int_drivers
 %package -n %bname-vidix-trident
 Group: Video
-Summary: VIDIX driver for Trident Cyberblade/i1
-Provides: %bname-vidix-cyberblade = %version-%release
+Summary: VIDIX driver for Trident Cyberblade i1
 Provides: %bname-vidix-driver = %version-%release
 
 %description -n %bname-vidix-trident
-VIDIX driver for Trident Cyberblade/i1.
-
+VIDIX driver for Trident Cyberblade i1.
 
 %package -n %bname-vidix-mach64
 Group: Video
-Summary: VIDIX driver for ATI Mach64 and 3DRage chips
+Summary: VIDIX driver for ATI Mach64
 Provides: %bname-vidix-driver = %version-%release
 
 %description -n %bname-vidix-mach64
-VIDIX driver for ATI Mach64 and 3DRage chips.
-
+VIDIX driver for ATI Mach64.
 
 %package -n %bname-vidix-mga
 Group: Video
@@ -764,24 +735,13 @@ Provides: %bname-vidix-driver = %version-%release
 %description -n %bname-vidix-mga
 Two VIDIX drivers for Matrox Gxxx series (using BES and CRTC2).
 
-
-%package -n %bname-vidix-permedia2
-Group: Video
-Summary: VIDIX driver for 3DLabs Permedia2 cards
-Provides: %bname-vidix-driver = %version-%release
-
-%description -n %bname-vidix-permedia2
-VIDIX driver for 3DLabs Permedia2 cards.
-
-
-%package -n %bname-vidix-permedia3
+%package -n %bname-vidix-permedia
 Group: Video
 Summary: VIDIX driver for 3DLabs Permedia3 cards
 Provides: %bname-vidix-driver = %version-%release
 
-%description -n %bname-vidix-permedia3
-VIDIX driver for 3DLabs GLINT R3/Permedia3 cards.
-
+%description -n %bname-vidix-permedia
+VIDIX driver for 3DLabs GLINT R3/Permedia3 driver.
 
 %package -n %bname-vidix-radeon
 Group: Video
@@ -791,7 +751,6 @@ Provides: %bname-vidix-driver = %version-%release
 %description -n %bname-vidix-radeon
 VIDIX driver for ATI Radeon.
 
-
 %package -n %bname-vidix-rage128
 Group: Video
 Summary: VIDIX driver for ATI Rage128
@@ -800,77 +759,55 @@ Provides: %bname-vidix-driver = %version-%release
 %description -n %bname-vidix-rage128
 VIDIX driver for ATI Rage128.
 
-
 %package -n %bname-vidix-savage
 Group: Video
-Summary: VIDIX driver for S3 Savage
+Summary: VIDIX driver for ATI Savage
 Provides: %bname-vidix-driver = %version-%release
 
 %description -n %bname-vidix-savage
-VIDIX driver for S3 Savage.
-
+VIDIX driver for ATI Savage.
 
 %package -n %bname-vidix-nvidia
 Group: Video
-Summary: VIDIX driver for nVidia chips
+Summary: VIDIX driver for nVidia chips (experimental)
 Provides: %bname-vidix-driver = %version-%release
 
 %description -n %bname-vidix-nvidia
-VIDIX driver for nVidia chips.
-
+VIDIX driver for nVidia chips (experimental)
 
 %package -n %bname-vidix-sis
 Group: Video
-Summary: VIDIX driver for SiS 300 and 310/325 series chips
+Summary: VIDIX driver for SiS chips (experimental)
 Provides: %bname-vidix-driver = %version-%release
 
 %description -n %bname-vidix-sis
-VIDIX driver for SiS 300 and 310/325 series chips.
-
+VIDIX driver for SiS chips (experimental)
 
 %package -n %bname-vidix-unichrome
 Group: Video
-Summary: VIDIX driver for VIA CLE266 Unichrome
+Summary: VIDIX driver for Unichrome
 Provides: %bname-vidix-driver = %version-%release
-Provides: %bname-vidix-via = %version-%release
 
 %description -n %bname-vidix-unichrome
-VIDIX driver for VIA CLE266 Unichrome.
-
-
-%package -n %bname-vidix-genfb
-Group: Video
-Summary: VIDIX driver for framebuffer
-Provides: %bname-vidix-driver = %version-%release
-Provides: %bname-vidix-fb = %version-%release
-
-%description -n %bname-vidix-genfb
-VIDIX driver for framebuffer.
-%endif
-%endif
-
+VIDIX driver for Unichrome.
 
 %prep
 %if %cvsbuild
 # CVS Build
 %if_enabled shared_ffmpeg
-%setup -q -n %fname-%fversion%{?_with_dvdmenu: -a 2} -a 6
+%setup -q -n %fname-%fversion %{?_with_dvdmenu: -a 2}
 %else
-%setup -q -n %fname-%fversion -a 1%{?_with_dvdmenu: -a 2} -a 6
+%setup -q -n %fname-%fversion -a 1 %{?_with_dvdmenu: -a 2}
 # needed with CVS snapshots
-%if_enabled dirac
 pushd ffmpeg-%ffmpeg_version
 %patch9 -p1
 popd
-%endif
 mv ffmpeg-%ffmpeg_version/libav{codec,format,util} .
 %endif
 %else
 # A Release Build
-%setup -q -n %fname-%fversion -a 6
+%setup -q -n %fname-%fversion
 %endif
-rm -rf vidix
-mv vidix-%vidixver/vidix ./
 
 %if_with dvdmenu
 for d in codecs demux dvdnav; do
@@ -882,42 +819,26 @@ for p in doc gui; do
 done
 %patch8 -p1
 %endif
-%patch1 -p1
-%patch2 -p1
+%patch1 -p1 
 %patch3 -p1
-%patch4 -p1
-%{!?_disable_vidix_int_drivers:%patch5 -p1}
 %patch6 -p1
 %if_enabled dirac
 %patch7 -p1
 %endif
-%{?_disable_vidix_int_drivers:%patch10 -p1}
 %patch21 -p1
-%{?_enable_polyp:%patch22 -p1}
+%patch22 -p1
 %patch24 -p1
 %patch25 -p1
 %if %cvsbuild
 %patch26 -p1
 %patch27 -p1
 %endif
-%{?_enable_polyp:bzip2 -dcf %SOURCE9 > libao2/ao_polyp.c}
+bzip2 -dcf %SOURCE9 > libao2/ao_polyp.c
 
-rm -rf libdha/*
-%if_enabled vidix_int_drivers
-mv vidix-%vidixver/libdha/* libdha/
 subst 's/\(ldconfig\)/\#\1/g' libdha/Makefile
-%else
-cat > libdha/Makefile <<__MAKE__
-all:
-
-install:
-__MAKE__
-%endif
-%if_enabled vidix_int
 subst 's,\(.*\)\/mplayer\/vidix,\1/vidix,g' vidix/drivers/Makefile
 subst 's,/mplayer\(/vidix/\),\1,' configure
-%endif
-%{?_enable_dvdnav:subst 's|\(\<\)\(dvdnav\)\(\.h\>\)|\1\2/\2\3|' configure}
+subst 's|\(\<\)\(dvdnav\)\(\.h\>\)|\1\2/\2\3|' configure
 
 %if %cvsbuild
 subst 's|"libavutil/md5.h"|<ffmpeg/md5.h>|' libvo/vo_md5sum.c
@@ -1067,13 +988,6 @@ LC_MESSAGES=C ; export LC_MESSAGES
 		--disable-tdfxfb \
 		--disable-tdfxvid \
 		%{subst_enable tga} \
-%if_enabled vidix
-		%{subst_enable_with vidix_ext vidix-external} \
-		%{subst_enable_with vidix_int vidix-internal} \
-%else
-		--disable-vidix-external \
-		--disable-vidix-internal \
-%endif
 		%{?enable_vidix:--disable-vidix-external} \
 		--enable-vm \
 		--enable-xv \
@@ -1256,12 +1170,10 @@ install -m 0644 DOCS/tech/realcodecs/{TODO,*.txt} %buildroot%_docdir/%name-doc-%
 unset RPM_PYTHON
 
 
-%if_enabled vidix_int
 %post -n %bname-vidix -p /sbin/ldconfig
 
 
 %postun -n %bname-vidix -p /sbin/ldconfig
-%endif
 
 
 %post -n %gui_name
@@ -1364,10 +1276,9 @@ unset RPM_PYTHON
 %endif
 
 
-%if_enabled vidix_int
-%if_enabled vidix_int_drivers
+%if_enabled vidix
 %files -n %bname-vidix
-%_libdir/libdha*
+%_libdir/libdha.so*
 
 
 %files -n %bname-vidix-trident
@@ -1381,11 +1292,14 @@ unset RPM_PYTHON
 %files -n %bname-vidix-mga
 %_libdir/vidix/mga_crtc2_vid.so
 %_libdir/vidix/mga_vid.so
-%_libdir/vidix/mga_tv_vid.so
 
 
 %files -n %bname-vidix-nvidia
 %_libdir/vidix/nvidia_vid.so
+
+
+%files -n %bname-vidix-permedia
+%_libdir/vidix/pm3_vid.so
 
 
 %files -n %bname-vidix-radeon
@@ -1402,42 +1316,16 @@ unset RPM_PYTHON
 
 %files -n %bname-vidix-sis
 %_libdir/vidix/sis_vid.so
+%endif
 
 
 %files -n %bname-vidix-unichrome
 %_libdir/vidix/unichrome_vid.so
 
 
-%files -n %bname-vidix-genfb
-%_libdir/vidix/genfb_vid.so
-
-
-%files -n %bname-vidix-permedia2
-%_libdir/vidix/pm2_vid.so
-
-
-%files -n %bname-vidix-permedia3
-%_libdir/vidix/pm3_vid.so
-%endif
-%endif
-
-
 %changelog
-* Thu Jul 06 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060630.5
-- enabled internal VIDIX
-- disabled external VIDIX
-- added vidix-0.9.9.1 with vidix-0.9.9.1-pm3_vid.patch
-- added MPlayer-svn-20060630-vidix_0.9.9.1.patch
-- added MPlayer-svn-20060630-vidix_ext_drivers.patch
-
-* Thu Jul 06 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060630.4
-- disabled internal VIDIX
-- enabled external VIDIX
-
-* Fri Jun 30 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060630.3
-- don't include ffmpeg tarball if shared_ffmpeg enabled (default)
-- updated MPlayer-dvd-ru patch
-- cleaned up bogus patches
+* Tue Jul 04 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060704.1
+- new SVN sbapshot (revision 18891)
 - fixed spec
 - fixed libvo/vo_md5sum.c
 - trying dvdmenu (disabled by deafult)
@@ -1785,3 +1673,5 @@ unset RPM_PYTHON
 
 * Wed Dec 26 2001 Grigory Milev <week@altlinux.ru>  0.60pre1-alt1
 - Initial build for ALT Linux distribution.
+
+

@@ -1,0 +1,24 @@
+--- libmpdemux/open.c.orig	2003-09-03 22:26:33 +0300
++++ libmpdemux/open.c	2004-01-27 15:05:00 +0200
+@@ -605,15 +605,20 @@
+ 
+ int dvd_aid_from_lang(stream_t *stream, unsigned char* lang){
+ dvd_priv_t *d=stream->priv;
+-int code,i;
++int code,i,c;
+ if(lang){
+   while(strlen(lang)>=2){
+     code=lang[1]|(lang[0]<<8);
++    c = isdigit(lang[2]) && lang[2] != '0' ? lang[2]-0x30 : 1;
+     for(i=0;i<d->nr_of_channels;i++){
+ 	if(d->audio_streams[i].language==code){
++	    if (c == 1){
+ 	    mp_msg(MSGT_OPEN,MSGL_INFO,"Selected DVD audio channel: %d language: %c%c\n",
+ 		d->audio_streams[i].id, lang[0],lang[1]);
+ 	    return d->audio_streams[i].id;
++	    } else {
++		--c;
++	    }
+ 	}
+ //	printf("%X != %X  (%c%c)\n",code,d->audio_streams[i].language,lang[0],lang[1]);
+     }
