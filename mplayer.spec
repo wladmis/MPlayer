@@ -272,7 +272,7 @@
 Name: %lname
 Serial: 1
 Version: 1.0
-%define altrel 1
+%define altrel 2
 %ifdef svnrev
 Release: alt1.%svnrev.%altrel
 %define pkgver svn-r%svnrev
@@ -1279,7 +1279,7 @@ unset RPM_PYTHON
 %endif
 
 
-%files -f %lname.lang
+%files
 %doc README AUTHORS ChangeLog.*
 %_bindir/%lname
 %{?_enable_freetype:%_bindir/%{lname}_subfont}
@@ -1417,11 +1417,14 @@ unset RPM_PYTHON
 
 
 %if_enabled nls
-%files i18n -f %name.lang
+%files i18n -f %lname.lang
 %endif
 
 
 %changelog
+* Fri Sep 15 2006 Led <led@altlinux.ru> 1:1.0-alt1.19833.2
+- fixed %%files section
+
 * Thu Sep 14 2006 Led <led@altlinux.ru> 1:1.0-alt1.19833.1
 - new SVN snapshot (revision 19833)
 
