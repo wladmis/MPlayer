@@ -7,7 +7,7 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 %define prerel 0
-%define svnrev 19416
+%define svnrev 19427
 %define ffmpeg_svnrev 6005
 %define vidixver 0.9.9.1
 
@@ -1411,6 +1411,9 @@ unset RPM_PYTHON
 
 
 %changelog
+* Fri Aug 18 2006 Led <led@altlinux.ru> 1:1.0-alt1.19427.1
+- new SVN snapshot (revision 19427)
+
 * Thu Aug 17 2006 Led <led@altlinux.ru> 1:1.0-alt1.19416.1
 - new SVN snapshot (revision 19416)
 - fixed and updated mplayer-svn-r19416-configure.patch
