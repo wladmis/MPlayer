@@ -9,8 +9,8 @@
 %define fversion	%real_version
 
 # Used only for CVS builds
-%define cvsbuild 20060629
-%define ffmpeg_version svn-20060629
+%define cvsbuild 20060630
+%define ffmpeg_version svn-20060630
 
 %if %cvsbuild
 %global release		0.%cvsbuild.%release
@@ -80,6 +80,7 @@
 %def_enable  libdv
 %def_enable  mad
 %def_disable xmms
+%def_enable  dvdnav
 %def_enable  jack
 %def_enable  cpu_detection
 %def_enable  mmx
@@ -177,7 +178,7 @@ Patch22:  MPlayer-cvs-20060519-polyp0.8.patch.gz
 Patch23:  ad_pcm_fix_20050826.diff
 Patch24:  MPlayer-1.0pre7try2-xmmslibs_fix.patch
 Patch25:  MPlayer-1.0pre7try2-libdir_fix.patch
-Patch26:  MPlayer-svn-20060621-configure.patch.gz
+Patch26:  MPlayer-svn-20060630-configure.patch.gz
 %if %cvsbuild
 Patch27:  %name-cvs-20060331-builddocs.patch.gz
 %endif
@@ -378,6 +379,10 @@ BuildRequires: libmad-devel
 
 %if_enabled xmms
 BuildRequires: libxmms-devel
+%endif
+
+%if_enabled dvdnav
+BuildRequires: libdvdnav-devel
 %endif
 
 %if_enabled fribidi
@@ -808,6 +813,7 @@ subst 's/\(ldconfig\)/\#\1/g' libdha/Makefile
 subst 's|$(LIBDIR)/mplayer/vidix|$(LIBDIR)/vidix/|g' vidix/drivers/Makefile
 subst 's|\(/lib/\)mplayer/\(vidix/\)|\1\2|' libvo/Makefile
 subst 's|/mplayer\(/vidix/\)|\1|' libvo/vosub_vidix.c
+subst 's|\(\<\)\(dvdnav\)\(\.h\>\)|\1\2/\2\3|' configure
 
 # iconv pl docs
 pushd DOCS/xml/pl
@@ -1002,6 +1008,7 @@ LC_MESSAGES=C ; export LC_MESSAGES
 		%{subst_enable libdv} \
 		%{subst_enable mad} \
 		%{subst_enable xmms} \
+		%{subst_enable dvdnav} \
 		%{subst_enable fribidi}
 #		%{subst_enable i18n} \
 
@@ -1285,6 +1292,11 @@ unset RPM_PYTHON
 
 
 %changelog
+* Fri Jun 30 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060630.1
+- new SVN sbapshot (revision 18853)
+- enabled dvdnav
+- updated MPlayer-svn-20060630-configure.patch
+
 * Thu Jun 29 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060629.1
 - new SVN sbapshot (revision 18847)
 

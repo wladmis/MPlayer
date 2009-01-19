@@ -1,7 +1,7 @@
-diff -urN MPlayer-svn-20060621.orig/configure MPlayer-svn-20060621/configure
---- MPlayer-svn-20060621.orig/configure	2006-06-20 13:10:58 +0300
-+++ MPlayer-svn-20060621/configure	2006-06-21 18:35:54 +0300
-@@ -4143,6 +4143,8 @@
+diff -urN MPlayer-svn-20060630.orig/configure MPlayer-svn-20060630/configure
+--- MPlayer-svn-20060630.orig/configure	2006-06-23 14:00:52 +0300
++++ MPlayer-svn-20060630/configure	2006-06-30 18:18:19 +0300
+@@ -4138,6 +4138,8 @@
    _def_aa='#define HAVE_AA 1'
    if cygwin ; then
      _ld_aa=`aalib-config --libs | cut -d " " -f 2,5,6`
@@ -10,7 +10,7 @@ diff -urN MPlayer-svn-20060621.orig/configure MPlayer-svn-20060621/configure
    fi
    _vosrc="$_vosrc vo_aa.c"
    _vomodules="aa $_vomodules"
-@@ -4919,7 +4921,7 @@
+@@ -4914,7 +4916,7 @@
  echores "$_jack"
  
  echocheck "OpenAL"
@@ -19,7 +19,16 @@ diff -urN MPlayer-svn-20060621.orig/configure MPlayer-svn-20060621/configure
    _openal=no
  cat > $TMPC << EOF
  #include <AL/al.h>
-@@ -5375,7 +5377,7 @@
+@@ -5237,7 +5239,7 @@
+    _inc_extra="$_inc_extra `$_dvdnavconfig --cflags`"
+   fi
+   if test -n "$_dvdnavdir" ; then
+-   _inc_extra="$_inc_extra -I$_dvdnavdir"
++   _inc_extra="$_inc_extra $_dvdnavdir"
+   fi
+   _inputmodules="dvdnav $_inputmodules"
+ else
+@@ -5370,7 +5372,7 @@
      _res_comment="freetype support needed"
  fi
  echocheck "fontconfig"
