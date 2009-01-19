@@ -1,21 +1,13 @@
 %define set_disable() %{expand:%%force_disable %{1}} %{expand:%%undefine _enable_%{1}}
 %define set_enable() %{expand:%%force_enable %{1}} %{expand:%%undefine _disable_%{1}}
 %define subst_enable_with() %{expand:%%{?_enable_%{1}:--enable-%{2}}} %{expand:%%{?_disable_%{1}:--disable-%{2}}}
+%define subst_o() %{expand:%%{?_enable_%{1}:%{1},}}
+%define subst_o_pre() %{expand:%%{?_enable_%{2}:%{1}%{2},}}
+%define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
-%define base_version 1.0
-%define real_version %base_version
-%define release	1
-
-%define fversion %real_version
-
-%define cvsbuild 20060713
-%define ffmpeg_version svn-20060711
-
-%if %cvsbuild
-%global release		0.%cvsbuild.%release
-%global	fversion	svn-%cvsbuild
-%endif
-
+%define prerel 0
+%define svndate 20060714
+%define ffmpeg_svndate 20060714
 %define vidixver 0.9.9.1
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
@@ -184,7 +176,10 @@
 %define termcaplib tinfo
 
 # Other parameters
-%def_without dvdmenu
+%def_with soundwrapper
+%def_with htmldocs
+%define default_vo %{subst_o xmga}%{subst_o_pre x vidix}%{subst_o xv}%{subst_o gl2}%{subst_o gl}%{subst_o sdl}%{subst_o x11}%{subst_o mga}%{subst_o dfbmga}%{subst_o tdfxfb}%{subst_o 3dfx}%{subst_o s3fb}%{subst_o_pre c vidix}%{subst_o_post fbdev 2}%{subst_o vesa}%{subst_o caca}%{subst_o aa}null
+%define default_ao %{subst_o polyp}%{subst_o alsa}%{subst_o oss}%{subst_o openal}%{subst_o sdl}%{subst_o nas}null
 
 #----------------------	END OF PARAMETERS ---------------------------------------
 
@@ -262,65 +257,77 @@
 %set_disable faad_ext
 %endif
 
-%define bname		MPlayer
-%define fname		MPlayer
-%define gui_name	%bname-gui
-%define console_name	%bname
-
+%define lname mplayer
 %define Name MPlayer
-Name:     %console_name
-Version:  %base_version
-Release:  alt%release
+Name: %lname
 Serial: 1
-Summary:  %bname is the Unix video player (console version)
-Summary(ru_RU.CP1251): %bname - это настоящий видеоплеер (консольный вариант)
-License: GPL for all but not for OpenDivX
-Group:    Video
-URL:      http://www.mplayerhq.hu
-Provides: %bname = %real_version
-Provides: %bname = %base_version
-Provides: %bname-console = %real_version
+Version: 1.0
+%define altrel 1
+%if %svndate
+Release: alt0.%svndate.%altrel
+%define pkgver svn-%svndate
+%else
+%if %prerel
+Release: alt0.%altrel
+%define pkgver %version%prerel
+%else
+Release: alt%altrel
+%define pkgver %version
+%endif
+%endif
+Summary: Media player
+Summary(uk_UA.CP1251): Медіаплейер
+Summary(ru_RU.CP1251): Медиаплейер
+License: GPL%{?_enable_opendivx: for all but not for OpenDivX}
+Group: Video
+URL: http://www.mplayerhq.hu
+%if %name != %Name
+Provides: %Name
+Obsoletes: %Name
+%endif
 %{?_disable_fontconfig:%{?_enable_freetype:Requires: urw-fonts}}
 
-Source0:  %bname-%fversion.tar.bz2
+%ifdef svndate
+Source0: %Name-svn-%svndate.tar.bz2
+%else
+Source0: %Name-%version%prerel.tar.bz2
+%endif
 # svn checkout svn.mplayerhq.hu/mplayer/trunk
-%if %cvsbuild
-%{?_disable_shared_ffmpeg:Source1: ffmpeg-%ffmpeg_version.tar.bz2}
+%ifdef svndate
+%{?_disable_shared_ffmpeg:Source1: ffmpeg-svn-%ffmpeg_svndate.tar.bz2}
 # svn checkout svn.mplayerhq.hu/ffmpeg/trunk
 %endif
-%{?_with_dvdmenu:Source2: mplayer-dvdnav-20060614-patch.tar.bz2}
+Source2: ao_polyp.c.bz2
 Source3: cp1251-font.tar.bz2
 Source4: standard-1.9.tar.bz2
-Source5: mplayer.sh
+Source5: %lname.conf.in.gz
 %{?_enable_vidix_int_drivers:Source6: vidix-%vidixver.tar.bz2}
-Source9: ao_polyp.c.bz2
-Patch1: MPlayer-svn-20060710-alt-external_fame.patch.gz
-Patch2: MPlayer-dvd-ru-20060705.patch.gz
-Patch3: MPlayer-1.0pre4-alt-explicit_gif.patch
-Patch4: MPlayer-svn-20060707-ext_vidix_drivers-0.9.9.1.patch.bz2
+Source7: %lname.sh
+# http://vidix.sourceforge.net
+Patch1: %Name-svn-20060710-alt-external_fame.patch.gz
+Patch2: %Name-dvd-ru-20060705.patch.gz
+Patch3: %Name-1.0pre4-alt-explicit_gif.patch
+Patch4: %Name-svn-20060707-ext_vidix_drivers-0.9.9.1.patch.bz2
 Patch5: vidix-0.9.9.1-pm3_vid.patch.gz
-Patch6: MPlayer-1.0pre4-alt-artsc_ldflags.patch
-Patch7: MPlayer-svn-20060707_dirac-0.5.x.patch.bz2
-%{?_with_dvdmenu:Patch8: navmplayer-20060630.patch.bz2}
+Patch6: %Name-1.0pre4-alt-artsc_ldflags.patch
+Patch7: %Name-svn-20060707_dirac-0.5.x.patch.bz2
 %{?_disable_shared_ffmpeg:Patch9: ffmpeg-svn-20060630-dirac-0.5.x.patch.bz2}
-Patch10: MPlayer-svn-20060630-vidix_ext_drivers.patch.gz
-Patch11: MPlayer-svn-20060630-vidix_0.9.9.1.patch.gz
-Patch12: mplayer-uni-20060710.diff.gz
-Patch13: MPlayer-svn-20060711-vbe.patch.gz
-Patch14: MPlayer-1.0pre7try2-xmmslibs_fix.patch
-Patch15: MPlayer-1.0pre7try2-libdir_fix.patch
-Patch21: MPlayer-svn-20060607-vf_mcdeint.patch.gz
-Patch22: MPlayer-cvs-20060519-polyp0.8.patch.gz
-Patch26: MPlayer-svn-20060711-configure.patch.gz
-%if %cvsbuild
-Patch27: MPlayer-cvs-20060331-builddocs.patch.gz
+%{?_disable_vidix_int_drivers:Patch10: %Name-svn-20060630-vidix_ext_drivers.patch.gz}
+Patch11: %Name-svn-20060630-vidix_0.9.9.1.patch.gz
+Patch12: %lname-uni-20060710.diff.gz
+Patch13: %Name-svn-20060711-vbe.patch.gz
+Patch14: %Name-1.0pre7try2-xmmslibs_fix.patch
+Patch15: %Name-1.0pre7try2-libdir_fix.patch
+Patch21: %Name-svn-20060607-vf_mcdeint.patch.gz
+Patch22: %Name-cvs-20060519-polyp0.8.patch.gz
+Patch26: %Name-svn-20060711-configure.patch.gz
+%if %svndate
+Patch27: %Name-cvs-20060331-builddocs.patch.gz
 %endif
 
-BuildRequires: libXt-devel
-BuildRequires: awk pkgconfig
-BuildRequires: libncurses-devel libslang-devel zlib-devel
+BuildRequires: awk pkgconfig libncurses-devel libslang-devel zlib-devel
 BuildRequires: cpp >= 3.3 gcc >= 3.3 gcc-c++ >= 3.3
-%if %cvsbuild
+%if %svndate
 BuildRequires: docbook-style-dsssl openjade xsltproc
 %endif
 
@@ -351,7 +358,7 @@ BuildRequires: docbook-style-dsssl openjade xsltproc
 %{?_enable_x264:BuildRequires: libx264-devel}
 %{?_enable_divx4linux:BuildRequires: divx4linux-devel}
 %{?_enable_opendivx:BuildRequires: libopendivx-devel}
-%{?_enable_shared_ffmpeg:BuildRequires: libffmpeg-devel >= 1:0.5.0-alt0.20060703.1}
+%{?_enable_shared_ffmpeg:BuildRequires: libffmpeg-devel >= 1:0.5.0-alt0.20060713.1}
 %{?_enable_fame:BuildRequires: libfame-devel}
 %{?_enable_tremor_external:BuildRequires: libtremor-devel}
 %{?_enable_vorbis:BuildRequires: libvorbis-devel}
@@ -398,7 +405,7 @@ BuildRequires: docbook-style-dsssl openjade xsltproc
 Autoreq: yes, noperl
 
 %description
-MPlayer is a movie and animation player that supports a wide range of file
+%Name is a movie and animation player that supports a wide range of file
 formats, including AVI, MPEG, and Quicktime. It has many MMX/SSE/3DNow! etc.
 optimized native audio and video codecs, but allows using XAnim's and
 RealPlayer's binary codec plugins, and Win32 codec DLLs. It has basic
@@ -413,11 +420,11 @@ DXR3/Hollywood+.
 
 It also supports video grabbing from V4L devices.
 
-This package provides only console version of the MPlayer. Install
-%gui_name *instead* if you need a nice skinnable GUI player.
+This package provides only console version of the %Name. Install
+%name-gui *instead* if you need a nice skinnable GUI player.
 
 %description -l ru_RU.CP1251
-MPlayer - это видеопроигрыватель, который поддерживает широкий спектр
+%Name - это видеопроигрыватель, который поддерживает широкий спектр
 форматов файлов, в том числе AVI, MPEG и Quicktime. В него включено
 множество аудио- и видеокодеков, оптимизированных для MMX, SSE, 3DNow!
 и.т.п. Кроме этого, имеется возможность использования внешних кодеков:
@@ -431,375 +438,443 @@ XAnim, RealPlayer и Win32. Реализованы основные функции для
 Mach64, Permedia3, - аппаратного декодирования AC3, а также нескольких
 плат, аппаратно декодирующих MPEG, таких как DVB и DXR3/Hollywood+.
 
-Кроме этого, MPlayer способен захватывать сигнал с устройств V4L.
+Кроме этого, %Name способен захватывать сигнал с устройств V4L.
 
-Этот пакет содержит только консольную версию MPlayer. Вам следует
-устанавливать пакет %gui_name *вместо* данного пакета, если Вам
+Этот пакет содержит только консольную версию %Name. Вам следует
+устанавливать пакет %name-gui *вместо* данного пакета, если Вам
 требуется видеопроигрыватель с хорошим настраиваемым GUI (графическим
 интерфейсом пользователя).
 
 
 %if_enabled gui
-%package -n %gui_name
-%define gname gmplayer
-Summary:  %bname is the Unix video player (GUI version)
-Summary(ru_RU.CP1251): %bname - это настоящий видеоплеер (GUI вариант)
-License:  GPL for all but not for OpenDivX
-Group:    Video
-Requires: %bname-console = %real_version
-Provides: %bname = %real_version
-Provides: %bname = %base_version
-Obsoletes: %bname-skin-default
+%package gui
+%define gname g%lname
+Summary:  %Name (GUI version)
+Summary(uk_UA.CP1251): Медіаплейер (GUI вариант)
+Summary(ru_RU.CP1251): Медиаплейер (GUI вариант)
+Group: Video
+Requires: %name >= 1.0
+Provides: %gname
+Obsoletes: %Name-skin-default
+%if %name != %Name
+Provides: %Name-gui = %version-%release
+Obsoletes: %Name-gui
+%endif
 %if_enabled gtk1
 BuildRequires: gtk+-devel
 %else
 BuildRequires: libgtk+2-devel
 %endif
-%if_enabled sdl
-Requires: libSDL >= 1.1.7
-%endif
 
-%description -n %gui_name
-MPlayer is a movie and animation player that supports a wide range of file
-formats, including AVI, MPEG, and Quicktime. It has many MMX/SSE/3DNow! etc.
-optimized native audio and video codecs, but allows using XAnim's and
-RealPlayer's binary codec plugins, and Win32 codec DLLs. It has basic
-VCD/DVD playback functionality, including DVD subtitles, but supports many
-text-based subtitle formats too.
-
+%description gui
+%Name is a movie and animation player that supports a wide range of
+file formats, including AVI, MPEG, and Quicktime. It has many
+MMX/SSE/3DNow! etc. optimized native audio and video codecs, but allows
+using XAnim's and RealPlayer's binary codec plugins, and Win32 codec
+DLLs. It has basic VCD/DVD playback functionality, including DVD
+subtitles, but supports many text-based subtitle formats too.
 For video and audio output, nearly every existing interface is
-supported including some low-level card-specific drivers
-(for Matrox, Nvidia, 3Dfx and Radeon, Mach64, Permedia3), hardware AC3
-decoding and few hardware MPEG decoding boards such as DVB and
-DXR3/Hollywood+.
-
+supported including some low-level card-specific drivers (for Matrox,
+Nvidia, 3Dfx and Radeon, Mach64, Permedia3), hardware AC3 decoding and
+few hardware MPEG decoding boards such as DVB and DXR3/Hollywood+.
 It also supports video grabbing from V4L devices.
+This package provides GUI version of the %Name. A console-only
+version with trimmed down dependencies is also available as %name.
 
-This package provides GUI version of the MPlayer. A console-only
-version with trimmed down dependencies is also available as
-%console_name.
-
-%description -n %gui_name -l ru_RU.CP1251
-MPlayer - это видеопроигрыватель, который поддерживает широкий спектр
+%description gui -l ru_RU.CP1251
+%Name - это видеопроигрыватель, который поддерживает широкий спектр
 форматов файлов, в том числе AVI, MPEG и Quicktime. В него включено
 множество аудио- и видеокодеков, оптимизированных для MMX, SSE, 3DNow!
-и.т.п. Кроме этого, имеется возможность использования внешних кодеков:
+и т.п. Кроме этого, имеется возможность использования внешних кодеков:
 XAnim, RealPlayer и Win32. Реализованы основные функции для
 проигрывания VCD/DVD, включая субтитры DVD, а также множества других
 текстовых форматов субтитров.
-
 Поддерживаются практически все способы вывода изображения и звука в
 юниксоподобных системах. Имеются низкоуровневые специализарованные
 драйвера для некоторых видеокарт: Matrox, Nvidia, 3Dfx, Radeon,
 Mach64, Permedia3, - аппаратного декодирования AC3, а также нескольких
 плат, аппаратно декодирующих MPEG, таких как DVB и DXR3/Hollywood+.
-
-Кроме этого, MPlayer способен захватывать сигнал с устройств V4L.
-
-Этот пакет содержит версию MPlayer c GUI (графическим интерфейсом).
-Также имеется %console_name - консольная версия пакета с меньшим
-числом зависимостей.
+Кроме этого, %Name способен захватывать сигнал с устройств V4L.
+Этот пакет содержит версию %Name c GUI (графическим интерфейсом).
+Также имеется %name - консольная версия пакета с меньшим числом
+зависимостей.
 %endif
 
 
 %if_enabled mencoder
 %package -n mencoder
 Group: Video
-Summary: MEncoder is a movie encoder for Unix.
-Summary(ru_RU.CP1251): MEncoder - это кодировщик фильмов для Unix.
-Requires: %bname = %base_version
+Summary: Movie encoder for Unix.
+Summary(ru_RU.CP1251): Кодировщик фильмов для Unix.
 
 %description -n mencoder
-MEncoder a movie encoder for Unix and is a part of the MPlayer package.
+MEncoder a movie encoder for Unix and is a part of the %name package.
 %endif
 
 
 %package docs
 Group: Video
-Summary: MPlayer all docs
-Requires: %bname-doc-en = %version-%release
-Requires: %bname-doc-de = %version-%release
-Requires: %bname-doc-cs = %version-%release
-Requires: %bname-doc-es = %version-%release
-Requires: %bname-doc-fr = %version-%release
-Requires: %bname-doc-hu = %version-%release
-Requires: %bname-doc-it = %version-%release
-Requires: %bname-doc-pl = %version-%release
-Requires: %bname-doc-ru = %version-%release
-Requires: %bname-doc-zh = %version-%release
+Summary: %Name all docs
+Requires: %name-doc-en
+Requires: %name-doc-de
+Requires: %name-doc-cs
+Requires: %name-doc-es
+Requires: %name-doc-fr
+Requires: %name-doc-hu
+Requires: %name-doc-it
+Requires: %name-doc-pl
+Requires: %name-doc-ru
+Requires: %name-doc-zh
+%if %name != %Name
+Provides: %Name-docs
+Obsoletes: %Name-docs
+%endif
 
 %description docs
-MPlayer all docs.
+%Name all docs.
 
 
 %package doc-en
 Group: Video
-Summary: MPlayer English docs
-Obsoletes: MPlayer-doc
-Provides: MPlayer-doc
+Summary: %Name English docs
+Obsoletes: %Name-doc
+Provides: %Name-doc
+%if %name != %Name
+Provides: %Name-doc-en
+Obsoletes: %Name-doc-en
+%endif
 
 %description doc-en
-MPlayer English docs.
+%Name English docs.
 
 
 %package doc-cs
 Group: Video
-Summary: MPlayer Czesh docs
+Summary: %Name Czesh docs
+%if %name != %Name
+Provides: %Name-doc-cs
+Obsoletes: %Name-doc-cs
+%endif
 
 %description doc-cs
-MPlayer Czesh docs.
+%Name Czesh docs.
 
 
 %package doc-de
 Group: Video
-Summary: MPlayer German docs
+Summary: %Name German docs
+%if %name != %Name
+Provides: %Name-doc-de
+Obsoletes: %Name-doc-de
+%endif
 
 %description doc-de
-MPlayer German docs.
+%Name German docs.
 
 
 %package doc-es
 Group: Video
-Summary: MPlayer Spanish docs
+Summary: %Name Spanish docs
+%if %name != %Name
+Provides: %Name-doc-es
+Obsoletes: %Name-doc-es
+%endif
 
 %description doc-es
-MPlayer Spanish docs.
+%Name Spanish docs.
 
 
 %package doc-fr
 Group: Video
-Summary: MPlayer French docs
+Summary: %Name French docs
+%if %name != %Name
+Provides: %Name-doc-fr
+Obsoletes: %Name-doc-fr
+%endif
 
 %description doc-fr
-MPlayer French docs.
+%Name French docs.
 
 
 %package doc-hu
 Group: Video
-Summary: MPlayer Hungarian docs
+Summary: %Name Hungarian docs
+%if %name != %Name
+Provides: %Name-doc-hu
+Obsoletes: %Name-doc-hu
+%endif
 
 %description doc-hu
-MPlayer Hungarian docs.
+%Name Hungarian docs.
 
 
 %package doc-it
 Group: Video
-Summary: MPlayer Italian docs
+Summary: %Name Italian docs
+%if %name != %Name
+Provides: %Name-doc-it
+Obsoletes: %Name-doc-it
+%endif
 
 %description doc-it
-MPlayer Italian docs.
+%Name Italian docs.
 
 
 %package doc-pl
 Group: Video
-Summary: MPlayer Polish docs
+Summary: %Name Polish docs
+%if %name != %Name
+Provides: %Name-doc-pl
+Obsoletes: %Name-doc-pl
+%endif
 
 %description doc-pl
-MPlayer Polish docs.
+%Name Polish docs.
 
 
 %package doc-ru
 Group: Video
-Summary: MPlayer Russian docs
+Summary: %Name Russian docs
+%if %name != %Name
+Provides: %Name-doc-ru
+Obsoletes: %Name-doc-ru
+%endif
 
 %description doc-ru
-MPlayer Russian docs.
+%Name Russian docs.
 
 
 %package doc-zh
 Group: Video
-Summary: MPlayer Taiwan Chinese docs
+Summary: %Name Taiwan Chinese docs
+%if %name != %Name
+Provides: %Name-doc-zh
+Obsoletes: %Name-doc-zh
+%endif
 
 %description doc-zh
-MPlayer Taiwan Chinese docs.
+%Name Taiwan Chinese docs.
 
 
 %if_enabled freetype
-%package -n %bname-fonts
+%package fonts
 Group: Video 
-Summary: fonts and font tools for the MPlayer
-BuildRequires: freetype2-devel >= 2.0.9
-Requires: %bname
+Summary: fonts and font tools for the %Name
+Requires: %name
+%if %name != %Name
+Provides: %Name-fonts
+Obsoletes: %Name-fonts
+%endif
 
-%description -n %bname-fonts
-Fonts and font tools for use with MPlayer.
-
+%description fonts
+Fonts and font tools for use with %Name.
 Currently included:
-* mplayer_subfont	a tool for creating OSD fonts
+  * %{lname}_subfont - a tool for creating OSD fonts
 %endif
 
 
 %if_enabled vidix_int
-%package -n %bname-vidix
+%package vidix
 Group: Video 
 Summary: VIDeo Interface for *nIX
-Requires: %bname = %version-%release
-Requires: %bname-vidix-driver
+%if %name != %Name
+Provides: %Name-vidix
+Obsoletes: %Name-vidix
+%endif
 
-%description -n %bname-vidix
+%description vidix
 VIDIX is the abbreviation for VIDeo Interface for *niX.
-
 VIDIX was designed and introduced as an interface for fast user-space
 drivers providing DGA. Hopefully these drivers will be as portable as
 X11 (not only on *nix).
-
 Basic features:
 * It's a portable successor of mga_vid technology, but it's located in
   user-space. 
-* Unlike X11 it provides DGA everywhere it's possible
-* Unlike v4l it provides interface for video playback
-* Unlike linux's drivers it uses the math library
+* Unlike X11 it provides DGA everywhere it's possible.
+* Unlike v4l it provides interface for video playback.
+* Unlike linux's drivers it uses the math library.
 
-%description -n %bname-vidix -l ru_RU.CP1251
+%description vidix -l ru_RU.CP1251
 VIDIX - это аббревиатура для VIDeo Interface for *niX (ВИДео Интерфейс
-для юниКСоподобных операционных систем)
-
+для юниКСоподобных операционных систем).
 VIDIX был спроектирован и разработан как интерфейс для быстрых
 драйверов уровня приложения для DGA (Direct Graphics Access - прямой
 доступ к графике). Предполагалось, что эти драйвера будут также
 переносимы как и X11 (не только на юникс).
-
 Основные характеристики:
 * Это переносимое развитие технологии mga_vid, работающее на уровне
-  приложения
-* В отличие от X11 он предоставляет DGA везде, где это возможно
-* В отличие от v4l он предоставляет интерфейс для воспроизведения
-  видео
-* В отличие от драйверов линукс он использует библиотеку math
+  приложения.
+* В отличие от X11 он предоставляет DGA везде, где это возможно.
+* В отличие от v4l он предоставляет интерфейс для воспроизведения 
+  видео.
+* В отличие от драйверов линукс он использует библиотеку math.
 
 
 %if_enabled vidix_int_drivers
-%package -n %bname-vidix-trident
+%package vidix-trident
 Group: Video
 Summary: VIDIX driver for Trident Cyberblade/i1
-Provides: %bname-vidix-cyberblade = %version-%release
-Provides: %bname-vidix-driver = %version-%release
+Provides: %name-vidix-cyberblade
+Provides: %name-vidix-driver
+%if %name != %Name
+Provides: %Name-vidix-trident
+Obsoletes: %Name-vidix-trident
+%endif
 
-%description -n %bname-vidix-trident
+%description vidix-trident
 VIDIX driver for Trident Cyberblade/i1.
 
 
-%package -n %bname-vidix-mach64
+%package vidix-mach64
 Group: Video
 Summary: VIDIX driver for ATI Mach64 and 3DRage chips
-Provides: %bname-vidix-driver = %version-%release
+Provides: %name-vidix-driver
+%if %name != %Name
+Provides: %Name-vidix-mach64
+Obsoletes: %Name-vidix-mach64
+%endif
 
-%description -n %bname-vidix-mach64
+%description vidix-mach64
 VIDIX driver for ATI Mach64 and 3DRage chips.
 
 
-%package -n %bname-vidix-mga
+%package vidix-mga
 Group: Video
 Summary: VIDIX drivers for Matrox Gxxx series
-Provides: %bname-vidix-driver = %version-%release
+Provides: %name-vidix-driver
+%if %name != %Name
+Provides: %Name-vidix-mga
+Obsoletes: %Name-vidix-mga
+%endif
 
-%description -n %bname-vidix-mga
+%description vidix-mga
 Two VIDIX drivers for Matrox Gxxx series (using BES and CRTC2).
 
 
-%package -n %bname-vidix-permedia2
+%package vidix-permedia2
 Group: Video
 Summary: VIDIX driver for 3DLabs Permedia2 cards
-Provides: %bname-vidix-driver = %version-%release
+Provides: %name-vidix-driver
 
-%description -n %bname-vidix-permedia2
+%description vidix-permedia2
 VIDIX driver for 3DLabs Permedia2 cards.
 
 
-%package -n %bname-vidix-permedia3
+%package vidix-permedia3
 Group: Video
 Summary: VIDIX driver for 3DLabs Permedia3 cards
-Provides: %bname-vidix-driver = %version-%release
+Provides: %name-vidix-driver
+%if %name != %Name
+Provides: %Name-vidix-permedia
+Obsoletes: %Name-vidix-permedia
+%endif
 
-%description -n %bname-vidix-permedia3
+%description vidix-permedia3
 VIDIX driver for 3DLabs GLINT R3/Permedia3 cards.
 
 
-%package -n %bname-vidix-radeon
+%package vidix-radeon
 Group: Video
 Summary: VIDIX driver for ATI Radeon
-Provides: %bname-vidix-driver = %version-%release
+Provides: %name-vidix-driver
+%if %name != %Name
+Provides: %Name-vidix-radeon
+Obsoletes: %Name-vidix-radeon
+%endif
 
-%description -n %bname-vidix-radeon
+%description vidix-radeon
 VIDIX driver for ATI Radeon.
 
 
-%package -n %bname-vidix-rage128
+%package vidix-rage128
 Group: Video
 Summary: VIDIX driver for ATI Rage128
-Provides: %bname-vidix-driver = %version-%release
+Provides: %name-vidix-driver
+%if %name != %Name
+Provides: %Name-vidix-rage128
+Obsoletes: %Name-vidix-rage128
+%endif
 
-%description -n %bname-vidix-rage128
+%description vidix-rage128
 VIDIX driver for ATI Rage128.
 
 
-%package -n %bname-vidix-savage
+%package vidix-savage
 Group: Video
 Summary: VIDIX driver for S3 Savage
-Provides: %bname-vidix-driver = %version-%release
+Provides: %name-vidix-driver
+%if %name != %Name
+Provides: %Name-vidix-savage
+Obsoletes: %Name-vidix-savage
+%endif
 
-%description -n %bname-vidix-savage
+%description vidix-savage
 VIDIX driver for S3 Savage.
 
 
-%package -n %bname-vidix-nvidia
+%package vidix-nvidia
 Group: Video
 Summary: VIDIX driver for nVidia chips
-Provides: %bname-vidix-driver = %version-%release
+Provides: %name-vidix-driver
+%if %name != %Name
+Provides: %Name-vidix-nvidia
+Obsoletes: %Name-vidix-nvidia
+%endif
 
-%description -n %bname-vidix-nvidia
+%description vidix-nvidia
 VIDIX driver for nVidia chips.
 
 
-%package -n %bname-vidix-sis
+%package vidix-sis
 Group: Video
 Summary: VIDIX driver for SiS 300 and 310/325 series chips
-Provides: %bname-vidix-driver = %version-%release
+Provides: %name-vidix-driver
+%if %name != %Name
+Provides: %Name-vidix-sis
+Obsoletes: %Name-vidix-sis
+%endif
 
-%description -n %bname-vidix-sis
+%description vidix-sis
 VIDIX driver for SiS 300 and 310/325 series chips.
 
 
-%package -n %bname-vidix-unichrome
+%package vidix-unichrome
 Group: Video
 Summary: VIDIX driver for VIA CLE266 Unichrome
-Provides: %bname-vidix-driver = %version-%release
-Provides: %bname-vidix-via = %version-%release
+Provides: %name-vidix-via
+Provides: %name-vidix-driver
 
-%description -n %bname-vidix-unichrome
+%description vidix-unichrome
 VIDIX driver for VIA CLE266 Unichrome.
 
 
-%package -n %bname-vidix-genfb
+%package vidix-genfb
 Group: Video
 Summary: VIDIX driver for framebuffer
-Provides: %bname-vidix-driver = %version-%release
-Provides: %bname-vidix-fb = %version-%release
+Provides: %name-vidix-fb
+Provides: %name-vidix-driver
 
-%description -n %bname-vidix-genfb
+%description vidix-genfb
 VIDIX driver for framebuffer.
 %endif
 %endif
 
 
 %prep
-%if %cvsbuild
-# CVS Build
+%if %svndate
 %if_enabled shared_ffmpeg
-%setup -q -n %fname-%fversion%{?_with_dvdmenu: -a 2}
+%setup -q -n %Name-%pkgver
 %else
-%setup -q -n %fname-%fversion -a 1%{?_with_dvdmenu: -a 2}
-# needed with CVS snapshots
+%setup -q -n %Name-%pkgver -a 1
 %if_enabled dirac
-pushd ffmpeg-%ffmpeg_version
+pushd ffmpeg-svn-%ffmpeg_svndate
 %patch9 -p1
 popd
 %endif
-mv ffmpeg-%ffmpeg_version/lib{av{codec,format,util},postproc} .
+mv ffmpeg-svn-%ffmpeg_svndate/lib{av{codec,format,util},postproc} .
 %endif
 %else
-# A Release Build
-%setup -q -n %fname-%fversion
+%setup -q -n %Name-%pkgver
 %endif
 %if_enabled vidix_int_drivers
 tar -xjvf %SOURCE6
@@ -807,16 +882,6 @@ rm -rf vidix
 mv vidix-%vidixver/vidix ./
 %endif
 
-%if_with dvdmenu
-for d in codecs demux dvdnav; do
-    mkdir -p libmp$d
-    mv mplayer-dvdnav-patch/mplayer-add/libmp$d/* ./libmp$d/
-done
-for p in doc gui; do
-    patch -p0 < mplayer-dvdnav-patch/nav$p.patch
-done
-%patch8 -p1
-%endif
 %patch1 -p1
 %patch2 -p1
 %patch3 -p1
@@ -834,11 +899,11 @@ done
 %patch15 -p1
 %patch21 -p1
 %{?_enable_polyp:%patch22 -p1}
-%if %cvsbuild
+%if %svndate
 %patch26 -p1
 %patch27 -p1
 %endif
-%{?_enable_polyp:bzip2 -dcf %SOURCE9 > libao2/ao_polyp.c}
+%{?_enable_polyp:bzip2 -dcf %SOURCE2 > libao2/ao_polyp.c}
 
 %if_enabled vidix_int_drivers
 rm -rf libdha/*
@@ -853,12 +918,12 @@ install:
 __MAKE__
 %endif
 %if_enabled vidix_int
-subst 's,\(.*\)\/mplayer\/vidix,\1/vidix,g' vidix/drivers/Makefile
-subst 's,/mplayer\(/vidix/\),\1,' configure
+subst 's,\(.*\)\/%lname\/vidix,\1/vidix,g' vidix/drivers/Makefile
+subst 's,/%lname\(/vidix/\),\1,' configure
 %endif
 %{?_enable_dvdnav:subst 's|\(\<\)\(dvdnav\)\(\.h\>\)|\1\2/\2\3|' configure}
 
-%if %cvsbuild
+%if %svndate
 subst 's|"libavutil/md5.h"|<ffmpeg/md5.h>|' libvo/vo_md5sum.c
 # iconv pl docs
 pushd DOCS/xml/pl
@@ -872,29 +937,17 @@ popd
 
 %build
 %if_disabled debug
-# this is equivalent to -O3
-CFLAGS="-Wall -Wno-unused-variable -Wno-unused-function -Wno-unused-label -Wno-uninitialized -Wno-trigraphs"
-#" -W -Wfloat-equal"
-CFLAGS="$CFLAGS $RPM_OPT_FLAGS -fomit-frame-pointer -ffast-math -finline-functions -frename-registers"
-%ifnarch mips
-CFLAGS="$CFLAGS -pipe"
+%define _optlevel 4
+CFLAGS="%optflags"; export CFLAGS
 %endif
-export CFLAGS
-%endif
-
-%if_enabled dvb
-CFLAGS="$CFLAGS -I/usr/include/dvb/include"
-export CFLAGS
-%endif
-
-LC_MESSAGES=C ; export LC_MESSAGES
-
+LC_MESSAGES=C
+export LC_MESSAGES
 ./configure \
 		--prefix=%_prefix \
 		--bindir=%_bindir \
-		--datadir=%_datadir/%bname \
+		--datadir=%_datadir/%name \
 		--mandir=%_mandir \
-		--confdir=%_sysconfdir/%bname \
+		--confdir=%_sysconfdir/%name \
 		--libdir=%_libdir \
 		%{subst_enable mencoder} \
 		%{subst_enable gui} \
@@ -1091,24 +1144,31 @@ LC_MESSAGES=C ; export LC_MESSAGES
 		%{subst_enable_with gdb crash-debug} \
 		%{subst_enable_with dynamic_plugins dynamic-plugins} \
 
-%ifarch %ix86
-%make_build
-%else
-%__make # x86_64 smp incompatible.
-%endif
-
-%if_enabled freetype
-pushd TOOLS/subfont-c
+%ifnarch x86_64
 make
-popd
+%else
+%make_build
 %endif
 
-pushd TOOLS
-# can't build vivodump subrip
-%make 302m_convert 360m_convert alaw-gen asfinfo avi-fix avisubdump bios2dump dump_mp4 mem2dump movinfo png2raw
-popd
+# make conf file
+gzip -dc %SOURCE5 |
+sed -e 's/^@VO@/vo = %default_vo/' \
+    -e 's/^@AO@/ao = %default_ao/' \
+    -e 's|@CONF_FILE@|%_sysconfdir/%name/%lname.conf|g' \
+    -e 's|@SKINS_DIR@|%_datadir/%name/skins|g' \
+    > etc/%lname.conf
+%if_enabled fontconfig
+echo "fontconfig = yes" >> etc/%lname.conf
+%else
+echo "fontconfig = no" >> etc/%lname.conf
+%endif
 
-%if %cvsbuild
+%{?_enable_freetype:make -C TOOLS/subfont-c}
+
+# can't build vivodump subrip
+%make_build -C TOOLS 302m_convert 360m_convert alaw-gen asfinfo avi-fix avisubdump bios2dump dump_mp4 mem2dump movinfo png2raw
+
+%if %svndate
 # build HTML documentation from XML files
 pushd DOCS/xml
 cp -fL %_sysconfdir/sgml/catalog ./
@@ -1122,82 +1182,57 @@ popd
 
 
 %install
-%makeinstall DESTDIR=%buildroot 
+%make_install DESTDIR=%buildroot install
 
-pushd %buildroot%_bindir
-ln -sf mplayer gmplayer
-install -d -m 0755 %buildroot%_datadir/%bname/skins
-tar -C %buildroot%_datadir/%bname/skins -xjf %SOURCE4
-ln -sf standard %buildroot%_datadir/%bname/skins/default
-popd
+install -d -m 0755 %buildroot%_datadir/%name/skins
+tar -C %buildroot%_datadir/%name/skins -xjf %SOURCE4
+ln -s standard %buildroot%_datadir/%name/skins/default
 
-default_vo=xv
-
-sed -e 's/include =.*//' < etc/example.conf \
-	| sed -e 's/fs=yes/# fs=yes/' \
-	| sed -e "s/# vo=xv/vo=$default_vo/" \
-	| sed -e 's|/usr/local/share/mplayer|%_datadir/%bname|g' \
-	> %buildroot%_sysconfdir/%bname/mplayer.conf
-
-%if_enabled fontconfig
-echo "fontconfig = yes" >> %buildroot%_sysconfdir/%bname/mplayer.conf
-%else
-echo "fontconfig = no" >> %buildroot%_sysconfdir/%bname/mplayer.conf
+%if_disabled fontconfig
 %if_enabled freetype
-pushd %buildroot%_datadir/%bname
-ln -sf ../fonts/default/Type1/n019003l.pfb ./subfont.ttf
-popd
+ln -s ../fonts/default/Type1/n019003l.pfb %buildroot%_datadir/%name/subfont.ttf
 %else
 # Russian font, that uses to show subscriptions 
-tar xjf %SOURCE3 -C %buildroot%_datadir/%bname
+tar -C %buildroot%_datadir/%name -xjf %SOURCE3
 %endif
 %endif
 
-install -m 0644 etc/{codecs,input}.conf %buildroot%_sysconfdir/%bname/
+install -m 0644 etc/{codecs,input,%lname}.conf %buildroot%_sysconfdir/%name/
 
 %if_enabled osdmenu
-install -m 0644 etc/menu.conf %buildroot%_sysconfdir/%bname/
+install -m 0644 etc/menu.conf %buildroot%_sysconfdir/%name/
 %if_enabled dvb
-install -m 0644 etc/dvb-menu.conf %buildroot%_sysconfdir/%bname/
+install -m 0644 etc/dvb-menu.conf %buildroot%_sysconfdir/%name/
 %endif
 %endif
 
 %if_enabled freetype
-# install tools
-pushd TOOLS/subfont-c
-install -d %buildroot%_datadir/%bname/fonts/{osd,encodings}
-install osd/{gen.py,osd.pfb,README,runme} %buildroot%_datadir/%bname/fonts/osd/
-install encodings/* %buildroot%_datadir/%bname/fonts/encodings/
-install -m 0755 subfont %buildroot%_bindir/mplayer_subfont
-popd
+install -d %buildroot%_datadir/%name/fonts/{osd,encodings}
+install -m 0644 TOOLS/subfont-c/osd/{gen.py,osd.pfb,README,runme} %buildroot%_datadir/%name/fonts/osd/
+install -m 0644 TOOLS/subfont-c/encodings/* %buildroot%_datadir/%name/fonts/encodings/
+install -m 0755 TOOLS/subfont-c/subfont %buildroot%_bindir/%{lname}_subfont
 %endif
 
-install -d %buildroot%_sysconfdir/bashrc.d
-
-install -m 0755 %SOURCE5 %buildroot%_sysconfdir/bashrc.d/
+%{?_with_soundwrapper:install -pD -m 0755 %SOURCE7 %buildroot%_sysconfdir/bashrc.d/%lname.sh}
 
 # Menus
-mv %buildroot%_desktopdir/mplayer.desktop %buildroot%_desktopdir/%bname.desktop
-iconv -f cp1251 -t utf-8 >> %buildroot%_desktopdir/%bname.desktop <<__MENU__
+[ "%name" = "%lname" ] || mv %buildroot%_desktopdir/%lname.desktop %buildroot%_desktopdir/%name.desktop
+iconv -f cp1251 -t utf-8 >> %buildroot%_desktopdir/%name.desktop <<__MENU__
 Version=1.0
 GenericName[uk]=Програвач мультимедіа
 X-MultipleArgs=true
 StartupNotify=true
 __MENU__
 
-#Icons
-find etc DOCS -type f -exec chmod 644 {} \;
-
 %if_enabled mencoder
-# add mencoder.1 man-link
 rm -f %buildroot%_man1dir/mencoder.1 ||:
-echo ".so mplayer.1" > %buildroot%_man1dir/mencoder.1
+echo ".so %lname.1" > %buildroot%_man1dir/mencoder.1
 %endif
 
 # docs
 bzip2 --best --force --keep -- ChangeLog
 for l in cs de es fr hu it pl sv zh; do
-    install -pD -m 0644 DOCS/man/$l/mplayer.1 %buildroot%_mandir/$l/man1/mplayer.1
+    install -pD -m 0644 DOCS/man/$l/%lname.1 %buildroot%_mandir/$l/man1/%lname.1
 done
 for l in it zh; do
     install -d %buildroot%_docdir/%name-doc-%version/$l
@@ -1217,43 +1252,43 @@ unset RPM_PYTHON
 
 
 %if_enabled vidix_int
-%post -n %bname-vidix -p /sbin/ldconfig
+%post vidix -p %post_ldconfig
 
 
-%postun -n %bname-vidix -p /sbin/ldconfig
+%postun vidix -p %postun_ldconfig
 %endif
 
 
 %if_enabled gui
-%post -n %gui_name
+%post gui
 %update_menus
 
 
-%postun -n %gui_name
+%postun gui
 %clean_menus
 %endif
 
 
-%files -n %console_name
+%files
 %doc README AUTHORS ChangeLog.*
-%_bindir/mplayer
-%dir %_sysconfdir/%bname
-%config %_sysconfdir/%bname/codecs.conf
-%config(noreplace) %verify(not size mtime md5) %_sysconfdir/%bname/mplayer.conf
-%config(noreplace) %verify(not size mtime md5) %_sysconfdir/%bname/input.conf
+%_bindir/%lname
+%dir %_sysconfdir/%name
+%config %_sysconfdir/%name/codecs.conf
+%config(noreplace) %verify(not size mtime md5) %_sysconfdir/%name/%lname.conf
+%config(noreplace) %verify(not size mtime md5) %_sysconfdir/%name/input.conf
 %if_enabled osdmenu
-%config(noreplace) %verify(not size mtime md5) %_sysconfdir/%bname/menu.conf
+%config(noreplace) %verify(not size mtime md5) %_sysconfdir/%name/menu.conf
 %if_enabled dvb
-%config(noreplace) %verify(not size mtime md5) %_sysconfdir/%bname/dvb-menu.conf
+%config(noreplace) %verify(not size mtime md5) %_sysconfdir/%name/dvb-menu.conf
 %endif
 %endif
-%_sysconfdir/bashrc.d/*
-%dir %_datadir/%bname
+%{?_with_soundwrapper:%_sysconfdir/bashrc.d/*}
+%dir %_datadir/%name
 %if_disabled fontconfig
 %if_enabled freetype
-%config(missingok,noreplace) %verify(not link size mtime md5) %_datadir/%bname/subfont.ttf
+%config(missingok,noreplace) %verify(not link size mtime md5) %_datadir/%name/subfont.ttf
 %else
-%_datadir/%bname/font
+%_datadir/%name/font
 %endif
 %endif
 %_man1dir/*
@@ -1261,13 +1296,13 @@ unset RPM_PYTHON
 
 
 %if_enabled gui
-%files -n %gui_name
-%_bindir/gmplayer
-%dir %_datadir/%bname
+%files gui
+%_bindir/%gname
 %_desktopdir/*
 %_datadir/pixmaps/*
-%_datadir/%bname/skins/standard
-%_datadir/%bname/skins/default
+%dir %_datadir/%name/skins
+%_datadir/%name/skins/standard
+%_datadir/%name/skins/default
 %endif
 
 
@@ -1318,79 +1353,89 @@ unset RPM_PYTHON
 
 
 %if_enabled freetype
-%files -n %bname-fonts
-%_bindir/mplayer_subfont
-%_datadir/%bname/fonts/osd/gen.py
-%_datadir/%bname/fonts/osd/osd.pfb
-%_datadir/%bname/fonts/osd/README
-%_datadir/%bname/fonts/osd/runme
-%_datadir/%bname/fonts/encodings/charmap2enc
-%_datadir/%bname/fonts/encodings/osd-mplayer
-%_datadir/%bname/fonts/encodings/runme-kr
+%files fonts
+%_bindir/%{lname}_subfont
+%dir %_datadir/%name/fonts
+%dir %_datadir/%name/fonts/osd
+%dir %_datadir/%name/fonts/encodings
+%_datadir/%name/fonts/osd/gen.py
+%_datadir/%name/fonts/osd/osd.pfb
+%_datadir/%name/fonts/osd/README
+%_datadir/%name/fonts/osd/runme
+%_datadir/%name/fonts/encodings/charmap2enc
+%_datadir/%name/fonts/encodings/osd-%lname
+%_datadir/%name/fonts/encodings/runme-kr
 %endif
 
 
 %if_enabled vidix_int
 %if_enabled vidix_int_drivers
-%files -n %bname-vidix
+%files vidix
 %_libdir/libdha*
 
 
-%files -n %bname-vidix-trident
+%files vidix-trident
 %_libdir/vidix/cyberblade_vid.so
 
 
-%files -n %bname-vidix-mach64
+%files vidix-mach64
 %_libdir/vidix/mach64_vid.so
 
 
-%files -n %bname-vidix-mga
+%files vidix-mga
 %_libdir/vidix/mga_crtc2_vid.so
 %_libdir/vidix/mga_vid.so
 %_libdir/vidix/mga_tv_vid.so
 
 
-%files -n %bname-vidix-nvidia
+%files vidix-nvidia
 %_libdir/vidix/nvidia_vid.so
 
 
-%files -n %bname-vidix-radeon
+%files vidix-radeon
 %_libdir/vidix/radeon_vid.so
 
 
-%files -n %bname-vidix-rage128
+%files vidix-rage128
 %_libdir/vidix/rage128_vid.so
 
 
-%files -n %bname-vidix-savage
+%files vidix-savage
 %_libdir/vidix/savage_vid.so
 
 
-%files -n %bname-vidix-sis
+%files vidix-sis
 %_libdir/vidix/sis_vid.so
 
 
-%files -n %bname-vidix-unichrome
+%files vidix-unichrome
 %_libdir/vidix/unichrome_vid.so
 
 
-%files -n %bname-vidix-genfb
+%files vidix-genfb
 %_libdir/vidix/genfb_vid.so
 
 
-%files -n %bname-vidix-permedia2
+%files vidix-permedia2
 %_libdir/vidix/pm2_vid.so
 
 
-%files -n %bname-vidix-permedia3
+%files vidix-permedia3
 %_libdir/vidix/pm3_vid.so
 %endif
 %endif
 
 
 %changelog
+* Mon Jul 17 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060714.1
+- new SVN sbapshot (revision 19058)
+- cleaned up spec
+- changed base package name to %lname
+
 * Thu Jul 13 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060713.1
 - new SVN sbapshot (revision 19047)
+- cleaned up spec
+- changed %%name to %lname
 
 * Thu Jul 13 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060712.1
 - new SVN sbapshot (revision 19018)
@@ -1399,23 +1444,23 @@ unset RPM_PYTHON
 
 * Wed Jul 12 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060711.1
 - new SVN sbapshot (revision 19001)
-- updated MPlayer-svn-20060711-configure.patch
+- updated %Name-svn-20060711-configure.patch
 - many changes in spec
 - enabled libmpeg2, md5sum, 3dfx, tdfxfb
 - disabled vesa
 
 * Mon Jul 10 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060710.2
-- added mplayer-uni-20060710.diff
+- added %lname-uni-20060710.diff
 
 * Mon Jul 10 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060710.1
 - new SVN sbapshot (revision 18986)
-- updated MPlayer-svn-20060710-alt-external_fame.patch
+- updated %Name-svn-20060710-alt-external_fame.patch
 - enabled ass (internal SSA/ASS subtitles support)
 - fixed spec
 
 * Mon Jul 10 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060707.3
 - replaced vidix-0.9.9.1.tar.bz2 with
-  MPlayer-svn-20060707-ext_vidix_drivers-0.9.9.1.patch
+  %Name-svn-20060707-ext_vidix_drivers-0.9.9.1.patch
 
 * Sat Jul 08 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060707.2
 - disabled dirac
@@ -1423,14 +1468,14 @@ unset RPM_PYTHON
 * Fri Jul 07 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060707.1
 - new SVN sbapshot (revision 18929)
 - fixed spec
-- updated MPlayer-svn-20060707_dirac-0.5.x.patch
+- updated %Name-svn-20060707_dirac-0.5.x.patch
 
 * Thu Jul 06 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060630.5
 - enabled internal VIDIX
 - disabled external VIDIX
 - added vidix-0.9.9.1 with vidix-0.9.9.1-pm3_vid.patch
-- added MPlayer-svn-20060630-vidix_0.9.9.1.patch
-- added MPlayer-svn-20060630-vidix_ext_drivers.patch
+- added %Name-svn-20060630-vidix_0.9.9.1.patch
+- added %Name-svn-20060630-vidix_ext_drivers.patch
 
 * Thu Jul 06 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060630.4
 - disabled internal VIDIX
@@ -1438,13 +1483,13 @@ unset RPM_PYTHON
 
 * Fri Jun 30 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060630.3
 - don't include ffmpeg tarball if shared_ffmpeg enabled (default)
-- updated MPlayer-dvd-ru patch
+- updated %Name-dvd-ru patch
 - cleaned up bogus patches
 - fixed spec
 - fixed libvo/vo_md5sum.c
 - trying dvdmenu (disabled by deafult)
 - some fixes from LAKostis (vidix prefixes, bogus BuildRequires)
-- added MPlayer-svn-20060704_dirac-0.5.x.patch
+- added %Name-svn-20060704_dirac-0.5.x.patch
 - enabled dirac
 
 * Fri Jun 30 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060630.1
@@ -1457,14 +1502,14 @@ unset RPM_PYTHON
 
 * Mon Jun 26 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060626.1
 - new SVN sbapshot (revision 18821)
-- removed MPlayer-cvs-20060506-docs.patch, used sed & iconv instead
+- removed %Name-cvs-20060506-docs.patch, used sed & iconv instead
 
 * Fri Jun 23 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060623.1
 - new SVN sbapshot (revision 18791)
 
 * Thu Jun 22 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060622.1
 - new SVN sbapshot (revision 18781)
-- returned mplayer.sh (soundwrapper)
+- returned %name.sh (soundwrapper)
 - cleaned up spec
 
 * Wed Jun 21 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060621.1
@@ -1472,14 +1517,14 @@ unset RPM_PYTHON
 - added macroses
 - enabled external tremor
 - force enabled openal
-- MPlayer-cvs-20060220-configure.patch merged with
-  MPlayer-1.0pre7-aalib.patch and some additions to
-  MPlayer-svn-20060621-configure.patch
+- %Name-cvs-20060220-configure.patch merged with
+  %Name-1.0pre7-aalib.patch and some additions to
+  %Name-svn-20060621-configure.patch
 
 * Tue Jun 20 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060620.1
 - new SVN sbapshot (revision 18760)
 - fixed spec
-- updated MPlayer-svn-20060620-alt-external_fame.patch
+- updated %Name-svn-20060620-alt-external_fame.patch
 - fixed configure parameters
 - cleaned up spec
 
@@ -1487,7 +1532,7 @@ unset RPM_PYTHON
 - new SVN sbapshot (revision 18698)
 - removed additional icons
 - fixed .desktop file
-- removed mplayer.sh (soundwrapper)
+- removed %name.sh (soundwrapper)
 - cleaned up spec
 
 * Wed Jun 07 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060607.1
@@ -1504,11 +1549,11 @@ unset RPM_PYTHON
 * Tue May 30 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060519.2
 - cleaned up spec
 - enabled polyp (thanx icesik and polypaudio's author)
-- added MPlayer-cvs-20060519-polyp0.8.patch
+- added %Name-cvs-20060519-polyp0.8.patch
 
 * Thu May 25 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060519.1
 - 20060519 CVS snapshot
-- removed mplayer-rpm-cvs.patch
+- removed %lname-rpm-cvs.patch
 
 * Thu May 25 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060515.5
 - rebuild for libffmpeg
@@ -1516,7 +1561,7 @@ unset RPM_PYTHON
 * Wed May 24 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060515.4
 - disabled xmms
 - enabled gtk+2.0 GUI
-- added default (standard) skin to %gui_name package
+- added default (standard) skin to %name-gui package
 - cleaned up spec
 
 * Tue May 23 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060515.3
