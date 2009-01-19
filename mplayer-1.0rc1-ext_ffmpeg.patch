@@ -97,7 +97,7 @@ diff -urN MPlayer-1.0rc1.orig/configure MPlayer-1.0rc1/configure
  echocheck "md5sum support"
  if test "$_md5sum" = yes; then
    _def_md5sum="#define HAVE_MD5SUM"
-@@ -7562,8 +7612,8 @@
+@@ -7562,8 +7612,9 @@
  QTX_CODECS = $_qtx
  REAL_CODECS = $_real
  XANIM_CODECS = $_xanim
@@ -105,6 +105,7 @@ diff -urN MPlayer-1.0rc1.orig/configure MPlayer-1.0rc1/configure
 -AV_LIB = $_ld_libavformat  $_ld_libavcodec  $_ld_libavutil  $_ld_libpostproc
 +AV_DEP = $_dep_libavformat $_dep_libavcodec $_dep_libavutil $_dep_libpostproc $_dep_libswscale
 +AV_LIB = $_ld_libavformat  $_ld_libavcodec  $_ld_libavutil  $_ld_libpostproc  $_ld_libswscale
++SWSCALE_LIB = $_ld_libswscale
  CONFIG_LIBAVUTIL = $_libavutil
  CONFIG_LIBAVUTIL_SO = $_libavutil_so
  CONFIG_LIBAVCODEC = $_libavcodec
@@ -441,11 +442,12 @@ diff -urN MPlayer-1.0rc1.orig/libvo/vo_yuv4mpeg.c MPlayer-1.0rc1/libvo/vo_yuv4mp
 diff -urN MPlayer-1.0rc1.orig/Makefile MPlayer-1.0rc1/Makefile
 --- MPlayer-1.0rc1.orig/Makefile	2006-10-23 01:32:31 +0300
 +++ MPlayer-1.0rc1/Makefile	2006-10-31 01:23:31 +0200
-@@ -132,7 +132,6 @@
+@@ -132,7 +132,7 @@
                libaf/libaf.a \
                libmpdemux/libmpdemux.a \
                stream/stream.a \
 -              libswscale/libswscale.a \
++              $(SWSCALE_LIB) \
                osdep/libosdep.a \
                $(EXTRA_LIB)\
                $(DVDREAD_LIB) \
