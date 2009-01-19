@@ -216,7 +216,19 @@
 %set_disable fontconfig
 %endif
 
-%{?_disable_vidix:%define vidixlib none}
+%if_disabled vidix
+%ifdef vidixlib
+%undefine vidixlib
+%endif
+%define vidixlib none
+%else
+%ifnarch %ix86
+%ifdef vidixlib
+%undefine vidixlib
+%endif
+%define vidixlib int
+%endif
+%endif
 %if %vidixlib == none
 %set_disable vidix
 %endif
@@ -225,7 +237,7 @@
 %set_disable tremor_low
 %endif
 
-%ifnarch %ix86 x86_64
+%ifnarch %ix86
 %set_disable win32
 %endif
 
@@ -259,7 +271,7 @@
 Name: %lname
 Serial: 1
 Version: 1.0
-%define altrel 1
+%define altrel 2
 %ifdef svnrev
 Release: alt1.%svnrev.%altrel
 %define pkgver svn-r%svnrev
@@ -274,7 +286,7 @@ License: GPL
 Group: Video
 URL: http://www.mplayerhq.hu
 %if %name != %Name
-Provides: %Name = %{?serail:%serial:}%version-%release
+Provides: %Name = %{?serial:%serial:}%version-%release
 Obsoletes: %Name
 %endif
 %if_enabled freetype
@@ -304,6 +316,7 @@ Patch6: %lname-svn-r19389-alt-artsc_ldflags.patch.gz
 Patch7: %Name-svn-20060707_dirac-0.5.x.patch.bz2
 Patch8: %lname-svn-r19389-ext_libswscale.patch.bz2
 %{?_disable_shared_ffmpeg:Patch9: ffmpeg-svn-20060630-dirac-0.5.x.patch.bz2}
+Patch10: %lname-svn-r19558-generic-x86_64.patch.gz
 Patch12: %lname-uni-svn19558.diff.gz
 Patch13: %Name-svn-20060711-vbe.patch.gz
 Patch14: %Name-1.0pre7try2-xmmslibs_fix.patch
@@ -869,7 +882,8 @@ mv ffmpeg-svn-%ffmpeg_svnrev/lib{av{codec,format,util},postproc} .
 %if %swscalelib == ext
 %patch8 -p1
 %endif
-#patch12 -p1
+%patch10 -p1
+%patch12 -p1
 %patch13 -p1
 %patch14 -p1
 %patch16 -p1
@@ -1354,6 +1368,13 @@ unset RPM_PYTHON
 
 
 %changelog
+* Tue Aug 29 2006 Led <led@altlinux.ru> 1:1.0-alt1.19558.2
+- added %lname-svn-r19558-generic-x86_64.patch (thanks LAKostis)
+- disabled win32 for x86_64
+- enabled internal vidix
+- fixed %%prep section
+- forced internal vidix (if enabled) for non-ix86 arches
+
 * Mon Aug 28 2006 Led <led@altlinux.ru> 1:1.0-alt1.19558.1
 - new SVN snapshot (revision 19558)
 - fixed configure parameters
