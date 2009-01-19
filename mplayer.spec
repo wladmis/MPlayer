@@ -4,7 +4,7 @@
 
 %define base_version	1.0
 %define real_version	%base_version
-%define release		3
+%define release		4
 
 %define fversion	%real_version
 
@@ -49,6 +49,8 @@
 %def_enable  svga
 %def_enable  tga
 %def_enable  vidix
+%def_enable  vidix_ext
+%def_disable vidix_int
 
 %def_enable  alsa
 %def_enable  arts
@@ -92,6 +94,19 @@
 %def_enable  sse
 %def_enable  sse2
 %def_disable fribidi
+
+%if_disabled vidix
+%set_disable vidix_ext
+%set_disable vidix_int
+%endif
+%if_disabled vidix_int
+%if_disabled vidix_ext
+%set_disable vidix
+%endif
+%endif
+%if_enabled vidix_int
+%set_disable vidix_ext
+%endif
 
 %if_enabled tremor_external
 %set_disable tremor_low
@@ -394,6 +409,10 @@ BuildRequires: libdvdnav-devel
 BuildRequires: libfribidi-devel fribidi
 %endif
 
+%if_enabled vidix_ext
+BuildRequires: libvidix-devel
+%endif
+
 #if_enabled external_flac
 #BuildRequires: libflac-devel
 #endif
@@ -667,6 +686,8 @@ Currently included:
 * mplayer_subfont	a tool for creating OSD fonts
 %endif
 
+
+%if_enabled vidix_int
 %package -n %bname-vidix
 Group: Video 
 Summary: VIDeo Interface for *nIX
@@ -783,6 +804,8 @@ Provides: %bname-vidix-driver = %version-%release
 
 %description -n %bname-vidix-unichrome
 VIDIX driver for Unichrome.
+%endif
+
 
 %prep
 %if %cvsbuild
@@ -832,7 +855,7 @@ done
 %{?_enable_polyp:bzip2 -dcf %SOURCE9 > libao2/ao_polyp.c}
 
 subst 's/\(ldconfig\)/\#\1/g' libdha/Makefile
-%if_enabled vidix
+%if_enabled vidix_int
 subst 's,\(.*\)\/mplayer\/vidix,\1/vidix,g' vidix/drivers/Makefile
 subst 's,/mplayer\(/vidix/\),\1,' configure
 %endif
@@ -986,6 +1009,13 @@ LC_MESSAGES=C ; export LC_MESSAGES
 		--disable-tdfxfb \
 		--disable-tdfxvid \
 		%{subst_enable tga} \
+%if_enabled vidix
+		%{subst_enable_with vidix_ext vidix-external} \
+		%{subst_enable_with vidix_int vidix-internal} \
+%else
+		--disable-vidix-external \
+		--disable-vidix-internal \
+%endif
 		%{?enable_vidix:--disable-vidix-external} \
 		--enable-vm \
 		--enable-xv \
@@ -1168,10 +1198,12 @@ install -m 0644 DOCS/tech/realcodecs/{TODO,*.txt} %buildroot%_docdir/%name-doc-%
 unset RPM_PYTHON
 
 
+%if_enabled vidix_int
 %post -n %bname-vidix -p /sbin/ldconfig
 
 
 %postun -n %bname-vidix -p /sbin/ldconfig
+%endif
 
 
 %post -n %gui_name
@@ -1274,7 +1306,7 @@ unset RPM_PYTHON
 %endif
 
 
-%if_enabled vidix
+%if_enabled vidix_int
 %files -n %bname-vidix
 %_libdir/libdha.so*
 
@@ -1314,14 +1346,18 @@ unset RPM_PYTHON
 
 %files -n %bname-vidix-sis
 %_libdir/vidix/sis_vid.so
-%endif
 
 
 %files -n %bname-vidix-unichrome
 %_libdir/vidix/unichrome_vid.so
+%endif
 
 
 %changelog
+* Thu Jul 06 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060630.4
+- disabled internal VIDIX
+- enabled external VIDIX
+
 * Fri Jun 30 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060630.3
 - don't include ffmpeg tarball if shared_ffmpeg enabled (default)
 - updated MPlayer-dvd-ru patch
