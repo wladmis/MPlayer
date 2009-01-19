@@ -6,8 +6,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 %define prerel %nil
-%define svnrev 20277
-%define ffmpeg_svnrev 6713
+%define svnrev 20288
+%define ffmpeg_svnrev 6723
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -80,6 +80,7 @@
 %def_enable fame
 %def_enable faad_ext
 %def_enable faad_int
+%def_disable faad_fixed
 %def_disable tremor_internal
 %def_disable tremor_low
 %def_disable tremor_external
@@ -268,9 +269,8 @@
 %define lname mplayer
 %define Name MPlayer
 Name: %lname
-#Serial: 1
 Version: 1.0
-%define rel 31
+%define rel 32
 %define subrel 1
 %ifdef svnrev
 Release: alt%rel.%svnrev.%subrel
@@ -286,7 +286,7 @@ License: GPL
 Group: Video
 URL: http://www.mplayerhq.hu
 %if %name != %Name
-Provides: %Name = %{?serial:%serial:}%version-%release
+Provides: %Name = %version-%release
 Obsoletes: %Name
 %endif
 %if_enabled freetype
@@ -460,10 +460,10 @@ Summary(uk_UA.CP1251): Медіаплейер (GUI вариант)
 Summary(ru_RU.CP1251): Медиаплейер (GUI вариант)
 Group: Video
 Requires: %name >= 1.0
-Provides: %gname
+Provides: %gname = %version-%release
 Obsoletes: %Name-skin-default
 %if %name != %Name
-Provides: %Name-gui = %{?serial:%serial:}%version-%release
+Provides: %Name-gui = %version-%release
 Obsoletes: %Name-gui
 %endif
 %if_enabled gtk1
@@ -1054,7 +1054,7 @@ export LC_MESSAGES=C
 		%{subst_enable_to vorbis libvorbis} \
 		%{subst_enable speex} \
 		%{subst_enable theora} \
-		%{?_enabled_faad_int:--enable-faad-internal --disable-faad-external} \
+		%{?_enabled_faad_int:--enable-faad-internal --disable-faad-external %{subst_enable_to faad_fixed faad-fixed}} \
 		%{?_enabled_faad_ext:--enable-faad-external --disable-faad-internal} \
 		%{subst_enable faac} \
 		%{subst_enable ladspa} \
@@ -1432,6 +1432,10 @@ unset RPM_PYTHON
 
 
 %changelog
+* Wed Oct 18 2006 Led <led@altlinux.ru> 1.0-alt32.20288.1
+- cleaned up spec
+- fixed Provides for %lname-gui package
+
 * Tue Oct 17 2006 Led <led@altlinux.ru> 1.0-alt31.20277.1
 - new SVN snapshot (revision 20277):
   + Russian documentation translation synced and almost finished
