@@ -5,12 +5,12 @@
 %define fversion	%real_version
 
 # Used only for CVS builds
-%define cvsbuild 20060519
-%define ffmpeg_version cvs-20060519
+%define cvsbuild 20060607
+%define ffmpeg_version svn-20060607
 
 %if %cvsbuild
-%global release		%release.%cvsbuild.5
-%global	fversion	cvs-%cvsbuild
+%global release		%release.%cvsbuild.1
+%global	fversion	svn-%cvsbuild
 %endif
 
 %def_enable  shared_ffmpeg
@@ -150,10 +150,10 @@ Requires: urw-fonts
 %endif
 
 Source0:  %bname-%fversion.tar.bz2
-# cvs -z9 -d:pserver:anonymous@mplayerhq.hu:/cvsroot/mplayer checkout -P -d MPlayer main
+# svn checkout svn.mplayerhq.hu/mplayer/trunk
 %if %cvsbuild
 Source1:  ffmpeg-%ffmpeg_version.tar.bz2
-# cvs -z9 -d:pserver:anonymous@mplayerhq.hu:/cvsroot/ffmpeg checkout -P -d ffmpeg ffmpeg
+# svn checkout svn.mplayerhq.hu/ffmpeg/trunk
 %endif
 Source2:  %bname.menu
 Source3:  cp1251-font.tar.bz2
@@ -173,6 +173,7 @@ Patch7:   MPlayer-1.0pre7-aalib.patch
 Patch12:  MPlayer-1.0pre5-alt-gcc-check.patch
 Patch13:  MPlayer-1.0pre5-nodebug.patch
 Patch19:  mplayer-libmpdvdkit2.patch
+Patch21:  MPlayer-svn-20060607-vf_mcdeint.patch.gz
 Patch22:  MPlayer-cvs-20060519-polyp0.8.patch.gz
 Patch23:  ad_pcm_fix_20050826.diff
 Patch24:  MPlayer-1.0pre7try2-xmmslibs_fix.patch
@@ -786,6 +787,7 @@ mv ffmpeg-%ffmpeg_version/libav{codec,format,util} .
 %patch3 -p1
 %patch6 -p1
 %patch7 -p1
+%patch21 -p1
 %patch22 -p1
 %patch24 -p1
 %patch25 -p1
@@ -796,12 +798,12 @@ mv ffmpeg-%ffmpeg_version/libav{codec,format,util} .
 %endif
 bzip2 -dcf %SOURCE9 > libao2/ao_polyp.c
 
-%__subst 's/\(ldconfig\)/\#\1/g' libdha/Makefile
+subst 's/\(ldconfig\)/\#\1/g' libdha/Makefile
 
 # I hope that vidix drivers are really as portable as it was claimed above
-%__subst 's|$(LIBDIR)/mplayer/vidix|$(LIBDIR)/vidix/|g' vidix/drivers/Makefile
-%__subst 's|\(/lib/\)mplayer/\(vidix/\)|\1\2|' libvo/Makefile
-%__subst 's|/mplayer\(/vidix/\)|\1|' libvo/vosub_vidix.c
+subst 's|$(LIBDIR)/mplayer/vidix|$(LIBDIR)/vidix/|g' vidix/drivers/Makefile
+subst 's|\(/lib/\)mplayer/\(vidix/\)|\1\2|' libvo/Makefile
+subst 's|/mplayer\(/vidix/\)|\1|' libvo/vosub_vidix.c
 
 %build
 %if_disabled debug
@@ -1030,10 +1032,6 @@ popd
 
 
 %install
-%if %cvsbuild
-find . -name CVS | xargs rm -rf
-%endif
-
 %makeinstall DESTDIR=%buildroot 
 
 pushd %buildroot%_bindir
@@ -1304,9 +1302,9 @@ unset RPM_PYTHON
 
 
 %changelog
-* Wed Jun 07 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060519.5
-- rebuild with new libdc1394
-- fixed BuildRequires
+* Wed Jun 07 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060607.1
+- 20060607 SVN snapshot
+- fixed spec
 
 * Fri Jun 02 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060519.4
 - fixed fbdev support

@@ -1,0 +1,27 @@
+diff -urN MPlayer-svn-20060607.orig/libmpcodecs/Makefile MPlayer-svn-20060607/libmpcodecs/Makefile
+--- MPlayer-svn-20060607.orig/libmpcodecs/Makefile	2006-06-07 14:28:50 +0300
++++ MPlayer-svn-20060607/libmpcodecs/Makefile	2006-06-07 21:01:16 +0300
+@@ -119,6 +119,7 @@
+              vf_ilpack.c \
+              vf_ivtc.c \
+              vf_kerndeint.c \
++             vf_mcdeint.c \
+              vf_mirror.c \
+              vf_noformat.c \
+              vf_noise.c \
+diff -urN MPlayer-svn-20060607.orig/libmpcodecs/vf_mcdeint.c MPlayer-svn-20060607/libmpcodecs/vf_mcdeint.c
+--- MPlayer-svn-20060607.orig/libmpcodecs/vf_mcdeint.c	2006-06-07 14:28:50 +0300
++++ MPlayer-svn-20060607/libmpcodecs/vf_mcdeint.c	2006-06-07 20:58:39 +0300
+@@ -54,8 +54,12 @@
+ #include "mp_msg.h"
+ #include "cpudetect.h"
+ 
++#ifdef USE_LIBAVCODEC_SO
++#include <ffmpeg/avcodec.h>
++#else
+ #include "libavcodec/avcodec.h"
+ #include "libavcodec/dsputil.h"
++#endif
+ 
+ #ifdef HAVE_MALLOC_H
+ #include <malloc.h>
