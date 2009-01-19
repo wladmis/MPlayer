@@ -1,4 +1,4 @@
-tar.bz2: r20117:. name=@name@-svn-r20117
+tar.bz2: r20190:. name=@name@-svn-r20190
 tar.bz2: standard-1.9:. name=standard-1.9 base=standard
 copy: *.sh *-explicit_gif.patch *-xmmslibs_fix.patch
 gzip: *.in *.diff *.awk *-udev.patch *-builddocs.patch *-vf_mcdeint.patch *-external_fame.patch *-configure.patch *-vbe.patch *-artsc_ldflags.patch *-polyp0.8.patch mplayer-dvd-ru-*.patch *-libdha.patch *-vo_vidix.patch *-x86_64.patch *-nls.patch

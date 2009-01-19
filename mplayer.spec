@@ -6,8 +6,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 %define prerel %nil
-%define svnrev 20117
-%define ffmpeg_svnrev 6545
+%define svnrev 20190
+%define ffmpeg_svnrev 6678
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -1245,7 +1245,6 @@ for l in $(ls DOCS/man | grep -v 'en'); do
     install -pD -m 0644 DOCS/man/$l/%lname.1 %buildroot%_mandir/$l/man1/%lname.1
     %{?_enable_mencoder:install -m 0644 DOCS/man/$l/%lname.1 %buildroot%_mandir/$l/man1/mencoder.1}
 done
-%find_lang --with-man %lname %lname-man
 rm -f %buildroot%_man1dir/mencoder.1
 %{?_enable_mencoder:install -m 0644 DOCS/man/en/%lname.1 %buildroot%_man1dir/mencoder.1}
 %if_with htmldocs
@@ -1262,6 +1261,7 @@ install -pD -m 0644 DOCS/tech/playtree-hun %buildroot%_docdir/%name-doc-%version
 install -d %buildroot%_docdir/%name-doc-%version/en/tech/realcodecs
 install -m 0644 DOCS/tech/{MAINTAINERS,TODO,*.txt,mpsub.sub,playtree,wishlist} %buildroot%_docdir/%name-doc-%version/en/tech/
 install -m 0644 DOCS/tech/realcodecs/{TODO,*.txt} %buildroot%_docdir/%name-doc-%version/en/tech/realcodecs/
+%find_lang --with-man %lname %lname-man
 
 %if_enabled nls
 for l in po/*.gmo; do
@@ -1270,7 +1270,8 @@ done
 %endif
 
 %find_lang %lname
-%{?_enable_mencoder:%find_lang --with-man mencoder}
+%find_lang --with-man --without-mo --output=%lname-man.lang %lname
+%{?_enable_mencoder:%find_lang --with-man --without-mo mencoder}
 
 # a tribute to clever python support
 unset RPM_PYTHON
@@ -1431,6 +1432,10 @@ unset RPM_PYTHON
 
 
 %changelog
+* Fri Oct 13 2006 Led <led@altlinux.ru> 1.0-alt31.20190.1
+- new SVN snapshot (revision 20190):
+  + -endpos option for %lname
+
 * Mon Oct 09 2006 Led <led@altlinux.ru> 1.0-alt31.20117.1
 - new SVN snapshot (revision 20117)
 - updated %lname-svn-r20117-ext_ffmpeg.patch
