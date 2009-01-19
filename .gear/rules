@@ -1,8 +1,6 @@
-tar.bz2: r18891:. name=@name@-svn-20060704
+tar.bz2: r18902:. name=@name@-svn-20060705
 tar.bz2: cp1251-font:. name=cp1251-font base=font
 tar.bz2: standard-1.9:. name=standard-1.9 base=standard
-tar.bz2: ffmpeg-r5603:. name=ffmpeg-svn-20060704
-tar.bz2: mplayer-dvdnav-20060614:. name=mplayer-dvdnav-20060614-patch base=mplayer-dvdnav-patch
-copy: *.sh MPlayer-1.0*.patch MPlayer-dvd-ru.patch mplayer-*.patch *.diff
-gzip: MPlayer-cvs-*.patch MPlayer-svn-200606*.patch
-bzip2: *.c MPlayer-svn-*_dirac-*.patch navmplayer-*.patch ffmpeg-*.patch
+copy: *.sh MPlayer-1.0*.patch
+gzip: MPlayer-cvs-*.patch MPlayer-svn-200606*.patch MPlayer-dvd-ru-*.patch
+bzip2: *.c MPlayer-svn-*_dirac-*.patch

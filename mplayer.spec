@@ -9,8 +9,8 @@
 %define fversion	%real_version
 
 # Used only for CVS builds
-%define cvsbuild 20060704
-%define ffmpeg_version svn-20060704
+%define cvsbuild 20060705
+%define ffmpeg_version svn-20060705
 
 %if %cvsbuild
 %global release		0.%cvsbuild.%release
@@ -81,7 +81,7 @@
 %def_enable  libdv
 %def_enable  mad
 %def_disable xmms
-%def_enable  dvdnav
+%def_disable dvdnav
 %def_without dvdmenu
 %def_enable  jack
 %def_enable  cpu_detection
@@ -91,7 +91,6 @@
 %def_enable  3dnowext
 %def_enable  sse
 %def_enable  sse2
-%def_disable i18n
 %def_disable fribidi
 
 %if_enabled tremor_external
@@ -159,36 +158,30 @@ Requires: urw-fonts
 Source0:  %bname-%fversion.tar.bz2
 # svn checkout svn.mplayerhq.hu/mplayer/trunk
 %if %cvsbuild
-Source1:  ffmpeg-%ffmpeg_version.tar.bz2
+%{?_disable_shared_ffmpeg:Source1: ffmpeg-%ffmpeg_version.tar.bz2}
 # svn checkout svn.mplayerhq.hu/ffmpeg/trunk
 %endif
-Source2:  mplayer-dvdnav-20060614-patch.tar.bz2
-Source3:  cp1251-font.tar.bz2
-Source4:  standard-1.9.tar.bz2
-Source5:  mplayer.sh
-Source9:  ao_polyp.c.bz2
-Patch1:   MPlayer-svn-20060620-alt-external_fame.patch.gz
-Patch2:   MPlayer-dvd-ru.patch
-Patch3:   MPlayer-1.0pre4-alt-explicit_gif.patch
-Patch4:   MPlayer-1.0pre5-alt-translation.patch
-Patch5:   MPlayer-1.0pre4-alt-explicit_termcap.patch
-Patch6:   MPlayer-1.0pre4-alt-artsc_ldflags.patch
-#Patch7:   MPlayer-1.0pre7_dirac-0.5.x.patch
-#Patch7:   MPlayer-1.0pre7try2_dirac-0.6.x.patch
-Patch7:   MPlayer-svn-20060704_dirac-0.5.x.patch.bz2
-Patch8:   navmplayer-20060630.patch.bz2
-Patch9:   ffmpeg-svn-20060630-dirac-0.5.x.patch.bz2
-Patch12:  MPlayer-1.0pre5-alt-gcc-check.patch
-Patch13:  MPlayer-1.0pre5-nodebug.patch
-Patch19:  mplayer-libmpdvdkit2.patch
-Patch21:  MPlayer-svn-20060607-vf_mcdeint.patch.gz
-Patch22:  MPlayer-cvs-20060519-polyp0.8.patch.gz
-Patch23:  ad_pcm_fix_20050826.diff
-Patch24:  MPlayer-1.0pre7try2-xmmslibs_fix.patch
-Patch25:  MPlayer-1.0pre7try2-libdir_fix.patch
-Patch26:  MPlayer-svn-20060621-configure.patch.gz
+%{?_with_dvdmenu:Source2: mplayer-dvdnav-20060614-patch.tar.bz2}
+Source3: cp1251-font.tar.bz2
+Source4: standard-1.9.tar.bz2
+Source5: mplayer.sh
+Source9: ao_polyp.c.bz2
+Patch1: MPlayer-svn-20060620-alt-external_fame.patch.gz
+Patch2: MPlayer-dvd-ru-20060705.patch.gz
+Patch3: MPlayer-1.0pre4-alt-explicit_gif.patch
+Patch6: MPlayer-1.0pre4-alt-artsc_ldflags.patch
+#Patch7: MPlayer-1.0pre7_dirac-0.5.x.patch
+#Patch7: MPlayer-1.0pre7try2_dirac-0.6.x.patch
+Patch7: MPlayer-svn-20060704_dirac-0.5.x.patch.bz2
+%{?_with_dvdmenu:Patch8: navmplayer-20060630.patch.bz2}
+%{?_disable_shared_ffmpeg:Patch9: ffmpeg-svn-20060630-dirac-0.5.x.patch.bz2}
+Patch21: MPlayer-svn-20060607-vf_mcdeint.patch.gz
+Patch22: MPlayer-cvs-20060519-polyp0.8.patch.gz
+Patch24: MPlayer-1.0pre7try2-xmmslibs_fix.patch
+Patch25: MPlayer-1.0pre7try2-libdir_fix.patch
+Patch26: MPlayer-svn-20060621-configure.patch.gz
 %if %cvsbuild
-Patch27:  %name-cvs-20060331-builddocs.patch.gz
+Patch27: MPlayer-cvs-20060331-builddocs.patch.gz
 %endif
 
 
@@ -799,9 +792,11 @@ VIDIX driver for Unichrome.
 %else
 %setup -q -n %fname-%fversion -a 1 %{?_with_dvdmenu: -a 2}
 # needed with CVS snapshots
+%if_enabled dirac
 pushd ffmpeg-%ffmpeg_version
 %patch9 -p1
 popd
+%endif
 mv ffmpeg-%ffmpeg_version/libav{codec,format,util} .
 %endif
 %else
@@ -819,26 +814,29 @@ for p in doc gui; do
 done
 %patch8 -p1
 %endif
-%patch1 -p1 
+%patch1 -p1
+%patch2 -p1
 %patch3 -p1
 %patch6 -p1
 %if_enabled dirac
 %patch7 -p1
 %endif
 %patch21 -p1
-%patch22 -p1
+%{?_enable_polyp:%patch22 -p1}
 %patch24 -p1
 %patch25 -p1
 %if %cvsbuild
 %patch26 -p1
 %patch27 -p1
 %endif
-bzip2 -dcf %SOURCE9 > libao2/ao_polyp.c
+%{?_enable_polyp:bzip2 -dcf %SOURCE9 > libao2/ao_polyp.c}
 
 subst 's/\(ldconfig\)/\#\1/g' libdha/Makefile
+%if_enabled vidix
 subst 's,\(.*\)\/mplayer\/vidix,\1/vidix,g' vidix/drivers/Makefile
 subst 's,/mplayer\(/vidix/\),\1,' configure
-subst 's|\(\<\)\(dvdnav\)\(\.h\>\)|\1\2/\2\3|' configure
+%endif
+%{?_enable_dvdnav:subst 's|\(\<\)\(dvdnav\)\(\.h\>\)|\1\2/\2\3|' configure}
 
 %if %cvsbuild
 subst 's|"libavutil/md5.h"|<ffmpeg/md5.h>|' libvo/vo_md5sum.c
@@ -1324,6 +1322,13 @@ unset RPM_PYTHON
 
 
 %changelog
+* Wed Jul 05 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060705.1
+- new SVN sbapshot (revision 18902)
+- disabled dvdnav (not usable now)
+- don't include ffmpeg tarball if shared_ffmpeg enabled (default)
+- updated MPlayer-dvd-ru patch
+- cleaned up bogus patches
+
 * Tue Jul 04 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060704.1
 - new SVN sbapshot (revision 18891)
 - fixed spec
