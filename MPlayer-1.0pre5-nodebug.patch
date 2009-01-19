@@ -1,0 +1,33 @@
+--- MPlayer-20030601/libaf/Makefile.nodebug	Thu May  1 16:06:20 2003
++++ MPlayer-20030601/libaf/Makefile	Sun Jun  1 16:13:11 2003
+@@ -6,7 +6,7 @@
+ 
+ OBJS=$(SRCS:.c=.o)
+ 
+-CFLAGS  = $(OPTFLAGS) -I. -Wall $(EXTRA_INC)
++CFLAGS  = $(OPTFLAGS) -I. $(EXTRA_INC)
+ 
+ ifeq ($(TARGET_MINGW32),yes)
+ CFLAGS += -D_IO_H_
+--- MPlayer-20030601/libmenu/Makefile.nodebug	Sun Dec 29 14:37:48 2002
++++ MPlayer-20030601/libmenu/Makefile	Sun Jun  1 16:12:45 2003
+@@ -6,7 +6,7 @@
+ SRCS= menu.c vf_menu.c menu_cmdlist.c menu_pt.c menu_list.c menu_filesel.c menu_txt.c menu_console.c menu_param.c
+ OBJS=$(SRCS:.c=.o)
+ 
+-CFLAGS  = $(OPTFLAGS) -I. -I.. -I../libmpcodecs $(EXTRA_INC) -Wall
++CFLAGS  = $(OPTFLAGS) -I. -I.. -I../libmpcodecs $(EXTRA_INC)
+ 
+ .SUFFIXES: .c .o
+ 
+--- MPlayer-20030601/Makefile.nodebug	Sun Jun  1 16:12:45 2003
++++ MPlayer-20030601/Makefile	Sun Jun  1 16:12:45 2003
+@@ -241,7 +241,7 @@
+ $(MENCODER_DEP): version.h
+ 
+ $(PRG_CFG): version.h codec-cfg.c codec-cfg.h
+-	$(CC) $(CFLAGS) -g codec-cfg.c mp_msg.c -o $(PRG_CFG) -DCODECS2HTML $(EXTRA_LIB) $(I18NLIBS)
++	$(CC) $(CFLAGS) codec-cfg.c mp_msg.c -o $(PRG_CFG) -DCODECS2HTML $(EXTRA_LIB) $(I18NLIBS)
+ 
+ install: $(ALL_PRG)
+ ifeq ($(VIDIX),yes)

@@ -1,5 +1,7 @@
-tar.bz2: r19467:. name=@name@-svn-r19467
+tar.bz2: r19513:. name=@name@-svn-20060823
+tar.bz2: ffmpeg-r6051:. name=ffmpeg-svn-20060823
 tar.bz2: standard-1.9:. name=standard-1.9 base=standard
-copy: *.sh *-explicit_gif.patch *-libdir_fix.patch *-xmmslibs_fix.patch
-gzip: *.in *.diff *-udev.patch *-builddocs.patch *-vf_mcdeint.patch *-external_fame.patch *-configure.patch *-vbe.patch *-artsc_ldflags.patch *-ext_ffmpeg.patch *-polyp0.8.patch mplayer-dvd-ru-*.patch *-libdha.patch *-vo_vidix.patch
-bzip2: *.c *_dirac-*.patch *-ext_libswscale.patch
+tar.bz2: cp1251-font:. name=cp1251-font base=font
+copy: *.sh *.diff MPlayer-1.0*.patch MPlayer-dvd-ru.patch *-artsc_ldflags.patch *-libmpdvdkit2.patch
+gzip: *-builddocs.patch *-vf_mcdeint.patch *-configure.patch *-polyp0.9.patch
+bzip2: *.c *-external_fame.patch *-docs.patch

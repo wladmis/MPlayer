@@ -1,0 +1,11 @@
+--- MPlayer-20031118/configure.r	Tue Nov 18 22:31:36 2003
++++ MPlayer-20031118/configure	Tue Nov 18 22:39:10 2003
+@@ -496,7 +496,7 @@
+ 
+ # Checking CC version...
+ if test "$_skip_cc_check" != yes ; then
+- for _cc in "$_cc" gcc gcc-3.3 gcc-3.2 gcc-3.1 gcc3 gcc-3.0 cc ; do
++ for _cc in "$_cc" gcc gcc-3.4 gcc-3.3 gcc-3.2 gcc32 gcc-3.1 gcc3 gcc-3.0 cc ; do
+   echocheck "$_cc version"
+   cc_name=`( $_cc -v ) 2>&1 | tail -1 | cut -d ' ' -f 1`
+   cc_version=`( $_cc -dumpversion ) 2>&1`
