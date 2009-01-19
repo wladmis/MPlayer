@@ -1,7 +1,7 @@
-diff -urN MPlayer-svn-20060620.orig/configure MPlayer-svn-20060620/configure
---- MPlayer-svn-20060620.orig/configure	2006-06-20 13:10:58 +0300
-+++ MPlayer-svn-20060620/configure	2006-06-20 16:14:45 +0300
-@@ -4744,7 +4744,7 @@
+diff -urN MPlayer-svn-20060710.orig/configure MPlayer-svn-20060710/configure
+--- MPlayer-svn-20060710.orig/configure	2006-07-10 14:48:37 +0300
++++ MPlayer-svn-20060710/configure	2006-07-10 16:30:35 +0300
+@@ -4729,7 +4729,7 @@
  _def_libfame='#undef USE_LIBFAME'
  if test "$_libfame" = yes ; then
    _def_libfame='#define USE_LIBFAME 1'
@@ -10,10 +10,10 @@ diff -urN MPlayer-svn-20060620.orig/configure MPlayer-svn-20060620/configure
  fi
  
  
-diff -urN MPlayer-svn-20060620.orig/Makefile MPlayer-svn-20060620/Makefile
---- MPlayer-svn-20060620.orig/Makefile	2006-06-20 13:10:58 +0300
-+++ MPlayer-svn-20060620/Makefile	2006-06-20 16:14:00 +0300
-@@ -187,9 +187,6 @@
+diff -urN MPlayer-svn-20060710.orig/Makefile MPlayer-svn-20060710/Makefile
+--- MPlayer-svn-20060710.orig/Makefile	2006-07-10 14:48:37 +0300
++++ MPlayer-svn-20060710/Makefile	2006-07-10 16:29:01 +0300
+@@ -196,9 +196,6 @@
  ifeq ($(VIDIX),yes)
  PARTS += libdha vidix
  endif
@@ -23,7 +23,7 @@ diff -urN MPlayer-svn-20060620.orig/Makefile MPlayer-svn-20060620/Makefile
  ifeq ($(DVDKIT2),yes)
  PARTS += libmpdvdkit2
  else
-@@ -247,9 +244,6 @@
+@@ -255,9 +252,6 @@
  ifeq ($(VIDIX),yes)
  COMMON_DEPS += libdha/libdha.so vidix/libvidix.a
  endif
@@ -33,13 +33,13 @@ diff -urN MPlayer-svn-20060620.orig/Makefile MPlayer-svn-20060620/Makefile
  ifeq ($(DVDKIT2),yes)
  COMMON_DEPS += libmpdvdkit2/libmpdvdkit.a
  endif
-@@ -277,9 +271,6 @@
+@@ -289,9 +283,6 @@
  loader/libloader.a:
  	$(MAKE) -C loader
  
 -libfame/libfame.a:
 -	$(MAKE) -C libfame
 -
- libmpdemux/libmpdemux.a:
- 	$(MAKE) -C libmpdemux
+ libass/libass.a:
+ 	$(MAKE) -C libass
  

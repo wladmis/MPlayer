@@ -4,12 +4,12 @@
 
 %define base_version	1.0
 %define real_version	%base_version
-%define release		3
+%define release		1
 
 %define fversion	%real_version
 
-%define cvsbuild 20060707
-%define ffmpeg_version svn-20060707
+%define cvsbuild 20060710
+%define ffmpeg_version svn-20060710
 
 %if %cvsbuild
 %global release		0.%cvsbuild.%release
@@ -87,6 +87,7 @@
 %def_disable xmms
 %def_disable dvdnav
 %def_without dvdmenu
+%def_enable ass # internal SSA/ASS subtitles support
 %def_enable jack
 %def_enable cpu_detection
 %def_enable mmx
@@ -186,8 +187,9 @@ Source0:  %bname-%fversion.tar.bz2
 Source3: cp1251-font.tar.bz2
 Source4: standard-1.9.tar.bz2
 Source5: mplayer.sh
+%{?_enable_vidix_int_drivers:Source6: vidix-%vidixver.tar.bz2}
 Source9: ao_polyp.c.bz2
-Patch1: MPlayer-svn-20060620-alt-external_fame.patch.gz
+Patch1: MPlayer-svn-20060710-alt-external_fame.patch.gz
 Patch2: MPlayer-dvd-ru-20060705.patch.gz
 Patch3: MPlayer-1.0pre4-alt-explicit_gif.patch
 Patch4: MPlayer-svn-20060707-ext_vidix_drivers-0.9.9.1.patch.bz2
@@ -863,11 +865,16 @@ pushd ffmpeg-%ffmpeg_version
 %patch9 -p1
 popd
 %endif
-mv ffmpeg-%ffmpeg_version/libav{codec,format,util} .
+mv ffmpeg-%ffmpeg_version/lib{av{codec,format,util}postproc} .
 %endif
 %else
 # A Release Build
 %setup -q -n %fname-%fversion
+%endif
+%if_enabled vidix_int_drivers
+tar -xjvf %SOURCE6
+rm -rf vidix
+mv vidix-%vidixver/vidix ./
 %endif
 
 %if_with dvdmenu
@@ -902,6 +909,7 @@ done
 %{?_enable_polyp:bzip2 -dcf %SOURCE9 > libao2/ao_polyp.c}
 
 %if_enabled vidix_int_drivers
+rm -rf libdha/*
 mv vidix-%vidixver/libdha/* libdha/
 subst 's/\(ldconfig\)/\#\1/g' libdha/Makefile
 %else
@@ -1126,8 +1134,8 @@ LC_MESSAGES=C ; export LC_MESSAGES
 		--with-dvdnavdir=%_includedir/dvdnav \
 %endif
 		%{subst_enable dvdnav} \
+		%{subst_enable ass} \
 		%{subst_enable fribidi}
-#		%{subst_enable i18n} \
 
 
 %ifarch %ix86
@@ -1422,6 +1430,12 @@ unset RPM_PYTHON
 
 
 %changelog
+* Mon Jul 10 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060710.1
+- new SVN sbapshot (revision 18986)
+- updated MPlayer-svn-20060710-alt-external_fame.patch
+- enabled ass (internal SSA/ASS subtitles support)
+- fixed spec
+
 * Mon Jul 10 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060707.3
 - replaced vidix-0.9.9.1.tar.bz2 with
   MPlayer-svn-20060707-ext_vidix_drivers-0.9.9.1.patch
@@ -1452,7 +1466,7 @@ unset RPM_PYTHON
 - fixed spec
 - fixed libvo/vo_md5sum.c
 - trying dvdmenu (disabled by deafult)
-- some fixes from LAKostis (vidix prefixes, bogus buildrequires)
+- some fixes from LAKostis (vidix prefixes, bogus BuildRequires)
 - added MPlayer-svn-20060704_dirac-0.5.x.patch
 - enabled dirac
 
