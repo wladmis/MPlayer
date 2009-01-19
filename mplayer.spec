@@ -7,9 +7,10 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 %define prerel 0
-%define svndate 20060719
-%define svnrev 19134
-%define ffmpeg_svndate 20060719
+%define svndate 20060720
+%define svnrev 19140
+%define ffmpeg_svndate 20060720
+%define ffmpeg_svnrev 5792
 %define vidixver 0.9.9.1
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
@@ -1417,10 +1418,9 @@ unset RPM_PYTHON
 
 
 %changelog
-* Thu Jul 20 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060719.1
+* Thu Jul 20 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060720.1
 - new SVN snapshot (revision 19134)
 - fixed lapses in %%changelog and %%description
-- removed %name-fonts package
 - without soundwrapper
 - making correct version.h
 - removed %name-fonts
