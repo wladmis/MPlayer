@@ -144,7 +144,9 @@
 %def_enable oss
 %def_enable arts
 %def_enable esd
-%def_enable polyp
+%def_enable pulse
+%def_disable polyp
+%def_disable old_polyp
 %def_enable jack
 %def_enable openal
 %def_enable nas
@@ -184,7 +186,7 @@
 %def_without soundwrapper
 %def_with htmldocs
 %define default_vo %{subst_o xmga}%{subst_o xv}%{subst_o sdl}%{subst_o gl2}%{subst_o gl}%{subst_o x11}%{subst_o_pre x vidix}%{subst_o mga}%{subst_o dfbmga}%{subst_o tdfxfb}%{subst_o 3dfx}%{subst_o s3fb}%{subst_o_pre c vidix}%{subst_o_post fbdev 2}%{subst_o vesa}%{subst_o caca}%{subst_o aa}null
-%define default_ao %{subst_o alsa}%{subst_o oss}%{subst_o openal}%{subst_o sdl}%{subst_o polyp}%{subst_o nas}null
+%define default_ao %{subst_o alsa}%{subst_o oss}%{subst_o openal}%{subst_o sdl}%{subst_o pulse}%{subst_o polyp}%{subst_o nas}null
 
 #----------------------	END OF PARAMETERS ---------------------------------------
 
@@ -271,7 +273,7 @@
 Name: %lname
 Serial: 1
 Version: 1.0
-%define altrel 1
+%define altrel 2
 %ifdef svnrev
 Release: alt1.%svnrev.%altrel
 %define pkgver svn-r%svnrev
@@ -303,7 +305,6 @@ Source0: %Name-%version%prerel.tar.bz2
 %endif
 # svn checkout svn.mplayerhq.hu/mplayer/trunk
 %{?ffmpeg_svnrev:%{?_disable_shared_ffmpeg:Source1: ffmpeg-svn-r%ffmpeg_svnrev.tar.bz2}}
-Source2: ao_polyp.c.bz2
 Source3: %lname.sh
 Source4: standard-1.9.tar.bz2
 Source5: %lname.conf.in.gz
@@ -323,6 +324,7 @@ Patch11: %lname-svn-r19595-nls.patch.gz
 Patch12: %lname-uni-svn19558.diff.gz
 Patch13: %Name-svn-20060711-vbe.patch.gz
 Patch14: %Name-1.0pre7try2-xmmslibs_fix.patch
+Patch15: %lname-svn-r19671-pulseaudio.patch.bz2
 Patch16: %Name-1.0pre8-udev.patch.gz
 Patch17: %lname-svn-r19389-ext_ffmpeg.patch.gz
 Patch21: %Name-svn-20060607-vf_mcdeint.patch.gz
@@ -401,7 +403,8 @@ BuildRequires: libvidix-devel
 %{?_enable_oss:BuildRequires: linux-libc-headers}
 %{?_enable_arts:BuildRequires: libarts-devel}
 %{?_enable_esd:BuildRequires: esound-devel}
-%{?_enable_polyp:BuildRequires: libpolypaudio-devel >= 0.9}
+%{?_enable_pulse:BuildRequires: libpulseaudio-devel >= 0.9}
+%{?_enable_polyp:BuildRequires: libpolypaudio-devel >= 0.8}
 %{?_enable_jack:BuildRequires: jackit-devel}
 %{?_enable_openal:BuildRequires: libopenal-devel}
 %{?_enable_nas:BuildRequires: libaudio-devel}
@@ -903,15 +906,16 @@ mv ffmpeg-svn-%ffmpeg_svnrev/lib{av{codec,format,util},postproc} .
 %patch12 -p1
 %patch13 -p1
 %patch14 -p1
+%patch15 -p1
 %patch16 -p1
 %patch17 -p1
 %patch21 -p1
-%{?_enable_polyp:%patch22 -p1}
+%{?_enable_polyp:%{?_disable_old_polyp:%patch22 -p1}}
 %ifdef svnrev
 %patch26 -p1
 %patch27 -p1
 %endif
-%{?_enable_polyp:bzip2 -dcf %SOURCE2 > libao2/ao_polyp.c}
+%{?_enable_polyp:%{?_disable_old_polyp:sed -e 's/\([Pp]\)ulse/\1olyp/g' -e 's/PULSE/POLYP/g' libao2/ao_pulse.c > libao2/ao_polyp.c}}
 
 subst 's/\(ldconfig\)/\#\1/g' libdha/Makefile
 %{?_enable_dvdnav:subst 's|\(\<\)\(dvdnav\)\(\.h\>\)|\1\2/\2\3|' configure}
@@ -1112,6 +1116,7 @@ export LC_MESSAGES=C
 		%{subst_enable_to oss ossaudio} \
 		%{subst_enable arts} \
 		%{subst_enable esd} \
+		%{subst_enable pulse} \
 		%{subst_enable polyp} \
 		%{subst_enable jack} \
 		%{subst_enable openal} \
@@ -1420,6 +1425,12 @@ unset RPM_PYTHON
 
 
 %changelog
+* Tue Sep 05 2006 Led <led@altlinux.ru> 1:1.0-alt1.19671.2
+- added %lname-svn-r19671-pulseaudio.patch (based on
+  mplayer-pulse.patch from http://pulseaudio.org
+- enabled pulse
+- disabled polyp (obsoleted with pulse)
+
 * Tue Sep 05 2006 Led <led@altlinux.ru> 1:1.0-alt1.19671.1
 - new SVN snapshot (revision 19671)
 - added NLS support: mp_help2msg.awk, mp_msg2po.awk,
