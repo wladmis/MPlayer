@@ -6,8 +6,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 %define prerel %nil
-%define svnrev 20190
-%define ffmpeg_svnrev 6678
+%define svnrev 20277
+%define ffmpeg_svnrev 6713
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -1432,6 +1432,33 @@ unset RPM_PYTHON
 
 
 %changelog
+* Tue Oct 17 2006 Led <led@altlinux.ru> 1.0-alt31.20277.1
+- new SVN snapshot (revision 20277):
+  + Russian documentation translation synced and almost finished
+  + bicubic OpenGL scaling works with ATI cards
+  + md5sum switched to use libavutil md5 implementation
+  + support for libcaca 1.0 via compatibility layer
+  + audio stream switching between streams with different codecs
+  + fixed seeking to absolute and percent position for libavformat
+    demuxer
+  + NUT demuxer using libnut
+  + Matroska SimpleBlock support
+  + -correct-pts option
+  + UTF-8 used for OSD and subtitles, some bitmap fonts will no longer
+    work correctly and -subcp must be set for all non-UTF-8 subtitles
+  + more audio-truncation fixes
+  + libavutil mandatory for MPlayer compilation
+  + more intuitive -edlout behaviour
+  + -nortc is now default since -rtc has only disadvantages with recent
+    kernels
+  + MMX-optimizations for -vf yadif
+  + MMX-optimizations for -vf zrmjpeg
+  + GUI:
+    drag-and-drop ignored last file
+    save and load cache setting correctly
+    working audio stream selection for Ogg and Matroska files
+    xinerama fixes
+
 * Fri Oct 13 2006 Led <led@altlinux.ru> 1.0-alt31.20190.1
 - new SVN snapshot (revision 20190):
   + -endpos option for %lname
