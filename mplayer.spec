@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 %define prerel %nil
-%define svnrev 19671
-%define ffmpeg_svnrev 6169
+%define svnrev 19700
+%define ffmpeg_svnrev 6181
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -273,7 +273,7 @@
 Name: %lname
 Serial: 1
 Version: 1.0
-%define altrel 2
+%define altrel 1
 %ifdef svnrev
 Release: alt1.%svnrev.%altrel
 %define pkgver svn-r%svnrev
@@ -1425,6 +1425,9 @@ unset RPM_PYTHON
 
 
 %changelog
+* Thu Sep 07 2006 Led <led@altlinux.ru> 1:1.0-alt1.19700.1
+- new SVN snapshot (revision 19700)
+
 * Tue Sep 05 2006 Led <led@altlinux.ru> 1:1.0-alt1.19671.2
 - added %lname-svn-r19671-pulseaudio.patch (based on
   mplayer-pulse.patch from http://pulseaudio.org
