@@ -6,10 +6,9 @@
 %define subst_o_pre() %{expand:%%{?_enable_%{2}:%{1}%{2},}}
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
-%define prerel 0
-%define svnrev 19427
+%define prerel %nil
+%define svnrev 19447
 %define ffmpeg_svnrev 6005
-%define vidixver 0.9.9.1
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -99,9 +98,7 @@
 
 # Video output:
 %def_enable vidix
-%def_disable vidix_ext
-%def_enable vidix_int
-%def_disable vidix_int_drivers
+%define vidixlib ext
 %def_enable gl
 %def_enable dga
 %def_disable vesa
@@ -222,21 +219,9 @@
 %set_disable fontconfig
 %endif
 
-%if_disabled vidix
-%set_disable vidix_ext
-%set_disable vidix_int
-%set_disable vidix_int_drivers
-%endif
-%if_disabled vidix_int
-%if_disabled vidix_ext
+%{?_disable_vidix:%define vidixlib none}
+%if %vidixlib == none
 %set_disable vidix
-%endif
-%endif
-%if_enabled vidix_int
-%set_disable vidix_ext
-%endif
-%if_enabled vidix_ext
-%set_disable vidix_int_drivers
 %endif
 
 %if_enabled tremor_external
@@ -273,13 +258,8 @@ Version: 1.0
 Release: alt1.%svnrev.%altrel
 %define pkgver svn-r%svnrev
 %else
-%ifdef prerel
-Release: alt0.%altrel
-%define pkgver %version%prerel
-%else
 Release: alt%altrel
-%define pkgver %version
-%endif
+%define pkgver %version%prerel
 %endif
 Summary: Media player
 Summary(uk_UA.CP1251): Медіаплейер
@@ -309,19 +289,14 @@ Source2: ao_polyp.c.bz2
 Source3: %lname.sh
 Source4: standard-1.9.tar.bz2
 Source5: %lname.conf.in.gz
-# http://vidix.sourceforge.net
-%{?_enable_vidix_int_drivers:Source6: vidix-%vidixver.tar.bz2}
 Patch1: %Name-svn-20060710-alt-external_fame.patch.gz
 Patch2: %lname-dvd-ru-svn19389.patch.gz
 Patch3: %Name-1.0pre4-alt-explicit_gif.patch
-Patch4: %Name-svn-20060707-ext_vidix_drivers-0.9.9.1.patch.bz2
-Patch5: vidix-0.9.9.1-pm3_vid.patch.gz
+Patch4: %lname-svn-r19427-libdha.patch.gz
 Patch6: %lname-svn-r19389-alt-artsc_ldflags.patch.gz
 Patch7: %Name-svn-20060707_dirac-0.5.x.patch.bz2
 Patch8: %lname-svn-r19389-ext_libswscale.patch.bz2
 %{?_disable_shared_ffmpeg:Patch9: ffmpeg-svn-20060630-dirac-0.5.x.patch.bz2}
-%{?_disable_vidix_int_drivers:Patch10: %Name-svn-20060630-vidix_ext_drivers.patch.gz}
-Patch11: %Name-svn-20060630-vidix_0.9.9.1.patch.gz
 Patch12: %lname-uni-svn19389.diff.gz
 Patch13: %Name-svn-20060711-vbe.patch.gz
 Patch14: %Name-1.0pre7try2-xmmslibs_fix.patch
@@ -330,7 +305,7 @@ Patch16: %Name-1.0pre8-udev.patch.gz
 Patch17: %lname-svn-r19389-ext_ffmpeg.patch.gz
 Patch21: %Name-svn-20060607-vf_mcdeint.patch.gz
 Patch22: %lname-svn-r19389-polyp0.8.patch.gz
-Patch26: %lname-svn-r19416-configure.patch.gz
+Patch26: %lname-svn-r19447-configure.patch.gz
 %{?svnrev:Patch27: %Name-cvs-20060331-builddocs.patch.gz}
 
 BuildRequires: awk pkgconfig libncurses-devel libslang-devel zlib-devel
@@ -378,7 +353,9 @@ BuildRequires: cpp >= 3.3 gcc >= 3.3 gcc-c++ >= 3.3
 %{?_enable_musepack:BuildRequires: libmpcdec-devel >= 1.2.1}
 %{?_enable_dirac:BuildRequires: libdirac-devel}
 
-%{?_enable_vidix_ext:BuildRequires: libvidix-devel}
+%if %vidixlib == ext
+BuildRequires: libvidix-devel
+%endif
 %{?_enable_gl:BuildRequires: libmesa-devel libGLwrapper}
 %{?_enable_vesa:BuildRequires: libvbe-devel}
 %{?_enable_svga:BuildRequires: svgalib-devel}
@@ -672,16 +649,26 @@ Obsoletes: %Name-doc-zh
 %Name Taiwan Chinese docs.
 
 
-%if_enabled vidix_int
-%package vidix
-Group: Video 
+%if %vidixlib == int
+%package vidix-drivers
+Group: Video
 Summary: VIDeo Interface for *nIX
+Requires: %lname-vidix-trident = %version-%release
+Requires: %lname-vidix-mga = %version-%release
+Requires: %lname-vidix-permedia2 = %version-%release
+Requires: %lname-vidix-permedia3 = %version-%release
+Requires: %lname-vidix-radeon = %version-%release
+Requires: %lname-vidix-rage128 = %version-%release
+Requires: %lname-vidix-savage = %version-%release
+Requires: %lname-vidix-nvidia = %version-%release
+Requires: %lname-vidix-sis = %version-%release
+Requires: %lname-vidix-unichrome = %version-%release
+Requires: %lname-vidix-genfb = %version-%release
 %if %name != %Name
-Provides: %Name-vidix
 Obsoletes: %Name-vidix
 %endif
 
-%description vidix
+%description vidix-drivers
 VIDIX is the abbreviation for VIDeo Interface for *niX.
 VIDIX was designed and introduced as an interface for fast user-space
 drivers providing DGA. Hopefully these drivers will be as portable as
@@ -692,8 +679,9 @@ Basic features:
 * Unlike X11 it provides DGA everywhere it's possible.
 * Unlike v4l it provides interface for video playback.
 * Unlike linux's drivers it uses the math library.
+This virtual package provides VIDIX drivers.
 
-%description vidix -l ru_RU.CP1251
+%description vidix-drivers -l ru_RU.CP1251
 VIDIX - это аббревиатура для VIDeo Interface for *niX (ВИДео Интерфейс
 для юниКСоподобных операционных систем).
 VIDIX был спроектирован и разработан как интерфейс для быстрых
@@ -707,9 +695,121 @@ VIDIX был спроектирован и разработан как интерфейс для быстрых
 * В отличие от v4l он предоставляет интерфейс для воспроизведения 
   видео.
 * В отличие от драйверов линукс он использует библиотеку math.
+Этот виртуальный пакет предоставляет VIDIX-драйверы.
 
 
-%if_enabled vidix_int_drivers
+%package vidix-mach64
+Group: Video
+Summary: VIDIX driver for ATI Mach64 and 3DRage chips
+Requires: %lname
+Provides: %name-vidix-driver
+%if %name != %Name
+Provides: %Name-vidix-mach64
+Obsoletes: %Name-vidix-mach64
+%endif
+
+%description vidix-mach64
+VIDIX driver for ATI Mach64 and 3DRage chips.
+
+
+%package vidix-mga
+Group: Video
+Summary: VIDIX drivers for Matrox Gxxx series
+Requires: %lname
+Provides: %name-vidix-driver
+%if %name != %Name
+Provides: %Name-vidix-mga
+Obsoletes: %Name-vidix-mga
+%endif
+
+%description vidix-mga
+Two VIDIX drivers for Matrox Gxxx series (using BES and CRTC2).
+
+
+%package vidix-nvidia
+Group: Video
+Summary: VIDIX driver for nVidia chips
+Requires: %lname
+Provides: %name-vidix-driver
+%if %name != %Name
+Provides: %Name-vidix-nvidia
+Obsoletes: %Name-vidix-nvidia
+%endif
+
+%description vidix-nvidia
+VIDIX driver for nVidia chips.
+
+
+%package vidix-permedia3
+Group: Video
+Summary: VIDIX driver for 3DLabs Permedia3 cards
+Requires: %lname
+Provides: %name-vidix-driver
+%if %name != %Name
+Provides: %Name-vidix-permedia
+Obsoletes: %Name-vidix-permedia
+%endif
+
+%description vidix-permedia3
+VIDIX driver for 3DLabs GLINT R3/Permedia3 cards.
+
+
+%package vidix-radeon
+Group: Video
+Summary: VIDIX driver for ATI Radeon
+Requires: %lname
+Provides: %name-vidix-driver
+%if %name != %Name
+Provides: %Name-vidix-radeon
+Obsoletes: %Name-vidix-radeon
+%endif
+
+%description vidix-radeon
+VIDIX driver for ATI Radeon.
+
+
+%package vidix-rage128
+Group: Video
+Summary: VIDIX driver for ATI Rage128
+Requires: %lname
+Provides: %name-vidix-driver
+%if %name != %Name
+Provides: %Name-vidix-rage128
+Obsoletes: %Name-vidix-rage128
+%endif
+
+%description vidix-rage128
+VIDIX driver for ATI Rage128.
+
+
+%package vidix-savage
+Group: Video
+Summary: VIDIX driver for S3 Savage
+Requires: %lname
+Provides: %name-vidix-driver
+%if %name != %Name
+Provides: %Name-vidix-savage
+Obsoletes: %Name-vidix-savage
+%endif
+
+%description vidix-savage
+VIDIX driver for S3 Savage.
+
+
+%package vidix-sis
+Group: Video
+Summary: VIDIX driver for SiS 300 and 310/325 series chips
+Requires: %lname
+Provides: %name-vidix-driver
+%if %name != %Name
+Provides: %Name-vidix-sis
+Obsoletes: %Name-vidix-sis
+%endif
+
+%description vidix-sis
+VIDIX driver for SiS 300 and 310/325 series chips.
+
+
 %package vidix-trident
 Group: Video
 Summary: VIDIX driver for Trident Cyberblade/i1
@@ -724,138 +824,15 @@ Obsoletes: %Name-vidix-trident
 VIDIX driver for Trident Cyberblade/i1.
 
 
-%package vidix-mach64
-Group: Video
-Summary: VIDIX driver for ATI Mach64 and 3DRage chips
-Provides: %name-vidix-driver
-%if %name != %Name
-Provides: %Name-vidix-mach64
-Obsoletes: %Name-vidix-mach64
-%endif
-
-%description vidix-mach64
-VIDIX driver for ATI Mach64 and 3DRage chips.
-
-
-%package vidix-mga
-Group: Video
-Summary: VIDIX drivers for Matrox Gxxx series
-Provides: %name-vidix-driver
-%if %name != %Name
-Provides: %Name-vidix-mga
-Obsoletes: %Name-vidix-mga
-%endif
-
-%description vidix-mga
-Two VIDIX drivers for Matrox Gxxx series (using BES and CRTC2).
-
-
-%package vidix-permedia2
-Group: Video
-Summary: VIDIX driver for 3DLabs Permedia2 cards
-Provides: %name-vidix-driver
-
-%description vidix-permedia2
-VIDIX driver for 3DLabs Permedia2 cards.
-
-
-%package vidix-permedia3
-Group: Video
-Summary: VIDIX driver for 3DLabs Permedia3 cards
-Provides: %name-vidix-driver
-%if %name != %Name
-Provides: %Name-vidix-permedia
-Obsoletes: %Name-vidix-permedia
-%endif
-
-%description vidix-permedia3
-VIDIX driver for 3DLabs GLINT R3/Permedia3 cards.
-
-
-%package vidix-radeon
-Group: Video
-Summary: VIDIX driver for ATI Radeon
-Provides: %name-vidix-driver
-%if %name != %Name
-Provides: %Name-vidix-radeon
-Obsoletes: %Name-vidix-radeon
-%endif
-
-%description vidix-radeon
-VIDIX driver for ATI Radeon.
-
-
-%package vidix-rage128
-Group: Video
-Summary: VIDIX driver for ATI Rage128
-Provides: %name-vidix-driver
-%if %name != %Name
-Provides: %Name-vidix-rage128
-Obsoletes: %Name-vidix-rage128
-%endif
-
-%description vidix-rage128
-VIDIX driver for ATI Rage128.
-
-
-%package vidix-savage
-Group: Video
-Summary: VIDIX driver for S3 Savage
-Provides: %name-vidix-driver
-%if %name != %Name
-Provides: %Name-vidix-savage
-Obsoletes: %Name-vidix-savage
-%endif
-
-%description vidix-savage
-VIDIX driver for S3 Savage.
-
-
-%package vidix-nvidia
-Group: Video
-Summary: VIDIX driver for nVidia chips
-Provides: %name-vidix-driver
-%if %name != %Name
-Provides: %Name-vidix-nvidia
-Obsoletes: %Name-vidix-nvidia
-%endif
-
-%description vidix-nvidia
-VIDIX driver for nVidia chips.
-
-
-%package vidix-sis
-Group: Video
-Summary: VIDIX driver for SiS 300 and 310/325 series chips
-Provides: %name-vidix-driver
-%if %name != %Name
-Provides: %Name-vidix-sis
-Obsoletes: %Name-vidix-sis
-%endif
-
-%description vidix-sis
-VIDIX driver for SiS 300 and 310/325 series chips.
-
-
 %package vidix-unichrome
 Group: Video
 Summary: VIDIX driver for VIA CLE266 Unichrome
+Requires: %lname
 Provides: %name-vidix-via
 Provides: %name-vidix-driver
 
 %description vidix-unichrome
 VIDIX driver for VIA CLE266 Unichrome.
-
-
-%package vidix-genfb
-Group: Video
-Summary: VIDIX driver for framebuffer
-Provides: %name-vidix-fb
-Provides: %name-vidix-driver
-
-%description vidix-genfb
-VIDIX driver for framebuffer.
-%endif
 %endif
 
 
@@ -875,24 +852,16 @@ mv ffmpeg-svn-%ffmpeg_svnrev/lib{av{codec,format,util},postproc} .
 %else
 %setup -q -n %Name-%pkgver
 %endif
-%if_enabled vidix_int_drivers
-tar -xjvf %SOURCE6
-rm -rf vidix
-mv vidix-%vidixver/vidix ./
-%endif
 
 %patch1 -p1
 %patch2 -p1
 %patch3 -p1
 %patch4 -p1
-%{!?_disable_vidix_int_drivers:%patch5 -p1}
 %patch6 -p1
 %{?_enabl_dirac:%patch7 -p1}
 %if %swscalelib == ext
 %patch8 -p1
 %endif
-%{?_disable_vidix_int_drivers:%patch11 -p1}
-%{?_disable_vidix_int_drivers:%patch10 -p1}
 %patch12 -p1
 %patch13 -p1
 %patch14 -p1
@@ -907,22 +876,7 @@ mv vidix-%vidixver/vidix ./
 %endif
 %{?_enable_polyp:bzip2 -dcf %SOURCE2 > libao2/ao_polyp.c}
 
-%if_enabled vidix_int_drivers
-rm -rf libdha/*
-mv vidix-%vidixver/libdha/* libdha/
 subst 's/\(ldconfig\)/\#\1/g' libdha/Makefile
-%else
-mv libdha/Makefile libdha/Makefile.orig
-cat > libdha/Makefile <<__MAKE__
-all:
-
-install:
-__MAKE__
-%endif
-%if_enabled vidix_int
-subst 's,\(.*\)\/%lname\/vidix,\1/vidix,g' vidix/drivers/Makefile
-subst 's,/%lname\(/vidix/\),\1,' configure
-%endif
 %{?_enable_dvdnav:subst 's|\(\<\)\(dvdnav\)\(\.h\>\)|\1\2/\2\3|' configure}
 
 %ifdef svnrev
@@ -976,7 +930,6 @@ export LC_MESSAGES=C
 		%{subst_enable live} \
 		%{?_enable_live:--with-livelibdir=%_libdir/live} \
 		%{subst_enable dvdnav} \
-		%{?_enable_dvdnav:--with-dvdnavdir=%_includedir/dvdnav} \
 		%{subst_enable dvdread} \
 		%{subst_enable mpdvdkit} \
 		%{subst_enable cdparanoia} \
@@ -1065,8 +1018,11 @@ export LC_MESSAGES=C
 		%{subst_enable musepack} \
 		%{?_enable_dirac:--enable-dirac} \
 %if_enabled vidix
-		%{subst_enable_to vidix_ext vidix-external} \
-		%{subst_enable_to vidix_int vidix-internal} \
+%if %vidixlib == int
+		--disable-vidix-external --enable-vidix-internal \
+%else
+		--enable-vidix-external --disable-vidix-internal \
+%endif
 %else
 		--disable-vidix-external --disable-vidix-internal \
 %endif
@@ -1239,19 +1195,12 @@ install -m 0644 DOCS/tech/realcodecs/{TODO,*.txt} %buildroot%_docdir/%name-doc-%
 # a tribute to clever python support
 unset RPM_PYTHON
 
-
-%if_enabled vidix_int
-%post vidix -p %post_ldconfig
-
-
-%postun vidix -p %postun_ldconfig
-%endif
+%add_verify_elf_skiplist %_libdir/%lname/vidix/*
 
 
 %if_enabled gui
 %post gui
 %update_menus
-
 
 %postun gui
 %clean_menus
@@ -1352,71 +1301,68 @@ unset RPM_PYTHON
 %_docdir/%name-doc-%version/zh
 
 
-%if_enabled vidix_int
-%if_enabled vidix_int_drivers
-%files vidix
-%_libdir/libdha*
-
-
-%files vidix-trident
-%_libdir/vidix/cyberblade_vid.so
+%if %vidixlib == int
+%files vidix-drivers
 
 
 %files vidix-mach64
-%_libdir/vidix/mach64_vid.so
+%_libdir/%lname/vidix/mach64_vid.so
 
 
 %files vidix-mga
-%_libdir/vidix/mga_crtc2_vid.so
-%_libdir/vidix/mga_vid.so
-%_libdir/vidix/mga_tv_vid.so
+%_libdir/%lname/vidix/mga_crtc2_vid.so
+%_libdir/%lname/vidix/mga_vid.so
 
 
 %files vidix-nvidia
-%_libdir/vidix/nvidia_vid.so
-
-
-%files vidix-radeon
-%_libdir/vidix/radeon_vid.so
-
-
-%files vidix-rage128
-%_libdir/vidix/rage128_vid.so
-
-
-%files vidix-savage
-%_libdir/vidix/savage_vid.so
-
-
-%files vidix-sis
-%_libdir/vidix/sis_vid.so
-
-
-%files vidix-unichrome
-%_libdir/vidix/unichrome_vid.so
-
-
-%files vidix-genfb
-%_libdir/vidix/genfb_vid.so
-
-
-%files vidix-permedia2
-%_libdir/vidix/pm2_vid.so
+%_libdir/%lname/vidix/nvidia_vid.so
 
 
 %files vidix-permedia3
-%_libdir/vidix/pm3_vid.so
-%endif
+%_libdir/%lname/vidix/pm3_vid.so
+
+%files vidix-radeon
+%_libdir/%lname/vidix/radeon_vid.so
+
+
+%files vidix-rage128
+%_libdir/%lname/vidix/rage128_vid.so
+
+
+%files vidix-savage
+%_libdir/%lname/vidix/savage_vid.so
+
+
+%files vidix-sis
+%_libdir/%lname/vidix/sis_vid.so
+
+
+%files vidix-trident
+%_libdir/%lname/vidix/cyberblade_vid.so
+
+
+%files vidix-unichrome
+%_libdir/%lname/vidix/unichrome_vid.so
 %endif
 
 
 %changelog
-* Fri Aug 18 2006 Led <led@altlinux.ru> 1:1.0-alt1.19427.1
-- new SVN snapshot (revision 19427)
+* Sat Aug 19 2006 Led <led@altlinux.ru> 1:1.0-alt1.19447.1
+- new SVN snapshot (revision 19447)
+  + support for chapters seeking in dvd:// stream
+- fixed build with external vidix
+- cleaned up spec
+- removed:
+  + %Name-svn-20060707-ext_vidix_drivers-0.9.9.1.patch,
+  + vidix-0.9.9.1-pm3_vid.patch,
+  + %Name-svn-20060630-vidix_ext_drivers.patch,
+  + %Name-svn-20060630-vidix_0.9.9.1.patch
+- updated %lname-svn-r19447-configure.patch
+- added lname-svn-r19427-libdha.patch
 
 * Thu Aug 17 2006 Led <led@altlinux.ru> 1:1.0-alt1.19416.1
 - new SVN snapshot (revision 19416)
-- fixed and updated mplayer-svn-r19416-configure.patch
+- fixed and updated %lname-svn-r19416-configure.patch
 - fixed %%changelog
 - cleaned up spec
 - fixed BuildRequires
