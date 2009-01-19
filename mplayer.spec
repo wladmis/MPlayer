@@ -274,7 +274,7 @@
 %define Name MPlayer
 Name: %lname
 Version: 1.0
-%define rel 35.1
+%define rel 35.2
 %define subrel 1
 %ifdef svnrev
 Release: alt%rel.%svnrev.%subrel
@@ -333,8 +333,9 @@ Patch19: %lname-bmovl-test.patch.gz
 Patch21: %Name-svn-20060607-vf_mcdeint.patch.gz
 Patch22: %lname-svn-r19389-polyp0.8.patch.gz
 Patch26: %lname-1.0rc1-configure.patch.gz
-Patch27: %lname-svn-r20544-builddocs.patch.gz
+Patch27: %lname-svn-r20777-builddocs.patch.gz
 Patch28: %lname-1.0rc1-mp3lib-amd.patch.gz
+Patch29: %lname-1.0rc1-demux_nut.patch.gz
 %if_disabled shared_ffmpeg
 Patch31: ffmpeg-svn-r6769-dirac-0.5.x.patch.bz2
 Patch32: ffmpeg-uni-svn-r6110.patch.gz
@@ -948,6 +949,7 @@ mv ffmpeg-svn-r%ffmpeg_svnrev/lib{av{codec,format,util},postproc} .
 %patch26 -p1
 %patch27 -p1
 %patch28 -p1
+%patch29 -p1
 %{?_disable_shared_ffmpeg:%patch32 -p1}
 %{?_enable_polyp:%{?_disable_old_polyp:sed -e 's/\([Pp]\)ulse/\1olyp/g' -e 's/PULSE/POLYP/g' libao2/ao_pulse.c > libao2/ao_polyp.c}}
 
@@ -1524,6 +1526,11 @@ unset RPM_PYTHON
 
 
 %changelog
+* Mon Nov 13 2006 Led <led@altlinux.ru> 1.0-alt35.2
+- rebuilt with new libnut:
+  + added %lname-1.0rc1-demux_nut.patch
+- updated %lname-svn-r20777-builddocs.patch
+
 * Wed Nov 08 2006 Led <led@altlinux.ru> 1.0-alt35.1
 - rebuild with new libavformat
 

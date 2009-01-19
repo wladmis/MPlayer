@@ -1,0 +1,12 @@
+diff -urN MPlayer-1.0rc1.orig/libmpdemux/demux_nut.c MPlayer-1.0rc1/libmpdemux/demux_nut.c
+--- MPlayer-1.0rc1.orig/libmpdemux/demux_nut.c	2006-10-23 01:32:31 +0300
++++ MPlayer-1.0rc1/libmpdemux/demux_nut.c	2006-11-13 17:22:50 +0200
+@@ -76,7 +76,7 @@
+ 	int ret;
+ 	int i;
+ 
+-	if ((ret = nut_read_headers(nut, &s))) {
++	if ((ret = nut_read_headers(nut, &s, NULL))) {
+ 		if (ret < 0) mp_msg(MSGT_HEADER, MSGL_ERR, "NUT error: %s\n",
+ 		                                           nut_error(-ret));
+ 		nut_demuxer_uninit(nut);
