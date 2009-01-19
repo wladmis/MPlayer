@@ -6,8 +6,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 %define prerel %nil
-%define svnrev 19838
-%define ffmpeg_svnrev 6252
+%define svnrev 19912
+%define ffmpeg_svnrev 6290
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -99,6 +99,7 @@
 %def_enable libmpeg2
 %def_enable musepack
 %def_disable dirac
+%def_disable nut
 
 # Video output:
 %def_enable vidix
@@ -155,7 +156,6 @@
 %def_enable select
 
 # Miscellaneous options:
-%define swscalelib ext
 %def_enable cpu_detection
 %define ccomp gcc
 %define asm as
@@ -316,7 +316,6 @@ Patch4: %lname-svn-r19427-libdha.patch.gz
 Patch5: %lname-svn-r19447-vo_vidix.patch.gz
 Patch6: %lname-svn-r19389-alt-artsc_ldflags.patch.gz
 Patch7: %Name-svn-20060707_dirac-0.5.x.patch.bz2
-Patch8: %lname-svn-r19389-ext_libswscale.patch.bz2
 %{?_disable_shared_ffmpeg:Patch9: ffmpeg-svn-20060630-dirac-0.5.x.patch.bz2}
 Patch10: %lname-svn-r19558-generic-x86_64.patch.gz
 Patch11: %lname-svn-r19595-nls.patch.gz
@@ -325,7 +324,7 @@ Patch13: %Name-svn-20060711-vbe.patch.gz
 Patch14: %Name-1.0pre7try2-xmmslibs_fix.patch
 Patch15: %lname-svn-r19671-pulseaudio.patch.bz2
 Patch16: %Name-1.0pre8-udev.patch.gz
-Patch17: %lname-svn-r19389-ext_ffmpeg.patch.gz
+Patch17: %lname-svn-r19912-ext_ffmpeg.patch.bz2
 Patch21: %Name-svn-20060607-vf_mcdeint.patch.gz
 Patch22: %lname-svn-r19389-polyp0.8.patch.gz
 Patch26: %lname-svn-r19467-configure.patch.gz
@@ -897,9 +896,6 @@ mv ffmpeg-svn-%ffmpeg_svnrev/lib{av{codec,format,util},postproc} .
 %patch5 -p1
 %patch6 -p1
 %{?_enabl_dirac:%patch7 -p1}
-%if %swscalelib == ext
-%patch8 -p1
-%endif
 %patch10 -p1
 %patch11 -p1
 %patch12 -p1
@@ -1067,6 +1063,7 @@ export LC_MESSAGES=C
 		%{subst_enable libdts} \
 		%{subst_enable libmpeg2} \
 		%{subst_enable musepack} \
+		%{subst_enable nut} \
 		%{?_enable_dirac:--enable-dirac} \
 %if_enabled vidix
 %if %vidixlib == ext
@@ -1421,6 +1418,12 @@ unset RPM_PYTHON
 
 
 %changelog
+* Wed Sep 20 2006 Led <led@altlinux.ru> 1:1.0-alt1.19912.1
+- new SVN snapshot (revision 19912)
+- merged %lname-svn-r19389-ext_libswscale.patch to
+  %lname-svn-r19912-ext_ffmpeg.patch
+- cleaned up spec
+
 * Fri Sep 15 2006 Led <led@altlinux.ru> 1:1.0-alt1.19838.1
 - new SVN snapshot (revision 19838)
 - fixed %%files section
