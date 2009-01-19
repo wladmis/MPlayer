@@ -6,8 +6,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 %define prerel rc1
-#define svnrev 20395
-%define ffmpeg_svnrev 6769
+#define svnrev 20523
+#define ffmpeg_svnrev 6835
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -184,8 +184,10 @@
 %def_enable nls
 %def_without soundwrapper
 %def_with htmldocs
+%def_with tools
 %define default_vo %{subst_o xmga}%{subst_o xv}%{subst_o sdl}%{subst_o gl2}%{subst_o gl}%{subst_o x11}%{subst_o_pre x vidix}%{subst_o mga}%{subst_o dfbmga}%{subst_o tdfxfb}%{subst_o 3dfx}%{subst_o s3fb}%{subst_o_pre c vidix}%{subst_o_post fbdev 2}%{subst_o vesa}%{subst_o caca}%{subst_o aa}null
 %define default_ao %{subst_o alsa}%{subst_o oss}%{subst_o openal}%{subst_o sdl}%{subst_o pulse}%{subst_o polyp}%{subst_o nas}null
+#define odml_chunklen 0x40000000
 
 #----------------------	END OF PARAMETERS ---------------------------------------
 
@@ -207,6 +209,8 @@
 %set_disable macosx_finder
 %set_disable macosx_bundle
 %endif
+
+%{?_enable_shared_ffmpeg:%set_disable zr}
 
 %if_enabled nls
 %define awk gawk
@@ -270,7 +274,7 @@
 %define Name MPlayer
 Name: %lname
 Version: 1.0
-%define rel 33
+%define rel 34
 %define subrel 1
 %ifdef svnrev
 Release: alt%rel.%svnrev.%subrel
@@ -316,8 +320,6 @@ Patch4: %lname-svn-r19427-libdha.patch.gz
 Patch5: %lname-svn-r19447-vo_vidix.patch.gz
 Patch6: %lname-svn-r19389-alt-artsc_ldflags.patch.gz
 Patch7: %Name-svn-20060707_dirac-0.5.x.patch.bz2
-%{?_disable_shared_ffmpeg:Patch8: ffmpeg-uni-svn-r6110.patch.gz}
-%{?_disable_shared_ffmpeg:Patch9: ffmpeg-svn-20060630-dirac-0.5.x.patch.bz2}
 Patch10: %lname-svn-r19558-generic-x86_64.patch.gz
 Patch11: %lname-svn-r19595-nls.patch.gz
 Patch12: %lname-uni-svn19558.diff.gz
@@ -325,11 +327,17 @@ Patch13: %Name-svn-20060711-vbe.patch.gz
 Patch14: %Name-1.0pre7try2-xmmslibs_fix.patch
 Patch15: %lname-svn-r19671-pulseaudio.patch.bz2
 Patch16: %Name-1.0pre8-udev.patch.gz
-Patch17: %lname-svn-r20117-ext_ffmpeg.patch.bz2
+Patch17: %lname-1.0rc1-ext_ffmpeg.patch.bz2
+Patch18: %lname-mwallp.patch.gz
+Patch19: %lname-bmovl-test.patch.gz
 Patch21: %Name-svn-20060607-vf_mcdeint.patch.gz
 Patch22: %lname-svn-r19389-polyp0.8.patch.gz
 Patch26: %lname-1.0rc1-configure.patch.gz
-%{?svnrev:Patch27: %Name-cvs-20060331-builddocs.patch.gz}
+Patch27: %Name-cvs-20060331-builddocs.patch.gz
+Patch28: %lname-1.0rc1-mp3lib-amd.patch.gz
+%if_disabled shared_ffmpeg
+Patch31: ffmpeg-uni-svn-r6110.patch.gz
+%endif
 
 BuildRequires: %awk pkgconfig libncurses-devel libslang-devel zlib-devel
 BuildRequires: cpp >= 3.3 gcc >= 3.3 gcc-c++ >= 3.3
@@ -410,6 +418,11 @@ BuildRequires: libvidix-devel
 %{?_enable_nas:BuildRequires: libaudio-devel}
 
 %{?_enable_nls:BuildRequires: gettext-tools}
+
+%if_with tools
+BuildRequires: libXmu-devel libXi-devel libXext-devel libX11-devel
+BuildRequires: libglut-devel libmesa-devel libjpeg-devel
+%endif
 
 Autoreq: yes, noperl
 
@@ -884,8 +897,8 @@ Languages support for %Name.
 %else
 %setup -q -n %lname-%pkgver -a 1
 %if_enabled dirac
-pushd ffmpeg-svn-%ffmpeg_svnrev
-%patch9 -p1
+pushd ffmpeg-svn-r%ffmpeg_svnrev
+%patch30 -p1
 popd
 %endif
 mv ffmpeg-svn-r%ffmpeg_svnrev/lib{av{codec,format,util},postproc} .
@@ -901,7 +914,6 @@ mv ffmpeg-svn-r%ffmpeg_svnrev/lib{av{codec,format,util},postproc} .
 %patch5 -p1
 %patch6 -p1
 %{?_enable_dirac:%patch7 -p1}
-%{?_disable_shared_ffmpeg:%patch8 -p1}
 %patch10 -p1
 %patch11 -p1
 %patch12 -p1
@@ -909,14 +921,21 @@ mv ffmpeg-svn-r%ffmpeg_svnrev/lib{av{codec,format,util},postproc} .
 %patch14 -p1
 %patch15 -p1
 %patch17 -p1
+%patch18 -p1
+%patch19 -p1
 %patch21 -p1
 %{?_enable_polyp:%{?_disable_old_polyp:%patch22 -p1}}
 %patch26 -p1
-%{?svnrev:%patch27 -p1}
+%patch27 -p1
+%patch28 -p1
+%if_disabled shared_ffmpeg
+%patch31 -p1
+%endif
 %{?_enable_polyp:%{?_disable_old_polyp:sed -e 's/\([Pp]\)ulse/\1olyp/g' -e 's/PULSE/POLYP/g' libao2/ao_pulse.c > libao2/ao_polyp.c}}
 
 subst 's/\(ldconfig\)/\#\1/g' libdha/Makefile
 %{?_enable_dvdnav:subst 's|\(\<\)\(dvdnav\)\(\.h\>\)|\1\2/\2\3|' configure}
+%{?odml_chunklen:sed -r -i -e 's/^(#[[:blank:]]*define[[:blank:]]+ODML_CHUNKLEN[[:blank:]]+)0x[[:xdigit:]]+/\1%odml_chunklen/' libmpdemux/muxer_avi.c}
 
 %ifdef svnrev
 subst 's/UNKNOWN/%svnrev/' version.sh
@@ -980,7 +999,6 @@ export CFLAGS="%optflags"
 		%{subst_enable winsock2} \
 		%{subst_enable smb} \
 		%{subst_enable live} \
-		%{?_enable_live:--with-livelibdir=%_libdir/live} \
 		%{subst_enable dvdnav} \
 		%{subst_enable dvdread} \
 		%{subst_enable mpdvdkit} \
@@ -1024,29 +1042,35 @@ export CFLAGS="%optflags"
 		--disable-libavformat \
 		--disable-libavutil \
 		--disable-libpostproc \
+		--disable-libswscale \
 		--enable-libavcodec_so \
 		--enable-libavformat_so \
 		--enable-libavutil_so \
 		--enable-libpostproc_so \
+		--enable-libswscale_so \
 %else
 		--disable-libavcodec_so \
 		--disable-libavformat_so \
 		--disable-libavutil_so \
 		--disable-libpostproc_so \
+		--disable-libswscale_so \
 		--enable-libavcodec \
 		--enable-libavformat \
 		--enable-libavutil \
 		--enable-libpostproc \
+		--enable-libswscale \
 %endif		
 %else
 		--disable-libavcodec \
 		--disable-libavformat \
 		--disable-libavutil \
 		--disable-libpostproc \
+		--disable-libswscale \
 		--disable-libavcodec_so \
 		--disable-libavformat_so \
 		--disable-libavutil_so \
 		--disable-libpostproc_so \
+		--disable-libswscale_so \
 %endif
 		%{subst_enable_to fame libfame} \
 		%{subst_enable_to tremor_internal tremor-internal} \
@@ -1173,8 +1197,14 @@ echo "utf8 = yes" >> etc/%lname.conf
 
 %{?_enable_freetype:make -C TOOLS/subfont-c}
 
-# can't build vivodump subrip
-%make_build -C TOOLS 302m_convert 360m_convert alaw-gen asfinfo avi-fix avisubdump bios2dump dump_mp4 mem2dump movinfo png2raw
+%if_with tools
+%make_build -C TOOLS 302m_convert 360m_convert alaw-gen asfinfo avi-fix avisubdump bios2dump cpuinfo dump_mp4 mem2dump movinfo png2raw
+for d in mwallp GL-test; do
+    pushd TOOLS/$d
+    ./compile.sh
+    popd
+done
+%endif
 
 %if_with htmldocs
 %ifdef svnrev
@@ -1435,6 +1465,16 @@ unset RPM_PYTHON
 
 
 %changelog
+* Mon Oct 30 2006 Led <led@altlinux.ru> 1.0-alt34
+- fixed spec
+- updated %lname-1.0rc1-ext_ffmpeg.patch
+- added --enable-libswscale[_so] configure options
+- added %lname-mwallp.patch
+- added %lname-bmovl-test.patch
+- fixed mp_msg2po.awk
+- updated %lname-1.0rc1-configure.patch (fixed #4108)
+- added %lname-1.0rc1-mp3lib-amd.patch (disabled broken asm-code)
+
 * Mon Oct 23 2006 Led <led@altlinux.ru> 1.0-alt33
 - 1.0rc1
 - removed %Name-1.0pre8-udev.patch (fixed in upstream)

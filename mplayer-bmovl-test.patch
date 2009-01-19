@@ -1,0 +1,12 @@
+diff -urN /home/led/RPM/BUILD/MPlayer-1.0rc1.orig/TOOLS/bmovl-test/Makefile /home/led/RPM/BUILD/MPlayer-1.0rc1/TOOLS/bmovl-test/Makefile
+--- MPlayer-1.0rc1.orig/TOOLS/bmovl-test/Makefile	2006-10-23 01:32:29 +0300
++++ MPlayer-1.0rc1/TOOLS/bmovl-test/Makefile	2006-10-26 18:13:34 +0300
+@@ -1,7 +1,7 @@
+ include ../../config.mak
+ 
+ bmovl-test: bmovl-test.c
+-	$(CC) -O3 $(SDL_INC) -lSDL_image -o bmovl-test bmovl-test.c
++	$(CC) -O3 $(EXTRA_INC) -o bmovl-test bmovl-test.c -lSDL_image
+ 
+ clean:
+ 	rm -f bmovl-test

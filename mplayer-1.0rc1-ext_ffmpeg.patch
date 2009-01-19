@@ -1,0 +1,493 @@
+diff -urN MPlayer-1.0rc1.orig/configure MPlayer-1.0rc1/configure
+--- MPlayer-1.0rc1.orig/configure	2006-10-23 01:32:31 +0300
++++ MPlayer-1.0rc1/configure	2006-10-31 01:23:28 +0200
+@@ -277,10 +277,12 @@
+   --disable-libavcodec   disable libavcodec [autodetect]
+   --disable-libavformat  disable libavformat [autodetect]
+   --disable-libpostproc  disable libpostproc [autodetect]
++  --disable-libswscale   disable libswscale [autodetect]
+   --disable-libavutil_so   disable shared libavutil [autodetect]
+   --disable-libavcodec_so  disable shared libavcodec [autodetect]
+   --disable-libavformat_so disable shared libavformat [autodetect]
+   --disable-libpostproc_so disable shared libpostproc [autodetect]
++  --disable-libswscale_so disable shared libswscale [autodetect]
+   --disable-libavcodec_mpegaudio_hp disable high precision audio decoding
+                                     in libavcodec [enabled]
+   --enable-libfame       enable libfame realtime encoder [autodetect]
+@@ -1573,6 +1575,8 @@
+ _libavformat_so=auto
+ _libpostproc=auto
+ _libpostproc_so=auto
++_libswscale=auto
++_libswscale_so=auto
+ _libavcodec_mpegaudio_hp=yes
+ _libfame=auto
+ _mencoder=yes
+@@ -1971,6 +1975,10 @@
+   --disable-libpostproc)	_libpostproc=no		;;
+   --enable-libpostproc_so)	_libpostproc_so=yes	;;
+   --disable-libpostproc_so)	_libpostproc_so=no	;;
++  --enable-libswscale)		_libswscale=yes		;;
++  --disable-libswscale)		_libswscale=no		;;
++  --enable-libswscale_so)	_libswscale_so=yes	;;
++  --disable-libswscale_so)	_libswscale_so=no	;;
+   --enable-libavcodec_mpegaudio_hp)	_libavcodec_mpegaudio_hp=yes	;;
+   --disable-libavcodec_mpegaudio_hp)	_libavcodec_mpegaudio_hp=no	;;
+ 
+@@ -6172,6 +6180,15 @@
+ fi
+ echores "$_libpostproc"
+ 
++echocheck "FFmpeg libswscale (static)"
++if test "$_libswscale" = auto ; then
++_libswscale=no
++if test -d libswscale && test -f libswscale/swscale.h ; then
++   _libswscale='yes'
++fi
++fi
++echores "$_libswscale"
++
+ 
+ if test "$_libavutil" != yes ; then
+ echocheck "FFmpeg libavutil (dynamic)"
+@@ -6269,6 +6286,26 @@
+ echores "$_libpostproc_so"
+ fi #if test "$_libpostproc" != yes ; then
+ 
++if test "$_libswscale" != yes ; then
++echocheck "FFmpeg libswscale (dynamic)"
++if test "$_libswscale_so" = auto ; then
++  _libswscale_so=no
++  cat > $TMPC << EOF
++  #define USE_LIBPOSTPROC 1
++  #include <inttypes.h>
++  #include <ffmpeg/swscale.h>
++  int main(void) {
++      sws_getIdentityVec();
++      return 0;}
++EOF
++  if cc_check -lswscale $_ld_lm ; then
++    _libswscale_so=yes
++    _res_comment="using libswscale.so, but static libswscale is recommended"
++  fi
++fi
++echores "$_libswscale_so"
++fi
++
+ _def_libavutil='#undef USE_LIBAVUTIL'
+ _def_libavutil_so='#undef USE_LIBAVUTIL_SO'
+ if test "$_libavutil" = yes ; then
+@@ -6335,6 +6372,19 @@
+   fi
+ fi
+ 
++_def_libswscale='#undef USE_LIBSWSCALE'
++_def_libswscale_so='#undef USE_LIBSWSCALE_SO'
++if test "$_libswscale" = yes ; then
++  _def_libswscale='#define USE_LIBSWSCALE 1'
++  _ld_libswscale='libswscale/libswscale.a'
++  _dep_libswscale='libswscale/libswscale.a'
++else
++  if test "$_libswscale_so" = yes ; then
++    _def_libswscale_so='#define USE_LIBSWSCALE_SO 1'
++    _ld_libswscale='-lswscale'
++  fi
++fi
++
+ echocheck "md5sum support"
+ if test "$_md5sum" = yes; then
+   _def_md5sum="#define HAVE_MD5SUM"
+@@ -7562,8 +7612,8 @@
+ QTX_CODECS = $_qtx
+ REAL_CODECS = $_real
+ XANIM_CODECS = $_xanim
+-AV_DEP = $_dep_libavformat $_dep_libavcodec $_dep_libavutil $_dep_libpostproc
+-AV_LIB = $_ld_libavformat  $_ld_libavcodec  $_ld_libavutil  $_ld_libpostproc
++AV_DEP = $_dep_libavformat $_dep_libavcodec $_dep_libavutil $_dep_libpostproc $_dep_libswscale
++AV_LIB = $_ld_libavformat  $_ld_libavcodec  $_ld_libavutil  $_ld_libpostproc  $_ld_libswscale
+ CONFIG_LIBAVUTIL = $_libavutil
+ CONFIG_LIBAVUTIL_SO = $_libavutil_so
+ CONFIG_LIBAVCODEC = $_libavcodec
+@@ -7572,6 +7622,9 @@
+ CONFIG_LIBAVFORMAT_SO = $_libavformat_so
+ CONFIG_LIBPOSTPROC = $_libpostproc
+ CONFIG_LIBPOSTPROC_SO = $_libpostproc_so
++CONFIG_LIBSWSCALE = $_libswscale
++CONFIG_SWSCALER = $_libswscale
++CONFIG_LIBSWSCALE_SO = $_libswscale_so
+ ZORAN = $_zr
+ FAME = $_libfame
+ FAME_LIB = $_ld_libfame
+@@ -7964,6 +8017,9 @@
+ $_def_libpostproc
+ $_def_libpostproc_so
+ 
++$_def_libswscale
++$_def_libswscale_so
++
+ /* Win32 DLL support */
+ $_def_win32
+ #define WIN32_PATH "$_win32libdir"
+diff -urN MPlayer-1.0rc1.orig/fmt-conversion.h MPlayer-1.0rc1/fmt-conversion.h
+--- MPlayer-1.0rc1.orig/fmt-conversion.h	2006-10-23 01:32:31 +0300
++++ MPlayer-1.0rc1/fmt-conversion.h	2006-10-31 01:23:28 +0200
+@@ -1,4 +1,8 @@
++#ifdef USE_LIBAVUTIL_SO
++#include <ffmpeg/avutil.h>
++#else
+ #include "avutil.h"
++#endif
+ #include "img_format.h"
+ 
+ enum PixelFormat imgfmt2pixfmt(int fmt)
+diff -urN MPlayer-1.0rc1.orig/Gui/wm/ws.c MPlayer-1.0rc1/Gui/wm/ws.c
+--- MPlayer-1.0rc1.orig/Gui/wm/ws.c	2006-10-23 01:32:24 +0300
++++ MPlayer-1.0rc1/Gui/wm/ws.c	2006-10-31 01:23:28 +0200
+@@ -24,8 +24,13 @@
+ #include "ws.h"
+ #include "wsxdnd.h"
+ #include "../cpudetect.h"
++#ifdef USE_LIBSWSCALE_SO
++#include <ffmpeg/swscale.h>
++#include <ffmpeg/rgb2rgb.h>
++#else
+ #include "../libswscale/swscale.h"
+ #include "../libswscale/rgb2rgb.h"
++#endif
+ #include "../libmpcodecs/vf_scale.h"
+ #include "../mp_msg.h"
+ #include "../help_mp.h"
+diff -urN MPlayer-1.0rc1.orig/libmpcodecs/vf_halfpack.c MPlayer-1.0rc1/libmpcodecs/vf_halfpack.c
+--- MPlayer-1.0rc1.orig/libmpcodecs/vf_halfpack.c	2006-10-23 01:32:24 +0300
++++ MPlayer-1.0rc1/libmpcodecs/vf_halfpack.c	2006-10-31 01:23:28 +0200
+@@ -12,7 +12,12 @@
+ #include "vf.h"
+ 
+ #include "libvo/fastmemcpy.h"
++#ifdef USE_LIBSWSCALE_SO
++#include <ffmpeg/rgb2rgb.h>
++#else
+ #include "libswscale/rgb2rgb.h"
++#endif
++
+ 
+ struct vf_priv_s {
+ 	int field;
+diff -urN MPlayer-1.0rc1.orig/libmpcodecs/vf_palette.c MPlayer-1.0rc1/libmpcodecs/vf_palette.c
+--- MPlayer-1.0rc1.orig/libmpcodecs/vf_palette.c	2006-10-23 01:32:24 +0300
++++ MPlayer-1.0rc1/libmpcodecs/vf_palette.c	2006-10-31 01:23:28 +0200
+@@ -11,7 +11,11 @@
+ #include "mp_image.h"
+ #include "vf.h"
+ 
++#ifdef USE_LIBSWSCALE_SO
++#include <ffmpeg/rgb2rgb.h>
++#else
+ #include "libswscale/rgb2rgb.h"
++#endif
+ 
+ //===========================================================================//
+ 
+diff -urN MPlayer-1.0rc1.orig/libmpcodecs/vf_qp.c MPlayer-1.0rc1/libmpcodecs/vf_qp.c
+--- MPlayer-1.0rc1.orig/libmpcodecs/vf_qp.c	2006-10-23 01:32:24 +0300
++++ MPlayer-1.0rc1/libmpcodecs/vf_qp.c	2006-10-31 01:23:28 +0200
+@@ -37,9 +37,15 @@
+ // Needed to bring in lrintf.
+ #define HAVE_AV_CONFIG_H
+ 
++#ifdef USE_LIBAVCODEC_SO
++#include <ffmpeg/avcodec.h>
++#include <ffmpeg/dsputil.h>
++#include <ffmpeg/common.h>
++#else
+ #include "libavcodec/avcodec.h"
+ #include "libavcodec/dsputil.h"
+ #include "libavutil/common.h"
++#endif
+ 
+ /* FIXME: common.h defines printf away when HAVE_AV_CONFIG
+  * is defined, but mp_image.h needs printf.
+diff -urN MPlayer-1.0rc1.orig/libmpcodecs/vf_rgb2bgr.c MPlayer-1.0rc1/libmpcodecs/vf_rgb2bgr.c
+--- MPlayer-1.0rc1.orig/libmpcodecs/vf_rgb2bgr.c	2006-10-23 01:32:24 +0300
++++ MPlayer-1.0rc1/libmpcodecs/vf_rgb2bgr.c	2006-10-31 01:23:28 +0200
+@@ -11,7 +11,12 @@
+ #include "vf.h"
+ 
+ #include "libvo/fastmemcpy.h"
++#ifdef USE_LIBSWSCALE_SO
++#include <ffmpeg/rgb2rgb.h>
++#else
+ #include "libswscale/rgb2rgb.h"
++#endif
++
+ 
+ //===========================================================================//
+ 
+diff -urN MPlayer-1.0rc1.orig/libmpcodecs/vf_sab.c MPlayer-1.0rc1/libmpcodecs/vf_sab.c
+--- MPlayer-1.0rc1.orig/libmpcodecs/vf_sab.c	2006-10-23 01:32:24 +0300
++++ MPlayer-1.0rc1/libmpcodecs/vf_sab.c	2006-10-31 01:23:28 +0200
+@@ -29,12 +29,20 @@
+ #include <malloc.h>
+ #endif
+ 
++#ifdef USE_LIBAVUTIL_SO
++#include <ffmpeg/avutil.h>
++#else
+ #include "avutil.h"
++#endif
+ #include "img_format.h"
+ #include "mp_image.h"
+ #include "vf.h"
+ #include "libvo/fastmemcpy.h"
++#ifdef USE_LIBSWSCALE_SO
++#include <ffmpeg/swscale.h>
++#else
+ #include "libswscale/swscale.h"
++#endif
+ #include "vf_scale.h"
+ 
+ 
+diff -urN MPlayer-1.0rc1.orig/libmpcodecs/vf_scale.c MPlayer-1.0rc1/libmpcodecs/vf_scale.c
+--- MPlayer-1.0rc1.orig/libmpcodecs/vf_scale.c	2006-10-23 01:32:24 +0300
++++ MPlayer-1.0rc1/libmpcodecs/vf_scale.c	2006-10-31 01:23:28 +0200
+@@ -13,7 +13,11 @@
+ #include "fmt-conversion.h"
+ 
+ #include "libvo/fastmemcpy.h"
++#ifdef USE_LIBSWSCALE_SO
++#include <ffmpeg/swscale.h>
++#else
+ #include "libswscale/swscale.h"
++#endif
+ #include "vf_scale.h"
+ 
+ #include "m_option.h"
+diff -urN MPlayer-1.0rc1.orig/libmpcodecs/vf_screenshot.c MPlayer-1.0rc1/libmpcodecs/vf_screenshot.c
+--- MPlayer-1.0rc1.orig/libmpcodecs/vf_screenshot.c	2006-10-23 01:32:24 +0300
++++ MPlayer-1.0rc1/libmpcodecs/vf_screenshot.c	2006-10-31 01:23:28 +0200
+@@ -22,7 +22,11 @@
+ #include "vf_scale.h"
+ 
+ #include "libvo/fastmemcpy.h"
++#ifdef USE_LIBSWSCALE_SO
++#include <ffmpeg/swscale.h>
++#else
+ #include "libswscale/swscale.h"
++#endif
+ 
+ struct vf_priv_s {
+     int frameno;
+diff -urN MPlayer-1.0rc1.orig/libmpcodecs/vf_smartblur.c MPlayer-1.0rc1/libmpcodecs/vf_smartblur.c
+--- MPlayer-1.0rc1.orig/libmpcodecs/vf_smartblur.c	2006-10-23 01:32:24 +0300
++++ MPlayer-1.0rc1/libmpcodecs/vf_smartblur.c	2006-10-31 01:23:28 +0200
+@@ -29,12 +29,21 @@
+ #include <malloc.h>
+ #endif
+ 
++#ifdef USE_LIBAVUTIL_SO
++#include <ffmpeg/avutil.h>
++#else
+ #include "avutil.h"
++#endif
++
+ #include "img_format.h"
+ #include "mp_image.h"
+ #include "vf.h"
+ #include "libvo/fastmemcpy.h"
++#ifdef USE_LIBSWSCALE_SO
++#include <ffmpeg/swscale.h>
++#else
+ #include "libswscale/swscale.h"
++#endif
+ #include "vf_scale.h"
+ 
+ //===========================================================================//
+diff -urN MPlayer-1.0rc1.orig/libmpcodecs/vf_yuy2.c MPlayer-1.0rc1/libmpcodecs/vf_yuy2.c
+--- MPlayer-1.0rc1.orig/libmpcodecs/vf_yuy2.c	2006-10-23 01:32:24 +0300
++++ MPlayer-1.0rc1/libmpcodecs/vf_yuy2.c	2006-10-31 01:23:28 +0200
+@@ -12,7 +12,11 @@
+ #include "vf.h"
+ 
+ #include "libvo/fastmemcpy.h"
++#ifdef USE_LIBSWSCALE_SO
++#include <ffmpeg/rgb2rgb.h>
++#else
+ #include "libswscale/rgb2rgb.h"
++#endif
+ #include "vf_scale.h"
+ 
+ //===========================================================================//
+diff -urN MPlayer-1.0rc1.orig/libswscale/swscale-example.c MPlayer-1.0rc1/libswscale/swscale-example.c
+--- MPlayer-1.0rc1.orig/libswscale/swscale-example.c	2006-10-23 01:32:29 +0300
++++ MPlayer-1.0rc1/libswscale/swscale-example.c	2006-10-31 01:23:28 +0200
+@@ -25,7 +25,11 @@
+ #include <stdarg.h>
+ 
+ #undef HAVE_AV_CONFIG_H
++#ifdef USE_LIBAVUTIL_SO
++#include <ffmpeg/avutil.h>
++#else
+ #include "avutil.h"
++#endif
+ #include "swscale.h"
+ #include "swscale_internal.h"
+ #include "rgb2rgb.h"
+diff -urN MPlayer-1.0rc1.orig/libswscale/swscale_internal.h MPlayer-1.0rc1/libswscale/swscale_internal.h
+--- MPlayer-1.0rc1.orig/libswscale/swscale_internal.h	2006-10-23 01:32:29 +0300
++++ MPlayer-1.0rc1/libswscale/swscale_internal.h	2006-10-31 01:23:28 +0200
+@@ -28,7 +28,11 @@
+ #include <altivec.h>
+ #endif
+ 
++#ifdef USE_LIBAVUTIL_SO
++#include <ffmpeg/avutil.h>
++#else
+ #include "avutil.h"
++#endif
+ 
+ #ifdef CONFIG_DARWIN
+ #define AVV(x...) (x)
+diff -urN MPlayer-1.0rc1.orig/libvo/mga_common.c MPlayer-1.0rc1/libvo/mga_common.c
+--- MPlayer-1.0rc1.orig/libvo/mga_common.c	2006-10-23 01:32:26 +0300
++++ MPlayer-1.0rc1/libvo/mga_common.c	2006-10-31 01:23:28 +0200
+@@ -1,7 +1,11 @@
+ 
+ #include "fastmemcpy.h"
+ #include "cpudetect.h"
++#ifdef USE_LIBSWSCALE_SO
++#include <ffmpeg/swscale.h>
++#else
+ #include "libswscale/swscale.h"
++#endif
+ #include "libmpcodecs/vf_scale.h"
+ #include "mp_msg.h"
+ #include "help_mp.h"
+diff -urN MPlayer-1.0rc1.orig/libvo/sub.c MPlayer-1.0rc1/libvo/sub.c
+--- MPlayer-1.0rc1.orig/libvo/sub.c	2006-10-23 01:32:26 +0300
++++ MPlayer-1.0rc1/libvo/sub.c	2006-10-31 01:23:31 +0200
+@@ -14,7 +14,12 @@
+ #include "font_load.h"
+ #include "sub.h"
+ #include "spudec.h"
++
++#ifdef USE_LIBAVCODEC_SO
++#include <ffmpeg/common.h>
++#else
+ #include "libavutil/common.h"
++#endif
+ 
+ #define NEW_SPLITTING
+ 
+diff -urN MPlayer-1.0rc1.orig/libvo/vo_aa.c MPlayer-1.0rc1/libvo/vo_aa.c
+--- MPlayer-1.0rc1.orig/libvo/vo_aa.c	2006-10-23 01:32:26 +0300
++++ MPlayer-1.0rc1/libvo/vo_aa.c	2006-10-31 01:23:31 +0200
+@@ -27,7 +27,11 @@
+ #include "video_out.h"
+ #include "video_out_internal.h"
+ #include "aspect.h"
++#ifdef USE_LIBSWSCALE_SO
++#include <ffmpeg/swscale.h>
++#else
+ #include "libswscale/swscale.h"
++#endif
+ #include "libmpcodecs/vf_scale.h"
+ #include "font_load.h"
+ #include "sub.h"
+diff -urN MPlayer-1.0rc1.orig/libvo/vo_vesa.c MPlayer-1.0rc1/libvo/vo_vesa.c
+--- MPlayer-1.0rc1.orig/libvo/vo_vesa.c	2006-10-23 01:32:26 +0300
++++ MPlayer-1.0rc1/libvo/vo_vesa.c	2006-10-31 01:23:31 +0200
+@@ -47,7 +47,11 @@
+ #endif
+ #include "mp_msg.h"
+ 
++#ifdef USE_LIBSWSCALE_SO
++#include <ffmpeg/swscale.h>
++#else
+ #include "libswscale/swscale.h"
++#endif
+ #include "libmpcodecs/vf_scale.h"
+ 
+ 
+diff -urN MPlayer-1.0rc1.orig/libvo/vo_x11.c MPlayer-1.0rc1/libvo/vo_x11.c
+--- MPlayer-1.0rc1.orig/libvo/vo_x11.c	2006-10-23 01:32:26 +0300
++++ MPlayer-1.0rc1/libvo/vo_x11.c	2006-10-31 01:23:31 +0200
+@@ -38,7 +38,11 @@
+ #include "fastmemcpy.h"
+ #include "sub.h"
+ 
++#ifdef USE_LIBSWSCALE_SO
++#include <ffmpeg/swscale.h>
++#else
+ #include "libswscale/swscale.h"
++#endif
+ #include "libmpcodecs/vf_scale.h"
+ #define MODE_RGB  0x1
+ #define MODE_BGR  0x2
+diff -urN MPlayer-1.0rc1.orig/libvo/vo_yuv4mpeg.c MPlayer-1.0rc1/libvo/vo_yuv4mpeg.c
+--- MPlayer-1.0rc1.orig/libvo/vo_yuv4mpeg.c	2006-10-23 01:32:26 +0300
++++ MPlayer-1.0rc1/libvo/vo_yuv4mpeg.c	2006-10-31 01:25:37 +0200
+@@ -39,7 +39,11 @@
+ #include "sub.h"
+ 
+ #include "fastmemcpy.h"
++#ifdef USE_LIBSWSCALE_SO
++#include <ffmpeg/swscale.h>
++#else
+ #include "libswscale/swscale.h"
++#endif
+ #include "libmpcodecs/vf_scale.h"
+ 
+ static vo_info_t info = 
+diff -urN MPlayer-1.0rc1.orig/Makefile MPlayer-1.0rc1/Makefile
+--- MPlayer-1.0rc1.orig/Makefile	2006-10-23 01:32:31 +0300
++++ MPlayer-1.0rc1/Makefile	2006-10-31 01:23:31 +0200
+@@ -132,7 +132,6 @@
+               libaf/libaf.a \
+               libmpdemux/libmpdemux.a \
+               stream/stream.a \
+-              libswscale/libswscale.a \
+               osdep/libosdep.a \
+               $(EXTRA_LIB)\
+               $(DVDREAD_LIB) \
+@@ -217,7 +216,6 @@
+               libmpcodecs/libmpcodecs.a \
+               libao2/libao2.a \
+               osdep/libosdep.a \
+-              libswscale/libswscale.a \
+               input/libinput.a \
+               libvo/libvo.a \
+               libaf/libaf.a \
+diff -urN MPlayer-1.0rc1.orig/spudec.c MPlayer-1.0rc1/spudec.c
+--- MPlayer-1.0rc1.orig/spudec.c	2006-10-23 01:32:31 +0300
++++ MPlayer-1.0rc1/spudec.c	2006-10-31 01:23:31 +0200
+@@ -23,8 +23,17 @@
+ #include <math.h>
+ #include "libvo/video_out.h"
+ #include "spudec.h"
++#ifdef USE_LIBAVUTIL_SO
++#include <ffmpeg/avutil.h>
++#else
+ #include "avutil.h"
++#endif
++#ifdef USE_LIBSWSCALE_SO
++#include <ffmpeg/swscale.h>
++#else
+ #include "libswscale/swscale.h"
++#endif
++
+ 
+ #define MIN(a, b)	((a)<(b)?(a):(b))
+ 
+diff -urN MPlayer-1.0rc1.orig/TOOLS/Makefile MPlayer-1.0rc1/TOOLS/Makefile
+--- MPlayer-1.0rc1.orig/TOOLS/Makefile	2006-10-23 01:32:30 +0300
++++ MPlayer-1.0rc1/TOOLS/Makefile	2006-10-31 01:23:31 +0200
+@@ -27,8 +27,7 @@
+ 
+ subrip: subrip.c
+ 	$(CC) $(CFLAGS) -g -o $@ $< ../vobsub.o ../spudec.o ../mp_msg.o \
+-          ../unrarlib.o ../libswscale/swscale.o ../libswscale/rgb2rgb.o \
+-          ../libswscale/yuv2rgb.o ../libmpcodecs/img_format.o -lm
++          ../unrarlib.o ../libmpcodecs/img_format.o -L../libswscale -lswscale -lm
+ 
+ vivodump: vivodump.c
+ 	$(CC) $(CFLAGS) -o $@ $< ../mp_msg.o ../libmpdemux/libmpdemux.a ../stream/stream.a

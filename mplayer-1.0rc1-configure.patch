@@ -1,6 +1,6 @@
 diff -urN MPlayer-1.0rc1.orig/configure MPlayer-1.0rc1/configure
 --- MPlayer-1.0rc1.orig/configure	2006-10-23 01:32:31 +0300
-+++ MPlayer-1.0rc1/configure	2006-10-23 15:03:52 +0300
++++ MPlayer-1.0rc1/configure	2006-10-25 14:24:15 +0300
 @@ -3272,7 +3272,7 @@
  
  
@@ -73,7 +73,63 @@ diff -urN MPlayer-1.0rc1.orig/configure MPlayer-1.0rc1/configure
      if test -z "$_win32libdir" ; then
        for I in "$_libdir/codecs" "$_libdir/win32" /usr/local/lib/codecs /usr/lib/codecs /usr/local/lib/win32 /usr/lib/win32 ; do
          if test -d "$I" ; then
-@@ -6546,7 +6548,7 @@
+@@ -6062,55 +6064,6 @@
+ fi
+ echores "$_real"
+ 
+-
+-echocheck "LIVE555 Streaming Media libraries"
+-if test "$_live" = auto  && test "$_network" = yes ; then
+-  cat > $TMPCPP << EOF
+-#include <liveMedia.hh>
+-#if (LIVEMEDIA_LIBRARY_VERSION_INT < 1090195200)
+-#error Please upgrade to version 2004.07.19 or later of the "LIVE555 Streaming Media" libraries - available from <www.live555.com/liveMedia/>
+-#endif
+-int main(void) {}
+-EOF
+-
+-  _live=no
+-  for I in "$_livelibdir" "$_libdir/live" "/usr/lib/live" "/usr/local/live" "/usr/local/lib/live" ; do
+-    cxx_check -I$I/liveMedia/include -I$I/UsageEnvironment/include -I$I/groupsock/include && _livelibdir=$I && _live=yes && break
+-  done
+-  if test "$_live" != yes ; then
+-      if cxx_check -I/usr/include/liveMedia -I/usr/include/UsageEnvironment -I/usr/include/groupsock; then
+-	  _live_dist=yes
+-      fi
+-  fi
+-fi
+-if test "$_live" = yes && test "$_network" = yes ; then
+-  _res_comment="using $_livelibdir"
+-  _def_live='#define STREAMING_LIVE555 1'
+-  _ld_live="$_livelibdir/liveMedia/libliveMedia.a \
+-           $_livelibdir/groupsock/libgroupsock.a \
+-           $_livelibdir/UsageEnvironment/libUsageEnvironment.a \
+-           $_livelibdir/BasicUsageEnvironment/libBasicUsageEnvironment.a \
+-           -lstdc++"
+-  _inc_extra="$_inc_extra -I$_livelibdir/liveMedia/include \
+-             -I$_livelibdir/UsageEnvironment/include \
+-             -I$_livelibdir/BasicUsageEnvironment/include \
+-             -I$_livelibdir/groupsock/include"
+- _inputmodules="live555 $_inputmodules"
+-elif test "$_live_dist" = yes && test "$_network" = yes ; then
+-  _res_comment="using distribution version"
+-  _live="yes"
+-  _def_live='#define STREAMING_LIVE555 1'
+-  _ld_live="-lliveMedia -lgroupsock -lUsageEnvironment -lBasicUsageEnvironment -lstdc++"
+-  _inc_extra="$_inc_extra -I/usr/include/liveMedia -I/usr/include/UsageEnvironment \
+-             -I/usr/include/BasicUsageEnvironment -I/usr/include/groupsock"
+- _inputmodules="live555 $_inputmodules"
+-else
+-  _def_live='#undef STREAMING_LIVE555'
+-  _noinputmodules="live555 $_noinputmodules"
+-fi
+-echores "$_live"
+-
+-
+ echocheck "FFmpeg libavutil (static)"
+ if test "$_libavutil" = auto ; then
+   if test -d libavutil ; then
+@@ -6546,7 +6499,7 @@
  fi
  
  echocheck "x264"
@@ -82,7 +138,7 @@ diff -urN MPlayer-1.0rc1.orig/configure MPlayer-1.0rc1/configure
    cat > $TMPC << EOF
  #include <inttypes.h>
  #include <x264.h>
-@@ -6581,7 +6583,7 @@
+@@ -6581,7 +6534,7 @@
  
  
  echocheck "nut"
@@ -91,7 +147,69 @@ diff -urN MPlayer-1.0rc1.orig/configure MPlayer-1.0rc1/configure
    cat > $TMPC << EOF
  #include <stdio.h>
  #include <stdlib.h>
-@@ -7327,6 +7329,9 @@
+@@ -6863,6 +6816,7 @@
+   _noinputmodules="network $_noinputmodules"
+   _def_network='#undef MPLAYER_NETWORK'
+   _ftp=no
++  _live=no
+ fi
+ echores "$_network"
+ 
+@@ -6876,6 +6830,53 @@
+ fi
+ echores "$_ftp"
+ 
++echocheck "LIVE555 Streaming Media libraries"
++if test "$_live" != no  && test "$_network" = yes ; then
++  cat > $TMPCPP << EOF
++#include <liveMedia.hh>
++#if (LIVEMEDIA_LIBRARY_VERSION_INT < 1090195200)
++#error Please upgrade to version 2004.07.19 or later of the "LIVE555 Streaming Media" libraries - available from <www.live555.com/liveMedia/>
++#endif
++int main(void) {}
++EOF
++
++  _live=no
++  for I in "$_livelibdir" "$_libdir/live" "/usr/lib/live" "/usr/local/live" "/usr/local/lib/live" ; do
++    cxx_check -I$I/liveMedia/include -I$I/UsageEnvironment/include -I$I/groupsock/include && _livelibdir=$I && _live=yes && break
++  done
++  if test "$_live" != yes ; then
++      if cxx_check -I/usr/include/liveMedia -I/usr/include/UsageEnvironment -I/usr/include/groupsock; then
++	  _live_dist=yes
++      fi
++  fi
++fi
++if test "$_live" = yes && test "$_network" = yes ; then
++  _res_comment="using $_livelibdir"
++  _def_live='#define STREAMING_LIVE555 1'
++  _ld_live="$_livelibdir/liveMedia/libliveMedia.a \
++           $_livelibdir/groupsock/libgroupsock.a \
++           $_livelibdir/UsageEnvironment/libUsageEnvironment.a \
++           $_livelibdir/BasicUsageEnvironment/libBasicUsageEnvironment.a \
++           -lstdc++"
++  _inc_extra="$_inc_extra -I$_livelibdir/liveMedia/include \
++             -I$_livelibdir/UsageEnvironment/include \
++             -I$_livelibdir/BasicUsageEnvironment/include \
++             -I$_livelibdir/groupsock/include"
++ _inputmodules="live555 $_inputmodules"
++elif test "$_live_dist" = yes && test "$_network" = yes ; then
++  _res_comment="using distribution version"
++  _live="yes"
++  _def_live='#define STREAMING_LIVE555 1'
++  _ld_live="-lliveMedia -lgroupsock -lUsageEnvironment -lBasicUsageEnvironment -lstdc++"
++  _inc_extra="$_inc_extra -I/usr/include/liveMedia -I/usr/include/UsageEnvironment \
++             -I/usr/include/BasicUsageEnvironment -I/usr/include/groupsock"
++ _inputmodules="live555 $_inputmodules"
++else
++  _def_live='#undef STREAMING_LIVE555'
++  _noinputmodules="live555 $_noinputmodules"
++fi
++echores "$_live"
++
+ echocheck "vstream client"
+ if test "$_vstream" = auto ; then
+   _vstream=no
+@@ -7327,6 +7328,9 @@
  if test "$_vidix_internal" = yes || test "$_vidix_external" = yes ; then
    _vidix=yes
    _def_vidix='#define CONFIG_VIDIX 1'
@@ -101,7 +219,7 @@ diff -urN MPlayer-1.0rc1.orig/configure MPlayer-1.0rc1/configure
  else
    _vidix=no
    _def_vidix='#undef CONFIG_VIDIX'
-@@ -7336,7 +7341,7 @@
+@@ -7336,7 +7340,7 @@
    _def_vidix_pfx="#define MP_VIDIX_PFX \"$_libdir\" \"/mplayer/vidix/\" "
  elif test "$_vidix_external" = yes ; then
    _ld_vidix_external="-lvidix"
@@ -110,7 +228,7 @@ diff -urN MPlayer-1.0rc1.orig/configure MPlayer-1.0rc1/configure
  fi
  
  if test "$_vidix" = yes; then
-@@ -8289,6 +8294,7 @@
+@@ -8289,6 +8293,7 @@
  /* enables / disables VIDIX usage */
  $_def_vidix
  $_def_vidix_pfx

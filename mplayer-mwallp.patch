@@ -1,0 +1,52 @@
+diff -urN mplayer-svn-r20448.orig/TOOLS/mwallp/compile.sh mplayer-svn-r20448/TOOLS/mwallp/compile.sh
+--- mplayer-svn-r20448.orig/TOOLS/mwallp/compile.sh	2006-07-03 14:16:57 +0300
++++ mplayer-svn-r20448/TOOLS/mwallp/compile.sh	2006-10-27 02:29:49 +0300
+@@ -1,6 +1,6 @@
+ echo
+-gcc -g mwallp.c jpeg.c ../../libvo/aclib.o ../../libmpcodecs/img_format.o \
+-    ../../cpudetect.o ../../mp_msg-mencoder.o ../../libavcodec/libavcodec.a \
+-    ../../libswscale/libswscale.a ../../osdep/libosdep.a \
++gcc $CFLAGS mwallp.c -include ../../config.h jpeg.c ../../libvo/aclib.o ../../libmpcodecs/img_format.o \
++    ../../cpudetect.o ../../mp_msg-mencoder.o -L../../libavcodec -lavcodec \
++    ../../osdep/libosdep.a \
+     -I../../libmpcodecs -I../.. -I../../libswscale \
+-    -L/usr/X11/lib -L/usr/X11R6/lib -lX11 -lm -ljpeg -o mwallp
++    -L/usr/X11/lib -L/usr/X11R6/lib -lX11 -L../../libswscale -lswscale -L../../libavutil -lavutil -lm -ljpeg -o mwallp
+diff -urN mplayer-svn-r20448.orig/TOOLS/mwallp/jpeg.c mplayer-svn-r20448/TOOLS/mwallp/jpeg.c
+--- mplayer-svn-r20448.orig/TOOLS/mwallp/jpeg.c	2006-06-13 15:12:11 +0300
++++ mplayer-svn-r20448/TOOLS/mwallp/jpeg.c	2006-10-27 02:26:34 +0300
+@@ -13,8 +13,13 @@
+ 
+ #include "img_format.h"
+ 
++#ifdef USE_LIBSWSCALE_SO
++#include <ffmpeg/swscale.h>
++#include <ffmpeg/rgb2rgb.h>
++#else
+ #include "swscale.h"
+ #include "rgb2rgb.h"
++#endif
+ 
+ static struct SwsContext *swsContext=NULL;
+ 
+diff -urN mplayer-svn-r20448.orig/TOOLS/mwallp/mwallp.c mplayer-svn-r20448/TOOLS/mwallp/mwallp.c
+--- mplayer-svn-r20448.orig/TOOLS/mwallp/mwallp.c	2006-06-13 15:12:11 +0300
++++ mplayer-svn-r20448/TOOLS/mwallp/mwallp.c	2006-10-27 02:26:34 +0300
+@@ -27,7 +27,7 @@
+ int vo_screenwidth=0;
+ int vo_screenheight=0;
+ 
+-int verbose=0;
++extern int verbose;
+ int namecnt=0;
+ 
+ int main(int argc,char* argv[]){
+@@ -35,7 +35,7 @@
+  int bpp,depth;
+ 
+  mp_msg_init();
+- mp_msg_set_level(5);
++ verbose=5;
+ 
+  GetCpuCaps(&gCpuCaps);
+  
