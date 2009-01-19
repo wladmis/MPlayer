@@ -5,8 +5,8 @@
 %define fversion	%real_version
 
 # Used only for CVS builds
-%define cvsbuild 20060607
-%define ffmpeg_version svn-20060607
+%define cvsbuild 20060613
+%define ffmpeg_version svn-20060613
 
 %if %cvsbuild
 %global release		%release.%cvsbuild.1
@@ -155,13 +155,9 @@ Source0:  %bname-%fversion.tar.bz2
 Source1:  ffmpeg-%ffmpeg_version.tar.bz2
 # svn checkout svn.mplayerhq.hu/ffmpeg/trunk
 %endif
-Source2:  %bname.menu
 Source3:  cp1251-font.tar.bz2
 Source4:  standard-1.9.tar.bz2
-Source5:  mplayer.sh
-Source6:  http://icculus.org/~jcspray/gnome-mplayer-32.png
-Source7:  http://icculus.org/~jcspray/gnome-mplayer-48.png
-Source8:  http://icculus.org/~jcspray/gnome-mplayer-16.png
+#Source5:  mplayer.sh
 Source9:  ao_polyp.c.bz2
 Patch1:   MPlayer-1.0pre5-alt-external_fame.patch
 Patch2:   MPlayer-dvd-ru.patch
@@ -1084,38 +1080,18 @@ popd
 
 install -d %buildroot%_sysconfdir/bashrc.d
 
-install -m 0755 %SOURCE5 %buildroot%_sysconfdir/bashrc.d/
+#install -m 0755 %SOURCE5 %buildroot%_sysconfdir/bashrc.d/
 
 # Menus
-iconv -f cp1251 -t utf-8 > %buildroot%_desktopdir/%bname.desktop <<__MENU__
-[Desktop Entry]
+mv %buildroot%_desktopdir/mplayer.desktop %buildroot%_desktopdir/%bname.desktop
+iconv -f cp1251 -t utf-8 >> %buildroot%_desktopdir/%bname.desktop <<__MENU__
 Version=1.0
-Encoding=UTF-8
-Name=%Name
-GenericName=Movie player
-Exec=%gname
+GenericName[uk]=Програвач мультимедіа
 X-MultipleArgs=true
-Icon=%bname
-Terminal=false
-Type=Application
 StartupNotify=true
-Categories=GTK;Application;AudioVideo;
-MimeType=video/mpeg;video/msvideo;video/quicktime;video/x-avi;\
-video/x-ms-asf;video/x-ms-wmv;video/x-msvideo;application/x-ogg;\
-application/ogg;audio/x-mp3;audio/x-mpeg;video/x-mpeg;video/x-fli;\
-audio/x-wav;audio/x-mpegurl;audio/x-scpls;audio/x-ms-asx;\
-application/vnd.rn-realmedia;audio/x-real-audio;audio/x-pn-realaudio;\
-application/x-flac;audio/x-flac;application/x-shockwave-flash;\
-audio/mpeg;audio/x-ms-asf;audio/x-m4a;audio/x-ms-wax;video/dv;\
-video/x-anim;video/x-flc;misc/ultravox;application/x-matroska;\
-audio/vnd.rn-realaudio;audio/x-pn-aiff;audio/x-pn-au;audio/x-pn-wav;\
-audio/x-pn-windows-acm;image/vnd.rn-realpix;video/vnd.rn-realvideo
 __MENU__
 
 #Icons
-install -p -m0644 -D %SOURCE6 %buildroot%_niconsdir/%bname.png
-install -p -m0644 -D %SOURCE7 %buildroot%_liconsdir/%bname.png
-install -p -m0644 -D %SOURCE8 %buildroot%_miconsdir/%bname.png
 find etc DOCS -type f -exec chmod 644 {} \;
 
 # add mencoder.1 man-link
@@ -1172,7 +1148,7 @@ unset RPM_PYTHON
 %config(noreplace) %verify(not size mtime md5) %_sysconfdir/%bname/dvb-menu.conf
 %endif
 %endif
-%_sysconfdir/bashrc.d/*
+#_sysconfdir/bashrc.d/*
 %dir %_datadir/%bname
 %if_disabled fontconfig
 %if_enabled freetype
@@ -1188,10 +1164,7 @@ unset RPM_PYTHON
 %files -n %gui_name
 %_bindir/gmplayer
 %dir %_datadir/%bname
-%_niconsdir/%bname.png
-%_miconsdir/%bname.png
-%_liconsdir/%bname.png
-%_datadir/applications/mplayer.desktop
+%_desktopdir/*
 %_datadir/pixmaps/*
 %_datadir/%bname/skins/standard
 %_datadir/%bname/skins/default
@@ -1302,6 +1275,13 @@ unset RPM_PYTHON
 
 
 %changelog
+* Tue Jun 13 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060613.1
+- new SVN sbapshot (revision 18698)
+- removed additional icons
+- fixed .desktop file
+- removed mplayer.sh (soundwrapper)
+- cleaned up spec
+
 * Wed Jun 07 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060607.1
 - 20060607 SVN snapshot
 - fixed spec
