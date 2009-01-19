@@ -7,7 +7,7 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 %define prerel %nil
-%define svnrev 19700
+%define svnrev 19734
 %define ffmpeg_svnrev 6181
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
@@ -273,7 +273,7 @@
 Name: %lname
 Serial: 1
 Version: 1.0
-%define altrel 2
+%define altrel 1
 %ifdef svnrev
 Release: alt1.%svnrev.%altrel
 %define pkgver svn-r%svnrev
@@ -1423,6 +1423,9 @@ unset RPM_PYTHON
 
 
 %changelog
+* Fri Sep 08 2006 Led <led@altlinux.ru> 1:1.0-alt1.19734.1
+- new SVN snapshot (revision 19734)
+
 * Fri Sep 08 2006 Led <led@altlinux.ru> 1:1.0-alt1.19700.2
 - fixed BuildRequires
 - fixed install mans
