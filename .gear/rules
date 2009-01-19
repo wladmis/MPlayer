@@ -1,4 +1,4 @@
-tar.bz2: r19018:. name=@name@-svn-20060712
+tar.bz2: r19047:. name=@name@-svn-20060713
 tar.bz2: cp1251-font:. name=cp1251-font base=font
 tar.bz2: standard-1.9:. name=standard-1.9 base=standard
 copy: *.sh MPlayer-1.0*.patch

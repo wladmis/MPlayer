@@ -8,7 +8,7 @@
 
 %define fversion %real_version
 
-%define cvsbuild 20060712
+%define cvsbuild 20060713
 %define ffmpeg_version svn-20060711
 
 %if %cvsbuild
@@ -1389,6 +1389,9 @@ unset RPM_PYTHON
 
 
 %changelog
+* Thu Jul 13 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060713.1
+- new SVN sbapshot (revision 19047)
+
 * Thu Jul 13 2006 Led <led@altlinux.ru> 1:1.0-alt0.20060712.1
 - new SVN sbapshot (revision 19018)
 - enabled fribidi
