@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 %define prerel %nil
-%define svnrev 19595
-%define ffmpeg_svnrev 6125
+%define svnrev 19671
+%define ffmpeg_svnrev 6169
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -158,7 +158,7 @@
 %def_enable cpu_detection
 %define ccomp gcc
 %define asm as
-%define charset cp1251
+%define charset UTF-8
 #define language uk ru en bg cs de dk el es fr hu it ja ko mk nl no pl ro sk sv tr pt_BR zh_CN zh_TW
 %define language all
 
@@ -180,6 +180,7 @@
 %define termcaplib tinfo
 
 # Other parameters
+%def_enable nls
 %def_without soundwrapper
 %def_with htmldocs
 %define default_vo %{subst_o xmga}%{subst_o xv}%{subst_o sdl}%{subst_o gl2}%{subst_o gl}%{subst_o x11}%{subst_o_pre x vidix}%{subst_o mga}%{subst_o dfbmga}%{subst_o tdfxfb}%{subst_o 3dfx}%{subst_o s3fb}%{subst_o_pre c vidix}%{subst_o_post fbdev 2}%{subst_o vesa}%{subst_o caca}%{subst_o aa}null
@@ -187,13 +188,8 @@
 
 #----------------------	END OF PARAMETERS ---------------------------------------
 
-%if_disabled mencoder
-%set_disable lame
-%endif
-
-%if_enabled termcap
-%set_disable termios
-%endif
+%{?_disable_mencoder:%set_disable lame}
+%{?_enable_termcap:%set_disable termios}
 
 %if_disabled tv
 %set_disable v4l1
@@ -212,13 +208,19 @@
 %set_disable macosx_bundle
 %endif
 
-%if_disabled ffmpeg
-%set_disable ffmpeg_shared
+%if_enabled nls
+%define awk gawk
+%set_enable iconv
+%{!?charset:%define charset UTF-8}
+%undefine language
+%define language en
+%else
+%define awk awk
 %endif
 
-%if_disabled freetype
-%set_disable fontconfig
-%endif
+%{?_disable_ffmpeg:%set_disable ffmpeg_shared}
+%{?_disable_iconv:%set_disable freetype}
+%{?_disable_freetype:%set_disable fontconfig}
 
 %if_disabled vidix
 %ifdef vidixlib
@@ -226,7 +228,7 @@
 %endif
 %define vidixlib none
 %else
-%ifnarch %ix86
+%ifnarch %ix86 x86_64
 %ifdef vidixlib
 %undefine vidixlib
 %endif
@@ -237,9 +239,7 @@
 %set_disable vidix
 %endif
 
-%if_enabled tremor_external
-%set_disable tremor_low
-%endif
+%{?_enable_tremor_external:%set_disable tremor_low}
 
 %ifnarch %ix86
 %set_disable win32
@@ -253,13 +253,8 @@
 %define xanim_libdir	%_libdir/xanim
 %define real_libdir	%_libdir/real
 
-%if_disabled win32
-%set_disable qtx
-%endif
-
-%if_enabled faad_int
-%set_disable faad_ext
-%endif
+%{?_disable_win32:%set_disable qtx}
+%{?_enable_faad_int:%set_disable faad_ext}
 
 %if_disabled x11
 %set_disable xv
@@ -269,6 +264,7 @@
 %set_disable vm
 %set_disable dga
 %endif
+
 
 %define lname mplayer
 %define Name MPlayer
@@ -311,6 +307,8 @@ Source2: ao_polyp.c.bz2
 Source3: %lname.sh
 Source4: standard-1.9.tar.bz2
 Source5: %lname.conf.in.gz
+Source6: mp_help2msg.awk.gz
+Source7: mp_msg2po.awk.gz
 Patch1: %Name-svn-20060710-alt-external_fame.patch.gz
 Patch2: %lname-dvd-ru-svn19389.patch.gz
 Patch3: %Name-1.0pre4-alt-explicit_gif.patch
@@ -321,6 +319,7 @@ Patch7: %Name-svn-20060707_dirac-0.5.x.patch.bz2
 Patch8: %lname-svn-r19389-ext_libswscale.patch.bz2
 %{?_disable_shared_ffmpeg:Patch9: ffmpeg-svn-20060630-dirac-0.5.x.patch.bz2}
 Patch10: %lname-svn-r19558-generic-x86_64.patch.gz
+Patch11: %lname-svn-r19595-nls.patch.gz
 Patch12: %lname-uni-svn19558.diff.gz
 Patch13: %Name-svn-20060711-vbe.patch.gz
 Patch14: %Name-1.0pre7try2-xmmslibs_fix.patch
@@ -331,7 +330,7 @@ Patch22: %lname-svn-r19389-polyp0.8.patch.gz
 Patch26: %lname-svn-r19467-configure.patch.gz
 %{?svnrev:Patch27: %Name-cvs-20060331-builddocs.patch.gz}
 
-BuildRequires: awk pkgconfig libncurses-devel libslang-devel zlib-devel
+BuildRequires: %awk pkgconfig libncurses-devel libslang-devel zlib-devel
 BuildRequires: cpp >= 3.3 gcc >= 3.3 gcc-c++ >= 3.3
 %{?svnrev:BuildRequires: docbook-style-dsssl openjade xsltproc}
 
@@ -406,6 +405,8 @@ BuildRequires: libvidix-devel
 %{?_enable_jack:BuildRequires: jackit-devel}
 %{?_enable_openal:BuildRequires: libopenal-devel}
 %{?_enable_nas:BuildRequires: libaudio-devel}
+
+%{?_enable_nls:BuildRequires: gettext-tools}
 
 Autoreq: yes, noperl
 
@@ -860,6 +861,16 @@ VIDIX driver for VIA CLE266 Unichrome.
 %endif
 
 
+%if_enabled nls
+%package i18n
+Group: Video
+Summary: Languages support for %Name
+
+%description i18n
+Languages support for %Name.
+%endif
+
+
 %prep
 %if %svnrev
 %if_enabled shared_ffmpeg
@@ -888,6 +899,7 @@ mv ffmpeg-svn-%ffmpeg_svnrev/lib{av{codec,format,util},postproc} .
 %patch8 -p1
 %endif
 %patch10 -p1
+%patch11 -p1
 %patch12 -p1
 %patch13 -p1
 %patch14 -p1
@@ -916,6 +928,12 @@ rm -f xml.utf8
 popd
 %endif
 
+%if_enabled nls
+install -d -m 0755 po
+gzip -dc %SOURCE6 > po/mp_help2msg.awk
+gzip -dc %SOURCE7 > po/mp_msg2po.awk
+%endif
+
 %build
 %if_disabled debug
 %define _optlevel 4
@@ -936,6 +954,7 @@ export LC_MESSAGES=C
 		%{subst_enable_to devfs linux-devfs} \
 		%{subst_enable termcap} \
 		%{subst_enable termios} \
+		%{subst_enable nls} \
 		%{subst_enable iconv} \
 		%{subst_enable langinfo} \
 		%{subst_enable lirc} \
@@ -1162,8 +1181,20 @@ echo 'CATALOG "/usr/share/xml/xml-iso-entities-8879.1986/catalog"' >> ./catalog
 popd
 %endif
 
+%if_enabled nls
+pushd po
+gawk -f ./mp_help2msg.awk ../help/help_mp-en.h > en.msg
+for h in $(ls ../help/help_mp-*.h | grep -v '..help/help_mp-en.h$'); do
+    l=$(basename ${h/help_mp-} .h)
+    gawk -f ./mp_help2msg.awk $h | iconv -c -f $(cat $h.charset) -t UTF-8 | awk -f ./mp_msg2po.awk en.msg > $l.po
+    msgfmt -o $l.gmo $l.po
+done
+popd
+%endif
+
 
 %install
+
 %make_install DESTDIR=%buildroot install
 
 install -d -m 0755 %buildroot%_datadir/%name/skins
@@ -1221,6 +1252,13 @@ install -d %buildroot%_docdir/%name-doc-%version/en/tech/realcodecs
 install -m 0644 DOCS/tech/{MAINTAINERS,TODO,*.txt,mpsub.sub,playtree,wishlist} %buildroot%_docdir/%name-doc-%version/en/tech/
 install -pD -m 0644 DOCS/tech/playtree-hun %buildroot%_docdir/%name-doc-%version/hu/tech/playtree
 install -m 0644 DOCS/tech/realcodecs/{TODO,*.txt} %buildroot%_docdir/%name-doc-%version/en/tech/realcodecs/
+
+%if_enabled nls
+for l in po/*.gmo; do
+install -pD -m 0644 $l %buildroot%_datadir/locale/$(basename $l .gmo)/LC_MESSAGES/%name.mo
+done
+%find_lang %name
+%endif
 
 # a tribute to clever python support
 unset RPM_PYTHON
@@ -1376,7 +1414,19 @@ unset RPM_PYTHON
 %endif
 
 
+%if_enabled nls
+%files i18n -f %name.lang
+%endif
+
+
 %changelog
+* Tue Sep 05 2006 Led <led@altlinux.ru> 1:1.0-alt1.19671.1
+- new SVN snapshot (revision 19671)
+- added NLS support: mp_help2msg.awk, mp_msg2po.awk,
+  %lname-svn-r19595-nls.patch
+- added %name-i18n package
+- fixed spec
+
 * Wed Aug 30 2006 Led <led@altlinux.ru> 1:1.0-alt1.19595.1
 - new SVN snapshot (revision 19595):
   + Radio support (radio://)
