@@ -271,7 +271,7 @@
 Name: %lname
 Serial: 1
 Version: 1.0
-%define altrel 2
+%define altrel 3
 %ifdef svnrev
 Release: alt1.%svnrev.%altrel
 %define pkgver svn-r%svnrev
@@ -1368,6 +1368,9 @@ unset RPM_PYTHON
 
 
 %changelog
+* Wed Aug 30 2006 Led <led@altlinux.ru> 1:1.0-alt1.19558.3
+- rebuild with external vidix from MPlayer's SVN
+
 * Tue Aug 29 2006 Led <led@altlinux.ru> 1:1.0-alt1.19558.2
 - added %lname-svn-r19558-generic-x86_64.patch (thanks LAKostis)
 - disabled win32 for x86_64
