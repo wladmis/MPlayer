@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 23822
-%define ffmpeg_svnrev 9744
+%define svnrev 23839
+%define ffmpeg_svnrev 9777
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -78,7 +78,7 @@
 %def_enable xvid
 %def_enable x264
 %def_enable ffmpeg
-%def_enable shared_ffmpeg
+%def_disable shared_ffmpeg
 %def_enable faad_ext
 %def_enable faad_int
 %def_disable faad_fixed
@@ -337,7 +337,9 @@ Patch17: %lname-svn-r23726-ext_ffmpeg.patch
 Patch22: %lname-svn-r19389-polyp0.8.patch.gz
 Patch27: %lname-svn-r22518-builddocs.patch
 %if_disabled shared_ffmpeg
-Patch32: ffmpeg-uni-svn-r8990.patch
+Patch31: ffmpeg-svn-r9777-dirac-0.7.x.patch
+Patch32: ffmpeg-uni-svn-r9389.patch
+Patch33: ffmpeg-svn-r9777-amr.patch
 %endif
 
 # Automatically added by buildreq on Wed May 30 2007
@@ -687,7 +689,11 @@ mv ffmpeg-svn-r%ffmpeg_svnrev/lib{av{codec,format,util},postproc} .
 %patch17 -p1
 %{?_enable_polyp:%{?_disable_old_polyp:%patch22 -p1}}
 %patch27 -p1
-%{?_disable_shared_ffmpeg:%patch32 -p1}
+%if_disabled shared_ffmpeg
+%patch31 -p1
+%patch32 -p1
+%patch33 -p1
+%endif
 %{?_enable_polyp:%{?_disable_old_polyp:sed -e 's/\([Pp]\)ulse/\1olyp/g' -e 's/PULSE/POLYP/g' libao2/ao_pulse.c > libao2/ao_polyp.c}}
 
 %{?_enable_dvdnav:subst 's/--minilibs/--libs/g' configure}
@@ -1218,11 +1224,13 @@ done
 
 
 %changelog
-* Thu Jul 19 2007 Led <led@altlinux.ru> 1.0-alt35.23822.1
-- new SVN snapshot (revision 23822)
+* Sun Jul 22 2007 Led <led@altlinux.ru> 1.0-alt35.23839.1
+- new SVN snapshot (revision 23839)
 - updated %lname-svn-r23810-configure.patch
 - updated %lname-svn-r23726-gui_nls.patch
 - updated %lname-svn-r23726-ext_ffmpeg.patch
+- added ffmpeg-svn-r9777-dirac-0.7.x.patch
+- added ffmpeg-svn-r9777-amr.patch
 
 * Fri Jul 06 2007 Led <led@altlinux.ru> 1.0-alt35.23722.1
 - new SVN snapshot (revision 23722)
