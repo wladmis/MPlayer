@@ -1,6 +1,6 @@
-diff -urN mplayer-svn-r21352.orig/libdha/Makefile mplayer-svn-r21352/libdha/Makefile
---- mplayer-svn-r21352.orig/libdha/Makefile	2006-11-27 14:05:38 +0200
-+++ mplayer-svn-r21352/libdha/Makefile	2006-11-28 17:00:38 +0200
+diff -urN mplayer-svn-r21995.orig/libdha/Makefile mplayer-svn-r21995/libdha/Makefile
+--- mplayer-svn-r21995.orig/libdha/Makefile	2007-01-22 19:01:51 +0200
++++ mplayer-svn-r21995/libdha/Makefile	2007-01-24 02:42:48 +0200
 @@ -15,12 +15,8 @@
  #SHORTNAME = libdha.so
  VSHORTNAME = libdha.so
@@ -29,26 +29,22 @@ diff -urN mplayer-svn-r21352.orig/libdha/Makefile mplayer-svn-r21352/libdha/Make
  
  all:    $(LIBNAME) $(SHORTNAME)
  
-@@ -83,12 +72,15 @@
+@@ -83,8 +72,11 @@
  	-mkdir -p $(LIBDIR)
  	install -m 755 $(INSTALLSTRIP) -p $(LIBNAME) $(LIBDIR)/$(LIBNAME)
  	rm -f $(LIBDIR)/libdha.so
 +ifneq ($(LIBNAME),$(SHORTNAME))
  	ln -sf $(LIBNAME) $(LIBDIR)/$(SHORTNAME)
 +else
- ifeq ($(TARGET_OS),OpenBSD)
- 	-ldconfig -R
- else
- 	-ldconfig
- endif
+ 	-$(LDCONFIG)
 +endif
  
  uninstall:
  	rm -f $(LIBDIR)/libdha.so $(LIBDIR)/$(SHORTNAME) $(LIBDIR)/$(LIBNAME)
-diff -urN mplayer-svn-r21352.orig/Makefile mplayer-svn-r21352/Makefile
---- mplayer-svn-r21352.orig/Makefile	2006-11-28 12:50:10 +0200
-+++ mplayer-svn-r21352/Makefile	2006-11-28 17:05:44 +0200
-@@ -105,7 +105,7 @@
+diff -urN mplayer-svn-r21995.orig/Makefile mplayer-svn-r21995/Makefile
+--- mplayer-svn-r21995.orig/Makefile	2007-01-22 19:01:55 +0200
++++ mplayer-svn-r21995/Makefile	2007-01-24 02:40:56 +0200
+@@ -108,7 +108,7 @@
  PARTS-$(FAAD_INTERNAL)            += libfaad2
  COMMON_LIBS-$(TREMOR_INTERNAL)    += tremor/libvorbisidec.a
  PARTS-$(TREMOR_INTERNAL)          += tremor
@@ -57,7 +53,7 @@ diff -urN mplayer-svn-r21352.orig/Makefile mplayer-svn-r21352/Makefile
  PARTS-$(VIDIX)                    += libdha vidix
  COMMON_LIBS-$(DVDREAD_INTERNAL)   += dvdread/libdvdread.a
  PARTS-$(DVDREAD_INTERNAL)         += dvdread
-@@ -213,10 +213,10 @@
+@@ -211,10 +211,10 @@
  tremor/libvorbisidec.a:
  	$(MAKE) -C tremor
  
@@ -70,7 +66,7 @@ diff -urN mplayer-svn-r21352.orig/Makefile mplayer-svn-r21352/Makefile
  	$(MAKE) -C vidix
  
  Gui/libgui.a:
-@@ -250,7 +250,6 @@
+@@ -251,7 +251,6 @@
  
  install: $(ALL_PRG)
  ifeq ($(VIDIX),yes)
@@ -78,7 +74,7 @@ diff -urN mplayer-svn-r21352.orig/Makefile mplayer-svn-r21352/Makefile
  	mkdir -p $(LIBDIR)/mplayer/vidix
  	-install -m 755 $(INSTALLSTRIP) -p vidix/drivers/*.so $(LIBDIR)/mplayer/vidix
  endif
-@@ -412,7 +411,7 @@
+@@ -408,7 +407,7 @@
  libfaad2/libfaad2.a: .norecurse $(wildcard libfaad2/*.[ch] libfaad2/*/*.[ch])
  
  loader/libloader.a: .norecurse $(wildcard loader/*.[chSs])

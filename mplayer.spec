@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 21858
-%define ffmpeg_svnrev 7430
+%define svnrev 21995
+%define ffmpeg_svnrev 7650
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -319,10 +319,10 @@ Source4: standard-1.9.tar.bz2
 Source5: %lname.conf.in.gz
 Source6: mp_help2msg.awk.gz
 Source7: mp_msg2po.awk.gz
-Patch1: %lname-svn-r21402-makefile.patch.gz
+Patch1: %lname-svn-r21995-makefile.patch
 Patch2: %lname-dvd-ru-svn19389.patch.gz
 Patch3: %Name-1.0pre4-alt-explicit_gif.patch
-Patch4: %lname-svn-r21352-libdha.patch.gz
+Patch4: %lname-svn-r21995-libdha.patch
 Patch5: %lname-svn-r19447-vo_vidix.patch.gz
 Patch6: %lname-svn-r21128-alt-artsc_ldflags.patch.gz
 Patch7: %Name-svn-20060707_dirac-0.5.x.patch.bz2
@@ -331,7 +331,7 @@ Patch12: %lname-uni-svn21402.diff.gz
 Patch13: %Name-svn-20060711-vbe.patch.gz
 Patch14: %lname-svn-r21402-gui_nls.patch.bz2
 Patch15: %lname-svn-r21128-pulseaudio.patch.gz
-Patch17: %lname-svn-r21858-ext_ffmpeg.patch.bz2
+Patch17: %lname-svn-r21995-ext_ffmpeg.patch
 Patch18: %lname-mwallp.patch.gz
 Patch22: %lname-svn-r19389-polyp0.8.patch.gz
 Patch26: %lname-svn-r21858-configure.patch.gz
@@ -372,7 +372,7 @@ BuildRequires: cpp >= 3.3 gcc >= 3.3 gcc-c++ >= 3.3
 %{?_enable_lzo:BuildRequires: liblzo-devel}
 %{?_enable_xvid:BuildRequires: libxvid-devel}
 %{?_enable_x264:BuildRequires: libx264-devel}
-%{?_enable_shared_ffmpeg:BuildRequires: libffmpeg-devel >= 0.5.0-alt1.svn7430}
+%{?_enable_shared_ffmpeg:BuildRequires: libffmpeg-devel >= 0.5.0-alt1.svn7650}
 %{?_enable_tremor_external:BuildRequires: libtremor-devel}
 %{?_enable_vorbis:BuildRequires: libvorbis-devel}
 %{?_enable_speex:BuildRequires: libspeex-devel}
@@ -1531,6 +1531,13 @@ unset RPM_PYTHON
 
 
 %changelog
+* Wed Jan 24 2007 Led <led@altlinux.ru> 1.0-alt35.21995.1
+- new SVN snapshot (revision 21995):
+  + Russian documentation translation finished
+- updated %lname-svn-r21995-makefile.patch
+- updated %lname-svn-r21995-libdha.patch
+- updated %lname-svn-r21995-ext_ffmpeg.patch
+
 * Tue Jan 09 2007 Led <led@altlinux.ru> 1.0-alt35.21858.1
 - new SVN snapshot (revision 21858)
 - updated %lname-svn-r21858-ext_ffmpeg.patch
