@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 23002
-%define ffmpeg_svnrev 8701
+%define svnrev 23023
+%define ffmpeg_svnrev 8757
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -1448,6 +1448,9 @@ unset RPM_PYTHON
 
 
 %changelog
+* Thu Apr 19 2007 Led <led@altlinux.ru> 1.0-alt35.23023.1
+- new SVN snapshot (revision 23023)
+
 * Mon Apr 16 2007 Led <led@altlinux.ru> 1.0-alt35.23002.1
 - new SVN snapshot (revision 23002):
   + THP audio and video via lavc
