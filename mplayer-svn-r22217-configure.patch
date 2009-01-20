@@ -1,6 +1,6 @@
-diff -urN mplayer-svn-r22092.orig/configure mplayer-svn-r22092/configure
---- mplayer-svn-r22092.orig/configure	2007-01-31 13:31:44 +0200
-+++ mplayer-svn-r22092/configure	2007-01-31 14:50:37 +0200
+diff -urN mplayer-svn-r22217.orig/configure mplayer-svn-r22217/configure
+--- mplayer-svn-r22217.orig/configure	2007-02-13 20:44:59 +0200
++++ mplayer-svn-r22217/configure	2007-02-14 15:11:56 +0200
 @@ -129,7 +129,7 @@
  
  x86_64() {
@@ -137,6 +137,15 @@ diff -urN mplayer-svn-r22092.orig/configure mplayer-svn-r22092/configure
 -  for I in $_inc_extra "-I$_libdir/live" "-I/usr/lib/live" "-I/usr/local/live" "-I/usr/local/lib/live" ; do
 -    cxx_check $I/liveMedia/include $I/UsageEnvironment/include \
 -      $I/groupsock/include && _livelibdir=`echo $I| sed s/-I//` && \
+-      _ld_extra="$_ld_extra $_livelibdir/liveMedia/libliveMedia.a \
+-                 $_livelibdir/groupsock/libgroupsock.a \
+-                 $_livelibdir/UsageEnvironment/libUsageEnvironment.a \
+-                 $_livelibdir/BasicUsageEnvironment/libBasicUsageEnvironment.a \
+-                 -lstdc++" \
+-      _inc_extra="$_inc_extra -I$_livelibdir/liveMedia/include \
+-                  -I$_livelibdir/UsageEnvironment/include \
+-                  -I$_livelibdir/BasicUsageEnvironment/include \
+-                  -I$_livelibdir/groupsock/include" && \
 -      _live=yes && break
 -  done
 -  if test "$_live" != yes ; then
@@ -148,15 +157,6 @@ diff -urN mplayer-svn-r22092.orig/configure mplayer-svn-r22092/configure
 -if test "$_live" = yes && test "$_network" = yes ; then
 -  _res_comment="using $_livelibdir"
 -  _def_live='#define STREAMING_LIVE555 1'
--  _ld_extra="$_ld_extra $_livelibdir/liveMedia/libliveMedia.a \
--           $_livelibdir/groupsock/libgroupsock.a \
--           $_livelibdir/UsageEnvironment/libUsageEnvironment.a \
--           $_livelibdir/BasicUsageEnvironment/libBasicUsageEnvironment.a \
--           -lstdc++"
--  _inc_extra="$_inc_extra -I$_livelibdir/liveMedia/include \
--             -I$_livelibdir/UsageEnvironment/include \
--             -I$_livelibdir/BasicUsageEnvironment/include \
--             -I$_livelibdir/groupsock/include"
 - _inputmodules="live555 $_inputmodules"
 -elif test "$_live_dist" = yes && test "$_network" = yes ; then
 -  _res_comment="using distribution version"
@@ -239,7 +239,7 @@ diff -urN mplayer-svn-r22092.orig/configure mplayer-svn-r22092/configure
    cat > $TMPC << EOF
  #include <stdio.h>
  #include <stdlib.h>
-@@ -6836,6 +6789,53 @@
+@@ -6836,6 +6789,55 @@
  fi
  echores "$_ftp"
  
@@ -255,7 +255,18 @@ diff -urN mplayer-svn-r22092.orig/configure mplayer-svn-r22092/configure
 +
 +  _live=no
 +  for I in "$_livelibdir" "$_libdir/live" "/usr/lib/live" "/usr/local/live" "/usr/local/lib/live" ; do
-+    cxx_check -I$I/liveMedia/include -I$I/UsageEnvironment/include -I$I/groupsock/include && _livelibdir=$I && _live=yes && break
++    cxx_check -I$I/liveMedia/include -I$I/UsageEnvironment/include \
++      -I$I/groupsock/include && _livelibdir=`echo $I| sed s/-I//` && \
++      _ld_extra="$_ld_extra $_livelibdir/liveMedia/libliveMedia.a \
++                 $_livelibdir/groupsock/libgroupsock.a \
++                 $_livelibdir/UsageEnvironment/libUsageEnvironment.a \
++                 $_livelibdir/BasicUsageEnvironment/libBasicUsageEnvironment.a \
++                 -lstdc++" \
++      _inc_extra="$_inc_extra -I$_livelibdir/liveMedia/include \
++                  -I$_livelibdir/UsageEnvironment/include \
++                  -I$_livelibdir/BasicUsageEnvironment/include \
++                  -I$_livelibdir/groupsock/include" && \
++      _live=yes && break
 +  done
 +  if test "$_live" != yes ; then
 +      if cxx_check -I/usr/include/liveMedia -I/usr/include/UsageEnvironment -I/usr/include/groupsock; then
@@ -266,15 +277,6 @@ diff -urN mplayer-svn-r22092.orig/configure mplayer-svn-r22092/configure
 +if test "$_live" = yes && test "$_network" = yes ; then
 +  _res_comment="using $_livelibdir"
 +  _def_live='#define STREAMING_LIVE555 1'
-+  _ld_extra="$_ld_extra $_livelibdir/liveMedia/libliveMedia.a \
-+           $_livelibdir/groupsock/libgroupsock.a \
-+           $_livelibdir/UsageEnvironment/libUsageEnvironment.a \
-+           $_livelibdir/BasicUsageEnvironment/libBasicUsageEnvironment.a \
-+           -lstdc++"
-+  _inc_extra="$_inc_extra -I$_livelibdir/liveMedia/include \
-+             -I$_livelibdir/UsageEnvironment/include \
-+             -I$_livelibdir/BasicUsageEnvironment/include \
-+             -I$_livelibdir/groupsock/include"
 + _inputmodules="live555 $_inputmodules"
 +elif test "$_live_dist" = yes && test "$_network" = yes ; then
 +  _res_comment="using distribution version"
@@ -293,7 +295,7 @@ diff -urN mplayer-svn-r22092.orig/configure mplayer-svn-r22092/configure
  echocheck "vstream client"
  if test "$_vstream" = auto ; then
    _vstream=no
-@@ -6931,7 +6931,7 @@
+@@ -6931,7 +6933,7 @@
    if darwin ; then
       _ld_extra="$_ld_extra ${_xmmslibdir}/libxmms.dylib"
    else
@@ -302,7 +304,7 @@ diff -urN mplayer-svn-r22092.orig/configure mplayer-svn-r22092/configure
    fi
  else
    _def_xmms='#undef HAVE_XMMS'
-@@ -7254,6 +7254,9 @@
+@@ -7254,6 +7256,9 @@
  if test "$_vidix_internal" = yes || test "$_vidix_external" = yes ; then
    _vidix=yes
    _def_vidix='#define CONFIG_VIDIX 1'
@@ -312,7 +314,7 @@ diff -urN mplayer-svn-r22092.orig/configure mplayer-svn-r22092/configure
  else
    _vidix=no
    _def_vidix='#undef CONFIG_VIDIX'
-@@ -7263,7 +7266,7 @@
+@@ -7263,7 +7268,7 @@
    _def_vidix_pfx="#define MP_VIDIX_PFX \"$_libdir\" \"/mplayer/vidix/\" "
  elif test "$_vidix_external" = yes ; then
    _libs_mplayer="$_libs_mplayer -lvidix"
@@ -321,7 +323,7 @@ diff -urN mplayer-svn-r22092.orig/configure mplayer-svn-r22092/configure
  fi
  
  if test "$_vidix" = yes; then
-@@ -8239,6 +8242,7 @@
+@@ -8238,6 +8243,7 @@
  /* enables / disables VIDIX usage */
  $_def_vidix
  $_def_vidix_pfx

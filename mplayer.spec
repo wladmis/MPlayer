@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 22210
-%define ffmpeg_svnrev 7881
+%define svnrev 22217
+%define ffmpeg_svnrev 7980
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -332,7 +332,7 @@ Patch15: %lname-svn-r21128-pulseaudio.patch.gz
 Patch17: %lname-svn-r22173-ext_ffmpeg.patch
 Patch18: %lname-mwallp.patch.gz
 Patch22: %lname-svn-r19389-polyp0.8.patch.gz
-Patch26: %lname-svn-r22092-configure.patch
+Patch26: %lname-svn-r22217-configure.patch
 Patch27: %lname-svn-r20777-builddocs.patch.gz
 %if_disabled shared_ffmpeg
 Patch32: ffmpeg-uni-svn-r7184.patch.gz
@@ -1173,7 +1173,7 @@ export CFLAGS="%optflags"
 		%{subst_enable_to dynamic_plugins dynamic-plugins} \
 		--with-extraincdir=%_includedir/vidix:%_includedir/directfb
 
-%make_build
+%make
 
 # make conf file
 sed -e 's/^@VO@/vo = %default_vo/' \
@@ -1520,6 +1520,10 @@ unset RPM_PYTHON
 
 
 %changelog
+* Wed Feb 14 2007 Led <led@altlinux.ru> 1.0-alt35.22217.1
+- new SVN snapshot (revision 22217)
+- updated %lname-svn-r22217-configure.patch
+
 * Mon Feb 12 2007 Led <led@altlinux.ru> 1.0-alt35.22210.1
 - new SVN snapshot (revision 22210):
   + Russian man page translation finished
