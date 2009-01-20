@@ -1,0 +1,6 @@
+object 172d13d27d717b506867fba7ef361280e0b68f27
+type commit
+tag ffmpeg-r11305
+tagger Led <led@altlinux.org> 1232486723 +0200
+
+ffmpeg-r11305

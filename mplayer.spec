@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc2
-%define svnrev 25487
-%define ffmpeg_svnrev 11298
+%define svnrev 25498
+%define ffmpeg_svnrev 11305
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -329,12 +329,11 @@ Patch5: %lname-svn-r25454-vo_vidix.patch
 Patch6: %lname-svn-r21128-alt-artsc_ldflags.patch.gz
 Patch7: %lname-svn-r23099-demux_nut.patch
 Patch8: %lname-svn-r23722-VIDM-win32-codec.patch
-Patch9: %lname-svn-r25454-dvdnav.patch
 Patch11: %lname-svn-r24081-nls.patch
 Patch12: %lname-uni-svn23235.diff
 Patch13: %Name-svn-20060711-vbe.patch.gz
 Patch14: %lname-svn-r23726-gui_nls.patch
-Patch16: %lname-svn-r25454-configure.patch
+Patch16: %lname-svn-r25505-configure.patch
 Patch17: %lname-svn-r25487-ext_ffmpeg.patch
 Patch27: %lname-svn-r22518-builddocs.patch
 %if_disabled shared_ffmpeg
@@ -690,7 +689,6 @@ mv ffmpeg-svn-r%ffmpeg_svnrev/lib{av{codec,format,util},postproc} .
 %patch6 -p1
 %patch7 -p1
 %patch8 -p1
-%patch9 -p1
 %patch11 -p1
 %patch12 -p1
 %patch13 -p1
@@ -1238,6 +1236,11 @@ done
 
 
 %changelog
+* Tue Dec 25 2007 Led <led@altlinux.ru> 1.0-alt35.25498.1
+- new SVN snapshot (revision 25498)
+- removed %lname-svn-r25454-dvdnav.patch
+- updated %lname-svn-r25505-configure.patch (fixed #13791)
+
 * Sat Dec 22 2007 Led <led@altlinux.ru> 1.0-alt35.25487.1
 - new SVN snapshot (revision 25487)
 - updated:
