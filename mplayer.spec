@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 23560
-%define ffmpeg_svnrev 9328
+%define svnrev 23580
+%define ffmpeg_svnrev 9363
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -1218,6 +1218,9 @@ done
 
 
 %changelog
+* Tue Jun 19 2007 Led <led@altlinux.ru> 1.0-alt35.23580.1
+- new SVN snapshot (revision 23580)
+
 * Sat Jun 16 2007 Led <led@altlinux.ru> 1.0-alt35.23560.1
 - new SVN snapshot (revision 23560)
 - updated %lname-svn-r23560-configure.patch
