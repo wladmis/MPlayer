@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 22004
-%define ffmpeg_svnrev 7650
+%define svnrev 22020
+%define ffmpeg_svnrev 7711
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -319,14 +319,13 @@ Source4: standard-1.9.tar.bz2
 Source5: %lname.conf.in.gz
 Source6: mp_help2msg.awk.gz
 Source7: mp_msg2po.awk.gz
-Patch1: %lname-svn-r21995-makefile.patch
+Patch1: %lname-svn-r22020-makefile.patch
 Patch2: %lname-dvd-ru-svn19389.patch.gz
 Patch3: %Name-1.0pre4-alt-explicit_gif.patch
 Patch4: %lname-svn-r21995-libdha.patch
 Patch5: %lname-svn-r19447-vo_vidix.patch.gz
 Patch6: %lname-svn-r21128-alt-artsc_ldflags.patch.gz
 Patch7: %Name-svn-20060707_dirac-0.5.x.patch.bz2
-Patch8: %lname-svn-r22004-doc_hu.patch
 Patch11: %lname-svn-r20777-nls.patch.gz
 Patch12: %lname-uni-svn21402.diff.gz
 Patch13: %Name-svn-20060711-vbe.patch.gz
@@ -932,7 +931,6 @@ mv ffmpeg-svn-r%ffmpeg_svnrev/lib{av{codec,format,util},postproc} .
 %patch5 -p1
 %patch6 -p1
 %{?_enable_dirac:%patch7 -p1}
-%patch8 -p1
 %patch11 -p1
 %patch12 -p1
 %patch13 -p1
@@ -1533,6 +1531,12 @@ unset RPM_PYTHON
 
 
 %changelog
+* Fri Jan 26 2007 Led <led@altlinux.ru> 1.0-alt35.22020.1
+- new SVN snapshot (revision 22020)
+- fixed %%changelog
+- updated %lname-svn-r22020-makefile.patch
+- removed %lname-svn-r22004-doc_hu.patch (fixed in upstream)
+
 * Wed Jan 24 2007 Led <led@altlinux.ru> 1.0-alt35.22004.1
 - new SVN snapshot (revision 22004)
 - added %lname-svn-r22004-doc_hu.patch
@@ -1544,11 +1548,11 @@ unset RPM_PYTHON
 - updated %lname-svn-r21995-libdha.patch
 - updated %lname-svn-r21995-ext_ffmpeg.patch
 
-* Tue Jan 09 2007 Led <led@altlinux.ru> 1.0-alt35.21858.1
-- new SVN snapshot (revision 21858)
-- updated %lname-svn-r21858-ext_ffmpeg.patch
+* Wed Jan 10 2007 Led <led@altlinux.ru> 1.0-alt35.21839.1
+- new SVN snapshot (revision 21839)
+- updated %lname-svn-r21839-ext_ffmpeg.patch
 - updated %lname-svn-r21858-configure.patch
-- fixed buffer overflow in asmrp.c (upstream)
+- fixed buffer overflow in realrtsp (upstream)
 
 * Fri Dec 29 2006 Led <led@altlinux.ru> 1.0-alt35.21781.1
 - new SVN snapshot (revision 21781)
