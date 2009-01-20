@@ -6,8 +6,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 20777
-%define ffmpeg_svnrev 6941
+%define svnrev 20837
+%define ffmpeg_svnrev 6962
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -319,14 +319,14 @@ Patch4: %lname-svn-r19427-libdha.patch.gz
 Patch5: %lname-svn-r19447-vo_vidix.patch.gz
 Patch6: %lname-svn-r19389-alt-artsc_ldflags.patch.gz
 Patch7: %Name-svn-20060707_dirac-0.5.x.patch.bz2
-Patch10: %lname-svn-r20777-generic-x86_64.patch.gz
+Patch10: %lname-svn-r20837-generic-x86_64.patch.gz
 Patch11: %lname-svn-r20777-nls.patch.gz
 Patch12: %lname-uni-svn20777.diff.gz
 Patch13: %Name-svn-20060711-vbe.patch.gz
 Patch14: %Name-1.0pre7try2-xmmslibs_fix.patch
-Patch15: %lname-svn-r20777-pulseaudio.patch.bz2
+Patch15: %lname-svn-r20837-pulseaudio.patch.bz2
 Patch16: %Name-1.0pre8-udev.patch.gz
-Patch17: %lname-svn-r20777-ext_ffmpeg.patch.bz2
+Patch17: %lname-svn-r20837-ext_ffmpeg.patch.bz2
 Patch18: %lname-mwallp.patch.gz
 Patch19: %lname-svn-r20777-bmovl-test.patch.gz
 Patch21: %Name-svn-20060607-vf_mcdeint.patch.gz
@@ -1522,6 +1522,12 @@ unset RPM_PYTHON
 
 
 %changelog
+* Fri Nov 10 2006 Led <led@altlinux.ru> 1.0-alt35.20837.1
+- new SVN snapshot (revision 20837)
+- updated %lname-svn-r20837-pulseaudio.patch
+- changed %lname-svn-r20837-generic-x86_64.patch
+- updated %lname-svn-r20837-ext_ffmpeg.patch
+
 * Thu Nov 09 2006 Led <led@altlinux.ru> 1.0-alt35.20777.1
 - new SVN snapshot (revision 20777)
 - removed %lname-1.0rc1-mp3lib-amd.patch (fixed in upstream)

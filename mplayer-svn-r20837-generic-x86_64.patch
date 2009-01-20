@@ -1,0 +1,21 @@
+diff -urN mplayer-svn-r20837.orig/libvo/osd_template.c mplayer-svn-r20837/libvo/osd_template.c
+--- mplayer-svn-r20837.orig/libvo/osd_template.c	2006-11-02 12:29:42 +0200
++++ mplayer-svn-r20837/libvo/osd_template.c	2006-11-10 21:00:26 +0200
+@@ -204,7 +204,7 @@
+     for(y=0;y<h;y++){
+         register unsigned char *dst = dstbase;
+         register int x;
+-#ifdef ARCH_X86
++#if defined(ARCH_X86) && !defined(ARCH_X86_64)
+ #ifdef HAVE_MMX
+     asm volatile(
+ 	PREFETCHW" %0\n\t"
+@@ -324,7 +324,7 @@
+ #endif /* HAVE_MMX */
+     for(y=0;y<h;y++){
+         register int x;
+-#ifdef ARCH_X86
++#if defined(ARCH_X86) && !defined(ARCH_X86_64)
+ #ifdef HAVE_MMX
+ #ifdef HAVE_3DNOW
+     asm volatile(
