@@ -6,8 +6,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 20885
-%define ffmpeg_svnrev 7012
+%define svnrev 21093
+%define ffmpeg_svnrev 7131
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -127,6 +127,7 @@
 %def_enable vm
 %def_enable xinerama
 %def_enable x11
+%def_enable xshape
 %def_enable fbdev
 %def_disable mlib
 %def_enable 3dfx
@@ -321,17 +322,17 @@ Patch6: %lname-svn-r19389-alt-artsc_ldflags.patch.gz
 Patch7: %Name-svn-20060707_dirac-0.5.x.patch.bz2
 Patch10: %lname-svn-r20837-generic-x86_64.patch.gz
 Patch11: %lname-svn-r20777-nls.patch.gz
-Patch12: %lname-uni-svn20777.diff.gz
+Patch12: %lname-uni-svn21093.diff.gz
 Patch13: %Name-svn-20060711-vbe.patch.gz
 Patch14: %Name-1.0pre7try2-xmmslibs_fix.patch
 Patch15: %lname-svn-r20837-pulseaudio.patch.bz2
 Patch16: %Name-1.0pre8-udev.patch.gz
-Patch17: %lname-svn-r20837-ext_ffmpeg.patch.bz2
+Patch17: %lname-svn-r21093-ext_ffmpeg.patch.bz2
 Patch18: %lname-mwallp.patch.gz
 Patch19: %lname-svn-r20777-bmovl-test.patch.gz
 Patch21: %Name-svn-20060607-vf_mcdeint.patch.gz
 Patch22: %lname-svn-r19389-polyp0.8.patch.gz
-Patch26: %lname-svn-r20777-configure.patch.gz
+Patch26: %lname-svn-r21093-configure.patch.gz
 Patch27: %lname-svn-r20777-builddocs.patch.gz
 %if_disabled shared_ffmpeg
 Patch31: ffmpeg-svn-r6769-dirac-0.5.x.patch.bz2
@@ -414,6 +415,14 @@ BuildRequires: libvidix-devel
 %{?_enable_openal:BuildRequires: libopenal-devel}
 %{?_enable_nas:BuildRequires: libaudio-devel}
 
+%if_enabled gui
+%if_enabled gtk1
+BuildRequires: gtk+-devel
+%else
+BuildRequires: libgtk+2-devel
+%endif
+%endif
+
 %{?_enable_nls:BuildRequires: gettext-tools}
 
 %if_with tools
@@ -479,11 +488,6 @@ Obsoletes: %Name-skin-default
 %if %name != %Name
 Provides: %Name-gui = %version-%release
 Obsoletes: %Name-gui
-%endif
-%if_enabled gtk1
-BuildRequires: gtk+-devel
-%else
-BuildRequires: libgtk+2-devel
 %endif
 
 %description gui
@@ -1132,6 +1136,7 @@ export CFLAGS="%optflags"
 		%{subst_enable vm} \
 		%{subst_enable xinerama} \
 		%{subst_enable x11} \
+		%{subst_enable xshape} \
 		%{subst_enable fbdev} \
 		%{subst_enable mlib} \
 		%{subst_enable 3dfx} \
@@ -1522,6 +1527,14 @@ unset RPM_PYTHON
 
 
 %changelog
+* Mon Nov 20 2006 Led <led@altlinux.ru> 1.0-alt35.21093.1
+- new SVN snapshot (revision 21093):
+  + obsolete XviD 3 support removed
+  + video stream switching
+- updated %lname-uni-svn21093.diff
+- updated %lname-svn-r21093-ext_ffmpeg.patch
+- updated %lname-svn-r21093-configure.patch
+
 * Mon Nov 13 2006 Led <led@altlinux.ru> 1.0-alt35.20885.1
 - new SVN snapshot (revision 20885)
 

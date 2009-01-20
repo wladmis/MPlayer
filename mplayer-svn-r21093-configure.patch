@@ -1,7 +1,7 @@
-diff -urN mplayer-svn-r20777.orig/configure mplayer-svn-r20777/configure
---- mplayer-svn-r20777.orig/configure	2006-11-08 14:49:41 +0200
-+++ mplayer-svn-r20777/configure	2006-11-09 02:18:06 +0200
-@@ -3254,7 +3252,7 @@
+diff -urN mplayer-svn-r21093.orig/configure mplayer-svn-r21093/configure
+--- mplayer-svn-r21093.orig/configure	2006-11-20 12:43:28 +0200
++++ mplayer-svn-r21093/configure	2006-11-20 13:12:04 +0200
+@@ -3250,7 +3250,7 @@
  
  
  echocheck "termios"
@@ -10,7 +10,7 @@ diff -urN mplayer-svn-r20777.orig/configure mplayer-svn-r20777/configure
    cat > $TMPC <<EOF
  #include <sys/termios.h>
  int main(void) { return 0; }
-@@ -4184,6 +4182,8 @@
+@@ -4182,6 +4182,8 @@
    _def_aa='#define HAVE_AA 1'
    if cygwin ; then
      _ld_aa=`aalib-config --libs | cut -d " " -f 2,5,6`
@@ -19,7 +19,7 @@ diff -urN mplayer-svn-r20777.orig/configure mplayer-svn-r20777/configure
    fi
    _vosrc="$_vosrc vo_aa.c"
    _vomodules="aa $_vomodules"
-@@ -4211,7 +4211,7 @@
+@@ -4209,7 +4211,7 @@
  if test "$_caca" = yes ; then
    _def_caca='#define HAVE_CACA 1'
    _inc_extra="$_inc_extra `caca-config --cflags`"
@@ -28,7 +28,7 @@ diff -urN mplayer-svn-r20777.orig/configure mplayer-svn-r20777/configure
    _vosrc="$_vosrc vo_caca.c"
    _vomodules="caca $_vomodules"
  else
-@@ -4875,7 +4875,7 @@
+@@ -4873,7 +4875,7 @@
  
  
  echocheck "JACK"
@@ -37,7 +37,7 @@ diff -urN mplayer-svn-r20777.orig/configure mplayer-svn-r20777/configure
    _jack=yes
  
  cat > $TMPC << EOF
-@@ -4902,7 +4902,7 @@
+@@ -4900,7 +4902,7 @@
  echores "$_jack"
  
  echocheck "OpenAL"
@@ -46,7 +46,7 @@ diff -urN mplayer-svn-r20777.orig/configure mplayer-svn-r20777/configure
    _openal=no
  cat > $TMPC << EOF
  #include <AL/al.h>
-@@ -5333,7 +5333,7 @@
+@@ -5343,7 +5345,7 @@
      _res_comment="freetype support needed"
  fi
  echocheck "fontconfig"
@@ -55,7 +55,7 @@ diff -urN mplayer-svn-r20777.orig/configure mplayer-svn-r20777/configure
          cat > $TMPC << EOF
  #include <stdio.h>
  #include <fontconfig/fontconfig.h>
-@@ -5782,7 +5782,7 @@
+@@ -5792,7 +5794,7 @@
  
  
  echocheck "FAAC (AAC encoder) support"
@@ -64,7 +64,7 @@ diff -urN mplayer-svn-r20777.orig/configure mplayer-svn-r20777/configure
    cat > $TMPC <<EOF
  #include <inttypes.h> 
  #include <faac.h>
-@@ -5896,7 +5896,7 @@
+@@ -5911,7 +5913,7 @@
  
  
  echocheck "Win32 codecs"
@@ -73,11 +73,10 @@ diff -urN mplayer-svn-r20777.orig/configure mplayer-svn-r20777/configure
    _win32=no
    if x86 && not qnx; then
      test -z "$_win32codecsdir" && _win32codecsdir=$_codecsdir
-@@ -5968,55 +5968,6 @@
- fi
+@@ -5984,54 +5986,6 @@
  echores "$_real"
  
--
+ 
 -echocheck "LIVE555 Streaming Media libraries"
 -if test "$_live" = auto  && test "$_network" = yes ; then
 -  cat > $TMPCPP << EOF
@@ -101,7 +100,7 @@ diff -urN mplayer-svn-r20777.orig/configure mplayer-svn-r20777/configure
 -if test "$_live" = yes && test "$_network" = yes ; then
 -  _res_comment="using $_livelibdir"
 -  _def_live='#define STREAMING_LIVE555 1'
--  _ld_live="$_livelibdir/liveMedia/libliveMedia.a \
+-  _ld_extra="$_ld_extra $_livelibdir/liveMedia/libliveMedia.a \
 -           $_livelibdir/groupsock/libgroupsock.a \
 -           $_livelibdir/UsageEnvironment/libUsageEnvironment.a \
 -           $_livelibdir/BasicUsageEnvironment/libBasicUsageEnvironment.a \
@@ -115,7 +114,7 @@ diff -urN mplayer-svn-r20777.orig/configure mplayer-svn-r20777/configure
 -  _res_comment="using distribution version"
 -  _live="yes"
 -  _def_live='#define STREAMING_LIVE555 1'
--  _ld_live="-lliveMedia -lgroupsock -lUsageEnvironment -lBasicUsageEnvironment -lstdc++"
+-  _ld_extra="$_ld_extra -lliveMedia -lgroupsock -lUsageEnvironment -lBasicUsageEnvironment -lstdc++"
 -  _inc_extra="$_inc_extra -I/usr/include/liveMedia -I/usr/include/UsageEnvironment \
 -             -I/usr/include/BasicUsageEnvironment -I/usr/include/groupsock"
 - _inputmodules="live555 $_inputmodules"
@@ -129,8 +128,8 @@ diff -urN mplayer-svn-r20777.orig/configure mplayer-svn-r20777/configure
  echocheck "FFmpeg libavutil (static)"
  if test "$_libavutil" = auto ; then
    if test -d libavutil ; then
-@@ -6452,7 +6403,7 @@
- fi
+@@ -6437,7 +6391,7 @@
+ 
  
  echocheck "x264"
 -if test "$_x264" = auto ; then
@@ -138,7 +137,7 @@ diff -urN mplayer-svn-r20777.orig/configure mplayer-svn-r20777/configure
    cat > $TMPC << EOF
  #include <inttypes.h>
  #include <x264.h>
-@@ -6487,7 +6438,7 @@
+@@ -6479,7 +6433,7 @@
  
  
  echocheck "nut"
@@ -147,7 +146,7 @@ diff -urN mplayer-svn-r20777.orig/configure mplayer-svn-r20777/configure
    cat > $TMPC << EOF
  #include <stdio.h>
  #include <stdlib.h>
-@@ -6769,6 +6720,7 @@
+@@ -6783,6 +6737,7 @@
    _noinputmodules="network $_noinputmodules"
    _def_network='#undef MPLAYER_NETWORK'
    _ftp=no
@@ -155,7 +154,7 @@ diff -urN mplayer-svn-r20777.orig/configure mplayer-svn-r20777/configure
  fi
  echores "$_network"
  
-@@ -6782,6 +6734,53 @@
+@@ -6796,6 +6751,53 @@
  fi
  echores "$_ftp"
  
@@ -182,7 +181,7 @@ diff -urN mplayer-svn-r20777.orig/configure mplayer-svn-r20777/configure
 +if test "$_live" = yes && test "$_network" = yes ; then
 +  _res_comment="using $_livelibdir"
 +  _def_live='#define STREAMING_LIVE555 1'
-+  _ld_live="$_livelibdir/liveMedia/libliveMedia.a \
++  _ld_extra="$_ld_extra $_livelibdir/liveMedia/libliveMedia.a \
 +           $_livelibdir/groupsock/libgroupsock.a \
 +           $_livelibdir/UsageEnvironment/libUsageEnvironment.a \
 +           $_livelibdir/BasicUsageEnvironment/libBasicUsageEnvironment.a \
@@ -196,7 +195,7 @@ diff -urN mplayer-svn-r20777.orig/configure mplayer-svn-r20777/configure
 +  _res_comment="using distribution version"
 +  _live="yes"
 +  _def_live='#define STREAMING_LIVE555 1'
-+  _ld_live="-lliveMedia -lgroupsock -lUsageEnvironment -lBasicUsageEnvironment -lstdc++"
++  _ld_extra="$_ld_extra -lliveMedia -lgroupsock -lUsageEnvironment -lBasicUsageEnvironment -lstdc++"
 +  _inc_extra="$_inc_extra -I/usr/include/liveMedia -I/usr/include/UsageEnvironment \
 +             -I/usr/include/BasicUsageEnvironment -I/usr/include/groupsock"
 + _inputmodules="live555 $_inputmodules"
@@ -209,7 +208,7 @@ diff -urN mplayer-svn-r20777.orig/configure mplayer-svn-r20777/configure
  echocheck "vstream client"
  if test "$_vstream" = auto ; then
    _vstream=no
-@@ -7212,6 +7211,9 @@
+@@ -7226,6 +7228,9 @@
  if test "$_vidix_internal" = yes || test "$_vidix_external" = yes ; then
    _vidix=yes
    _def_vidix='#define CONFIG_VIDIX 1'
@@ -219,7 +218,7 @@ diff -urN mplayer-svn-r20777.orig/configure mplayer-svn-r20777/configure
  else
    _vidix=no
    _def_vidix='#undef CONFIG_VIDIX'
-@@ -7221,7 +7223,7 @@
+@@ -7235,7 +7240,7 @@
    _def_vidix_pfx="#define MP_VIDIX_PFX \"$_libdir\" \"/mplayer/vidix/\" "
  elif test "$_vidix_external" = yes ; then
    _ld_vidix_external="-lvidix"
@@ -228,7 +227,7 @@ diff -urN mplayer-svn-r20777.orig/configure mplayer-svn-r20777/configure
  fi
  
  if test "$_vidix" = yes; then
-@@ -8130,6 +8132,7 @@
+@@ -8154,6 +8159,7 @@
  /* enables / disables VIDIX usage */
  $_def_vidix
  $_def_vidix_pfx

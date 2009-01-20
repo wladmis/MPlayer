@@ -1,6 +1,6 @@
-diff -urN mplayer-svn-r20777.orig/codec-cfg.c mplayer-svn-r20777/codec-cfg.c
---- mplayer-svn-r20777.orig/codec-cfg.c	2006-07-17 10:28:57 +0300
-+++ mplayer-svn-r20777/codec-cfg.c	2006-11-09 01:28:16 +0200
+diff -urN mplayer-svn-r21093.orig/codec-cfg.c mplayer-svn-r21093/codec-cfg.c
+--- mplayer-svn-r21093.orig/codec-cfg.c	2006-07-17 10:28:57 +0300
++++ mplayer-svn-r21093/codec-cfg.c	2006-11-20 13:01:11 +0200
 @@ -178,6 +178,7 @@
  		{"ZRMJPEGIT", IMGFMT_ZRMJPEGIT},
  		{"ZRMJPEGIB", IMGFMT_ZRMJPEGIB},
@@ -9,20 +9,20 @@ diff -urN mplayer-svn-r20777.orig/codec-cfg.c mplayer-svn-r20777/codec-cfg.c
  		{"IDCT_MPEG2",IMGFMT_XVMC_IDCT_MPEG2},
  		{"MOCO_MPEG2",IMGFMT_XVMC_MOCO_MPEG2},
  
-diff -urN mplayer-svn-r20777.orig/configure mplayer-svn-r20777/configure
---- mplayer-svn-r20777.orig/configure	2006-11-08 14:49:41 +0200
-+++ mplayer-svn-r20777/configure	2006-11-09 01:32:38 +0200
-@@ -428,7 +428,8 @@
+diff -urN mplayer-svn-r21093.orig/configure mplayer-svn-r21093/configure
+--- mplayer-svn-r21093.orig/configure	2006-11-20 12:43:28 +0200
++++ mplayer-svn-r21093/configure	2006-11-20 13:02:08 +0200
+@@ -427,7 +427,8 @@
+   --with-toolamelibdir=DIR    Toolame in DIR
    --with-xmmsplugindir=DIR    XMMS plugins in DIR
    --with-xmmslibdir=DIR       libxmms.so.1 in DIR
-   --with-cdparanoialibdir=DIR cdparanoia libraries (libcdda_*) in DIR (*)
 -  --with-xvmclib=NAME         adapter-specific library name (e.g. XvMCNVIDIA)
 +  --with-xvmclib=NAME         name of adapter-specific library
 +                              (e.g. XvMCNVIDIA/I810XvMC/viaXvMC/viaXvMCPro)
  
    --with-freetype-config=PATH path to freetype-config
    --with-fribidi-config=PATH  path to fribidi-config
-@@ -3900,33 +3901,88 @@
+@@ -3898,33 +3899,88 @@
  echores "$_xv"
  
  
@@ -133,7 +133,7 @@ diff -urN mplayer-svn-r20777.orig/configure mplayer-svn-r20777/configure
  
  
  echocheck "Xinerama"
-@@ -8181,6 +8237,7 @@
+@@ -8205,6 +8261,7 @@
  $_def_x11
  $_def_xv
  $_def_xvmc
@@ -141,9 +141,9 @@ diff -urN mplayer-svn-r20777.orig/configure mplayer-svn-r20777/configure
  $_def_vm
  $_def_xf86keysym
  $_def_xinerama
-diff -urN mplayer-svn-r20777.orig/etc/codecs.conf mplayer-svn-r20777/etc/codecs.conf
---- mplayer-svn-r20777.orig/etc/codecs.conf	2006-11-06 17:08:14 +0200
-+++ mplayer-svn-r20777/etc/codecs.conf	2006-11-09 01:28:16 +0200
+diff -urN mplayer-svn-r21093.orig/etc/codecs.conf mplayer-svn-r21093/etc/codecs.conf
+--- mplayer-svn-r21093.orig/etc/codecs.conf	2006-11-20 12:43:28 +0200
++++ mplayer-svn-r21093/etc/codecs.conf	2006-11-20 13:01:11 +0200
 @@ -124,6 +124,7 @@
    fourcc mx5p        ; MPEG IMX 625/50 (50 Mb/s)
    driver ffmpeg
@@ -152,9 +152,9 @@ diff -urN mplayer-svn-r20777.orig/etc/codecs.conf mplayer-svn-r20777/etc/codecs.
    out IDCT_MPEG2
    out MOCO_MPEG2
  
-diff -urN mplayer-svn-r20777.orig/libmpcodecs/img_format.c mplayer-svn-r20777/libmpcodecs/img_format.c
---- mplayer-svn-r20777.orig/libmpcodecs/img_format.c	2006-07-17 10:28:51 +0300
-+++ mplayer-svn-r20777/libmpcodecs/img_format.c	2006-11-09 01:28:16 +0200
+diff -urN mplayer-svn-r21093.orig/libmpcodecs/img_format.c mplayer-svn-r21093/libmpcodecs/img_format.c
+--- mplayer-svn-r21093.orig/libmpcodecs/img_format.c	2006-07-17 10:28:51 +0300
++++ mplayer-svn-r21093/libmpcodecs/img_format.c	2006-11-20 13:01:11 +0200
 @@ -65,6 +65,7 @@
  	case IMGFMT_ZRMJPEGIB: return("Zoran MJPEG bottom field first");
  	case IMGFMT_XVMC_MOCO_MPEG2: return("MPEG1/2 Motion Compensation");
@@ -163,9 +163,9 @@ diff -urN mplayer-svn-r20777.orig/libmpcodecs/img_format.c mplayer-svn-r20777/li
      }
      return("Unknown");
  }
-diff -urN mplayer-svn-r20777.orig/libmpcodecs/img_format.h mplayer-svn-r20777/libmpcodecs/img_format.h
---- mplayer-svn-r20777.orig/libmpcodecs/img_format.h	2006-07-17 10:28:51 +0300
-+++ mplayer-svn-r20777/libmpcodecs/img_format.h	2006-11-09 01:28:16 +0200
+diff -urN mplayer-svn-r21093.orig/libmpcodecs/img_format.h mplayer-svn-r21093/libmpcodecs/img_format.h
+--- mplayer-svn-r21093.orig/libmpcodecs/img_format.h	2006-07-17 10:28:51 +0300
++++ mplayer-svn-r21093/libmpcodecs/img_format.h	2006-11-20 13:01:11 +0200
 @@ -106,6 +106,7 @@
  //these are chroma420
  #define IMGFMT_XVMC_MOCO_MPEG2 (IMGFMT_XVMC|0x02)
@@ -174,9 +174,9 @@ diff -urN mplayer-svn-r20777.orig/libmpcodecs/img_format.h mplayer-svn-r20777/li
  
  typedef struct {
      void* data;
-diff -urN mplayer-svn-r20777.orig/libmpcodecs/vd_ffmpeg.c mplayer-svn-r20777/libmpcodecs/vd_ffmpeg.c
---- mplayer-svn-r20777.orig/libmpcodecs/vd_ffmpeg.c	2006-11-08 14:49:37 +0200
-+++ mplayer-svn-r20777/libmpcodecs/vd_ffmpeg.c	2006-11-09 01:28:16 +0200
+diff -urN mplayer-svn-r21093.orig/libmpcodecs/vd_ffmpeg.c mplayer-svn-r21093/libmpcodecs/vd_ffmpeg.c
+--- mplayer-svn-r21093.orig/libmpcodecs/vd_ffmpeg.c	2006-11-17 12:30:00 +0200
++++ mplayer-svn-r21093/libmpcodecs/vd_ffmpeg.c	2006-11-20 13:01:11 +0200
 @@ -153,6 +153,8 @@
          case IMGFMT_XVMC_IDCT_MPEG2:
          case IMGFMT_XVMC_MOCO_MPEG2:
@@ -186,7 +186,7 @@ diff -urN mplayer-svn-r20777.orig/libmpcodecs/vd_ffmpeg.c mplayer-svn-r20777/lib
  #endif
  	}
          return CONTROL_FALSE;
-@@ -528,6 +530,7 @@
+@@ -527,6 +529,7 @@
  #ifdef HAVE_XVMC
          case PIX_FMT_XVMC_MPEG2_MC:ctx->best_csp=IMGFMT_XVMC_MOCO_MPEG2;break;
          case PIX_FMT_XVMC_MPEG2_IDCT:ctx->best_csp=IMGFMT_XVMC_IDCT_MPEG2;break;
@@ -194,7 +194,7 @@ diff -urN mplayer-svn-r20777.orig/libmpcodecs/vd_ffmpeg.c mplayer-svn-r20777/lib
  #endif
  	default:
  	    ctx->best_csp=0;
-@@ -903,7 +906,11 @@
+@@ -902,7 +905,11 @@
          avctx->get_buffer= mc_get_buffer;
          avctx->release_buffer= mc_release_buffer;
          avctx->draw_horiz_band = mc_render_slice;
@@ -206,9 +206,9 @@ diff -urN mplayer-svn-r20777.orig/libmpcodecs/vd_ffmpeg.c mplayer-svn-r20777/lib
          assert(ctx->do_dr1);//these are must to!
          assert(ctx->do_slices); //it is (vo_)ffmpeg bug if this fails
          avctx->flags|= CODEC_FLAG_EMU_EDGE;//do i need that??!!
-diff -urN mplayer-svn-r20777.orig/libvo/vo_xvmc.c mplayer-svn-r20777/libvo/vo_xvmc.c
---- mplayer-svn-r20777.orig/libvo/vo_xvmc.c	2006-10-17 16:03:17 +0300
-+++ mplayer-svn-r20777/libvo/vo_xvmc.c	2006-11-09 01:28:16 +0200
+diff -urN mplayer-svn-r21093.orig/libvo/vo_xvmc.c mplayer-svn-r21093/libvo/vo_xvmc.c
+--- mplayer-svn-r21093.orig/libvo/vo_xvmc.c	2006-11-20 12:43:24 +0200
++++ mplayer-svn-r21093/libvo/vo_xvmc.c	2006-11-20 13:01:11 +0200
 @@ -24,6 +24,10 @@
  #include <X11/extensions/Xvlib.h>
  #include <X11/extensions/XvMClib.h>
@@ -348,10 +348,10 @@ diff -urN mplayer-svn-r20777.orig/libvo/vo_xvmc.c mplayer-svn-r20777/libvo/vo_xv
     mpi->priv =
     mpi->planes[2] = (char*)rndr;
  
-diff -urN mplayer-svn-r20777.orig/Makefile mplayer-svn-r20777/Makefile
---- mplayer-svn-r20777.orig/Makefile	2006-11-08 14:49:41 +0200
-+++ mplayer-svn-r20777/Makefile	2006-11-09 01:31:28 +0200
-@@ -127,6 +127,9 @@
+diff -urN mplayer-svn-r21093.orig/Makefile mplayer-svn-r21093/Makefile
+--- mplayer-svn-r21093.orig/Makefile	2006-11-20 12:43:28 +0200
++++ mplayer-svn-r21093/Makefile	2006-11-20 13:01:11 +0200
+@@ -129,6 +129,9 @@
  ifeq ($(TREMOR_INTERNAL),yes)
  PARTS += tremor
  endif
@@ -361,9 +361,9 @@ diff -urN mplayer-svn-r20777.orig/Makefile mplayer-svn-r20777/Makefile
  
  ALL_PRG = mplayer$(EXESUF)
  ifeq ($(MENCODER),yes)
-diff -urN mplayer-svn-r20777.orig/xvmc_render.h mplayer-svn-r20777/xvmc_render.h
---- mplayer-svn-r20777.orig/xvmc_render.h	2006-06-13 15:12:34 +0300
-+++ mplayer-svn-r20777/xvmc_render.h	2006-11-09 01:28:16 +0200
+diff -urN mplayer-svn-r21093.orig/xvmc_render.h mplayer-svn-r21093/xvmc_render.h
+--- mplayer-svn-r21093.orig/xvmc_render.h	2006-06-13 15:12:34 +0300
++++ mplayer-svn-r21093/xvmc_render.h	2006-11-20 13:01:11 +0200
 @@ -5,6 +5,9 @@
  #include <X11/extensions/Xvlib.h>
  #include <X11/extensions/XvMClib.h>
