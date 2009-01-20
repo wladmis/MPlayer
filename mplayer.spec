@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 23322
-%define ffmpeg_svnrev 9038
+%define svnrev 23331
+%define ffmpeg_svnrev 9052
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -97,7 +97,6 @@
 %def_enable xmms
 %def_enable mp3lib
 %def_enable liba52
-%def_enable libdts
 %def_enable libmpeg2
 %def_enable musepack
 %def_enable nut
@@ -332,16 +331,16 @@ Patch12: %lname-uni-svn23235.diff
 Patch13: %Name-svn-20060711-vbe.patch.gz
 Patch14: %lname-svn-r23099-gui_nls.patch
 Patch15: %lname-svn-r21128-pulseaudio.patch.gz
-Patch17: %lname-svn-r23304-ext_ffmpeg.patch
+Patch17: %lname-svn-r23331-ext_ffmpeg.patch
 Patch22: %lname-svn-r19389-polyp0.8.patch.gz
-Patch26: %lname-svn-r23304-configure.patch
+Patch26: %lname-svn-r23331-configure.patch
 Patch27: %lname-svn-r22518-builddocs.patch
 %if_disabled shared_ffmpeg
 Patch32: ffmpeg-uni-svn-r8990.patch
 %endif
 
-# Automatically added by buildreq on Thu Feb 15 2007
-#BuildRequires: aalib-devel docbook-dtds docbook-style-xsl esound-devel gcc-c++ kdelibs ladspa_sdk liba52-devel libarts-devel libavformat-devel libcaca-devel libcdparanoia-devel libdv-devel libdvdnav-devel libenca-devel libfribidi-devel libglut-devel libgpm-devel libgtk+2-devel libjpeg-devel liblirc-devel liblive555-devel liblzo-devel libmesa-devel libmpcdec-devel libopenal-devel libpostproc-devel libpulseaudio-devel libSDL-devel libslang-devel libsmbclient-devel libspeex-devel libswscale-devel libungif-devel libvidix-devel libXi-devel libXinerama-devel libxmms-devel libXmu-devel libXvMC-devel libXxf86dga-devel libXxf86vm-devel linux-libc-headers subversion svgalib-devel w3c-markup-validator-libs xsltproc
+# Automatically added by buildreq on Fri May 18 2007
+#BuildRequires: aalib-devel docbook-dtds docbook-style-xsl esound-devel gcc-c++ kdelibs ladspa_sdk libarts-devel libaudio-devel libavformat-devel libcaca-devel libcdparanoia-devel libdv-devel libdvdnav-devel libdvdread-devel libenca-devel libfribidi-devel libgpm-devel libgtk+2-devel libjpeg-devel liblirc-devel liblive555-devel liblzo2-devel libmesa-devel libmpcdec-devel libopenal-devel libpostproc-devel libpulseaudio-devel libSDL-devel libSDL_image-devel libslang-devel libsmbclient-devel libspeex-devel libswscale-devel libungif-devel libvidix-devel libXinerama-devel libxmms-devel libXt-devel libXvMC-devel libXxf86dga-devel libXxf86vm-devel subversion svgalib-devel xsltproc
 
 BuildRequires: %awk libncurses-devel libslang-devel zlib-devel
 BuildRequires: cpp >= 3.3 gcc >= 3.3 gcc-c++ >= 3.3
@@ -382,7 +381,6 @@ BuildRequires: cpp >= 3.3 gcc >= 3.3 gcc-c++ >= 3.3
 %{?_enable_mad:BuildRequires: libmad-devel}
 %{?_enable_xmms:BuildRequires: libxmms-devel}
 %{?_enable_liba52:BuildRequires: liba52-devel}
-%{?_enable_libdts:BuildRequires: libdca-devel}
 %{?_enable_libmpeg2:BuildRequires: libmpeg2-devel}
 %{?_enable_musepack:BuildRequires: libmpcdec-devel >= 1.2.1}
 %{?_enable_nut:BuildRequires: libnut-devel >= 0.0-alt0.272}
@@ -845,7 +843,6 @@ export CFLAGS="%optflags"
 		%{subst_enable xmms} \
 		%{subst_enable mp3lib} \
 		%{subst_enable liba52} \
-		%{subst_enable libdts} \
 		%{subst_enable libmpeg2} \
 		%{subst_enable musepack} \
 		%{subst_enable nut} \
@@ -1220,6 +1217,12 @@ unset RPM_PYTHON
 
 
 %changelog
+* Fri May 18 2007 Led <led@altlinux.ru> 1.0-alt35.23331.1
+- new SVN snapshot (revision 23331)
+- updated %lname-svn-r23331-configure.patch
+- updated %lname-svn-r23331-ext_ffmpeg.patch
+- cleaned up spec
+
 * Thu May 17 2007 Led <led@altlinux.ru> 1.0-alt35.23322.1
 - new SVN snapshot (revision 23322)
 
