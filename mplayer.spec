@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 22221
-%define ffmpeg_svnrev 7987
+%define svnrev 22223
+%define ffmpeg_svnrev 7991
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -340,7 +340,7 @@ Patch32: ffmpeg-uni-svn-r7184.patch.gz
 %endif
 
 # Automatically added by buildreq on Thu Feb 15 2007
-BuildRequires: aalib-devel docbook-dtds docbook-style-xsl esound-devel gcc-c++ kdelibs ladspa_sdk liba52-devel libarts-devel libavformat-devel libcaca-devel libcdparanoia-devel libdv-devel libdvdnav-devel libenca-devel libfribidi-devel libglut-devel libgpm-devel libgtk+2-devel libjpeg-devel liblirc-devel liblive555-devel liblzo-devel libmesa-devel libmpcdec-devel libopenal-devel libpostproc-devel libpulseaudio-devel libSDL-devel libslang-devel libsmbclient-devel libspeex-devel libswscale-devel libungif-devel libvidix-devel libXi-devel libXinerama-devel libxmms-devel libXmu-devel libXvMC-devel libXxf86dga-devel libXxf86vm-devel linux-libc-headers subversion svgalib-devel w3c-markup-validator-libs xsltproc
+#BuildRequires: aalib-devel docbook-dtds docbook-style-xsl esound-devel gcc-c++ kdelibs ladspa_sdk liba52-devel libarts-devel libavformat-devel libcaca-devel libcdparanoia-devel libdv-devel libdvdnav-devel libenca-devel libfribidi-devel libglut-devel libgpm-devel libgtk+2-devel libjpeg-devel liblirc-devel liblive555-devel liblzo-devel libmesa-devel libmpcdec-devel libopenal-devel libpostproc-devel libpulseaudio-devel libSDL-devel libslang-devel libsmbclient-devel libspeex-devel libswscale-devel libungif-devel libvidix-devel libXi-devel libXinerama-devel libxmms-devel libXmu-devel libXvMC-devel libXxf86dga-devel libXxf86vm-devel linux-libc-headers subversion svgalib-devel w3c-markup-validator-libs xsltproc
 
 BuildRequires: %awk pkgconfig libncurses-devel libslang-devel zlib-devel
 BuildRequires: cpp >= 3.3 gcc >= 3.3 gcc-c++ >= 3.3
@@ -380,6 +380,7 @@ BuildRequires: cpp >= 3.3 gcc >= 3.3 gcc-c++ >= 3.3
 %{?_enable_libdv:BuildRequires: libdv-devel}
 %{?_enable_mad:BuildRequires: libmad-devel}
 %{?_enable_xmms:BuildRequires: libxmms-devel}
+%{?_enable_liba52:BuildRequires: liba52-devel}
 %{?_enable_libdts:BuildRequires: libdca-devel}
 %{?_enable_libmpeg2:BuildRequires: libmpeg2-devel}
 %{?_enable_musepack:BuildRequires: libmpcdec-devel >= 1.2.1}
@@ -1519,11 +1520,11 @@ unset RPM_PYTHON
 
 
 %changelog
-* Thu Feb 15 2007 Led <led@altlinux.ru> 1.0-alt35.22221.1
-- new SVN snapshot (revision 22221)
+* Thu Feb 15 2007 Led <led@altlinux.ru> 1.0-alt35.22223.1
+- new SVN snapshot (revision 22223)
 - updated %lname-svn-r22217-configure.patch
 - added mplayer-svn-r22221-subreader.patch (fixed #10844)
-- cleaned up BuildRequires
+- fixed BuildRequires
 
 * Mon Feb 12 2007 Led <led@altlinux.ru> 1.0-alt35.22210.1
 - new SVN snapshot (revision 22210):
