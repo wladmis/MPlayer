@@ -7,7 +7,7 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 21781
+%define svnrev 21839
 %define ffmpeg_svnrev 7375
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
@@ -331,10 +331,10 @@ Patch12: %lname-uni-svn21402.diff.gz
 Patch13: %Name-svn-20060711-vbe.patch.gz
 Patch14: %lname-svn-r21402-gui_nls.patch.bz2
 Patch15: %lname-svn-r21128-pulseaudio.patch.gz
-Patch17: %lname-svn-r21611-ext_ffmpeg.patch.bz2
+Patch17: %lname-svn-r21839-ext_ffmpeg.patch.bz2
 Patch18: %lname-mwallp.patch.gz
 Patch22: %lname-svn-r19389-polyp0.8.patch.gz
-Patch26: %lname-svn-r21766-configure.patch.gz
+Patch26: %lname-svn-r21858-configure.patch.gz
 Patch27: %lname-svn-r20777-builddocs.patch.gz
 %if_disabled shared_ffmpeg
 Patch31: ffmpeg-svn-r6769-dirac-0.5.x.patch.bz2
@@ -1531,6 +1531,12 @@ unset RPM_PYTHON
 
 
 %changelog
+* Wed Jan 10 2007 Led <led@altlinux.ru> 1.0-alt35.21839.1
+- new SVN snapshot (revision 21839)
+- updated %lname-svn-r21839-ext_ffmpeg.patch
+- updated %lname-svn-r21858-configure.patch
+- fixed buffer overflow in realrtsp (upstream)
+
 * Fri Dec 29 2006 Led <led@altlinux.ru> 1.0-alt35.21781.1
 - new SVN snapshot (revision 21781)
 
