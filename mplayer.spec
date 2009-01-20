@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 22324
-%define ffmpeg_svnrev 7991
+%define svnrev 22358
+%define ffmpeg_svnrev 8149
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -911,7 +911,7 @@ subst 's|\\/\\/|//|g' help/help_mp-zh_??.h
 
 %build
 %if_disabled debug
-%define _optlevel 4
+%define _optlevel 3
 %add_optflags -fomit-frame-pointer -ffast-math
 export CFLAGS="%optflags"
 %endif
@@ -1510,6 +1510,9 @@ unset RPM_PYTHON
 
 
 %changelog
+* Wed Feb 28 2007 Led <led@altlinux.ru> 1.0-alt35.22358.1
+- new SVN snapshot (revision 22358)
+
 * Fri Feb 23 2007 Led <led@altlinux.ru> 1.0-alt35.22324.1
 - new SVN snapshot (revision 22324):
   + ffmpeg video decoder handles aspect ratio changes
