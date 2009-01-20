@@ -1,7 +1,7 @@
-diff -urN ffmpeg-svn-r7650.orig/libavcodec/allcodecs.c ffmpeg-svn-r7650/libavcodec/allcodecs.c
---- ffmpeg-svn-r7650.orig/libavcodec/allcodecs.c	2007-01-22 19:00:54 +0200
-+++ ffmpeg-svn-r7650/libavcodec/allcodecs.c	2007-01-24 02:22:42 +0200
-@@ -89,6 +89,9 @@
+diff -urN ffmpeg-svn-r8990.orig/libavcodec/allcodecs.c ffmpeg-svn-r8990/libavcodec/allcodecs.c
+--- ffmpeg-svn-r8990.orig/libavcodec/allcodecs.c	2007-05-07 23:45:07 +0300
++++ ffmpeg-svn-r8990/libavcodec/allcodecs.c	2007-05-11 03:23:56 +0300
+@@ -97,6 +97,9 @@
      REGISTER_ENCDEC (MJPEG, mjpeg);
      REGISTER_DECODER(MJPEGB, mjpegb);
      REGISTER_DECODER(MMVIDEO, mmvideo);
@@ -11,21 +11,21 @@ diff -urN ffmpeg-svn-r7650.orig/libavcodec/allcodecs.c ffmpeg-svn-r7650/libavcod
      REGISTER_DECODER(MPEG_XVMC, mpeg_xvmc);
      REGISTER_ENCDEC (MPEG1VIDEO, mpeg1video);
      REGISTER_ENCDEC (MPEG2VIDEO, mpeg2video);
-diff -urN ffmpeg-svn-r7650.orig/libavcodec/avcodec.h ffmpeg-svn-r7650/libavcodec/avcodec.h
---- ffmpeg-svn-r7650.orig/libavcodec/avcodec.h	2007-01-22 19:00:54 +0200
-+++ ffmpeg-svn-r7650/libavcodec/avcodec.h	2007-01-24 02:23:10 +0200
-@@ -2253,6 +2253,7 @@
+diff -urN ffmpeg-svn-r8990.orig/libavcodec/avcodec.h ffmpeg-svn-r8990/libavcodec/avcodec.h
+--- ffmpeg-svn-r8990.orig/libavcodec/avcodec.h	2007-05-11 01:00:24 +0300
++++ ffmpeg-svn-r8990/libavcodec/avcodec.h	2007-05-11 03:23:56 +0300
+@@ -2303,6 +2303,7 @@
+ extern AVCodec mpeg2video_decoder;
  extern AVCodec mpeg4_decoder;
- extern AVCodec mpeg4aac_decoder;
  extern AVCodec mpeg_xvmc_decoder;
 +extern AVCodec mpeg_xxmc_decoder;
  extern AVCodec mpegvideo_decoder;
  extern AVCodec msmpeg4v1_decoder;
  extern AVCodec msmpeg4v2_decoder;
-diff -urN ffmpeg-svn-r7650.orig/libavcodec/mpeg12.c ffmpeg-svn-r7650/libavcodec/mpeg12.c
---- ffmpeg-svn-r7650.orig/libavcodec/mpeg12.c	2007-01-16 12:45:52 +0200
-+++ ffmpeg-svn-r7650/libavcodec/mpeg12.c	2007-01-24 02:21:25 +0200
-@@ -85,10 +85,15 @@
+diff -urN ffmpeg-svn-r8990.orig/libavcodec/mpeg12.c ffmpeg-svn-r8990/libavcodec/mpeg12.c
+--- ffmpeg-svn-r8990.orig/libavcodec/mpeg12.c	2007-05-07 23:45:07 +0300
++++ ffmpeg-svn-r8990/libavcodec/mpeg12.c	2007-05-11 03:23:56 +0300
+@@ -76,10 +76,15 @@
  extern void XVMC_init_block(MpegEncContext *s);//set s->block
  #endif
  
@@ -41,7 +41,7 @@ diff -urN ffmpeg-svn-r7650.orig/libavcodec/mpeg12.c ffmpeg-svn-r7650/libavcodec/
                                             PIX_FMT_XVMC_MPEG2_IDCT,
                                             PIX_FMT_XVMC_MPEG2_MC,
                                             -1};
-@@ -2541,6 +2546,16 @@
+@@ -2563,6 +2568,16 @@
          return -1;
      }
  
@@ -58,9 +58,9 @@ diff -urN ffmpeg-svn-r7650.orig/libavcodec/mpeg12.c ffmpeg-svn-r7650/libavcodec/
      init_get_bits(&s->gb, *buf, buf_size*8);
  
      ff_mpeg1_clean_buffers(s);
-@@ -3491,7 +3506,42 @@
+@@ -3383,7 +3398,42 @@
+     imx_dump_header,
  };
- #endif /* !CONFIG_MPEGVIDEO_PARSER */
  
 -/* this is ugly i know, but the alternative is too make
 +#ifdef HAVE_XVMC_VLD
@@ -102,9 +102,40 @@ diff -urN ffmpeg-svn-r7650.orig/libavcodec/mpeg12.c ffmpeg-svn-r7650/libavcodec/
     hundreds of vars global and prefix them with ff_mpeg1_
     which is far uglier. */
  #include "mdec.c"
-diff -urN ffmpeg-svn-r7650.orig/libavcodec/xvmcvideo.c ffmpeg-svn-r7650/libavcodec/xvmcvideo.c
---- ffmpeg-svn-r7650.orig/libavcodec/xvmcvideo.c	2006-10-13 12:17:16 +0300
-+++ ffmpeg-svn-r7650/libavcodec/xvmcvideo.c	2007-01-24 02:21:25 +0200
+diff -urN ffmpeg-svn-r8990.orig/libavcodec/xvmc_render.h ffmpeg-svn-r8990/libavcodec/xvmc_render.h
+--- ffmpeg-svn-r8990.orig/libavcodec/xvmc_render.h	2007-03-27 00:16:33 +0300
++++ ffmpeg-svn-r8990/libavcodec/xvmc_render.h	2007-05-11 03:25:21 +0300
+@@ -4,7 +4,9 @@
+ #include <X11/extensions/Xv.h>
+ #include <X11/extensions/Xvlib.h>
+ #include <X11/extensions/XvMClib.h>
+-
++#ifdef HAVE_XVMC_VLD
++#include <X11/extensions/vldXvMC.h>
++#endif
+ 
+ //the surface should be shown, video driver manipulate this
+ #define MP_XVMC_STATE_DISPLAY_PENDING 1
+@@ -27,6 +29,16 @@
+   int idct;//does we use IDCT acceleration?
+   int chroma_format;//420,422,444
+   int unsigned_intra;//+-128 for intra pictures after clip
++#ifdef HAVE_XVMC_VLD
++  int reserved1[3];
++  // These are for the XVMC VLD slice interface
++  int pict_type; //this is for skipping frames
++  int   slice_code; 
++  int   slice_datalen;
++  unsigned char *slice_data;
++  Display *disp;
++  XvMCContext *ctx;
++#endif
+   XvMCSurface* p_surface;//pointer to rendered surface, never changed
+ 
+ //these are changed by decoder
+diff -urN ffmpeg-svn-r8990.orig/libavcodec/xvmcvideo.c ffmpeg-svn-r8990/libavcodec/xvmcvideo.c
+--- ffmpeg-svn-r8990.orig/libavcodec/xvmcvideo.c	2006-10-13 12:17:16 +0300
++++ ffmpeg-svn-r8990/libavcodec/xvmcvideo.c	2007-05-11 03:23:56 +0300
 @@ -72,11 +72,68 @@
      }
  }
@@ -401,9 +432,9 @@ diff -urN ffmpeg-svn-r7650.orig/libavcodec/xvmcvideo.c ffmpeg-svn-r7650/libavcod
 +
 +#endif
 +
-diff -urN ffmpeg-svn-r7650.orig/libavutil/avutil.h ffmpeg-svn-r7650/libavutil/avutil.h
---- ffmpeg-svn-r7650.orig/libavutil/avutil.h	2007-01-22 19:00:52 +0200
-+++ ffmpeg-svn-r7650/libavutil/avutil.h	2007-01-24 02:21:25 +0200
+diff -urN ffmpeg-svn-r8990.orig/libavutil/avutil.h ffmpeg-svn-r8990/libavutil/avutil.h
+--- ffmpeg-svn-r8990.orig/libavutil/avutil.h	2007-03-19 21:50:32 +0200
++++ ffmpeg-svn-r8990/libavutil/avutil.h	2007-05-11 03:23:56 +0300
 @@ -88,6 +88,7 @@
      PIX_FMT_YUVJ444P,  ///< Planar YUV 4:4:4, 24bpp, full scale (jpeg)
      PIX_FMT_XVMC_MPEG2_MC,///< XVideo Motion Acceleration via common packet passing(xvmc_render.h)

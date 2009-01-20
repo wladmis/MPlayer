@@ -1,6 +1,6 @@
-diff -urN mplayer-svn-r23235.orig/configure mplayer-svn-r23235/configure
---- mplayer-svn-r23235.orig/configure	2007-05-04 00:59:20 +0300
-+++ mplayer-svn-r23235/configure	2007-05-05 22:44:19 +0300
+diff -urN mplayer-svn-r23304.orig/configure mplayer-svn-r23304/configure
+--- mplayer-svn-r23304.orig/configure	2007-05-12 00:56:09 +0300
++++ mplayer-svn-r23304/configure	2007-05-13 02:23:38 +0300
 @@ -128,7 +128,7 @@
  
  x86_64() {
@@ -10,15 +10,6 @@ diff -urN mplayer-svn-r23235.orig/configure mplayer-svn-r23235/configure
      *) return 1 ;;
    esac
  }
-@@ -286,7 +286,7 @@
-   --disable-xvid            disable XviD [autodetect]
-   --disable-x264            disable x264 [autodetect]
-   --disable-nut             disable libnut [autodetect]
--  --disable-libavutil       disable static libavutil [autodetect]
-+  --disable-libavutil_a     disable static libavutil [autodetect]
-   --disable-libavcodec_a    disable static libavcodec [autodetect]
-   --disable-libavformat_a   disable static libavformat [autodetect]
-   --disable-libpostproc_a   disable static libpostproc [autodetect]
 @@ -1821,7 +1821,7 @@
      _optimizing=''
      ;;
@@ -350,7 +341,7 @@ diff -urN mplayer-svn-r23235.orig/configure mplayer-svn-r23235/configure
  else
    _vidix=no
    _def_vidix='#undef CONFIG_VIDIX'
-@@ -7322,7 +7327,7 @@
+@@ -7342,7 +7347,7 @@
    _def_vidix_pfx="#define MP_VIDIX_PFX \"$_libdir\" \"/mplayer/vidix/\" "
  elif test "$_vidix_external" = yes ; then
    _libs_mplayer="$_libs_mplayer -lvidix"
@@ -359,7 +350,7 @@ diff -urN mplayer-svn-r23235.orig/configure mplayer-svn-r23235/configure
  fi
  
  if test "$_vidix" = yes; then
-@@ -8392,6 +8397,7 @@
+@@ -8414,6 +8419,7 @@
  $_def_vidix_drv_sis
  $_def_vidix_drv_unichrome
  $_def_vidix_pfx
@@ -367,9 +358,9 @@ diff -urN mplayer-svn-r23235.orig/configure mplayer-svn-r23235/configure
  
  /* enables / disables new input joystick support */
  $_def_joystick
-diff -urN mplayer-svn-r23235.orig/Makefile mplayer-svn-r23235/Makefile
---- mplayer-svn-r23235.orig/Makefile	2007-05-02 22:43:16 +0300
-+++ mplayer-svn-r23235/Makefile	2007-05-05 22:43:39 +0300
+diff -urN mplayer-svn-r23304.orig/Makefile mplayer-svn-r23304/Makefile
+--- mplayer-svn-r23304.orig/Makefile	2007-05-12 02:32:51 +0300
++++ mplayer-svn-r23304/Makefile	2007-05-13 02:23:38 +0300
 @@ -73,7 +73,7 @@
                 libao2/libao2.a \
                 input/libinput.a \
