@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 22590
-%define ffmpeg_svnrev 8408
+%define svnrev 22753
+%define ffmpeg_svnrev 8449
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -323,7 +323,7 @@ Patch0: %lname-svn-r22221-subreader.patch
 Patch1: %lname-svn-r22092-dirac.patch
 Patch2: %lname-dvd-ru-svn19389.patch.gz
 Patch3: %Name-1.0pre4-alt-explicit_gif.patch
-Patch4: %lname-svn-r22590-libdha.patch
+Patch4: %lname-svn-r22753-libdha.patch
 Patch5: %lname-svn-r19447-vo_vidix.patch.gz
 Patch6: %lname-svn-r21128-alt-artsc_ldflags.patch.gz
 Patch11: %lname-svn-r22518-nls.patch
@@ -331,10 +331,10 @@ Patch12: %lname-uni-svn21402.diff.gz
 Patch13: %Name-svn-20060711-vbe.patch.gz
 Patch14: %lname-svn-r22324-gui_nls.patch
 Patch15: %lname-svn-r21128-pulseaudio.patch.gz
-Patch17: %lname-svn-r22518-ext_ffmpeg.patch
+Patch17: %lname-svn-r22753-ext_ffmpeg.patch
 Patch18: %lname-svn-r22518-mwallp.patch
 Patch22: %lname-svn-r19389-polyp0.8.patch.gz
-Patch26: %lname-svn-r22518-configure.patch
+Patch26: %lname-svn-r22753-configure.patch
 Patch27: %lname-svn-r22518-builddocs.patch
 %if_disabled shared_ffmpeg
 Patch32: ffmpeg-uni-svn-r7650.patch
@@ -984,7 +984,7 @@ export CFLAGS="%optflags"
 		%{subst_enable jpeg} \
 		%{subst_enable libcdio} \
 		%{subst_enable_to lzo liblzo} \
-		%{subst_enable win32} \
+		%{subst_enable_to win32 win32dll} \
 		%{?_enable_win32:--win32codecsdir=%win32_libdir} \
 		%{subst_enable qtx} \
 		%{subst_enable xanim} \
@@ -1510,6 +1510,12 @@ unset RPM_PYTHON
 
 
 %changelog
+* Tue Mar 20 2007 Led <led@altlinux.ru> 1.0-alt35.22753.1
+- new SVN snapshot (revision 22753)
+- updated %lname-svn-r22753-libdha.patch
+- updated %lname-svn-r22753-ext_ffmpeg.patch
+- updated %lname-svn-r22753-configure.patch
+
 * Thu Mar 15 2007 Led <led@altlinux.ru> 1.0-alt35.22590.1
 - new SVN snapshot (revision 22590)
 - updated %lname-svn-r22590-libdha.patch
