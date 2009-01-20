@@ -7,7 +7,7 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 21995
+%define svnrev 22004
 %define ffmpeg_svnrev 7650
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
@@ -326,6 +326,7 @@ Patch4: %lname-svn-r21995-libdha.patch
 Patch5: %lname-svn-r19447-vo_vidix.patch.gz
 Patch6: %lname-svn-r21128-alt-artsc_ldflags.patch.gz
 Patch7: %Name-svn-20060707_dirac-0.5.x.patch.bz2
+Patch8: %lname-svn-r22004-doc_hu.patch
 Patch11: %lname-svn-r20777-nls.patch.gz
 Patch12: %lname-uni-svn21402.diff.gz
 Patch13: %Name-svn-20060711-vbe.patch.gz
@@ -372,7 +373,7 @@ BuildRequires: cpp >= 3.3 gcc >= 3.3 gcc-c++ >= 3.3
 %{?_enable_lzo:BuildRequires: liblzo-devel}
 %{?_enable_xvid:BuildRequires: libxvid-devel}
 %{?_enable_x264:BuildRequires: libx264-devel}
-%{?_enable_shared_ffmpeg:BuildRequires: libffmpeg-devel >= 0.5.0-alt1.svn7650}
+%{?_enable_shared_ffmpeg:BuildRequires: libffmpeg-devel >= 0.5.0-alt1.svn7593}
 %{?_enable_tremor_external:BuildRequires: libtremor-devel}
 %{?_enable_vorbis:BuildRequires: libvorbis-devel}
 %{?_enable_speex:BuildRequires: libspeex-devel}
@@ -931,6 +932,7 @@ mv ffmpeg-svn-r%ffmpeg_svnrev/lib{av{codec,format,util},postproc} .
 %patch5 -p1
 %patch6 -p1
 %{?_enable_dirac:%patch7 -p1}
+%patch8 -p1
 %patch11 -p1
 %patch12 -p1
 %patch13 -p1
@@ -1531,6 +1533,10 @@ unset RPM_PYTHON
 
 
 %changelog
+* Wed Jan 24 2007 Led <led@altlinux.ru> 1.0-alt35.22004.1
+- new SVN snapshot (revision 22004)
+- added %lname-svn-r22004-doc_hu.patch
+
 * Wed Jan 24 2007 Led <led@altlinux.ru> 1.0-alt35.21995.1
 - new SVN snapshot (revision 21995):
   + Russian documentation translation finished

@@ -1,0 +1,13 @@
+diff -urN mplayer-svn-r22004.orig/DOCS/xml/hu/faq.xml mplayer-svn-r22004/DOCS/xml/hu/faq.xml
+--- mplayer-svn-r22004.orig/DOCS/xml/hu/faq.xml	2007-01-22 19:01:52 +0200
++++ mplayer-svn-r22004/DOCS/xml/hu/faq.xml	2007-01-24 17:16:06 +0200
+@@ -80,8 +80,7 @@
+ <systemitem>internal compiler error</systemitem> vagy
+ <systemitem>unable to find a register to spill</systemitem> vagy
+ <systemitem>can't find a register in class `GENERAL_REGS'
+-while reloading `asm'</systemitem>.</para></question>
+-sorokat tartalmazza.
++while reloading `asm'</systemitem> sorokat tartalmazza.
+ </para></question>
+ <answer><para>
+ Belebotlottál egy <application>gcc</application> hibába. Kérjük
