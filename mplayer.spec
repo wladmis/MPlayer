@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 23726
-%define ffmpeg_svnrev 9509
+%define svnrev 23810
+%define ffmpeg_svnrev 9725
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -332,9 +332,9 @@ Patch12: %lname-uni-svn23235.diff
 Patch13: %Name-svn-20060711-vbe.patch.gz
 Patch14: %lname-svn-r23726-gui_nls.patch
 Patch15: %lname-svn-r21128-pulseaudio.patch.gz
+Patch16: %lname-svn-r23810-configure.patch
 Patch17: %lname-svn-r23726-ext_ffmpeg.patch
 Patch22: %lname-svn-r19389-polyp0.8.patch.gz
-Patch26: %lname-svn-r23592-configure.patch
 Patch27: %lname-svn-r22518-builddocs.patch
 %if_disabled shared_ffmpeg
 Patch32: ffmpeg-uni-svn-r8990.patch
@@ -683,9 +683,9 @@ mv ffmpeg-svn-r%ffmpeg_svnrev/lib{av{codec,format,util},postproc} .
 %patch13 -p1
 %patch14 -p1
 %patch15 -p1
+%patch16 -p1
 %patch17 -p1
 %{?_enable_polyp:%{?_disable_old_polyp:%patch22 -p1}}
-%patch26 -p1
 %patch27 -p1
 %{?_disable_shared_ffmpeg:%patch32 -p1}
 %{?_enable_polyp:%{?_disable_old_polyp:sed -e 's/\([Pp]\)ulse/\1olyp/g' -e 's/PULSE/POLYP/g' libao2/ao_pulse.c > libao2/ao_polyp.c}}
@@ -854,7 +854,7 @@ export CFLAGS="%optflags"
 		%{subst_enable liba52} \
 		%{subst_enable libmpeg2} \
 		%{subst_enable musepack} \
-		%{subst_enable nut} \
+		%{subst_enable_to nut libnut} \
 %if_enabled vidix
 %if %vidixlib == ext
 		--enable-vidix-external --disable-vidix-internal \
@@ -1218,8 +1218,9 @@ done
 
 
 %changelog
-* Sat Jul 07 2007 Led <led@altlinux.ru> 1.0-alt35.23726.1
-- new SVN snapshot (revision 23726)
+* Wed Jul 18 2007 Led <led@altlinux.ru> 1.0-alt35.23810.1
+- new SVN snapshot (revision 23810)
+- updated %lname-svn-r23810-configure.patch
 - updated %lname-svn-r23726-gui_nls.patch
 - updated %lname-svn-r23726-ext_ffmpeg.patch
 
