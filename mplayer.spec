@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 25023
-%define ffmpeg_svnrev 11001
+%define svnrev 25029
+%define ffmpeg_svnrev 11004
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -1238,6 +1238,10 @@ done
 
 
 %changelog
+* Mon Nov 12 2007 Led <led@altlinux.ru> 1.0-alt35.25029.1
+- new SVN snapshot (revision 25029)
+- fixed %%changelog
+
 * Sun Nov 11 2007 Led <led@altlinux.ru> 1.0-alt35.25023.1
 - new SVN snapshot (revision 25023)
 - updated ffmpeg-svn-r11000-dirac-0.8.x.patch
@@ -1279,8 +1283,13 @@ done
 
 * Mon Aug 27 2007 Led <led@altlinux.ru> 1.0-alt35.24247.1
 - new SVN snapshot (revision 24247)
-- updated ffmpeg-svn-r10237-dirac-0.7.x.patch (fixed #12627)
 - updated %lname-svn-r24244-ext_ffmpeg.patch
+
+* Mon Aug 27 2007 Led <led@altlinux.ru> 1.0-alt35.24127.1
+- new SVN snapshot (revision 24127)
+- updated %lname-svn-r24244-dirac-0.7.x.patch (fixed #12627)
+- updated ffmpeg-svn-r10237-dirac-0.7.x.patch
+- updated %lname-svn-r24127-ext_ffmpeg.patch
 
 * Fri Aug 17 2007 Led <led@altlinux.ru> 1.0-alt35.24081.1
 - new SVN snapshot (revision 24081)
