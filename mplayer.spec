@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 21614
-%define ffmpeg_svnrev 7317
+%define svnrev 21766
+%define ffmpeg_svnrev 7375
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -333,9 +333,8 @@ Patch14: %lname-svn-r21402-gui_nls.patch.bz2
 Patch15: %lname-svn-r21128-pulseaudio.patch.gz
 Patch17: %lname-svn-r21611-ext_ffmpeg.patch.bz2
 Patch18: %lname-mwallp.patch.gz
-Patch19: %lname-svn-r20777-bmovl-test.patch.gz
 Patch22: %lname-svn-r19389-polyp0.8.patch.gz
-Patch26: %lname-svn-r21357-configure.patch.gz
+Patch26: %lname-svn-r21765-configure.patch.gz
 Patch27: %lname-svn-r20777-builddocs.patch.gz
 %if_disabled shared_ffmpeg
 Patch31: ffmpeg-svn-r6769-dirac-0.5.x.patch.bz2
@@ -387,7 +386,7 @@ BuildRequires: cpp >= 3.3 gcc >= 3.3 gcc-c++ >= 3.3
 %{?_enable_libmpeg2:BuildRequires: libmpeg2-devel}
 %{?_enable_musepack:BuildRequires: libmpcdec-devel >= 1.2.1}
 %{?_enable_dirac:BuildRequires: libdirac-devel}
-%{?_enable_nut:BuildRequires: libnut-devel}
+%{?_enable_nut:BuildRequires: libnut-devel >= 0.0-alt0.272}
 
 %{?_enable_xvmc:BuildRequires: libXvMC-devel}
 %if_enabled mplayer
@@ -569,10 +568,9 @@ Requires: %name-doc-cs
 Requires: %name-doc-es
 Requires: %name-doc-fr
 Requires: %name-doc-hu
-Requires: %name-doc-it
 Requires: %name-doc-pl
 Requires: %name-doc-ru
-Requires: %name-doc-zh
+Requires: %name-doc-zh_CN
 %if %name != %Name
 Provides: %Name-docs
 Obsoletes: %Name-docs
@@ -588,7 +586,7 @@ Summary: %Name English docs
 Obsoletes: %Name-doc
 Provides: %Name-doc
 %if %name != %Name
-Provides: %Name-doc-en
+Provides: %Name-doc-en = %version-%release
 Obsoletes: %Name-doc-en
 %endif
 
@@ -600,7 +598,7 @@ Obsoletes: %Name-doc-en
 Group: Video
 Summary: %Name Czesh docs
 %if %name != %Name
-Provides: %Name-doc-cs
+Provides: %Name-doc-cs = %version-%release
 Obsoletes: %Name-doc-cs
 %endif
 
@@ -612,7 +610,7 @@ Obsoletes: %Name-doc-cs
 Group: Video
 Summary: %Name German docs
 %if %name != %Name
-Provides: %Name-doc-de
+Provides: %Name-doc-de = %version-%release
 Obsoletes: %Name-doc-de
 %endif
 
@@ -624,7 +622,7 @@ Obsoletes: %Name-doc-de
 Group: Video
 Summary: %Name Spanish docs
 %if %name != %Name
-Provides: %Name-doc-es
+Provides: %Name-doc-es = %version-%release
 Obsoletes: %Name-doc-es
 %endif
 
@@ -636,7 +634,7 @@ Obsoletes: %Name-doc-es
 Group: Video
 Summary: %Name French docs
 %if %name != %Name
-Provides: %Name-doc-fr
+Provides: %Name-doc-fr = %version-%release
 Obsoletes: %Name-doc-fr
 %endif
 
@@ -648,7 +646,7 @@ Obsoletes: %Name-doc-fr
 Group: Video
 Summary: %Name Hungarian docs
 %if %name != %Name
-Provides: %Name-doc-hu
+Provides: %Name-doc-hu = %version-%release
 Obsoletes: %Name-doc-hu
 %endif
 
@@ -656,23 +654,11 @@ Obsoletes: %Name-doc-hu
 %Name Hungarian docs.
 
 
-%package doc-it
-Group: Video
-Summary: %Name Italian docs
-%if %name != %Name
-Provides: %Name-doc-it
-Obsoletes: %Name-doc-it
-%endif
-
-%description doc-it
-%Name Italian docs.
-
-
 %package doc-pl
 Group: Video
 Summary: %Name Polish docs
 %if %name != %Name
-Provides: %Name-doc-pl
+Provides: %Name-doc-pl = %version-%release
 Obsoletes: %Name-doc-pl
 %endif
 
@@ -684,7 +670,7 @@ Obsoletes: %Name-doc-pl
 Group: Video
 Summary: %Name Russian docs
 %if %name != %Name
-Provides: %Name-doc-ru
+Provides: %Name-doc-ru = %version-%release
 Obsoletes: %Name-doc-ru
 %endif
 
@@ -692,16 +678,14 @@ Obsoletes: %Name-doc-ru
 %Name Russian docs.
 
 
-%package doc-zh
+%package doc-zh_CN
 Group: Video
-Summary: %Name Taiwan Chinese docs
-%if %name != %Name
-Provides: %Name-doc-zh
-Obsoletes: %Name-doc-zh
-%endif
+Summary: %Name Chinese docs
+Provides: %name-doc-zh = %version-%release
+Obsoletes: %name-doc-zh
 
-%description doc-zh
-%Name Taiwan Chinese docs.
+%description doc-zh_CN
+%Name Chinese docs.
 
 
 %if_enabled mplayer
@@ -954,7 +938,6 @@ mv ffmpeg-svn-r%ffmpeg_svnrev/lib{av{codec,format,util},postproc} .
 %patch15 -p1
 %patch17 -p1
 %patch18 -p1
-#%%patch19 -p1
 %{?_enable_polyp:%{?_disable_old_polyp:%patch22 -p1}}
 %patch26 -p1
 %patch27 -p1
@@ -973,7 +956,7 @@ gzip -dc %SOURCE6 > po/mp_help2msg.awk
 gzip -dc %SOURCE7 > po/mp_msg2po.awk
 %endif
 
-subst 's|\\/\\/|//|g' help/help_mp-zh_CN.h
+subst 's|\\/\\/|//|g' help/help_mp-zh_??.h
 
 
 %build
@@ -983,6 +966,7 @@ subst 's|\\/\\/|//|g' help/help_mp-zh_CN.h
 export CFLAGS="%optflags"
 %endif
 ./configure \
+		--target=%_target \
 		--prefix=%_prefix \
 		--bindir=%_bindir \
 		--mandir=%_mandir \
@@ -1311,11 +1295,7 @@ done
 rm -f %buildroot%_man1dir/mencoder.1
 %{?_enable_mencoder:install -m 0644 DOCS/man/en/%lname.1 %buildroot%_man1dir/mencoder.1}
 %if_with htmldocs
-for l in %{?svnrev:it} zh; do
-    install -d %buildroot%_docdir/%name-doc-%version/$l
-    install -m 0644 DOCS/$l/*.html %buildroot%_docdir/%name-doc-%version/$l/
-done
-for l in cs de en es fr hu pl ru; do
+for l in cs de en es fr hu pl ru zh_CN; do
     install -d %buildroot%_docdir/%name-doc-%version/$l
     install -m 0644 DOCS/HTML/$l/{*.html,*.css} %buildroot%_docdir/%name-doc-%version/$l/
 done
@@ -1436,12 +1416,6 @@ unset RPM_PYTHON
 %_docdir/%name-doc-%version/hu
 
 
-%ifdef svnrev
-%files doc-it
-%_docdir/%name-doc-%version/it
-%endif
-
-
 %files doc-pl
 %_docdir/%name-doc-%version/pl
 
@@ -1450,8 +1424,8 @@ unset RPM_PYTHON
 %_docdir/%name-doc-%version/ru
 
 
-%files doc-zh
-%_docdir/%name-doc-%version/zh
+%files doc-zh_CN
+%_docdir/%name-doc-%version/zh_CN
 %endif
 
 
@@ -1557,6 +1531,14 @@ unset RPM_PYTHON
 
 
 %changelog
+* Mon Dec 25 2006 Led <led@altlinux.ru> 1.0-alt35.21766.1
+- new SVN snapshot (revision 21766):
+  + mencoder now can write to output streams file:// and smb://
+- updated %lname-svn-r21765-configure.patch
+- fixed BuildRequires
+- fixed docs installing
+- removed %name-doc-it, replaced %name-doc-zh with %name-doc-zh_CN
+
 * Thu Dec 14 2006 Led <led@altlinux.ru> 1.0-alt35.21614.1
 - new SVN snapshot (revision 21614)
 - updated %lname-svn-r21611-ext_ffmpeg.patch
