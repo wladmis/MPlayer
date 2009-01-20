@@ -7,7 +7,7 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 21766
+%define svnrev 21781
 %define ffmpeg_svnrev 7375
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
@@ -281,7 +281,7 @@
 Name: %lname
 Version: 1.0
 %define rel 35
-%define subrel 2
+%define subrel 1
 %ifdef svnrev
 Release: alt%rel.%svnrev.%subrel
 %define pkgver svn-r%svnrev
@@ -1531,6 +1531,9 @@ unset RPM_PYTHON
 
 
 %changelog
+* Fri Dec 29 2006 Led <led@altlinux.ru> 1.0-alt35.21781.1
+- new SVN snapshot (revision 21781)
+
 * Fri Dec 29 2006 Led <led@altlinux.ru> 1.0-alt35.21766.2
 - fixed x86_64 build:
   + fixed %lname-svn-r21766-configure.patch
