@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 23606
-%define ffmpeg_svnrev 9389
+%define svnrev 23664
+%define ffmpeg_svnrev 9430
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -331,7 +331,7 @@ Patch12: %lname-uni-svn23235.diff
 Patch13: %Name-svn-20060711-vbe.patch.gz
 Patch14: %lname-svn-r23099-gui_nls.patch
 Patch15: %lname-svn-r21128-pulseaudio.patch.gz
-Patch17: %lname-svn-r23600-ext_ffmpeg.patch
+Patch17: %lname-svn-r23664-ext_ffmpeg.patch
 Patch22: %lname-svn-r19389-polyp0.8.patch.gz
 Patch26: %lname-svn-r23592-configure.patch
 Patch27: %lname-svn-r22518-builddocs.patch
@@ -369,7 +369,7 @@ BuildRequires: cpp >= 3.3 gcc >= 3.3 gcc-c++ >= 3.3
 %{?_enable_lzo:BuildRequires: liblzo2-devel}
 %{?_enable_xvid:BuildRequires: libxvid-devel}
 %{?_enable_x264:BuildRequires: libx264-devel}
-%{?_enable_shared_ffmpeg:BuildRequires: libffmpeg-devel >= 0.5.0-alt1.svn7822}
+%{?_enable_shared_ffmpeg:BuildRequires: libffmpeg-devel >= 0.5.0-alt1.svn9400}
 %{?_enable_tremor_external:BuildRequires: libtremor-devel}
 %{?_enable_vorbis:BuildRequires: libvorbis-devel}
 %{?_enable_speex:BuildRequires: libspeex-devel}
@@ -1216,6 +1216,11 @@ done
 
 
 %changelog
+* Tue Jun 26 2007 Led <led@altlinux.ru> 1.0-alt35.23664.1
+- new SVN snapshot (revision 23664)
+- updated %lname-svn-r23664-ext_ffmpeg.patch
+- updated BuildRequires
+
 * Sat Jun 23 2007 Led <led@altlinux.ru> 1.0-alt35.23606.1
 - new SVN snapshot (revision 23606)
 - updated %lname-svn-r23600-ext_ffmpeg.patch
