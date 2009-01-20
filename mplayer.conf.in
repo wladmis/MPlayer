@@ -125,3 +125,4 @@ cache-seek-min = 50
 # You can also include other configuration files.
 #include = /path/to/the/file/you/want/to/include
 
+utf8 = yes

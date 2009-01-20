@@ -7,7 +7,7 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 22173
+%define svnrev 22210
 %define ffmpeg_svnrev 7881
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
@@ -100,7 +100,6 @@
 %def_enable libdts
 %def_enable libmpeg2
 %def_enable musepack
-%def_disable dirac
 %def_enable nut
 
 # Video output:
@@ -325,7 +324,6 @@ Patch3: %Name-1.0pre4-alt-explicit_gif.patch
 Patch4: %lname-svn-r22092-libdha.patch
 Patch5: %lname-svn-r19447-vo_vidix.patch.gz
 Patch6: %lname-svn-r21128-alt-artsc_ldflags.patch.gz
-Patch7: %Name-svn-20060707_dirac-0.5.x.patch.bz2
 Patch11: %lname-svn-r20777-nls.patch.gz
 Patch12: %lname-uni-svn21402.diff.gz
 Patch13: %Name-svn-20060711-vbe.patch.gz
@@ -337,7 +335,6 @@ Patch22: %lname-svn-r19389-polyp0.8.patch.gz
 Patch26: %lname-svn-r22092-configure.patch
 Patch27: %lname-svn-r20777-builddocs.patch.gz
 %if_disabled shared_ffmpeg
-Patch31: ffmpeg-svn-r6769-dirac-0.5.x.patch.bz2
 Patch32: ffmpeg-uni-svn-r7184.patch.gz
 %endif
 
@@ -386,7 +383,6 @@ BuildRequires: cpp >= 3.3 gcc >= 3.3 gcc-c++ >= 3.3
 %{?_enable_libdts:BuildRequires: libdca-devel}
 %{?_enable_libmpeg2:BuildRequires: libmpeg2-devel}
 %{?_enable_musepack:BuildRequires: libmpcdec-devel >= 1.2.1}
-%{?_enable_dirac:BuildRequires: libdirac-devel}
 %{?_enable_nut:BuildRequires: libnut-devel >= 0.0-alt0.272}
 
 %{?_enable_xvmc:BuildRequires: libXvMC-devel}
@@ -914,11 +910,6 @@ SVCDs from a movie.
 %setup -q -n %lname-%pkgver
 %else
 %setup -q -n %lname-%pkgver -a 1
-%if_enabled dirac
-pushd ffmpeg-svn-r%ffmpeg_svnrev
-%patch31 -p1
-popd
-%endif
 mv ffmpeg-svn-r%ffmpeg_svnrev/lib{av{codec,format,util},postproc} .
 %endif
 %else
@@ -931,7 +922,6 @@ mv ffmpeg-svn-r%ffmpeg_svnrev/lib{av{codec,format,util},postproc} .
 %patch4 -p1
 %patch5 -p1
 %patch6 -p1
-%{?_enable_dirac:%patch7 -p1}
 %patch11 -p1
 %patch12 -p1
 %patch13 -p1
@@ -1101,7 +1091,6 @@ export CFLAGS="%optflags"
 		%{subst_enable libmpeg2} \
 		%{subst_enable musepack} \
 		%{subst_enable nut} \
-		%{?_enable_dirac:--enable-dirac} \
 %if_enabled vidix
 %if %vidixlib == ext
 		--enable-vidix-external --disable-vidix-internal \
@@ -1198,7 +1187,6 @@ echo "fontconfig = yes" >> etc/%lname.conf
 %else
 echo "fontconfig = no" >> etc/%lname.conf
 %endif
-echo "utf8 = yes" >> etc/%lname.conf
 
 %{?_enable_freetype:make -C TOOLS/subfont-c}
 
@@ -1532,6 +1520,18 @@ unset RPM_PYTHON
 
 
 %changelog
+* Mon Feb 12 2007 Led <led@altlinux.ru> 1.0-alt35.22210.1
+- new SVN snapshot (revision 22210):
+  + Russian man page translation finished
+  + GIF demuxer improvement
+  + support for VC1 in MPEG-TS and MPEG-PS files (bd,hd)-dvd
+  + support for doubleclick as input event
+  + select libavformat demuxer (-lavfdopts format=)
+  + MEncoder support -ffourcc with -of lavf
+- enabled Dirac
+- removed %Name-svn-20060707_dirac-0.5.x.patch
+- cleaned up spec
+
 * Thu Feb 08 2007 Led <led@altlinux.ru> 1.0-alt35.22173.1
 - new SVN snapshot (revision 22173)
 - turned off joystick and LIRC support by default in %_sysconfdir/%lname.conf
