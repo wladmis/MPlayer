@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc2
-%define svnrev 25873
-%define ffmpeg_svnrev 11627
+%define svnrev 25895
+%define ffmpeg_svnrev 11643
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -80,8 +80,8 @@
 %def_enable x264
 %def_enable ffmpeg
 %def_enable shared_ffmpeg
-%def_disable faad_ext
-%def_enable faad_int
+%def_enable faad_ext
+%def_disable faad_int
 %def_disable faad_fixed
 %def_disable tremor_internal
 %def_disable tremor_low
@@ -281,7 +281,7 @@
 Name: %lname
 Version: 1.0
 %define rel 35
-%define subrel 2
+%define subrel 1
 %ifdef svnrev
 Release: alt%rel.%svnrev.%subrel
 %define pkgver svn-r%svnrev
@@ -334,7 +334,7 @@ Patch12: %lname-uni-svn25678.patch
 Patch13: %Name-svn-20060711-vbe.patch.gz
 Patch14: %lname-svn-r25669-gui_nls.patch
 Patch16: %lname-svn-r25826-configure.patch
-Patch17: %lname-svn-r25873-ext_ffmpeg.patch
+Patch17: %lname-svn-r25895-ext_ffmpeg.patch
 Patch27: %lname-svn-r22518-builddocs.patch
 %if_disabled shared_ffmpeg
 %{?_enable_dirac:Patch31: ffmpeg-svn-r11604-dirac-0.9.x.patch}
@@ -1234,6 +1234,10 @@ done
 
 
 %changelog
+* Mon Jan 28 2008 Led <led@altlinux.ru> 1.0-alt35.25895.1
+- new SVN snapshot (revision 25895)
+- updated %lname-svn-r25895-ext_ffmpeg.patch
+
 * Sun Jan 27 2008 Led <led@altlinux.ru> 1.0-alt35.25873.2
 - build with internal FAAD
 
