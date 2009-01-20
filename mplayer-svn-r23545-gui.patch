@@ -1,0 +1,31 @@
+diff -urN mplayer-svn-r23545.orig/gui/bitmap.c mplayer-svn-r23545/gui/bitmap.c
+--- mplayer-svn-r23545.orig/gui/bitmap.c	2007-05-07 23:45:34 +0300
++++ mplayer-svn-r23545/gui/bitmap.c	2007-06-12 02:21:52 +0300
+@@ -10,9 +10,15 @@
+ #else
+ #include "libavcodec/avcodec.h"
+ #endif
++#ifdef USE_LIBAVUTIL_SO
++#include <ffmpeg/intreadwrite.h>
++#else
+ #include "libavutil/intreadwrite.h"
++#endif
+ #include "libvo/fastmemcpy.h"
+ 
++extern AVCodec png_decoder;
++
+ static int pngRead( unsigned char * fname,txSample * bf )
+ {
+  int             decode_ok;
+diff -urN mplayer-svn-r23545.orig/gui/mplayer/play.h mplayer-svn-r23545/gui/mplayer/play.h
+--- mplayer-svn-r23545.orig/gui/mplayer/play.h	2007-04-23 23:01:47 +0300
++++ mplayer-svn-r23545/gui/mplayer/play.h	2007-06-12 02:20:07 +0300
+@@ -2,7 +2,7 @@
+ #ifndef __GUI_PLAY_H
+ #define __GUI_PLAY_H
+ 
+-#include "../config.h"
++#include "../../config.h"
+ 
+ extern int mplGotoTheNext;
+ 

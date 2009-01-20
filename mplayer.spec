@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 23410
-%define ffmpeg_svnrev 9152
+%define svnrev 23545
+%define ffmpeg_svnrev 9283
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -36,6 +36,7 @@
 %def_enable radio_v4l2
 %def_enable radio_capture
 %def_disable bsdbt848
+%def_enable teletext
 %def_disable pvr
 %def_enable rtc
 %def_enable network
@@ -198,6 +199,7 @@
 %set_disable v4l1
 %set_disable v4l2
 %set_disable bsdbt848
+%set_disable teletext
 %set_disable pvr
 %endif
 
@@ -322,16 +324,16 @@ Patch0: %lname-svn-r22221-subreader.patch
 Patch1: %lname-svn-r22092-dirac.patch
 Patch2: %lname-dvd-ru-svn19389.patch.gz
 Patch3: %Name-1.0pre4-alt-explicit_gif.patch
-Patch4: %lname-svn-r23099-gui.patch
+Patch4: %lname-svn-r23545-gui.patch
 Patch5: %lname-svn-r19447-vo_vidix.patch.gz
 Patch6: %lname-svn-r21128-alt-artsc_ldflags.patch.gz
 Patch7: %lname-svn-r23099-demux_nut.patch
-Patch11: %lname-svn-r22518-nls.patch
+Patch11: %lname-svn-r23545-nls.patch
 Patch12: %lname-uni-svn23235.diff
 Patch13: %Name-svn-20060711-vbe.patch.gz
 Patch14: %lname-svn-r23099-gui_nls.patch
 Patch15: %lname-svn-r21128-pulseaudio.patch.gz
-Patch17: %lname-svn-r23410-ext_ffmpeg.patch
+Patch17: %lname-svn-r23545-ext_ffmpeg.patch
 Patch22: %lname-svn-r19389-polyp0.8.patch.gz
 Patch26: %lname-svn-r23340-configure.patch
 Patch27: %lname-svn-r22518-builddocs.patch
@@ -384,6 +386,7 @@ BuildRequires: cpp >= 3.3 gcc >= 3.3 gcc-c++ >= 3.3
 %{?_enable_libmpeg2:BuildRequires: libmpeg2-devel}
 %{?_enable_musepack:BuildRequires: libmpcdec-devel >= 1.2.1}
 %{?_enable_nut:BuildRequires: libnut-devel >= 0.0-alt0.272}
+%{?_enable_teletext:BuildRequires: libzvbi-devel}
 
 %{?_enable_xvmc:BuildRequires: libXvMC-devel}
 %if_enabled mplayer
@@ -742,6 +745,7 @@ export CFLAGS="%optflags"
 		%{subst_enable_to radio_v4l2 radio-v4l2} \
 		%{subst_enable_to radio_capture radio-capture} \
 		%{subst_enable_to bsdbt848 tv-bsdbt848} \
+		%{subst_enable_to teletext tv-teletext} \
 		%{subst_enable pvr} \
 		%{subst_enable rtc} \
 		%{subst_enable network} \
@@ -1213,10 +1217,14 @@ done
 
 
 %changelog
-* Wed May 30 2007 Led <led@altlinux.ru> 1.0-alt35.23410.1
-- new SVN snapshot (revision 23410)
+* Mon Jun 11 2007 Led <led@altlinux.ru> 1.0-alt35.23545.1
+- new SVN snapshot (revision 23545):
+  + Teletext support for tv:// (v4l and v4l2 only)
 - cleaned up spec
 - cleaned up BuildRequires
+- updated %lname-svn-r23545-ext_ffmpeg.patch
+- updated %lname-svn-r23545-gui.patch
+- updated %lname-svn-r23545-nls.patch
 
 * Sat May 19 2007 Led <led@altlinux.ru> 1.0-alt35.23340.1
 - new SVN snapshot (revision 23340)

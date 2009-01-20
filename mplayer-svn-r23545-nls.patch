@@ -1,7 +1,7 @@
-diff -urN mplayer-svn-r22518.orig/configure mplayer-svn-r22518/configure
---- mplayer-svn-r22518.orig/configure	2007-03-12 02:50:41 +0200
-+++ mplayer-svn-r22518/configure	2007-03-12 03:14:42 +0200
-@@ -226,6 +226,7 @@
+diff -urN mplayer-svn-r23545.orig/configure mplayer-svn-r23545/configure
+--- mplayer-svn-r23545.orig/configure	2007-06-11 00:49:37 +0300
++++ mplayer-svn-r23545/configure	2007-06-12 21:58:10 +0300
+@@ -225,6 +225,7 @@
    --enable-linux-devfs   set default devices to devfs [disable]
    --enable-termcap       use termcap database for key codes [autodetect]
    --enable-termios       use termios database for key codes [autodetect]
@@ -9,7 +9,7 @@ diff -urN mplayer-svn-r22518.orig/configure mplayer-svn-r22518/configure
    --disable-iconv        disable iconv for encoding conversion [autodetect]
    --disable-langinfo     do not use langinfo [autodetect]
    --enable-lirc          enable LIRC (remote control) support [autodetect]
-@@ -523,6 +524,7 @@
+@@ -530,6 +531,7 @@
  _dxr2=auto
  _dxr3=auto
  _ivtv=auto
@@ -17,7 +17,7 @@ diff -urN mplayer-svn-r22518.orig/configure mplayer-svn-r22518/configure
  _iconv=auto
  _langinfo=auto
  _rtc=auto
-@@ -827,6 +829,8 @@
+@@ -835,6 +837,8 @@
    --disable-dxr3)	_dxr3=no	;;
    --enable-ivtv)        _ivtv=yes       ;;
    --disable-ivtv)       _ivtv=no        ;;
@@ -26,7 +26,7 @@ diff -urN mplayer-svn-r22518.orig/configure mplayer-svn-r22518/configure
    --enable-iconv)	_iconv=yes	;;
    --disable-iconv)	_iconv=no	;;
    --enable-langinfo)	_langinfo=yes	;;
-@@ -3056,6 +3060,14 @@
+@@ -3078,6 +3082,14 @@
  fi
  echores "$_rpath"
  
@@ -41,7 +41,7 @@ diff -urN mplayer-svn-r22518.orig/configure mplayer-svn-r22518/configure
  echocheck "iconv"
  if test "$_iconv" = auto ; then
    _iconv_tmp='#include <iconv.h>'
-@@ -7783,6 +7795,10 @@
+@@ -7838,6 +7850,10 @@
     try to recompile MPlayer with this option disabled! */
  $_def_select
  
@@ -52,9 +52,9 @@ diff -urN mplayer-svn-r22518.orig/configure mplayer-svn-r22518/configure
  /* define this to use iconv(3) function to codepage conversions */
  $_def_iconv
  
-diff -urN mplayer-svn-r22518.orig/mp_msg.c mplayer-svn-r22518/mp_msg.c
---- mplayer-svn-r22518.orig/mp_msg.c	2007-03-12 02:50:50 +0200
-+++ mplayer-svn-r22518/mp_msg.c	2007-03-12 03:23:14 +0200
+diff -urN mplayer-svn-r23545.orig/mp_msg.c mplayer-svn-r23545/mp_msg.c
+--- mplayer-svn-r23545.orig/mp_msg.c	2007-06-05 23:28:31 +0300
++++ mplayer-svn-r23545/mp_msg.c	2007-06-12 22:05:07 +0300
 @@ -8,6 +8,13 @@
  
  #include "config.h"
@@ -90,7 +90,22 @@ diff -urN mplayer-svn-r22518.orig/mp_msg.c mplayer-svn-r22518/mp_msg.c
  #endif
  }
  
-@@ -92,14 +104,14 @@
+@@ -77,7 +89,14 @@
+ #ifdef USE_ICONV
+     mp_msg_charset = getenv("MPLAYER_CHARSET");
+     if (!mp_msg_charset)
++      //setlocale(LC_CTYPE, "");
+       mp_msg_charset = get_term_charset();
++      //setlocale(LC_CTYPE, "C");
++#ifdef ENABLE_NLS
++    setlocale(LC_ALL, "");
++    bindtextdomain(PACKAGE, LOCALEDIR);
++    textdomain(PACKAGE);
++#endif
+ #endif
+ }
+ 
+@@ -92,14 +111,14 @@
      
      if (!mp_msg_test(mod, lev)) return; // do not display
      va_start(va, format);
