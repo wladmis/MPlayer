@@ -104,7 +104,7 @@
 
 # Video output:
 %def_enable vidix
-%define vidixlib ext
+%define vidixlib int
 %def_enable gl
 %def_enable dga
 %def_disable vesa
@@ -280,7 +280,7 @@
 Name: %lname
 Version: 1.0
 %define rel 35
-%define subrel 1
+%define subrel 2
 %ifdef svnrev
 Release: alt%rel.%svnrev.%subrel
 %define pkgver svn-r%svnrev
@@ -1450,6 +1450,9 @@ unset RPM_PYTHON
 
 
 %changelog
+* Tue Apr 24 2007 Led <led@altlinux.ru> 1.0-alt35.23099.2
+- build with internal vidix
+
 * Mon Apr 23 2007 Led <led@altlinux.ru> 1.0-alt35.23099.1
 - new SVN snapshot (revision 23099)
 - updated %lname-svn-r23099-gui.patch
