@@ -7,7 +7,7 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 22230
+%define svnrev 22324
 %define ffmpeg_svnrev 7991
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
@@ -329,9 +329,9 @@ Patch6: %lname-svn-r21128-alt-artsc_ldflags.patch.gz
 Patch11: %lname-svn-r20777-nls.patch.gz
 Patch12: %lname-uni-svn21402.diff.gz
 Patch13: %Name-svn-20060711-vbe.patch.gz
-Patch14: %lname-svn-r21402-gui_nls.patch.bz2
+Patch14: %lname-svn-r22324-gui_nls.patch
 Patch15: %lname-svn-r21128-pulseaudio.patch.gz
-Patch17: %lname-svn-r22173-ext_ffmpeg.patch
+Patch17: %lname-svn-r22324-ext_ffmpeg.patch
 Patch18: %lname-mwallp.patch.gz
 Patch22: %lname-svn-r19389-polyp0.8.patch.gz
 Patch26: %lname-svn-r22217-configure.patch
@@ -367,7 +367,7 @@ BuildRequires: cpp >= 3.3 gcc >= 3.3 gcc-c++ >= 3.3
 %{?_enable_png:BuildRequires: libpng-devel}
 %{?_enable_jpeg:BuildRequires: libjpeg-devel}
 %{?_enable_libcdio:BuildRequires: libcdio-devel}
-%{?_enable_lzo:BuildRequires: liblzo-devel}
+%{?_enable_lzo:BuildRequires: liblzo2-devel}
 %{?_enable_xvid:BuildRequires: libxvid-devel}
 %{?_enable_x264:BuildRequires: libx264-devel}
 %{?_enable_shared_ffmpeg:BuildRequires: libffmpeg-devel >= 0.5.0-alt1.svn7822}
@@ -1510,6 +1510,14 @@ unset RPM_PYTHON
 
 
 %changelog
+* Fri Feb 23 2007 Led <led@altlinux.ru> 1.0-alt35.22324.1
+- new SVN snapshot (revision 22324):
+  + ffmpeg video decoder handles aspect ratio changes
+  + smil playlist over Real RTSP
+- updated %lname-svn-r22324-gui_nls.patch
+- used liblzo2
+- updated %lname-svn-r22324-ext_ffmpeg.patch
+
 * Fri Feb 16 2007 Led <led@altlinux.ru> 1.0-alt35.22230.1
 - new SVN snapshot (revision 22230)
 - added subpackages %name-i18n-ru, %name-i18n-uk,
