@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 23114
-%define ffmpeg_svnrev 8891
+%define svnrev 23143
+%define ffmpeg_svnrev 8838
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -280,7 +280,7 @@
 Name: %lname
 Version: 1.0
 %define rel 35
-%define subrel 2
+%define subrel 1
 %ifdef svnrev
 Release: alt%rel.%svnrev.%subrel
 %define pkgver svn-r%svnrev
@@ -872,9 +872,9 @@ mv ffmpeg-svn-r%ffmpeg_svnrev/lib{av{codec,format,util},postproc} .
 %patch13 -p1
 %patch14 -p1
 %patch15 -p1
-%patch17 -p1
+#%%patch17 -p1
 %{?_enable_polyp:%{?_disable_old_polyp:%patch22 -p1}}
-%patch26 -p1
+#%%patch26 -p1
 %patch27 -p1
 %{?_disable_shared_ffmpeg:%patch32 -p1}
 %{?_enable_polyp:%{?_disable_old_polyp:sed -e 's/\([Pp]\)ulse/\1olyp/g' -e 's/PULSE/POLYP/g' libao2/ao_pulse.c > libao2/ao_polyp.c}}
@@ -1450,8 +1450,8 @@ unset RPM_PYTHON
 
 
 %changelog
-* Sat May 05 2007 Led <led@altlinux.ru> 1.0-alt35.23114.2
-- rebuild with libx264.so.55
+* Thu Apr 26 2007 Led <led@altlinux.ru> 1.0-alt35.23143.1
+- new SVN snapshot (revision 23143)
 
 * Thu Apr 26 2007 Led <led@altlinux.ru> 1.0-alt35.23114.1
 - new SVN snapshot (revision 23114)
