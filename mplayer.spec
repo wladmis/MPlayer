@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc2
-%define svnrev 25669
-%define ffmpeg_svnrev 11494
+%define svnrev 25678
+%define ffmpeg_svnrev 11508
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -330,7 +330,7 @@ Patch6: %lname-svn-r21128-alt-artsc_ldflags.patch.gz
 Patch7: %lname-svn-r23099-demux_nut.patch
 Patch8: %lname-svn-r23722-VIDM-win32-codec.patch
 Patch11: %lname-svn-r24081-nls.patch
-Patch12: %lname-uni-svn23235.diff
+Patch12: %lname-uni-svn25678.patch
 Patch13: %Name-svn-20060711-vbe.patch.gz
 Patch14: %lname-svn-r25669-gui_nls.patch
 Patch16: %lname-svn-r25454-configure.patch
@@ -721,7 +721,7 @@ gzip -dc %SOURCE7 > po/mp_msg2po.awk
 %endif
 
 %if %dvdreadlib == ext
-mv dvdread dvdread.internal
+#mv dvdread dvdread.internal
 %endif
 
 subst 's|\\/\\/|//|g' help/help_mp-zh_??.h
@@ -1236,6 +1236,10 @@ done
 
 
 %changelog
+* Fri Jan 11 2008 Led <led@altlinux.ru> 1.0-alt35.25678.1
+- new SVN snapshot (revision 25678)
+- updated %lname-uni-svn25678.patch
+
 * Fri Jan 11 2008 Led <led@altlinux.ru> 1.0-alt35.25669.1
 - new SVN snapshot (revision 25669)
 - updated:
