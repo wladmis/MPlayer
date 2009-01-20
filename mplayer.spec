@@ -6,8 +6,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 20837
-%define ffmpeg_svnrev 6962
+%define svnrev 20885
+%define ffmpeg_svnrev 7012
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -1522,6 +1522,9 @@ unset RPM_PYTHON
 
 
 %changelog
+* Mon Nov 13 2006 Led <led@altlinux.ru> 1.0-alt35.20885.1
+- new SVN snapshot (revision 20885)
+
 * Fri Nov 10 2006 Led <led@altlinux.ru> 1.0-alt35.20837.1
 - new SVN snapshot (revision 20837)
 - updated %lname-svn-r20837-pulseaudio.patch
