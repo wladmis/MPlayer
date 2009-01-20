@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 22518
-%define ffmpeg_svnrev 8335
+%define svnrev 22535
+%define ffmpeg_svnrev 8350
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -1510,8 +1510,8 @@ unset RPM_PYTHON
 
 
 %changelog
-* Mon Mar 12 2007 Led <led@altlinux.ru> 1.0-alt35.22518.1
-- new SVN snapshot (revision 22518)
+* Mon Mar 12 2007 Led <led@altlinux.ru> 1.0-alt35.22535.1
+- new SVN snapshot (revision 22535)
 - updated %lname-svn-r22518-nls.patch
 - updated %lname-svn-r22518-ext_ffmpeg.patch
 - updated %lname-svn-r22518-configure.patch
