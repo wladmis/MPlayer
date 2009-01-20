@@ -7,7 +7,7 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 22229
+%define svnrev 22230
 %define ffmpeg_svnrev 7991
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
@@ -343,7 +343,7 @@ Patch32: ffmpeg-uni-svn-r7184.patch.gz
 # Automatically added by buildreq on Thu Feb 15 2007
 #BuildRequires: aalib-devel docbook-dtds docbook-style-xsl esound-devel gcc-c++ kdelibs ladspa_sdk liba52-devel libarts-devel libavformat-devel libcaca-devel libcdparanoia-devel libdv-devel libdvdnav-devel libenca-devel libfribidi-devel libglut-devel libgpm-devel libgtk+2-devel libjpeg-devel liblirc-devel liblive555-devel liblzo-devel libmesa-devel libmpcdec-devel libopenal-devel libpostproc-devel libpulseaudio-devel libSDL-devel libslang-devel libsmbclient-devel libspeex-devel libswscale-devel libungif-devel libvidix-devel libXi-devel libXinerama-devel libxmms-devel libXmu-devel libXvMC-devel libXxf86dga-devel libXxf86vm-devel linux-libc-headers subversion svgalib-devel w3c-markup-validator-libs xsltproc
 
-BuildRequires: %awk pkgconfig libncurses-devel libslang-devel zlib-devel
+BuildRequires: %awk libncurses-devel libslang-devel zlib-devel
 BuildRequires: cpp >= 3.3 gcc >= 3.3 gcc-c++ >= 3.3
 %{?svnrev:%{?_with_htmldocs:BuildRequires: docbook-style-xsl xsltproc sgml-common docbook-dtds}}
 
@@ -823,6 +823,7 @@ Languages support for %Name (except ru%{?_enable_nls: and uk}).
 %package i18n-ru
 Group: Video
 Summary: Russian language support for %Name
+Requires: man-pages-ru
 Conflicts: %name-i18n < 1.0-35.22229.1
 %{?_enable_mencoder:Provides: mencoder-i18n-ru = %version-%release}
 
@@ -1176,11 +1177,7 @@ pushd po
 gawk -f ./mp_help2msg.awk ../help/help_mp-en.h > en.msg
 for h in $(ls ../help/help_mp-*.h | grep -v '..help/help_mp-en.h$'); do
     l=$(basename ${h/help_mp-} .h)
-    if [ -f "$h.charset" ]; then
-	gawk -f ./mp_help2msg.awk $h | iconv -c -f $(cat $h.charset) -t UTF-8 | awk -f ./mp_msg2po.awk en.msg > $l.po
-    else
-	gawk -f ./mp_help2msg.awk $h | awk -f ./mp_msg2po.awk en.msg > $l.po
-    fi
+    gawk -f ./mp_help2msg.awk $h | awk -f ./mp_msg2po.awk en.msg > $l.po
     msgfmt -o $l.gmo $l.po
 done
 popd
@@ -1245,7 +1242,6 @@ for l in $(ls DOCS/man | grep -v 'en'); do
 done
 rm -f %buildroot%_man1dir/mencoder.1
 %{?_enable_mencoder:install -m 0644 DOCS/man/en/%lname.1 %buildroot%_man1dir/mencoder.1}
-echo "KOI8-R" > %buildroot%_mandir/ru/.charset
 %if_with htmldocs
 for l in cs de en es fr hu pl ru zh_CN; do
     install -d %buildroot%_docdir/%name-doc-%version/$l
@@ -1279,10 +1275,6 @@ unset RPM_PYTHON
 %clean_menus
 %endif
 %endif
-
-
-%post i18n-ru 
-[ -e %_mandir/ru/.charset ] || echo "KOI8-R" > %_mandir/ru/.charset
 
 
 %if_enabled mplayer
@@ -1518,12 +1510,13 @@ unset RPM_PYTHON
 
 
 %changelog
-* Fri Feb 16 2007 Led <led@altlinux.ru> 1.0-alt35.22229.1
-- new SVN snapshot (revision 22229)
-- added subpackages %name-i18n-ru, %name-i18n-uk, %name-i18n-world
+* Fri Feb 16 2007 Led <led@altlinux.ru> 1.0-alt35.22230.1
+- new SVN snapshot (revision 22230)
+- added subpackages %name-i18n-ru, %name-i18n-uk,
+  %name-i18n-world, %name-doc-world, %name-docs
 - fixed configure parameters (%%build section)
-- creating %%_mandir/ru/.charset (if nonexist) in %name-i18n-ru
-  subpackage's post script
+- %name-i18n-ru requires man-pages-ru (#10819)
+- cleaned up BuildRequires
 
 * Thu Feb 15 2007 Led <led@altlinux.ru> 1.0-alt35.22223.1
 - new SVN snapshot (revision 22223)
