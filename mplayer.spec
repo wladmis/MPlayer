@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 23545
-%define ffmpeg_svnrev 9283
+%define svnrev 23547
+%define ffmpeg_svnrev 9292
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -324,7 +324,7 @@ Patch0: %lname-svn-r22221-subreader.patch
 Patch1: %lname-svn-r22092-dirac.patch
 Patch2: %lname-dvd-ru-svn19389.patch.gz
 Patch3: %Name-1.0pre4-alt-explicit_gif.patch
-Patch4: %lname-svn-r23545-gui.patch
+Patch4: %lname-svn-r23547-gui.patch
 Patch5: %lname-svn-r19447-vo_vidix.patch.gz
 Patch6: %lname-svn-r21128-alt-artsc_ldflags.patch.gz
 Patch7: %lname-svn-r23099-demux_nut.patch
@@ -1024,7 +1024,7 @@ done
 rm -f %buildroot%_man1dir/mencoder.1
 %{?_enable_mencoder:install -m 0644 DOCS/man/en/%lname.1 %buildroot%_man1dir/mencoder.1}
 %if_with htmldocs
-for l in cs de en es fr hu pl ru zh_CN; do
+for l in cs de en es fr hu it pl ru zh_CN; do
     install -d %buildroot%_docdir/%name-doc-%version/$l
     install -m 0644 DOCS/HTML/$l/{*.html,*.css} %buildroot%_docdir/%name-doc-%version/$l/
 done
@@ -1112,6 +1112,7 @@ done
 %lang(es) %_docdir/%name-doc-%version/es
 %lang(fr) %_docdir/%name-doc-%version/fr
 %lang(hu) %_docdir/%name-doc-%version/hu
+%lang(it) %_docdir/%name-doc-%version/it
 %lang(pl) %_docdir/%name-doc-%version/pl
 %lang(zh_CN) %_docdir/%name-doc-%version/zh_CN
 
@@ -1217,14 +1218,15 @@ done
 
 
 %changelog
-* Mon Jun 11 2007 Led <led@altlinux.ru> 1.0-alt35.23545.1
-- new SVN snapshot (revision 23545):
+* Tue Jun 12 2007 Led <led@altlinux.ru> 1.0-alt35.23547.1
+- new SVN snapshot (revision 23547):
   + Teletext support for tv:// (v4l and v4l2 only)
 - cleaned up spec
 - cleaned up BuildRequires
 - updated %lname-svn-r23545-ext_ffmpeg.patch
-- updated %lname-svn-r23545-gui.patch
+- updated %lname-svn-r23547-gui.patch
 - updated %lname-svn-r23545-nls.patch
+- added it docs
 
 * Sat May 19 2007 Led <led@altlinux.ru> 1.0-alt35.23340.1
 - new SVN snapshot (revision 23340)
