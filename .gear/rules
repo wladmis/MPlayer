@@ -1,4 +1,4 @@
-tar.bz2: r23304:. name=@name@-svn-r23304
+tar.bz2: r23306:. name=@name@-svn-r23306
 tar.bz2: standard-1.9:. name=standard-1.9 base=standard
 tar.bz2: ffmpeg-r9012:. name=ffmpeg-svn-9012
 copy: *.sh *.in *.diff *-explicit_gif.patch *-ext_ffmpeg.patch *-configure.patch *-dirac.patch *-subreader.patch *-gui_nls.patch *-nls.patch *-builddocs.patch *-gui.patch *-demux_nut.patch ffmpeg-*.patch

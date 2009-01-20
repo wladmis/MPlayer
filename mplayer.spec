@@ -7,7 +7,7 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 23304
+%define svnrev 23306
 %define ffmpeg_svnrev 9012
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
@@ -1220,12 +1220,13 @@ unset RPM_PYTHON
 
 
 %changelog
-* Sun May 13 2007 Led <led@altlinux.ru> 1.0-alt35.23304.1
-- new SVN snapshot (revision 23300):
+* Sun May 13 2007 Led <led@altlinux.ru> 1.0-alt35.23306.1
+- new SVN snapshot (revision 23306):
   + Renderware TeXture Dictionary video via lavc
 - updated %lname-svn-r23304-ext_ffmpeg.patch
 - updated %lname-svn-r23304-configure.patch
 - updated ffmpeg-uni-svn-r8990.patch
+- cleaned up spec
 
 * Tue May 08 2007 Led <led@altlinux.ru> 1.0-alt35.23272.1
 - new SVN snapshot (revision 23272):
