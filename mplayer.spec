@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 21402
-%define ffmpeg_svnrev 7188
+%define svnrev 21410
+%define ffmpeg_svnrev 7199
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -329,7 +329,7 @@ Patch11: %lname-svn-r20777-nls.patch.gz
 Patch12: %lname-uni-svn21352.diff.gz
 Patch13: %Name-svn-20060711-vbe.patch.gz
 Patch15: %lname-svn-r21128-pulseaudio.patch.gz
-Patch17: %lname-svn-r21398-ext_ffmpeg.patch.bz2
+Patch17: %lname-svn-r21410-ext_ffmpeg.patch.bz2
 Patch18: %lname-mwallp.patch.gz
 Patch19: %lname-svn-r20777-bmovl-test.patch.gz
 Patch22: %lname-svn-r19389-polyp0.8.patch.gz
@@ -1555,6 +1555,10 @@ unset RPM_PYTHON
 
 
 %changelog
+* Fri Dec 01 2006 Led <led@altlinux.ru> 1.0-alt35.21410.1
+- new SVN snapshot (revision 21410)
+- updated %lname-svn-r21410-ext_ffmpeg.patch
+
 * Thu Nov 30 2006 Led <led@altlinux.ru> 1.0-alt35.21402.1
 - new SVN snapshot (revision 21402)
 
