@@ -1,0 +1,32 @@
+diff -urN ffmpeg-svn-r7881.orig/libavcodec/imgconvert.c ffmpeg-svn-r7881/libavcodec/imgconvert.c
+--- ffmpeg-svn-r7881.orig/libavcodec/imgconvert.c	2007-02-08 12:24:30 +0200
++++ ffmpeg-svn-r7881/libavcodec/imgconvert.c	2007-02-12 02:22:21 +0200
+@@ -2312,7 +2312,6 @@
+     return 0;
+ }
+ 
+-#ifndef CONFIG_SWSCALER
+ /* XXX: always use linesize. Return -1 if not supported */
+ int img_convert(AVPicture *dst, int dst_pix_fmt,
+                 const AVPicture *src, int src_pix_fmt,
+@@ -2554,7 +2553,6 @@
+     avpicture_free(tmp);
+     return ret;
+ }
+-#endif
+ 
+ /* NOTE: we scan all the pixels to have an exact information */
+ static int get_alpha_info_pal8(const AVPicture *src, int width, int height)
+diff -urN ffmpeg-svn-r7881.orig/libavcodec/Makefile ffmpeg-svn-r7881/libavcodec/Makefile
+--- ffmpeg-svn-r7881.orig/libavcodec/Makefile	2007-02-08 12:24:30 +0200
++++ ffmpeg-svn-r7881/libavcodec/Makefile	2007-02-12 02:22:45 +0200
+@@ -316,9 +316,7 @@
+ 
+ OBJS-$(HAVE_XVMC_ACCEL)                += xvmcvideo.o
+ 
+-ifneq ($(CONFIG_SWSCALER),yes)
+ OBJS += imgresample.o
+-endif
+ 
+ # i386 mmx specific stuff
+ ifeq ($(TARGET_MMX),yes)

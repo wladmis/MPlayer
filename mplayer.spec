@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 23272
-%define ffmpeg_svnrev 8939
+%define svnrev 23293
+%define ffmpeg_svnrev 8983
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -78,7 +78,7 @@
 %def_enable xvid
 %def_enable x264
 %def_enable ffmpeg
-%def_enable shared_ffmpeg
+%def_disable shared_ffmpeg
 %def_enable faad_ext
 %def_enable faad_int
 %def_disable faad_fixed
@@ -104,7 +104,7 @@
 
 # Video output:
 %def_enable vidix
-%define vidixlib int
+%define vidixlib ext
 %def_enable gl
 %def_enable dga
 %def_disable vesa
@@ -337,6 +337,7 @@ Patch22: %lname-svn-r19389-polyp0.8.patch.gz
 Patch26: %lname-svn-r23235-configure.patch
 Patch27: %lname-svn-r22518-builddocs.patch
 %if_disabled shared_ffmpeg
+Patch31: ffmpeg-svn-r7881-swscale.patch
 Patch32: ffmpeg-uni-svn-r7650.patch
 %endif
 
@@ -854,6 +855,7 @@ SVCDs from a movie.
 %else
 %setup -q -n %lname-%pkgver -a 1
 mv ffmpeg-svn-r%ffmpeg_svnrev/lib{av{codec,format,util},postproc} .
+%patch31 -p1
 %endif
 %else
 %setup -q -n %Name-%pkgver
@@ -1456,6 +1458,9 @@ unset RPM_PYTHON
 
 
 %changelog
+* Fri May 11 2007 Led <led@altlinux.ru> 1.0-alt35.23293.1
+- new SVN snapshot (revision 23293)
+
 * Tue May 08 2007 Led <led@altlinux.ru> 1.0-alt35.23272.1
 - new SVN snapshot (revision 23272):
   + support for channel navigation with PVR input

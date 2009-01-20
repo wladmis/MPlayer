@@ -1,4 +1,5 @@
-tar.bz2: r23272:. name=@name@-svn-r23272
+tar.bz2: r23293:. name=@name@-svn-r23293
 tar.bz2: standard-1.9:. name=standard-1.9 base=standard
-copy: *.sh *.in *.diff *-explicit_gif.patch *-ext_ffmpeg.patch *-configure.patch *-dirac.patch *-subreader.patch *-gui_nls.patch *-nls.patch *-builddocs.patch *-gui.patch *-demux_nut.patch
+tar.bz2: ffmpeg-r8983:. name=ffmpeg-svn-r8983
+copy: *.sh *.in *.diff *-explicit_gif.patch *-ext_ffmpeg.patch *-configure.patch *-dirac.patch *-subreader.patch *-gui_nls.patch *-nls.patch *-builddocs.patch *-gui.patch *-demux_nut.patch ffmpeg-*.patch
 gzip: *.awk *-vbe.patch *-artsc_ldflags.patch *-polyp0.8.patch mplayer-dvd-ru-*.patch *-vo_vidix.patch *-pulseaudio.patch
