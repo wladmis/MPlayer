@@ -7,7 +7,7 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc2
-%define svnrev 25498
+%define svnrev 25513
 %define ffmpeg_svnrev 11305
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
@@ -333,7 +333,7 @@ Patch11: %lname-svn-r24081-nls.patch
 Patch12: %lname-uni-svn23235.diff
 Patch13: %Name-svn-20060711-vbe.patch.gz
 Patch14: %lname-svn-r23726-gui_nls.patch
-Patch16: %lname-svn-r25505-configure.patch
+Patch16: %lname-svn-r25454-configure.patch
 Patch17: %lname-svn-r25487-ext_ffmpeg.patch
 Patch27: %lname-svn-r22518-builddocs.patch
 %if_disabled shared_ffmpeg
@@ -372,7 +372,7 @@ BuildRequires: cpp >= 3.3 gcc >= 3.3 gcc-c++ >= 3.3
 %{?_enable_lzo:BuildRequires: liblzo2-devel}
 %{?_enable_xvid:BuildRequires: libxvid-devel}
 %{?_enable_x264:BuildRequires: libx264-devel}
-%{?_enable_shared_ffmpeg:BuildRequires: libffmpeg-devel >= 0:0.5.0-alt1.svn9400}
+%{?_enable_shared_ffmpeg:BuildRequires: libffmpeg-devel >= 1:0.5.0-alt0.11305.1}
 %{?_enable_tremor_external:BuildRequires: libtremor-devel}
 %{?_enable_vorbis:BuildRequires: libvorbis-devel}
 %{?_enable_speex:BuildRequires: libspeex-devel}
@@ -1236,10 +1236,9 @@ done
 
 
 %changelog
-* Tue Dec 25 2007 Led <led@altlinux.ru> 1.0-alt35.25498.1
-- new SVN snapshot (revision 25498)
+* Sun Dec 23 2007 Led <led@altlinux.ru> 1.0-alt35.25513.1
+- new SVN snapshot (revision 25513)
 - removed %lname-svn-r25454-dvdnav.patch
-- updated %lname-svn-r25505-configure.patch (fixed #13791)
 
 * Sat Dec 22 2007 Led <led@altlinux.ru> 1.0-alt35.25487.1
 - new SVN snapshot (revision 25487)
