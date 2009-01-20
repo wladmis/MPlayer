@@ -7,7 +7,7 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 23673
+%define svnrev 23722
 %define ffmpeg_svnrev 9440
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
@@ -326,6 +326,7 @@ Patch4: %lname-svn-r23547-gui.patch
 Patch5: %lname-svn-r19447-vo_vidix.patch.gz
 Patch6: %lname-svn-r21128-alt-artsc_ldflags.patch.gz
 Patch7: %lname-svn-r23099-demux_nut.patch
+Patch8: %lname-svn-r23722-VIDM-win32-codec.patch
 Patch11: %lname-svn-r23545-nls.patch
 Patch12: %lname-uni-svn23235.diff
 Patch13: %Name-svn-20060711-vbe.patch.gz
@@ -676,6 +677,7 @@ mv ffmpeg-svn-r%ffmpeg_svnrev/lib{av{codec,format,util},postproc} .
 %patch5 -p1
 %patch6 -p1
 %patch7 -p1
+%patch8 -p1
 %patch11 -p1
 %patch12 -p1
 %patch13 -p1
@@ -1216,10 +1218,11 @@ done
 
 
 %changelog
-* Tue Jun 26 2007 Led <led@altlinux.ru> 1.0-alt35.23673.1
-- new SVN snapshot (revision 23673)
+* Fri Jul 06 2007 Led <led@altlinux.ru> 1.0-alt35.23722.1
+- new SVN snapshot (revision 23722)
 - updated %lname-svn-r23664-ext_ffmpeg.patch
 - updated BuildRequires
+- added %lname-svn-r23722-VIDM-win32-codec.patch (by icesik@ FR #12211)
 
 * Sat Jun 23 2007 Led <led@altlinux.ru> 1.0-alt35.23606.1
 - new SVN snapshot (revision 23606)
