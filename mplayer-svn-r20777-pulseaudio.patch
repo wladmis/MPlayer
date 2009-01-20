@@ -1,6 +1,6 @@
-diff -urN mplayer-svn-r19671.orig/AUTHORS mplayer-svn-r19671/AUTHORS
---- mplayer-svn-r19671.orig/AUTHORS	2006-09-05 09:11:10 +0300
-+++ mplayer-svn-r19671/AUTHORS	2006-09-05 16:01:48 +0300
+diff -urN mplayer-svn-r20777.orig/AUTHORS mplayer-svn-r20777/AUTHORS
+--- mplayer-svn-r20777.orig/AUTHORS	2006-11-06 17:08:14 +0200
++++ mplayer-svn-r20777/AUTHORS	2006-11-09 01:35:00 +0200
 @@ -627,6 +627,7 @@
  
  Poettering, Lennart <mzzcynlre@0pointer.de>
@@ -9,18 +9,18 @@ diff -urN mplayer-svn-r19671.orig/AUTHORS mplayer-svn-r19671/AUTHORS
  
  Poirier, Guillaume (poirierg) <poirierg@gmail.com>
      * French documentation translation and synchronization
-diff -urN mplayer-svn-r19671.orig/configure mplayer-svn-r19671/configure
---- mplayer-svn-r19671.orig/configure	2006-09-05 09:11:10 +0300
-+++ mplayer-svn-r19671/configure	2006-09-05 16:17:34 +0300
-@@ -355,6 +355,7 @@
-   --disable-arts         disable aRts sound support [autodetect]
-   --disable-esd          disable esd sound support [autodetect]
-   --disable-polyp        disable Polypaudio sound support [autodetect]
+diff -urN mplayer-svn-r20777.orig/configure mplayer-svn-r20777/configure
+--- mplayer-svn-r20777.orig/configure	2006-11-08 14:49:41 +0200
++++ mplayer-svn-r20777/configure	2006-11-09 01:40:50 +0200
+@@ -366,6 +366,7 @@
+   --disable-arts         disable aRts audio output [autodetect]
+   --disable-esd          disable esd audio output [autodetect]
+   --disable-polyp        disable Polypaudio audio output [autodetect]
 +  --disable-pulse        disable PulseAudio sound support [autodetect]
-   --disable-jack         disable JACK sound support [autodetect]
-   --disable-openal       disable OpenAL sound support [autodetect]
-   --disable-nas          disable NAS sound support [autodetect]
-@@ -1607,6 +1608,7 @@
+   --disable-jack         disable JACK audio output [autodetect]
+   --disable-openal       disable OpenAL audio output [autodetect]
+   --disable-nas          disable NAS audio output [autodetect]
+@@ -1598,6 +1599,7 @@
  _arts=auto
  _esd=auto
  _polyp=auto
@@ -28,7 +28,7 @@ diff -urN mplayer-svn-r19671.orig/configure mplayer-svn-r19671/configure
  _jack=auto
  _openal=auto
  _libcdio=auto
-@@ -1813,6 +1815,8 @@
+@@ -1806,6 +1808,8 @@
    --disable-esd)	_esd=no		;;
    --enable-polyp)	_polyp=yes	;;
    --disable-polyp)	_polyp=no		;;
@@ -37,7 +37,7 @@ diff -urN mplayer-svn-r19671.orig/configure mplayer-svn-r19671/configure
    --enable-jack)	_jack=yes	;;
    --disable-jack)	_jack=no	;;
    --enable-openal)	_openal=yes	;;
-@@ -4845,6 +4849,33 @@
+@@ -4874,6 +4878,33 @@
  fi
  
  
@@ -71,15 +71,16 @@ diff -urN mplayer-svn-r19671.orig/configure mplayer-svn-r19671/configure
  echocheck "JACK"
  if test "$_jack" = auto ; then
    _jack=yes
-@@ -7416,6 +7447,7 @@
- ARTS_LIB = $_ld_arts
- ESD_LIB = $_ld_esd
- POLYP_LIB = $_ld_polyp
-+PULSE_LIB = $_ld_pulse
- JACK_LIB = $_ld_jack
- OPENAL_LIB = $_ld_openal
- SGIAUDIO_LIB = $_ld_sgiaudio
-@@ -7930,6 +7962,7 @@
+@@ -7392,7 +7423,7 @@
+   $_ld_vesa $_ld_vidix_external $_ld_gl $_ld_dga $_ld_xv $_ld_xvmc $_ld_vm \
+   $_ld_xinerama $_ld_x11 $_ld_sock
+ AO_LIBS = $_ld_arts $_ld_esd $_ld_jack $_ld_openal $_ld_nas $_ld_sgiaudio \
+-  $_ld_polyp
++  $_ld_polyp $_ld_pulse
+ ENCORE_LIB = $_ld_mp3lame
+ LAVC_MP3LAME = $_lavc_mp3lame
+ FREETYPE_LIB = $_ld_freetype
+@@ -7903,6 +7934,7 @@
  $_def_esd
  $_def_esd_latency
  $_def_polyp
@@ -87,9 +88,9 @@ diff -urN mplayer-svn-r19671.orig/configure mplayer-svn-r19671/configure
  $_def_jack
  $_def_openal
  $_def_sys_asoundlib_h
-diff -urN mplayer-svn-r19671.orig/libao2/ao_pulse.c mplayer-svn-r19671/libao2/ao_pulse.c
---- mplayer-svn-r19671.orig/libao2/ao_pulse.c	1970-01-01 03:00:00 +0300
-+++ mplayer-svn-r19671/libao2/ao_pulse.c	2006-09-05 16:00:22 +0300
+diff -urN mplayer-svn-r20777.orig/libao2/ao_pulse.c mplayer-svn-r20777/libao2/ao_pulse.c
+--- mplayer-svn-r20777.orig/libao2/ao_pulse.c	1970-01-01 03:00:00 +0300
++++ mplayer-svn-r20777/libao2/ao_pulse.c	2006-11-09 01:35:00 +0200
 @@ -0,0 +1,566 @@
 +#include <assert.h>
 +#include <string.h>
@@ -657,9 +658,9 @@ diff -urN mplayer-svn-r19671.orig/libao2/ao_pulse.c mplayer-svn-r19671/libao2/ao
 +    }
 +}
 +
-diff -urN mplayer-svn-r19671.orig/libao2/audio_out.c mplayer-svn-r19671/libao2/audio_out.c
---- mplayer-svn-r19671.orig/libao2/audio_out.c	2006-08-17 13:36:32 +0300
-+++ mplayer-svn-r19671/libao2/audio_out.c	2006-09-05 16:03:13 +0300
+diff -urN mplayer-svn-r20777.orig/libao2/audio_out.c mplayer-svn-r20777/libao2/audio_out.c
+--- mplayer-svn-r20777.orig/libao2/audio_out.c	2006-08-17 13:36:32 +0300
++++ mplayer-svn-r20777/libao2/audio_out.c	2006-11-09 01:35:00 +0200
 @@ -28,6 +28,9 @@
  #ifdef USE_POLYP
  extern ao_functions_t audio_out_polyp;
@@ -680,14 +681,3 @@ diff -urN mplayer-svn-r19671.orig/libao2/audio_out.c mplayer-svn-r19671/libao2/a
  #ifdef USE_JACK
          &audio_out_jack,
  #endif
-diff -urN mplayer-svn-r19671.orig/Makefile mplayer-svn-r19671/Makefile
---- mplayer-svn-r19671.orig/Makefile	2006-08-29 12:45:14 +0300
-+++ mplayer-svn-r19671/Makefile	2006-09-05 16:09:01 +0300
-@@ -90,6 +90,7 @@
-           $(NAS_LIB) \
-           $(SGIAUDIO_LIB) \
-           $(POLYP_LIB) \
-+          $(PULSE_LIB) \
- 
- CODEC_LIBS = $(AV_LIB) \
-              $(FAME_LIB) \

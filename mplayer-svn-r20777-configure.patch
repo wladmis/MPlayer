@@ -1,7 +1,7 @@
-diff -urN MPlayer-1.0rc1.orig/configure MPlayer-1.0rc1/configure
---- MPlayer-1.0rc1.orig/configure	2006-10-23 01:32:31 +0300
-+++ MPlayer-1.0rc1/configure	2006-10-25 14:24:15 +0300
-@@ -3272,7 +3272,7 @@
+diff -urN mplayer-svn-r20777.orig/configure mplayer-svn-r20777/configure
+--- mplayer-svn-r20777.orig/configure	2006-11-08 14:49:41 +0200
++++ mplayer-svn-r20777/configure	2006-11-09 02:18:06 +0200
+@@ -3254,7 +3252,7 @@
  
  
  echocheck "termios"
@@ -10,7 +10,7 @@ diff -urN MPlayer-1.0rc1.orig/configure MPlayer-1.0rc1/configure
    cat > $TMPC <<EOF
  #include <sys/termios.h>
  int main(void) { return 0; }
-@@ -4193,6 +4193,8 @@
+@@ -4184,6 +4182,8 @@
    _def_aa='#define HAVE_AA 1'
    if cygwin ; then
      _ld_aa=`aalib-config --libs | cut -d " " -f 2,5,6`
@@ -19,7 +19,7 @@ diff -urN MPlayer-1.0rc1.orig/configure MPlayer-1.0rc1/configure
    fi
    _vosrc="$_vosrc vo_aa.c"
    _vomodules="aa $_vomodules"
-@@ -4220,7 +4222,7 @@
+@@ -4211,7 +4211,7 @@
  if test "$_caca" = yes ; then
    _def_caca='#define HAVE_CACA 1'
    _inc_extra="$_inc_extra `caca-config --cflags`"
@@ -28,7 +28,7 @@ diff -urN MPlayer-1.0rc1.orig/configure MPlayer-1.0rc1/configure
    _vosrc="$_vosrc vo_caca.c"
    _vomodules="caca $_vomodules"
  else
-@@ -4910,7 +4912,7 @@
+@@ -4875,7 +4875,7 @@
  
  
  echocheck "JACK"
@@ -37,7 +37,7 @@ diff -urN MPlayer-1.0rc1.orig/configure MPlayer-1.0rc1/configure
    _jack=yes
  
  cat > $TMPC << EOF
-@@ -4937,7 +4939,7 @@
+@@ -4902,7 +4902,7 @@
  echores "$_jack"
  
  echocheck "OpenAL"
@@ -46,7 +46,7 @@ diff -urN MPlayer-1.0rc1.orig/configure MPlayer-1.0rc1/configure
    _openal=no
  cat > $TMPC << EOF
  #include <AL/al.h>
-@@ -5398,7 +5400,7 @@
+@@ -5333,7 +5333,7 @@
      _res_comment="freetype support needed"
  fi
  echocheck "fontconfig"
@@ -55,7 +55,7 @@ diff -urN MPlayer-1.0rc1.orig/configure MPlayer-1.0rc1/configure
          cat > $TMPC << EOF
  #include <stdio.h>
  #include <fontconfig/fontconfig.h>
-@@ -5845,7 +5847,7 @@
+@@ -5782,7 +5782,7 @@
  
  
  echocheck "FAAC (AAC encoder) support"
@@ -64,16 +64,16 @@ diff -urN MPlayer-1.0rc1.orig/configure MPlayer-1.0rc1/configure
    cat > $TMPC <<EOF
  #include <inttypes.h> 
  #include <faac.h>
-@@ -5945,7 +5947,7 @@
+@@ -5896,7 +5896,7 @@
  
- if x86 && not qnx; then
  
+ echocheck "Win32 codecs"
 -if test "$_win32" = auto ; then
 +if test "$_win32" != no ; then
-     if test -z "$_win32libdir" ; then
-       for I in "$_libdir/codecs" "$_libdir/win32" /usr/local/lib/codecs /usr/lib/codecs /usr/local/lib/win32 /usr/lib/win32 ; do
-         if test -d "$I" ; then
-@@ -6062,55 +6064,6 @@
+   _win32=no
+   if x86 && not qnx; then
+     test -z "$_win32codecsdir" && _win32codecsdir=$_codecsdir
+@@ -5968,55 +5968,6 @@
  fi
  echores "$_real"
  
@@ -129,7 +129,7 @@ diff -urN MPlayer-1.0rc1.orig/configure MPlayer-1.0rc1/configure
  echocheck "FFmpeg libavutil (static)"
  if test "$_libavutil" = auto ; then
    if test -d libavutil ; then
-@@ -6546,7 +6499,7 @@
+@@ -6452,7 +6403,7 @@
  fi
  
  echocheck "x264"
@@ -138,7 +138,7 @@ diff -urN MPlayer-1.0rc1.orig/configure MPlayer-1.0rc1/configure
    cat > $TMPC << EOF
  #include <inttypes.h>
  #include <x264.h>
-@@ -6581,7 +6534,7 @@
+@@ -6487,7 +6438,7 @@
  
  
  echocheck "nut"
@@ -147,7 +147,7 @@ diff -urN MPlayer-1.0rc1.orig/configure MPlayer-1.0rc1/configure
    cat > $TMPC << EOF
  #include <stdio.h>
  #include <stdlib.h>
-@@ -6863,6 +6816,7 @@
+@@ -6769,6 +6720,7 @@
    _noinputmodules="network $_noinputmodules"
    _def_network='#undef MPLAYER_NETWORK'
    _ftp=no
@@ -155,7 +155,7 @@ diff -urN MPlayer-1.0rc1.orig/configure MPlayer-1.0rc1/configure
  fi
  echores "$_network"
  
-@@ -6876,6 +6830,53 @@
+@@ -6782,6 +6734,53 @@
  fi
  echores "$_ftp"
  
@@ -209,7 +209,7 @@ diff -urN MPlayer-1.0rc1.orig/configure MPlayer-1.0rc1/configure
  echocheck "vstream client"
  if test "$_vstream" = auto ; then
    _vstream=no
-@@ -7327,6 +7328,9 @@
+@@ -7212,6 +7211,9 @@
  if test "$_vidix_internal" = yes || test "$_vidix_external" = yes ; then
    _vidix=yes
    _def_vidix='#define CONFIG_VIDIX 1'
@@ -219,7 +219,7 @@ diff -urN MPlayer-1.0rc1.orig/configure MPlayer-1.0rc1/configure
  else
    _vidix=no
    _def_vidix='#undef CONFIG_VIDIX'
-@@ -7336,7 +7340,7 @@
+@@ -7221,7 +7223,7 @@
    _def_vidix_pfx="#define MP_VIDIX_PFX \"$_libdir\" \"/mplayer/vidix/\" "
  elif test "$_vidix_external" = yes ; then
    _ld_vidix_external="-lvidix"
@@ -228,7 +228,7 @@ diff -urN MPlayer-1.0rc1.orig/configure MPlayer-1.0rc1/configure
  fi
  
  if test "$_vidix" = yes; then
-@@ -8289,6 +8293,7 @@
+@@ -8130,6 +8132,7 @@
  /* enables / disables VIDIX usage */
  $_def_vidix
  $_def_vidix_pfx

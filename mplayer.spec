@@ -5,9 +5,9 @@
 %define subst_o_pre() %{expand:%%{?_enable_%{2}:%{1}%{2},}}
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
-%define prerel rc1
-%define svnrev 20523
-%define ffmpeg_svnrev 6835
+#define prerel rc1
+%define svnrev 20777
+%define ffmpeg_svnrev 6941
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -42,7 +42,7 @@
 %def_enable live
 %def_enable dvdnav
 %def_enable dvdread
-%def_enable mpdvdkit
+%define dvdreadlib ext
 %def_enable cdparanoia
 %def_enable bitmap_font
 %def_enable freetype
@@ -77,7 +77,6 @@
 %def_enable x264
 %def_enable ffmpeg
 %def_enable shared_ffmpeg
-%def_enable fame
 %def_enable faad_ext
 %def_enable faad_int
 %def_disable faad_fixed
@@ -124,6 +123,7 @@
 %def_enable xmga
 %def_enable xv
 %def_enable xvmc
+%define xvmclib XvMCW
 %def_enable vm
 %def_enable xinerama
 %def_enable x11
@@ -274,7 +274,7 @@
 %define Name MPlayer
 Name: %lname
 Version: 1.0
-%define rel 34
+%define rel 35
 %define subrel 1
 %ifdef svnrev
 Release: alt%rel.%svnrev.%subrel
@@ -313,36 +313,34 @@ Source4: standard-1.9.tar.bz2
 Source5: %lname.conf.in.gz
 Source6: mp_help2msg.awk.gz
 Source7: mp_msg2po.awk.gz
-Patch1: %Name-svn-20060710-alt-external_fame.patch.gz
 Patch2: %lname-dvd-ru-svn19389.patch.gz
 Patch3: %Name-1.0pre4-alt-explicit_gif.patch
 Patch4: %lname-svn-r19427-libdha.patch.gz
 Patch5: %lname-svn-r19447-vo_vidix.patch.gz
 Patch6: %lname-svn-r19389-alt-artsc_ldflags.patch.gz
 Patch7: %Name-svn-20060707_dirac-0.5.x.patch.bz2
-Patch10: %lname-svn-r19558-generic-x86_64.patch.gz
-Patch11: %lname-svn-r19595-nls.patch.gz
-Patch12: %lname-uni-svn19558.diff.gz
+Patch10: %lname-svn-r20777-generic-x86_64.patch.gz
+Patch11: %lname-svn-r20777-nls.patch.gz
+Patch12: %lname-uni-svn20777.diff.gz
 Patch13: %Name-svn-20060711-vbe.patch.gz
 Patch14: %Name-1.0pre7try2-xmmslibs_fix.patch
-Patch15: %lname-svn-r19671-pulseaudio.patch.bz2
+Patch15: %lname-svn-r20777-pulseaudio.patch.bz2
 Patch16: %Name-1.0pre8-udev.patch.gz
-Patch17: %lname-svn-r20448-ext_ffmpeg.patch.bz2
+Patch17: %lname-svn-r20777-ext_ffmpeg.patch.bz2
 Patch18: %lname-mwallp.patch.gz
-Patch19: %lname-bmovl-test.patch.gz
+Patch19: %lname-svn-r20777-bmovl-test.patch.gz
 Patch21: %Name-svn-20060607-vf_mcdeint.patch.gz
 Patch22: %lname-svn-r19389-polyp0.8.patch.gz
-Patch26: %lname-1.0rc1-configure.patch.gz
-Patch27: %Name-cvs-20060331-builddocs.patch.gz
+Patch26: %lname-svn-r20777-configure.patch.gz
+Patch27: %lname-svn-r20777-builddocs.patch.gz
 %if_disabled shared_ffmpeg
-Patch30: ffmpeg-svn-r6769-dirac-0.5.x.patch.bz2
-Patch31: ffmpeg-svn-r6713-swscale.patch.gz
+Patch31: ffmpeg-svn-r6769-dirac-0.5.x.patch.bz2
 Patch32: ffmpeg-uni-svn-r6110.patch.gz
 %endif
 
 BuildRequires: %awk pkgconfig libncurses-devel libslang-devel zlib-devel
 BuildRequires: cpp >= 3.3 gcc >= 3.3 gcc-c++ >= 3.3
-%{?svnrev:BuildRequires: docbook-style-dsssl openjade xsltproc}
+%{?svnrev:%{?_with_htmldocs:BuildRequires: docbook-style-xsl xsltproc sgml-common docbook-dtds}}
 
 %{?_enable_lame:BuildRequires: liblame-devel}
 %{?_enable_termcap:BuildRequires: libtinfo-devel}
@@ -355,7 +353,6 @@ BuildRequires: cpp >= 3.3 gcc >= 3.3 gcc-c++ >= 3.3
 %{?_enable_live:BuildRequires: liblive555-devel >= 0.0.0-alt0.2006.05.15}
 %{?_enable_dvdnav:BuildRequires: libdvdnav-devel}
 %{?_enable_dvdread:BuildRequires: libdvdread-devel}
-%{?_enable_mpdvdkit:BuildRequires: linux-libc-headers}
 %{?_enable_cdparanoia:BuildRequires: libcdparanoia-devel}
 %{?_enable_freetype:BuildRequires: libfreetype-devel >= 2.0.9}
 %{?_enable_fontconfig:BuildRequires: fontconfig-devel}
@@ -371,7 +368,6 @@ BuildRequires: cpp >= 3.3 gcc >= 3.3 gcc-c++ >= 3.3
 %{?_enable_xvid:BuildRequires: libxvid-devel}
 %{?_enable_x264:BuildRequires: libx264-devel}
 %{?_enable_shared_ffmpeg:BuildRequires: libffmpeg-devel >= 0.5.0}
-%{?_enable_fame:BuildRequires: libfame-devel}
 %{?_enable_tremor_external:BuildRequires: libtremor-devel}
 %{?_enable_vorbis:BuildRequires: libvorbis-devel}
 %{?_enable_speex:BuildRequires: libspeex-devel}
@@ -423,9 +419,10 @@ BuildRequires: libvidix-devel
 %if_with tools
 BuildRequires: libXmu-devel libXi-devel libXext-devel libX11-devel
 BuildRequires: libglut-devel libmesa-devel libjpeg-devel
+BuildRequires: perl-libwww perl-Math-BigInt
+BuildRequires: python-modules-compiler python-modules-encodings
+BuildRequires: normalize sox termutils vcdimager
 %endif
-
-Autoreq: yes, noperl
 
 %description
 %Name is a movie and animation player that supports a wide range of file
@@ -542,6 +539,7 @@ Font utils for use with %Name.
 Group: Video
 Summary: Movie encoder for Unix.
 Summary(ru_RU.CP1251): Кодировщик фильмов для Unix.
+Provides: MEncoder = %version-%release
 Conflicts: %Name < 1.0-alt28
 
 %description -n mencoder
@@ -891,6 +889,23 @@ Languages support for %Name.
 %endif
 
 
+%if_with tools
+%package tools
+Group: Video
+Summary: %Name/MEncoder tools
+%if_enabled mencoder
+Provides: mencoder-tools = %version-%release
+Requires: mencoder
+%endif
+Requires: %name
+
+%description tools
+Nice scripts and code that makes using %Name and MEncoder easier, for
+example scripts for DVD track encoding in three pass mode or creating
+SVCDs from a movie.
+%endif
+
+
 %prep
 %ifdef svnrev
 %if_enabled shared_ffmpeg
@@ -899,7 +914,7 @@ Languages support for %Name.
 %setup -q -n %lname-%pkgver -a 1
 %if_enabled dirac
 pushd ffmpeg-svn-r%ffmpeg_svnrev
-%patch30 -p1
+%patch31 -p1
 popd
 %endif
 mv ffmpeg-svn-r%ffmpeg_svnrev/lib{av{codec,format,util},postproc} .
@@ -908,7 +923,6 @@ mv ffmpeg-svn-r%ffmpeg_svnrev/lib{av{codec,format,util},postproc} .
 %setup -q -n %Name-%pkgver
 %endif
 
-%patch1 -p1
 %patch2 -p1
 %patch3 -p1
 %patch4 -p1
@@ -928,27 +942,14 @@ mv ffmpeg-svn-r%ffmpeg_svnrev/lib{av{codec,format,util},postproc} .
 %{?_enable_polyp:%{?_disable_old_polyp:%patch22 -p1}}
 %patch26 -p1
 %patch27 -p1
-%if_disabled shared_ffmpeg
-#%%patch31 -p1
-%patch32 -p1
-%endif
+%{?_disable_shared_ffmpeg:%patch32 -p1}
 %{?_enable_polyp:%{?_disable_old_polyp:sed -e 's/\([Pp]\)ulse/\1olyp/g' -e 's/PULSE/POLYP/g' libao2/ao_pulse.c > libao2/ao_polyp.c}}
 
 subst 's/\(ldconfig\)/\#\1/g' libdha/Makefile
 %{?_enable_dvdnav:subst 's|\(\<\)\(dvdnav\)\(\.h\>\)|\1\2/\2\3|' configure}
 %{?odml_chunklen:sed -r -i -e 's/^(#[[:blank:]]*define[[:blank:]]+ODML_CHUNKLEN[[:blank:]]+)0x[[:xdigit:]]+/\1%odml_chunklen/' libmpdemux/muxer_avi.c}
 
-%ifdef svnrev
-subst 's/UNKNOWN/%svnrev/' version.sh
-# iconv pl docs
-pushd DOCS/xml/pl
-for f in $(grep -H -l ' encoding="utf-8"' *.xml); do
-    mv -f $f xml.utf8
-    sed -e '1 s/ encoding="utf-8"/ encoding="iso-8859-2"/' xml.utf8 | iconv -c -f utf-8 -t ISO-8859-2 > $f
-done
-rm -f xml.utf8
-popd
-%endif
+%{?svnrev:subst 's/UNKNOWN/%svnrev/' version.sh}
 
 %if_enabled nls
 install -d -m 0755 po
@@ -1002,7 +1003,11 @@ export CFLAGS="%optflags"
 		%{subst_enable live} \
 		%{subst_enable dvdnav} \
 		%{subst_enable dvdread} \
-		%{subst_enable mpdvdkit} \
+%if %dvdreadlib == int
+		--enable-dvdread-internal \
+%else
+		--disable-dvdread-internal \
+%endif
 		%{subst_enable cdparanoia} \
 		%{subst_enable_to bitmap_font bitmap-font} \
 		%{subst_enable freetype} \
@@ -1029,12 +1034,12 @@ export CFLAGS="%optflags"
 		%{subst_enable libcdio} \
 		%{subst_enable_to lzo liblzo} \
 		%{subst_enable win32} \
-		%{?_enable_win32:--with-win32libdir=%win32_libdir} \
+		%{?_enable_win32:--win32codecsdir=%win32_libdir} \
 		%{subst_enable qtx} \
 		%{subst_enable xanim} \
-		%{?_enable_xanim:--with-xanimlibdir=%xanim_libdir} \
+		%{?_enable_xanim:--xanimcodecsdir=%xanim_libdir} \
 		%{subst_enable real} \
-		%{?_enable_real:--with-reallibdir=%real_libdir} \
+		%{?_enable_real:--realcodecsdir=%real_libdir} \
 		%{subst_enable xvid} \
 		%{subst_enable x264} \
 %if_enabled ffmpeg
@@ -1073,7 +1078,6 @@ export CFLAGS="%optflags"
 		--disable-libpostproc_so \
 		--disable-libswscale_so \
 %endif
-		%{subst_enable_to fame libfame} \
 		%{subst_enable_to tremor_internal tremor-internal} \
 		%{subst_enable_to tremor_low tremor-low} \
 		%{subst_enable_to tremor_external tremor-external} \
@@ -1124,6 +1128,7 @@ export CFLAGS="%optflags"
 	        %{subst_enable xmga} \
 		%{subst_enable xv} \
 		%{subst_enable xvmc} \
+		%{?_enable_xvmc:%{?xvmclib:--with-xvmclib=%xvmclib}} \
 		%{subst_enable vm} \
 		%{subst_enable xinerama} \
 		%{subst_enable x11} \
@@ -1176,11 +1181,7 @@ export CFLAGS="%optflags"
 		%{subst_enable_to dynamic_plugins dynamic-plugins} \
 		--with-extraincdir=%_includedir/vidix:%_includedir/directfb
 
-%ifnarch x86_64
-make
-%else
 %make_build
-%endif
 
 # make conf file
 gzip -dc %SOURCE5 |
@@ -1215,9 +1216,6 @@ cp -fL %_sysconfdir/sgml/catalog ./
 echo 'CATALOG "/usr/share/xml/xml-iso-entities-8879.1986/catalog"' >> ./catalog
 ./configure
 %make_build html-chunked
-#for lang in cs de en es fr hu pl ru; do
-#    make html-chunked-$lang
-#done
 popd
 %endif
 %endif
@@ -1227,7 +1225,11 @@ pushd po
 gawk -f ./mp_help2msg.awk ../help/help_mp-en.h > en.msg
 for h in $(ls ../help/help_mp-*.h | grep -v '..help/help_mp-en.h$'); do
     l=$(basename ${h/help_mp-} .h)
-    gawk -f ./mp_help2msg.awk $h | iconv -c -f $(cat $h.charset) -t UTF-8 | awk -f ./mp_msg2po.awk en.msg > $l.po
+    if [ -f "$h.charset" ]; then
+	gawk -f ./mp_help2msg.awk $h | iconv -c -f $(cat $h.charset) -t UTF-8 | awk -f ./mp_msg2po.awk en.msg > $l.po
+    else
+	gawk -f ./mp_help2msg.awk $h | awk -f ./mp_msg2po.awk en.msg > $l.po
+    fi
     msgfmt -o $l.gmo $l.po
 done
 popd
@@ -1260,6 +1262,13 @@ install -m 0755 TOOLS/subfont-c/encodings/charmap2enc %buildroot%_datadir/%name/
 install -m 0755 TOOLS/subfont-c/subfont %buildroot%_bindir/%{lname}_subfont
 %endif
 
+%if_with tools
+install -m 0755 TOOLS/{3*convert,aconvert,alaw-gen,asfinfo,avi-fix,avisubdump,bios2dump,calcbpp.pl,countquant.pl,cpuinfo,divx2svcd,dump_mp4,encode2mpeglight,mem2dump,mencvcd,midentify,movinfo,mp.pl,mpconsole,mplmult.sh,plotpsnr.pl,png2raw,psnr-video.sh,subedit.pl,subsearch.sh,sws-test,vobshift.py,w32codec_dl.pl,wma2ogg.pl,x2mpsub.sh,GL-test/gltest,mwallp/mwallp} %buildroot/%_bindir/
+%{?_enable_mencoder:install -m 0755 TOOLS/{dvd2divxscript.pl,menc2pass,qepdvcd.sh} %buildroot/%_bindir/}
+install -pD -m 0644 TOOLS/mwallp/README %buildroot%_docdir/%name-tools-%version/README.mwallp
+install -m 0644 TOOLS/README %buildroot%_docdir/%name-tools-%version/
+%endif
+
 %{?_with_soundwrapper:install -pD -m 0755 %SOURCE3 %buildroot%_sysconfdir/bashrc.d/%lname.sh}
 
 # Menus
@@ -1286,7 +1295,7 @@ for l in %{?svnrev:it} zh; do
 done
 for l in cs de en es fr hu pl ru; do
     install -d %buildroot%_docdir/%name-doc-%version/$l
-    install -m 0644 DOCS/HTML/$l/{*.htm%{!?svnrev:l},*.css} %buildroot%_docdir/%name-doc-%version/$l/
+    install -m 0644 DOCS/HTML/$l/{*.html,*.css} %buildroot%_docdir/%name-doc-%version/$l/
 done
 install -pD -m 0644 DOCS/tech/playtree-hun %buildroot%_docdir/%name-doc-%version/hu/tech/playtree
 %endif
@@ -1465,7 +1474,85 @@ unset RPM_PYTHON
 %endif
 
 
+%if_with tools
+%files tools
+%_docdir/%name-tools-%version
+#mplayer
+%_bindir/mencvcd
+%_bindir/midentify
+%_bindir/mp.pl
+%_bindir/mpconsole
+%_bindir/mplmult.sh
+%_bindir/psnr-video.sh
+%_bindir/sws-test
+%_bindir/wma2ogg.pl
+%_bindir/x2mpsub.sh
+%if_enabled mencoder
+#mencoder
+%_bindir/dvd2divxscript.pl
+%_bindir/menc2pass
+%_bindir/qepdvcd.sh
+%endif
+#common
+%_bindir/aconvert
+%_bindir/divx2svcd
+%_bindir/dump_mp4
+%_bindir/encode2mpeglight
+#other
+%_bindir/3*convert
+%_bindir/alaw-gen
+%_bindir/asfinfo
+%_bindir/avi-fix
+%_bindir/avisubdump
+%_bindir/bios2dump
+%_bindir/calcbpp.pl
+%_bindir/countquant.pl
+%_bindir/cpuinfo
+%_bindir/gltest
+%_bindir/mem2dump
+%_bindir/movinfo
+%_bindir/plotpsnr.pl
+%_bindir/png2raw
+%_bindir/subedit.pl
+%_bindir/subsearch.sh
+%_bindir/vobshift.py
+%_bindir/w32codec_dl.pl
+%_bindir/mwallp
+%endif
+
+
 %changelog
+* Thu Nov 09 2006 Led <led@altlinux.ru> 1.0-alt35.20777.1
+- new SVN snapshot (revision 20777)
+- removed %lname-1.0rc1-mp3lib-amd.patch (fixed in upstream)
+- removed %Name-svn-20060710-alt-external_fame.patch (removed libfame
+  support in upstream)
+- updated %lname-svn-r20777-generic-x86_64.patch
+- updated %lname-svn-r20777-nls.patch
+- updated %lname-uni-svn20777.diff
+- updated %lname-svn-r20777-pulseaudio.patch
+- updated %lname-svn-r20777-bmovl-test.patch
+- updated %lname-svn-r20777-configure.patch
+- fixed %lname-svn-r20777-builddocs.patch
+- cleaned up spec
+
+* Tue Nov 07 2006 Led <led@altlinux.ru> 1.0-alt35
+- build docs with xsltproc instead of openjade
+  + updated %lname-svn-r20544-builddocs.patch
+  + fixed BuildRequires
+- added %name-tools package
+- fixed %lname-1.0rc1-ext_ffmpeg.patch
+
+* Tue Oct 31 2006 Led <led@altlinux.ru> 1.0-alt34
+- fixed spec
+- updated %lname-1.0rc1-ext_ffmpeg.patch
+- added --enable-libswscale[_so] configure options
+- added %lname-mwallp.patch
+- added %lname-bmovl-test.patch
+- fixed mp_msg2po.awk
+- updated %lname-1.0rc1-configure.patch (fixed #4108)
+- added %lname-1.0rc1-mp3lib-amd.patch (disabled broken asm-code)
+
 * Mon Oct 30 2006 Led <led@altlinux.ru> 1.0-alt34.20523.1
 - new SVN snapshot (revision 20523)
 - fixed spec

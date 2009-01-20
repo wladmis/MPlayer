@@ -1,0 +1,51 @@
+diff -urN mplayer-svn-r20777.orig/DOCS/xml/configure mplayer-svn-r20777/DOCS/xml/configure
+--- mplayer-svn-r20777.orig/DOCS/xml/configure	2006-11-08 14:49:39 +0200
++++ mplayer-svn-r20777/DOCS/xml/configure	2006-11-09 03:34:29 +0200
+@@ -8,6 +8,7 @@
+ 
+ echo "Searching for XML catalogs..."
+ for _try_catalog in \
++  `pwd`/catalog \
+   /etc/sgml/catalog \
+   /usr/share/xml/docbook/*/catalog.xml \
+   /usr/share/sgml/docbook/xml-dtd-4.1.2/xmlcatalog \
+@@ -39,6 +40,7 @@
+ echo "Searching for stylesheets..."
+ echo "Searching for html/chunk.xsl..."
+ for _try_chunk_xsl in \
++  /usr/share/xml/docbook/xsl-stylesheets/html/chunk.xsl \
+   /usr/share/sgml/docbook/stylesheet/xsl/nwalsh/html/chunk.xsl \
+   /usr/share/sgml/docbook/yelp/docbook/html/chunk.xsl \
+   /usr/local/share/sgml/docbook/stylesheet/xsl/nwalsh/html/chunk.xsl \
+@@ -66,6 +68,7 @@
+ 
+ echo "Searching for html/docbook.xsl..."
+ for _try_docbook_xsl in \
++  /usr/share/xml/docbook/xsl-stylesheets/html/docbook.xsl \
+   /usr/share/sgml/docbook/stylesheet/xsl/nwalsh/html/docbook.xsl \
+   /usr/share/sgml/docbook/yelp/docbook/html/docbook.xsl \
+   /usr/local/share/sgml/docbook/stylesheet/xsl/nwalsh/html/docbook.xsl \
+@@ -122,6 +125,7 @@
+ 
+ echo "Searching for DTD..."
+ for _try_dtd in \
++  /usr/share/xml/docbook/dtd/*/docbookx.dtd \
+   /usr/share/xml/docbook/*/docbookx.dtd \
+   /usr/share/sgml/docbook/dtd/xml/4.1.2/docbookx.dtd \
+   /usr/share/docbook-xml42/docbookx.dtd \
+@@ -277,6 +281,7 @@
+     echo "I will try to use OpenJade or Jade (using '$_jade')."
+     echo "They aren't (currently) fully supported, however."
+     for _try_docbook_dsl in \
++      /usr/share/sgml/docbook/dsssl-stylesheets/html/docbook.dsl \
+       /usr/share/sgml/docbook/stylesheet/dsssl/modular/html/docbook.dsl \
+       /usr/local/share/sgml/docbook/stylesheet/dsssl/modular/html/docbook.dsl
+     do
+@@ -287,6 +292,7 @@
+       fi
+     done
+     for _try_xml_dcl in \
++      /usr/share/sgml/xml.dcl \
+       /usr/share/sgml/declaration/xml.dcl \
+       /usr/local/share/sgml/declaration/xml.dcl
+     do

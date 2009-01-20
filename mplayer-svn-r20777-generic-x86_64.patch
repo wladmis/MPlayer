@@ -1,0 +1,12 @@
+diff -urN mplayer-svn-r20777.orig/configure mplayer-svn-r20777/configure
+--- mplayer-svn-r20777.orig/configure	2006-11-08 14:49:41 +0200
++++ mplayer-svn-r20777/configure	2006-11-09 02:18:06 +0200
+@@ -1088,8 +1088,6 @@
+   x86_64|amd64)
+     _def_arch='#define ARCH_X86_64 1'
+     _target_arch='TARGET_ARCH_X86_64 = yes'
+-    _def_arch_x86="#define ARCH_X86 1"
+-    _target_arch_x86="TARGET_ARCH_X86 = yes"
+     iproc='x86_64'
+ 
+     # gcc >= 3.4.0  doesn't support -mcpu, we have to use -mtune instead

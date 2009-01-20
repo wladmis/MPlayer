@@ -1,15 +1,15 @@
-diff -urN mplayer-svn-r19595.orig/configure mplayer-svn-r19595/configure
---- mplayer-svn-r19595.orig/configure	2006-08-29 12:45:14 +0300
-+++ mplayer-svn-r19595/configure	2006-09-05 01:19:05 +0300
-@@ -208,6 +208,7 @@
-   --enable-linux-devfs   set default devices to devfs ones [disable]
+diff -urN mplayer-svn-r20777.orig/configure mplayer-svn-r20777/configure
+--- mplayer-svn-r20777.orig/configure	2006-11-08 14:49:41 +0200
++++ mplayer-svn-r20777/configure	2006-11-09 01:25:36 +0200
+@@ -218,6 +218,7 @@
+   --enable-linux-devfs   set default devices to devfs [disable]
    --enable-termcap       use termcap database for key codes [autodetect]
    --enable-termios       use termios database for key codes [autodetect]
 +  --enable-nls           use Native Language Support [disable]
-   --disable-iconv        do not use iconv(3) function [autodetect]
+   --disable-iconv        disable iconv for encoding conversion [autodetect]
    --disable-langinfo     do not use langinfo [autodetect]
    --enable-lirc          enable LIRC (remote control) support [autodetect]
-@@ -1600,6 +1601,7 @@
+@@ -1591,6 +1592,7 @@
  _dxr2=auto
  _dxr3=auto
  _ivtv=auto
@@ -17,7 +17,7 @@ diff -urN mplayer-svn-r19595.orig/configure mplayer-svn-r19595/configure
  _iconv=auto
  _langinfo=auto
  _rtc=auto
-@@ -1797,6 +1799,8 @@
+@@ -1790,6 +1792,8 @@
    --disable-dxr3)	_dxr3=no	;;
    --enable-ivtv)        _ivtv=yes       ;;
    --disable-ivtv)       _ivtv=no        ;;
@@ -26,7 +26,7 @@ diff -urN mplayer-svn-r19595.orig/configure mplayer-svn-r19595/configure
    --enable-iconv)	_iconv=yes	;;
    --disable-iconv)	_iconv=no	;;
    --enable-langinfo)	_langinfo=yes	;;
-@@ -2994,6 +2998,14 @@
+@@ -3025,6 +3029,14 @@
  fi
  echores "$_rpath"
  
@@ -41,7 +41,7 @@ diff -urN mplayer-svn-r19595.orig/configure mplayer-svn-r19595/configure
  echocheck "iconv"
  if test "$_iconv" = auto ; then
    _iconv_tmp='#include <iconv.h>'
-@@ -7678,6 +7690,10 @@
+@@ -7657,6 +7669,10 @@
     try to recompile MPlayer with this option disabled! */
  $_def_select
  
@@ -52,9 +52,9 @@ diff -urN mplayer-svn-r19595.orig/configure mplayer-svn-r19595/configure
  /* define this to use iconv(3) function to codepage conversions */
  $_def_iconv
  
-diff -urN mplayer-svn-r19595.orig/mp_msg.c mplayer-svn-r19595/mp_msg.c
---- mplayer-svn-r19595.orig/mp_msg.c	2006-08-28 14:40:34 +0300
-+++ mplayer-svn-r19595/mp_msg.c	2006-09-05 01:19:37 +0300
+diff -urN mplayer-svn-r20777.orig/mp_msg.c mplayer-svn-r20777/mp_msg.c
+--- mplayer-svn-r20777.orig/mp_msg.c	2006-08-28 14:40:34 +0300
++++ mplayer-svn-r20777/mp_msg.c	2006-11-09 01:24:19 +0200
 @@ -8,6 +8,13 @@
  
  #include "config.h"
