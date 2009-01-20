@@ -65,6 +65,12 @@ fbmodeconfig = /etc/fb.modes
 # Turns off xscreensaver at startup and turns it on again on exit
 stop-xscreensaver=yes
 
+# Turns off joystick support
+nojoystick=yes
+
+# Turns off LIRC support
+nolirc=yes
+
 
 ##################
 # audio settings #

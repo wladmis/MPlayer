@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 22138
-%define ffmpeg_svnrev 7781
+%define svnrev 22173
+%define ffmpeg_svnrev 7881
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -89,7 +89,7 @@
 %def_enable speex
 %def_enable theora
 %def_enable faac
-%def_disable ladspa
+%def_enable ladspa
 %def_enable libdv
 %def_enable mad
 %def_disable toolame
@@ -188,7 +188,7 @@
 %def_without soundwrapper
 %def_with htmldocs
 %def_with tools
-%define default_vo %{subst_o xmga}%{subst_o xv}%{subst_o sdl}%{subst_o gl2}%{subst_o gl}%{subst_o x11}%{subst_o_pre x vidix}%{subst_o mga}%{subst_o dfbmga}%{subst_o tdfxfb}%{subst_o 3dfx}%{subst_o s3fb}%{subst_o_pre c vidix}%{subst_o_post fbdev 2}%{subst_o vesa}%{subst_o caca}%{subst_o aa}null
+%define default_vo %{subst_o xv}%{subst_o sdl}%{subst_o gl2}%{subst_o gl}%{subst_o x11}%{subst_o_pre x vidix}%{subst_o mga}%{subst_o dfbmga}%{subst_o tdfxfb}%{subst_o 3dfx}%{subst_o s3fb}%{subst_o_pre c vidix}%{subst_o_post fbdev 2}%{subst_o vesa}%{subst_o caca}%{subst_o aa}null
 %define default_ao %{subst_o alsa}%{subst_o oss}%{subst_o openal}%{subst_o sdl}%{subst_o pulse}%{subst_o polyp}%{subst_o nas}null
 #define odml_chunklen 0x40000000
 
@@ -316,7 +316,7 @@ Source0: %Name-%version%prerel.tar.bz2
 %{?ffmpeg_svnrev:%{?_disable_shared_ffmpeg:Source1: ffmpeg-svn-r%ffmpeg_svnrev.tar.bz2}}
 Source3: %lname.sh
 Source4: standard-1.9.tar.bz2
-Source5: %lname.conf.in.gz
+Source5: %lname.conf.in
 Source6: mp_help2msg.awk.gz
 Source7: mp_msg2po.awk.gz
 Patch1: %lname-svn-r22092-dirac.patch
@@ -331,7 +331,7 @@ Patch12: %lname-uni-svn21402.diff.gz
 Patch13: %Name-svn-20060711-vbe.patch.gz
 Patch14: %lname-svn-r21402-gui_nls.patch.bz2
 Patch15: %lname-svn-r21128-pulseaudio.patch.gz
-Patch17: %lname-svn-r21995-ext_ffmpeg.patch
+Patch17: %lname-svn-r22173-ext_ffmpeg.patch
 Patch18: %lname-mwallp.patch.gz
 Patch22: %lname-svn-r19389-polyp0.8.patch.gz
 Patch26: %lname-svn-r22092-configure.patch
@@ -372,13 +372,14 @@ BuildRequires: cpp >= 3.3 gcc >= 3.3 gcc-c++ >= 3.3
 %{?_enable_lzo:BuildRequires: liblzo-devel}
 %{?_enable_xvid:BuildRequires: libxvid-devel}
 %{?_enable_x264:BuildRequires: libx264-devel}
-%{?_enable_shared_ffmpeg:BuildRequires: libffmpeg-devel >= 0.5.0-alt1.svn7593}
+%{?_enable_shared_ffmpeg:BuildRequires: libffmpeg-devel >= 0.5.0-alt1.svn7822}
 %{?_enable_tremor_external:BuildRequires: libtremor-devel}
 %{?_enable_vorbis:BuildRequires: libvorbis-devel}
 %{?_enable_speex:BuildRequires: libspeex-devel}
 %{?_enable_theora:BuildRequires: libtheora-devel}
 %{?_enable_faad_ext:BuildRequires: libfaad-devel}
 %{?_enable_faac:BuildRequires: libfaac-devel}
+%{?_enable_ladspa:BuildRequires: ladspa_sdk}
 %{?_enable_libdv:BuildRequires: libdv-devel}
 %{?_enable_mad:BuildRequires: libmad-devel}
 %{?_enable_xmms:BuildRequires: libxmms-devel}
@@ -1186,11 +1187,11 @@ export CFLAGS="%optflags"
 %make_build
 
 # make conf file
-gzip -dc %SOURCE5 |
 sed -e 's/^@VO@/vo = %default_vo/' \
     -e 's/^@AO@/ao = %default_ao/' \
     -e 's|@CONF_FILE@|%_sysconfdir/%name/%lname.conf|g' \
     -e 's|@SKINS_DIR@|%_datadir/%name/skins|g' \
+    %SOURCE5 \
     > etc/%lname.conf
 %if_enabled fontconfig
 echo "fontconfig = yes" >> etc/%lname.conf
@@ -1531,6 +1532,12 @@ unset RPM_PYTHON
 
 
 %changelog
+* Thu Feb 08 2007 Led <led@altlinux.ru> 1.0-alt35.22173.1
+- new SVN snapshot (revision 22173)
+- turned off joystick and LIRC support by default in %_sysconfdir/%lname.conf
+- enabled LADSPA
+- updated %lname-svn-r22173-ext_ffmpeg.patch
+
 * Mon Feb 05 2007 Led <led@altlinux.ru> 1.0-alt35.22138.1
 - new SVN snapshot (revision 22138)
 - fixed %lname.conf (#10770)
