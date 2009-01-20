@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc2
-%define svnrev 25895
-%define ffmpeg_svnrev 11643
+%define svnrev 25957
+%define ffmpeg_svnrev 11872
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -80,8 +80,8 @@
 %def_enable x264
 %def_enable ffmpeg
 %def_enable shared_ffmpeg
-%def_enable faad_ext
-%def_disable faad_int
+%def_disable faad_ext
+%def_enable faad_int
 %def_disable faad_fixed
 %def_disable tremor_internal
 %def_disable tremor_low
@@ -321,7 +321,7 @@ Source5: %lname.conf.in
 Source6: mp_help2msg.awk.gz
 Source7: mp_msg2po.awk.gz
 Patch0: %lname-svn-r22221-subreader.patch
-Patch1: %lname-svn-r25844-dirac-0.9.0.patch
+Patch1: %lname-svn-r25957-dirac-0.9.1.patch
 Patch2: %lname-dvd-ru-svn19389.patch.gz
 Patch3: %Name-1.0pre4-alt-explicit_gif.patch
 Patch4: %lname-svn-r23547-gui.patch
@@ -337,7 +337,7 @@ Patch16: %lname-svn-r25826-configure.patch
 Patch17: %lname-svn-r25895-ext_ffmpeg.patch
 Patch27: %lname-svn-r22518-builddocs.patch
 %if_disabled shared_ffmpeg
-%{?_enable_dirac:Patch31: ffmpeg-svn-r11604-dirac-0.9.x.patch}
+%{?_enable_dirac:Patch31: ffmpeg-svn-r11872-dirac-0.9.x.patch}
 Patch32: ffmpeg-uni-svn-r10644.patch
 Patch33: ffmpeg-svn-r10644-amr.patch
 %endif
@@ -372,7 +372,7 @@ BuildRequires: cpp >= 3.3 gcc >= 3.3 gcc-c++ >= 3.3
 %{?_enable_lzo:BuildRequires: liblzo2-devel}
 %{?_enable_xvid:BuildRequires: libxvid-devel}
 %{?_enable_x264:BuildRequires: libx264-devel}
-%{?_enable_shared_ffmpeg:BuildRequires: libffmpeg-devel >= 1:0.5.0-alt0.11305.1}
+%{?_enable_shared_ffmpeg:BuildRequires: libffmpeg-devel >= 0:11305}
 %{?_enable_tremor_external:BuildRequires: libtremor-devel}
 %{?_enable_vorbis:BuildRequires: libvorbis-devel}
 %{?_enable_speex:BuildRequires: libspeex-devel}
@@ -1234,9 +1234,14 @@ done
 
 
 %changelog
-* Mon Jan 28 2008 Led <led@altlinux.ru> 1.0-alt35.25895.1
-- new SVN snapshot (revision 25895)
-- updated %lname-svn-r25895-ext_ffmpeg.patch
+* Wed Feb 06 2008 Led <led@altlinux.ru> 1.0-alt35.25957.1
+- new SVN snapshot (revision 25957):
+  + stack overflow in demuxer_audio.c fixed
+  + buffer overflow in demuxer_mov.c fixed
+- updated:
+  + %lname-svn-r25895-ext_ffmpeg.patch
+  + %lname-svn-r25957-dirac-0.9.1.patch
+  + ffmpeg-svn-r11872-dirac-0.9.x.patch
 
 * Sun Jan 27 2008 Led <led@altlinux.ru> 1.0-alt35.25873.2
 - build with internal FAAD
@@ -1251,7 +1256,9 @@ done
 - updated %lname-svn-r25844-dirac-0.9.0.patch
 
 * Mon Jan 21 2008 Led <led@altlinux.ru> 1.0-alt35.25826.1
-- new SVN snapshot (revision 25826)
+- new SVN snapshot (revision 25826):
+  + buffer overflow in url.c fixed
+  + buffer overflow in stream_cddb.c fixed
 - updated:
   + %lname-svn-r25826-dirac-0.8.x.patch
   + %lname-svn-r25826-configure.patch

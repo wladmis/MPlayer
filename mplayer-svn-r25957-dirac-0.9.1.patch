@@ -1,6 +1,6 @@
-diff -urN mplayer-svn-r25844.orig/configure mplayer-svn-r25844/configure
---- mplayer-svn-r25844.orig/configure	2008-01-24 02:33:27 +0200
-+++ mplayer-svn-r25844/configure	2008-01-24 02:48:14 +0200
+diff -urN mplayer-svn-r25957.orig/configure mplayer-svn-r25957/configure
+--- mplayer-svn-r25957.orig/configure	2008-02-06 00:33:19 +0200
++++ mplayer-svn-r25957/configure	2008-02-06 00:57:06 +0200
 @@ -307,6 +307,7 @@
    --disable-faad-internal   disable internal FAAD2 (AAC) [autodetect]
    --enable-faad-fixed       enable fixed-point mode in internal FAAD2 [disabled]
@@ -9,7 +9,7 @@ diff -urN mplayer-svn-r25844.orig/configure mplayer-svn-r25844/configure
    --disable-ladspa          disable LADSPA plugin support [autodetect]
    --disable-libdv           disable libdv 0.9.5 en/decoding support [autodetect]
    --disable-mad             disable libmad (MPEG audio) support [autodetect]
-@@ -573,6 +574,7 @@
+@@ -572,6 +573,7 @@
  _faad_external=auto
  _faad_fixed=no
  _faac=auto
@@ -17,7 +17,7 @@ diff -urN mplayer-svn-r25844.orig/configure mplayer-svn-r25844/configure
  _ladspa=auto
  _xmms=no
  _dvdnav=auto
-@@ -931,6 +933,8 @@
+@@ -930,6 +932,8 @@
    --disable-faad-fixed)	_faad_fixed=no	;;
    --enable-faac)	_faac=yes	;;
    --disable-faac)	_faac=no	;;
@@ -26,7 +26,7 @@ diff -urN mplayer-svn-r25844.orig/configure mplayer-svn-r25844/configure
    --enable-ladspa)	_ladspa=yes	;;
    --disable-ladspa)	_ladspa=no		;;
    --enable-xmms)	_xmms=yes	;;
-@@ -6075,6 +6079,58 @@
+@@ -6076,6 +6080,58 @@
  echores "$_faac (in libavcodec: $_lavc_faac)"
  
  
@@ -111,9 +111,9 @@ diff -urN mplayer-svn-r25844.orig/configure mplayer-svn-r25844/configure
  /* enable LADSPA plugin support */
  $_def_ladspa
  
-diff -urN mplayer-svn-r25844.orig/etc/codecs.conf mplayer-svn-r25844/etc/codecs.conf
---- mplayer-svn-r25844.orig/etc/codecs.conf	2008-01-21 04:18:30 +0200
-+++ mplayer-svn-r25844/etc/codecs.conf	2008-01-24 02:48:14 +0200
+diff -urN mplayer-svn-r25957.orig/etc/codecs.conf mplayer-svn-r25957/etc/codecs.conf
+--- mplayer-svn-r25957.orig/etc/codecs.conf	2008-02-06 00:33:19 +0200
++++ mplayer-svn-r25957/etc/codecs.conf	2008-02-06 00:57:06 +0200
 @@ -328,6 +328,16 @@
    dll libtheora
    out YV12
@@ -146,9 +146,9 @@ diff -urN mplayer-svn-r25844.orig/etc/codecs.conf mplayer-svn-r25844/etc/codecs.
  videocodec ffasv1
    info "FFmpeg ASUS V1"
    status working
-diff -urN mplayer-svn-r25844.orig/libmpcodecs/Makefile mplayer-svn-r25844/libmpcodecs/Makefile
---- mplayer-svn-r25844.orig/libmpcodecs/Makefile	2007-10-11 00:13:38 +0300
-+++ mplayer-svn-r25844/libmpcodecs/Makefile	2008-01-24 02:48:14 +0200
+diff -urN mplayer-svn-r25957.orig/libmpcodecs/Makefile mplayer-svn-r25957/libmpcodecs/Makefile
+--- mplayer-svn-r25957.orig/libmpcodecs/Makefile	2007-10-11 00:13:38 +0300
++++ mplayer-svn-r25957/libmpcodecs/Makefile	2008-02-06 00:57:06 +0200
 @@ -127,6 +127,7 @@
  SRCS_COMMON-$(XANIM_CODECS)          += vd_xanim.c
  SRCS_COMMON-$(XVID4)                 += vd_xvid4.c
@@ -157,30 +157,30 @@ diff -urN mplayer-svn-r25844.orig/libmpcodecs/Makefile mplayer-svn-r25844/libmpc
  
  
  SRCS_MENCODER = ae.c \
-diff -urN mplayer-svn-r25844.orig/libmpcodecs/vd.c mplayer-svn-r25844/libmpcodecs/vd.c
---- mplayer-svn-r25844.orig/libmpcodecs/vd.c	2008-01-11 02:30:34 +0200
-+++ mplayer-svn-r25844/libmpcodecs/vd.c	2008-01-24 02:48:14 +0200
+diff -urN mplayer-svn-r25957.orig/libmpcodecs/vd.c mplayer-svn-r25957/libmpcodecs/vd.c
+--- mplayer-svn-r25957.orig/libmpcodecs/vd.c	2008-02-06 00:33:17 +0200
++++ mplayer-svn-r25957/libmpcodecs/vd.c	2008-02-06 00:58:49 +0200
 @@ -48,6 +48,7 @@
  extern vd_functions_t mpcodecs_vd_libdv;
  extern vd_functions_t mpcodecs_vd_lzo;
  extern vd_functions_t mpcodecs_vd_qtvideo;
 +extern vd_functions_t mpcodecs_vd_dirac;
  
- vd_functions_t* mpcodecs_vd_drivers[] = {
-         &mpcodecs_vd_null,
-@@ -97,6 +98,9 @@
+ /* Please do not add any new decoders here. If you want to implement a new
+  * decoder, add it to libavcodec, except for wrappers around external
+@@ -101,6 +102,9 @@
  #if defined(USE_QTX_CODECS) || defined(MACOSX)
  	&mpcodecs_vd_qtvideo,
  #endif
 +#ifdef HAVE_DIRAC 
 +	&mpcodecs_vd_dirac,
 +#endif
- 	NULL
- };
- 
-diff -urN mplayer-svn-r25844.orig/libmpcodecs/vd_dirac.c mplayer-svn-r25844/libmpcodecs/vd_dirac.c
---- mplayer-svn-r25844.orig/libmpcodecs/vd_dirac.c	1970-01-01 03:00:00 +0300
-+++ mplayer-svn-r25844/libmpcodecs/vd_dirac.c	2008-01-24 02:44:26 +0200
+     /* Please do not add any new decoders here. If you want to implement a new
+      * decoder, add it to libavcodec, except for wrappers around external
+      * libraries and decoders requiring binary support. */
+diff -urN mplayer-svn-r25957.orig/libmpcodecs/vd_dirac.c mplayer-svn-r25957/libmpcodecs/vd_dirac.c
+--- mplayer-svn-r25957.orig/libmpcodecs/vd_dirac.c	1970-01-01 03:00:00 +0300
++++ mplayer-svn-r25957/libmpcodecs/vd_dirac.c	2008-02-06 00:57:06 +0200
 @@ -0,0 +1,176 @@
 +#include <stdio.h>
 +#include <stdlib.h>
@@ -358,9 +358,9 @@ diff -urN mplayer-svn-r25844.orig/libmpcodecs/vd_dirac.c mplayer-svn-r25844/libm
 +}
 +
 +#endif
-diff -urN mplayer-svn-r25844.orig/libmpdemux/demux_dirac.c mplayer-svn-r25844/libmpdemux/demux_dirac.c
---- mplayer-svn-r25844.orig/libmpdemux/demux_dirac.c	1970-01-01 03:00:00 +0300
-+++ mplayer-svn-r25844/libmpdemux/demux_dirac.c	2008-01-24 02:48:14 +0200
+diff -urN mplayer-svn-r25957.orig/libmpdemux/demux_dirac.c mplayer-svn-r25957/libmpdemux/demux_dirac.c
+--- mplayer-svn-r25957.orig/libmpdemux/demux_dirac.c	1970-01-01 03:00:00 +0300
++++ mplayer-svn-r25957/libmpdemux/demux_dirac.c	2008-02-06 01:00:11 +0200
 @@ -0,0 +1,170 @@
 +#include <stdio.h>
 +#include <stdlib.h>
@@ -524,7 +524,7 @@ diff -urN mplayer-svn-r25844.orig/libmpdemux/demux_dirac.c mplayer-svn-r25844/li
 +	"",
 +	DEMUXER_TYPE_DIRAC,
 +	0,
-+	dirac_check_file,
++	NULL,
 +	demux_dirac_fill_buffer,
 +	demux_open_dirac,
 +	demux_close_dirac,
@@ -532,30 +532,30 @@ diff -urN mplayer-svn-r25844.orig/libmpdemux/demux_dirac.c mplayer-svn-r25844/li
 +	NULL
 +};
 +#endif
-diff -urN mplayer-svn-r25844.orig/libmpdemux/demuxer.c mplayer-svn-r25844/libmpdemux/demuxer.c
---- mplayer-svn-r25844.orig/libmpdemux/demuxer.c	2008-01-21 04:18:29 +0200
-+++ mplayer-svn-r25844/libmpdemux/demuxer.c	2008-01-24 02:48:14 +0200
+diff -urN mplayer-svn-r25957.orig/libmpdemux/demuxer.c mplayer-svn-r25957/libmpdemux/demuxer.c
+--- mplayer-svn-r25957.orig/libmpdemux/demuxer.c	2008-02-06 00:33:19 +0200
++++ mplayer-svn-r25957/libmpdemux/demuxer.c	2008-02-06 00:58:22 +0200
 @@ -73,6 +73,7 @@
  extern const demuxer_desc_t demuxer_desc_lavf_preferred;
  extern const demuxer_desc_t demuxer_desc_aac;
  extern const demuxer_desc_t demuxer_desc_nut;
 +extern demuxer_desc_t demuxer_desc_dirac;
  
- const demuxer_desc_t* const demuxer_list[] = {
-   &demuxer_desc_rawaudio,
-@@ -141,6 +142,9 @@
+ /* Please do not add any new demuxers here. If you want to implement a new
+  * demuxer, add it to libavformat, except for wrappers around external
+@@ -145,6 +146,9 @@
  #ifdef HAVE_XMMS
    &demuxer_desc_xmms,
  #endif
 +#ifdef HAVE_DIRAC
 +  &demuxer_desc_dirac,
 +#endif
-   NULL
- };
- 
-diff -urN mplayer-svn-r25844.orig/libmpdemux/demuxer.h mplayer-svn-r25844/libmpdemux/demuxer.h
---- mplayer-svn-r25844.orig/libmpdemux/demuxer.h	2008-01-21 04:18:29 +0200
-+++ mplayer-svn-r25844/libmpdemux/demuxer.h	2008-01-24 02:48:14 +0200
+   /* Please do not add any new demuxers here. If you want to implement a new
+    * demuxer, add it to libavformat, except for wrappers around external
+    * libraries and demuxers requiring binary support. */
+diff -urN mplayer-svn-r25957.orig/libmpdemux/demuxer.h mplayer-svn-r25957/libmpdemux/demuxer.h
+--- mplayer-svn-r25957.orig/libmpdemux/demuxer.h	2008-02-06 00:33:19 +0200
++++ mplayer-svn-r25957/libmpdemux/demuxer.h	2008-02-06 00:57:06 +0200
 @@ -57,11 +57,12 @@
  #define DEMUXER_TYPE_NUT 43
  #define DEMUXER_TYPE_LAVF_PREFERRED 44
@@ -570,9 +570,20 @@ diff -urN mplayer-svn-r25844.orig/libmpdemux/demuxer.h mplayer-svn-r25844/libmpd
  
  #define DEMUXER_TYPE_DEMUXERS (1<<16)
  // A virtual demuxer type for the network code
-diff -urN mplayer-svn-r25844.orig/libmpdemux/Makefile mplayer-svn-r25844/libmpdemux/Makefile
---- mplayer-svn-r25844.orig/libmpdemux/Makefile	2007-09-21 05:04:04 +0300
-+++ mplayer-svn-r25844/libmpdemux/Makefile	2008-01-24 02:48:14 +0200
+diff -urN mplayer-svn-r25957.orig/libmpdemux/extension.c mplayer-svn-r25957/libmpdemux/extension.c
+--- mplayer-svn-r25957.orig/libmpdemux/extension.c	2007-09-15 00:53:49 +0300
++++ mplayer-svn-r25957/libmpdemux/extension.c	2008-02-06 01:00:40 +0200
+@@ -62,6 +62,7 @@
+         { "ape", DEMUXER_TYPE_LAVF },
+         { "apl", DEMUXER_TYPE_LAVF },
+         { "mac", DEMUXER_TYPE_LAVF },
++	{ "drc", DEMUXER_TYPE_DIRAC },
+ 
+ // At least the following are hacks against broken autodetection
+ // that should not be there
+diff -urN mplayer-svn-r25957.orig/libmpdemux/Makefile mplayer-svn-r25957/libmpdemux/Makefile
+--- mplayer-svn-r25957.orig/libmpdemux/Makefile	2007-09-21 05:04:04 +0300
++++ mplayer-svn-r25957/libmpdemux/Makefile	2008-02-06 00:57:06 +0200
 @@ -55,6 +55,7 @@
  SRCS_COMMON-$(STREAMING_LIVE555)       += demux_rtp.cpp demux_rtp_codec.cpp
  SRCS_COMMON-$(WIN32DLL)                += demux_avs.c
@@ -581,10 +592,10 @@ diff -urN mplayer-svn-r25844.orig/libmpdemux/Makefile mplayer-svn-r25844/libmpde
  
  SRCS_MENCODER = muxer.c \
                  muxer_avi.c \
-diff -urN mplayer-svn-r25844.orig/libmpdemux/parse_dirac.c mplayer-svn-r25844/libmpdemux/parse_dirac.c
---- mplayer-svn-r25844.orig/libmpdemux/parse_dirac.c	1970-01-01 03:00:00 +0300
-+++ mplayer-svn-r25844/libmpdemux/parse_dirac.c	2008-01-24 02:48:14 +0200
-@@ -0,0 +1,154 @@
+diff -urN mplayer-svn-r25957.orig/libmpdemux/parse_dirac.c mplayer-svn-r25957/libmpdemux/parse_dirac.c
+--- mplayer-svn-r25957.orig/libmpdemux/parse_dirac.c	1970-01-01 03:00:00 +0300
++++ mplayer-svn-r25957/libmpdemux/parse_dirac.c	2008-02-06 01:03:10 +0200
+@@ -0,0 +1,162 @@
 +#include <stdio.h>
 +#include <stdlib.h>
 +#include <unistd.h>
@@ -635,15 +646,23 @@ diff -urN mplayer-svn-r25844.orig/libmpdemux/parse_dirac.c mplayer-svn-r25844/li
 +	return dirac_videobuf_code[4];
 +}
 +
-+// Access unit header = 0x00
-+// Intra_Ref start = 0x0C
-+// Intra_NonRef start = 0x08
-+// Inter_Ref_1Ref start = 0x0D
-+// Inter_Ref_2Ref start = 0x0E
-+// Inter_NonRef_1Ref start = 0x09
-+// Inter_NonRef_2Ref start = 0x0A
-+// End of sequence = 0x10
-+#define FRAME_START(c) ((c) == 0x00 || (c) == 0x0C || (c) == 0x08 || (c) == 0x0D || (c) == 0x0E || (c) == 0x09 || (c) == 0x0A || (c) == 0x10)
++/*
++* Access unit header = 0x00
++* End of sequence    = 0x10
++* Auxiliary data     = 0x20
++* Padding data       = 0x30
++* Intra_Ref start    = 0x0C (using ac)
++* Intra_NonRef start = 0x08 (using ac)
++* Intra_Ref start    = 0x4C (not using ac)
++* Intra_NonRef start = 0x48 (not using ac)
++* Intra_Ref start    = 0xCC (low delay syntax)
++* Intra_NonRef start = 0xC8 (low delay syntax)
++* Inter_Ref_1Ref start = 0x0D
++* Inter_Ref_2Ref start = 0x0E
++* Inter_NonRef_1Ref start = 0x09
++* Inter_NonRef_2Ref start = 0x0A
++*/
++#define FRAME_START(c) (((c) == 0x00) || ((c) == 0x10) || (((c)&0xF8) == 0x20) || ((c) == 0x30) || (((c)&0x08) == 0x08))
 +
 +int dirac_read_video_frame (demux_stream_t *ds, unsigned char** start)
 +{
@@ -739,9 +758,9 @@ diff -urN mplayer-svn-r25844.orig/libmpdemux/parse_dirac.c mplayer-svn-r25844/li
 +{
 +	return 0;
 +}
-diff -urN mplayer-svn-r25844.orig/libmpdemux/parse_dirac.h mplayer-svn-r25844/libmpdemux/parse_dirac.h
---- mplayer-svn-r25844.orig/libmpdemux/parse_dirac.h	1970-01-01 03:00:00 +0300
-+++ mplayer-svn-r25844/libmpdemux/parse_dirac.h	2008-01-24 02:48:14 +0200
+diff -urN mplayer-svn-r25957.orig/libmpdemux/parse_dirac.h mplayer-svn-r25957/libmpdemux/parse_dirac.h
+--- mplayer-svn-r25957.orig/libmpdemux/parse_dirac.h	1970-01-01 03:00:00 +0300
++++ mplayer-svn-r25957/libmpdemux/parse_dirac.h	2008-02-06 00:57:06 +0200
 @@ -0,0 +1,10 @@
 +
 +#define MAX_VIDEO_PACKET_SIZE (224*1024+4)
@@ -753,9 +772,9 @@ diff -urN mplayer-svn-r25844.orig/libmpdemux/parse_dirac.h mplayer-svn-r25844/li
 +// return: next packet code
 +int dirac_skip_video_frame(demux_stream_t *ds);
 +
-diff -urN mplayer-svn-r25844.orig/libmpdemux/video.c mplayer-svn-r25844/libmpdemux/video.c
---- mplayer-svn-r25844.orig/libmpdemux/video.c	2007-11-10 23:20:51 +0200
-+++ mplayer-svn-r25844/libmpdemux/video.c	2008-01-24 02:48:14 +0200
+diff -urN mplayer-svn-r25957.orig/libmpdemux/video.c mplayer-svn-r25957/libmpdemux/video.c
+--- mplayer-svn-r25957.orig/libmpdemux/video.c	2007-11-10 23:20:51 +0200
++++ mplayer-svn-r25957/libmpdemux/video.c	2008-02-06 00:57:06 +0200
 @@ -17,6 +17,7 @@
  #include "demuxer.h"
  #include "stheader.h"
