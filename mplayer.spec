@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc2
-%define svnrev 25513
-%define ffmpeg_svnrev 11305
+%define svnrev 25669
+%define ffmpeg_svnrev 11494
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -332,9 +332,9 @@ Patch8: %lname-svn-r23722-VIDM-win32-codec.patch
 Patch11: %lname-svn-r24081-nls.patch
 Patch12: %lname-uni-svn23235.diff
 Patch13: %Name-svn-20060711-vbe.patch.gz
-Patch14: %lname-svn-r23726-gui_nls.patch
+Patch14: %lname-svn-r25669-gui_nls.patch
 Patch16: %lname-svn-r25454-configure.patch
-Patch17: %lname-svn-r25487-ext_ffmpeg.patch
+Patch17: %lname-svn-r25669-ext_ffmpeg.patch
 Patch27: %lname-svn-r22518-builddocs.patch
 %if_disabled shared_ffmpeg
 %{?_enable_dirac:Patch31: ffmpeg-svn-r11263-dirac-0.8.x.patch}
@@ -1236,6 +1236,12 @@ done
 
 
 %changelog
+* Fri Jan 11 2008 Led <led@altlinux.ru> 1.0-alt35.25669.1
+- new SVN snapshot (revision 25669)
+- updated:
+  + %lname-svn-r25669-gui_nls.patch
+  + %lname-svn-r25669-ext_ffmpeg.patch
+
 * Sun Dec 23 2007 Led <led@altlinux.ru> 1.0-alt35.25513.1
 - new SVN snapshot (revision 25513)
 - removed %lname-svn-r25454-dvdnav.patch
