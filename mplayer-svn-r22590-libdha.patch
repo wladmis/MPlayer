@@ -1,8 +1,8 @@
-diff -urN mplayer-svn-r22092.orig/libdha/Makefile mplayer-svn-r22092/libdha/Makefile
---- mplayer-svn-r22092.orig/libdha/Makefile	2007-01-22 19:01:51 +0200
-+++ mplayer-svn-r22092/libdha/Makefile	2007-01-31 14:42:43 +0200
-@@ -15,12 +15,8 @@
- #SHORTNAME = libdha.so
+diff -urN mplayer-svn-r22590.orig/libdha/Makefile mplayer-svn-r22590/libdha/Makefile
+--- mplayer-svn-r22590.orig/libdha/Makefile	2007-03-15 02:36:39 +0200
++++ mplayer-svn-r22590/libdha/Makefile	2007-03-15 02:42:07 +0200
+@@ -11,12 +11,8 @@
+ SHORTNAME = libdha.so.$(MAJOR_VERSION)
  VSHORTNAME = libdha.so
  endif
 -ifeq ($(TARGET_WIN32),yes)
@@ -14,25 +14,24 @@ diff -urN mplayer-svn-r22092.orig/libdha/Makefile mplayer-svn-r22092/libdha/Make
  
  SRCS=libdha.c \
       mtrr.c \
-@@ -52,14 +48,7 @@
- 	$(CC) -c $(CFLAGS) -o $@ $<
+@@ -43,13 +39,7 @@
+ all: pci_names.c $(LIBNAME) $(SHORTNAME)
  
  $(LIBNAME):     $(OBJS)
 -ifeq ($(TARGET_WIN32),yes)
- 	$(AR) r $(LIBNAME) $(OBJS)
+ 	$(AR) r $@ $^
 -else
--	#$(CC) -shared $(SONAME_FLAGS) -o $(LIBNAME) $(OBJS) $(LIBS)
--	$(CC) -shared -Wl,-soname -Wl,$(LIBNAME) -o $(LIBNAME) $(OBJS) $(LIBS)
--	ln -sf $(LIBNAME) $(SHORTNAME)
--	ln -sf $(LIBNAME) $(VSHORTNAME)
+-	$(CC) -shared -Wl,-soname -Wl,$@ -o $@ $^ $(LIBS)
+-	ln -sf $@ $(SHORTNAME)
+-	ln -sf $@ $(VSHORTNAME)
 -endif
  
- all:    $(LIBNAME) $(SHORTNAME)
- 
-@@ -83,8 +72,11 @@
+ pci_names.c:	oth/pci.db
+ 	LC_ALL=C $(AWK) -f pci_db2c.awk $<
+@@ -70,8 +60,11 @@
+ install:
  	-mkdir -p $(LIBDIR)
- 	install -m 755 $(INSTALLSTRIP) -p $(LIBNAME) $(LIBDIR)/$(LIBNAME)
- 	rm -f $(LIBDIR)/libdha.so
+ 	$(INSTALL) -m 755 $(INSTALLSTRIP) -p $(LIBNAME) $(LIBDIR)/$(LIBNAME)
 +ifneq ($(LIBNAME),$(SHORTNAME))
  	ln -sf $(LIBNAME) $(LIBDIR)/$(SHORTNAME)
 +else
@@ -41,10 +40,10 @@ diff -urN mplayer-svn-r22092.orig/libdha/Makefile mplayer-svn-r22092/libdha/Make
  
  uninstall:
  	rm -f $(LIBDIR)/libdha.so $(LIBDIR)/$(SHORTNAME) $(LIBDIR)/$(LIBNAME)
-diff -urN mplayer-svn-r22092.orig/Makefile mplayer-svn-r22092/Makefile
---- mplayer-svn-r22092.orig/Makefile	2007-01-31 13:31:44 +0200
-+++ mplayer-svn-r22092/Makefile	2007-01-31 14:47:56 +0200
-@@ -211,10 +211,10 @@
+diff -urN mplayer-svn-r22590.orig/Makefile mplayer-svn-r22590/Makefile
+--- mplayer-svn-r22590.orig/Makefile	2007-03-15 01:20:31 +0200
++++ mplayer-svn-r22590/Makefile	2007-03-15 02:39:38 +0200
+@@ -207,10 +207,10 @@
  tremor/libvorbisidec.a:
  	$(MAKE) -C tremor
  
@@ -57,15 +56,15 @@ diff -urN mplayer-svn-r22092.orig/Makefile mplayer-svn-r22092/Makefile
  	$(MAKE) -C vidix
  
  Gui/libgui.a:
-@@ -298,7 +298,6 @@
+@@ -297,7 +297,6 @@
  	$(INSTALL) -m 644 etc/mplayer.desktop $(prefix)/share/applications/
  
  install-vidix:
 -	$(MAKE) -C libdha install
  	mkdir -p $(LIBDIR)/mplayer/vidix
- 	-install -m 755 $(INSTALLSTRIP) -p vidix/drivers/*.so $(LIBDIR)/mplayer/vidix
+ 	$(INSTALL) -m 755 $(INSTALLSTRIP) -p vidix/drivers/*.so $(LIBDIR)/mplayer/vidix
  
-@@ -419,7 +418,7 @@
+@@ -417,7 +416,7 @@
  libfaad2/libfaad2.a: .norecurse $(wildcard libfaad2/*.[ch] libfaad2/*/*.[ch])
  
  loader/libloader.a: .norecurse $(wildcard loader/*.[chSs])

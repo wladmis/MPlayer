@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 22550
-%define ffmpeg_svnrev 8388
+%define svnrev 22590
+%define ffmpeg_svnrev 8408
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -323,7 +323,7 @@ Patch0: %lname-svn-r22221-subreader.patch
 Patch1: %lname-svn-r22092-dirac.patch
 Patch2: %lname-dvd-ru-svn19389.patch.gz
 Patch3: %Name-1.0pre4-alt-explicit_gif.patch
-Patch4: %lname-svn-r22092-libdha.patch
+Patch4: %lname-svn-r22590-libdha.patch
 Patch5: %lname-svn-r19447-vo_vidix.patch.gz
 Patch6: %lname-svn-r21128-alt-artsc_ldflags.patch.gz
 Patch11: %lname-svn-r22518-nls.patch
@@ -1510,6 +1510,10 @@ unset RPM_PYTHON
 
 
 %changelog
+* Thu Mar 15 2007 Led <led@altlinux.ru> 1.0-alt35.22590.1
+- new SVN snapshot (revision 22590)
+- updated %lname-svn-r22590-libdha.patch
+
 * Wed Mar 14 2007 Led <led@altlinux.ru> 1.0-alt35.22550.1
 - new SVN snapshot (revision 22550)
 
