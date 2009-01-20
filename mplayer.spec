@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 22063
-%define ffmpeg_svnrev 7760
+%define svnrev 22092
+%define ffmpeg_svnrev 7781
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -319,10 +319,9 @@ Source4: standard-1.9.tar.bz2
 Source5: %lname.conf.in.gz
 Source6: mp_help2msg.awk.gz
 Source7: mp_msg2po.awk.gz
-Patch1: %lname-svn-r22020-makefile.patch
 Patch2: %lname-dvd-ru-svn19389.patch.gz
 Patch3: %Name-1.0pre4-alt-explicit_gif.patch
-Patch4: %lname-svn-r21995-libdha.patch
+Patch4: %lname-svn-r22092-libdha.patch
 Patch5: %lname-svn-r19447-vo_vidix.patch.gz
 Patch6: %lname-svn-r21128-alt-artsc_ldflags.patch.gz
 Patch7: %Name-svn-20060707_dirac-0.5.x.patch.bz2
@@ -334,7 +333,7 @@ Patch15: %lname-svn-r21128-pulseaudio.patch.gz
 Patch17: %lname-svn-r21995-ext_ffmpeg.patch
 Patch18: %lname-mwallp.patch.gz
 Patch22: %lname-svn-r19389-polyp0.8.patch.gz
-Patch26: %lname-svn-r21858-configure.patch.gz
+Patch26: %lname-svn-r22092-configure.patch
 Patch27: %lname-svn-r20777-builddocs.patch.gz
 %if_disabled shared_ffmpeg
 Patch31: ffmpeg-svn-r6769-dirac-0.5.x.patch.bz2
@@ -924,7 +923,6 @@ mv ffmpeg-svn-r%ffmpeg_svnrev/lib{av{codec,format,util},postproc} .
 %setup -q -n %Name-%pkgver
 %endif
 
-%patch1 -p1
 %patch2 -p1
 %patch3 -p1
 %patch4 -p1
@@ -1531,8 +1529,11 @@ unset RPM_PYTHON
 
 
 %changelog
-* Mon Jan 29 2007 Led <led@altlinux.ru> 1.0-alt35.22063.1
-- new SVN snapshot (revision 22063)
+* Wed Jan 31 2007 Led <led@altlinux.ru> 1.0-alt35.22092.1
+- new SVN snapshot (revision 22092)
+- removed %lname-svn-r22020-makefile.patch
+- updated %lname-svn-r22092-libdha.patch
+- updated %lname-svn-r22092-configure.patch
 
 * Fri Jan 26 2007 Led <led@altlinux.ru> 1.0-alt35.22020.1
 - new SVN snapshot (revision 22020)

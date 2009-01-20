@@ -1,6 +1,6 @@
-diff -urN mplayer-svn-r21995.orig/libdha/Makefile mplayer-svn-r21995/libdha/Makefile
---- mplayer-svn-r21995.orig/libdha/Makefile	2007-01-22 19:01:51 +0200
-+++ mplayer-svn-r21995/libdha/Makefile	2007-01-24 02:42:48 +0200
+diff -urN mplayer-svn-r22092.orig/libdha/Makefile mplayer-svn-r22092/libdha/Makefile
+--- mplayer-svn-r22092.orig/libdha/Makefile	2007-01-22 19:01:51 +0200
++++ mplayer-svn-r22092/libdha/Makefile	2007-01-31 14:42:43 +0200
 @@ -15,12 +15,8 @@
  #SHORTNAME = libdha.so
  VSHORTNAME = libdha.so
@@ -41,18 +41,9 @@ diff -urN mplayer-svn-r21995.orig/libdha/Makefile mplayer-svn-r21995/libdha/Make
  
  uninstall:
  	rm -f $(LIBDIR)/libdha.so $(LIBDIR)/$(SHORTNAME) $(LIBDIR)/$(LIBNAME)
-diff -urN mplayer-svn-r21995.orig/Makefile mplayer-svn-r21995/Makefile
---- mplayer-svn-r21995.orig/Makefile	2007-01-22 19:01:55 +0200
-+++ mplayer-svn-r21995/Makefile	2007-01-24 02:40:56 +0200
-@@ -108,7 +108,7 @@
- PARTS-$(FAAD_INTERNAL)            += libfaad2
- COMMON_LIBS-$(TREMOR_INTERNAL)    += tremor/libvorbisidec.a
- PARTS-$(TREMOR_INTERNAL)          += tremor
--LIBS_MPLAYER-$(VIDIX)             += vidix/libvidix.a
-+LIBS_MPLAYER-$(VIDIX)             += vidix/libvidix.a libdha/libdha.a
- PARTS-$(VIDIX)                    += libdha vidix
- COMMON_LIBS-$(DVDREAD_INTERNAL)   += dvdread/libdvdread.a
- PARTS-$(DVDREAD_INTERNAL)         += dvdread
+diff -urN mplayer-svn-r22092.orig/Makefile mplayer-svn-r22092/Makefile
+--- mplayer-svn-r22092.orig/Makefile	2007-01-31 13:31:44 +0200
++++ mplayer-svn-r22092/Makefile	2007-01-31 14:47:56 +0200
 @@ -211,10 +211,10 @@
  tremor/libvorbisidec.a:
  	$(MAKE) -C tremor
@@ -66,15 +57,15 @@ diff -urN mplayer-svn-r21995.orig/Makefile mplayer-svn-r21995/Makefile
  	$(MAKE) -C vidix
  
  Gui/libgui.a:
-@@ -251,7 +251,6 @@
+@@ -298,7 +298,6 @@
+ 	$(INSTALL) -m 644 etc/mplayer.desktop $(prefix)/share/applications/
  
- install: $(ALL_PRG)
- ifeq ($(VIDIX),yes)
+ install-vidix:
 -	$(MAKE) -C libdha install
  	mkdir -p $(LIBDIR)/mplayer/vidix
  	-install -m 755 $(INSTALLSTRIP) -p vidix/drivers/*.so $(LIBDIR)/mplayer/vidix
- endif
-@@ -408,7 +407,7 @@
+ 
+@@ -419,7 +418,7 @@
  libfaad2/libfaad2.a: .norecurse $(wildcard libfaad2/*.[ch] libfaad2/*/*.[ch])
  
  loader/libloader.a: .norecurse $(wildcard loader/*.[chSs])
