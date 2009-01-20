@@ -1,4 +1,4 @@
-tar.bz2: r22020:. name=@name@-svn-r22020
+tar.bz2: r22063:. name=@name@-svn-r22063
 tar.bz2: standard-1.9:. name=standard-1.9 base=standard
 copy: *.sh *-explicit_gif.patch *-makefile.patch  *-libdha.patch *-ext_ffmpeg.patch
 gzip: *.in *.diff *.awk *-configure.patch *-vbe.patch *-artsc_ldflags.patch *-polyp0.8.patch mplayer-dvd-ru-*.patch *-vo_vidix.patch *-nls.patch *-mwallp.patch *-builddocs.patch *-pulseaudio.patch
