@@ -8,7 +8,7 @@
 
 #define prerel rc1
 %define svnrev 23114
-%define ffmpeg_svnrev 8820
+%define ffmpeg_svnrev 8891
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -280,7 +280,7 @@
 Name: %lname
 Version: 1.0
 %define rel 35
-%define subrel 1
+%define subrel 2
 %ifdef svnrev
 Release: alt%rel.%svnrev.%subrel
 %define pkgver svn-r%svnrev
@@ -1450,6 +1450,9 @@ unset RPM_PYTHON
 
 
 %changelog
+* Sat May 05 2007 Led <led@altlinux.ru> 1.0-alt35.23114.2
+- rebuild with libx264.so.55
+
 * Thu Apr 26 2007 Led <led@altlinux.ru> 1.0-alt35.23114.1
 - new SVN snapshot (revision 23114)
 - updated %lname-svn-r23114-ext_ffmpeg.patch
