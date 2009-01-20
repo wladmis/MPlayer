@@ -7,7 +7,7 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 22092
+%define svnrev 22138
 %define ffmpeg_svnrev 7781
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
@@ -281,7 +281,7 @@
 Name: %lname
 Version: 1.0
 %define rel 35
-%define subrel 2
+%define subrel 1
 %ifdef svnrev
 Release: alt%rel.%svnrev.%subrel
 %define pkgver svn-r%svnrev
@@ -1531,9 +1531,12 @@ unset RPM_PYTHON
 
 
 %changelog
+* Mon Feb 05 2007 Led <led@altlinux.ru> 1.0-alt35.22138.1
+- new SVN snapshot (revision 22138)
+- fixed %lname.conf (#10770)
+
 * Mon Feb 05 2007 Led <led@altlinux.ru> 1.0-alt35.22092.2
 - added %lname-svn-r22092-dirac.patch
-- fixed %lname.conf (#10770)
 
 * Wed Jan 31 2007 Led <led@altlinux.ru> 1.0-alt35.22092.1
 - new SVN snapshot (revision 22092)
