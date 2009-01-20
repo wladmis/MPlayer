@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 22917
-%define ffmpeg_svnrev 8633
+%define svnrev 22963
+%define ffmpeg_svnrev 8701
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -323,6 +323,7 @@ Patch0: %lname-svn-r22221-subreader.patch
 Patch1: %lname-svn-r22092-dirac.patch
 Patch2: %lname-dvd-ru-svn19389.patch.gz
 Patch3: %Name-1.0pre4-alt-explicit_gif.patch
+Patch4: %lname-svn-r22963-gui.patch
 Patch5: %lname-svn-r19447-vo_vidix.patch.gz
 Patch6: %lname-svn-r21128-alt-artsc_ldflags.patch.gz
 Patch11: %lname-svn-r22518-nls.patch
@@ -330,7 +331,7 @@ Patch12: %lname-uni-svn22915.diff
 Patch13: %Name-svn-20060711-vbe.patch.gz
 Patch14: %lname-svn-r22324-gui_nls.patch
 Patch15: %lname-svn-r21128-pulseaudio.patch.gz
-Patch17: %lname-svn-r22915-ext_ffmpeg.patch
+Patch17: %lname-svn-r22963-ext_ffmpeg.patch
 Patch22: %lname-svn-r19389-polyp0.8.patch.gz
 Patch26: %lname-svn-r22915-configure.patch
 Patch27: %lname-svn-r22518-builddocs.patch
@@ -522,19 +523,6 @@ Mach64, Permedia3, - аппаратного декодирования AC3, а также нескольких
 Этот пакет содержит версию %Name c GUI (графическим интерфейсом).
 Также имеется %name - консольная версия пакета с меньшим числом
 зависимостей.
-%endif
-
-
-%if_enabled freetype
-%package fontutils
-Group: Video
-Summary: Font utils for the %Name
-Requires: %name
-Conflicts: %Name-fonts < 1.0-alt28
-Conflicts: %Name < 1.0-alt28
-
-%description fontutils
-Font utils for use with %Name.
 %endif
 %endif
 
@@ -874,6 +862,7 @@ mv ffmpeg-svn-r%ffmpeg_svnrev/lib{av{codec,format,util},postproc} .
 %patch1 -p1
 %patch2 -p1
 %patch3 -p1
+%patch4 -p1
 %patch5 -p1
 %patch6 -p1
 %patch11 -p1
@@ -888,7 +877,6 @@ mv ffmpeg-svn-r%ffmpeg_svnrev/lib{av{codec,format,util},postproc} .
 %{?_disable_shared_ffmpeg:%patch32 -p1}
 %{?_enable_polyp:%{?_disable_old_polyp:sed -e 's/\([Pp]\)ulse/\1olyp/g' -e 's/PULSE/POLYP/g' libao2/ao_pulse.c > libao2/ao_polyp.c}}
 
-subst 's/\(ldconfig\)/\#\1/g' libdha/Makefile
 %{?_enable_dvdnav:subst 's|\(\<\)\(dvdnav\)\(\.h\>\)|\1\2/\2\3|' configure}
 %{?odml_chunklen:sed -r -i -e 's/^(#[[:blank:]]*define[[:blank:]]+ODML_CHUNKLEN[[:blank:]]+)0x[[:xdigit:]]+/\1%odml_chunklen/' libmpdemux/muxer_avi.c}
 
@@ -1126,7 +1114,7 @@ export CFLAGS="%optflags"
 		%{subst_enable_to dynamic_plugins dynamic-plugins} \
 		--with-extraincdir=%_includedir/vidix:%_includedir/directfb
 
-%make
+%make_build
 
 # make conf file
 sed -e 's/^@VO@/vo = %default_vo/' \
@@ -1143,7 +1131,7 @@ echo "fontconfig = no" >> etc/%lname.conf
 
 %if_enabled mplayer
 %if_with tools
-%make_build -C TOOLS alaw-gen asfinfo avi-fix avisubdump cpuinfo dump_mp4 movinfo
+%make_build -C TOOLS alaw-gen asfinfo avi-fix avisubdump dump_mp4 movinfo
 %endif
 %endif
 
@@ -1188,9 +1176,9 @@ install -m 0644 etc/{codecs,input,%lname}.conf %buildroot%_sysconfdir/%name/
 %{?_enable_dvb:install -m 0644 etc/dvb-menu.conf %buildroot%_sysconfdir/%name/}
 
 %if_with tools
-install -m 0755 TOOLS/{aconvert,alaw-gen,asfinfo,avi-fix,avisubdump,calcbpp.pl,countquant.pl,cpuinfo,divx2svcd,dump_mp4,encode2mpeglight,mencvcd,midentify,movinfo,mp.pl,mpconsole,mplmult.sh,plotpsnr.pl,psnr-video.sh,subedit.pl,subsearch.sh,sws-test,vobshift.py,w32codec_dl.pl,wma2ogg.pl,x2mpsub.sh,} %buildroot/%_bindir/
-%{?_enable_mencoder:install -m 0755 TOOLS/{dvd2divxscript.pl,menc2pass,qepdvcd.sh} %buildroot/%_bindir/}
-install -m 0644 TOOLS/README %buildroot%_docdir/%name-tools-%version/
+install -m 0755 TOOLS/{aconvert,alaw-gen,asfinfo,avi-fix,avisubdump,calcbpp.pl,countquant.pl,divx2svcd,dump_mp4,encode2mpeglight,mencvcd,midentify,movinfo,mpconsole,mplmult.sh,plotpsnr.pl,psnr-video.sh,subedit.pl,subsearch.sh,vobshift.py,w32codec_dl.pl,wma2ogg.pl} %buildroot/%_bindir/
+%{?_enable_mencoder:install -m 0755 TOOLS/{dvd2divxscript.pl,qepdvcd.sh} %buildroot/%_bindir/}
+install -pD -m 0644 TOOLS/README %buildroot%_docdir/%name-tools-%version/README
 %endif
 
 %{?_with_soundwrapper:install -pD -m 0755 %SOURCE3 %buildroot%_sysconfdir/bashrc.d/%lname.sh}
@@ -1282,20 +1270,6 @@ unset RPM_PYTHON
 %dir %_datadir/%name/skins
 %_datadir/%name/skins/standard
 %_datadir/%name/skins/default
-%endif
-
-
-%if_enabled freetype
-%files fontutils
-%_bindir/%{lname}_subfont
-%dir %_datadir/%name/fonts
-%dir %_datadir/%name/fonts/osd
-%dir %_datadir/%name/fonts/encodings
-%_datadir/%name/fonts/fontgen
-%_datadir/%name/fonts/runme
-%_datadir/%name/fonts/font.desc.tail
-%_datadir/%name/fonts/osd/*
-%_datadir/%name/fonts/encodings/*
 %endif
 %endif
 
@@ -1442,17 +1416,13 @@ unset RPM_PYTHON
 #mplayer
 %_bindir/mencvcd
 %_bindir/midentify
-%_bindir/mp.pl
 %_bindir/mpconsole
 %_bindir/mplmult.sh
 %_bindir/psnr-video.sh
-%_bindir/sws-test
 %_bindir/wma2ogg.pl
-%_bindir/x2mpsub.sh
 %if_enabled mencoder
 #mencoder
 %_bindir/dvd2divxscript.pl
-%_bindir/menc2pass
 %_bindir/qepdvcd.sh
 %endif
 #common
@@ -1467,7 +1437,6 @@ unset RPM_PYTHON
 %_bindir/avisubdump
 %_bindir/calcbpp.pl
 %_bindir/countquant.pl
-%_bindir/cpuinfo
 %_bindir/movinfo
 %_bindir/plotpsnr.pl
 %_bindir/subedit.pl
@@ -1479,14 +1448,16 @@ unset RPM_PYTHON
 
 
 %changelog
-* Fri Apr 05 2007 Led <led@altlinux.ru> 1.0-alt35.22917.1
-- new SVN snapshot (revision 22917):
+* Tue Apr 10 2007 Led <led@altlinux.ru> 1.0-alt35.22963.1
+- new SVN snapshot (revision 229963):
   + AAC-LATM, H.263-2000, AMR, H.264 over RTSP
 - removed %lname-svn-r22753-libdha.patch (due upstream)
 - updated %lname-uni-svn22915.diff
-- updated %lname-svn-r22915-ext_ffmpeg.patch
+- updated %lname-svn-r22963-ext_ffmpeg.patch
 - removed %lname-svn-r22518-mwallp.patch (due upstream)
 - updated %lname-svn-r22915-configure.patch
+- removed %name-fontutils package (due upstream)
+- added %lname-svn-r22963-gui.patch
 
 * Tue Mar 20 2007 Led <led@altlinux.ru> 1.0-alt35.22753.1
 - new SVN snapshot (revision 22753)
