@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 23547
-%define ffmpeg_svnrev 9292
+%define svnrev 23550
+%define ffmpeg_svnrev 9298
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -1218,8 +1218,8 @@ done
 
 
 %changelog
-* Tue Jun 12 2007 Led <led@altlinux.ru> 1.0-alt35.23547.1
-- new SVN snapshot (revision 23547):
+* Wed Jun 13 2007 Led <led@altlinux.ru> 1.0-alt35.23550.1
+- new SVN snapshot (revision 23550):
   + Teletext support for tv:// (v4l and v4l2 only)
 - cleaned up spec
 - cleaned up BuildRequires
