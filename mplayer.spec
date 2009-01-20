@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 24761
-%define ffmpeg_svnrev 10703
+%define svnrev 24764
+%define ffmpeg_svnrev 10712
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -1232,8 +1232,8 @@ done
 
 
 %changelog
-* Thu Oct 11 2007 Led <led@altlinux.ru> 1.0-alt35.24761.1
-- new SVN snapshot (revision 24761)
+* Fri Oct 12 2007 Led <led@altlinux.ru> 1.0-alt35.24764.1
+- new SVN snapshot (revision 24764)
 - updated ffmpeg-svn-r10703-dirac-0.8.x.patch
 
 * Wed Oct 03 2007 Led <led@altlinux.ru> 1.0-alt35.24688.1
