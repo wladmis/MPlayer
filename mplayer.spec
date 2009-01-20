@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc2
-%define svnrev 25826
-%define ffmpeg_svnrev 11584
+%define svnrev 25844
+%define ffmpeg_svnrev 11604
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -321,7 +321,7 @@ Source5: %lname.conf.in
 Source6: mp_help2msg.awk.gz
 Source7: mp_msg2po.awk.gz
 Patch0: %lname-svn-r22221-subreader.patch
-Patch1: %lname-svn-r25826-dirac-0.8.x.patch
+Patch1: %lname-svn-r25844-dirac-0.9.0.patch
 Patch2: %lname-dvd-ru-svn19389.patch.gz
 Patch3: %Name-1.0pre4-alt-explicit_gif.patch
 Patch4: %lname-svn-r23547-gui.patch
@@ -337,7 +337,7 @@ Patch16: %lname-svn-r25826-configure.patch
 Patch17: %lname-svn-r25826-ext_ffmpeg.patch
 Patch27: %lname-svn-r22518-builddocs.patch
 %if_disabled shared_ffmpeg
-%{?_enable_dirac:Patch31: ffmpeg-svn-r11263-dirac-0.8.x.patch}
+%{?_enable_dirac:Patch31: ffmpeg-svn-r11604-dirac-0.9.x.patch}
 Patch32: ffmpeg-uni-svn-r10644.patch
 Patch33: ffmpeg-svn-r10644-amr.patch
 %endif
@@ -387,7 +387,7 @@ BuildRequires: cpp >= 3.3 gcc >= 3.3 gcc-c++ >= 3.3
 %{?_enable_libmpeg2:BuildRequires: libmpeg2-devel}
 %{?_enable_musepack:BuildRequires: libmpcdec-devel >= 1.2.1}
 %{?_enable_nut:BuildRequires: libnut-devel >= 0.0-alt0.272}
-%{?_enable_dirac:BuildRequires: libdirac-devel >= 0.8}
+%{?_enable_dirac:BuildRequires: libdirac-devel >= 0.9}
 
 %{?_enable_xvmc:BuildRequires: libXvMC-devel}
 %if_enabled mplayer
@@ -1236,6 +1236,11 @@ done
 
 
 %changelog
+* Thu Jan 24 2008 Led <led@altlinux.ru> 1.0-alt35.25844.1
+- new SVN snapshot (revision 25844)
+- updated ffmpeg-svn-r11604-dirac-0.9.x.patch
+- updated %lname-svn-r25844-dirac-0.9.0.patch
+
 * Mon Jan 21 2008 Led <led@altlinux.ru> 1.0-alt35.25826.1
 - new SVN snapshot (revision 25826)
 - updated:
