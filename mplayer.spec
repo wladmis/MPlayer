@@ -7,7 +7,7 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 22963
+%define svnrev 23002
 %define ffmpeg_svnrev 8701
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
@@ -1448,8 +1448,13 @@ unset RPM_PYTHON
 
 
 %changelog
+* Mon Apr 16 2007 Led <led@altlinux.ru> 1.0-alt35.23002.1
+- new SVN snapshot (revision 23002):
+  + THP audio and video via lavc
+- fixed %%changelog
+
 * Tue Apr 10 2007 Led <led@altlinux.ru> 1.0-alt35.22963.1
-- new SVN snapshot (revision 229963):
+- new SVN snapshot (revision 22963):
   + AAC-LATM, H.263-2000, AMR, H.264 over RTSP
 - removed %lname-svn-r22753-libdha.patch (due upstream)
 - updated %lname-uni-svn22915.diff
