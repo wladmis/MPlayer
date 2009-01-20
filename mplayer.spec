@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc2
-%define svnrev 25678
-%define ffmpeg_svnrev 11508
+%define svnrev 25826
+%define ffmpeg_svnrev 11584
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -81,7 +81,7 @@
 %def_enable ffmpeg
 %def_enable shared_ffmpeg
 %def_enable faad_ext
-%def_enable faad_int
+%def_disable faad_int
 %def_disable faad_fixed
 %def_disable tremor_internal
 %def_disable tremor_low
@@ -321,7 +321,7 @@ Source5: %lname.conf.in
 Source6: mp_help2msg.awk.gz
 Source7: mp_msg2po.awk.gz
 Patch0: %lname-svn-r22221-subreader.patch
-Patch1: %lname-svn-r25454-dirac-0.8.x.patch
+Patch1: %lname-svn-r25826-dirac-0.8.x.patch
 Patch2: %lname-dvd-ru-svn19389.patch.gz
 Patch3: %Name-1.0pre4-alt-explicit_gif.patch
 Patch4: %lname-svn-r23547-gui.patch
@@ -333,8 +333,8 @@ Patch11: %lname-svn-r24081-nls.patch
 Patch12: %lname-uni-svn25678.patch
 Patch13: %Name-svn-20060711-vbe.patch.gz
 Patch14: %lname-svn-r25669-gui_nls.patch
-Patch16: %lname-svn-r25454-configure.patch
-Patch17: %lname-svn-r25669-ext_ffmpeg.patch
+Patch16: %lname-svn-r25826-configure.patch
+Patch17: %lname-svn-r25826-ext_ffmpeg.patch
 Patch27: %lname-svn-r22518-builddocs.patch
 %if_disabled shared_ffmpeg
 %{?_enable_dirac:Patch31: ffmpeg-svn-r11263-dirac-0.8.x.patch}
@@ -1236,6 +1236,14 @@ done
 
 
 %changelog
+* Mon Jan 21 2008 Led <led@altlinux.ru> 1.0-alt35.25826.1
+- new SVN snapshot (revision 25826)
+- updated:
+  + %lname-svn-r25826-dirac-0.8.x.patch
+  + %lname-svn-r25826-configure.patch
+  + %lname-svn-r25826-ext_ffmpeg.patch
+- build with external libfaad
+
 * Fri Jan 11 2008 Led <led@altlinux.ru> 1.0-alt35.25678.1
 - new SVN snapshot (revision 25678)
 - updated %lname-uni-svn25678.patch
