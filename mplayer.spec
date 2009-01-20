@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 24247
-%define ffmpeg_svnrev 10252
+%define svnrev 24688
+%define ffmpeg_svnrev 10650
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -107,7 +107,8 @@
 %def_enable vidix
 %define vidixlib int
 %def_enable gl
-%def_enable dga
+%def_disable dga1
+%def_enable dga2
 %def_disable vesa
 %def_enable svga
 %def_enable sdl
@@ -270,11 +271,11 @@
 %set_disable xinerama
 %set_disable xf86keysym
 %set_disable vm
-%set_disable dga
+%set_disable dga1
+%set_disable dga2
 %endif
 
 %{?_disable_mplayer:%set_without tools}
-
 
 
 %define lname mplayer
@@ -322,7 +323,7 @@ Source5: %lname.conf.in
 Source6: mp_help2msg.awk.gz
 Source7: mp_msg2po.awk.gz
 Patch0: %lname-svn-r22221-subreader.patch
-Patch1: %lname-svn-r24244-dirac-0.7.x.patch
+Patch1: %lname-svn-r24688-dirac-0.8.x.patch
 Patch2: %lname-dvd-ru-svn19389.patch.gz
 Patch3: %Name-1.0pre4-alt-explicit_gif.patch
 Patch4: %lname-svn-r23547-gui.patch
@@ -335,14 +336,14 @@ Patch12: %lname-uni-svn23235.diff
 Patch13: %Name-svn-20060711-vbe.patch.gz
 Patch14: %lname-svn-r23726-gui_nls.patch
 Patch15: %lname-svn-r21128-pulseaudio.patch.gz
-Patch16: %lname-svn-r23810-configure.patch
-Patch17: %lname-svn-r24244-ext_ffmpeg.patch
+Patch16: %lname-svn-r24688-configure.patch
+Patch17: %lname-svn-r24688-ext_ffmpeg.patch
 Patch22: %lname-svn-r19389-polyp0.8.patch.gz
 Patch27: %lname-svn-r22518-builddocs.patch
 %if_disabled shared_ffmpeg
-%{?_enable_dirac:Patch31: ffmpeg-svn-r10237-dirac-0.7.x.patch}
-Patch32: ffmpeg-uni-svn-r9389.patch
-Patch33: ffmpeg-svn-r9777-amr.patch
+%{?_enable_dirac:Patch31: ffmpeg-svn-r10636-dirac-0.8.x.patch}
+Patch32: ffmpeg-uni-svn-r10644.patch
+Patch33: ffmpeg-svn-r10644-amr.patch
 %endif
 
 # Automatically added by buildreq on Wed May 30 2007
@@ -409,7 +410,8 @@ BuildRequires: libvidix-devel
 %{?_enable_vm:BuildRequires: libXxf86vm-devel}
 %{?_enable_xinerama:BuildRequires: libXinerama-devel}
 %{?_enable_x11:BuildRequires: libXt-devel}
-%{?_enable_dga:BuildRequires: libXxf86dga-devel}
+%{?_enable_dga1:BuildRequires: libXxf86dga-devel}
+%{?_enable_dga2:BuildRequires: libXxf86dga-devel}
 %{?_enable_directfb:BuildRequires: libdirectfb-devel}
 %{?_enable_pnm:BuildRequires: libnetpbm-devel}
 
@@ -876,7 +878,8 @@ export CFLAGS="%optflags"
 		--disable-vidix-external --disable-vidix-internal \
 %endif
 		%{subst_enable gl} \
-		%{subst_enable dga} \
+		%{subst_enable dga1} \
+		%{subst_enable dga2} \
 		%{subst_enable vesa} \
 		%{subst_enable svga} \
 		%{subst_enable sdl} \
@@ -1229,6 +1232,23 @@ done
 
 
 %changelog
+* Wed Oct 03 2007 Led <led@altlinux.ru> 1.0-alt35.24688.1
+- new SVN snapshot (revision 24688):
+  + support H.263-2000 over RTSP
+  + support AMR over RTSP
+  + support H.264 over RTSP
+  + channel scanner for tv://
+  + fine tuning for tv://
+  + driver autodetection for tv://
+  + libnemesi RTSP/RTP support
+- updated
+  + %lname-svn-r24688-configure.patch
+  + %lname-svn-r24688-ext_ffmpeg.patch
+  + %lname-svn-r24688-dirac-0.8.x.patch
+  + ffmpeg-svn-r10636-dirac-0.8.x.patch
+  + ffmpeg-uni-svn-r10644.patch
+  + ffmpeg-svn-r10644-amr.patch
+
 * Mon Aug 27 2007 Led <led@altlinux.ru> 1.0-alt35.24247.1
 - new SVN snapshot (revision 24247)
 - updated ffmpeg-svn-r10237-dirac-0.7.x.patch (fixed #12627)

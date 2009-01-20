@@ -1,6 +1,6 @@
-diff -urN ffmpeg-svn-r9777.orig/libavcodec/libamr.c ffmpeg-svn-r9777/libavcodec/libamr.c
---- ffmpeg-svn-r9777.orig/libavcodec/libamr.c	2007-06-07 00:35:53 +0300
-+++ ffmpeg-svn-r9777/libavcodec/libamr.c	2007-07-22 18:56:25 +0300
+diff -urN ffmpeg-svn-r10644.orig/libavcodec/libamr.c ffmpeg-svn-r10644/libavcodec/libamr.c
+--- ffmpeg-svn-r10644.orig/libavcodec/libamr.c	2007-06-07 00:35:53 +0300
++++ ffmpeg-svn-r10644/libavcodec/libamr.c	2007-10-02 23:00:05 +0300
 @@ -65,6 +65,25 @@
  
  #include "avcodec.h"
@@ -32,7 +32,7 @@ diff -urN ffmpeg-svn-r9777.orig/libavcodec/libamr.c ffmpeg-svn-r9777/libavcodec/
  
  #else
 +#ifdef CONFIG_LIBAMRNBBIN
-+static const char* libamrnbname = "libamrnb.so.2";
++static char* libamrnbnames[] = {"libamrnb.so.3", "libamrnb.so.2"};
 +#else
  #include <amrnb/interf_dec.h>
  #include <amrnb/interf_enc.h>
@@ -124,7 +124,7 @@ diff -urN ffmpeg-svn-r9777.orig/libavcodec/libamr.c ffmpeg-svn-r9777/libavcodec/
  
      if(avctx->channels > 1)
      {
-@@ -359,13 +385,48 @@
+@@ -359,13 +385,54 @@
      void * decState;
      int *enstate;
      int enc_bitrate;
@@ -152,13 +152,19 @@ diff -urN ffmpeg-svn-r9777.orig/libavcodec/libamr.c ffmpeg-svn-r9777/libavcodec/
  static int amr_nb_decode_init(AVCodecContext * avctx)
  {
      AMRContext *s = avctx->priv_data;
++#ifdef CONFIG_LIBAMRNBBIN
++    int i;
++#endif
  
      s->frameCount=0;
 +#ifdef CONFIG_LIBAMRNBBIN
-+    s->handle = dlopen(libamrnbname, RTLD_LAZY);
++    for(i=0, s->handle=NULL; i<(sizeof(libamrnbnames)/sizeof(char*)) && s->handle==NULL; i++)
++	s->handle = dlopen(libamrnbnames[i], RTLD_LAZY);
 +    if (!s->handle)
 +    {
-+        av_log( avctx, AV_LOG_ERROR, "AMR-NB library %s could not be opened! \n%s\n", libamrnbname, dlerror());
++	av_log(avctx, AV_LOG_ERROR, "AMR-NB library ");
++	for(i=0; i<(sizeof(libamrnbnames)/sizeof(char*)); i++) av_log(avctx, AV_LOG_ERROR, "%s ", libamrnbnames[i]);
++	av_log(avctx, AV_LOG_ERROR, "could not be opened! \n%s\n", dlerror());
 +        return -1;
 +    }
 +    s->amrnb_dec_init=(void (*)) dlsymn(s->handle, "Decoder_Interface_init");
@@ -173,7 +179,7 @@ diff -urN ffmpeg-svn-r9777.orig/libavcodec/libamr.c ffmpeg-svn-r9777/libavcodec/
      s->decState=Decoder_Interface_init();
      if(!s->decState)
      {
-@@ -373,7 +434,7 @@
+@@ -373,7 +440,7 @@
          return -1;
      }
  
@@ -182,15 +188,28 @@ diff -urN ffmpeg-svn-r9777.orig/libavcodec/libamr.c ffmpeg-svn-r9777/libavcodec/
  
      if(avctx->channels > 1)
      {
-@@ -405,6 +466,22 @@
+@@ -387,6 +454,9 @@
+ static int amr_nb_encode_init(AVCodecContext * avctx)
+ {
+     AMRContext *s = avctx->priv_data;
++#ifdef CONFIG_LIBAMRNBBIN
++    int i;
++#endif
+ 
+     s->frameCount=0;
+ 
+@@ -405,6 +475,25 @@
      avctx->frame_size=160;
      avctx->coded_frame= avcodec_alloc_frame();
  
 +#ifdef CONFIG_LIBAMRNBBIN
-+    s->handle = dlopen(libamrnbname, RTLD_LAZY);
++    for(i=0, s->handle=NULL; i<(sizeof(libamrnbnames)/sizeof(char*)) && s->handle==NULL; i++)
++	s->handle = dlopen(libamrnbnames[i], RTLD_LAZY);
 +    if (!s->handle)
 +    {
-+        av_log( avctx, AV_LOG_ERROR, "amrnb library %s could not be opened! \n%s\n", libamrnbname, dlerror());
++	av_log(avctx, AV_LOG_ERROR, "AMR-NB library ");
++	for(i=0; i<(sizeof(libamrnbnames)/sizeof(char*)); i++) av_log(avctx, AV_LOG_ERROR, "%s ", libamrnbnames[i]);
++	av_log(avctx, AV_LOG_ERROR, "could not be opened! \n%s\n", dlerror());
 +        return -1;
 +    }
 +    s->amrnb_enc_init=(void* (*)(int, char)) dlsymn(s->handle, "VADxEncoder_Interface_init");
@@ -205,7 +224,7 @@ diff -urN ffmpeg-svn-r9777.orig/libavcodec/libamr.c ffmpeg-svn-r9777/libavcodec/
      s->enstate=Encoder_Interface_init(0);
      if(!s->enstate)
      {
-@@ -445,7 +522,11 @@
+@@ -445,7 +534,11 @@
      AMRContext *s = avctx->priv_data;
      uint8_t*amrData=buf;
      static short block_size[16]={ 12, 13, 15, 17, 19, 20, 26, 31, 5, 0, 0, 0, 0, 0, 0, 0 };
@@ -217,7 +236,7 @@ diff -urN ffmpeg-svn-r9777.orig/libavcodec/libamr.c ffmpeg-svn-r9777/libavcodec/
      int packet_size;
  
      /* av_log(NULL,AV_LOG_DEBUG,"amr_decode_frame buf=%p buf_size=%d frameCount=%d!!\n",buf,buf_size,s->frameCount); */
-@@ -479,11 +560,7 @@
+@@ -479,11 +572,7 @@
          return -1;
      }
  
@@ -230,7 +249,7 @@ diff -urN ffmpeg-svn-r9777.orig/libavcodec/libamr.c ffmpeg-svn-r9777/libavcodec/
      /* av_log(NULL,AV_LOG_DEBUG,"amr_nb_encode_frame encoded %u bytes, bitrate %u, first byte was %#02x\n",written, s->enc_bitrate, frame[0] ); */
  
      return written;
-@@ -491,8 +568,6 @@
+@@ -491,8 +580,6 @@
  
  #endif
  
@@ -239,13 +258,13 @@ diff -urN ffmpeg-svn-r9777.orig/libavcodec/libamr.c ffmpeg-svn-r9777/libavcodec/
  AVCodec libamr_nb_decoder =
  {
      "libamr_nb",
-@@ -527,11 +602,26 @@
+@@ -527,11 +614,26 @@
  #define typedef_h
  #endif
  
 +#ifdef CONFIG_LIBAMRWBBIN
 +#include <stdint.h>
-+static const char* libamrwbname = "libamrwb.so.2";
++static char* libamrwbnames[] = {"libamrwb.so.3", "libamrwb.so.2"};
 +#define Word16 int16_t
 +#define E_IF_init s->amrwb_init
 +#define E_IF_exit(S) s->amrwb_exit(S); dlclose(s->handle)
@@ -267,7 +286,7 @@ diff -urN ffmpeg-svn-r9777.orig/libavcodec/libamr.c ffmpeg-svn-r9777/libavcodec/
  typedef struct AMRWB_bitrates
  {
      int rate;
-@@ -569,9 +659,26 @@
+@@ -569,12 +671,32 @@
      int frameCount;
      void *state;
      int mode;
@@ -294,15 +313,24 @@ diff -urN ffmpeg-svn-r9777.orig/libavcodec/libamr.c ffmpeg-svn-r9777/libavcodec/
  static int amr_wb_encode_init(AVCodecContext * avctx)
  {
      AMRWBContext *s = avctx->priv_data;
-@@ -599,6 +706,22 @@
++#ifdef CONFIG_LIBAMRNBBIN
++    int i;
++#endif
+ 
+     s->frameCount=0;
+ 
+@@ -599,6 +721,25 @@
      avctx->frame_size=320;
      avctx->coded_frame= avcodec_alloc_frame();
  
 +#ifdef CONFIG_LIBAMRWBBIN
-+    s->handle = dlopen(libamrwbname, RTLD_LAZY);
++    for(i=0, s->handle=NULL; i<(sizeof(libamrwbnames)/sizeof(char*)) && s->handle==NULL; i++)
++	s->handle = dlopen(libamrwbnames[i], RTLD_LAZY);
 +    if (!s->handle)
 +    {
-+        av_log( avctx, AV_LOG_ERROR, "AMR-WB library %s could not be opened! \n%s\n", libamrnbname, dlerror());
++	av_log(avctx, AV_LOG_ERROR, "AMR-WB library ");
++	for(i=0; i<(sizeof(libamrwbnames)/sizeof(char*)); i++) av_log(avctx, AV_LOG_ERROR, "%s ", libamrwbnames[i]);
++	av_log(avctx, AV_LOG_ERROR, "could not be opened! \n%s\n", dlerror());
 +        return -1;
 +    }
 +    s->amrwb_init=(void (*)) dlsymw(s->handle, "E_IF_init");
@@ -317,15 +345,23 @@ diff -urN ffmpeg-svn-r9777.orig/libavcodec/libamr.c ffmpeg-svn-r9777/libavcodec/
      s->state = E_IF_init();
      s->allow_dtx=0;
  
-@@ -635,9 +758,26 @@
+@@ -633,11 +774,34 @@
+ static int amr_wb_decode_init(AVCodecContext * avctx)
+ {
      AMRWBContext *s = avctx->priv_data;
++#ifdef CONFIG_LIBAMRNBBIN
++    int i;
++#endif
  
      s->frameCount=0;
 +#ifdef CONFIG_LIBAMRWBBIN
-+    s->handle = dlopen(libamrwbname, RTLD_LAZY);
++    for(i=0, s->handle=NULL; i<(sizeof(libamrwbnames)/sizeof(char*)) && s->handle==NULL; i++)
++	s->handle = dlopen(libamrwbnames[i], RTLD_LAZY);
 +    if (!s->handle)
 +    {
-+        av_log( avctx, AV_LOG_ERROR, "AMR-WB library %s could not be opened! \n%s\n", libamrnbname, dlerror());
++	av_log(avctx, AV_LOG_ERROR, "AMR-WB library ");
++	for(i=0; i<(sizeof(libamrwbnames)/sizeof(char*)); i++) av_log(avctx, AV_LOG_ERROR, "%s ", libamrwbnames[i]);
++	av_log(avctx, AV_LOG_ERROR, "could not be opened! \n%s\n", dlerror());
 +        return -1;
 +    }
 +    s->amrwb_init=(void (*)) dlsymw(s->handle, "D_IF_init");

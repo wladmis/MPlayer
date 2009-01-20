@@ -1,64 +1,39 @@
-diff -urN ffmpeg-svn-r10237.orig/libavcodec/allcodecs.c ffmpeg-svn-r10237/libavcodec/allcodecs.c
---- ffmpeg-svn-r10237.orig/libavcodec/allcodecs.c	2007-08-10 01:12:15 +0300
-+++ ffmpeg-svn-r10237/libavcodec/allcodecs.c	2007-08-27 00:13:32 +0300
-@@ -68,6 +68,7 @@
-     REGISTER_DECODER(CLJR, cljr);
-     REGISTER_DECODER(CSCD, cscd);
-     REGISTER_DECODER(CYUV, cyuv);
-+    REGISTER_ENCDEC (DIRAC, dirac);
-     REGISTER_DECODER(DNXHD, dnxhd);
-     REGISTER_DECODER(DSICINVIDEO, dsicinvideo);
-     REGISTER_ENCDEC (DVVIDEO, dvvideo);
-@@ -264,6 +265,7 @@
-     REGISTER_PARSER (AC3, ac3);
-     REGISTER_PARSER (CAVSVIDEO, cavsvideo);
-     REGISTER_PARSER (DCA, dca);
+diff -ruN ffmpegsvn_trunk/libavcodec/allcodecs.c ffmpegsvn_trunk_dirac/libavcodec/allcodecs.c
+--- ffmpegsvn_trunk/libavcodec/allcodecs.c	2007-10-01 11:15:43.000000000 +0100
++++ ffmpegsvn_trunk_dirac/libavcodec/allcodecs.c	2007-10-02 10:17:37.000000000 +0100
+@@ -73,6 +73,7 @@
+     REGISTER_DECODER (CLJR, cljr);
+     REGISTER_DECODER (CSCD, cscd);
+     REGISTER_DECODER (CYUV, cyuv);
++    REGISTER_ENCDEC(DIRAC, dirac);
+     REGISTER_DECODER (DNXHD, dnxhd);
+     REGISTER_DECODER (DSICINVIDEO, dsicinvideo);
+     REGISTER_ENCDEC  (DVVIDEO, dvvideo);
+@@ -271,6 +272,7 @@
+     REGISTER_PARSER  (AAC, aac);
+     REGISTER_PARSER  (AC3, ac3);
+     REGISTER_PARSER  (CAVSVIDEO, cavsvideo);
 +    REGISTER_PARSER (DIRAC, dirac);
-     REGISTER_PARSER (DVBSUB, dvbsub);
-     REGISTER_PARSER (DVDSUB, dvdsub);
-     REGISTER_PARSER (H261, h261);
-diff -urN ffmpeg-svn-r10237.orig/libavcodec/allcodecs.h ffmpeg-svn-r10237/libavcodec/allcodecs.h
---- ffmpeg-svn-r10237.orig/libavcodec/allcodecs.h	2007-08-27 00:01:18 +0300
-+++ ffmpeg-svn-r10237/libavcodec/allcodecs.h	2007-08-27 00:15:41 +0300
-@@ -93,6 +93,7 @@
- extern AVCodec cscd_decoder;
- extern AVCodec cyuv_decoder;
- extern AVCodec dca_decoder;
-+extern AVCodec dirac_decoder;
- extern AVCodec dnxhd_decoder;
- extern AVCodec dsicinaudio_decoder;
- extern AVCodec dsicinvideo_decoder;
-@@ -277,6 +278,7 @@
- extern AVCodec libvorbis_decoder;
- extern AVCodec libvorbis_encoder;
- extern AVCodec libx264_encoder;
-+extern AVCodec dirac_encoder;
- extern AVCodec libxvid_encoder;
- extern AVCodec mpeg4aac_decoder;
- extern AVCodec zlib_decoder;
-@@ -298,6 +300,7 @@
- extern AVCodecParser h261_parser;
- extern AVCodecParser h263_parser;
- extern AVCodecParser h264_parser;
-+extern AVCodecParser dirac_parser;
- extern AVCodecParser mjpeg_parser;
- extern AVCodecParser mpeg4video_parser;
- extern AVCodecParser mpegaudio_parser;
-diff -urN ffmpeg-svn-r10237.orig/libavcodec/avcodec.h ffmpeg-svn-r10237/libavcodec/avcodec.h
---- ffmpeg-svn-r10237.orig/libavcodec/avcodec.h	2007-08-27 00:01:18 +0300
-+++ ffmpeg-svn-r10237/libavcodec/avcodec.h	2007-08-27 00:13:32 +0300
-@@ -266,6 +266,7 @@
-     CODEC_ID_DVB_SUBTITLE,
+     REGISTER_PARSER  (DCA, dca);
+     REGISTER_PARSER  (DVBSUB, dvbsub);
+     REGISTER_PARSER  (DVDSUB, dvdsub);
+diff -ruN ffmpegsvn_trunk/libavcodec/avcodec.h ffmpegsvn_trunk_dirac/libavcodec/avcodec.h
+--- ffmpegsvn_trunk/libavcodec/avcodec.h	2007-10-01 11:15:43.000000000 +0100
++++ ffmpegsvn_trunk_dirac/libavcodec/avcodec.h	2007-10-02 10:17:37.000000000 +0100
+@@ -271,6 +271,9 @@
      CODEC_ID_TEXT,  /* raw UTF-8 text */
      CODEC_ID_XSUB,
-+    CODEC_ID_DIRAC= 0x18000,
  
++    CODEC_ID_DIRAC = 0x18000,
++
++
      CODEC_ID_MPEG2TS= 0x20000, /* _FAKE_ codec to indicate a raw MPEG-2 TS
                                  * stream (only used by libavformat) */
-diff -urN ffmpeg-svn-r10237.orig/libavcodec/dirac.c ffmpeg-svn-r10237/libavcodec/dirac.c
---- ffmpeg-svn-r10237.orig/libavcodec/dirac.c	1970-01-01 03:00:00 +0300
-+++ ffmpeg-svn-r10237/libavcodec/dirac.c	2007-08-27 00:13:32 +0300
-@@ -0,0 +1,718 @@
+ };
+diff -ruN ffmpegsvn_trunk/libavcodec/dirac.c ffmpegsvn_trunk_dirac/libavcodec/dirac.c
+--- ffmpegsvn_trunk/libavcodec/dirac.c	1970-01-01 01:00:00.000000000 +0100
++++ ffmpegsvn_trunk_dirac/libavcodec/dirac.c	2007-10-02 10:17:37.000000000 +0100
+@@ -0,0 +1,765 @@
 +/**
 + * @file dirac.c
 + * Dirac codec support via dirac_encoder.
@@ -127,7 +102,7 @@ diff -urN ffmpeg-svn-r10237.orig/libavcodec/dirac.c ffmpeg-svn-r10237/libavcodec
 +    
 +    /* encoder */
 +    dirac_encoder_t*  p_encoder;
-+    
++
 +    /* input frame buffer */
 +    unsigned char *p_in_frame_buf;
 +    
@@ -163,18 +138,56 @@ diff -urN ffmpeg-svn-r10237.orig/libavcodec/dirac.c ffmpeg-svn-r10237/libavcodec
 +static dirac_encoder_presets_t GetDiracPreset(AVCodecContext *avccontext)
 +{
 +
-+    if(avccontext->width==720 && avccontext->height==576)
-+        return VIDEO_FORMAT_SD_625_DIGITAL;
-+   
-+    if(avccontext->height==1280 && avccontext->height==720)
-+        return VIDEO_FORMAT_HD_720;
-+        
-+    if(avccontext->height==1920 && avccontext->width==1080)
-+        return VIDEO_FORMAT_HD_1080;
-+
-+    if(avccontext->height==352 && avccontext->width==288)
++    if(avccontext->width==176 && avccontext->height==120)
++        return VIDEO_FORMAT_QSIF;
++    else if(avccontext->width==176 && avccontext->height==144)
++        return VIDEO_FORMAT_QCIF;
++    else if(avccontext->width==352 && avccontext->height==240)
++        return VIDEO_FORMAT_SIF;
++    else if(avccontext->width==352 && avccontext->height==288)
 +        return VIDEO_FORMAT_CIF;
-+
++    else if(avccontext->width==704 && avccontext->height==480)
++        return VIDEO_FORMAT_4SIF;
++    else if(avccontext->width==704 && avccontext->height==576)
++        return VIDEO_FORMAT_4CIF;
++    else if(avccontext->width==720 && avccontext->height==480)
++        return VIDEO_FORMAT_SD_525_DIGITAL;
++    else if(avccontext->width==720 && avccontext->height==576)
++        return VIDEO_FORMAT_SD_625_DIGITAL;
++    else if(avccontext->height==1280 && avccontext->height==720)
++    {
++        if (avccontext->time_base.den == 60000 && 
++            avccontext->time_base.num == 1001)
++        {
++            return VIDEO_FORMAT_HD_720P60;
++        }
++        else
++        {
++            return VIDEO_FORMAT_HD_720P50;
++        }
++    }    
++    else if(avccontext->height==1920 && avccontext->width==1080)
++    {
++        if (avccontext->time_base.den == 30000 && 
++            avccontext->time_base.num == 1001)
++        {
++            return VIDEO_FORMAT_HD_1080I60;
++        }
++        else if (avccontext->time_base.den == 25 && 
++            avccontext->time_base.num == 1)
++        {
++            return VIDEO_FORMAT_HD_1080I50;
++        }
++        else if (avccontext->time_base.den == 60 && 
++            avccontext->time_base.num == 1001)
++        {
++            return VIDEO_FORMAT_HD_1080P60;
++        }
++        else
++        {
++            return VIDEO_FORMAT_HD_1080P50;
++        }
++    }
 +    return VIDEO_FORMAT_CUSTOM;
 +}
 +
@@ -188,15 +201,15 @@ diff -urN ffmpeg-svn-r10237.orig/libavcodec/dirac.c ffmpeg-svn-r10237/libavcodec
 +    switch(avccontext->pix_fmt)
 +    {
 +        case PIX_FMT_YUV420P:
-+            p_dirac_params->enc_ctx.seq_params.chroma =  format420;
++            p_dirac_params->enc_ctx.src_params.chroma =  format420;
 +            break;
 +
 +        case PIX_FMT_YUV422P:
-+            p_dirac_params->enc_ctx.seq_params.chroma =  format422;
++            p_dirac_params->enc_ctx.src_params.chroma =  format422;
 +            break;
 +    
 +        case PIX_FMT_YUV444P:
-+            p_dirac_params->enc_ctx.seq_params.chroma =  format444;
++            p_dirac_params->enc_ctx.src_params.chroma =  format444;
 +            break;
 +    
 +        default:
@@ -232,7 +245,7 @@ diff -urN ffmpeg-svn-r10237.orig/libavcodec/dirac.c ffmpeg-svn-r10237/libavcodec
 +{
 +  
 +   FfmpegDiracParams* p_dirac_params = avccontext->priv_data;
-+   int no_local=0;  
++   int no_local=1;  
 +   int verbose=avccontext->debug;
 +   dirac_encoder_presets_t preset;
 +   
@@ -256,8 +269,8 @@ diff -urN ffmpeg-svn-r10237.orig/libavcodec/dirac.c ffmpeg-svn-r10237/libavcodec
 +        return -1;
 +    p_dirac_params->enc_ctx.src_params.frame_rate.numerator=avccontext->time_base.den;
 +    p_dirac_params->enc_ctx.src_params.frame_rate.denominator=avccontext->time_base.num;
-+    p_dirac_params->enc_ctx.seq_params.width=avccontext->width;
-+    p_dirac_params->enc_ctx.seq_params.height=avccontext->height;
++    p_dirac_params->enc_ctx.src_params.width=avccontext->width;
++    p_dirac_params->enc_ctx.src_params.height=avccontext->height;
 +   
 +    avccontext->frame_size = avpicture_get_size(avccontext->pix_fmt, avccontext->width, avccontext->height);
 +    avccontext->coded_frame= &p_dirac_params->picture;
@@ -278,10 +291,19 @@ diff -urN ffmpeg-svn-r10237.orig/libavcodec/dirac.c ffmpeg-svn-r10237/libavcodec
 +    else if(avccontext->bit_rate >= 1000)
 +       p_dirac_params->enc_ctx.enc_params.trate=avccontext->bit_rate/1000;
 +
-+    if (avccontext->global_quality != 0 && avccontext->bit_rate != 0)
++    if ((preset > VIDEO_FORMAT_QCIF || preset < VIDEO_FORMAT_QSIF) && 
++        avccontext->bit_rate == 200000)
 +    {
-+        av_log(avccontext, AV_LOG_INFO, "Both qscale and target bit rate options set in command line. Using qscale and ignoring target bit-rate");
++        p_dirac_params->enc_ctx.enc_params.trate = 0;
 +    }
++
++	if (avccontext->flags & CODEC_FLAG_INTERLACED_ME)
++	{
++		if (p_dirac_params->enc_ctx.src_params.interlace)
++		{
++			p_dirac_params->enc_ctx.enc_params.interlace = 1;
++		}
++	}
 +
 +    p_dirac_params->p_encoder = dirac_encoder_init( &(p_dirac_params->enc_ctx), verbose );
 +   
@@ -472,7 +494,7 @@ diff -urN ffmpeg-svn-r10237.orig/libavcodec/dirac.c ffmpeg-svn-r10237/libavcodec
 +    int pict_size;
 +    unsigned char *buffer[3];
 +
-+	*data_size = 0;
++    *data_size = 0;
 +
 +    if(buf_size>0) 
 +        /* set data to decode into buffer */
@@ -489,9 +511,9 @@ diff -urN ffmpeg-svn-r10237.orig/libavcodec/dirac.c ffmpeg-svn-r10237/libavcodec
 +            case STATE_SEQUENCE:
 +                
 +                /* tell ffmpeg about sequence details*/
-+                avccontext->height=p_dirac_params->p_decoder->seq_params.height;
-+                avccontext->width=p_dirac_params->p_decoder->seq_params.width;
-+                avccontext->pix_fmt=GetFfmpegChromaFormat(p_dirac_params->p_decoder->seq_params.chroma);
++                avccontext->height=p_dirac_params->p_decoder->src_params.height;
++                avccontext->width=p_dirac_params->p_decoder->src_params.width;
++                avccontext->pix_fmt=GetFfmpegChromaFormat(p_dirac_params->p_decoder->src_params.chroma);
 +                avccontext->time_base.den =p_dirac_params->p_decoder->src_params.frame_rate.numerator;
 +                avccontext->time_base.num =p_dirac_params->p_decoder->src_params.frame_rate.denominator;
 +                
@@ -504,7 +526,7 @@ diff -urN ffmpeg-svn-r10237.orig/libavcodec/dirac.c ffmpeg-svn-r10237/libavcodec
 +                    p_dirac_params->p_out_frame_buf = (unsigned char *)av_malloc (pict_size);
 +                buffer[0]=p_dirac_params->p_out_frame_buf;
 +                buffer[1]=p_dirac_params->p_out_frame_buf+(pic.linesize[0]*avccontext->height);
-+                buffer[2]=buffer[1]+(pic.linesize[1]*p_dirac_params->p_decoder->seq_params.chroma_height);
++                buffer[2]=buffer[1]+(pic.linesize[1]*p_dirac_params->p_decoder->src_params.chroma_height);
 +                
 +                /* tell dirac about output destination */
 +                dirac_set_buf(p_dirac_params->p_decoder, buffer, NULL);
@@ -599,7 +621,7 @@ diff -urN ffmpeg-svn-r10237.orig/libavcodec/dirac.c ffmpeg-svn-r10237/libavcodec
 +
 +static int dirac_find_frame_end(FfmpegDiracParseContext *p_dirac_params, 
 +                                const uint8_t *buf, 
-+                                uint8_t *p_buf_end, int cur_idx)
++                                const uint8_t *p_buf_end, int cur_idx)
 +{
 +    int byte;
 +    int end_idx=cur_idx;
@@ -699,13 +721,13 @@ diff -urN ffmpeg-svn-r10237.orig/libavcodec/dirac.c ffmpeg-svn-r10237/libavcodec
 +
 +static int parse_dirac(AVCodecParserContext *s,
 +                      AVCodecContext *avctx,
-+                      uint8_t **poutbuf, int *poutbuf_size, 
++                      const uint8_t **poutbuf, int *poutbuf_size, 
 +                      const uint8_t *buf, int buf_size)
 +{
 +
 +    int frame_start=0;
 +    int frame_end;
-+    uint8_t *p_cur=buf;
++    const uint8_t *p_cur=buf;
 +    
 +    FfmpegDiracParseContext *p_dirac_params = (FfmpegDiracParseContext*)s->priv_data ;
 + 
@@ -775,32 +797,43 @@ diff -urN ffmpeg-svn-r10237.orig/libavcodec/dirac.c ffmpeg-svn-r10237/libavcodec
 +    sizeof(FfmpegDiracParseContext),
 +    dirac_parse_open,
 +    parse_dirac,
-+    dirac_parse_close
++    dirac_parse_close,
 +};
-diff -urN ffmpeg-svn-r10237.orig/libavcodec/Makefile ffmpeg-svn-r10237/libavcodec/Makefile
---- ffmpeg-svn-r10237.orig/libavcodec/Makefile	2007-08-27 00:01:18 +0300
-+++ ffmpeg-svn-r10237/libavcodec/Makefile	2007-08-27 00:13:32 +0300
-@@ -53,6 +53,8 @@
- OBJS-$(CONFIG_CSCD_DECODER)            += cscd.o
- OBJS-$(CONFIG_CYUV_DECODER)            += cyuv.o
- OBJS-$(CONFIG_DCA_DECODER)             += dca.o
-+OBJS-$(CONFIG_DIRAC_DECODER)           += dirac.o
-+OBJS-$(CONFIG_DIRAC_ENCODER)           += dirac.o
- OBJS-$(CONFIG_DNXHD_DECODER)           += dnxhddec.o dnxhddata.o
- OBJS-$(CONFIG_DSICINVIDEO_DECODER)     += dsicinav.o
- OBJS-$(CONFIG_DSICINAUDIO_DECODER)     += dsicinav.o
-@@ -307,6 +309,7 @@
- OBJS-$(CONFIG_AC3_PARSER)              += ac3_parser.o ac3tab.o aac_ac3_parser.o
- OBJS-$(CONFIG_CAVSVIDEO_PARSER)        += cavs_parser.o
- OBJS-$(CONFIG_DCA_PARSER)              += dca_parser.o
-+OBJS-$(CONFIG_DIRAC_PARSER)            += dirac.o
- OBJS-$(CONFIG_DVBSUB_PARSER)           += dvbsub_parser.o
- OBJS-$(CONFIG_DVDSUB_PARSER)           += dvdsub_parser.o
- OBJS-$(CONFIG_H261_PARSER)             += h261_parser.o
-diff -urN ffmpeg-svn-r10237.orig/libavformat/raw.c ffmpeg-svn-r10237/libavformat/raw.c
---- ffmpeg-svn-r10237.orig/libavformat/raw.c	2007-08-12 00:47:34 +0300
-+++ ffmpeg-svn-r10237/libavformat/raw.c	2007-08-27 00:13:32 +0300
-@@ -226,6 +226,23 @@
+diff -ruN ffmpegsvn_trunk/libavcodec/Makefile ffmpegsvn_trunk_dirac/libavcodec/Makefile
+--- ffmpegsvn_trunk/libavcodec/Makefile	2007-10-01 11:15:43.000000000 +0100
++++ ffmpegsvn_trunk_dirac/libavcodec/Makefile	2007-10-02 10:17:37.000000000 +0100
+@@ -4,7 +4,7 @@
+ #
+ include ../config.mak
+ 
+-CFLAGS += -I$(SRC_PATH)/libswscale -I$(SRC_PATH)/libavcodec
++CFLAGS += -I$(SRC_PATH)/libswscale -I$(SRC_PATH)/libavcodec $(EXTRAINCS)
+ 
+ OBJS = allcodecs.o \
+        audioconvert.o \
+@@ -296,6 +296,7 @@
+ # external codec libraries
+ OBJS-$(CONFIG_LIBA52)                  += liba52.o
+ OBJS-$(CONFIG_LIBAMR)                  += libamr.o
++OBJS-$(CONFIG_DIRAC)                   += dirac.o
+ OBJS-$(CONFIG_LIBFAAC)                 += libfaac.o
+ OBJS-$(CONFIG_LIBFAAD)                 += libfaad.o
+ OBJS-$(CONFIG_LIBGSM)                  += libgsm.o
+diff -ruN ffmpegsvn_trunk/libavformat/allformats.c ffmpegsvn_trunk_dirac/libavformat/allformats.c
+--- ffmpegsvn_trunk/libavformat/allformats.c	2007-09-28 14:53:51.000000000 +0100
++++ ffmpegsvn_trunk_dirac/libavformat/allformats.c	2007-10-02 10:17:37.000000000 +0100
+@@ -71,6 +71,7 @@
+     REGISTER_DEMUXER  (C93, c93);
+     REGISTER_MUXER    (CRC, crc);
+     REGISTER_DEMUXER  (DAUD, daud);
++    REGISTER_MUXDEMUX (DIRAC, dirac);
+     REGISTER_DEMUXER  (DSICIN, dsicin);
+     REGISTER_DEMUXER  (DTS, dts);
+     REGISTER_MUXDEMUX (DV, dv);
+diff -ruN ffmpegsvn_trunk/libavformat/raw.c ffmpegsvn_trunk_dirac/libavformat/raw.c
+--- ffmpegsvn_trunk/libavformat/raw.c	2007-09-21 14:59:27.000000000 +0100
++++ ffmpegsvn_trunk_dirac/libavformat/raw.c	2007-10-02 10:17:37.000000000 +0100
+@@ -227,6 +227,23 @@
      return 0;
  }
  
@@ -824,7 +857,7 @@ diff -urN ffmpeg-svn-r10237.orig/libavformat/raw.c ffmpeg-svn-r10237/libavformat
  static int shorten_read_header(AVFormatContext *s,
                                 AVFormatParameters *ap)
  {
-@@ -751,6 +768,33 @@
+@@ -752,6 +769,33 @@
      .value = CODEC_ID_VC1,
  };
  
@@ -851,16 +884,16 @@ diff -urN ffmpeg-svn-r10237.orig/libavformat/raw.c ffmpeg-svn-r10237/libavformat
 +    CODEC_ID_DIRAC,
 +    NULL,
 +    raw_write_packet,
-+    .flags= AVFMT_NOTIMESTAMPS,
++    NULL,
 +};
 +#endif //CONFIG_MUXERS
 +
  /* pcm formats */
  
  #define PCMINPUTDEF(name, long_name, ext, codec) \
-diff -urN ffmpeg-svn-r10237.orig/libavformat/riff.c ffmpeg-svn-r10237/libavformat/riff.c
---- ffmpeg-svn-r10237.orig/libavformat/riff.c	2007-07-30 23:16:55 +0300
-+++ ffmpeg-svn-r10237/libavformat/riff.c	2007-08-27 00:13:32 +0300
+diff -ruN ffmpegsvn_trunk/libavformat/riff.c ffmpegsvn_trunk_dirac/libavformat/riff.c
+--- ffmpegsvn_trunk/libavformat/riff.c	2007-09-24 15:58:33.000000000 +0100
++++ ffmpegsvn_trunk_dirac/libavformat/riff.c	2007-10-02 10:17:37.000000000 +0100
 @@ -172,6 +172,7 @@
      { CODEC_ID_JPEG2000, MKTAG('M', 'J', '2', 'C') },
      { CODEC_ID_VMNC, MKTAG('V', 'M', 'n', 'c') },
@@ -868,15 +901,4 @@ diff -urN ffmpeg-svn-r10237.orig/libavformat/riff.c ffmpeg-svn-r10237/libavforma
 +    { CODEC_ID_DIRAC, MKTAG('d', 'r', 'a', 'c') },
      { CODEC_ID_NONE, 0 },
  };
- 
-diff -urN ffmpeg-svn-r10237.orig/libavformat/utils.c ffmpeg-svn-r10237/libavformat/utils.c
---- ffmpeg-svn-r10237.orig/libavformat/utils.c	2007-08-19 23:12:22 +0300
-+++ ffmpeg-svn-r10237/libavformat/utils.c	2007-08-27 00:13:32 +0300
-@@ -1899,6 +1899,7 @@
-              st->codec->codec_id == CODEC_ID_PBM ||
-              st->codec->codec_id == CODEC_ID_PPM ||
-              st->codec->codec_id == CODEC_ID_SHORTEN ||
-+	     st->codec->codec_id == CODEC_ID_DIRAC ||
-              (st->codec->codec_id == CODEC_ID_MPEG4 && !st->need_parsing))*/)
-             try_decode_frame(st, pkt->data, pkt->size);
  
