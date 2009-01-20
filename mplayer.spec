@@ -7,7 +7,7 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 21399
+%define svnrev 21402
 %define ffmpeg_svnrev 7188
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
@@ -1555,6 +1555,9 @@ unset RPM_PYTHON
 
 
 %changelog
+* Thu Nov 30 2006 Led <led@altlinux.ru> 1.0-alt35.21402.1
+- new SVN snapshot (revision 21402)
+
 * Thu Nov 30 2006 Led <led@altlinux.ru> 1.0-alt35.21399.1
 - new SVN snapshot (revision 21399)
 - fixed %%changelog
