@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 24081
-%define ffmpeg_svnrev 10124
+%define svnrev 24127
+%define ffmpeg_svnrev 10252
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -105,7 +105,7 @@
 
 # Video output:
 %def_enable vidix
-%define vidixlib ext
+%define vidixlib int
 %def_enable gl
 %def_enable dga
 %def_disable vesa
@@ -322,7 +322,7 @@ Source5: %lname.conf.in
 Source6: mp_help2msg.awk.gz
 Source7: mp_msg2po.awk.gz
 Patch0: %lname-svn-r22221-subreader.patch
-Patch1: %lname-svn-r23840-dirac-0.7.x.patch
+Patch1: %lname-svn-r24244-dirac-0.7.x.patch
 Patch2: %lname-dvd-ru-svn19389.patch.gz
 Patch3: %Name-1.0pre4-alt-explicit_gif.patch
 Patch4: %lname-svn-r23547-gui.patch
@@ -336,11 +336,11 @@ Patch13: %Name-svn-20060711-vbe.patch.gz
 Patch14: %lname-svn-r23726-gui_nls.patch
 Patch15: %lname-svn-r21128-pulseaudio.patch.gz
 Patch16: %lname-svn-r23810-configure.patch
-Patch17: %lname-svn-r24081-ext_ffmpeg.patch
+Patch17: %lname-svn-r24127-ext_ffmpeg.patch
 Patch22: %lname-svn-r19389-polyp0.8.patch.gz
 Patch27: %lname-svn-r22518-builddocs.patch
 %if_disabled shared_ffmpeg
-%{?_enable_dirac:Patch31: ffmpeg-svn-r10124-dirac-0.7.x.patch}
+%{?_enable_dirac:Patch31: ffmpeg-svn-r10237-dirac-0.7.x.patch}
 Patch32: ffmpeg-uni-svn-r9389.patch
 Patch33: ffmpeg-svn-r9777-amr.patch
 %endif
@@ -375,7 +375,7 @@ BuildRequires: cpp >= 3.3 gcc >= 3.3 gcc-c++ >= 3.3
 %{?_enable_lzo:BuildRequires: liblzo2-devel}
 %{?_enable_xvid:BuildRequires: libxvid-devel}
 %{?_enable_x264:BuildRequires: libx264-devel}
-%{?_enable_shared_ffmpeg:BuildRequires: libffmpeg-devel >= 0.5.0-alt1.svn9400}
+%{?_enable_shared_ffmpeg:BuildRequires: libffmpeg-devel >= 0:0.5.0-alt1.svn9400}
 %{?_enable_tremor_external:BuildRequires: libtremor-devel}
 %{?_enable_vorbis:BuildRequires: libvorbis-devel}
 %{?_enable_speex:BuildRequires: libspeex-devel}
@@ -949,7 +949,7 @@ export CFLAGS="%optflags"
 		--with-extraincdir=%_includedir/vidix:%_includedir/directfb
 
 subst 's|^#\(CFLAGS .*\) -Isvgalib_helper/|\1|' vidix/Makefile
-%make
+%make_build
 
 # make conf file
 sed -e 's/^@VO@/vo = %default_vo/' \
@@ -1229,6 +1229,12 @@ done
 
 
 %changelog
+* Mon Aug 27 2007 Led <led@altlinux.ru> 1.0-alt35.24127.1
+- new SVN snapshot (revision 24127)
+- updated %lname-svn-r24244-dirac-0.7.x.patch (fixed #12627)
+- updated ffmpeg-svn-r10237-dirac-0.7.x.patch
+- updated %lname-svn-r24127-ext_ffmpeg.patch
+
 * Fri Aug 17 2007 Led <led@altlinux.ru> 1.0-alt35.24081.1
 - new SVN snapshot (revision 24081)
 - updated mplayer-svn-r24081-nls.patch

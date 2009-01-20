@@ -1,7 +1,7 @@
-diff -urN mplayer-svn-r23840.orig/configure mplayer-svn-r23840/configure
---- mplayer-svn-r23840.orig/configure	2007-07-21 23:19:23 +0300
-+++ mplayer-svn-r23840/configure	2007-07-23 01:37:41 +0300
-@@ -307,6 +307,7 @@
+diff -urN mplayer-svn-r24244.orig/configure mplayer-svn-r24244/configure
+--- mplayer-svn-r24244.orig/configure	2007-08-27 15:37:45 +0300
++++ mplayer-svn-r24244/configure	2007-08-27 21:57:18 +0300
+@@ -316,6 +316,7 @@
    --disable-faad-internal   disable internal FAAD2 (AAC) [autodetect]
    --enable-faad-fixed       enable fixed-point mode in internal FAAD2 [disabled]
    --disable-faac            disable support for FAAC (AAC encoder) [autodetect]
@@ -9,7 +9,7 @@ diff -urN mplayer-svn-r23840.orig/configure mplayer-svn-r23840/configure
    --disable-ladspa          disable LADSPA plugin support [autodetect]
    --disable-libdv           disable libdv 0.9.5 en/decoding support [autodetect]
    --disable-mad             disable libmad (MPEG audio) support [autodetect]
-@@ -557,6 +558,7 @@
+@@ -574,6 +575,7 @@
  _faad_external=auto
  _faad_fixed=no
  _faac=auto
@@ -17,7 +17,7 @@ diff -urN mplayer-svn-r23840.orig/configure mplayer-svn-r23840/configure
  _ladspa=auto
  _xmms=no
  _dvdnav=auto
-@@ -893,6 +895,8 @@
+@@ -923,6 +925,8 @@
    --disable-faad-fixed)	_faad_fixed=no	;;
    --enable-faac)	_faac=yes	;;
    --disable-faac)	_faac=no	;;
@@ -26,7 +26,7 @@ diff -urN mplayer-svn-r23840.orig/configure mplayer-svn-r23840/configure
    --enable-ladspa)	_ladspa=yes	;;
    --disable-ladspa)	_ladspa=no		;;
    --enable-xmms)	_xmms=yes	;;
-@@ -5860,6 +5864,57 @@
+@@ -6036,6 +6040,57 @@
  echores "$_faac (in libavcodec: $_lavc_faac)"
  
  
@@ -84,7 +84,7 @@ diff -urN mplayer-svn-r23840.orig/configure mplayer-svn-r23840/configure
  echocheck "FAAD2 (AAC) support"
  if test "$_faad_internal" = auto ; then
    if x86_32 && test cc_vendor=gnu; then
-@@ -7434,6 +7489,7 @@
+@@ -7639,6 +7694,7 @@
  `echo $_libavmuxers | tr '[a-z] ' '[A-Z]\n' | sed 's/^/CONFIG_/;s/$/=yes/'`
  `echo $_libavbsfs | tr '[a-z] ' '[A-Z]\n' | sed 's/^/CONFIG_/;s/$/=yes/'`
  CONFIG_LIBFAAC=$_lavc_faac
@@ -92,7 +92,7 @@ diff -urN mplayer-svn-r23840.orig/configure mplayer-svn-r23840/configure
  CONFIG_LIBMP3LAME=$_lavc_mp3lame
  CONFIG_LIBXVID=$_lavc_xvid
  CONFIG_LIBX264=$_lavc_x264
-@@ -7456,6 +7512,7 @@
+@@ -7661,6 +7717,7 @@
  VIDIX_SAVAGE=$_vidix_drv_savage
  VIDIX_SIS=$_vidix_drv_sis
  VIDIX_UNICHROME=$_vidix_drv_unichrome
@@ -100,7 +100,7 @@ diff -urN mplayer-svn-r23840.orig/configure mplayer-svn-r23840/configure
  
  # --- Some stuff for autoconfigure ----
  $_target_arch
-@@ -8066,6 +8123,9 @@
+@@ -8294,6 +8351,9 @@
  /* enable FAAC (AAC encoder) support */
  $_def_faac
  
@@ -110,9 +110,9 @@ diff -urN mplayer-svn-r23840.orig/configure mplayer-svn-r23840/configure
  /* enable LADSPA plugin support */
  $_def_ladspa
  
-diff -urN mplayer-svn-r23840.orig/etc/codecs.conf mplayer-svn-r23840/etc/codecs.conf
---- mplayer-svn-r23840.orig/etc/codecs.conf	2007-06-09 04:09:24 +0300
-+++ mplayer-svn-r23840/etc/codecs.conf	2007-07-23 01:37:07 +0300
+diff -urN mplayer-svn-r24244.orig/etc/codecs.conf mplayer-svn-r24244/etc/codecs.conf
+--- mplayer-svn-r24244.orig/etc/codecs.conf	2007-08-03 00:12:42 +0300
++++ mplayer-svn-r24244/etc/codecs.conf	2007-08-27 21:57:18 +0300
 @@ -326,6 +326,16 @@
    dll libtheora
    out YV12
@@ -145,10 +145,10 @@ diff -urN mplayer-svn-r23840.orig/etc/codecs.conf mplayer-svn-r23840/etc/codecs.
  videocodec ffasv1
    info "FFmpeg ASUS V1"
    status working
-diff -urN mplayer-svn-r23840.orig/libmpcodecs/Makefile mplayer-svn-r23840/libmpcodecs/Makefile
---- mplayer-svn-r23840.orig/libmpcodecs/Makefile	2007-07-17 23:33:58 +0300
-+++ mplayer-svn-r23840/libmpcodecs/Makefile	2007-07-23 01:37:07 +0300
-@@ -124,6 +124,7 @@
+diff -urN mplayer-svn-r24244.orig/libmpcodecs/Makefile mplayer-svn-r24244/libmpcodecs/Makefile
+--- mplayer-svn-r24244.orig/libmpcodecs/Makefile	2007-08-07 00:16:54 +0300
++++ mplayer-svn-r24244/libmpcodecs/Makefile	2007-08-27 21:57:18 +0300
+@@ -126,6 +126,7 @@
  SRCS_COMMON-$(XANIM_CODECS)          += vd_xanim.c
  SRCS_COMMON-$(XVID4)                 += vd_xvid4.c
  SRCS_COMMON-$(ZORAN)                 += vd_zrmjpeg.c vf_zrmjpeg.c
@@ -156,9 +156,9 @@ diff -urN mplayer-svn-r23840.orig/libmpcodecs/Makefile mplayer-svn-r23840/libmpc
  
  
  SRCS_MENCODER = ae.c \
-diff -urN mplayer-svn-r23840.orig/libmpcodecs/vd.c mplayer-svn-r23840/libmpcodecs/vd.c
---- mplayer-svn-r23840.orig/libmpcodecs/vd.c	2007-04-23 23:00:14 +0300
-+++ mplayer-svn-r23840/libmpcodecs/vd.c	2007-07-23 01:37:07 +0300
+diff -urN mplayer-svn-r24244.orig/libmpcodecs/vd.c mplayer-svn-r24244/libmpcodecs/vd.c
+--- mplayer-svn-r24244.orig/libmpcodecs/vd.c	2007-08-27 00:02:45 +0300
++++ mplayer-svn-r24244/libmpcodecs/vd.c	2007-08-27 21:57:18 +0300
 @@ -50,6 +50,7 @@
  extern vd_functions_t mpcodecs_vd_libdv;
  extern vd_functions_t mpcodecs_vd_lzo;
@@ -177,9 +177,9 @@ diff -urN mplayer-svn-r23840.orig/libmpcodecs/vd.c mplayer-svn-r23840/libmpcodec
  	NULL
  };
  
-diff -urN mplayer-svn-r23840.orig/libmpcodecs/vd_dirac.c mplayer-svn-r23840/libmpcodecs/vd_dirac.c
---- mplayer-svn-r23840.orig/libmpcodecs/vd_dirac.c	1970-01-01 03:00:00 +0300
-+++ mplayer-svn-r23840/libmpcodecs/vd_dirac.c	2007-07-23 01:37:07 +0300
+diff -urN mplayer-svn-r24244.orig/libmpcodecs/vd_dirac.c mplayer-svn-r24244/libmpcodecs/vd_dirac.c
+--- mplayer-svn-r24244.orig/libmpcodecs/vd_dirac.c	1970-01-01 03:00:00 +0300
++++ mplayer-svn-r24244/libmpcodecs/vd_dirac.c	2007-08-27 21:57:18 +0300
 @@ -0,0 +1,171 @@
 +#include <stdio.h>
 +#include <stdlib.h>
@@ -192,9 +192,9 @@ diff -urN mplayer-svn-r23840.orig/libmpcodecs/vd_dirac.c mplayer-svn-r23840/libm
 +
 +static vd_info_t info = 
 +{
-+	"Dirac Video decoder v0.6.x",
++	"Dirac Video decoder v0.7.x",
 +	"dirac",
-+	"Dirac <dirac@rd.bbc.co.uk",
++	"Dirac <dirac@rd.bbc.co.uk>",
 +	"Dirac",
 +	"native"
 +};
@@ -352,10 +352,10 @@ diff -urN mplayer-svn-r23840.orig/libmpcodecs/vd_dirac.c mplayer-svn-r23840/libm
 +}
 +
 +#endif
-diff -urN mplayer-svn-r23840.orig/libmpcodecs/ve_lavc.c mplayer-svn-r23840/libmpcodecs/ve_lavc.c
---- mplayer-svn-r23840.orig/libmpcodecs/ve_lavc.c	2007-05-17 23:25:38 +0300
-+++ mplayer-svn-r23840/libmpcodecs/ve_lavc.c	2007-07-23 01:37:07 +0300
-@@ -990,6 +990,8 @@
+diff -urN mplayer-svn-r24244.orig/libmpcodecs/ve_lavc.c mplayer-svn-r24244/libmpcodecs/ve_lavc.c
+--- mplayer-svn-r24244.orig/libmpcodecs/ve_lavc.c	2007-08-10 01:12:45 +0300
++++ mplayer-svn-r24244/libmpcodecs/ve_lavc.c	2007-08-27 21:57:18 +0300
+@@ -1006,6 +1006,8 @@
  	mux_v->bih->biCompression = mmioFOURCC('F', 'F', 'V', '1');
      else if (!strcasecmp(lavc_param_vcodec, "snow"))
  	mux_v->bih->biCompression = mmioFOURCC('S', 'N', 'O', 'W');
@@ -364,9 +364,9 @@ diff -urN mplayer-svn-r23840.orig/libmpcodecs/ve_lavc.c mplayer-svn-r23840/libmp
      else if (!strcasecmp(lavc_param_vcodec, "flv"))
  	mux_v->bih->biCompression = mmioFOURCC('F', 'L', 'V', '1');
      else if (!strcasecmp(lavc_param_vcodec, "dvvideo"))
-diff -urN mplayer-svn-r23840.orig/libmpdemux/demux_dirac.c mplayer-svn-r23840/libmpdemux/demux_dirac.c
---- mplayer-svn-r23840.orig/libmpdemux/demux_dirac.c	1970-01-01 03:00:00 +0300
-+++ mplayer-svn-r23840/libmpdemux/demux_dirac.c	2007-07-23 01:37:07 +0300
+diff -urN mplayer-svn-r24244.orig/libmpdemux/demux_dirac.c mplayer-svn-r24244/libmpdemux/demux_dirac.c
+--- mplayer-svn-r24244.orig/libmpdemux/demux_dirac.c	1970-01-01 03:00:00 +0300
++++ mplayer-svn-r24244/libmpdemux/demux_dirac.c	2007-08-27 21:57:18 +0300
 @@ -0,0 +1,170 @@
 +#include <stdio.h>
 +#include <stdlib.h>
@@ -523,13 +523,13 @@ diff -urN mplayer-svn-r23840.orig/libmpdemux/demux_dirac.c mplayer-svn-r23840/li
 +}
 +
 +demuxer_desc_t demuxer_desc_dirac = {
-+    "Dirac Demuxer",
++	"Dirac Demuxer",
 +	"dirac",
 +	"Dirac",
 +	"Anuradha Suraparaju",
 +	"",
 +	DEMUXER_TYPE_DIRAC,
-+	1,
++	0,
 +	dirac_check_file,
 +	demux_dirac_fill_buffer,
 +	demux_open_dirac,
@@ -538,19 +538,18 @@ diff -urN mplayer-svn-r23840.orig/libmpdemux/demux_dirac.c mplayer-svn-r23840/li
 +	NULL
 +};
 +#endif
-diff -urN mplayer-svn-r23840.orig/libmpdemux/demuxer.c mplayer-svn-r23840/libmpdemux/demuxer.c
---- mplayer-svn-r23840.orig/libmpdemux/demuxer.c	2007-06-24 16:02:02 +0300
-+++ mplayer-svn-r23840/libmpdemux/demuxer.c	2007-07-23 01:37:07 +0300
-@@ -67,6 +67,8 @@
+diff -urN mplayer-svn-r24244.orig/libmpdemux/demuxer.c mplayer-svn-r24244/libmpdemux/demuxer.c
+--- mplayer-svn-r24244.orig/libmpdemux/demuxer.c	2007-08-10 01:12:50 +0300
++++ mplayer-svn-r24244/libmpdemux/demuxer.c	2007-08-27 21:57:18 +0300
+@@ -67,6 +67,7 @@
  extern demuxer_desc_t demuxer_desc_lavf_preferred;
  extern demuxer_desc_t demuxer_desc_aac;
  extern demuxer_desc_t demuxer_desc_nut;
-+extern demuxer_desc_t demuxer_desc_avs;
 +extern demuxer_desc_t demuxer_desc_dirac;
  
  demuxer_desc_t* demuxer_list[] = {
    &demuxer_desc_rawaudio,
-@@ -132,6 +134,9 @@
+@@ -132,6 +133,9 @@
  #ifdef HAVE_XMMS
    &demuxer_desc_xmms,
  #endif
@@ -560,9 +559,9 @@ diff -urN mplayer-svn-r23840.orig/libmpdemux/demuxer.c mplayer-svn-r23840/libmpd
    NULL
  };
  
-diff -urN mplayer-svn-r23840.orig/libmpdemux/demuxer.h mplayer-svn-r23840/libmpdemux/demuxer.h
---- mplayer-svn-r23840.orig/libmpdemux/demuxer.h	2007-07-03 02:32:26 +0300
-+++ mplayer-svn-r23840/libmpdemux/demuxer.h	2007-07-23 01:37:07 +0300
+diff -urN mplayer-svn-r24244.orig/libmpdemux/demuxer.h mplayer-svn-r24244/libmpdemux/demuxer.h
+--- mplayer-svn-r24244.orig/libmpdemux/demuxer.h	2007-07-03 02:32:26 +0300
++++ mplayer-svn-r24244/libmpdemux/demuxer.h	2007-08-27 21:57:18 +0300
 @@ -56,11 +56,12 @@
  #define DEMUXER_TYPE_MPEG_GXF 42
  #define DEMUXER_TYPE_NUT 43
@@ -577,9 +576,9 @@ diff -urN mplayer-svn-r23840.orig/libmpdemux/demuxer.h mplayer-svn-r23840/libmpd
  
  #define DEMUXER_TYPE_DEMUXERS (1<<16)
  // A virtual demuxer type for the network code
-diff -urN mplayer-svn-r23840.orig/libmpdemux/Makefile mplayer-svn-r23840/libmpdemux/Makefile
---- mplayer-svn-r23840.orig/libmpdemux/Makefile	2007-04-26 22:40:02 +0300
-+++ mplayer-svn-r23840/libmpdemux/Makefile	2007-07-23 01:37:07 +0300
+diff -urN mplayer-svn-r24244.orig/libmpdemux/Makefile mplayer-svn-r24244/libmpdemux/Makefile
+--- mplayer-svn-r24244.orig/libmpdemux/Makefile	2007-04-26 22:40:02 +0300
++++ mplayer-svn-r24244/libmpdemux/Makefile	2007-08-27 21:57:18 +0300
 @@ -54,6 +54,7 @@
  SRCS_COMMON-$(STREAMING_LIVE555)       += demux_rtp.cpp demux_rtp_codec.cpp
  SRCS_COMMON-$(WIN32DLL)                += demux_avs.c
@@ -588,9 +587,9 @@ diff -urN mplayer-svn-r23840.orig/libmpdemux/Makefile mplayer-svn-r23840/libmpde
  
  SRCS_MENCODER = muxer.c \
                  muxer_avi.c \
-diff -urN mplayer-svn-r23840.orig/libmpdemux/parse_dirac.c mplayer-svn-r23840/libmpdemux/parse_dirac.c
---- mplayer-svn-r23840.orig/libmpdemux/parse_dirac.c	1970-01-01 03:00:00 +0300
-+++ mplayer-svn-r23840/libmpdemux/parse_dirac.c	2007-07-23 01:37:07 +0300
+diff -urN mplayer-svn-r24244.orig/libmpdemux/parse_dirac.c mplayer-svn-r24244/libmpdemux/parse_dirac.c
+--- mplayer-svn-r24244.orig/libmpdemux/parse_dirac.c	1970-01-01 03:00:00 +0300
++++ mplayer-svn-r24244/libmpdemux/parse_dirac.c	2007-08-27 21:57:18 +0300
 @@ -0,0 +1,154 @@
 +#include <stdio.h>
 +#include <stdlib.h>
@@ -746,9 +745,9 @@ diff -urN mplayer-svn-r23840.orig/libmpdemux/parse_dirac.c mplayer-svn-r23840/li
 +{
 +	return 0;
 +}
-diff -urN mplayer-svn-r23840.orig/libmpdemux/parse_dirac.h mplayer-svn-r23840/libmpdemux/parse_dirac.h
---- mplayer-svn-r23840.orig/libmpdemux/parse_dirac.h	1970-01-01 03:00:00 +0300
-+++ mplayer-svn-r23840/libmpdemux/parse_dirac.h	2007-07-23 01:37:07 +0300
+diff -urN mplayer-svn-r24244.orig/libmpdemux/parse_dirac.h mplayer-svn-r24244/libmpdemux/parse_dirac.h
+--- mplayer-svn-r24244.orig/libmpdemux/parse_dirac.h	1970-01-01 03:00:00 +0300
++++ mplayer-svn-r24244/libmpdemux/parse_dirac.h	2007-08-27 21:57:18 +0300
 @@ -0,0 +1,10 @@
 +
 +#define MAX_VIDEO_PACKET_SIZE (224*1024+4)
@@ -760,9 +759,9 @@ diff -urN mplayer-svn-r23840.orig/libmpdemux/parse_dirac.h mplayer-svn-r23840/li
 +// return: next packet code
 +int dirac_skip_video_frame(demux_stream_t *ds);
 +
-diff -urN mplayer-svn-r23840.orig/libmpdemux/video.c mplayer-svn-r23840/libmpdemux/video.c
---- mplayer-svn-r23840.orig/libmpdemux/video.c	2007-07-15 18:56:02 +0300
-+++ mplayer-svn-r23840/libmpdemux/video.c	2007-07-23 01:37:07 +0300
+diff -urN mplayer-svn-r24244.orig/libmpdemux/video.c mplayer-svn-r24244/libmpdemux/video.c
+--- mplayer-svn-r24244.orig/libmpdemux/video.c	2007-07-15 18:56:02 +0300
++++ mplayer-svn-r24244/libmpdemux/video.c	2007-08-27 21:57:18 +0300
 @@ -17,6 +17,7 @@
  #include "demuxer.h"
  #include "stheader.h"
