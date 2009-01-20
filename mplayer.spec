@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc2
-%define svnrev 25844
-%define ffmpeg_svnrev 11604
+%define svnrev 25873
+%define ffmpeg_svnrev 11627
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -334,7 +334,7 @@ Patch12: %lname-uni-svn25678.patch
 Patch13: %Name-svn-20060711-vbe.patch.gz
 Patch14: %lname-svn-r25669-gui_nls.patch
 Patch16: %lname-svn-r25826-configure.patch
-Patch17: %lname-svn-r25826-ext_ffmpeg.patch
+Patch17: %lname-svn-r25873-ext_ffmpeg.patch
 Patch27: %lname-svn-r22518-builddocs.patch
 %if_disabled shared_ffmpeg
 %{?_enable_dirac:Patch31: ffmpeg-svn-r11604-dirac-0.9.x.patch}
@@ -728,11 +728,9 @@ subst 's|\\/\\/|//|g' help/help_mp-zh_??.h
 
 
 %build
-%if_disabled debug
 %define _optlevel 3
-%add_optflags -fomit-frame-pointer -ffast-math
+%{?_disable_debug:%add_optflags -ffast-math}
 export CFLAGS="%optflags"
-%endif
 ./configure \
 		--target=%_target \
 		--prefix=%_prefix \
@@ -1236,6 +1234,10 @@ done
 
 
 %changelog
+* Sat Jan 26 2008 Led <led@altlinux.ru> 1.0-alt35.25873.1
+- new SVN snapshot (revision 25873)
+- updated %lname-svn-r25873-ext_ffmpeg.patch
+
 * Thu Jan 24 2008 Led <led@altlinux.ru> 1.0-alt35.25844.1
 - new SVN snapshot (revision 25844)
 - updated ffmpeg-svn-r11604-dirac-0.9.x.patch

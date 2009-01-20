@@ -1,6 +1,6 @@
-diff -urN mplayer-svn-r25826.orig/configure mplayer-svn-r25826/configure
---- mplayer-svn-r25826.orig/configure	2008-01-21 04:18:30 +0200
-+++ mplayer-svn-r25826/configure	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/configure mplayer-svn-r25873/configure
+--- mplayer-svn-r25873.orig/configure	2008-01-24 02:33:27 +0200
++++ mplayer-svn-r25873/configure	2008-01-27 04:47:14 +0200
 @@ -291,10 +291,12 @@
    --disable-libavcodec_a    disable static libavcodec [autodetect]
    --disable-libavformat_a   disable static libavformat [autodetect]
@@ -34,7 +34,7 @@ diff -urN mplayer-svn-r25826.orig/configure mplayer-svn-r25826/configure
    --enable-libavcodec_mpegaudio_hp)	_libavcodec_mpegaudio_hp=yes	;;
    --disable-libavcodec_mpegaudio_hp)	_libavcodec_mpegaudio_hp=no	;;
  
-@@ -6260,6 +6268,45 @@
+@@ -6235,6 +6243,45 @@
  fi
  echores "$_real"
  
@@ -80,7 +80,7 @@ diff -urN mplayer-svn-r25826.orig/configure mplayer-svn-r25826/configure
  
  echocheck "QuickTime codecs"
  if test "$_qtx" = auto ; then
-@@ -7722,6 +7769,10 @@
+@@ -7723,6 +7770,10 @@
  LIBPOSTPROC = $_libpostproc
  LIBPOSTPROC_A = $_libpostproc_a
  LIBPOSTPROC_SO = $_libpostproc_so
@@ -91,7 +91,7 @@ diff -urN mplayer-svn-r25826.orig/configure mplayer-svn-r25826/configure
  ZORAN = $_zr
  LIBLZO = $_liblzo
  LIBDV = $_libdv
-@@ -8107,6 +8158,10 @@
+@@ -8108,6 +8159,10 @@
  $_def_libpostproc_a
  $_def_libpostproc_so
  
@@ -102,9 +102,9 @@ diff -urN mplayer-svn-r25826.orig/configure mplayer-svn-r25826/configure
  /* Win32 DLL support */
  $_def_win32dll
  #define WIN32_PATH "$_win32codecsdir"
-diff -urN mplayer-svn-r25826.orig/gui/mplayer/gui_common.c mplayer-svn-r25826/gui/mplayer/gui_common.c
---- mplayer-svn-r25826.orig/gui/mplayer/gui_common.c	2008-01-11 02:30:35 +0200
-+++ mplayer-svn-r25826/gui/mplayer/gui_common.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/gui/mplayer/gui_common.c mplayer-svn-r25873/gui/mplayer/gui_common.c
+--- mplayer-svn-r25873.orig/gui/mplayer/gui_common.c	2008-01-11 02:30:35 +0200
++++ mplayer-svn-r25873/gui/mplayer/gui_common.c	2008-01-27 04:47:14 +0200
 @@ -25,7 +25,11 @@
  #include "../libmpdemux/stheader.h"
  #include "../codec-cfg.h"
@@ -117,9 +117,9 @@ diff -urN mplayer-svn-r25826.orig/gui/mplayer/gui_common.c mplayer-svn-r25826/gu
  
  
  #include "play.h"
-diff -urN mplayer-svn-r25826.orig/gui/skin/font.c mplayer-svn-r25826/gui/skin/font.c
---- mplayer-svn-r25826.orig/gui/skin/font.c	2007-07-06 23:36:36 +0300
-+++ mplayer-svn-r25826/gui/skin/font.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/gui/skin/font.c mplayer-svn-r25873/gui/skin/font.c
+--- mplayer-svn-r25873.orig/gui/skin/font.c	2007-07-06 23:36:36 +0300
++++ mplayer-svn-r25873/gui/skin/font.c	2008-01-27 04:47:14 +0200
 @@ -10,7 +10,11 @@
  #include "font.h"
  #include "cut.h"
@@ -132,9 +132,9 @@ diff -urN mplayer-svn-r25826.orig/gui/skin/font.c mplayer-svn-r25826/gui/skin/fo
  
  int items;
  
-diff -urN mplayer-svn-r25826.orig/gui/skin/skin.c mplayer-svn-r25826/gui/skin/skin.c
---- mplayer-svn-r25826.orig/gui/skin/skin.c	2007-07-06 23:36:36 +0300
-+++ mplayer-svn-r25826/gui/skin/skin.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/gui/skin/skin.c mplayer-svn-r25873/gui/skin/skin.c
+--- mplayer-svn-r25873.orig/gui/skin/skin.c	2007-07-06 23:36:36 +0300
++++ mplayer-svn-r25873/gui/skin/skin.c	2008-01-27 04:47:14 +0200
 @@ -11,7 +11,11 @@
  #include "../mp_msg.h"
  #include "../help_mp.h"
@@ -147,9 +147,9 @@ diff -urN mplayer-svn-r25826.orig/gui/skin/skin.c mplayer-svn-r25826/gui/skin/sk
  
  //#define MSGL_DBG2 MSGL_STATUS
  
-diff -urN mplayer-svn-r25826.orig/gui/wm/ws.c mplayer-svn-r25826/gui/wm/ws.c
---- mplayer-svn-r25826.orig/gui/wm/ws.c	2007-07-19 01:16:01 +0300
-+++ mplayer-svn-r25826/gui/wm/ws.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/gui/wm/ws.c mplayer-svn-r25873/gui/wm/ws.c
+--- mplayer-svn-r25873.orig/gui/wm/ws.c	2007-07-19 01:16:01 +0300
++++ mplayer-svn-r25873/gui/wm/ws.c	2008-01-27 04:47:14 +0200
 @@ -24,8 +24,13 @@
  #include "ws.h"
  #include "wsxdnd.h"
@@ -164,9 +164,9 @@ diff -urN mplayer-svn-r25826.orig/gui/wm/ws.c mplayer-svn-r25826/gui/wm/ws.c
  #include "../libmpcodecs/vf_scale.h"
  #include "../mp_msg.h"
  #include "../help_mp.h"
-diff -urN mplayer-svn-r25826.orig/input/input.c mplayer-svn-r25826/input/input.c
---- mplayer-svn-r25826.orig/input/input.c	2008-01-21 04:18:26 +0200
-+++ mplayer-svn-r25826/input/input.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/input/input.c mplayer-svn-r25873/input/input.c
+--- mplayer-svn-r25873.orig/input/input.c	2008-01-26 00:38:06 +0200
++++ mplayer-svn-r25873/input/input.c	2008-01-27 04:47:14 +0200
 @@ -20,7 +20,11 @@
  #include "osdep/getch2.h"
  #include "osdep/keycodes.h"
@@ -179,9 +179,9 @@ diff -urN mplayer-svn-r25826.orig/input/input.c mplayer-svn-r25826/input/input.c
  #include "mp_msg.h"
  #include "help_mp.h"
  #include "m_config.h"
-diff -urN mplayer-svn-r25826.orig/liba52/parse.c mplayer-svn-r25826/liba52/parse.c
---- mplayer-svn-r25826.orig/liba52/parse.c	2006-11-09 16:34:19 +0200
-+++ mplayer-svn-r25826/liba52/parse.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/liba52/parse.c mplayer-svn-r25873/liba52/parse.c
+--- mplayer-svn-r25873.orig/liba52/parse.c	2006-11-09 16:34:19 +0200
++++ mplayer-svn-r25873/liba52/parse.c	2008-01-27 04:47:14 +0200
 @@ -37,7 +37,11 @@
  #include "bitstream.h"
  #include "tables.h"
@@ -194,9 +194,9 @@ diff -urN mplayer-svn-r25826.orig/liba52/parse.c mplayer-svn-r25826/liba52/parse
  
  #ifdef HAVE_MEMALIGN
  /* some systems have memalign() but no declaration for it */
-diff -urN mplayer-svn-r25826.orig/libaf/af_format.c mplayer-svn-r25826/libaf/af_format.c
---- mplayer-svn-r25826.orig/libaf/af_format.c	2007-11-10 23:20:51 +0200
-+++ mplayer-svn-r25826/libaf/af_format.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libaf/af_format.c mplayer-svn-r25873/libaf/af_format.c
+--- mplayer-svn-r25873.orig/libaf/af_format.c	2007-11-10 23:20:51 +0200
++++ mplayer-svn-r25873/libaf/af_format.c	2008-01-27 04:47:14 +0200
 @@ -21,7 +21,11 @@
  #endif
  
@@ -209,9 +209,9 @@ diff -urN mplayer-svn-r25826.orig/libaf/af_format.c mplayer-svn-r25826/libaf/af_
  #include "mpbswap.h"
  #include "libvo/fastmemcpy.h"
  
-diff -urN mplayer-svn-r25826.orig/libaf/af_resample.c mplayer-svn-r25826/libaf/af_resample.c
---- mplayer-svn-r25826.orig/libaf/af_resample.c	2007-11-10 23:20:51 +0200
-+++ mplayer-svn-r25826/libaf/af_resample.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libaf/af_resample.c mplayer-svn-r25873/libaf/af_resample.c
+--- mplayer-svn-r25873.orig/libaf/af_resample.c	2007-11-10 23:20:51 +0200
++++ mplayer-svn-r25873/libaf/af_resample.c	2008-01-27 04:47:14 +0200
 @@ -13,7 +13,12 @@
  #include <stdlib.h>
  #include <inttypes.h>
@@ -225,9 +225,9 @@ diff -urN mplayer-svn-r25826.orig/libaf/af_resample.c mplayer-svn-r25826/libaf/a
  #include "af.h"
  #include "dsp.h"
  
-diff -urN mplayer-svn-r25826.orig/libaf/af_scaletempo.c mplayer-svn-r25826/libaf/af_scaletempo.c
---- mplayer-svn-r25826.orig/libaf/af_scaletempo.c	2007-12-02 17:50:51 +0200
-+++ mplayer-svn-r25826/libaf/af_scaletempo.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libaf/af_scaletempo.c mplayer-svn-r25873/libaf/af_scaletempo.c
+--- mplayer-svn-r25873.orig/libaf/af_scaletempo.c	2007-12-02 17:50:51 +0200
++++ mplayer-svn-r25873/libaf/af_scaletempo.c	2008-01-27 04:47:14 +0200
 @@ -36,7 +36,12 @@
  #include <limits.h>
  
@@ -241,9 +241,9 @@ diff -urN mplayer-svn-r25826.orig/libaf/af_scaletempo.c mplayer-svn-r25826/libaf
  #include "subopt-helper.h"
  #include "help_mp.h"
  
-diff -urN mplayer-svn-r25826.orig/libao2/ao_dxr2.c mplayer-svn-r25826/libao2/ao_dxr2.c
---- mplayer-svn-r25826.orig/libao2/ao_dxr2.c	2008-01-21 04:18:26 +0200
-+++ mplayer-svn-r25826/libao2/ao_dxr2.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libao2/ao_dxr2.c mplayer-svn-r25873/libao2/ao_dxr2.c
+--- mplayer-svn-r25873.orig/libao2/ao_dxr2.c	2008-01-21 04:18:26 +0200
++++ mplayer-svn-r25873/libao2/ao_dxr2.c	2008-01-27 04:47:14 +0200
 @@ -7,7 +7,11 @@
  #include "config.h"
  #include "mp_msg.h"
@@ -256,9 +256,9 @@ diff -urN mplayer-svn-r25826.orig/libao2/ao_dxr2.c mplayer-svn-r25826/libao2/ao_
  #include "mpbswap.h"
  
  #include "audio_out.h"
-diff -urN mplayer-svn-r25826.orig/libao2/ao_pcm.c mplayer-svn-r25826/libao2/ao_pcm.c
---- mplayer-svn-r25826.orig/libao2/ao_pcm.c	2007-12-11 00:55:26 +0200
-+++ mplayer-svn-r25826/libao2/ao_pcm.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libao2/ao_pcm.c mplayer-svn-r25873/libao2/ao_pcm.c
+--- mplayer-svn-r25873.orig/libao2/ao_pcm.c	2007-12-11 00:55:26 +0200
++++ mplayer-svn-r25873/libao2/ao_pcm.c	2008-01-27 04:47:14 +0200
 @@ -4,7 +4,11 @@
  #include <stdlib.h>
  #include <string.h>
@@ -271,9 +271,9 @@ diff -urN mplayer-svn-r25826.orig/libao2/ao_pcm.c mplayer-svn-r25826/libao2/ao_p
  #include "mpbswap.h"
  #include "subopt-helper.h"
  #include "libaf/af_format.h"
-diff -urN mplayer-svn-r25826.orig/libass/mputils.h mplayer-svn-r25826/libass/mputils.h
---- mplayer-svn-r25826.orig/libass/mputils.h	2008-01-11 02:30:38 +0200
-+++ mplayer-svn-r25826/libass/mputils.h	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libass/mputils.h mplayer-svn-r25873/libass/mputils.h
+--- mplayer-svn-r25873.orig/libass/mputils.h	2008-01-11 02:30:38 +0200
++++ mplayer-svn-r25873/libass/mputils.h	2008-01-27 04:47:14 +0200
 @@ -6,6 +6,10 @@
  #include "libvo/font_load.h" // for blur()
  #include "subreader.h" // for guess_buffer_cp
@@ -285,9 +285,9 @@ diff -urN mplayer-svn-r25826.orig/libass/mputils.h mplayer-svn-r25826/libass/mpu
 +#endif
  
  #endif /* ASS_MPUTILS_H */
-diff -urN mplayer-svn-r25826.orig/libmenu/menu.c mplayer-svn-r25826/libmenu/menu.c
---- mplayer-svn-r25826.orig/libmenu/menu.c	2008-01-11 02:30:38 +0200
-+++ mplayer-svn-r25826/libmenu/menu.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libmenu/menu.c mplayer-svn-r25873/libmenu/menu.c
+--- mplayer-svn-r25873.orig/libmenu/menu.c	2008-01-11 02:30:38 +0200
++++ mplayer-svn-r25873/libmenu/menu.c	2008-01-27 04:47:14 +0200
 @@ -407,7 +407,11 @@
  
  #ifdef USE_FRIBIDI
@@ -300,9 +300,9 @@ diff -urN mplayer-svn-r25826.orig/libmenu/menu.c mplayer-svn-r25826/libmenu/menu
  char *menu_fribidi_charset = NULL;
  int menu_flip_hebrew = 0;
  int menu_fribidi_flip_commas = 0;
-diff -urN mplayer-svn-r25826.orig/libmpcodecs/ad_dk3adpcm.c mplayer-svn-r25826/libmpcodecs/ad_dk3adpcm.c
---- mplayer-svn-r25826.orig/libmpcodecs/ad_dk3adpcm.c	2006-12-08 20:58:10 +0200
-+++ mplayer-svn-r25826/libmpcodecs/ad_dk3adpcm.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libmpcodecs/ad_dk3adpcm.c mplayer-svn-r25873/libmpcodecs/ad_dk3adpcm.c
+--- mplayer-svn-r25873.orig/libmpcodecs/ad_dk3adpcm.c	2006-12-08 20:58:10 +0200
++++ mplayer-svn-r25873/libmpcodecs/ad_dk3adpcm.c	2008-01-27 04:47:14 +0200
 @@ -16,7 +16,11 @@
  #include <unistd.h>
  
@@ -315,9 +315,9 @@ diff -urN mplayer-svn-r25826.orig/libmpcodecs/ad_dk3adpcm.c mplayer-svn-r25826/l
  #include "mpbswap.h"
  #include "ad_internal.h"
  
-diff -urN mplayer-svn-r25826.orig/libmpcodecs/ad_imaadpcm.c mplayer-svn-r25826/libmpcodecs/ad_imaadpcm.c
---- mplayer-svn-r25826.orig/libmpcodecs/ad_imaadpcm.c	2006-12-08 20:58:09 +0200
-+++ mplayer-svn-r25826/libmpcodecs/ad_imaadpcm.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libmpcodecs/ad_imaadpcm.c mplayer-svn-r25873/libmpcodecs/ad_imaadpcm.c
+--- mplayer-svn-r25873.orig/libmpcodecs/ad_imaadpcm.c	2006-12-08 20:58:09 +0200
++++ mplayer-svn-r25873/libmpcodecs/ad_imaadpcm.c	2008-01-27 04:47:14 +0200
 @@ -21,7 +21,11 @@
  #include <unistd.h>
  
@@ -330,9 +330,9 @@ diff -urN mplayer-svn-r25826.orig/libmpcodecs/ad_imaadpcm.c mplayer-svn-r25826/l
  #include "mpbswap.h"
  #include "ad_internal.h"
  
-diff -urN mplayer-svn-r25826.orig/libmpcodecs/ad_msadpcm.c mplayer-svn-r25826/libmpcodecs/ad_msadpcm.c
---- mplayer-svn-r25826.orig/libmpcodecs/ad_msadpcm.c	2006-12-08 20:58:10 +0200
-+++ mplayer-svn-r25826/libmpcodecs/ad_msadpcm.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libmpcodecs/ad_msadpcm.c mplayer-svn-r25873/libmpcodecs/ad_msadpcm.c
+--- mplayer-svn-r25873.orig/libmpcodecs/ad_msadpcm.c	2006-12-08 20:58:10 +0200
++++ mplayer-svn-r25873/libmpcodecs/ad_msadpcm.c	2008-01-27 04:47:14 +0200
 @@ -12,7 +12,11 @@
  #include <unistd.h>
  
@@ -345,9 +345,9 @@ diff -urN mplayer-svn-r25826.orig/libmpcodecs/ad_msadpcm.c mplayer-svn-r25826/li
  #include "mpbswap.h"
  #include "ad_internal.h"
  
-diff -urN mplayer-svn-r25826.orig/libmpcodecs/ad_qtaudio.c mplayer-svn-r25826/libmpcodecs/ad_qtaudio.c
---- mplayer-svn-r25826.orig/libmpcodecs/ad_qtaudio.c	2007-03-19 00:20:09 +0200
-+++ mplayer-svn-r25826/libmpcodecs/ad_qtaudio.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libmpcodecs/ad_qtaudio.c mplayer-svn-r25873/libmpcodecs/ad_qtaudio.c
+--- mplayer-svn-r25873.orig/libmpcodecs/ad_qtaudio.c	2007-03-19 00:20:09 +0200
++++ mplayer-svn-r25873/libmpcodecs/ad_qtaudio.c	2008-01-27 04:47:14 +0200
 @@ -14,7 +14,13 @@
  #include "loader/wine/windef.h"
  
@@ -363,9 +363,9 @@ diff -urN mplayer-svn-r25826.orig/libmpcodecs/ad_qtaudio.c mplayer-svn-r25826/li
  
  #ifdef WIN32_LOADER
  #include "loader/ldt_keeper.h"
-diff -urN mplayer-svn-r25826.orig/libmpcodecs/native/nuppelvideo.c mplayer-svn-r25826/libmpcodecs/native/nuppelvideo.c
---- mplayer-svn-r25826.orig/libmpcodecs/native/nuppelvideo.c	2007-06-05 23:28:21 +0300
-+++ mplayer-svn-r25826/libmpcodecs/native/nuppelvideo.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libmpcodecs/native/nuppelvideo.c mplayer-svn-r25873/libmpcodecs/native/nuppelvideo.c
+--- mplayer-svn-r25873.orig/libmpcodecs/native/nuppelvideo.c	2007-06-05 23:28:21 +0300
++++ mplayer-svn-r25873/libmpcodecs/native/nuppelvideo.c	2008-01-27 04:47:14 +0200
 @@ -13,7 +13,11 @@
  
  #include "config.h"
@@ -378,9 +378,9 @@ diff -urN mplayer-svn-r25826.orig/libmpcodecs/native/nuppelvideo.c mplayer-svn-r
  #include "mpbswap.h"
  
  #include "../libvo/fastmemcpy.h"
-diff -urN mplayer-svn-r25826.orig/libmpcodecs/native/RTjpegN.c mplayer-svn-r25826/libmpcodecs/native/RTjpegN.c
---- mplayer-svn-r25826.orig/libmpcodecs/native/RTjpegN.c	2007-01-22 19:01:51 +0200
-+++ mplayer-svn-r25826/libmpcodecs/native/RTjpegN.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libmpcodecs/native/RTjpegN.c mplayer-svn-r25873/libmpcodecs/native/RTjpegN.c
+--- mplayer-svn-r25873.orig/libmpcodecs/native/RTjpegN.c	2007-01-22 19:01:51 +0200
++++ mplayer-svn-r25873/libmpcodecs/native/RTjpegN.c	2008-01-27 04:47:14 +0200
 @@ -30,7 +30,11 @@
  #define MMX
  #endif
@@ -393,9 +393,9 @@ diff -urN mplayer-svn-r25826.orig/libmpcodecs/native/RTjpegN.c mplayer-svn-r2582
  #include "mpbswap.h"
  #include "RTjpegN.h"
  
-diff -urN mplayer-svn-r25826.orig/libmpcodecs/vd_ffmpeg.c mplayer-svn-r25826/libmpcodecs/vd_ffmpeg.c
---- mplayer-svn-r25826.orig/libmpcodecs/vd_ffmpeg.c	2007-12-03 01:37:09 +0200
-+++ mplayer-svn-r25826/libmpcodecs/vd_ffmpeg.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libmpcodecs/vd_ffmpeg.c mplayer-svn-r25873/libmpcodecs/vd_ffmpeg.c
+--- mplayer-svn-r25873.orig/libmpcodecs/vd_ffmpeg.c	2007-12-03 01:37:09 +0200
++++ mplayer-svn-r25873/libmpcodecs/vd_ffmpeg.c	2008-01-27 04:47:14 +0200
 @@ -7,8 +7,15 @@
  #include "mp_msg.h"
  #include "help_mp.h"
@@ -412,9 +412,9 @@ diff -urN mplayer-svn-r25826.orig/libmpcodecs/vd_ffmpeg.c mplayer-svn-r25826/lib
  #include "mpbswap.h"
  
  #include "vd_internal.h"
-diff -urN mplayer-svn-r25826.orig/libmpcodecs/vd_ijpg.c mplayer-svn-r25826/libmpcodecs/vd_ijpg.c
---- mplayer-svn-r25826.orig/libmpcodecs/vd_ijpg.c	2008-01-21 04:18:25 +0200
-+++ mplayer-svn-r25826/libmpcodecs/vd_ijpg.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libmpcodecs/vd_ijpg.c mplayer-svn-r25873/libmpcodecs/vd_ijpg.c
+--- mplayer-svn-r25873.orig/libmpcodecs/vd_ijpg.c	2008-01-21 04:18:25 +0200
++++ mplayer-svn-r25873/libmpcodecs/vd_ijpg.c	2008-01-27 04:47:14 +0200
 @@ -12,7 +12,11 @@
  
  #include <setjmp.h>
@@ -427,9 +427,9 @@ diff -urN mplayer-svn-r25826.orig/libmpcodecs/vd_ijpg.c mplayer-svn-r25826/libmp
  #include "mpbswap.h"
  
  #include "vd_internal.h"
-diff -urN mplayer-svn-r25826.orig/libmpcodecs/vd_mpng.c mplayer-svn-r25826/libmpcodecs/vd_mpng.c
---- mplayer-svn-r25826.orig/libmpcodecs/vd_mpng.c	2007-06-05 23:28:24 +0300
-+++ mplayer-svn-r25826/libmpcodecs/vd_mpng.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libmpcodecs/vd_mpng.c mplayer-svn-r25873/libmpcodecs/vd_mpng.c
+--- mplayer-svn-r25873.orig/libmpcodecs/vd_mpng.c	2007-06-05 23:28:24 +0300
++++ mplayer-svn-r25873/libmpcodecs/vd_mpng.c	2008-01-27 04:47:14 +0200
 @@ -6,7 +6,11 @@
  
  #include <png.h>
@@ -442,9 +442,9 @@ diff -urN mplayer-svn-r25826.orig/libmpcodecs/vd_mpng.c mplayer-svn-r25826/libmp
  #include "mpbswap.h"
  #include "libvo/fastmemcpy.h"
  
-diff -urN mplayer-svn-r25826.orig/libmpcodecs/vd_mtga.c mplayer-svn-r25826/libmpcodecs/vd_mtga.c
---- mplayer-svn-r25826.orig/libmpcodecs/vd_mtga.c	2007-06-05 23:28:24 +0300
-+++ mplayer-svn-r25826/libmpcodecs/vd_mtga.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libmpcodecs/vd_mtga.c mplayer-svn-r25873/libmpcodecs/vd_mtga.c
+--- mplayer-svn-r25873.orig/libmpcodecs/vd_mtga.c	2007-06-05 23:28:24 +0300
++++ mplayer-svn-r25873/libmpcodecs/vd_mtga.c	2008-01-27 04:47:14 +0200
 @@ -11,7 +11,11 @@
  #include "config.h"
  #include "mp_msg.h"
@@ -457,9 +457,9 @@ diff -urN mplayer-svn-r25826.orig/libmpcodecs/vd_mtga.c mplayer-svn-r25826/libmp
  #include "mpbswap.h"
  #include "libvo/fastmemcpy.h"
  
-diff -urN mplayer-svn-r25826.orig/libmpcodecs/vd_qtvideo.c mplayer-svn-r25826/libmpcodecs/vd_qtvideo.c
---- mplayer-svn-r25826.orig/libmpcodecs/vd_qtvideo.c	2007-03-19 00:20:09 +0200
-+++ mplayer-svn-r25826/libmpcodecs/vd_qtvideo.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libmpcodecs/vd_qtvideo.c mplayer-svn-r25873/libmpcodecs/vd_qtvideo.c
+--- mplayer-svn-r25873.orig/libmpcodecs/vd_qtvideo.c	2008-01-24 02:33:26 +0200
++++ mplayer-svn-r25873/libmpcodecs/vd_qtvideo.c	2008-01-27 04:47:14 +0200
 @@ -28,7 +28,7 @@
  
  LIBVD_EXTERN(qtvideo)
@@ -469,9 +469,9 @@ diff -urN mplayer-svn-r25826.orig/libmpcodecs/vd_qtvideo.c mplayer-svn-r25826/li
  
  #ifndef MACOSX
  #include "loader/qtx/qtxsdk/components.h"
-diff -urN mplayer-svn-r25826.orig/libmpcodecs/vd_sgi.c mplayer-svn-r25826/libmpcodecs/vd_sgi.c
---- mplayer-svn-r25826.orig/libmpcodecs/vd_sgi.c	2006-12-08 20:58:10 +0200
-+++ mplayer-svn-r25826/libmpcodecs/vd_sgi.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libmpcodecs/vd_sgi.c mplayer-svn-r25873/libmpcodecs/vd_sgi.c
+--- mplayer-svn-r25873.orig/libmpcodecs/vd_sgi.c	2006-12-08 20:58:10 +0200
++++ mplayer-svn-r25873/libmpcodecs/vd_sgi.c	2008-01-27 04:47:14 +0200
 @@ -7,7 +7,11 @@
  
  #include "config.h"
@@ -484,9 +484,9 @@ diff -urN mplayer-svn-r25826.orig/libmpcodecs/vd_sgi.c mplayer-svn-r25826/libmpc
  #include "mpbswap.h"
  #include "vd_internal.h"
  
-diff -urN mplayer-svn-r25826.orig/libmpcodecs/vd_xanim.c mplayer-svn-r25826/libmpcodecs/vd_xanim.c
---- mplayer-svn-r25826.orig/libmpcodecs/vd_xanim.c	2007-05-28 01:08:51 +0300
-+++ mplayer-svn-r25826/libmpcodecs/vd_xanim.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libmpcodecs/vd_xanim.c mplayer-svn-r25873/libmpcodecs/vd_xanim.c
+--- mplayer-svn-r25873.orig/libmpcodecs/vd_xanim.c	2007-05-28 01:08:51 +0300
++++ mplayer-svn-r25873/libmpcodecs/vd_xanim.c	2008-01-27 04:47:14 +0200
 @@ -37,7 +37,11 @@
  #include <errno.h> /* strerror, errno */
  
@@ -500,9 +500,9 @@ diff -urN mplayer-svn-r25826.orig/libmpcodecs/vd_xanim.c mplayer-svn-r25826/libm
  
  #include "osdep/timer.h"
  
-diff -urN mplayer-svn-r25826.orig/libmpcodecs/ve_qtvideo.c mplayer-svn-r25826/libmpcodecs/ve_qtvideo.c
---- mplayer-svn-r25826.orig/libmpcodecs/ve_qtvideo.c	2007-08-30 01:53:21 +0300
-+++ mplayer-svn-r25826/libmpcodecs/ve_qtvideo.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libmpcodecs/ve_qtvideo.c mplayer-svn-r25873/libmpcodecs/ve_qtvideo.c
+--- mplayer-svn-r25873.orig/libmpcodecs/ve_qtvideo.c	2007-08-30 01:53:21 +0300
++++ mplayer-svn-r25873/libmpcodecs/ve_qtvideo.c	2008-01-27 04:47:14 +0200
 @@ -10,7 +10,11 @@
  
  #include "config.h"
@@ -515,9 +515,9 @@ diff -urN mplayer-svn-r25826.orig/libmpcodecs/ve_qtvideo.c mplayer-svn-r25826/li
  #include "mpbswap.h"
  
  #ifdef WIN32_LOADER 
-diff -urN mplayer-svn-r25826.orig/libmpcodecs/vf_bmovl.c mplayer-svn-r25826/libmpcodecs/vf_bmovl.c
---- mplayer-svn-r25826.orig/libmpcodecs/vf_bmovl.c	2007-11-10 23:20:48 +0200
-+++ mplayer-svn-r25826/libmpcodecs/vf_bmovl.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libmpcodecs/vf_bmovl.c mplayer-svn-r25873/libmpcodecs/vf_bmovl.c
+--- mplayer-svn-r25873.orig/libmpcodecs/vf_bmovl.c	2007-11-10 23:20:48 +0200
++++ mplayer-svn-r25873/libmpcodecs/vf_bmovl.c	2008-01-27 04:47:14 +0200
 @@ -69,7 +69,11 @@
  #include "img_format.h"
  
@@ -530,9 +530,9 @@ diff -urN mplayer-svn-r25826.orig/libmpcodecs/vf_bmovl.c mplayer-svn-r25826/libm
  
  #include "libvo/fastmemcpy.h"
  
-diff -urN mplayer-svn-r25826.orig/libmpcodecs/vf_divtc.c mplayer-svn-r25826/libmpcodecs/vf_divtc.c
---- mplayer-svn-r25826.orig/libmpcodecs/vf_divtc.c	2007-12-02 17:50:48 +0200
-+++ mplayer-svn-r25826/libmpcodecs/vf_divtc.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libmpcodecs/vf_divtc.c mplayer-svn-r25873/libmpcodecs/vf_divtc.c
+--- mplayer-svn-r25873.orig/libmpcodecs/vf_divtc.c	2007-12-02 17:50:48 +0200
++++ mplayer-svn-r25873/libmpcodecs/vf_divtc.c	2008-01-27 04:47:14 +0200
 @@ -7,7 +7,11 @@
  #include "config.h"
  #include "mp_msg.h"
@@ -545,9 +545,9 @@ diff -urN mplayer-svn-r25826.orig/libmpcodecs/vf_divtc.c mplayer-svn-r25826/libm
  #include "mpbswap.h"
  
  #include "img_format.h"
-diff -urN mplayer-svn-r25826.orig/libmpcodecs/vf_geq.c mplayer-svn-r25826/libmpcodecs/vf_geq.c
---- mplayer-svn-r25826.orig/libmpcodecs/vf_geq.c	2007-12-02 17:50:48 +0200
-+++ mplayer-svn-r25826/libmpcodecs/vf_geq.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libmpcodecs/vf_geq.c mplayer-svn-r25873/libmpcodecs/vf_geq.c
+--- mplayer-svn-r25873.orig/libmpcodecs/vf_geq.c	2007-12-02 17:50:48 +0200
++++ mplayer-svn-r25873/libmpcodecs/vf_geq.c	2008-01-27 04:47:14 +0200
 @@ -32,8 +32,13 @@
  #include "vf.h"
  
@@ -562,9 +562,9 @@ diff -urN mplayer-svn-r25826.orig/libmpcodecs/vf_geq.c mplayer-svn-r25826/libmpc
  
  struct vf_priv_s {
      AVEvalExpr * e[3];
-diff -urN mplayer-svn-r25826.orig/libmpcodecs/vf_halfpack.c mplayer-svn-r25826/libmpcodecs/vf_halfpack.c
---- mplayer-svn-r25826.orig/libmpcodecs/vf_halfpack.c	2007-12-02 17:50:48 +0200
-+++ mplayer-svn-r25826/libmpcodecs/vf_halfpack.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libmpcodecs/vf_halfpack.c mplayer-svn-r25873/libmpcodecs/vf_halfpack.c
+--- mplayer-svn-r25873.orig/libmpcodecs/vf_halfpack.c	2007-12-02 17:50:48 +0200
++++ mplayer-svn-r25873/libmpcodecs/vf_halfpack.c	2008-01-27 04:47:14 +0200
 @@ -11,7 +11,11 @@
  #include "mp_image.h"
  #include "vf.h"
@@ -577,9 +577,9 @@ diff -urN mplayer-svn-r25826.orig/libmpcodecs/vf_halfpack.c mplayer-svn-r25826/l
  
  struct vf_priv_s {
  	int field;
-diff -urN mplayer-svn-r25826.orig/libmpcodecs/vf_palette.c mplayer-svn-r25826/libmpcodecs/vf_palette.c
---- mplayer-svn-r25826.orig/libmpcodecs/vf_palette.c	2007-12-02 17:50:48 +0200
-+++ mplayer-svn-r25826/libmpcodecs/vf_palette.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libmpcodecs/vf_palette.c mplayer-svn-r25873/libmpcodecs/vf_palette.c
+--- mplayer-svn-r25873.orig/libmpcodecs/vf_palette.c	2007-12-02 17:50:48 +0200
++++ mplayer-svn-r25873/libmpcodecs/vf_palette.c	2008-01-27 04:47:14 +0200
 @@ -11,7 +11,11 @@
  #include "mp_image.h"
  #include "vf.h"
@@ -592,9 +592,9 @@ diff -urN mplayer-svn-r25826.orig/libmpcodecs/vf_palette.c mplayer-svn-r25826/li
  
  //===========================================================================//
  
-diff -urN mplayer-svn-r25826.orig/libmpcodecs/vf_qp.c mplayer-svn-r25826/libmpcodecs/vf_qp.c
---- mplayer-svn-r25826.orig/libmpcodecs/vf_qp.c	2007-12-02 17:50:48 +0200
-+++ mplayer-svn-r25826/libmpcodecs/vf_qp.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libmpcodecs/vf_qp.c mplayer-svn-r25873/libmpcodecs/vf_qp.c
+--- mplayer-svn-r25873.orig/libmpcodecs/vf_qp.c	2007-12-02 17:50:48 +0200
++++ mplayer-svn-r25873/libmpcodecs/vf_qp.c	2008-01-27 04:47:14 +0200
 @@ -33,8 +33,13 @@
  
  // Needed to bring in lrintf.
@@ -609,9 +609,9 @@ diff -urN mplayer-svn-r25826.orig/libmpcodecs/vf_qp.c mplayer-svn-r25826/libmpco
  
  #ifdef HAVE_MALLOC_H
  #include <malloc.h>
-diff -urN mplayer-svn-r25826.orig/libmpcodecs/vf_rectangle.c mplayer-svn-r25826/libmpcodecs/vf_rectangle.c
---- mplayer-svn-r25826.orig/libmpcodecs/vf_rectangle.c	2007-12-02 17:50:48 +0200
-+++ mplayer-svn-r25826/libmpcodecs/vf_rectangle.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libmpcodecs/vf_rectangle.c mplayer-svn-r25873/libmpcodecs/vf_rectangle.c
+--- mplayer-svn-r25873.orig/libmpcodecs/vf_rectangle.c	2007-12-02 17:50:48 +0200
++++ mplayer-svn-r25873/libmpcodecs/vf_rectangle.c	2008-01-27 04:47:14 +0200
 @@ -6,7 +6,11 @@
  #include "vf.h"
  
@@ -624,9 +624,9 @@ diff -urN mplayer-svn-r25826.orig/libmpcodecs/vf_rectangle.c mplayer-svn-r25826/
  
  struct vf_priv_s {
      int x, y, w, h;
-diff -urN mplayer-svn-r25826.orig/libmpcodecs/vf_rgb2bgr.c mplayer-svn-r25826/libmpcodecs/vf_rgb2bgr.c
---- mplayer-svn-r25826.orig/libmpcodecs/vf_rgb2bgr.c	2007-12-02 17:50:48 +0200
-+++ mplayer-svn-r25826/libmpcodecs/vf_rgb2bgr.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libmpcodecs/vf_rgb2bgr.c mplayer-svn-r25873/libmpcodecs/vf_rgb2bgr.c
+--- mplayer-svn-r25873.orig/libmpcodecs/vf_rgb2bgr.c	2007-12-02 17:50:48 +0200
++++ mplayer-svn-r25873/libmpcodecs/vf_rgb2bgr.c	2008-01-27 04:47:14 +0200
 @@ -10,7 +10,11 @@
  #include "mp_image.h"
  #include "vf.h"
@@ -639,9 +639,9 @@ diff -urN mplayer-svn-r25826.orig/libmpcodecs/vf_rgb2bgr.c mplayer-svn-r25826/li
  
  //===========================================================================//
  
-diff -urN mplayer-svn-r25826.orig/libmpcodecs/vf_sab.c mplayer-svn-r25826/libmpcodecs/vf_sab.c
---- mplayer-svn-r25826.orig/libmpcodecs/vf_sab.c	2007-12-02 17:50:48 +0200
-+++ mplayer-svn-r25826/libmpcodecs/vf_sab.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libmpcodecs/vf_sab.c mplayer-svn-r25873/libmpcodecs/vf_sab.c
+--- mplayer-svn-r25873.orig/libmpcodecs/vf_sab.c	2007-12-02 17:50:48 +0200
++++ mplayer-svn-r25873/libmpcodecs/vf_sab.c	2008-01-27 04:47:14 +0200
 @@ -37,7 +37,11 @@
  #include "img_format.h"
  #include "mp_image.h"
@@ -654,9 +654,9 @@ diff -urN mplayer-svn-r25826.orig/libmpcodecs/vf_sab.c mplayer-svn-r25826/libmpc
  #include "vf_scale.h"
  
  
-diff -urN mplayer-svn-r25826.orig/libmpcodecs/vf_scale.c mplayer-svn-r25826/libmpcodecs/vf_scale.c
---- mplayer-svn-r25826.orig/libmpcodecs/vf_scale.c	2007-12-02 17:50:48 +0200
-+++ mplayer-svn-r25826/libmpcodecs/vf_scale.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libmpcodecs/vf_scale.c mplayer-svn-r25873/libmpcodecs/vf_scale.c
+--- mplayer-svn-r25873.orig/libmpcodecs/vf_scale.c	2007-12-02 17:50:48 +0200
++++ mplayer-svn-r25873/libmpcodecs/vf_scale.c	2008-01-27 04:47:14 +0200
 @@ -11,9 +11,13 @@
  #include "mp_image.h"
  #include "vf.h"
@@ -673,9 +673,9 @@ diff -urN mplayer-svn-r25826.orig/libmpcodecs/vf_scale.c mplayer-svn-r25826/libm
  #include "vf_scale.h"
  
  #include "m_option.h"
-diff -urN mplayer-svn-r25826.orig/libmpcodecs/vf_screenshot.c mplayer-svn-r25826/libmpcodecs/vf_screenshot.c
---- mplayer-svn-r25826.orig/libmpcodecs/vf_screenshot.c	2008-01-11 02:30:34 +0200
-+++ mplayer-svn-r25826/libmpcodecs/vf_screenshot.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libmpcodecs/vf_screenshot.c mplayer-svn-r25873/libmpcodecs/vf_screenshot.c
+--- mplayer-svn-r25873.orig/libmpcodecs/vf_screenshot.c	2008-01-24 02:33:26 +0200
++++ mplayer-svn-r25873/libmpcodecs/vf_screenshot.c	2008-01-27 04:47:14 +0200
 @@ -19,7 +19,11 @@
  #include "vf.h"
  #include "vf_scale.h"
@@ -688,9 +688,9 @@ diff -urN mplayer-svn-r25826.orig/libmpcodecs/vf_screenshot.c mplayer-svn-r25826
  
  #ifdef USE_LIBAVCODEC_SO
  #include <ffmpeg/avcodec.h>
-diff -urN mplayer-svn-r25826.orig/libmpcodecs/vf_smartblur.c mplayer-svn-r25826/libmpcodecs/vf_smartblur.c
---- mplayer-svn-r25826.orig/libmpcodecs/vf_smartblur.c	2007-12-02 17:50:48 +0200
-+++ mplayer-svn-r25826/libmpcodecs/vf_smartblur.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libmpcodecs/vf_smartblur.c mplayer-svn-r25873/libmpcodecs/vf_smartblur.c
+--- mplayer-svn-r25873.orig/libmpcodecs/vf_smartblur.c	2007-12-02 17:50:48 +0200
++++ mplayer-svn-r25873/libmpcodecs/vf_smartblur.c	2008-01-27 04:47:14 +0200
 @@ -37,7 +37,11 @@
  #include "img_format.h"
  #include "mp_image.h"
@@ -703,9 +703,9 @@ diff -urN mplayer-svn-r25826.orig/libmpcodecs/vf_smartblur.c mplayer-svn-r25826/
  #include "vf_scale.h"
  
  //===========================================================================//
-diff -urN mplayer-svn-r25826.orig/libmpcodecs/vf_unsharp.c mplayer-svn-r25826/libmpcodecs/vf_unsharp.c
---- mplayer-svn-r25826.orig/libmpcodecs/vf_unsharp.c	2007-12-02 17:50:48 +0200
-+++ mplayer-svn-r25826/libmpcodecs/vf_unsharp.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libmpcodecs/vf_unsharp.c mplayer-svn-r25873/libmpcodecs/vf_unsharp.c
+--- mplayer-svn-r25873.orig/libmpcodecs/vf_unsharp.c	2007-12-02 17:50:48 +0200
++++ mplayer-svn-r25873/libmpcodecs/vf_unsharp.c	2008-01-27 04:47:14 +0200
 @@ -35,7 +35,11 @@
  #include "mp_image.h"
  #include "vf.h"
@@ -718,9 +718,9 @@ diff -urN mplayer-svn-r25826.orig/libmpcodecs/vf_unsharp.c mplayer-svn-r25826/li
  
  //===========================================================================//
  
-diff -urN mplayer-svn-r25826.orig/libmpcodecs/vf_yuy2.c mplayer-svn-r25826/libmpcodecs/vf_yuy2.c
---- mplayer-svn-r25826.orig/libmpcodecs/vf_yuy2.c	2007-12-02 17:50:48 +0200
-+++ mplayer-svn-r25826/libmpcodecs/vf_yuy2.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libmpcodecs/vf_yuy2.c mplayer-svn-r25873/libmpcodecs/vf_yuy2.c
+--- mplayer-svn-r25873.orig/libmpcodecs/vf_yuy2.c	2007-12-02 17:50:48 +0200
++++ mplayer-svn-r25873/libmpcodecs/vf_yuy2.c	2008-01-27 04:47:14 +0200
 @@ -11,7 +11,11 @@
  #include "mp_image.h"
  #include "vf.h"
@@ -733,9 +733,9 @@ diff -urN mplayer-svn-r25826.orig/libmpcodecs/vf_yuy2.c mplayer-svn-r25826/libmp
  #include "vf_scale.h"
  
  //===========================================================================//
-diff -urN mplayer-svn-r25826.orig/libmpdemux/asf.h mplayer-svn-r25826/libmpdemux/asf.h
---- mplayer-svn-r25826.orig/libmpdemux/asf.h	2008-01-11 02:30:38 +0200
-+++ mplayer-svn-r25826/libmpdemux/asf.h	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libmpdemux/asf.h mplayer-svn-r25873/libmpdemux/asf.h
+--- mplayer-svn-r25873.orig/libmpdemux/asf.h	2008-01-11 02:30:38 +0200
++++ mplayer-svn-r25873/libmpdemux/asf.h	2008-01-27 04:47:14 +0200
 @@ -3,7 +3,11 @@
  
  //#include "config.h"	/* for WORDS_BIGENDIAN */
@@ -748,9 +748,9 @@ diff -urN mplayer-svn-r25826.orig/libmpdemux/asf.h mplayer-svn-r25826/libmpdemux
  #include "mpbswap.h"
  
  ///////////////////////
-diff -urN mplayer-svn-r25826.orig/libmpdemux/asfheader.c mplayer-svn-r25826/libmpdemux/asfheader.c
---- mplayer-svn-r25826.orig/libmpdemux/asfheader.c	2007-07-26 01:19:56 +0300
-+++ mplayer-svn-r25826/libmpdemux/asfheader.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libmpdemux/asfheader.c mplayer-svn-r25873/libmpdemux/asfheader.c
+--- mplayer-svn-r25873.orig/libmpdemux/asfheader.c	2007-07-26 01:19:56 +0300
++++ mplayer-svn-r25873/libmpdemux/asfheader.c	2008-01-27 04:47:14 +0200
 @@ -6,8 +6,13 @@
  #include <unistd.h>
  
@@ -765,9 +765,9 @@ diff -urN mplayer-svn-r25826.orig/libmpdemux/asfheader.c mplayer-svn-r25826/libm
  #include "mp_msg.h"
  #include "help_mp.h"
  
-diff -urN mplayer-svn-r25826.orig/libmpdemux/aviheader.c mplayer-svn-r25826/libmpdemux/aviheader.c
---- mplayer-svn-r25826.orig/libmpdemux/aviheader.c	2007-12-02 17:50:51 +0200
-+++ mplayer-svn-r25826/libmpdemux/aviheader.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libmpdemux/aviheader.c mplayer-svn-r25873/libmpdemux/aviheader.c
+--- mplayer-svn-r25873.orig/libmpdemux/aviheader.c	2007-12-02 17:50:51 +0200
++++ mplayer-svn-r25873/libmpdemux/aviheader.c	2008-01-27 04:47:14 +0200
 @@ -13,7 +13,11 @@
  #include "stheader.h"
  
@@ -780,9 +780,9 @@ diff -urN mplayer-svn-r25826.orig/libmpdemux/aviheader.c mplayer-svn-r25826/libm
  
  static MainAVIHeader avih;
  
-diff -urN mplayer-svn-r25826.orig/libmpdemux/aviheader.h mplayer-svn-r25826/libmpdemux/aviheader.h
---- mplayer-svn-r25826.orig/libmpdemux/aviheader.h	2008-01-11 02:30:38 +0200
-+++ mplayer-svn-r25826/libmpdemux/aviheader.h	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libmpdemux/aviheader.h mplayer-svn-r25873/libmpdemux/aviheader.h
+--- mplayer-svn-r25873.orig/libmpdemux/aviheader.h	2008-01-11 02:30:38 +0200
++++ mplayer-svn-r25873/libmpdemux/aviheader.h	2008-01-27 04:47:14 +0200
 @@ -1,8 +1,12 @@
  #ifndef AVIHEADER_H
  #define AVIHEADER_H
@@ -797,9 +797,9 @@ diff -urN mplayer-svn-r25826.orig/libmpdemux/aviheader.h mplayer-svn-r25826/libm
  #include "mpbswap.h"
  
  #ifndef mmioFOURCC
-diff -urN mplayer-svn-r25826.orig/libmpdemux/demux_asf.c mplayer-svn-r25826/libmpdemux/demux_asf.c
---- mplayer-svn-r25826.orig/libmpdemux/demux_asf.c	2008-01-21 04:18:29 +0200
-+++ mplayer-svn-r25826/libmpdemux/demux_asf.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libmpdemux/demux_asf.c mplayer-svn-r25873/libmpdemux/demux_asf.c
+--- mplayer-svn-r25873.orig/libmpdemux/demux_asf.c	2008-01-21 04:18:29 +0200
++++ mplayer-svn-r25873/libmpdemux/demux_asf.c	2008-01-27 04:47:14 +0200
 @@ -13,7 +13,11 @@
  #include "demuxer.h"
  
@@ -812,9 +812,9 @@ diff -urN mplayer-svn-r25826.orig/libmpdemux/demux_asf.c mplayer-svn-r25826/libm
  
  // defined at asfheader.c:
  
-diff -urN mplayer-svn-r25826.orig/libmpdemux/demux_audio.c mplayer-svn-r25826/libmpdemux/demux_audio.c
---- mplayer-svn-r25826.orig/libmpdemux/demux_audio.c	2008-01-21 04:18:29 +0200
-+++ mplayer-svn-r25826/libmpdemux/demux_audio.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libmpdemux/demux_audio.c mplayer-svn-r25873/libmpdemux/demux_audio.c
+--- mplayer-svn-r25873.orig/libmpdemux/demux_audio.c	2008-01-21 04:18:29 +0200
++++ mplayer-svn-r25873/libmpdemux/demux_audio.c	2008-01-27 04:47:14 +0200
 @@ -10,7 +10,11 @@
  #include "stheader.h"
  #include "genres.h"
@@ -827,9 +827,9 @@ diff -urN mplayer-svn-r25826.orig/libmpdemux/demux_audio.c mplayer-svn-r25826/li
  
  #include <string.h>
  
-diff -urN mplayer-svn-r25826.orig/libmpdemux/demux_lavf.c mplayer-svn-r25826/libmpdemux/demux_lavf.c
---- mplayer-svn-r25826.orig/libmpdemux/demux_lavf.c	2008-01-21 04:18:29 +0200
-+++ mplayer-svn-r25826/libmpdemux/demux_lavf.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libmpdemux/demux_lavf.c mplayer-svn-r25873/libmpdemux/demux_lavf.c
+--- mplayer-svn-r25873.orig/libmpdemux/demux_lavf.c	2008-01-27 03:54:38 +0200
++++ mplayer-svn-r25873/libmpdemux/demux_lavf.c	2008-01-27 04:47:14 +0200
 @@ -41,7 +41,11 @@
  #include "avi.h"
  #include "opt.h"
@@ -843,9 +843,9 @@ diff -urN mplayer-svn-r25826.orig/libmpdemux/demux_lavf.c mplayer-svn-r25826/lib
  
  #define PROBE_BUF_SIZE 2048
  
-diff -urN mplayer-svn-r25826.orig/libmpdemux/demux_mkv.c mplayer-svn-r25826/libmpdemux/demux_mkv.c
---- mplayer-svn-r25826.orig/libmpdemux/demux_mkv.c	2008-01-21 04:18:29 +0200
-+++ mplayer-svn-r25826/libmpdemux/demux_mkv.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libmpdemux/demux_mkv.c mplayer-svn-r25873/libmpdemux/demux_mkv.c
+--- mplayer-svn-r25873.orig/libmpdemux/demux_mkv.c	2008-01-21 04:18:29 +0200
++++ mplayer-svn-r25873/libmpdemux/demux_mkv.c	2008-01-27 04:47:14 +0200
 @@ -29,7 +29,11 @@
  #include "libass/ass.h"
  #include "libass/ass_mp.h"
@@ -872,9 +872,9 @@ diff -urN mplayer-svn-r25826.orig/libmpdemux/demux_mkv.c mplayer-svn-r25826/libm
  
  static unsigned char sipr_swaps[38][2]={
      {0,63},{1,22},{2,44},{3,90},{5,81},{7,31},{8,86},{9,58},{10,36},{12,68},
-diff -urN mplayer-svn-r25826.orig/libmpdemux/demux_mpc.c mplayer-svn-r25826/libmpdemux/demux_mpc.c
---- mplayer-svn-r25826.orig/libmpdemux/demux_mpc.c	2008-01-21 04:18:29 +0200
-+++ mplayer-svn-r25826/libmpdemux/demux_mpc.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libmpdemux/demux_mpc.c mplayer-svn-r25873/libmpdemux/demux_mpc.c
+--- mplayer-svn-r25873.orig/libmpdemux/demux_mpc.c	2008-01-21 04:18:29 +0200
++++ mplayer-svn-r25873/libmpdemux/demux_mpc.c	2008-01-27 04:47:14 +0200
 @@ -11,7 +11,11 @@
  #include <stdio.h>
  #include <string.h>
@@ -887,9 +887,9 @@ diff -urN mplayer-svn-r25826.orig/libmpdemux/demux_mpc.c mplayer-svn-r25826/libm
  #include "mpbswap.h"
  #include "stream/stream.h"
  #include "demuxer.h"
-diff -urN mplayer-svn-r25826.orig/libmpdemux/demux_ogg.c mplayer-svn-r25826/libmpdemux/demux_ogg.c
---- mplayer-svn-r25826.orig/libmpdemux/demux_ogg.c	2008-01-21 04:18:29 +0200
-+++ mplayer-svn-r25826/libmpdemux/demux_ogg.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libmpdemux/demux_ogg.c mplayer-svn-r25873/libmpdemux/demux_ogg.c
+--- mplayer-svn-r25873.orig/libmpdemux/demux_ogg.c	2008-01-21 04:18:29 +0200
++++ mplayer-svn-r25873/libmpdemux/demux_ogg.c	2008-01-27 04:47:14 +0200
 @@ -13,7 +13,11 @@
  #include "stream/stream.h"
  #include "demuxer.h"
@@ -902,9 +902,9 @@ diff -urN mplayer-svn-r25826.orig/libmpdemux/demux_ogg.c mplayer-svn-r25826/libm
  
  #define FOURCC_VORBIS mmioFOURCC('v', 'r', 'b', 's')
  #define FOURCC_SPEEX  mmioFOURCC('s', 'p', 'x', ' ')
-diff -urN mplayer-svn-r25826.orig/libmpdemux/demux_rtp_codec.cpp mplayer-svn-r25826/libmpdemux/demux_rtp_codec.cpp
---- mplayer-svn-r25826.orig/libmpdemux/demux_rtp_codec.cpp	2007-08-27 00:03:02 +0300
-+++ mplayer-svn-r25826/libmpdemux/demux_rtp_codec.cpp	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libmpdemux/demux_rtp_codec.cpp mplayer-svn-r25873/libmpdemux/demux_rtp_codec.cpp
+--- mplayer-svn-r25873.orig/libmpdemux/demux_rtp_codec.cpp	2007-08-27 00:03:02 +0300
++++ mplayer-svn-r25873/libmpdemux/demux_rtp_codec.cpp	2008-01-27 04:47:14 +0200
 @@ -6,7 +6,11 @@
  #include <limits.h>
  #include <math.h>
@@ -918,9 +918,9 @@ diff -urN mplayer-svn-r25826.orig/libmpdemux/demux_rtp_codec.cpp mplayer-svn-r25
  }
  
  #ifdef USE_LIBAVCODEC
-diff -urN mplayer-svn-r25826.orig/libmpdemux/demux_ty.c mplayer-svn-r25826/libmpdemux/demux_ty.c
---- mplayer-svn-r25826.orig/libmpdemux/demux_ty.c	2008-01-21 04:18:29 +0200
-+++ mplayer-svn-r25826/libmpdemux/demux_ty.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libmpdemux/demux_ty.c mplayer-svn-r25873/libmpdemux/demux_ty.c
+--- mplayer-svn-r25873.orig/libmpdemux/demux_ty.c	2008-01-21 04:18:29 +0200
++++ mplayer-svn-r25873/libmpdemux/demux_ty.c	2008-01-27 04:47:14 +0200
 @@ -44,8 +44,14 @@
  #include "parse_es.h"
  #include "stheader.h"
@@ -936,9 +936,9 @@ diff -urN mplayer-svn-r25826.orig/libmpdemux/demux_ty.c mplayer-svn-r25826/libmp
  
  extern void skip_audio_frame( sh_audio_t *sh_audio );
  extern int sub_justify;
-diff -urN mplayer-svn-r25826.orig/libmpdemux/demux_vqf.c mplayer-svn-r25826/libmpdemux/demux_vqf.c
---- mplayer-svn-r25826.orig/libmpdemux/demux_vqf.c	2008-01-21 04:18:29 +0200
-+++ mplayer-svn-r25826/libmpdemux/demux_vqf.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libmpdemux/demux_vqf.c mplayer-svn-r25873/libmpdemux/demux_vqf.c
+--- mplayer-svn-r25873.orig/libmpdemux/demux_vqf.c	2008-01-21 04:18:29 +0200
++++ mplayer-svn-r25873/libmpdemux/demux_vqf.c	2008-01-27 04:47:14 +0200
 @@ -2,7 +2,11 @@
  
  #include <stdlib.h>
@@ -951,9 +951,9 @@ diff -urN mplayer-svn-r25826.orig/libmpdemux/demux_vqf.c mplayer-svn-r25826/libm
  #include "mpbswap.h"
  
  #include "stream/stream.h"
-diff -urN mplayer-svn-r25826.orig/libmpdemux/ebml.c mplayer-svn-r25826/libmpdemux/ebml.c
---- mplayer-svn-r25826.orig/libmpdemux/ebml.c	2007-03-19 00:20:28 +0200
-+++ mplayer-svn-r25826/libmpdemux/ebml.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libmpdemux/ebml.c mplayer-svn-r25873/libmpdemux/ebml.c
+--- mplayer-svn-r25873.orig/libmpdemux/ebml.c	2007-03-19 00:20:28 +0200
++++ mplayer-svn-r25873/libmpdemux/ebml.c	2008-01-27 04:47:14 +0200
 @@ -11,9 +11,17 @@
  
  #include "stream/stream.h"
@@ -972,9 +972,9 @@ diff -urN mplayer-svn-r25826.orig/libmpdemux/ebml.c mplayer-svn-r25826/libmpdemu
  
  
  #ifndef SIZE_MAX
-diff -urN mplayer-svn-r25826.orig/libmpdemux/muxer_lavf.c mplayer-svn-r25826/libmpdemux/muxer_lavf.c
---- mplayer-svn-r25826.orig/libmpdemux/muxer_lavf.c	2007-12-02 17:50:51 +0200
-+++ mplayer-svn-r25826/libmpdemux/muxer_lavf.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libmpdemux/muxer_lavf.c mplayer-svn-r25873/libmpdemux/muxer_lavf.c
+--- mplayer-svn-r25873.orig/libmpdemux/muxer_lavf.c	2007-12-02 17:50:51 +0200
++++ mplayer-svn-r25873/libmpdemux/muxer_lavf.c	2008-01-27 04:47:14 +0200
 @@ -22,7 +22,11 @@
  #else
  #include "avformat.h"
@@ -987,9 +987,9 @@ diff -urN mplayer-svn-r25826.orig/libmpdemux/muxer_lavf.c mplayer-svn-r25826/lib
  
  enum PixelFormat imgfmt2pixfmt(int fmt);
  
-diff -urN mplayer-svn-r25826.orig/libmpdemux/nuppelvideo.h mplayer-svn-r25826/libmpdemux/nuppelvideo.h
---- mplayer-svn-r25826.orig/libmpdemux/nuppelvideo.h	2008-01-11 02:30:38 +0200
-+++ mplayer-svn-r25826/libmpdemux/nuppelvideo.h	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libmpdemux/nuppelvideo.h mplayer-svn-r25873/libmpdemux/nuppelvideo.h
+--- mplayer-svn-r25873.orig/libmpdemux/nuppelvideo.h	2008-01-11 02:30:38 +0200
++++ mplayer-svn-r25873/libmpdemux/nuppelvideo.h	2008-01-27 04:47:14 +0200
 @@ -3,7 +3,11 @@
  #ifndef NUPPELVIDEO_H
  #define NUPPELVIDEO_H
@@ -1002,9 +1002,9 @@ diff -urN mplayer-svn-r25826.orig/libmpdemux/nuppelvideo.h mplayer-svn-r25826/li
  
  typedef struct  __attribute__((packed)) rtfileheader
  {
-diff -urN mplayer-svn-r25826.orig/libswscale/rgb2rgb.c mplayer-svn-r25826/libswscale/rgb2rgb.c
---- mplayer-svn-r25826.orig/libswscale/rgb2rgb.c	2008-01-21 04:18:27 +0200
-+++ mplayer-svn-r25826/libswscale/rgb2rgb.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libswscale/rgb2rgb.c mplayer-svn-r25873/libswscale/rgb2rgb.c
+--- mplayer-svn-r25873.orig/libswscale/rgb2rgb.c	2008-01-21 04:18:27 +0200
++++ mplayer-svn-r25873/libswscale/rgb2rgb.c	2008-01-27 04:47:14 +0200
 @@ -31,7 +31,11 @@
  #include "swscale.h"
  #include "swscale_internal.h"
@@ -1018,9 +1018,9 @@ diff -urN mplayer-svn-r25826.orig/libswscale/rgb2rgb.c mplayer-svn-r25826/libsws
  
  #define FAST_BGR2YV12 // use 7 bit coeffs instead of 15bit
  
-diff -urN mplayer-svn-r25826.orig/libswscale/swscale.c mplayer-svn-r25826/libswscale/swscale.c
---- mplayer-svn-r25826.orig/libswscale/swscale.c	2008-01-21 04:18:27 +0200
-+++ mplayer-svn-r25826/libswscale/swscale.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libswscale/swscale.c mplayer-svn-r25873/libswscale/swscale.c
+--- mplayer-svn-r25873.orig/libswscale/swscale.c	2008-01-24 02:33:26 +0200
++++ mplayer-svn-r25873/libswscale/swscale.c	2008-01-27 04:47:14 +0200
 @@ -70,7 +70,11 @@
  #include "swscale.h"
  #include "swscale_internal.h"
@@ -1034,9 +1034,9 @@ diff -urN mplayer-svn-r25826.orig/libswscale/swscale.c mplayer-svn-r25826/libsws
  #include "rgb2rgb.h"
  #include "libavcodec/opt.h"
  
-diff -urN mplayer-svn-r25826.orig/libswscale/swscale-example.c mplayer-svn-r25826/libswscale/swscale-example.c
---- mplayer-svn-r25826.orig/libswscale/swscale-example.c	2008-01-21 04:18:27 +0200
-+++ mplayer-svn-r25826/libswscale/swscale-example.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libswscale/swscale-example.c mplayer-svn-r25873/libswscale/swscale-example.c
+--- mplayer-svn-r25873.orig/libswscale/swscale-example.c	2008-01-21 04:18:27 +0200
++++ mplayer-svn-r25873/libswscale/swscale-example.c	2008-01-27 04:47:14 +0200
 @@ -25,7 +25,11 @@
  #include <stdarg.h>
  
@@ -1049,9 +1049,9 @@ diff -urN mplayer-svn-r25826.orig/libswscale/swscale-example.c mplayer-svn-r2582
  #include "swscale.h"
  #include "swscale_internal.h"
  #include "rgb2rgb.h"
-diff -urN mplayer-svn-r25826.orig/libswscale/swscale_internal.h mplayer-svn-r25826/libswscale/swscale_internal.h
---- mplayer-svn-r25826.orig/libswscale/swscale_internal.h	2007-12-22 00:43:11 +0200
-+++ mplayer-svn-r25826/libswscale/swscale_internal.h	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libswscale/swscale_internal.h mplayer-svn-r25873/libswscale/swscale_internal.h
+--- mplayer-svn-r25873.orig/libswscale/swscale_internal.h	2007-12-22 00:43:11 +0200
++++ mplayer-svn-r25873/libswscale/swscale_internal.h	2008-01-27 04:47:14 +0200
 @@ -27,7 +27,11 @@
  #include <altivec.h>
  #endif
@@ -1064,9 +1064,9 @@ diff -urN mplayer-svn-r25826.orig/libswscale/swscale_internal.h mplayer-svn-r258
  
  #define MAX_FILTER_SIZE 256
  
-diff -urN mplayer-svn-r25826.orig/libvo/font_load_ft.c mplayer-svn-r25826/libvo/font_load_ft.c
---- mplayer-svn-r25826.orig/libvo/font_load_ft.c	2008-01-11 02:30:36 +0200
-+++ mplayer-svn-r25826/libvo/font_load_ft.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libvo/font_load_ft.c mplayer-svn-r25873/libvo/font_load_ft.c
+--- mplayer-svn-r25873.orig/libvo/font_load_ft.c	2008-01-11 02:30:36 +0200
++++ mplayer-svn-r25873/libvo/font_load_ft.c	2008-01-27 04:47:14 +0200
 @@ -28,7 +28,11 @@
  #include <fontconfig/fontconfig.h>
  #endif
@@ -1079,9 +1079,9 @@ diff -urN mplayer-svn-r25826.orig/libvo/font_load_ft.c mplayer-svn-r25826/libvo/
  #include "mpbswap.h"
  #include "font_load.h"
  #include "mp_msg.h"
-diff -urN mplayer-svn-r25826.orig/libvo/mga_common.c mplayer-svn-r25826/libvo/mga_common.c
---- mplayer-svn-r25826.orig/libvo/mga_common.c	2007-09-15 00:53:48 +0300
-+++ mplayer-svn-r25826/libvo/mga_common.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libvo/mga_common.c mplayer-svn-r25873/libvo/mga_common.c
+--- mplayer-svn-r25873.orig/libvo/mga_common.c	2007-09-15 00:53:48 +0300
++++ mplayer-svn-r25873/libvo/mga_common.c	2008-01-27 04:47:14 +0200
 @@ -1,8 +1,12 @@
  
  #include "fastmemcpy.h"
@@ -1095,9 +1095,9 @@ diff -urN mplayer-svn-r25826.orig/libvo/mga_common.c mplayer-svn-r25826/libvo/mg
  #include "libmpcodecs/vf_scale.h"
  #include "mp_msg.h"
  #include "help_mp.h"
-diff -urN mplayer-svn-r25826.orig/libvo/sub.c mplayer-svn-r25826/libvo/sub.c
---- mplayer-svn-r25826.orig/libvo/sub.c	2007-10-02 15:01:56 +0300
-+++ mplayer-svn-r25826/libvo/sub.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libvo/sub.c mplayer-svn-r25873/libvo/sub.c
+--- mplayer-svn-r25873.orig/libvo/sub.c	2007-10-02 15:01:56 +0300
++++ mplayer-svn-r25873/libvo/sub.c	2008-01-27 04:47:14 +0200
 @@ -26,7 +26,12 @@
  #include "font_load.h"
  #include "sub.h"
@@ -1111,9 +1111,9 @@ diff -urN mplayer-svn-r25826.orig/libvo/sub.c mplayer-svn-r25826/libvo/sub.c
  
  #define NEW_SPLITTING
  
-diff -urN mplayer-svn-r25826.orig/libvo/vo_aa.c mplayer-svn-r25826/libvo/vo_aa.c
---- mplayer-svn-r25826.orig/libvo/vo_aa.c	2007-12-02 17:50:50 +0200
-+++ mplayer-svn-r25826/libvo/vo_aa.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libvo/vo_aa.c mplayer-svn-r25873/libvo/vo_aa.c
+--- mplayer-svn-r25873.orig/libvo/vo_aa.c	2007-12-02 17:50:50 +0200
++++ mplayer-svn-r25873/libvo/vo_aa.c	2008-01-27 04:47:14 +0200
 @@ -27,7 +27,11 @@
  #include "video_out.h"
  #include "video_out_internal.h"
@@ -1126,9 +1126,9 @@ diff -urN mplayer-svn-r25826.orig/libvo/vo_aa.c mplayer-svn-r25826/libvo/vo_aa.c
  #include "libmpcodecs/vf_scale.h"
  #include "font_load.h"
  #include "sub.h"
-diff -urN mplayer-svn-r25826.orig/libvo/vo_dxr3.c mplayer-svn-r25826/libvo/vo_dxr3.c
---- mplayer-svn-r25826.orig/libvo/vo_dxr3.c	2008-01-11 02:30:36 +0200
-+++ mplayer-svn-r25826/libvo/vo_dxr3.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libvo/vo_dxr3.c mplayer-svn-r25873/libvo/vo_dxr3.c
+--- mplayer-svn-r25873.orig/libvo/vo_dxr3.c	2008-01-11 02:30:36 +0200
++++ mplayer-svn-r25873/libvo/vo_dxr3.c	2008-01-27 04:47:14 +0200
 @@ -38,7 +38,11 @@
  #ifdef HAVE_X11
  #include "x11_common.h"
@@ -1141,9 +1141,9 @@ diff -urN mplayer-svn-r25826.orig/libvo/vo_dxr3.c mplayer-svn-r25826/libvo/vo_dx
  
  #define SPU_SUPPORT
  
-diff -urN mplayer-svn-r25826.orig/libvo/vo_vesa.c mplayer-svn-r25826/libvo/vo_vesa.c
---- mplayer-svn-r25826.orig/libvo/vo_vesa.c	2008-01-11 02:30:36 +0200
-+++ mplayer-svn-r25826/libvo/vo_vesa.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libvo/vo_vesa.c mplayer-svn-r25873/libvo/vo_vesa.c
+--- mplayer-svn-r25873.orig/libvo/vo_vesa.c	2008-01-11 02:30:36 +0200
++++ mplayer-svn-r25873/libvo/vo_vesa.c	2008-01-27 04:47:14 +0200
 @@ -39,7 +39,11 @@
  
  #include "fastmemcpy.h"
@@ -1168,9 +1168,9 @@ diff -urN mplayer-svn-r25826.orig/libvo/vo_vesa.c mplayer-svn-r25826/libvo/vo_ve
  #include "libmpcodecs/vf_scale.h"
  
  
-diff -urN mplayer-svn-r25826.orig/libvo/vo_x11.c mplayer-svn-r25826/libvo/vo_x11.c
---- mplayer-svn-r25826.orig/libvo/vo_x11.c	2008-01-11 02:30:36 +0200
-+++ mplayer-svn-r25826/libvo/vo_x11.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libvo/vo_x11.c mplayer-svn-r25873/libvo/vo_x11.c
+--- mplayer-svn-r25873.orig/libvo/vo_x11.c	2008-01-11 02:30:36 +0200
++++ mplayer-svn-r25873/libvo/vo_x11.c	2008-01-27 04:47:14 +0200
 @@ -36,7 +36,11 @@
  
  #include "sub.h"
@@ -1183,9 +1183,9 @@ diff -urN mplayer-svn-r25826.orig/libvo/vo_x11.c mplayer-svn-r25826/libvo/vo_x11
  #include "libmpcodecs/vf_scale.h"
  #define MODE_RGB  0x1
  #define MODE_BGR  0x2
-diff -urN mplayer-svn-r25826.orig/libvo/vo_xv.c mplayer-svn-r25826/libvo/vo_xv.c
---- mplayer-svn-r25826.orig/libvo/vo_xv.c	2007-12-02 17:50:50 +0200
-+++ mplayer-svn-r25826/libvo/vo_xv.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libvo/vo_xv.c mplayer-svn-r25873/libvo/vo_xv.c
+--- mplayer-svn-r25873.orig/libvo/vo_xv.c	2007-12-02 17:50:50 +0200
++++ mplayer-svn-r25873/libvo/vo_xv.c	2008-01-27 04:47:14 +0200
 @@ -45,7 +45,11 @@
  #include "gui/interface.h"
  #endif
@@ -1198,9 +1198,9 @@ diff -urN mplayer-svn-r25826.orig/libvo/vo_xv.c mplayer-svn-r25826/libvo/vo_xv.c
  
  static const vo_info_t info = {
      "X11/Xv",
-diff -urN mplayer-svn-r25826.orig/libvo/vo_xvmc.c mplayer-svn-r25826/libvo/vo_xvmc.c
---- mplayer-svn-r25826.orig/libvo/vo_xvmc.c	2007-12-02 17:50:50 +0200
-+++ mplayer-svn-r25826/libvo/vo_xvmc.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libvo/vo_xvmc.c mplayer-svn-r25873/libvo/vo_xvmc.c
+--- mplayer-svn-r25873.orig/libvo/vo_xvmc.c	2007-12-02 17:50:50 +0200
++++ mplayer-svn-r25873/libvo/vo_xvmc.c	2008-01-27 04:47:14 +0200
 @@ -35,7 +35,11 @@
  #include "gui/interface.h"
  #endif
@@ -1225,9 +1225,9 @@ diff -urN mplayer-svn-r25826.orig/libvo/vo_xvmc.c mplayer-svn-r25826/libvo/vo_xv
  #if LIBAVCODEC_BUILD < ((51<<16)+(40<<8)+2)
  #error You need at least libavcodecs v51.40.2
  #endif
-diff -urN mplayer-svn-r25826.orig/libvo/vo_yuv4mpeg.c mplayer-svn-r25826/libvo/vo_yuv4mpeg.c
---- mplayer-svn-r25826.orig/libvo/vo_yuv4mpeg.c	2007-12-02 17:50:50 +0200
-+++ mplayer-svn-r25826/libvo/vo_yuv4mpeg.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/libvo/vo_yuv4mpeg.c mplayer-svn-r25873/libvo/vo_yuv4mpeg.c
+--- mplayer-svn-r25873.orig/libvo/vo_yuv4mpeg.c	2007-12-02 17:50:50 +0200
++++ mplayer-svn-r25873/libvo/vo_yuv4mpeg.c	2008-01-27 04:47:14 +0200
 @@ -40,10 +40,19 @@
  #include "sub.h"
  
@@ -1248,9 +1248,9 @@ diff -urN mplayer-svn-r25826.orig/libvo/vo_yuv4mpeg.c mplayer-svn-r25826/libvo/v
  
  static const vo_info_t info = 
  {
-diff -urN mplayer-svn-r25826.orig/Makefile mplayer-svn-r25826/Makefile
---- mplayer-svn-r25826.orig/Makefile	2008-01-11 02:30:39 +0200
-+++ mplayer-svn-r25826/Makefile	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/Makefile mplayer-svn-r25873/Makefile
+--- mplayer-svn-r25873.orig/Makefile	2008-01-11 02:30:39 +0200
++++ mplayer-svn-r25873/Makefile	2008-01-27 04:47:14 +0200
 @@ -53,13 +53,14 @@
                libaf/libaf.a \
                libmpdemux/libmpdemux.a \
@@ -1267,9 +1267,9 @@ diff -urN mplayer-svn-r25826.orig/Makefile mplayer-svn-r25826/Makefile
  COMMON_LIBS-$(WIN32DLL)           += loader/libloader.a
  COMMON_LIBS-$(MP3LIB)             += mp3lib/libmp3.a
  COMMON_LIBS-$(LIBA52)             += liba52/liba52.a
-diff -urN mplayer-svn-r25826.orig/m_option.c mplayer-svn-r25826/m_option.c
---- mplayer-svn-r25826.orig/m_option.c	2007-12-25 04:33:43 +0200
-+++ mplayer-svn-r25826/m_option.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/m_option.c mplayer-svn-r25873/m_option.c
+--- mplayer-svn-r25873.orig/m_option.c	2007-12-25 04:33:43 +0200
++++ mplayer-svn-r25873/m_option.c	2008-01-27 04:47:14 +0200
 @@ -16,7 +16,11 @@
  //#include "m_config.h"
  #include "mp_msg.h"
@@ -1282,9 +1282,9 @@ diff -urN mplayer-svn-r25826.orig/m_option.c mplayer-svn-r25826/m_option.c
  
  // Don't free for 'production' atm
  #ifndef MP_DEBUG
-diff -urN mplayer-svn-r25826.orig/mp3lib/dct64_sse.c mplayer-svn-r25826/mp3lib/dct64_sse.c
---- mplayer-svn-r25826.orig/mp3lib/dct64_sse.c	2007-12-17 18:36:04 +0200
-+++ mplayer-svn-r25826/mp3lib/dct64_sse.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/mp3lib/dct64_sse.c mplayer-svn-r25873/mp3lib/dct64_sse.c
+--- mplayer-svn-r25873.orig/mp3lib/dct64_sse.c	2007-12-17 18:36:04 +0200
++++ mplayer-svn-r25873/mp3lib/dct64_sse.c	2008-01-27 04:47:14 +0200
 @@ -5,7 +5,12 @@
   * and mp3lib/dct64_mmx.c
   */
@@ -1299,9 +1299,9 @@ diff -urN mplayer-svn-r25826.orig/mp3lib/dct64_sse.c mplayer-svn-r25826/mp3lib/d
  
  typedef float real;
  
-diff -urN mplayer-svn-r25826.orig/mp3lib/sr1.c mplayer-svn-r25826/mp3lib/sr1.c
---- mplayer-svn-r25826.orig/mp3lib/sr1.c	2008-01-11 02:30:35 +0200
-+++ mplayer-svn-r25826/mp3lib/sr1.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/mp3lib/sr1.c mplayer-svn-r25873/mp3lib/sr1.c
+--- mplayer-svn-r25873.orig/mp3lib/sr1.c	2008-01-11 02:30:35 +0200
++++ mplayer-svn-r25873/mp3lib/sr1.c	2008-01-27 04:47:14 +0200
 @@ -23,7 +23,11 @@
  #include "mpg123.h"
  #include "huffman.h"
@@ -1314,9 +1314,9 @@ diff -urN mplayer-svn-r25826.orig/mp3lib/sr1.c mplayer-svn-r25826/mp3lib/sr1.c
  #include "mpbswap.h"
  #include "cpudetect.h"
  //#include "liba52/mm_accel.h"
-diff -urN mplayer-svn-r25826.orig/mpbswap.h mplayer-svn-r25826/mpbswap.h
---- mplayer-svn-r25826.orig/mpbswap.h	2007-06-24 23:25:10 +0300
-+++ mplayer-svn-r25826/mpbswap.h	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/mpbswap.h mplayer-svn-r25873/mpbswap.h
+--- mplayer-svn-r25873.orig/mpbswap.h	2007-06-24 23:25:10 +0300
++++ mplayer-svn-r25873/mpbswap.h	2008-01-27 04:47:14 +0200
 @@ -1,7 +1,12 @@
  #ifndef MPBSWAP_H
  #define MPBSWAP_H
@@ -1330,9 +1330,24 @@ diff -urN mplayer-svn-r25826.orig/mpbswap.h mplayer-svn-r25826/mpbswap.h
  #ifndef HAVE_SWAB
  void swab(const void *from, void *to, ssize_t n);
  #endif
-diff -urN mplayer-svn-r25826.orig/spudec.c mplayer-svn-r25826/spudec.c
---- mplayer-svn-r25826.orig/spudec.c	2008-01-11 02:30:39 +0200
-+++ mplayer-svn-r25826/spudec.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/mplayer.c mplayer-svn-r25873/mplayer.c
+--- mplayer-svn-r25873.orig/mplayer.c	2008-01-27 03:54:38 +0200
++++ mplayer-svn-r25873/mplayer.c	2008-01-27 04:48:15 +0200
+@@ -49,7 +49,11 @@
+ 
+ #include "cfg-mplayer-def.h"
+ 
++#ifdef USE_LIBAVUTIL_SO
++#include <ffmpeg/intreadwrite.h>
++#else
+ #include "libavutil/intreadwrite.h"
++#endif
+ 
+ #include "subreader.h"
+ 
+diff -urN mplayer-svn-r25873.orig/spudec.c mplayer-svn-r25873/spudec.c
+--- mplayer-svn-r25873.orig/spudec.c	2008-01-11 02:30:39 +0200
++++ mplayer-svn-r25873/spudec.c	2008-01-27 04:47:14 +0200
 @@ -28,7 +28,11 @@
  #else
  #include "avutil.h"
@@ -1345,9 +1360,9 @@ diff -urN mplayer-svn-r25826.orig/spudec.c mplayer-svn-r25826/spudec.c
  
  /* Valid values for spu_aamode:
     0: none (fastest, most ugly)
-diff -urN mplayer-svn-r25826.orig/stream/asf_streaming.c mplayer-svn-r25826/stream/asf_streaming.c
---- mplayer-svn-r25826.orig/stream/asf_streaming.c	2007-12-22 00:43:11 +0200
-+++ mplayer-svn-r25826/stream/asf_streaming.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/stream/asf_streaming.c mplayer-svn-r25873/stream/asf_streaming.c
+--- mplayer-svn-r25873.orig/stream/asf_streaming.c	2007-12-22 00:43:11 +0200
++++ mplayer-svn-r25873/stream/asf_streaming.c	2008-01-27 04:47:14 +0200
 @@ -25,7 +25,11 @@
  #include "network.h"
  #include "tcp.h"
@@ -1360,9 +1375,9 @@ diff -urN mplayer-svn-r25826.orig/stream/asf_streaming.c mplayer-svn-r25826/stre
  
  #ifdef ARCH_X86
  #define	ASF_LOAD_GUID_PREFIX(guid)	(*(uint32_t *)(guid))
-diff -urN mplayer-svn-r25826.orig/stream/pnm.c mplayer-svn-r25826/stream/pnm.c
---- mplayer-svn-r25826.orig/stream/pnm.c	2008-01-21 04:18:26 +0200
-+++ mplayer-svn-r25826/stream/pnm.c	2008-01-21 04:47:43 +0200
+diff -urN mplayer-svn-r25873.orig/stream/pnm.c mplayer-svn-r25873/stream/pnm.c
+--- mplayer-svn-r25873.orig/stream/pnm.c	2008-01-21 04:18:26 +0200
++++ mplayer-svn-r25873/stream/pnm.c	2008-01-27 04:47:14 +0200
 @@ -44,7 +44,11 @@
  #include <winsock2.h>
  #endif
@@ -1375,9 +1390,9 @@ diff -urN mplayer-svn-r25826.orig/stream/pnm.c mplayer-svn-r25826/stream/pnm.c
  
  #include "stream.h"
  #include "libmpdemux/demuxer.h"
-diff -urN mplayer-svn-r25826.orig/stream/realrtsp/real.c mplayer-svn-r25826/stream/realrtsp/real.c
---- mplayer-svn-r25826.orig/stream/realrtsp/real.c	2008-01-21 04:18:26 +0200
-+++ mplayer-svn-r25826/stream/realrtsp/real.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/stream/realrtsp/real.c mplayer-svn-r25873/stream/realrtsp/real.c
+--- mplayer-svn-r25873.orig/stream/realrtsp/real.c	2008-01-21 04:18:26 +0200
++++ mplayer-svn-r25873/stream/realrtsp/real.c	2008-01-27 04:47:14 +0200
 @@ -31,17 +31,22 @@
  #include <string.h>
  
@@ -1403,9 +1418,9 @@ diff -urN mplayer-svn-r25826.orig/stream/realrtsp/real.c mplayer-svn-r25826/stre
  #include "../http.h"
  #include "mp_msg.h"
  
-diff -urN mplayer-svn-r25826.orig/stream/realrtsp/rmff.c mplayer-svn-r25826/stream/realrtsp/rmff.c
---- mplayer-svn-r25826.orig/stream/realrtsp/rmff.c	2007-03-27 00:16:50 +0300
-+++ mplayer-svn-r25826/stream/realrtsp/rmff.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/stream/realrtsp/rmff.c mplayer-svn-r25873/stream/realrtsp/rmff.c
+--- mplayer-svn-r25873.orig/stream/realrtsp/rmff.c	2007-03-27 00:16:50 +0300
++++ mplayer-svn-r25873/stream/realrtsp/rmff.c	2008-01-27 04:47:14 +0200
 @@ -29,7 +29,11 @@
  #include "rmff.h"
  #include "xbuffer.h"
@@ -1418,9 +1433,9 @@ diff -urN mplayer-svn-r25826.orig/stream/realrtsp/rmff.c mplayer-svn-r25826/stre
  
  /*
  #define LOG
-diff -urN mplayer-svn-r25826.orig/stream/stream_cdda.c mplayer-svn-r25826/stream/stream_cdda.c
---- mplayer-svn-r25826.orig/stream/stream_cdda.c	2008-01-21 04:18:26 +0200
-+++ mplayer-svn-r25826/stream/stream_cdda.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/stream/stream_cdda.c mplayer-svn-r25873/stream/stream_cdda.c
+--- mplayer-svn-r25873.orig/stream/stream_cdda.c	2008-01-21 04:18:26 +0200
++++ mplayer-svn-r25873/stream/stream_cdda.c	2008-01-27 04:47:14 +0200
 @@ -6,7 +6,11 @@
  #include "stream.h"
  #include "m_option.h"
@@ -1433,9 +1448,9 @@ diff -urN mplayer-svn-r25826.orig/stream/stream_cdda.c mplayer-svn-r25826/stream
  #include "mpbswap.h"
  #include "libmpdemux/demuxer.h"
  
-diff -urN mplayer-svn-r25826.orig/stream/stream_cddb.c mplayer-svn-r25826/stream/stream_cddb.c
---- mplayer-svn-r25826.orig/stream/stream_cddb.c	2008-01-21 04:18:26 +0200
-+++ mplayer-svn-r25826/stream/stream_cddb.c	2008-01-21 04:48:02 +0200
+diff -urN mplayer-svn-r25873.orig/stream/stream_cddb.c mplayer-svn-r25873/stream/stream_cddb.c
+--- mplayer-svn-r25873.orig/stream/stream_cddb.c	2008-01-21 04:18:26 +0200
++++ mplayer-svn-r25873/stream/stream_cddb.c	2008-01-27 04:47:14 +0200
 @@ -58,7 +58,11 @@
  #include "version.h"
  #include "stream.h"
@@ -1448,9 +1463,9 @@ diff -urN mplayer-svn-r25826.orig/stream/stream_cddb.c mplayer-svn-r25826/stream
  
  #define DEFAULT_FREEDB_SERVER	"freedb.freedb.org"
  #define DEFAULT_CACHE_DIR	"/.cddb/"
-diff -urN mplayer-svn-r25826.orig/stream/stream_cue.c mplayer-svn-r25826/stream/stream_cue.c
---- mplayer-svn-r25826.orig/stream/stream_cue.c	2008-01-21 04:18:26 +0200
-+++ mplayer-svn-r25826/stream/stream_cue.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/stream/stream_cue.c mplayer-svn-r25873/stream/stream_cue.c
+--- mplayer-svn-r25873.orig/stream/stream_cue.c	2008-01-21 04:18:26 +0200
++++ mplayer-svn-r25873/stream/stream_cue.c	2008-01-27 04:47:14 +0200
 @@ -18,7 +18,11 @@
  #include "help_mp.h"
  #include "m_option.h"
@@ -1463,9 +1478,9 @@ diff -urN mplayer-svn-r25826.orig/stream/stream_cue.c mplayer-svn-r25826/stream/
  
  #define byte    unsigned char
  #define SIZERAW 2352
-diff -urN mplayer-svn-r25826.orig/stream/stream_dvb.c mplayer-svn-r25826/stream/stream_dvb.c
---- mplayer-svn-r25826.orig/stream/stream_dvb.c	2008-01-21 04:18:26 +0200
-+++ mplayer-svn-r25826/stream/stream_dvb.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/stream/stream_dvb.c mplayer-svn-r25873/stream/stream_dvb.c
+--- mplayer-svn-r25873.orig/stream/stream_dvb.c	2008-01-21 04:18:26 +0200
++++ mplayer-svn-r25873/stream/stream_dvb.c	2008-01-27 04:47:14 +0200
 @@ -45,7 +45,12 @@
  #include "m_option.h"
  #include "m_struct.h"
@@ -1479,9 +1494,9 @@ diff -urN mplayer-svn-r25826.orig/stream/stream_dvb.c mplayer-svn-r25826/stream/
  
  #include "dvbin.h"
  
-diff -urN mplayer-svn-r25826.orig/stream/stream_dvd.c mplayer-svn-r25826/stream/stream_dvd.c
---- mplayer-svn-r25826.orig/stream/stream_dvd.c	2008-01-21 04:18:26 +0200
-+++ mplayer-svn-r25826/stream/stream_dvd.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/stream/stream_dvd.c mplayer-svn-r25873/stream/stream_dvd.c
+--- mplayer-svn-r25873.orig/stream/stream_dvd.c	2008-01-21 04:18:26 +0200
++++ mplayer-svn-r25873/stream/stream_dvd.c	2008-01-27 04:47:14 +0200
 @@ -39,7 +39,11 @@
  #include "stream_dvd.h"
  #include "stream_dvd_common.h"
@@ -1494,9 +1509,9 @@ diff -urN mplayer-svn-r25826.orig/stream/stream_dvd.c mplayer-svn-r25826/stream/
  
  extern int stream_cache_size;
  extern char* dvd_device;
-diff -urN mplayer-svn-r25826.orig/stream/stream_dvdnav.c mplayer-svn-r25826/stream/stream_dvdnav.c
---- mplayer-svn-r25826.orig/stream/stream_dvdnav.c	2008-01-21 04:18:26 +0200
-+++ mplayer-svn-r25826/stream/stream_dvdnav.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/stream/stream_dvdnav.c mplayer-svn-r25873/stream/stream_dvdnav.c
+--- mplayer-svn-r25873.orig/stream/stream_dvdnav.c	2008-01-27 03:54:37 +0200
++++ mplayer-svn-r25873/stream/stream_dvdnav.c	2008-01-27 04:47:14 +0200
 @@ -13,7 +13,11 @@
  #include <dvdnav/dvdnav.h>
  #include "stream_dvdnav.h"
@@ -1509,9 +1524,9 @@ diff -urN mplayer-svn-r25826.orig/stream/stream_dvdnav.c mplayer-svn-r25826/stre
  #include "spudec.h"
  #include "m_option.h"
  #include "m_struct.h"
-diff -urN mplayer-svn-r25826.orig/stream/stream_netstream.c mplayer-svn-r25826/stream/stream_netstream.c
---- mplayer-svn-r25826.orig/stream/stream_netstream.c	2008-01-21 04:18:26 +0200
-+++ mplayer-svn-r25826/stream/stream_netstream.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/stream/stream_netstream.c mplayer-svn-r25873/stream/stream_netstream.c
+--- mplayer-svn-r25873.orig/stream/stream_netstream.c	2008-01-21 04:18:26 +0200
++++ mplayer-svn-r25873/stream/stream_netstream.c	2008-01-27 04:47:14 +0200
 @@ -58,7 +58,11 @@
  #include "help_mp.h"
  #include "m_option.h"
@@ -1524,9 +1539,9 @@ diff -urN mplayer-svn-r25826.orig/stream/stream_netstream.c mplayer-svn-r25826/s
  #include "mpbswap.h"
  
  #include "netstream.h"
-diff -urN mplayer-svn-r25826.orig/stream/stream_pvr.c mplayer-svn-r25826/stream/stream_pvr.c
---- mplayer-svn-r25826.orig/stream/stream_pvr.c	2007-12-02 17:50:49 +0200
-+++ mplayer-svn-r25826/stream/stream_pvr.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/stream/stream_pvr.c mplayer-svn-r25873/stream/stream_pvr.c
+--- mplayer-svn-r25873.orig/stream/stream_pvr.c	2007-12-02 17:50:49 +0200
++++ mplayer-svn-r25873/stream/stream_pvr.c	2008-01-27 04:47:14 +0200
 @@ -44,8 +44,13 @@
  #include "pvr.h"
  
@@ -1541,9 +1556,9 @@ diff -urN mplayer-svn-r25826.orig/stream/stream_pvr.c mplayer-svn-r25826/stream/
  
  #define PVR_DEFAULT_DEVICE "/dev/video0"
  #define PVR_MAX_CONTROLS 10
-diff -urN mplayer-svn-r25826.orig/stream/stream_radio.c mplayer-svn-r25826/stream/stream_radio.c
---- mplayer-svn-r25826.orig/stream/stream_radio.c	2008-01-21 04:18:26 +0200
-+++ mplayer-svn-r25826/stream/stream_radio.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/stream/stream_radio.c mplayer-svn-r25873/stream/stream_radio.c
+--- mplayer-svn-r25873.orig/stream/stream_radio.c	2008-01-21 04:18:26 +0200
++++ mplayer-svn-r25873/stream/stream_radio.c	2008-01-27 04:47:14 +0200
 @@ -63,7 +63,11 @@
  #include "mp_msg.h"
  #include "help_mp.h"
@@ -1556,9 +1571,9 @@ diff -urN mplayer-svn-r25826.orig/stream/stream_radio.c mplayer-svn-r25826/strea
  
  #ifdef USE_RADIO_CAPTURE
  #include "audio_in.h"
-diff -urN mplayer-svn-r25826.orig/stream/tv.c mplayer-svn-r25826/stream/tv.c
---- mplayer-svn-r25826.orig/stream/tv.c	2008-01-21 04:18:26 +0200
-+++ mplayer-svn-r25826/stream/tv.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/stream/tv.c mplayer-svn-r25873/stream/tv.c
+--- mplayer-svn-r25873.orig/stream/tv.c	2008-01-21 04:18:26 +0200
++++ mplayer-svn-r25873/stream/tv.c	2008-01-27 04:47:14 +0200
 @@ -29,7 +29,11 @@
  
  #include "libaf/af_format.h"
@@ -1571,9 +1586,9 @@ diff -urN mplayer-svn-r25826.orig/stream/tv.c mplayer-svn-r25826/stream/tv.c
  #include "osdep/timer.h"
  
  #include "tv.h"
-diff -urN mplayer-svn-r25826.orig/stream/tvi_vbi.c mplayer-svn-r25826/stream/tvi_vbi.c
---- mplayer-svn-r25826.orig/stream/tvi_vbi.c	2007-12-03 01:37:09 +0200
-+++ mplayer-svn-r25826/stream/tvi_vbi.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/stream/tvi_vbi.c mplayer-svn-r25873/stream/tvi_vbi.c
+--- mplayer-svn-r25873.orig/stream/tvi_vbi.c	2007-12-03 01:37:09 +0200
++++ mplayer-svn-r25873/stream/tvi_vbi.c	2008-01-27 04:47:14 +0200
 @@ -94,7 +94,11 @@
  #include "mp_msg.h"
  #include "help_mp.h"
@@ -1586,9 +1601,9 @@ diff -urN mplayer-svn-r25826.orig/stream/tvi_vbi.c mplayer-svn-r25826/stream/tvi
  #include "input/input.h"
  #include "osdep/timer.h"
  
-diff -urN mplayer-svn-r25826.orig/stream/vcd_read.h mplayer-svn-r25826/stream/vcd_read.h
---- mplayer-svn-r25826.orig/stream/vcd_read.h	2007-12-17 18:36:04 +0200
-+++ mplayer-svn-r25826/stream/vcd_read.h	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/stream/vcd_read.h mplayer-svn-r25873/stream/vcd_read.h
+--- mplayer-svn-r25873.orig/stream/vcd_read.h	2007-12-17 18:36:04 +0200
++++ mplayer-svn-r25873/stream/vcd_read.h	2008-01-27 04:47:14 +0200
 @@ -1,4 +1,8 @@
 +#ifdef USE_LIBAVUTIL_SO
 +#include <ffmpeg/intreadwrite.h>
@@ -1598,10 +1613,10 @@ diff -urN mplayer-svn-r25826.orig/stream/vcd_read.h mplayer-svn-r25826/stream/vc
  //=================== VideoCD ==========================
  #if	defined(linux) || defined(sun) || defined(__bsdi__)
  
-diff -urN mplayer-svn-r25826.orig/TOOLS/Makefile mplayer-svn-r25826/TOOLS/Makefile
---- mplayer-svn-r25826.orig/TOOLS/Makefile	2008-01-11 02:30:38 +0200
-+++ mplayer-svn-r25826/TOOLS/Makefile	2008-01-21 04:46:06 +0200
-@@ -12,14 +12,15 @@
+diff -urN mplayer-svn-r25873.orig/TOOLS/Makefile mplayer-svn-r25873/TOOLS/Makefile
+--- mplayer-svn-r25873.orig/TOOLS/Makefile	2008-01-24 02:33:26 +0200
++++ mplayer-svn-r25873/TOOLS/Makefile	2008-01-27 04:47:14 +0200
+@@ -13,14 +13,15 @@
  	subrip$(EXESUF) \
  #	vivodump$(EXESUF) \
  
@@ -1620,9 +1635,9 @@ diff -urN mplayer-svn-r25826.orig/TOOLS/Makefile mplayer-svn-r25826/TOOLS/Makefi
  
  #FIXME: Linking is broken, help welcome.
  vivodump$(EXESUF): vivodump.c
-diff -urN mplayer-svn-r25826.orig/vidix/drivers.c mplayer-svn-r25826/vidix/drivers.c
---- mplayer-svn-r25826.orig/vidix/drivers.c	2007-05-11 01:00:46 +0300
-+++ mplayer-svn-r25826/vidix/drivers.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/vidix/drivers.c mplayer-svn-r25873/vidix/drivers.c
+--- mplayer-svn-r25873.orig/vidix/drivers.c	2007-05-11 01:00:46 +0300
++++ mplayer-svn-r25873/vidix/drivers.c	2008-01-27 04:47:14 +0200
 @@ -26,7 +26,11 @@
  
  #include "vidixlib.h"
@@ -1635,9 +1650,9 @@ diff -urN mplayer-svn-r25826.orig/vidix/drivers.c mplayer-svn-r25826/vidix/drive
  #include "mpbswap.h"
  #include "config.h"
  
-diff -urN mplayer-svn-r25826.orig/vidix/mach64_vid.c mplayer-svn-r25826/vidix/mach64_vid.c
---- mplayer-svn-r25826.orig/vidix/mach64_vid.c	2007-08-27 00:02:47 +0300
-+++ mplayer-svn-r25826/vidix/mach64_vid.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/vidix/mach64_vid.c mplayer-svn-r25873/vidix/mach64_vid.c
+--- mplayer-svn-r25873.orig/vidix/mach64_vid.c	2007-08-27 00:02:47 +0300
++++ mplayer-svn-r25873/vidix/mach64_vid.c	2008-01-27 04:47:14 +0200
 @@ -31,7 +31,11 @@
  #include <fcntl.h>
  
@@ -1650,9 +1665,9 @@ diff -urN mplayer-svn-r25826.orig/vidix/mach64_vid.c mplayer-svn-r25826/vidix/ma
  #include "mpbswap.h"
  #include "vidix.h"
  #include "vidixlib.h"
-diff -urN mplayer-svn-r25826.orig/vidix/nvidia_vid.c mplayer-svn-r25826/vidix/nvidia_vid.c
---- mplayer-svn-r25826.orig/vidix/nvidia_vid.c	2007-10-02 15:01:56 +0300
-+++ mplayer-svn-r25826/vidix/nvidia_vid.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/vidix/nvidia_vid.c mplayer-svn-r25873/vidix/nvidia_vid.c
+--- mplayer-svn-r25873.orig/vidix/nvidia_vid.c	2007-10-02 15:01:56 +0300
++++ mplayer-svn-r25873/vidix/nvidia_vid.c	2008-01-27 04:47:14 +0200
 @@ -38,7 +38,11 @@
  #include "pci_ids.h"
  #include "pci_names.h"
@@ -1665,9 +1680,9 @@ diff -urN mplayer-svn-r25826.orig/vidix/nvidia_vid.c mplayer-svn-r25826/vidix/nv
  #include "mpbswap.h"
  
  
-diff -urN mplayer-svn-r25826.orig/vidix/radeon_vid.c mplayer-svn-r25826/vidix/radeon_vid.c
---- mplayer-svn-r25826.orig/vidix/radeon_vid.c	2008-01-21 04:18:26 +0200
-+++ mplayer-svn-r25826/vidix/radeon_vid.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/vidix/radeon_vid.c mplayer-svn-r25873/vidix/radeon_vid.c
+--- mplayer-svn-r25873.orig/vidix/radeon_vid.c	2008-01-21 04:18:26 +0200
++++ mplayer-svn-r25873/vidix/radeon_vid.c	2008-01-27 04:47:14 +0200
 @@ -37,7 +37,11 @@
  #include <inttypes.h>
  
@@ -1680,9 +1695,9 @@ diff -urN mplayer-svn-r25826.orig/vidix/radeon_vid.c mplayer-svn-r25826/vidix/ra
  #include "mpbswap.h"
  #include "pci_ids.h"
  #include "pci_names.h"
-diff -urN mplayer-svn-r25826.orig/vidix/sysdep/pci_linux.c mplayer-svn-r25826/vidix/sysdep/pci_linux.c
---- mplayer-svn-r25826.orig/vidix/sysdep/pci_linux.c	2007-12-02 17:50:49 +0200
-+++ mplayer-svn-r25826/vidix/sysdep/pci_linux.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/vidix/sysdep/pci_linux.c mplayer-svn-r25873/vidix/sysdep/pci_linux.c
+--- mplayer-svn-r25873.orig/vidix/sysdep/pci_linux.c	2007-12-02 17:50:49 +0200
++++ mplayer-svn-r25873/vidix/sysdep/pci_linux.c	2008-01-27 04:47:14 +0200
 @@ -155,7 +155,11 @@
  #include <fcntl.h>
  //#include <sys/io.h>
@@ -1695,9 +1710,9 @@ diff -urN mplayer-svn-r25826.orig/vidix/sysdep/pci_linux.c mplayer-svn-r25826/vi
  #include "mpbswap.h"
  
  static int pci_get_vendor(
-diff -urN mplayer-svn-r25826.orig/vidix/vidixlib.c mplayer-svn-r25826/vidix/vidixlib.c
---- mplayer-svn-r25826.orig/vidix/vidixlib.c	2007-04-23 01:35:47 +0300
-+++ mplayer-svn-r25826/vidix/vidixlib.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/vidix/vidixlib.c mplayer-svn-r25873/vidix/vidixlib.c
+--- mplayer-svn-r25873.orig/vidix/vidixlib.c	2007-04-23 01:35:47 +0300
++++ mplayer-svn-r25873/vidix/vidixlib.c	2008-01-27 04:47:14 +0200
 @@ -40,7 +40,11 @@
  #include "vidixlib.h"
  #include "drivers.h"
@@ -1710,9 +1725,9 @@ diff -urN mplayer-svn-r25826.orig/vidix/vidixlib.c mplayer-svn-r25826/vidix/vidi
  #include "mpbswap.h"
  
  extern unsigned int  vdlGetVersion( void )
-diff -urN mplayer-svn-r25826.orig/vobsub.c mplayer-svn-r25826/vobsub.c
---- mplayer-svn-r25826.orig/vobsub.c	2008-01-21 04:18:30 +0200
-+++ mplayer-svn-r25826/vobsub.c	2008-01-21 04:46:06 +0200
+diff -urN mplayer-svn-r25873.orig/vobsub.c mplayer-svn-r25873/vobsub.c
+--- mplayer-svn-r25873.orig/vobsub.c	2008-01-21 04:18:30 +0200
++++ mplayer-svn-r25873/vobsub.c	2008-01-27 04:47:14 +0200
 @@ -23,7 +23,11 @@
  #ifdef USE_UNRAR_EXEC
  #include "unrar_exec.h"
