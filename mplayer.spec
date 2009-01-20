@@ -280,7 +280,7 @@
 Name: %lname
 Version: 1.0
 %define rel 35
-%define subrel 1
+%define subrel 2
 %ifdef svnrev
 Release: alt%rel.%svnrev.%subrel
 %define pkgver svn-r%svnrev
@@ -326,7 +326,8 @@ Patch3: %Name-1.0pre4-alt-explicit_gif.patch
 Patch4: %lname-svn-r22092-libdha.patch
 Patch5: %lname-svn-r19447-vo_vidix.patch.gz
 Patch6: %lname-svn-r21128-alt-artsc_ldflags.patch.gz
-Patch11: %lname-svn-r22518-nls.patch
+Patch7: cddb_fix_20070605.diff
+Patch11: %lname-svn-r22535-nls.patch
 Patch12: %lname-uni-svn21402.diff.gz
 Patch13: %Name-svn-20060711-vbe.patch.gz
 Patch14: %lname-svn-r22324-gui_nls.patch
@@ -590,7 +591,7 @@ Obsoletes: %Name-doc-en
 Group: Video
 Summary: %Name docs
 Conflicts: %name-doc-cs %name-doc-de %name-doc-es %name-doc-fr
-Conflicts: %name-doc-hu %name-doc-it %name-doc-pl %name-doc-zh_CN
+Conflicts: %name-doc-hu %name-doc-pl %name-doc-zh_CN
 
 %description doc-world
 %Name docs (exept English and Russian.
@@ -881,6 +882,7 @@ mv ffmpeg-svn-r%ffmpeg_svnrev/lib{av{codec,format,util},postproc} .
 %patch4 -p1
 %patch5 -p1
 %patch6 -p1
+%patch7 -p0
 %patch11 -p1
 %patch12 -p1
 %patch13 -p1
@@ -1510,6 +1512,10 @@ unset RPM_PYTHON
 
 
 %changelog
+* Tue Jun 12 2007 Led <led@altlinux.ru> 1.0-alt35.22535.2
+- updated %lname-svn-r22535-nls.patch
+- added cddb_fix_20070605.diff (CVE-2007-2948)
+
 * Mon Mar 12 2007 Led <led@altlinux.ru> 1.0-alt35.22535.1
 - new SVN snapshot (revision 22535)
 - updated %lname-svn-r22518-nls.patch

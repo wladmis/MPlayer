@@ -1,6 +1,6 @@
-diff -urN mplayer-svn-r22518.orig/configure mplayer-svn-r22518/configure
---- mplayer-svn-r22518.orig/configure	2007-03-12 02:50:41 +0200
-+++ mplayer-svn-r22518/configure	2007-03-12 03:14:42 +0200
+diff -urN mplayer-svn-r22535.orig/configure mplayer-svn-r22535/configure
+--- mplayer-svn-r22535.orig/configure	2007-03-12 21:50:50 +0200
++++ mplayer-svn-r22535/configure	2007-06-12 22:49:18 +0300
 @@ -226,6 +226,7 @@
    --enable-linux-devfs   set default devices to devfs [disable]
    --enable-termcap       use termcap database for key codes [autodetect]
@@ -52,9 +52,9 @@ diff -urN mplayer-svn-r22518.orig/configure mplayer-svn-r22518/configure
  /* define this to use iconv(3) function to codepage conversions */
  $_def_iconv
  
-diff -urN mplayer-svn-r22518.orig/mp_msg.c mplayer-svn-r22518/mp_msg.c
---- mplayer-svn-r22518.orig/mp_msg.c	2007-03-12 02:50:50 +0200
-+++ mplayer-svn-r22518/mp_msg.c	2007-03-12 03:23:14 +0200
+diff -urN mplayer-svn-r22535.orig/mp_msg.c mplayer-svn-r22535/mp_msg.c
+--- mplayer-svn-r22535.orig/mp_msg.c	2007-03-12 21:50:50 +0200
++++ mplayer-svn-r22535/mp_msg.c	2007-06-12 22:49:18 +0300
 @@ -8,6 +8,13 @@
  
  #include "config.h"
@@ -90,7 +90,22 @@ diff -urN mplayer-svn-r22518.orig/mp_msg.c mplayer-svn-r22518/mp_msg.c
  #endif
  }
  
-@@ -92,14 +104,14 @@
+@@ -77,7 +89,14 @@
+ #ifdef USE_ICONV
+     mp_msg_charset = getenv("MPLAYER_CHARSET");
+     if (!mp_msg_charset)
++      //setlocale(LC_CTYPE, "");
+       mp_msg_charset = get_term_charset();
++      //setlocale(LC_CTYPE, "C");
++#ifdef ENABLE_NLS
++    setlocale(LC_ALL, "");
++    bindtextdomain(PACKAGE, LOCALEDIR);
++    textdomain(PACKAGE);
++#endif
+ #endif
+ }
+ 
+@@ -92,14 +111,14 @@
      
      if (!mp_msg_test(mod, lev)) return; // do not display
      va_start(va, format);
