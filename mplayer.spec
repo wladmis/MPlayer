@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 21410
-%define ffmpeg_svnrev 7199
+%define svnrev 21614
+%define ffmpeg_svnrev 7317
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -319,6 +319,7 @@ Source4: standard-1.9.tar.bz2
 Source5: %lname.conf.in.gz
 Source6: mp_help2msg.awk.gz
 Source7: mp_msg2po.awk.gz
+Patch1: %lname-svn-r21402-makefile.patch.gz
 Patch2: %lname-dvd-ru-svn19389.patch.gz
 Patch3: %Name-1.0pre4-alt-explicit_gif.patch
 Patch4: %lname-svn-r21352-libdha.patch.gz
@@ -326,10 +327,11 @@ Patch5: %lname-svn-r19447-vo_vidix.patch.gz
 Patch6: %lname-svn-r21128-alt-artsc_ldflags.patch.gz
 Patch7: %Name-svn-20060707_dirac-0.5.x.patch.bz2
 Patch11: %lname-svn-r20777-nls.patch.gz
-Patch12: %lname-uni-svn21352.diff.gz
+Patch12: %lname-uni-svn21402.diff.gz
 Patch13: %Name-svn-20060711-vbe.patch.gz
+Patch14: %lname-svn-r21402-gui_nls.patch.bz2
 Patch15: %lname-svn-r21128-pulseaudio.patch.gz
-Patch17: %lname-svn-r21410-ext_ffmpeg.patch.bz2
+Patch17: %lname-svn-r21611-ext_ffmpeg.patch.bz2
 Patch18: %lname-mwallp.patch.gz
 Patch19: %lname-svn-r20777-bmovl-test.patch.gz
 Patch22: %lname-svn-r19389-polyp0.8.patch.gz
@@ -337,7 +339,7 @@ Patch26: %lname-svn-r21357-configure.patch.gz
 Patch27: %lname-svn-r20777-builddocs.patch.gz
 %if_disabled shared_ffmpeg
 Patch31: ffmpeg-svn-r6769-dirac-0.5.x.patch.bz2
-Patch32: ffmpeg-uni-svn-r6110.patch.gz
+Patch32: ffmpeg-uni-svn-r7184.patch.gz
 %endif
 
 BuildRequires: %awk pkgconfig libncurses-devel libslang-devel zlib-devel
@@ -387,6 +389,7 @@ BuildRequires: cpp >= 3.3 gcc >= 3.3 gcc-c++ >= 3.3
 %{?_enable_dirac:BuildRequires: libdirac-devel}
 %{?_enable_nut:BuildRequires: libnut-devel}
 
+%{?_enable_xvmc:BuildRequires: libXvMC-devel}
 %if_enabled mplayer
 %if %vidixlib == ext
 BuildRequires: libvidix-devel
@@ -400,7 +403,6 @@ BuildRequires: libvidix-devel
 %{?_enable_ggi:BuildRequires: libggi-devel}
 %{?_enable_dxr3:BuildRequires: libdxr3-devel}
 %{?_enable_xv:BuildRequires: libXv-devel}
-%{?_enable_xvmc:BuildRequires: libXvMC-devel}
 %{?_enable_vm:BuildRequires: libXxf86vm-devel}
 %{?_enable_xinerama:BuildRequires: libXinerama-devel}
 %{?_enable_x11:BuildRequires: libXt-devel}
@@ -938,6 +940,7 @@ mv ffmpeg-svn-r%ffmpeg_svnrev/lib{av{codec,format,util},postproc} .
 %setup -q -n %Name-%pkgver
 %endif
 
+%patch1 -p1
 %patch2 -p1
 %patch3 -p1
 %patch4 -p1
@@ -947,10 +950,11 @@ mv ffmpeg-svn-r%ffmpeg_svnrev/lib{av{codec,format,util},postproc} .
 %patch11 -p1
 %patch12 -p1
 %patch13 -p1
+%patch14 -p1
 %patch15 -p1
 %patch17 -p1
 %patch18 -p1
-%patch19 -p1
+#%%patch19 -p1
 %{?_enable_polyp:%{?_disable_old_polyp:%patch22 -p1}}
 %patch26 -p1
 %patch27 -p1
@@ -1216,7 +1220,7 @@ echo "utf8 = yes" >> etc/%lname.conf
 %if_enabled mplayer
 %if_with tools
 %make_build -C TOOLS 302m_convert 360m_convert alaw-gen asfinfo avi-fix avisubdump bios2dump cpuinfo dump_mp4 mem2dump movinfo png2raw
-for d in mwallp GL-test; do
+for d in %{?_enable_mencoder:mwallp} GL-test; do
     pushd TOOLS/$d
     ./compile.sh
     popd
@@ -1280,7 +1284,7 @@ install -m 0755 TOOLS/subfont-c/subfont %buildroot%_bindir/%{lname}_subfont
 %endif
 
 %if_with tools
-install -m 0755 TOOLS/{3*convert,aconvert,alaw-gen,asfinfo,avi-fix,avisubdump,bios2dump,calcbpp.pl,countquant.pl,cpuinfo,divx2svcd,dump_mp4,encode2mpeglight,mem2dump,mencvcd,midentify,movinfo,mp.pl,mpconsole,mplmult.sh,plotpsnr.pl,png2raw,psnr-video.sh,subedit.pl,subsearch.sh,sws-test,vobshift.py,w32codec_dl.pl,wma2ogg.pl,x2mpsub.sh,GL-test/gltest,mwallp/mwallp} %buildroot/%_bindir/
+install -m 0755 TOOLS/{3*convert,aconvert,alaw-gen,asfinfo,avi-fix,avisubdump,bios2dump,calcbpp.pl,countquant.pl,cpuinfo,divx2svcd,dump_mp4,encode2mpeglight,mem2dump,mencvcd,midentify,movinfo,mp.pl,mpconsole,mplmult.sh,plotpsnr.pl,png2raw,psnr-video.sh,subedit.pl,subsearch.sh,sws-test,vobshift.py,w32codec_dl.pl,wma2ogg.pl,x2mpsub.sh,GL-test/gltest%{?_enable_mencoder:,mwallp/mwallp}} %buildroot/%_bindir/
 %{?_enable_mencoder:install -m 0755 TOOLS/{dvd2divxscript.pl,menc2pass,qepdvcd.sh} %buildroot/%_bindir/}
 install -pD -m 0644 TOOLS/mwallp/README %buildroot%_docdir/%name-tools-%version/README.mwallp
 install -m 0644 TOOLS/README %buildroot%_docdir/%name-tools-%version/
@@ -1328,10 +1332,8 @@ install -pD -m 0644 $l %buildroot%_datadir/locale/$(basename $l .gmo)/LC_MESSAGE
 done
 %endif
 
-%if_enabled mplayer
 %find_lang %lname
 %find_lang --with-man --without-mo --output=%lname-man.lang %lname
-%endif
 %{?_enable_mencoder:%find_lang --with-man --without-mo mencoder}
 
 # a tribute to clever python support
@@ -1549,15 +1551,25 @@ unset RPM_PYTHON
 %_bindir/subsearch.sh
 %_bindir/vobshift.py
 %_bindir/w32codec_dl.pl
-%_bindir/mwallp
+%{?_enable_mencoder:%_bindir/mwallp}
 %endif
 %endif
 
 
 %changelog
-* Fri Dec 01 2006 Led <led@altlinux.ru> 1.0-alt35.21410.1
-- new SVN snapshot (revision 21410)
-- updated %lname-svn-r21410-ext_ffmpeg.patch
+* Thu Dec 14 2006 Led <led@altlinux.ru> 1.0-alt35.21614.1
+- new SVN snapshot (revision 21614)
+- updated %lname-svn-r21611-ext_ffmpeg.patch
+- removed %lname-svn-r20777-bmovl-test.patch
+
+* Sat Dec 02 2006 Led <led@altlinux.ru> 1.0-alt35.21402.3
+- added %lname-svn-r21402-gui_nls.patch
+
+* Thu Nov 30 2006 Led <led@altlinux.ru> 1.0-alt35.21402.2
+- fixed %lname-uni-svn21402.diff
+- fixed BuildRequires
+- added %lname-svn-r21402-makefile.patch
+- fixed spec
 
 * Thu Nov 30 2006 Led <led@altlinux.ru> 1.0-alt35.21402.1
 - new SVN snapshot (revision 21402)
