@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 21374
-%define ffmpeg_svnrev 7184
+%define svnrev 21398
+%define ffmpeg_svnrev 7188
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -325,12 +325,11 @@ Patch4: %lname-svn-r21352-libdha.patch.gz
 Patch5: %lname-svn-r19447-vo_vidix.patch.gz
 Patch6: %lname-svn-r21128-alt-artsc_ldflags.patch.gz
 Patch7: %Name-svn-20060707_dirac-0.5.x.patch.bz2
-Patch10: %lname-svn-r20837-generic-x86_64.patch.gz
 Patch11: %lname-svn-r20777-nls.patch.gz
 Patch12: %lname-uni-svn21352.diff.gz
 Patch13: %Name-svn-20060711-vbe.patch.gz
 Patch15: %lname-svn-r21128-pulseaudio.patch.gz
-Patch17: %lname-svn-r21374-ext_ffmpeg.patch.bz2
+Patch17: %lname-svn-r21398-ext_ffmpeg.patch.bz2
 Patch18: %lname-mwallp.patch.gz
 Patch19: %lname-svn-r20777-bmovl-test.patch.gz
 Patch22: %lname-svn-r19389-polyp0.8.patch.gz
@@ -945,7 +944,6 @@ mv ffmpeg-svn-r%ffmpeg_svnrev/lib{av{codec,format,util},postproc} .
 %patch5 -p1
 %patch6 -p1
 %{?_enable_dirac:%patch7 -p1}
-%patch10 -p1
 %patch11 -p1
 %patch12 -p1
 %patch13 -p1
@@ -1557,7 +1555,14 @@ unset RPM_PYTHON
 
 
 %changelog
+* Thu Nov 30 2006 Led <led@altlinux.ru> 1.0-alt35.21398.1
+- new SVN snapshot (revision 21398)
+- fixed %%changelog
+- updated %lname-svn-r21398-ext_ffmpeg.patch
+- removed %lname-svn-r20837-generic-x86_64.patch (fixed in upstream)
+
 * Wed Nov 29 2006 Led <led@altlinux.ru> 1.0-alt35.21374.1
+- new SVN snapshot (revision 21374)
 - forced --enable-mplayer
 - fixed BuildRequires
 - updated %lname-svn-r21374-ext_ffmpeg.patch
