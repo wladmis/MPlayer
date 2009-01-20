@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 23099
-%define ffmpeg_svnrev 8793
+%define svnrev 23104
+%define ffmpeg_svnrev 8800
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -104,7 +104,7 @@
 
 # Video output:
 %def_enable vidix
-%define vidixlib int
+%define vidixlib ext
 %def_enable gl
 %def_enable dga
 %def_disable vesa
@@ -280,7 +280,7 @@
 Name: %lname
 Version: 1.0
 %define rel 35
-%define subrel 2
+%define subrel 1
 %ifdef svnrev
 Release: alt%rel.%svnrev.%subrel
 %define pkgver svn-r%svnrev
@@ -1450,8 +1450,8 @@ unset RPM_PYTHON
 
 
 %changelog
-* Tue Apr 24 2007 Led <led@altlinux.ru> 1.0-alt35.23099.2
-- build with internal vidix
+* Wed Apr 25 2007 Led <led@altlinux.ru> 1.0-alt35.23104.1
+- new SVN snapshot (revision 23104)
 
 * Mon Apr 23 2007 Led <led@altlinux.ru> 1.0-alt35.23099.1
 - new SVN snapshot (revision 23099)
