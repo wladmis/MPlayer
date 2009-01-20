@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 22217
-%define ffmpeg_svnrev 7980
+%define svnrev 22221
+%define ffmpeg_svnrev 7987
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -318,6 +318,7 @@ Source4: standard-1.9.tar.bz2
 Source5: %lname.conf.in
 Source6: mp_help2msg.awk.gz
 Source7: mp_msg2po.awk.gz
+Patch0: %lname-svn-r22221-subreader.patch
 Patch1: %lname-svn-r22092-dirac.patch
 Patch2: %lname-dvd-ru-svn19389.patch.gz
 Patch3: %Name-1.0pre4-alt-explicit_gif.patch
@@ -338,16 +339,15 @@ Patch27: %lname-svn-r20777-builddocs.patch.gz
 Patch32: ffmpeg-uni-svn-r7184.patch.gz
 %endif
 
+# Automatically added by buildreq on Thu Feb 15 2007
+BuildRequires: aalib-devel docbook-dtds docbook-style-xsl esound-devel gcc-c++ kdelibs ladspa_sdk liba52-devel libarts-devel libavformat-devel libcaca-devel libcdparanoia-devel libdv-devel libdvdnav-devel libenca-devel libfribidi-devel libglut-devel libgpm-devel libgtk+2-devel libjpeg-devel liblirc-devel liblive555-devel liblzo-devel libmesa-devel libmpcdec-devel libopenal-devel libpostproc-devel libpulseaudio-devel libSDL-devel libslang-devel libsmbclient-devel libspeex-devel libswscale-devel libungif-devel libvidix-devel libXi-devel libXinerama-devel libxmms-devel libXmu-devel libXvMC-devel libXxf86dga-devel libXxf86vm-devel linux-libc-headers subversion svgalib-devel w3c-markup-validator-libs xsltproc
+
 BuildRequires: %awk pkgconfig libncurses-devel libslang-devel zlib-devel
 BuildRequires: cpp >= 3.3 gcc >= 3.3 gcc-c++ >= 3.3
 %{?svnrev:%{?_with_htmldocs:BuildRequires: docbook-style-xsl xsltproc sgml-common docbook-dtds}}
 
 %{?_enable_mencoder:%{?_enable_lame:BuildRequires: liblame-devel}}
 %{?_enable_termcap:BuildRequires: libtinfo-devel}
-%{?_enable_tv:BuildRequires: linux-libc-headers}
-%{?_enable_radio:BuildRequires: linux-libc-headers}
-%{?_enable_pvr:BuildRequires: linux-libc-headers}
-%{?_enable_rtc:BuildRequires: linux-libc-headers}
 %{?_enable_smb:BuildRequires: libsmbclient-devel >= 3.0.3}
 %{?_enable_live:BuildRequires: liblive555-devel >= 0.0.0-alt0.2006.05.15}
 %{?_enable_dvdnav:BuildRequires: libdvdnav-devel}
@@ -403,12 +403,10 @@ BuildRequires: libvidix-devel
 %{?_enable_xinerama:BuildRequires: libXinerama-devel}
 %{?_enable_x11:BuildRequires: libXt-devel}
 %{?_enable_dga:BuildRequires: libXxf86dga-devel}
-%{?_enable_dvb:BuildRequires: linux-libc-headers}
 %{?_enable_directfb:BuildRequires: libdirectfb-devel}
 %{?_enable_pnm:BuildRequires: libnetpbm-devel}
 
 %{?_enable_alsa:BuildRequires: libalsa-devel}
-%{?_enable_oss:BuildRequires: linux-libc-headers}
 %{?_enable_arts:BuildRequires: libarts-devel}
 %{?_enable_esd:BuildRequires: esound-devel}
 %{?_enable_pulse:BuildRequires: libpulseaudio-devel >= 0.9}
@@ -916,6 +914,7 @@ mv ffmpeg-svn-r%ffmpeg_svnrev/lib{av{codec,format,util},postproc} .
 %setup -q -n %Name-%pkgver
 %endif
 
+%patch0 -p1
 %patch1 -p1
 %patch2 -p1
 %patch3 -p1
@@ -1520,9 +1519,11 @@ unset RPM_PYTHON
 
 
 %changelog
-* Wed Feb 14 2007 Led <led@altlinux.ru> 1.0-alt35.22217.1
-- new SVN snapshot (revision 22217)
+* Thu Feb 15 2007 Led <led@altlinux.ru> 1.0-alt35.22221.1
+- new SVN snapshot (revision 22221)
 - updated %lname-svn-r22217-configure.patch
+- added mplayer-svn-r22221-subreader.patch (fixed #10844)
+- cleaned up BuildRequires
 
 * Mon Feb 12 2007 Led <led@altlinux.ru> 1.0-alt35.22210.1
 - new SVN snapshot (revision 22210):

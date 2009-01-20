@@ -1,0 +1,26 @@
+diff -urN mplayer-svn-r22221.orig/subreader.c mplayer-svn-r22221/subreader.c
+--- mplayer-svn-r22221.orig/subreader.c	2007-02-06 12:58:57 +0200
++++ mplayer-svn-r22221/subreader.c	2007-02-15 17:08:28 +0200
+@@ -1729,18 +1729,18 @@
+ static void strcpy_trim(char *d, char *s)
+ {
+     // skip leading whitespace
+-    while (*s && !isalnum(*s)) {
++    while (*s && isascii(*s) && !isalnum(*s)) {
+ 	s++;
+     }
+     for (;;) {
+ 	// copy word
+-	while (*s && isalnum(*s)) {
+-	    *d = tolower(*s);
++	while (*s && (!isascii(*s) || isalnum(*s))) {
++	    *d = *s;
+ 	    s++; d++;
+ 	}
+ 	if (*s == 0) break;
+ 	// trim excess whitespace
+-	while (*s && !isalnum(*s)) {
++	while (*s && isascii(*s) && !isalnum(*s)) {
+ 	    s++;
+ 	}
+ 	if (*s == 0) break;
