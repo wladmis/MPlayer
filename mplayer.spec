@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 23839
-%define ffmpeg_svnrev 9777
+%define svnrev 23840
+%define ffmpeg_svnrev 9778
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -78,7 +78,7 @@
 %def_enable xvid
 %def_enable x264
 %def_enable ffmpeg
-%def_disable shared_ffmpeg
+%def_enable shared_ffmpeg
 %def_enable faad_ext
 %def_enable faad_int
 %def_disable faad_fixed
@@ -99,11 +99,12 @@
 %def_enable liba52
 %def_enable libmpeg2
 %def_enable musepack
+%def_enable dirac
 %def_enable nut
 
 # Video output:
 %def_enable vidix
-%define vidixlib ext
+%define vidixlib int
 %def_enable gl
 %def_enable dga
 %def_disable vesa
@@ -319,7 +320,7 @@ Source5: %lname.conf.in
 Source6: mp_help2msg.awk.gz
 Source7: mp_msg2po.awk.gz
 Patch0: %lname-svn-r22221-subreader.patch
-Patch1: %lname-svn-r22092-dirac.patch
+Patch1: %lname-svn-r23840-dirac-0.7.x.patch
 Patch2: %lname-dvd-ru-svn19389.patch.gz
 Patch3: %Name-1.0pre4-alt-explicit_gif.patch
 Patch4: %lname-svn-r23547-gui.patch
@@ -337,7 +338,7 @@ Patch17: %lname-svn-r23726-ext_ffmpeg.patch
 Patch22: %lname-svn-r19389-polyp0.8.patch.gz
 Patch27: %lname-svn-r22518-builddocs.patch
 %if_disabled shared_ffmpeg
-Patch31: ffmpeg-svn-r9777-dirac-0.7.x.patch
+%{?_enable_dirac:Patch31: ffmpeg-svn-r9777-dirac-0.7.x.patch}
 Patch32: ffmpeg-uni-svn-r9389.patch
 Patch33: ffmpeg-svn-r9777-amr.patch
 %endif
@@ -387,7 +388,7 @@ BuildRequires: cpp >= 3.3 gcc >= 3.3 gcc-c++ >= 3.3
 %{?_enable_libmpeg2:BuildRequires: libmpeg2-devel}
 %{?_enable_musepack:BuildRequires: libmpcdec-devel >= 1.2.1}
 %{?_enable_nut:BuildRequires: libnut-devel >= 0.0-alt0.272}
-%{?_enable_teletext:BuildRequires: libzvbi-devel}
+%{?_enable_dirac:BuildRequires: libdirac-devel >= 0.6}
 
 %{?_enable_xvmc:BuildRequires: libXvMC-devel}
 %if_enabled mplayer
@@ -850,6 +851,7 @@ export CFLAGS="%optflags"
 		%{?_enable_faad_int:--enable-faad-internal --disable-faad-external %{subst_enable_to faad_fixed faad-fixed}} \
 		%{?_enable_faad_ext:--enable-faad-external --disable-faad-internal} \
 		%{subst_enable faac} \
+		%{subst_enable dirac} \
 		%{subst_enable ladspa} \
 		%{subst_enable libdv} \
 		%{subst_enable mad} \
@@ -944,7 +946,7 @@ export CFLAGS="%optflags"
 		--with-extraincdir=%_includedir/vidix:%_includedir/directfb
 
 subst 's|^#\(CFLAGS .*\) -Isvgalib_helper/|\1|' vidix/Makefile
-%make_build
+%make
 
 # make conf file
 sed -e 's/^@VO@/vo = %default_vo/' \
@@ -1231,6 +1233,8 @@ done
 - updated %lname-svn-r23726-ext_ffmpeg.patch
 - added ffmpeg-svn-r9777-dirac-0.7.x.patch
 - added ffmpeg-svn-r9777-amr.patch
+- removed %lname-svn-r22092-dirac.patch
+- added %lname-svn-r23840-dirac-0.7.x.patch
 
 * Fri Jul 06 2007 Led <led@altlinux.ru> 1.0-alt35.23722.1
 - new SVN snapshot (revision 23722)
