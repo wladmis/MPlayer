@@ -281,7 +281,7 @@
 Name: %lname
 Version: 1.0
 %define rel 35
-%define subrel 1
+%define subrel 2
 %ifdef svnrev
 Release: alt%rel.%svnrev.%subrel
 %define pkgver svn-r%svnrev
@@ -319,6 +319,7 @@ Source4: standard-1.9.tar.bz2
 Source5: %lname.conf.in.gz
 Source6: mp_help2msg.awk.gz
 Source7: mp_msg2po.awk.gz
+Patch1: %lname-svn-r22092-dirac.patch
 Patch2: %lname-dvd-ru-svn19389.patch.gz
 Patch3: %Name-1.0pre4-alt-explicit_gif.patch
 Patch4: %lname-svn-r22092-libdha.patch
@@ -923,6 +924,7 @@ mv ffmpeg-svn-r%ffmpeg_svnrev/lib{av{codec,format,util},postproc} .
 %setup -q -n %Name-%pkgver
 %endif
 
+%patch1 -p1
 %patch2 -p1
 %patch3 -p1
 %patch4 -p1
@@ -1529,6 +1531,10 @@ unset RPM_PYTHON
 
 
 %changelog
+* Mon Feb 05 2007 Led <led@altlinux.ru> 1.0-alt35.22092.2
+- added %lname-svn-r22092-dirac.patch
+- fixed %lname.conf (#10770)
+
 * Wed Jan 31 2007 Led <led@altlinux.ru> 1.0-alt35.22092.1
 - new SVN snapshot (revision 22092)
 - removed %lname-svn-r22020-makefile.patch

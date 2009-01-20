@@ -62,6 +62,9 @@ fbmodeconfig = /etc/fb.modes
 # Keep the player window on top of all other windows.
 #ontop=yes
 
+# Turns off xscreensaver at startup and turns it on again on exit
+stop-xscreensaver=yes
+
 
 ##################
 # audio settings #
