@@ -1,0 +1,75 @@
+diff -urN mplayer-svn-r25454.orig/libvo/vo_cvidix.c mplayer-svn-r25454/libvo/vo_cvidix.c
+--- mplayer-svn-r25454.orig/libvo/vo_cvidix.c	2007-12-02 17:50:50 +0200
++++ mplayer-svn-r25454/libvo/vo_cvidix.c	2007-12-19 00:22:52 +0200
+@@ -23,7 +23,11 @@
+ #include "mp_msg.h"
+ 
+ #include "vosub_vidix.h"
++#ifdef VIDIX_EXT
++#include <vidixlib.h>
++#else
+ #include "vidix/vidixlib.h"
++#endif
+ 
+ 
+ static const vo_info_t info = {
+diff -urN mplayer-svn-r25454.orig/libvo/vosub_vidix.c mplayer-svn-r25454/libvo/vosub_vidix.c
+--- mplayer-svn-r25454.orig/libvo/vosub_vidix.c	2007-12-02 17:50:50 +0200
++++ mplayer-svn-r25454/libvo/vosub_vidix.c	2007-12-19 00:23:40 +0200
+@@ -27,7 +27,11 @@
+ #include "mp_msg.h"
+ #include "help_mp.h"
+ 
++#ifdef VIDIX_EXT
++#include <vidixlib.h>
++#else
+ #include "vidix/vidixlib.h"
++#endif
+ #include "fastmemcpy.h"
+ #include "osd.h"
+ #include "video_out.h"
+diff -urN mplayer-svn-r25454.orig/libvo/vosub_vidix.h mplayer-svn-r25454/libvo/vosub_vidix.h
+--- mplayer-svn-r25454.orig/libvo/vosub_vidix.h	2007-12-02 17:50:50 +0200
++++ mplayer-svn-r25454/libvo/vosub_vidix.h	2007-12-19 00:22:52 +0200
+@@ -29,7 +29,11 @@
+ void     vidix_flip_page(void);
+ void     vidix_draw_osd(void);
+ 
++#ifdef VIDIX_EXT
++#include <vidix.h>
++#else
+ #include "vidix/vidix.h"
++#endif
+ /* graphic keys */
+ int vidix_grkey_support(void);
+ int vidix_grkey_get(vidix_grkey_t *gr_key);
+diff -urN mplayer-svn-r25454.orig/libvo/vo_winvidix.c mplayer-svn-r25454/libvo/vo_winvidix.c
+--- mplayer-svn-r25454.orig/libvo/vo_winvidix.c	2007-12-02 17:50:50 +0200
++++ mplayer-svn-r25454/libvo/vo_winvidix.c	2007-12-19 00:22:52 +0200
+@@ -25,7 +25,11 @@
+ #include "mp_fifo.h"
+ 
+ #include "vosub_vidix.h"
++#ifdef VIDIX_EXT
++#include <vidixlib.h>
++#else
+ #include "vidix/vidixlib.h"
++#endif
+ 
+ 
+ static const vo_info_t info = 
+diff -urN mplayer-svn-r25454.orig/libvo/vo_xvidix.c mplayer-svn-r25454/libvo/vo_xvidix.c
+--- mplayer-svn-r25454.orig/libvo/vo_xvidix.c	2007-12-02 17:50:50 +0200
++++ mplayer-svn-r25454/libvo/vo_xvidix.c	2007-12-19 00:22:52 +0200
+@@ -31,7 +31,11 @@
+ #include "mp_msg.h"
+ 
+ #include "vosub_vidix.h"
++#ifdef VIDIX_EXT
++#include <vidixlib.h>
++#else
+ #include "vidix/vidixlib.h"
++#endif
+ 
+ #ifdef HAVE_NEW_GUI
+ #include "gui/interface.h"

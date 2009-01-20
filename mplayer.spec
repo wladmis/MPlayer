@@ -6,9 +6,9 @@
 %define subst_o_pre() %{expand:%%{?_enable_%{2}:%{1}%{2},}}
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
-#define prerel rc1
-%define svnrev 25029
-%define ffmpeg_svnrev 11004
+#define prerel rc2
+%define svnrev 25454
+%define ffmpeg_svnrev 11263
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -51,6 +51,7 @@
 %def_enable freetype
 %def_enable fontconfig
 %def_enable unrarlib
+%def_enable unrarexec
 %def_enable osdmenu
 %def_enable sortsub
 %def_enable fribidi
@@ -321,24 +322,24 @@ Source5: %lname.conf.in
 Source6: mp_help2msg.awk.gz
 Source7: mp_msg2po.awk.gz
 Patch0: %lname-svn-r22221-subreader.patch
-Patch1: %lname-svn-r25014-dirac-0.8.x.patch
+Patch1: %lname-svn-r25454-dirac-0.8.x.patch
 Patch2: %lname-dvd-ru-svn19389.patch.gz
 Patch3: %Name-1.0pre4-alt-explicit_gif.patch
 Patch4: %lname-svn-r23547-gui.patch
-Patch5: %lname-svn-r19447-vo_vidix.patch.gz
+Patch5: %lname-svn-r25454-vo_vidix.patch
 Patch6: %lname-svn-r21128-alt-artsc_ldflags.patch.gz
 Patch7: %lname-svn-r23099-demux_nut.patch
 Patch8: %lname-svn-r23722-VIDM-win32-codec.patch
+Patch9: %lname-svn-r25454-dvdnav.patch
 Patch11: %lname-svn-r24081-nls.patch
 Patch12: %lname-uni-svn23235.diff
 Patch13: %Name-svn-20060711-vbe.patch.gz
 Patch14: %lname-svn-r23726-gui_nls.patch
-Patch15: %lname-svn-r21128-pulseaudio.patch.gz
-Patch16: %lname-svn-r24688-configure.patch
-Patch17: %lname-svn-r25014-ext_ffmpeg.patch
+Patch16: %lname-svn-r25454-configure.patch
+Patch17: %lname-svn-r25454-ext_ffmpeg.patch
 Patch27: %lname-svn-r22518-builddocs.patch
 %if_disabled shared_ffmpeg
-%{?_enable_dirac:Patch31: ffmpeg-svn-r11000-dirac-0.8.x.patch}
+%{?_enable_dirac:Patch31: ffmpeg-svn-r11263-dirac-0.8.x.patch}
 Patch32: ffmpeg-uni-svn-r10644.patch
 Patch33: ffmpeg-svn-r10644-amr.patch
 %endif
@@ -690,11 +691,11 @@ mv ffmpeg-svn-r%ffmpeg_svnrev/lib{av{codec,format,util},postproc} .
 %patch6 -p1
 %patch7 -p1
 %patch8 -p1
+%patch9 -p1
 %patch11 -p1
 %patch12 -p1
 %patch13 -p1
 %patch14 -p1
-#%%patch15 -p1
 %patch16 -p1
 %patch17 -p1
 %patch27 -p1
@@ -785,6 +786,7 @@ export CFLAGS="%optflags"
 		%{subst_enable freetype} \
 		%{subst_enable fontconfig} \
 		%{subst_enable unrarlib} \
+		%{subst_enable unrarexec} \
 		%{subst_enable_to osdmenu menu} \
 		%{subst_enable sortsub} \
 		%{subst_enable fribidi} \
@@ -1238,6 +1240,16 @@ done
 
 
 %changelog
+* Wed Dec 19 2007 Led <led@altlinux.ru> 1.0-alt35.25454.1
+- new SVN snapshot (revision 25454)
+- updated:
+  + ffmpeg-svn-r11263-dirac-0.8.x.patch
+  + %lname-svn-r25454-dirac-0.8.x.patch
+  + %lname-svn-r25454-vo_vidix.patch
+  + %lname-svn-r25454-configure.patch
+  + %lname-svn-r25454-ext_ffmpeg.patch
+- added %lname-svn-r25454-dvdnav.patch
+
 * Mon Nov 12 2007 Led <led@altlinux.ru> 1.0-alt35.25029.1
 - new SVN snapshot (revision 25029)
 - fixed %%changelog

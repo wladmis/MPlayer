@@ -1,0 +1,19 @@
+diff -urN mplayer-svn-r25454.orig/stream/stream_dvdnav.c mplayer-svn-r25454/stream/stream_dvdnav.c
+--- mplayer-svn-r25454.orig/stream/stream_dvdnav.c	2007-12-10 00:47:43 +0200
++++ mplayer-svn-r25454/stream/stream_dvdnav.c	2007-12-19 01:44:07 +0200
+@@ -572,6 +572,7 @@
+  * \return -1 on error, current subtitle id if successful
+  */
+ int dvdnav_aid_from_lang(stream_t *stream, unsigned char *language) {
++#ifdef DVDNAV_FORMAT_AC3
+   dvdnav_priv_t * priv=(dvdnav_priv_t*)stream->priv;
+   int k;
+   uint8_t format, lg;
+@@ -602,6 +603,7 @@
+     language += 2;
+     while(language[0]==',' || language[0]==' ') ++language;
+   }
++#endif
+   return -1;
+ }
+ 
