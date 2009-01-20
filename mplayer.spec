@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 23844
-%define ffmpeg_svnrev 9778
+%define svnrev 24081
+%define ffmpeg_svnrev 10124
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -36,6 +36,7 @@
 %def_enable radio_v4l2
 %def_enable radio_capture
 %def_disable bsdbt848
+%def_enable teletext
 %def_disable pvr
 %def_enable rtc
 %def_enable network
@@ -199,6 +200,7 @@
 %set_disable v4l1
 %set_disable v4l2
 %set_disable bsdbt848
+%set_disable teletext
 %set_disable pvr
 %endif
 
@@ -328,17 +330,17 @@ Patch5: %lname-svn-r19447-vo_vidix.patch.gz
 Patch6: %lname-svn-r21128-alt-artsc_ldflags.patch.gz
 Patch7: %lname-svn-r23099-demux_nut.patch
 Patch8: %lname-svn-r23722-VIDM-win32-codec.patch
-Patch11: %lname-svn-r23545-nls.patch
+Patch11: %lname-svn-r24081-nls.patch
 Patch12: %lname-uni-svn23235.diff
 Patch13: %Name-svn-20060711-vbe.patch.gz
 Patch14: %lname-svn-r23726-gui_nls.patch
 Patch15: %lname-svn-r21128-pulseaudio.patch.gz
 Patch16: %lname-svn-r23810-configure.patch
-Patch17: %lname-svn-r23726-ext_ffmpeg.patch
+Patch17: %lname-svn-r24081-ext_ffmpeg.patch
 Patch22: %lname-svn-r19389-polyp0.8.patch.gz
 Patch27: %lname-svn-r22518-builddocs.patch
 %if_disabled shared_ffmpeg
-%{?_enable_dirac:Patch31: ffmpeg-svn-r9777-dirac-0.7.x.patch}
+%{?_enable_dirac:Patch31: ffmpeg-svn-r10124-dirac-0.7.x.patch}
 Patch32: ffmpeg-uni-svn-r9389.patch
 Patch33: ffmpeg-svn-r9777-amr.patch
 %endif
@@ -759,6 +761,7 @@ export CFLAGS="%optflags"
 		%{subst_enable_to radio_v4l2 radio-v4l2} \
 		%{subst_enable_to radio_capture radio-capture} \
 		%{subst_enable_to bsdbt848 tv-bsdbt848} \
+		%{subst_enable_to teletext tv-teletext} \
 		%{subst_enable pvr} \
 		%{subst_enable rtc} \
 		%{subst_enable network} \
@@ -1226,6 +1229,11 @@ done
 
 
 %changelog
+* Fri Aug 17 2007 Led <led@altlinux.ru> 1.0-alt35.24081.1
+- new SVN snapshot (revision 24081)
+- updated mplayer-svn-r24081-nls.patch
+- updated %lname-svn-r24081-ext_ffmpeg.patch
+
 * Mon Jul 23 2007 Led <led@altlinux.ru> 1.0-alt35.23844.1
 - new SVN snapshot (revision 23844)
 - updated %lname-svn-r23810-configure.patch
