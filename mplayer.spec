@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 23722
-%define ffmpeg_svnrev 9440
+%define svnrev 23726
+%define ffmpeg_svnrev 9509
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -330,9 +330,9 @@ Patch8: %lname-svn-r23722-VIDM-win32-codec.patch
 Patch11: %lname-svn-r23545-nls.patch
 Patch12: %lname-uni-svn23235.diff
 Patch13: %Name-svn-20060711-vbe.patch.gz
-Patch14: %lname-svn-r23099-gui_nls.patch
+Patch14: %lname-svn-r23726-gui_nls.patch
 Patch15: %lname-svn-r21128-pulseaudio.patch.gz
-Patch17: %lname-svn-r23664-ext_ffmpeg.patch
+Patch17: %lname-svn-r23726-ext_ffmpeg.patch
 Patch22: %lname-svn-r19389-polyp0.8.patch.gz
 Patch26: %lname-svn-r23592-configure.patch
 Patch27: %lname-svn-r22518-builddocs.patch
@@ -1218,6 +1218,11 @@ done
 
 
 %changelog
+* Sat Jul 07 2007 Led <led@altlinux.ru> 1.0-alt35.23726.1
+- new SVN snapshot (revision 23726)
+- updated %lname-svn-r23726-gui_nls.patch
+- updated %lname-svn-r23726-ext_ffmpeg.patch
+
 * Fri Jul 06 2007 Led <led@altlinux.ru> 1.0-alt35.23722.1
 - new SVN snapshot (revision 23722)
 - updated %lname-svn-r23664-ext_ffmpeg.patch
