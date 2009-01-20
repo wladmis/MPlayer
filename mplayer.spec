@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc2
-%define svnrev 25454
-%define ffmpeg_svnrev 11263
+%define svnrev 25487
+%define ffmpeg_svnrev 11298
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -50,7 +50,6 @@
 %def_enable bitmap_font
 %def_enable freetype
 %def_enable fontconfig
-%def_enable unrarlib
 %def_enable unrarexec
 %def_enable osdmenu
 %def_enable sortsub
@@ -336,7 +335,7 @@ Patch12: %lname-uni-svn23235.diff
 Patch13: %Name-svn-20060711-vbe.patch.gz
 Patch14: %lname-svn-r23726-gui_nls.patch
 Patch16: %lname-svn-r25454-configure.patch
-Patch17: %lname-svn-r25454-ext_ffmpeg.patch
+Patch17: %lname-svn-r25487-ext_ffmpeg.patch
 Patch27: %lname-svn-r22518-builddocs.patch
 %if_disabled shared_ffmpeg
 %{?_enable_dirac:Patch31: ffmpeg-svn-r11263-dirac-0.8.x.patch}
@@ -355,7 +354,7 @@ BuildRequires: cpp >= 3.3 gcc >= 3.3 gcc-c++ >= 3.3
 %{?_enable_termcap:BuildRequires: libtinfo-devel}
 %{?_enable_smb:BuildRequires: libsmbclient-devel >= 3.0.3}
 %{?_enable_live:BuildRequires: liblive555-devel >= 0.0.0-alt0.2006.03.03}
-%{?_enable_dvdnav:BuildRequires: libdvdnav-devel}
+%{?_enable_dvdnav:BuildRequires: libdvdnav-devel >= 0.1.10-alt4}
 %{?_enable_dvdread:BuildRequires: libdvdread-devel}
 %{?_enable_cdparanoia:BuildRequires: libcdparanoia-devel}
 %{?_enable_vstream:BuildRequires: libvstream-client-devel}
@@ -785,7 +784,6 @@ export CFLAGS="%optflags"
 		%{subst_enable_to bitmap_font bitmap-font} \
 		%{subst_enable freetype} \
 		%{subst_enable fontconfig} \
-		%{subst_enable unrarlib} \
 		%{subst_enable unrarexec} \
 		%{subst_enable_to osdmenu menu} \
 		%{subst_enable sortsub} \
@@ -1240,14 +1238,14 @@ done
 
 
 %changelog
-* Wed Dec 19 2007 Led <led@altlinux.ru> 1.0-alt35.25454.1
-- new SVN snapshot (revision 25454)
+* Sat Dec 22 2007 Led <led@altlinux.ru> 1.0-alt35.25487.1
+- new SVN snapshot (revision 25487)
 - updated:
   + ffmpeg-svn-r11263-dirac-0.8.x.patch
   + %lname-svn-r25454-dirac-0.8.x.patch
   + %lname-svn-r25454-vo_vidix.patch
   + %lname-svn-r25454-configure.patch
-  + %lname-svn-r25454-ext_ffmpeg.patch
+  + %lname-svn-r25487-ext_ffmpeg.patch
 - added %lname-svn-r25454-dvdnav.patch
 
 * Mon Nov 12 2007 Led <led@altlinux.ru> 1.0-alt35.25029.1
