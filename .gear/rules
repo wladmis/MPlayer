@@ -1,4 +1,4 @@
-tar.bz2: r22223:. name=@name@-svn-r22223
+tar.bz2: r22229:. name=@name@-svn-r22229
 tar.bz2: standard-1.9:. name=standard-1.9 base=standard
 copy: *.sh *.in *-explicit_gif.patch *-libdha.patch *-ext_ffmpeg.patch *-configure.patch *-dirac.patch *-subreader.patch
 gzip: *.diff *.awk *-vbe.patch *-artsc_ldflags.patch *-polyp0.8.patch mplayer-dvd-ru-*.patch *-vo_vidix.patch *-nls.patch *-mwallp.patch *-builddocs.patch *-pulseaudio.patch

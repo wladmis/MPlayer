@@ -7,7 +7,7 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 22223
+%define svnrev 22229
 %define ffmpeg_svnrev 7991
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
@@ -301,6 +301,7 @@ Obsoletes: %Name
 %if_enabled freetype
 %{?_disable_fontconfig:Requires: fonts-type1-urw}
 Conflicts: %Name-fonts < 1.0-alt28
+Conflicts: %name-i18n < 1.0-35.22229.1
 Obsoletes: %Name-fonts
 %else
 Requires: %name-fonts
@@ -555,18 +556,13 @@ MEncoder a movie encoder for Unix and is a part of the %name package.
 %endif
 
 
+%if_with htmldocs
 %package docs
 Group: Video
 Summary: %Name all docs
 Requires: %name-doc-en
-Requires: %name-doc-de
-Requires: %name-doc-cs
-Requires: %name-doc-es
-Requires: %name-doc-fr
-Requires: %name-doc-hu
-Requires: %name-doc-pl
+Requires: %name-doc-world
 Requires: %name-doc-ru
-Requires: %name-doc-zh_CN
 %if %name != %Name
 Provides: %Name-docs
 Obsoletes: %Name-docs
@@ -590,76 +586,14 @@ Obsoletes: %Name-doc-en
 %Name English docs.
 
 
-%package doc-cs
+%package doc-world
 Group: Video
-Summary: %Name Czesh docs
-%if %name != %Name
-Provides: %Name-doc-cs = %version-%release
-Obsoletes: %Name-doc-cs
-%endif
+Summary: %Name docs
+Conflicts: %name-doc-cs %name-doc-de %name-doc-es %name-doc-fr
+Conflicts: %name-doc-hu %name-doc-it %name-doc-pl %name-doc-zh_CN
 
-%description doc-cs
-%Name Czesh docs.
-
-
-%package doc-de
-Group: Video
-Summary: %Name German docs
-%if %name != %Name
-Provides: %Name-doc-de = %version-%release
-Obsoletes: %Name-doc-de
-%endif
-
-%description doc-de
-%Name German docs.
-
-
-%package doc-es
-Group: Video
-Summary: %Name Spanish docs
-%if %name != %Name
-Provides: %Name-doc-es = %version-%release
-Obsoletes: %Name-doc-es
-%endif
-
-%description doc-es
-%Name Spanish docs.
-
-
-%package doc-fr
-Group: Video
-Summary: %Name French docs
-%if %name != %Name
-Provides: %Name-doc-fr = %version-%release
-Obsoletes: %Name-doc-fr
-%endif
-
-%description doc-fr
-%Name French docs.
-
-
-%package doc-hu
-Group: Video
-Summary: %Name Hungarian docs
-%if %name != %Name
-Provides: %Name-doc-hu = %version-%release
-Obsoletes: %Name-doc-hu
-%endif
-
-%description doc-hu
-%Name Hungarian docs.
-
-
-%package doc-pl
-Group: Video
-Summary: %Name Polish docs
-%if %name != %Name
-Provides: %Name-doc-pl = %version-%release
-Obsoletes: %Name-doc-pl
-%endif
-
-%description doc-pl
-%Name Polish docs.
+%description doc-world
+%Name docs (exept English and Russian.
 
 
 %package doc-ru
@@ -672,16 +606,7 @@ Obsoletes: %Name-doc-ru
 
 %description doc-ru
 %Name Russian docs.
-
-
-%package doc-zh_CN
-Group: Video
-Summary: %Name Chinese docs
-Provides: %name-doc-zh = %version-%release
-Obsoletes: %name-doc-zh
-
-%description doc-zh_CN
-%Name Chinese docs.
+%endif
 
 
 %if_enabled mplayer
@@ -873,14 +798,47 @@ VIDIX driver for VIA CLE266 Unichrome.
 %endif
 
 
-%if_enabled nls
 %package i18n
 Group: Video
 Summary: Languages support for %Name
-Provides: mencoder-i18n = %version-%release
+%{?_enable_mencoder:Provides: mencoder-i18n = %version-%release}
+Requires: %name-i18n-world = %version-%release
+Requires: %name-i18n-ru = %version-%release
+%{?_enable_nls:Requires: %name-i18n-uk = %version-%release}
 
 %description i18n
 Languages support for %Name.
+
+
+%package i18n-world
+Group: Video
+Summary: Languages support for %Name
+Conflicts: %name-i18n < 1.0-35.22229.1
+%{?_enable_mencoder:Provides: mencoder-i18n-world = %version-%release}
+
+%description i18n-world
+Languages support for %Name (except ru%{?_enable_nls: and uk}).
+
+
+%package i18n-ru
+Group: Video
+Summary: Russian language support for %Name
+Conflicts: %name-i18n < 1.0-35.22229.1
+%{?_enable_mencoder:Provides: mencoder-i18n-ru = %version-%release}
+
+%description i18n-ru
+Russian language support for %Name.
+
+
+%if_enabled nls
+%package i18n-uk
+Group: Video
+Summary: Ukrainian language support for %Name
+Conflicts: %name-i18n < 1.0-35.22229.1
+%{?_enable_mencoder:Provides: mencoder-i18n-uk = %version-%release}
+
+%description i18n-uk
+Ukrainian language support for %Name.
 %endif
 
 
@@ -1076,8 +1034,8 @@ export CFLAGS="%optflags"
 		%{subst_enable_to vorbis libvorbis} \
 		%{subst_enable speex} \
 		%{subst_enable theora} \
-		%{?_enabled_faad_int:--enable-faad-internal --disable-faad-external %{subst_enable_to faad_fixed faad-fixed}} \
-		%{?_enabled_faad_ext:--enable-faad-external --disable-faad-internal} \
+		%{?_enable_faad_int:--enable-faad-internal --disable-faad-external %{subst_enable_to faad_fixed faad-fixed}} \
+		%{?_enable_faad_ext:--enable-faad-external --disable-faad-internal} \
 		%{subst_enable faac} \
 		%{subst_enable ladspa} \
 		%{subst_enable libdv} \
@@ -1278,11 +1236,16 @@ __MENU__
 # docs
 bzip2 --best --force --keep -- ChangeLog
 for l in $(ls DOCS/man | grep -v 'en'); do
+%if_enabled mplayer
     install -pD -m 0644 DOCS/man/$l/%lname.1 %buildroot%_mandir/$l/man1/%lname.1
-    %{?_enable_mencoder:install -m 0644 DOCS/man/$l/%lname.1 %buildroot%_mandir/$l/man1/mencoder.1}
+    %{?_enable_mencoder:ln -sf %lname.1 %buildroot%_mandir/$l/man1/mencoder.1}
+%else
+    %{?_enable_mencoder:install -pD -m 0644 DOCS/man/$l/mencoder.1 %buildroot%_mandir/$l/man1/mencoder.1}
+%endif
 done
 rm -f %buildroot%_man1dir/mencoder.1
 %{?_enable_mencoder:install -m 0644 DOCS/man/en/%lname.1 %buildroot%_man1dir/mencoder.1}
+echo "KOI8-R" > %buildroot%_mandir/ru/.charset
 %if_with htmldocs
 for l in cs de en es fr hu pl ru zh_CN; do
     install -d %buildroot%_docdir/%name-doc-%version/$l
@@ -1301,10 +1264,6 @@ install -pD -m 0644 $l %buildroot%_datadir/locale/$(basename $l .gmo)/LC_MESSAGE
 done
 %endif
 
-%find_lang %lname
-%find_lang --with-man --without-mo --output=%lname-man.lang %lname
-%{?_enable_mencoder:%find_lang --with-man --without-mo mencoder}
-
 # a tribute to clever python support
 unset RPM_PYTHON
 
@@ -1322,10 +1281,15 @@ unset RPM_PYTHON
 %endif
 
 
+%post i18n-ru 
+[ -e %_mandir/ru/.charset ] || echo "KOI8-R" > %_mandir/ru/.charset
+
+
 %if_enabled mplayer
-%files -f %lname-man.lang
+%files
 %doc README AUTHORS ChangeLog.*
 %_bindir/%lname
+%_man1dir/%lname.*
 %dir %_sysconfdir/%name
 %config %_sysconfdir/%name/codecs.conf
 %config(noreplace) %verify(not size mtime md5) %_sysconfdir/%name/%lname.conf
@@ -1370,8 +1334,9 @@ unset RPM_PYTHON
 
 
 %if_enabled mencoder
-%files -n mencoder -f mencoder.lang
+%files -n mencoder
 %_bindir/mencoder
+%_man1dir/mencoder.*
 %if_disabled mplayer
 %doc README AUTHORS ChangeLog.*
 %dir %_sysconfdir/%name
@@ -1380,41 +1345,29 @@ unset RPM_PYTHON
 %endif
 
 
+%if_with htmldocs
+%files docs
+
+
+%files doc-world
+%dir %_docdir/%name-doc-%version
+%lang(cs) %_docdir/%name-doc-%version/cs
+%lang(de) %_docdir/%name-doc-%version/de
+%lang(es) %_docdir/%name-doc-%version/es
+%lang(fr) %_docdir/%name-doc-%version/fr
+%lang(hu) %_docdir/%name-doc-%version/hu
+%lang(pl) %_docdir/%name-doc-%version/pl
+%lang(zh_CN) %_docdir/%name-doc-%version/zh_CN
+
+
 %files doc-en
+%dir %_docdir/%name-doc-%version
 %_docdir/%name-doc-%version/en
 
 
-%if_with htmldocs
-%files doc-cs
-%_docdir/%name-doc-%version/cs
-
-
-%files doc-de
-%_docdir/%name-doc-%version/de
-
-
-%files doc-es
-%_docdir/%name-doc-%version/es
-
-
-%files doc-fr
-%_docdir/%name-doc-%version/fr
-
-
-%files doc-hu
-%_docdir/%name-doc-%version/hu
-
-
-%files doc-pl
-%_docdir/%name-doc-%version/pl
-
-
 %files doc-ru
+%dir %_docdir/%name-doc-%version
 %_docdir/%name-doc-%version/ru
-
-
-%files doc-zh_CN
-%_docdir/%name-doc-%version/zh_CN
 %endif
 
 
@@ -1465,8 +1418,53 @@ unset RPM_PYTHON
 %endif
 
 
+%files i18n
+
+
+%files i18n-ru
+%_mandir/ru/man1/*
+%{?_enable_nls:%_datadir/locale/ru/LC_MESSAGES/*}
+
+
 %if_enabled nls
-%files i18n -f %lname.lang
+%files i18n-uk
+%_datadir/locale/uk/LC_MESSAGES/*
+%endif
+
+
+%files i18n-world
+%lang(cs) %_mandir/cs/man1/*
+%lang(de) %_mandir/de/man1/*
+%lang(es) %_mandir/es/man1/*
+%lang(fr) %_mandir/fr/man1/*
+%lang(hu) %_mandir/hu/man1/*
+%lang(it) %_mandir/it/man1/*
+%lang(pl) %_mandir/pl/man1/*
+%lang(zh) %_mandir/zh/man1/*
+%if_enabled nls
+%lang(bg) %_datadir/locale/bg/LC_MESSAGES/*
+%lang(cs) %_datadir/locale/cs/LC_MESSAGES/*
+%lang(de) %_datadir/locale/de/LC_MESSAGES/*
+%lang(dk) %_datadir/locale/dk/LC_MESSAGES/*
+%lang(el) %_datadir/locale/el/LC_MESSAGES/*
+%lang(es) %_datadir/locale/es/LC_MESSAGES/*
+%lang(fr) %_datadir/locale/fr/LC_MESSAGES/*
+%lang(hu) %_datadir/locale/hu/LC_MESSAGES/*
+%lang(it) %_datadir/locale/it/LC_MESSAGES/*
+%lang(ja) %_datadir/locale/ja/LC_MESSAGES/*
+%lang(ko) %_datadir/locale/ko/LC_MESSAGES/*
+%lang(mk) %_datadir/locale/mk/LC_MESSAGES/*
+%lang(nb) %_datadir/locale/nb/LC_MESSAGES/*
+%lang(nl) %_datadir/locale/nl/LC_MESSAGES/*
+%lang(pl) %_datadir/locale/pl/LC_MESSAGES/*
+%lang(pt) %_datadir/locale/pt_BR/LC_MESSAGES/*
+%lang(ro) %_datadir/locale/ro/LC_MESSAGES/*
+%lang(sk) %_datadir/locale/sk/LC_MESSAGES/*
+%lang(sv) %_datadir/locale/sv/LC_MESSAGES/*
+%lang(sk) %_datadir/locale/sk/LC_MESSAGES/*
+%lang(tr) %_datadir/locale/tr/LC_MESSAGES/*
+%lang(zh_CN) %_datadir/locale/zh_CN/LC_MESSAGES/*
+%lang(zh_TW) %_datadir/locale/zh_TW/LC_MESSAGES/*
 %endif
 
 
@@ -1520,6 +1518,13 @@ unset RPM_PYTHON
 
 
 %changelog
+* Fri Feb 16 2007 Led <led@altlinux.ru> 1.0-alt35.22229.1
+- new SVN snapshot (revision 22229)
+- added subpackages %name-i18n-ru, %name-i18n-uk, %name-i18n-world
+- fixed configure parameters (%%build section)
+- creating %%_mandir/ru/.charset (if nonexist) in %name-i18n-ru
+  subpackage's post script
+
 * Thu Feb 15 2007 Led <led@altlinux.ru> 1.0-alt35.22223.1
 - new SVN snapshot (revision 22223)
 - updated %lname-svn-r22217-configure.patch
