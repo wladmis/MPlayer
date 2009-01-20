@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 23091
-%define ffmpeg_svnrev 8792
+%define svnrev 23099
+%define ffmpeg_svnrev 8793
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -323,17 +323,18 @@ Patch0: %lname-svn-r22221-subreader.patch
 Patch1: %lname-svn-r22092-dirac.patch
 Patch2: %lname-dvd-ru-svn19389.patch.gz
 Patch3: %Name-1.0pre4-alt-explicit_gif.patch
-Patch4: %lname-svn-r22963-gui.patch
+Patch4: %lname-svn-r23099-gui.patch
 Patch5: %lname-svn-r19447-vo_vidix.patch.gz
 Patch6: %lname-svn-r21128-alt-artsc_ldflags.patch.gz
+Patch7: %lname-svn-r23099-demux_nut.patch
 Patch11: %lname-svn-r22518-nls.patch
 Patch12: %lname-uni-svn22915.diff
 Patch13: %Name-svn-20060711-vbe.patch.gz
-Patch14: %lname-svn-r22324-gui_nls.patch
+Patch14: %lname-svn-r23099-gui_nls.patch
 Patch15: %lname-svn-r21128-pulseaudio.patch.gz
-Patch17: %lname-svn-r22963-ext_ffmpeg.patch
+Patch17: %lname-svn-r23099-ext_ffmpeg.patch
 Patch22: %lname-svn-r19389-polyp0.8.patch.gz
-Patch26: %lname-svn-r22915-configure.patch
+Patch26: %lname-svn-r23099-configure.patch
 Patch27: %lname-svn-r22518-builddocs.patch
 %if_disabled shared_ffmpeg
 Patch32: ffmpeg-uni-svn-r7650.patch
@@ -865,6 +866,7 @@ mv ffmpeg-svn-r%ffmpeg_svnrev/lib{av{codec,format,util},postproc} .
 %patch4 -p1
 %patch5 -p1
 %patch6 -p1
+%patch7 -p1
 %patch11 -p1
 %patch12 -p1
 %patch13 -p1
@@ -1448,8 +1450,13 @@ unset RPM_PYTHON
 
 
 %changelog
-* Mon Apr 23 2007 Led <led@altlinux.ru> 1.0-alt35.23091.1
-- new SVN snapshot (revision 23091)
+* Mon Apr 23 2007 Led <led@altlinux.ru> 1.0-alt35.23099.1
+- new SVN snapshot (revision 23099)
+- updated %lname-svn-r23099-gui.patch
+- updated %lname-svn-r23099-gui_nls.patch
+- updated %lname-svn-r23099-ext_ffmpeg.patch
+- updated %lname-svn-r23099-configure.patch
+- added %lname-svn-r23099-demux_nut.patch
 
 * Thu Apr 19 2007 Led <led@altlinux.ru> 1.0-alt35.23023.1
 - new SVN snapshot (revision 23023)

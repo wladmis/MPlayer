@@ -1,0 +1,11 @@
+diff -urN mplayer-svn-r23099.orig/libmpdemux/demux_nut.c mplayer-svn-r23099/libmpdemux/demux_nut.c
+--- mplayer-svn-r23099.orig/libmpdemux/demux_nut.c	2007-04-23 01:35:52 +0300
++++ mplayer-svn-r23099/libmpdemux/demux_nut.c	2007-04-23 23:38:47 +0300
+@@ -3,6 +3,7 @@
+ 
+ #include "config.h"
+ #include "mp_msg.h"
++#include "help_mp.h"
+ 
+ #include "stream/stream.h"
+ #include "demuxer.h"
