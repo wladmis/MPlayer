@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 22358
-%define ffmpeg_svnrev 8149
+%define svnrev 22518
+%define ffmpeg_svnrev 8335
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -326,18 +326,18 @@ Patch3: %Name-1.0pre4-alt-explicit_gif.patch
 Patch4: %lname-svn-r22092-libdha.patch
 Patch5: %lname-svn-r19447-vo_vidix.patch.gz
 Patch6: %lname-svn-r21128-alt-artsc_ldflags.patch.gz
-Patch11: %lname-svn-r20777-nls.patch.gz
+Patch11: %lname-svn-r22518-nls.patch
 Patch12: %lname-uni-svn21402.diff.gz
 Patch13: %Name-svn-20060711-vbe.patch.gz
 Patch14: %lname-svn-r22324-gui_nls.patch
 Patch15: %lname-svn-r21128-pulseaudio.patch.gz
-Patch17: %lname-svn-r22324-ext_ffmpeg.patch
-Patch18: %lname-mwallp.patch.gz
+Patch17: %lname-svn-r22518-ext_ffmpeg.patch
+Patch18: %lname-svn-r22518-mwallp.patch
 Patch22: %lname-svn-r19389-polyp0.8.patch.gz
-Patch26: %lname-svn-r22217-configure.patch
-Patch27: %lname-svn-r20777-builddocs.patch.gz
+Patch26: %lname-svn-r22518-configure.patch
+Patch27: %lname-svn-r22518-builddocs.patch
 %if_disabled shared_ffmpeg
-Patch32: ffmpeg-uni-svn-r7184.patch.gz
+Patch32: ffmpeg-uni-svn-r7650.patch
 %endif
 
 # Automatically added by buildreq on Thu Feb 15 2007
@@ -350,7 +350,7 @@ BuildRequires: cpp >= 3.3 gcc >= 3.3 gcc-c++ >= 3.3
 %{?_enable_mencoder:%{?_enable_lame:BuildRequires: liblame-devel}}
 %{?_enable_termcap:BuildRequires: libtinfo-devel}
 %{?_enable_smb:BuildRequires: libsmbclient-devel >= 3.0.3}
-%{?_enable_live:BuildRequires: liblive555-devel >= 0.0.0-alt0.2006.05.15}
+%{?_enable_live:BuildRequires: liblive555-devel >= 0.0.0-alt0.2006.03.03}
 %{?_enable_dvdnav:BuildRequires: libdvdnav-devel}
 %{?_enable_dvdread:BuildRequires: libdvdread-devel}
 %{?_enable_cdparanoia:BuildRequires: libcdparanoia-devel}
@@ -1231,7 +1231,7 @@ __MENU__
 %endif
 
 # docs
-bzip2 --best --force --keep -- ChangeLog
+bzip2 --best --force --keep -- Changelog
 for l in $(ls DOCS/man | grep -v 'en'); do
 %if_enabled mplayer
     install -pD -m 0644 DOCS/man/$l/%lname.1 %buildroot%_mandir/$l/man1/%lname.1
@@ -1279,7 +1279,7 @@ unset RPM_PYTHON
 
 %if_enabled mplayer
 %files
-%doc README AUTHORS ChangeLog.*
+%doc README AUTHORS Changelog.*
 %_bindir/%lname
 %_man1dir/%lname.*
 %dir %_sysconfdir/%name
@@ -1330,7 +1330,7 @@ unset RPM_PYTHON
 %_bindir/mencoder
 %_man1dir/mencoder.*
 %if_disabled mplayer
-%doc README AUTHORS ChangeLog.*
+%doc README AUTHORS Changelog.*
 %dir %_sysconfdir/%name
 %config %_sysconfdir/%name/codecs.conf
 %endif
@@ -1510,6 +1510,15 @@ unset RPM_PYTHON
 
 
 %changelog
+* Mon Mar 12 2007 Led <led@altlinux.ru> 1.0-alt35.22518.1
+- new SVN snapshot (revision 22518)
+- updated %lname-svn-r22518-nls.patch
+- updated %lname-svn-r22518-ext_ffmpeg.patch
+- updated %lname-svn-r22518-configure.patch
+- updated %lname-svn-r22518-builddocs.patch
+- updated ffmpeg-uni-svn-r7650.patch
+- updated %lname-svn-r22518-mwallp.patch
+
 * Wed Feb 28 2007 Led <led@altlinux.ru> 1.0-alt35.22358.1
 - new SVN snapshot (revision 22358)
 
