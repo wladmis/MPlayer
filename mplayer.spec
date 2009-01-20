@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 24764
-%define ffmpeg_svnrev 10712
+%define svnrev 25017
+%define ffmpeg_svnrev 11000
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -150,8 +150,6 @@
 %def_enable arts
 %def_enable esd
 %def_enable pulse
-%def_disable polyp
-%def_disable old_polyp
 %def_enable jack
 %def_enable openal
 %def_enable nas
@@ -190,7 +188,7 @@
 %def_with htmldocs
 %def_with tools
 %define default_vo %{subst_o xv}%{subst_o sdl}%{subst_o gl2}%{subst_o gl}%{subst_o x11}%{subst_o_pre x vidix}%{subst_o mga}%{subst_o dfbmga}%{subst_o tdfxfb}%{subst_o 3dfx}%{subst_o s3fb}%{subst_o_pre c vidix}%{subst_o_post fbdev 2}%{subst_o vesa}%{subst_o caca}%{subst_o aa}null
-%define default_ao %{subst_o alsa}%{subst_o oss}%{subst_o openal}%{subst_o sdl}%{subst_o pulse}%{subst_o polyp}%{subst_o nas}null
+%define default_ao %{subst_o alsa}%{subst_o oss}%{subst_o openal}%{subst_o sdl}%{subst_o pulse}%{subst_o nas}null
 #define odml_chunklen 0x40000000
 
 #----------------------	END OF PARAMETERS ---------------------------------------
@@ -251,7 +249,7 @@
 %{?_enable_tremor_external:%set_disable tremor_low}
 
 %ifnarch %ix86
-%set_disable win32 
+%set_disable win32
 %endif
 
 %ifnarch ppc
@@ -323,7 +321,7 @@ Source5: %lname.conf.in
 Source6: mp_help2msg.awk.gz
 Source7: mp_msg2po.awk.gz
 Patch0: %lname-svn-r22221-subreader.patch
-Patch1: %lname-svn-r24688-dirac-0.8.x.patch
+Patch1: %lname-svn-r25014-dirac-0.8.x.patch
 Patch2: %lname-dvd-ru-svn19389.patch.gz
 Patch3: %Name-1.0pre4-alt-explicit_gif.patch
 Patch4: %lname-svn-r23547-gui.patch
@@ -337,8 +335,7 @@ Patch13: %Name-svn-20060711-vbe.patch.gz
 Patch14: %lname-svn-r23726-gui_nls.patch
 Patch15: %lname-svn-r21128-pulseaudio.patch.gz
 Patch16: %lname-svn-r24688-configure.patch
-Patch17: %lname-svn-r24688-ext_ffmpeg.patch
-Patch22: %lname-svn-r19389-polyp0.8.patch.gz
+Patch17: %lname-svn-r25014-ext_ffmpeg.patch
 Patch27: %lname-svn-r22518-builddocs.patch
 %if_disabled shared_ffmpeg
 %{?_enable_dirac:Patch31: ffmpeg-svn-r10703-dirac-0.8.x.patch}
@@ -419,7 +416,6 @@ BuildRequires: libvidix-devel
 %{?_enable_arts:BuildRequires: libarts-devel}
 %{?_enable_esd:BuildRequires: esound-devel}
 %{?_enable_pulse:BuildRequires: libpulseaudio-devel >= 0.9}
-%{?_enable_polyp:BuildRequires: libpolypaudio-devel >= 0.8}
 %{?_enable_jack:BuildRequires: jackit-devel}
 %{?_enable_openal:BuildRequires: libopenal-devel}
 %{?_enable_nas:BuildRequires: libaudio-devel}
@@ -549,8 +545,9 @@ MEncoder a movie encoder for Unix and is a part of the %name package.
 
 %if_with htmldocs
 %package docs
-Group: Video
+Group: Documentation
 Summary: %Name all docs
+Requires: %name-doc-tech
 Requires: %name-doc-en
 Requires: %name-doc-world
 Requires: %name-doc-ru
@@ -563,8 +560,16 @@ Obsoletes: %Name-docs
 %Name all docs.
 
 
+%package doc-tech
+Group: Documentation
+Summary: %Name Tech docs
+
+%description doc-tech
+%Name Tech docs.
+
+
 %package doc-en
-Group: Video
+Group: Documentation
 Summary: %Name English docs
 Obsoletes: %Name-doc
 Provides: %Name-doc
@@ -578,7 +583,7 @@ Obsoletes: %Name-doc-en
 
 
 %package doc-world
-Group: Video
+Group: Documentation
 Summary: %Name docs
 Conflicts: %name-doc-cs %name-doc-de %name-doc-es %name-doc-fr
 Conflicts: %name-doc-hu %name-doc-it %name-doc-pl %name-doc-zh_CN
@@ -588,7 +593,7 @@ Conflicts: %name-doc-hu %name-doc-it %name-doc-pl %name-doc-zh_CN
 
 
 %package doc-ru
-Group: Video
+Group: Documentation
 Summary: %Name Russian docs
 %if %name != %Name
 Provides: %Name-doc-ru = %version-%release
@@ -689,17 +694,15 @@ mv ffmpeg-svn-r%ffmpeg_svnrev/lib{av{codec,format,util},postproc} .
 %patch12 -p1
 %patch13 -p1
 %patch14 -p1
-%patch15 -p1
+#%%patch15 -p1
 %patch16 -p1
 %patch17 -p1
-%{?_enable_polyp:%{?_disable_old_polyp:%patch22 -p1}}
 %patch27 -p1
 %if_disabled shared_ffmpeg
 %patch31 -p1
 %patch32 -p1
 %patch33 -p1
 %endif
-%{?_enable_polyp:%{?_disable_old_polyp:sed -e 's/\([Pp]\)ulse/\1olyp/g' -e 's/PULSE/POLYP/g' libao2/ao_pulse.c > libao2/ao_polyp.c}}
 
 %{?_enable_dvdnav:subst 's/--minilibs/--libs/g' configure}
 %{?odml_chunklen:sed -r -i -e 's/^(#[[:blank:]]*define[[:blank:]]+ODML_CHUNKLEN[[:blank:]]+)0x[[:xdigit:]]+/\1%odml_chunklen/' libmpdemux/muxer_avi.c}
@@ -919,7 +922,6 @@ export CFLAGS="%optflags"
 		%{subst_enable arts} \
 		%{subst_enable esd} \
 		%{subst_enable pulse} \
-		%{subst_enable polyp} \
 		%{subst_enable jack} \
 		%{subst_enable openal} \
 		%{subst_enable nas} \
@@ -952,7 +954,7 @@ export CFLAGS="%optflags"
 		--with-extraincdir=%_includedir/vidix:%_includedir/directfb
 
 subst 's|^#\(CFLAGS .*\) -Isvgalib_helper/|\1|' vidix/Makefile
-%make_build
+%make
 
 # make conf file
 sed -e 's/^@VO@/vo = %default_vo/' \
@@ -1042,11 +1044,10 @@ for l in cs de en es fr hu it pl ru zh_CN; do
     install -d %buildroot%_docdir/%name-doc-%version/$l
     install -m 0644 DOCS/HTML/$l/{*.html,*.css} %buildroot%_docdir/%name-doc-%version/$l/
 done
-install -pD -m 0644 DOCS/tech/playtree-hun %buildroot%_docdir/%name-doc-%version/hu/tech/playtree
 %endif
-install -d %buildroot%_docdir/%name-doc-%version/en/tech/realcodecs
-install -m 0644 DOCS/tech/{MAINTAINERS,TODO,*.txt,mpsub.sub,playtree,wishlist} %buildroot%_docdir/%name-doc-%version/en/tech/
-install -m 0644 DOCS/tech/realcodecs/{TODO,*.txt} %buildroot%_docdir/%name-doc-%version/en/tech/realcodecs/
+install -d %buildroot%_docdir/%name-doc-%version/tech/realcodecs
+install -m 0644 DOCS/tech/{MAINTAINERS,TODO,*.txt,mpsub.sub,playtree,wishlist} %buildroot%_docdir/%name-doc-%version/tech/
+install -m 0644 DOCS/tech/realcodecs/{TODO,*.txt} %buildroot%_docdir/%name-doc-%version/tech/realcodecs/
 %find_lang --with-man %lname %lname-man
 
 %if_enabled nls
@@ -1129,6 +1130,11 @@ done
 %lang(it) %_docdir/%name-doc-%version/it
 %lang(pl) %_docdir/%name-doc-%version/pl
 %lang(zh_CN) %_docdir/%name-doc-%version/zh_CN
+
+
+%files doc-tech
+%dir %_docdir/%name-doc-%version
+%_docdir/%name-doc-%version/tech
 
 
 %files doc-en
@@ -1232,6 +1238,20 @@ done
 
 
 %changelog
+* Sun Nov 11 2007 Led <led@altlinux.ru> 1.0-alt35.25017.1
+- new SVN snapshot (revision 25017):
+  + support for wavpack in matroska
+  + add vf_scaletempo
+  + rewrite dec_audio to support more filters
+  + Nellymoser audio decoding via lavc
+  + Basic support for Closed Captioning Roll-up mode
+- updated:
+  + %lname-svn-r25014-dirac-0.8.x.patch
+  + %lname-svn-r25014-ext_ffmpeg.patch
+- removed:
+  + %lname-svn-r19389-polyp0.8.patch
+  + mplayer-svn-r21128-pulseaudio.patch
+
 * Fri Oct 12 2007 Led <led@altlinux.ru> 1.0-alt35.24764.1
 - new SVN snapshot (revision 24764)
 - updated ffmpeg-svn-r10703-dirac-0.8.x.patch
