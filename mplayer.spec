@@ -7,7 +7,7 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 23840
+%define svnrev 23844
 %define ffmpeg_svnrev 9778
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
@@ -104,7 +104,7 @@
 
 # Video output:
 %def_enable vidix
-%define vidixlib int
+%define vidixlib ext
 %def_enable gl
 %def_enable dga
 %def_disable vesa
@@ -1226,8 +1226,8 @@ done
 
 
 %changelog
-* Sun Jul 22 2007 Led <led@altlinux.ru> 1.0-alt35.23839.1
-- new SVN snapshot (revision 23839)
+* Mon Jul 23 2007 Led <led@altlinux.ru> 1.0-alt35.23844.1
+- new SVN snapshot (revision 23844)
 - updated %lname-svn-r23810-configure.patch
 - updated %lname-svn-r23726-gui_nls.patch
 - updated %lname-svn-r23726-ext_ffmpeg.patch
