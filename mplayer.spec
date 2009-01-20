@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 25017
-%define ffmpeg_svnrev 11000
+%define svnrev 25023
+%define ffmpeg_svnrev 11001
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -105,7 +105,7 @@
 
 # Video output:
 %def_enable vidix
-%define vidixlib int
+%define vidixlib ext
 %def_enable gl
 %def_disable dga1
 %def_enable dga2
@@ -338,7 +338,7 @@ Patch16: %lname-svn-r24688-configure.patch
 Patch17: %lname-svn-r25014-ext_ffmpeg.patch
 Patch27: %lname-svn-r22518-builddocs.patch
 %if_disabled shared_ffmpeg
-%{?_enable_dirac:Patch31: ffmpeg-svn-r10703-dirac-0.8.x.patch}
+%{?_enable_dirac:Patch31: ffmpeg-svn-r11000-dirac-0.8.x.patch}
 Patch32: ffmpeg-uni-svn-r10644.patch
 Patch33: ffmpeg-svn-r10644-amr.patch
 %endif
@@ -388,7 +388,7 @@ BuildRequires: cpp >= 3.3 gcc >= 3.3 gcc-c++ >= 3.3
 %{?_enable_libmpeg2:BuildRequires: libmpeg2-devel}
 %{?_enable_musepack:BuildRequires: libmpcdec-devel >= 1.2.1}
 %{?_enable_nut:BuildRequires: libnut-devel >= 0.0-alt0.272}
-%{?_enable_dirac:BuildRequires: libdirac-devel >= 0.6}
+%{?_enable_dirac:BuildRequires: libdirac-devel >= 0.8}
 
 %{?_enable_xvmc:BuildRequires: libXvMC-devel}
 %if_enabled mplayer
@@ -954,7 +954,7 @@ export CFLAGS="%optflags"
 		--with-extraincdir=%_includedir/vidix:%_includedir/directfb
 
 subst 's|^#\(CFLAGS .*\) -Isvgalib_helper/|\1|' vidix/Makefile
-%make
+%make_build
 
 # make conf file
 sed -e 's/^@VO@/vo = %default_vo/' \
@@ -1238,6 +1238,10 @@ done
 
 
 %changelog
+* Sun Nov 11 2007 Led <led@altlinux.ru> 1.0-alt35.25023.1
+- new SVN snapshot (revision 25023)
+- updated ffmpeg-svn-r11000-dirac-0.8.x.patch
+
 * Sun Nov 11 2007 Led <led@altlinux.ru> 1.0-alt35.25017.1
 - new SVN snapshot (revision 25017):
   + support for wavpack in matroska
