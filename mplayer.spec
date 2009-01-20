@@ -1,17 +1,19 @@
 %define set_disable() %{expand:%%force_disable %{1}} %{expand:%%undefine _enable_%{1}}
 %define set_enable() %{expand:%%force_enable %{1}} %{expand:%%undefine _disable_%{1}}
+%define set_without() %{expand:%%force_without %{1}} %{expand:%%undefine _with_%{1}}
 %define subst_enable_to() %{expand:%%{?_enable_%{1}:--enable-%{2}}} %{expand:%%{?_disable_%{1}:--disable-%{2}}}
 %define subst_o() %{expand:%%{?_enable_%{1}:%{1},}}
 %define subst_o_pre() %{expand:%%{?_enable_%{2}:%{1}%{2},}}
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 21357
-%define ffmpeg_svnrev 7180
+%define svnrev 21374
+%define ffmpeg_svnrev 7184
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
 # Optional features:
+%def_enable mplayer
 %def_enable mencoder
 %def_enable lame
 %def_enable gui
@@ -270,6 +272,9 @@
 %set_disable dga
 %endif
 
+%{?_disable_mplayer:%set_without tools}
+
+
 
 %define lname mplayer
 %define Name MPlayer
@@ -325,7 +330,7 @@ Patch11: %lname-svn-r20777-nls.patch.gz
 Patch12: %lname-uni-svn21352.diff.gz
 Patch13: %Name-svn-20060711-vbe.patch.gz
 Patch15: %lname-svn-r21128-pulseaudio.patch.gz
-Patch17: %lname-svn-r21352-ext_ffmpeg.patch.bz2
+Patch17: %lname-svn-r21374-ext_ffmpeg.patch.bz2
 Patch18: %lname-mwallp.patch.gz
 Patch19: %lname-svn-r20777-bmovl-test.patch.gz
 Patch22: %lname-svn-r19389-polyp0.8.patch.gz
@@ -340,9 +345,8 @@ BuildRequires: %awk pkgconfig libncurses-devel libslang-devel zlib-devel
 BuildRequires: cpp >= 3.3 gcc >= 3.3 gcc-c++ >= 3.3
 %{?svnrev:%{?_with_htmldocs:BuildRequires: docbook-style-xsl xsltproc sgml-common docbook-dtds}}
 
-%{?_enable_lame:BuildRequires: liblame-devel}
+%{?_enable_mencoder:%{?_enable_lame:BuildRequires: liblame-devel}}
 %{?_enable_termcap:BuildRequires: libtinfo-devel}
-%{?_enable_lirc:BuildRequires: liblirc-devel}
 %{?_enable_tv:BuildRequires: linux-libc-headers}
 %{?_enable_radio:BuildRequires: linux-libc-headers}
 %{?_enable_pvr:BuildRequires: linux-libc-headers}
@@ -352,11 +356,14 @@ BuildRequires: cpp >= 3.3 gcc >= 3.3 gcc-c++ >= 3.3
 %{?_enable_dvdnav:BuildRequires: libdvdnav-devel}
 %{?_enable_dvdread:BuildRequires: libdvdread-devel}
 %{?_enable_cdparanoia:BuildRequires: libcdparanoia-devel}
+%{?_enable_vstream:BuildRequires: libvstream-client-devel}
+%if_enabled mplayer
+%{?_enable_lirc:BuildRequires: liblirc-devel}
 %{?_enable_freetype:BuildRequires: libfreetype-devel >= 2.0.9}
 %{?_enable_fontconfig:BuildRequires: fontconfig-devel}
 %{?_enable_fribidi:BuildRequires: libfribidi-devel}
 %{?_enable_enca:BuildRequires: libenca-devel}
-%{?_enable_vstream:BuildRequires: libvstream-client-devel}
+%endif
 
 %{?_enable_gif:BuildRequires: libungif-devel}
 %{?_enable_png:BuildRequires: libpng-devel}
@@ -381,6 +388,7 @@ BuildRequires: cpp >= 3.3 gcc >= 3.3 gcc-c++ >= 3.3
 %{?_enable_dirac:BuildRequires: libdirac-devel}
 %{?_enable_nut:BuildRequires: libnut-devel}
 
+%if_enabled mplayer
 %if %vidixlib == ext
 BuildRequires: libvidix-devel
 %endif
@@ -417,6 +425,7 @@ BuildRequires: libvidix-devel
 BuildRequires: gtk+-devel
 %else
 BuildRequires: libgtk+2-devel
+%endif
 %endif
 %endif
 
@@ -472,6 +481,7 @@ Mach64, Permedia3, - аппаратного декодирования AC3, а также нескольких
 интерфейсом пользователя).
 
 
+%if_enabled mplayer
 %if_enabled gui
 %package gui
 %define gname g%lname
@@ -532,6 +542,7 @@ Conflicts: %Name < 1.0-alt28
 
 %description fontutils
 Font utils for use with %Name.
+%endif
 %endif
 
 
@@ -692,6 +703,7 @@ Obsoletes: %Name-doc-zh
 %Name Taiwan Chinese docs.
 
 
+%if_enabled mplayer
 %if %vidixlib == int
 %package vidix-drivers
 Group: Video
@@ -877,6 +889,7 @@ Provides: %name-vidix-driver
 %description vidix-unichrome
 VIDIX driver for VIA CLE266 Unichrome.
 %endif
+%endif
 
 
 %if_enabled nls
@@ -890,6 +903,7 @@ Languages support for %Name.
 %endif
 
 
+%if_enabled mplayer
 %if_with tools
 %package tools
 Group: Video
@@ -904,6 +918,7 @@ Requires: %name
 Nice scripts and code that makes using %Name and MEncoder easier, for
 example scripts for DVD track encoding in three pass mode or creating
 SVCDs from a movie.
+%endif
 %endif
 
 
@@ -972,6 +987,7 @@ export CFLAGS="%optflags"
 		--libdir=%_libdir \
 		--datadir=%_datadir/%name \
 		--confdir=%_sysconfdir/%name \
+		%{subst_enable mplayer} \
 		%{subst_enable mencoder} \
 		%{subst_enable gui} \
 		%{subst_enable gtk1} \
@@ -1199,6 +1215,7 @@ echo "utf8 = yes" >> etc/%lname.conf
 
 %{?_enable_freetype:make -C TOOLS/subfont-c}
 
+%if_enabled mplayer
 %if_with tools
 %make_build -C TOOLS 302m_convert 360m_convert alaw-gen asfinfo avi-fix avisubdump bios2dump cpuinfo dump_mp4 mem2dump movinfo png2raw
 for d in mwallp GL-test; do
@@ -1206,6 +1223,7 @@ for d in mwallp GL-test; do
     ./compile.sh
     popd
 done
+%endif
 %endif
 
 %if_with htmldocs
@@ -1237,17 +1255,18 @@ popd
 
 
 %install
-
 %make_install DESTDIR=%buildroot install
 
+%if_enabled mplayer
 install -d -m 0755 %buildroot%_datadir/%name/skins
 tar -C %buildroot%_datadir/%name/skins -xjf %SOURCE4
 ln -s standard %buildroot%_datadir/%name/skins/default
-
 %{?_enable_freetype:%{?_disable_fontconfig:ln -s ../fonts/default/Type1/n019003l.pfb %buildroot%_datadir/%name/subfont.ttf}}
+%endif
 
 install -m 0644 etc/{codecs,input,%lname}.conf %buildroot%_sysconfdir/%name/
 
+%if_enabled mplayer
 %{?_enable_osdmenu:install -m 0644 etc/menu.conf %buildroot%_sysconfdir/%name/}
 %{?_enable_dvb:install -m 0644 etc/dvb-menu.conf %buildroot%_sysconfdir/%name/}
 
@@ -1279,6 +1298,7 @@ GenericName[uk]=Програвач мультимедіа
 X-MultipleArgs=true
 StartupNotify=true
 __MENU__
+%endif
 
 # docs
 bzip2 --best --force --keep -- ChangeLog
@@ -1310,16 +1330,19 @@ install -pD -m 0644 $l %buildroot%_datadir/locale/$(basename $l .gmo)/LC_MESSAGE
 done
 %endif
 
+%if_enabled mplayer
 %find_lang %lname
 %find_lang --with-man --without-mo --output=%lname-man.lang %lname
+%endif
 %{?_enable_mencoder:%find_lang --with-man --without-mo mencoder}
 
 # a tribute to clever python support
 unset RPM_PYTHON
 
-%add_verify_elf_skiplist %_libdir/%lname/vidix/*
+%{?_enable_mplayer:%add_verify_elf_skiplist %_libdir/%lname/vidix/*}
 
 
+%if_enabled mplayer
 %if_enabled gui
 %post gui
 %update_menus
@@ -1327,8 +1350,10 @@ unset RPM_PYTHON
 %postun gui
 %clean_menus
 %endif
+%endif
 
 
+%if_enabled mplayer
 %files -f %lname-man.lang
 %doc README AUTHORS ChangeLog.*
 %_bindir/%lname
@@ -1372,11 +1397,17 @@ unset RPM_PYTHON
 %_datadir/%name/fonts/osd/*
 %_datadir/%name/fonts/encodings/*
 %endif
+%endif
 
 
 %if_enabled mencoder
 %files -n mencoder -f mencoder.lang
 %_bindir/mencoder
+%if_disabled mplayer
+%doc README AUTHORS ChangeLog.*
+%dir %_sysconfdir/%name
+%config %_sysconfdir/%name/codecs.conf
+%endif
 %endif
 
 
@@ -1424,6 +1455,7 @@ unset RPM_PYTHON
 %endif
 
 
+%if_enabled mplayer
 %if %vidixlib == int
 %files vidix-drivers
 
@@ -1467,6 +1499,7 @@ unset RPM_PYTHON
 %files vidix-unichrome
 %_libdir/%lname/vidix/unichrome_vid.so
 %endif
+%endif
 
 
 %if_enabled nls
@@ -1474,6 +1507,7 @@ unset RPM_PYTHON
 %endif
 
 
+%if_enabled mplayer
 %if_with tools
 %files tools
 %_docdir/%name-tools-%version
@@ -1519,9 +1553,15 @@ unset RPM_PYTHON
 %_bindir/w32codec_dl.pl
 %_bindir/mwallp
 %endif
+%endif
 
 
 %changelog
+* Wed Nov 29 2006 Led <led@altlinux.ru> 1.0-alt35.21374.1
+- forced --enable-mplayer
+- fixed BuildRequires
+- updated %lname-svn-r21374-ext_ffmpeg.patch
+
 * Tue Nov 28 2006 Led <led@altlinux.ru> 1.0-alt35.21357.1
 - new SVN snapshot (revision 21352)
 - updated %lname-svn-r21352-libdha.patch
