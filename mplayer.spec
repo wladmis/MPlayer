@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 23235
-%define ffmpeg_svnrev 8891
+%define svnrev 23238
+%define ffmpeg_svnrev 8905
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -429,7 +429,7 @@ BuildRequires: libgtk+2-devel
 %{?_enable_nls:BuildRequires: gettext-tools}
 
 %if_with tools
-BuildRequires: perl-libwww perl-Math-BigInt
+BuildRequires: perl-libwww perl-Math-BigInt libSDL_image-devel
 BuildRequires: python-modules-compiler python-modules-encodings
 BuildRequires: normalize sox termutils vcdimager
 %endif
@@ -1120,8 +1120,7 @@ export CFLAGS="%optflags"
 		%{subst_enable_to dynamic_plugins dynamic-plugins} \
 		--with-extraincdir=%_includedir/vidix:%_includedir/directfb
 
-#%%make_build
-make
+%make_build
 
 # make conf file
 sed -e 's/^@VO@/vo = %default_vo/' \
@@ -1138,7 +1137,7 @@ echo "fontconfig = no" >> etc/%lname.conf
 
 %if_enabled mplayer
 %if_with tools
-%make_build -C TOOLS alaw-gen asfinfo avi-fix avisubdump dump_mp4 movinfo
+%make_build -C TOOLS alaw-gen asfinfo avi-fix avisubdump bmovl-test dump_mp4 movinfo
 %endif
 %endif
 
@@ -1183,7 +1182,7 @@ install -m 0644 etc/{codecs,input,%lname}.conf %buildroot%_sysconfdir/%name/
 %{?_enable_dvb:install -m 0644 etc/dvb-menu.conf %buildroot%_sysconfdir/%name/}
 
 %if_with tools
-install -m 0755 TOOLS/{aconvert,alaw-gen,asfinfo,avi-fix,avisubdump,calcbpp.pl,countquant.pl,divx2svcd,dump_mp4,encode2mpeglight,mencvcd,midentify,movinfo,mpconsole,mplmult.sh,plotpsnr.pl,psnr-video.sh,subedit.pl,subsearch.sh,vobshift.py,w32codec_dl.pl,wma2ogg.pl} %buildroot/%_bindir/
+install -m 0755 TOOLS/{aconvert,alaw-gen,asfinfo,avi-fix,avisubdump,bmovl-test,calcbpp.pl,countquant.pl,divx2svcd,dump_mp4,encode2mpeglight,mencvcd,midentify,movinfo,mpconsole,mplmult.sh,plotpsnr.pl,psnr-video.sh,subedit.pl,subsearch.sh,vobshift.py,w32codec_dl.pl,wma2ogg.pl} %buildroot/%_bindir/
 %{?_enable_mencoder:install -m 0755 TOOLS/{dvd2divxscript.pl,qepdvcd.sh} %buildroot/%_bindir/}
 install -pD -m 0644 TOOLS/README %buildroot%_docdir/%name-tools-%version/README
 %endif
@@ -1442,6 +1441,7 @@ unset RPM_PYTHON
 %_bindir/asfinfo
 %_bindir/avi-fix
 %_bindir/avisubdump
+%_bindir/bmovl-test
 %_bindir/calcbpp.pl
 %_bindir/countquant.pl
 %_bindir/movinfo
@@ -1455,8 +1455,8 @@ unset RPM_PYTHON
 
 
 %changelog
-* Sat May 05 2007 Led <led@altlinux.ru> 1.0-alt35.23235.1
-- new SVN snapshot (revision 23235)
+* Sun May 06 2007 Led <led@altlinux.ru> 1.0-alt35.23238.1
+- new SVN snapshot (revision 23238)
 - updated %lname-uni-svn23235.diff
 - updated %lname-svn-r23235-ext_ffmpeg.patch
 - updated %lname-svn-r23235-configure.patch
