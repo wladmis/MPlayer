@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 24244
-%define ffmpeg_svnrev 10250
+%define svnrev 24247
+%define ffmpeg_svnrev 10252
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -375,7 +375,7 @@ BuildRequires: cpp >= 3.3 gcc >= 3.3 gcc-c++ >= 3.3
 %{?_enable_lzo:BuildRequires: liblzo2-devel}
 %{?_enable_xvid:BuildRequires: libxvid-devel}
 %{?_enable_x264:BuildRequires: libx264-devel}
-%{?_enable_shared_ffmpeg:BuildRequires: libffmpeg-devel >= 0.5.0-alt1.svn9400}
+%{?_enable_shared_ffmpeg:BuildRequires: libffmpeg-devel >= 0:0.5.0-alt1.svn9400}
 %{?_enable_tremor_external:BuildRequires: libtremor-devel}
 %{?_enable_vorbis:BuildRequires: libvorbis-devel}
 %{?_enable_speex:BuildRequires: libspeex-devel}
@@ -1229,8 +1229,8 @@ done
 
 
 %changelog
-* Mon Aug 27 2007 Led <led@altlinux.ru> 1.0-alt35.24244.1
-- new SVN snapshot (revision 24244)
+* Mon Aug 27 2007 Led <led@altlinux.ru> 1.0-alt35.24247.1
+- new SVN snapshot (revision 24247)
 - updated ffmpeg-svn-r10237-dirac-0.7.x.patch (fixed #12627)
 - updated %lname-svn-r24244-ext_ffmpeg.patch
 
