@@ -1,6 +1,15 @@
-diff -urN mplayer-svn-r21765.orig/configure mplayer-svn-r21765/configure
---- mplayer-svn-r21765.orig/configure	2006-12-25 12:00:35 +0200
-+++ mplayer-svn-r21765/configure	2006-12-25 13:50:47 +0200
+diff -urN mplayer-svn-r21766.orig/configure mplayer-svn-r21766/configure
+--- mplayer-svn-r21766.orig/configure	2006-12-25 12:00:35 +0200
++++ mplayer-svn-r21766/configure	2006-12-29 00:37:42 +0200
+@@ -129,7 +129,7 @@
+ 
+ x86_64() {
+   case "$host_arch" in
+-    x86_64|amd64) return 0 ;;
++    x86-64|x86_64|amd64) return 0 ;;
+     *) return 1 ;;
+   esac
+ }
 @@ -548,10 +548,6 @@
    esac
  done
@@ -23,6 +32,15 @@ diff -urN mplayer-svn-r21765.orig/configure mplayer-svn-r21765/configure
  # LGB: temporary files
  for I in "$TMPDIR" "$TEMPDIR" "/tmp" ; do
    test "$I" && break
+@@ -1114,7 +1114,7 @@
+     _optimizing=''
+     ;;
+ 
+-  x86_64|amd64)
++  x86-64|x86_64|amd64)
+     _def_arch='#define ARCH_X86_64 1'
+     _target_arch='TARGET_ARCH_X86_64 = yes'
+     _def_arch_x86="#define ARCH_X86 1"
 @@ -3302,7 +3302,7 @@
  
  
