@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 23379
-%define ffmpeg_svnrev 9111
+%define svnrev 23410
+%define ffmpeg_svnrev 9152
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -247,7 +247,7 @@
 %{?_enable_tremor_external:%set_disable tremor_low}
 
 %ifnarch %ix86
-%set_disable win32
+%set_disable win32 
 %endif
 
 %ifnarch ppc
@@ -331,7 +331,7 @@ Patch12: %lname-uni-svn23235.diff
 Patch13: %Name-svn-20060711-vbe.patch.gz
 Patch14: %lname-svn-r23099-gui_nls.patch
 Patch15: %lname-svn-r21128-pulseaudio.patch.gz
-Patch17: %lname-svn-r23331-ext_ffmpeg.patch
+Patch17: %lname-svn-r23410-ext_ffmpeg.patch
 Patch22: %lname-svn-r19389-polyp0.8.patch.gz
 Patch26: %lname-svn-r23340-configure.patch
 Patch27: %lname-svn-r22518-builddocs.patch
@@ -339,8 +339,8 @@ Patch27: %lname-svn-r22518-builddocs.patch
 Patch32: ffmpeg-uni-svn-r8990.patch
 %endif
 
-# Automatically added by buildreq on Fri May 18 2007
-#BuildRequires: aalib-devel docbook-dtds docbook-style-xsl esound-devel gcc-c++ kdelibs ladspa_sdk libarts-devel libaudio-devel libavformat-devel libcaca-devel libcdparanoia-devel libdv-devel libdvdnav-devel libdvdread-devel libenca-devel libfribidi-devel libgpm-devel libgtk+2-devel libjpeg-devel liblirc-devel liblive555-devel liblzo2-devel libmesa-devel libmpcdec-devel libopenal-devel libpostproc-devel libpulseaudio-devel libSDL-devel libSDL_image-devel libslang-devel libsmbclient-devel libspeex-devel libswscale-devel libungif-devel libvidix-devel libXinerama-devel libxmms-devel libXt-devel libXvMC-devel libXxf86dga-devel libXxf86vm-devel subversion svgalib-devel xsltproc
+# Automatically added by buildreq on Wed May 30 2007
+#BuildRequires: aalib-devel docbook-dtds docbook-style-xsl esound-devel gcc-c++ kdelibs ladspa_sdk libarts-devel libaudio-devel libavformat-devel libcaca-devel libcdparanoia-devel libdv-devel libdvdnav-devel libdvdread-devel libenca-devel libfribidi-devel libgpm-devel libgtk+2-devel libjpeg-devel liblirc-devel liblive555-devel liblzo2-devel libmesa-devel libmpcdec-devel libopenal-devel libpostproc-devel libpulseaudio-devel libSDL-devel libSDL_image-devel libslang-devel libsmbclient-devel libspeex-devel libswscale-devel libungif-devel libvidix-devel libXinerama-devel libxmms-devel libXvMC-devel libXxf86dga-devel subversion svgalib-devel xsltproc
 
 BuildRequires: %awk libncurses-devel libslang-devel zlib-devel
 BuildRequires: cpp >= 3.3 gcc >= 3.3 gcc-c++ >= 3.3
@@ -428,7 +428,6 @@ BuildRequires: libgtk+2-devel
 
 %if_with tools
 BuildRequires: perl-libwww perl-Math-BigInt libSDL_image-devel
-BuildRequires: python-modules-compiler python-modules-encodings
 BuildRequires: normalize sox termutils vcdimager
 %endif
 
@@ -1038,9 +1037,6 @@ install -pD -m 0644 $l %buildroot%_datadir/locale/$(basename $l .gmo)/LC_MESSAGE
 done
 %endif
 
-# a tribute to clever python support
-unset RPM_PYTHON
-
 %{?_enable_mplayer:%add_verify_elf_skiplist %_libdir/%lname/vidix/*}
 
 
@@ -1217,11 +1213,10 @@ unset RPM_PYTHON
 
 
 %changelog
-* Thu May 24 2007 Led <led@altlinux.ru> 1.0-alt35.23379.1
-- new SVN snapshot (revision 23379)
-
-* Mon May 21 2007 Led <led@altlinux.ru> 1.0-alt35.23359.1
-- new SVN snapshot (revision 23359)
+* Wed May 30 2007 Led <led@altlinux.ru> 1.0-alt35.23410.1
+- new SVN snapshot (revision 23410)
+- cleaned up spec
+- cleaned up BuildRequires
 
 * Sat May 19 2007 Led <led@altlinux.ru> 1.0-alt35.23340.1
 - new SVN snapshot (revision 23340)
