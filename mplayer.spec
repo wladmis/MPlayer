@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 23241
-%define ffmpeg_svnrev 8920
+%define svnrev 23272
+%define ffmpeg_svnrev 8939
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -104,7 +104,7 @@
 
 # Video output:
 %def_enable vidix
-%define vidixlib ext
+%define vidixlib int
 %def_enable gl
 %def_enable dga
 %def_disable vesa
@@ -332,7 +332,7 @@ Patch12: %lname-uni-svn23235.diff
 Patch13: %Name-svn-20060711-vbe.patch.gz
 Patch14: %lname-svn-r23099-gui_nls.patch
 Patch15: %lname-svn-r21128-pulseaudio.patch.gz
-Patch17: %lname-svn-r23235-ext_ffmpeg.patch
+Patch17: %lname-svn-r23272-ext_ffmpeg.patch
 Patch22: %lname-svn-r19389-polyp0.8.patch.gz
 Patch26: %lname-svn-r23235-configure.patch
 Patch27: %lname-svn-r22518-builddocs.patch
@@ -1120,7 +1120,8 @@ export CFLAGS="%optflags"
 		%{subst_enable_to dynamic_plugins dynamic-plugins} \
 		--with-extraincdir=%_includedir/vidix:%_includedir/directfb
 
-%make_build
+#%%make_build
+make
 
 # make conf file
 sed -e 's/^@VO@/vo = %default_vo/' \
@@ -1455,6 +1456,11 @@ unset RPM_PYTHON
 
 
 %changelog
+* Tue May 08 2007 Led <led@altlinux.ru> 1.0-alt35.23272.1
+- new SVN snapshot (revision 23272):
+  + support for channel navigation with PVR input
+- updated %lname-svn-r23272-ext_ffmpeg.patch
+
 * Mon May 07 2007 Led <led@altlinux.ru> 1.0-alt35.23241.1
 - new SVN snapshot (revision 23241)
 
