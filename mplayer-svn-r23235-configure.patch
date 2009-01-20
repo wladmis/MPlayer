@@ -1,6 +1,6 @@
-diff -urN mplayer-svn-r23099.orig/configure mplayer-svn-r23099/configure
---- mplayer-svn-r23099.orig/configure	2007-04-23 23:01:49 +0300
-+++ mplayer-svn-r23099/configure	2007-04-23 23:17:25 +0300
+diff -urN mplayer-svn-r23235.orig/configure mplayer-svn-r23235/configure
+--- mplayer-svn-r23235.orig/configure	2007-05-04 00:59:20 +0300
++++ mplayer-svn-r23235/configure	2007-05-05 22:44:19 +0300
 @@ -128,7 +128,7 @@
  
  x86_64() {
@@ -10,7 +10,16 @@ diff -urN mplayer-svn-r23099.orig/configure mplayer-svn-r23099/configure
      *) return 1 ;;
    esac
  }
-@@ -1824,7 +1824,7 @@
+@@ -286,7 +286,7 @@
+   --disable-xvid            disable XviD [autodetect]
+   --disable-x264            disable x264 [autodetect]
+   --disable-nut             disable libnut [autodetect]
+-  --disable-libavutil       disable static libavutil [autodetect]
++  --disable-libavutil_a     disable static libavutil [autodetect]
+   --disable-libavcodec_a    disable static libavcodec [autodetect]
+   --disable-libavformat_a   disable static libavformat [autodetect]
+   --disable-libpostproc_a   disable static libpostproc [autodetect]
+@@ -1821,7 +1821,7 @@
      _optimizing=''
      ;;
  
@@ -19,7 +28,7 @@ diff -urN mplayer-svn-r23099.orig/configure mplayer-svn-r23099/configure
      _def_arch='#define ARCH_X86_64 1'
      _target_arch='TARGET_ARCH_X86_64 = yes'
      _def_arch_x86="#define ARCH_X86 1"
-@@ -2848,6 +2848,7 @@
+@@ -2846,6 +2846,7 @@
    _noinputmodules="network $_noinputmodules"
    _def_network='#undef MPLAYER_NETWORK'
    _ftp=no
@@ -27,7 +36,7 @@ diff -urN mplayer-svn-r23099.orig/configure mplayer-svn-r23099/configure
  fi
  echores "$_network"
  
-@@ -3301,7 +3302,7 @@
+@@ -3299,7 +3300,7 @@
  
  
  echocheck "termcap"
@@ -36,7 +45,7 @@ diff -urN mplayer-svn-r23099.orig/configure mplayer-svn-r23099/configure
    cat > $TMPC <<EOF
  int main(void) { tgetent(); return 0; }
  EOF
-@@ -3321,7 +3322,7 @@
+@@ -3319,7 +3320,7 @@
  
  
  echocheck "termios"
@@ -45,7 +54,7 @@ diff -urN mplayer-svn-r23099.orig/configure mplayer-svn-r23099/configure
    cat > $TMPC <<EOF
  #include <sys/termios.h>
  int main(void) { return 0; }
-@@ -4275,7 +4276,9 @@
+@@ -4274,7 +4275,9 @@
  if test "$_aa" = yes ; then
    _def_aa='#define HAVE_AA 1'
    if cygwin ; then
@@ -56,7 +65,7 @@ diff -urN mplayer-svn-r23099.orig/configure mplayer-svn-r23099/configure
    fi
    _vosrc="$_vosrc vo_aa.c"
    _vomodules="aa $_vomodules"
-@@ -4303,7 +4306,7 @@
+@@ -4302,7 +4305,7 @@
  if test "$_caca" = yes ; then
    _def_caca='#define HAVE_CACA 1'
    _inc_extra="$_inc_extra `caca-config --cflags`"
@@ -65,7 +74,7 @@ diff -urN mplayer-svn-r23099.orig/configure mplayer-svn-r23099/configure
    _vosrc="$_vosrc vo_caca.c"
    _vomodules="caca $_vomodules"
  else
-@@ -4968,7 +4971,7 @@
+@@ -4967,7 +4970,7 @@
  
  
  echocheck "JACK"
@@ -74,7 +83,7 @@ diff -urN mplayer-svn-r23099.orig/configure mplayer-svn-r23099/configure
    _jack=yes
  
  cat > $TMPC << EOF
-@@ -4995,7 +4998,7 @@
+@@ -4994,7 +4997,7 @@
  echores "$_jack"
  
  echocheck "OpenAL"
@@ -83,7 +92,7 @@ diff -urN mplayer-svn-r23099.orig/configure mplayer-svn-r23099/configure
    _openal=no
  cat > $TMPC << EOF
  #ifdef OPENAL_AL_H
-@@ -5461,7 +5464,7 @@
+@@ -5420,7 +5423,7 @@
      _res_comment="freetype support needed"
  fi
  echocheck "fontconfig"
@@ -92,7 +101,7 @@ diff -urN mplayer-svn-r23099.orig/configure mplayer-svn-r23099/configure
          cat > $TMPC << EOF
  #include <stdio.h>
  #include <fontconfig/fontconfig.h>
-@@ -5778,7 +5781,7 @@
+@@ -5743,7 +5746,7 @@
  echores "$_speex"
  
  echocheck "OggTheora support"
@@ -101,7 +110,7 @@ diff -urN mplayer-svn-r23099.orig/configure mplayer-svn-r23099/configure
    _theora=no
      cat > $TMPC << EOF
  #include <theora/theora.h>
-@@ -5858,7 +5861,7 @@
+@@ -5823,7 +5826,7 @@
  echores "$_liba52"
  
  echocheck "libdts support"
@@ -110,7 +119,7 @@ diff -urN mplayer-svn-r23099.orig/configure mplayer-svn-r23099/configure
    _libdts=no
    cat > $TMPC << EOF
  #include <inttypes.h>
-@@ -5913,7 +5916,7 @@
+@@ -5879,7 +5882,7 @@
  
  
  echocheck "FAAC (AAC encoder) support"
@@ -119,7 +128,7 @@ diff -urN mplayer-svn-r23099.orig/configure mplayer-svn-r23099/configure
    cat > $TMPC <<EOF
  #include <inttypes.h> 
  #include <faac.h>
-@@ -6033,7 +6036,7 @@
+@@ -6000,7 +6003,7 @@
  
  
  echocheck "Win32 codecs"
@@ -128,7 +137,7 @@ diff -urN mplayer-svn-r23099.orig/configure mplayer-svn-r23099/configure
    _win32dll=no
    if x86_32 && not qnx; then
      _win32dll=yes
-@@ -6103,56 +6106,6 @@
+@@ -6070,56 +6073,6 @@
  echores "$_real"
  
  
@@ -182,46 +191,64 @@ diff -urN mplayer-svn-r23099.orig/configure mplayer-svn-r23099/configure
 -echores "$_live"
 -
 -
- echocheck "FFmpeg libavutil (static)"
- if test "$_libavutil" = auto ; then
+ echocheck "FFmpeg libavutil"
+ if test "$_libavutil_a" = auto ; then
    if test -d libavutil ; then
-@@ -6217,7 +6170,7 @@
- 
- if test "$_libavutil" != yes ; then
- echocheck "FFmpeg libavutil (dynamic)"
--if test "$_libavutil_so" = auto ; then
-+if test "$_libavutil_so" != no ; then
+@@ -6128,7 +6081,7 @@
+   else
+     die "MPlayer will not compile without libavutil in the source tree."
+   fi
+-elif test "$_libavutil_so" = auto ; then
++elif test "$_libavutil_so" != no ; then
    _libavutil_so=no
    cat > $TMPC << EOF
  #include <ffmpeg/common.h>
-@@ -6243,7 +6196,7 @@
- 
- if test "$_libavcodec" != yes ; then
- echocheck "FFmpeg libavcodec (dynamic)"
--if test "$_libavcodec_so" = auto ; then
-+if test "$_libavcodec_so" != no ; then
+@@ -6166,7 +6119,7 @@
+     _libavcodec_a="yes"
+     _res_comment="static"
+   fi
+-elif test "$_libavcodec_so" = auto ; then
++elif test "$_libavcodec_so" != no ; then
    _libavcodec_so=no
    _res_comment="libavcodec.so is discouraged over static libavcodec"
- # FIXME : check for avcodec_find_encoder_by_name() for mencoder
-@@ -6270,7 +6223,7 @@
- 
- if test "$_libavformat" != yes ; then
- echocheck "FFmpeg libavformat (dynamic)"
--if test "$_libavformat_so" = auto ; then
-+if test "$_libavformat_so" != no ; then
+   cat > $TMPC << EOF
+@@ -6210,7 +6163,7 @@
+     _libavformat_a=yes
+     _res_comment="static"
+   fi
+-elif test "$_libavformat_so" = auto ; then
++elif test "$_libavformat_so" != no ; then
    _libavformat_so=no
    cat > $TMPC <<EOF
    #include <ffmpeg/avformat.h>
-@@ -6293,7 +6246,7 @@
- 
- if test "$_libpostproc" != yes ; then
- echocheck "FFmpeg libpostproc (dynamic)"
--if test "$_libpostproc_so" = auto ; then
-+if test "$_libpostproc_so" != no ; then
+@@ -6246,7 +6199,7 @@
+     _libpostproc_a='yes'
+     _res_comment="static"
+   fi
+-elif test "$_libpostproc_so" = auto ; then
++elif test "$_libpostproc_so" != no ; then
    _libpostproc_so=no
    cat > $TMPC << EOF
    #define USE_LIBPOSTPROC 1
-@@ -6512,7 +6465,7 @@
+@@ -6284,7 +6237,7 @@
+ echores "$_md5sum"
+ 
+ echocheck "libamr narrowband"
+-if test "$_libamr_nb" = auto ; then
++if test "$_libavcodec_a" = yes -a "$_libamr_nb" = auto ; then
+   _libamr_nb=no
+   cat > $TMPC << EOF
+ #include <amrnb/interf_dec.h>
+@@ -6312,7 +6265,7 @@
+ 
+ 
+ echocheck "libamr wideband"
+-if test "$_libamr_wb" = auto ; then
++if test "$_libavcodec_a" = yes -a "$_libamr_wb" = auto ; then
+   _libamr_wb=no
+   cat > $TMPC << EOF
+ #include <amrwb/dec_if.h>
+@@ -6396,7 +6349,7 @@
  
  
  echocheck "XviD"
@@ -230,7 +257,7 @@ diff -urN mplayer-svn-r23099.orig/configure mplayer-svn-r23099/configure
    _xvid=no
    cat > $TMPC << EOF
  #include <xvid.h>
-@@ -6550,7 +6503,7 @@
+@@ -6435,7 +6388,7 @@
  
  
  echocheck "x264"
@@ -239,7 +266,7 @@ diff -urN mplayer-svn-r23099.orig/configure mplayer-svn-r23099/configure
    cat > $TMPC << EOF
  #include <inttypes.h>
  #include <x264.h>
-@@ -6588,7 +6541,7 @@
+@@ -6474,7 +6427,7 @@
  
  
  echocheck "nut"
@@ -248,7 +275,7 @@ diff -urN mplayer-svn-r23099.orig/configure mplayer-svn-r23099/configure
    cat > $TMPC << EOF
  #include <stdio.h>
  #include <stdlib.h>
-@@ -6966,6 +6919,55 @@
+@@ -6854,6 +6807,55 @@
  fi
  echores "$_ftp"
  
@@ -304,7 +331,7 @@ diff -urN mplayer-svn-r23099.orig/configure mplayer-svn-r23099/configure
  echocheck "vstream client"
  if test "$_vstream" = auto ; then
    _vstream=no
-@@ -7061,7 +7063,7 @@
+@@ -6949,7 +6951,7 @@
    if darwin ; then
       _ld_extra="$_ld_extra ${_xmmslibdir}/libxmms.dylib"
    else
@@ -313,7 +340,7 @@ diff -urN mplayer-svn-r23099.orig/configure mplayer-svn-r23099/configure
    fi
  else
    _def_xmms='#undef HAVE_XMMS'
-@@ -7338,6 +7340,9 @@
+@@ -7226,6 +7228,9 @@
  if test "$_vidix_internal" = yes || test "$_vidix_external" = yes ; then
    _vidix=yes
    _def_vidix='#define CONFIG_VIDIX 1'
@@ -323,7 +350,7 @@ diff -urN mplayer-svn-r23099.orig/configure mplayer-svn-r23099/configure
  else
    _vidix=no
    _def_vidix='#undef CONFIG_VIDIX'
-@@ -7434,7 +7439,7 @@
+@@ -7322,7 +7327,7 @@
    _def_vidix_pfx="#define MP_VIDIX_PFX \"$_libdir\" \"/mplayer/vidix/\" "
  elif test "$_vidix_external" = yes ; then
    _libs_mplayer="$_libs_mplayer -lvidix"
@@ -332,7 +359,7 @@ diff -urN mplayer-svn-r23099.orig/configure mplayer-svn-r23099/configure
  fi
  
  if test "$_vidix" = yes; then
-@@ -8503,6 +8508,7 @@
+@@ -8392,6 +8397,7 @@
  $_def_vidix_drv_sis
  $_def_vidix_drv_unichrome
  $_def_vidix_pfx
@@ -340,10 +367,10 @@ diff -urN mplayer-svn-r23099.orig/configure mplayer-svn-r23099/configure
  
  /* enables / disables new input joystick support */
  $_def_joystick
-diff -urN mplayer-svn-r23099.orig/Makefile mplayer-svn-r23099/Makefile
---- mplayer-svn-r23099.orig/Makefile	2007-04-23 23:01:49 +0300
-+++ mplayer-svn-r23099/Makefile	2007-04-23 23:17:56 +0300
-@@ -78,7 +78,7 @@
+diff -urN mplayer-svn-r23235.orig/Makefile mplayer-svn-r23235/Makefile
+--- mplayer-svn-r23235.orig/Makefile	2007-05-02 22:43:16 +0300
++++ mplayer-svn-r23235/Makefile	2007-05-05 22:43:39 +0300
+@@ -73,7 +73,7 @@
                 libao2/libao2.a \
                 input/libinput.a \
  

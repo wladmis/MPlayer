@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 23143
-%define ffmpeg_svnrev 8838
+%define svnrev 23235
+%define ffmpeg_svnrev 8891
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -328,13 +328,13 @@ Patch5: %lname-svn-r19447-vo_vidix.patch.gz
 Patch6: %lname-svn-r21128-alt-artsc_ldflags.patch.gz
 Patch7: %lname-svn-r23099-demux_nut.patch
 Patch11: %lname-svn-r22518-nls.patch
-Patch12: %lname-uni-svn22915.diff
+Patch12: %lname-uni-svn23235.diff
 Patch13: %Name-svn-20060711-vbe.patch.gz
 Patch14: %lname-svn-r23099-gui_nls.patch
 Patch15: %lname-svn-r21128-pulseaudio.patch.gz
-Patch17: %lname-svn-r23114-ext_ffmpeg.patch
+Patch17: %lname-svn-r23235-ext_ffmpeg.patch
 Patch22: %lname-svn-r19389-polyp0.8.patch.gz
-Patch26: %lname-svn-r23099-configure.patch
+Patch26: %lname-svn-r23235-configure.patch
 Patch27: %lname-svn-r22518-builddocs.patch
 %if_disabled shared_ffmpeg
 Patch32: ffmpeg-uni-svn-r7650.patch
@@ -872,14 +872,14 @@ mv ffmpeg-svn-r%ffmpeg_svnrev/lib{av{codec,format,util},postproc} .
 %patch13 -p1
 %patch14 -p1
 %patch15 -p1
-#%%patch17 -p1
+%patch17 -p1
 %{?_enable_polyp:%{?_disable_old_polyp:%patch22 -p1}}
-#%%patch26 -p1
+%patch26 -p1
 %patch27 -p1
 %{?_disable_shared_ffmpeg:%patch32 -p1}
 %{?_enable_polyp:%{?_disable_old_polyp:sed -e 's/\([Pp]\)ulse/\1olyp/g' -e 's/PULSE/POLYP/g' libao2/ao_pulse.c > libao2/ao_polyp.c}}
 
-%{?_enable_dvdnav:subst 's|\(\<\)\(dvdnav\)\(\.h\>\)|\1\2/\2\3|' configure}
+%{?_enable_dvdnav:subst 's/--minilibs/--libs/g' configure}
 %{?odml_chunklen:sed -r -i -e 's/^(#[[:blank:]]*define[[:blank:]]+ODML_CHUNKLEN[[:blank:]]+)0x[[:xdigit:]]+/\1%odml_chunklen/' libmpdemux/muxer_avi.c}
 
 %{?svnrev:subst 's/UNKNOWN/%svnrev/' version.sh}
@@ -888,6 +888,10 @@ mv ffmpeg-svn-r%ffmpeg_svnrev/lib{av{codec,format,util},postproc} .
 install -d -m 0755 po
 gzip -dc %SOURCE6 > po/mp_help2msg.awk
 gzip -dc %SOURCE7 > po/mp_msg2po.awk
+%endif
+
+%if %dvdreadlib == ext
+mv dvdread dvdread.internal
 %endif
 
 subst 's|\\/\\/|//|g' help/help_mp-zh_??.h
@@ -979,11 +983,11 @@ export CFLAGS="%optflags"
 		%{subst_enable x264} \
 %if_enabled ffmpeg
 %if_enabled shared_ffmpeg
-		--disable-libavcodec \
-		--disable-libavformat \
-		--disable-libavutil \
-		--disable-libpostproc \
-		--disable-libswscale \
+		--disable-libavcodec_a \
+		--disable-libavformat_a \
+		--disable-libavutil_a \
+		--disable-libpostproc_a \
+		--disable-libswscale_a \
 		--enable-libavcodec_so \
 		--enable-libavformat_so \
 		--enable-libavutil_so \
@@ -995,18 +999,18 @@ export CFLAGS="%optflags"
 		--disable-libavutil_so \
 		--disable-libpostproc_so \
 		--disable-libswscale_so \
-		--enable-libavcodec \
-		--enable-libavformat \
-		--enable-libavutil \
-		--enable-libpostproc \
-		--enable-libswscale \
+		--enable-libavcodec_a \
+		--enable-libavformat_a \
+		--enable-libavutil_a \
+		--enable-libpostproc_a \
+		--enable-libswscale_a \
 %endif		
 %else
-		--disable-libavcodec \
-		--disable-libavformat \
-		--disable-libavutil \
-		--disable-libpostproc \
-		--disable-libswscale \
+		--disable-libavcodec_a \
+		--disable-libavformat_a \
+		--disable-libavutil_a \
+		--disable-libpostproc_a \
+		--disable-libswscale_a \
 		--disable-libavcodec_so \
 		--disable-libavformat_so \
 		--disable-libavutil_so \
@@ -1116,7 +1120,8 @@ export CFLAGS="%optflags"
 		%{subst_enable_to dynamic_plugins dynamic-plugins} \
 		--with-extraincdir=%_includedir/vidix:%_includedir/directfb
 
-%make_build
+#%%make_build
+make
 
 # make conf file
 sed -e 's/^@VO@/vo = %default_vo/' \
@@ -1450,8 +1455,12 @@ unset RPM_PYTHON
 
 
 %changelog
-* Thu Apr 26 2007 Led <led@altlinux.ru> 1.0-alt35.23143.1
-- new SVN snapshot (revision 23143)
+* Sat May 05 2007 Led <led@altlinux.ru> 1.0-alt35.23235.1
+- new SVN snapshot (revision 23235)
+- updated %lname-uni-svn23235.diff
+- updated %lname-svn-r23235-ext_ffmpeg.patch
+- updated %lname-svn-r23235-configure.patch
+- fixed build with mainstream libdvdnav
 
 * Thu Apr 26 2007 Led <led@altlinux.ru> 1.0-alt35.23114.1
 - new SVN snapshot (revision 23114)
