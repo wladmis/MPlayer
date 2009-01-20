@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 22753
-%define ffmpeg_svnrev 8449
+%define svnrev 22917
+%define ffmpeg_svnrev 8633
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -323,18 +323,16 @@ Patch0: %lname-svn-r22221-subreader.patch
 Patch1: %lname-svn-r22092-dirac.patch
 Patch2: %lname-dvd-ru-svn19389.patch.gz
 Patch3: %Name-1.0pre4-alt-explicit_gif.patch
-Patch4: %lname-svn-r22753-libdha.patch
 Patch5: %lname-svn-r19447-vo_vidix.patch.gz
 Patch6: %lname-svn-r21128-alt-artsc_ldflags.patch.gz
 Patch11: %lname-svn-r22518-nls.patch
-Patch12: %lname-uni-svn21402.diff.gz
+Patch12: %lname-uni-svn22915.diff
 Patch13: %Name-svn-20060711-vbe.patch.gz
 Patch14: %lname-svn-r22324-gui_nls.patch
 Patch15: %lname-svn-r21128-pulseaudio.patch.gz
-Patch17: %lname-svn-r22753-ext_ffmpeg.patch
-Patch18: %lname-svn-r22518-mwallp.patch
+Patch17: %lname-svn-r22915-ext_ffmpeg.patch
 Patch22: %lname-svn-r19389-polyp0.8.patch.gz
-Patch26: %lname-svn-r22753-configure.patch
+Patch26: %lname-svn-r22915-configure.patch
 Patch27: %lname-svn-r22518-builddocs.patch
 %if_disabled shared_ffmpeg
 Patch32: ffmpeg-uni-svn-r7650.patch
@@ -429,8 +427,6 @@ BuildRequires: libgtk+2-devel
 %{?_enable_nls:BuildRequires: gettext-tools}
 
 %if_with tools
-BuildRequires: libXmu-devel libXi-devel libXext-devel libX11-devel
-BuildRequires: libglut-devel libmesa-devel libjpeg-devel
 BuildRequires: perl-libwww perl-Math-BigInt
 BuildRequires: python-modules-compiler python-modules-encodings
 BuildRequires: normalize sox termutils vcdimager
@@ -878,7 +874,6 @@ mv ffmpeg-svn-r%ffmpeg_svnrev/lib{av{codec,format,util},postproc} .
 %patch1 -p1
 %patch2 -p1
 %patch3 -p1
-%patch4 -p1
 %patch5 -p1
 %patch6 -p1
 %patch11 -p1
@@ -887,7 +882,6 @@ mv ffmpeg-svn-r%ffmpeg_svnrev/lib{av{codec,format,util},postproc} .
 %patch14 -p1
 %patch15 -p1
 %patch17 -p1
-%patch18 -p1
 %{?_enable_polyp:%{?_disable_old_polyp:%patch22 -p1}}
 %patch26 -p1
 %patch27 -p1
@@ -1147,16 +1141,9 @@ echo "fontconfig = yes" >> etc/%lname.conf
 echo "fontconfig = no" >> etc/%lname.conf
 %endif
 
-%{?_enable_freetype:make -C TOOLS/subfont-c}
-
 %if_enabled mplayer
 %if_with tools
-%make_build -C TOOLS 302m_convert 360m_convert alaw-gen asfinfo avi-fix avisubdump bios2dump cpuinfo dump_mp4 mem2dump movinfo png2raw
-for d in %{?_enable_mencoder:mwallp} GL-test; do
-    pushd TOOLS/$d
-    ./compile.sh
-    popd
-done
+%make_build -C TOOLS alaw-gen asfinfo avi-fix avisubdump cpuinfo dump_mp4 movinfo
 %endif
 %endif
 
@@ -1200,21 +1187,9 @@ install -m 0644 etc/{codecs,input,%lname}.conf %buildroot%_sysconfdir/%name/
 %{?_enable_osdmenu:install -m 0644 etc/menu.conf %buildroot%_sysconfdir/%name/}
 %{?_enable_dvb:install -m 0644 etc/dvb-menu.conf %buildroot%_sysconfdir/%name/}
 
-%if_enabled freetype
-install -d %buildroot%_datadir/%name/fonts/{osd,encodings}
-install -m 0644 TOOLS/subfont-c/font.desc.tail %buildroot%_datadir/%name/fonts/
-install -m 0755 TOOLS/subfont-c/{fontgen,runme} %buildroot%_datadir/%name/fonts/
-install -m 0644 TOOLS/subfont-c/osd/osd.pfb %buildroot%_datadir/%name/fonts/osd/
-install -m 0755 TOOLS/subfont-c/osd/{gen.py,runme} %buildroot%_datadir/%name/fonts/osd/
-install -m 0644 TOOLS/subfont-c/encodings/{osd-%lname,runme-kr} %buildroot%_datadir/%name/fonts/encodings/
-install -m 0755 TOOLS/subfont-c/encodings/charmap2enc %buildroot%_datadir/%name/fonts/encodings/
-install -m 0755 TOOLS/subfont-c/subfont %buildroot%_bindir/%{lname}_subfont
-%endif
-
 %if_with tools
-install -m 0755 TOOLS/{3*convert,aconvert,alaw-gen,asfinfo,avi-fix,avisubdump,bios2dump,calcbpp.pl,countquant.pl,cpuinfo,divx2svcd,dump_mp4,encode2mpeglight,mem2dump,mencvcd,midentify,movinfo,mp.pl,mpconsole,mplmult.sh,plotpsnr.pl,png2raw,psnr-video.sh,subedit.pl,subsearch.sh,sws-test,vobshift.py,w32codec_dl.pl,wma2ogg.pl,x2mpsub.sh,GL-test/gltest%{?_enable_mencoder:,mwallp/mwallp}} %buildroot/%_bindir/
+install -m 0755 TOOLS/{aconvert,alaw-gen,asfinfo,avi-fix,avisubdump,calcbpp.pl,countquant.pl,cpuinfo,divx2svcd,dump_mp4,encode2mpeglight,mencvcd,midentify,movinfo,mp.pl,mpconsole,mplmult.sh,plotpsnr.pl,psnr-video.sh,subedit.pl,subsearch.sh,sws-test,vobshift.py,w32codec_dl.pl,wma2ogg.pl,x2mpsub.sh,} %buildroot/%_bindir/
 %{?_enable_mencoder:install -m 0755 TOOLS/{dvd2divxscript.pl,menc2pass,qepdvcd.sh} %buildroot/%_bindir/}
-install -pD -m 0644 TOOLS/mwallp/README %buildroot%_docdir/%name-tools-%version/README.mwallp
 install -m 0644 TOOLS/README %buildroot%_docdir/%name-tools-%version/
 %endif
 
@@ -1486,30 +1461,33 @@ unset RPM_PYTHON
 %_bindir/dump_mp4
 %_bindir/encode2mpeglight
 #other
-%_bindir/3*convert
 %_bindir/alaw-gen
 %_bindir/asfinfo
 %_bindir/avi-fix
 %_bindir/avisubdump
-%_bindir/bios2dump
 %_bindir/calcbpp.pl
 %_bindir/countquant.pl
 %_bindir/cpuinfo
-%_bindir/gltest
-%_bindir/mem2dump
 %_bindir/movinfo
 %_bindir/plotpsnr.pl
-%_bindir/png2raw
 %_bindir/subedit.pl
 %_bindir/subsearch.sh
 %_bindir/vobshift.py
 %_bindir/w32codec_dl.pl
-%{?_enable_mencoder:%_bindir/mwallp}
 %endif
 %endif
 
 
 %changelog
+* Fri Apr 05 2007 Led <led@altlinux.ru> 1.0-alt35.22917.1
+- new SVN snapshot (revision 22917):
+  + AAC-LATM, H.263-2000, AMR, H.264 over RTSP
+- removed %lname-svn-r22753-libdha.patch (due upstream)
+- updated %lname-uni-svn22915.diff
+- updated %lname-svn-r22915-ext_ffmpeg.patch
+- removed %lname-svn-r22518-mwallp.patch (due upstream)
+- updated %lname-svn-r22915-configure.patch
+
 * Tue Mar 20 2007 Led <led@altlinux.ru> 1.0-alt35.22753.1
 - new SVN snapshot (revision 22753)
 - updated %lname-svn-r22753-libdha.patch
