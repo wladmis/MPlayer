@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 23104
-%define ffmpeg_svnrev 8800
+%define svnrev 23114
+%define ffmpeg_svnrev 8820
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -332,7 +332,7 @@ Patch12: %lname-uni-svn22915.diff
 Patch13: %Name-svn-20060711-vbe.patch.gz
 Patch14: %lname-svn-r23099-gui_nls.patch
 Patch15: %lname-svn-r21128-pulseaudio.patch.gz
-Patch17: %lname-svn-r23099-ext_ffmpeg.patch
+Patch17: %lname-svn-r23114-ext_ffmpeg.patch
 Patch22: %lname-svn-r19389-polyp0.8.patch.gz
 Patch26: %lname-svn-r23099-configure.patch
 Patch27: %lname-svn-r22518-builddocs.patch
@@ -1450,6 +1450,10 @@ unset RPM_PYTHON
 
 
 %changelog
+* Thu Apr 26 2007 Led <led@altlinux.ru> 1.0-alt35.23114.1
+- new SVN snapshot (revision 23114)
+- updated %lname-svn-r23114-ext_ffmpeg.patch
+
 * Wed Apr 25 2007 Led <led@altlinux.ru> 1.0-alt35.23104.1
 - new SVN snapshot (revision 23104)
 
