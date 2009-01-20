@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 24688
-%define ffmpeg_svnrev 10650
+%define svnrev 24761
+%define ffmpeg_svnrev 10703
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -341,7 +341,7 @@ Patch17: %lname-svn-r24688-ext_ffmpeg.patch
 Patch22: %lname-svn-r19389-polyp0.8.patch.gz
 Patch27: %lname-svn-r22518-builddocs.patch
 %if_disabled shared_ffmpeg
-%{?_enable_dirac:Patch31: ffmpeg-svn-r10636-dirac-0.8.x.patch}
+%{?_enable_dirac:Patch31: ffmpeg-svn-r10703-dirac-0.8.x.patch}
 Patch32: ffmpeg-uni-svn-r10644.patch
 Patch33: ffmpeg-svn-r10644-amr.patch
 %endif
@@ -1232,6 +1232,10 @@ done
 
 
 %changelog
+* Thu Oct 11 2007 Led <led@altlinux.ru> 1.0-alt35.24761.1
+- new SVN snapshot (revision 24761)
+- updated ffmpeg-svn-r10703-dirac-0.8.x.patch
+
 * Wed Oct 03 2007 Led <led@altlinux.ru> 1.0-alt35.24688.1
 - new SVN snapshot (revision 24688):
   + support H.263-2000 over RTSP

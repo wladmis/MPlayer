@@ -1,0 +1,6 @@
+object 6c66c42db91e76c33ca7413a8bcd1a86d419f1a3
+type commit
+tag ffmpeg-r10703
+tagger Led <led@altlinux.org> 1232486095 +0200
+
+ffmpeg-r10703

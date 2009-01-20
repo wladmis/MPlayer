@@ -1,12 +1,12 @@
-diff -ruN ffmpegsvn_trunk/libavcodec/allcodecs.c ffmpegsvn_trunk_dirac/libavcodec/allcodecs.c
---- ffmpegsvn_trunk/libavcodec/allcodecs.c	2007-10-01 11:15:43.000000000 +0100
-+++ ffmpegsvn_trunk_dirac/libavcodec/allcodecs.c	2007-10-02 10:17:37.000000000 +0100
+diff -urN ffmpeg-svn-r10703.orig/libavcodec/allcodecs.c ffmpeg-svn-r10703/libavcodec/allcodecs.c
+--- ffmpeg-svn-r10703.orig/libavcodec/allcodecs.c	2007-10-11 00:12:59 +0300
++++ ffmpeg-svn-r10703/libavcodec/allcodecs.c	2007-10-11 00:48:46 +0300
 @@ -73,6 +73,7 @@
      REGISTER_DECODER (CLJR, cljr);
      REGISTER_DECODER (CSCD, cscd);
      REGISTER_DECODER (CYUV, cyuv);
-+    REGISTER_ENCDEC(DIRAC, dirac);
-     REGISTER_DECODER (DNXHD, dnxhd);
++    REGISTER_ENCDEC  (DIRAC, dirac);
+     REGISTER_ENCDEC  (DNXHD, dnxhd);
      REGISTER_DECODER (DSICINVIDEO, dsicinvideo);
      REGISTER_ENCDEC  (DVVIDEO, dvvideo);
 @@ -271,6 +272,7 @@
@@ -17,9 +17,9 @@ diff -ruN ffmpegsvn_trunk/libavcodec/allcodecs.c ffmpegsvn_trunk_dirac/libavcode
      REGISTER_PARSER  (DCA, dca);
      REGISTER_PARSER  (DVBSUB, dvbsub);
      REGISTER_PARSER  (DVDSUB, dvdsub);
-diff -ruN ffmpegsvn_trunk/libavcodec/avcodec.h ffmpegsvn_trunk_dirac/libavcodec/avcodec.h
---- ffmpegsvn_trunk/libavcodec/avcodec.h	2007-10-01 11:15:43.000000000 +0100
-+++ ffmpegsvn_trunk_dirac/libavcodec/avcodec.h	2007-10-02 10:17:37.000000000 +0100
+diff -urN ffmpeg-svn-r10703.orig/libavcodec/avcodec.h ffmpeg-svn-r10703/libavcodec/avcodec.h
+--- ffmpeg-svn-r10703.orig/libavcodec/avcodec.h	2007-10-11 00:12:59 +0300
++++ ffmpeg-svn-r10703/libavcodec/avcodec.h	2007-10-11 00:47:58 +0300
 @@ -271,6 +271,9 @@
      CODEC_ID_TEXT,  /* raw UTF-8 text */
      CODEC_ID_XSUB,
@@ -30,9 +30,9 @@ diff -ruN ffmpegsvn_trunk/libavcodec/avcodec.h ffmpegsvn_trunk_dirac/libavcodec/
      CODEC_ID_MPEG2TS= 0x20000, /* _FAKE_ codec to indicate a raw MPEG-2 TS
                                  * stream (only used by libavformat) */
  };
-diff -ruN ffmpegsvn_trunk/libavcodec/dirac.c ffmpegsvn_trunk_dirac/libavcodec/dirac.c
---- ffmpegsvn_trunk/libavcodec/dirac.c	1970-01-01 01:00:00.000000000 +0100
-+++ ffmpegsvn_trunk_dirac/libavcodec/dirac.c	2007-10-02 10:17:37.000000000 +0100
+diff -urN ffmpeg-svn-r10703.orig/libavcodec/dirac.c ffmpeg-svn-r10703/libavcodec/dirac.c
+--- ffmpeg-svn-r10703.orig/libavcodec/dirac.c	1970-01-01 03:00:00 +0300
++++ ffmpeg-svn-r10703/libavcodec/dirac.c	2007-10-11 00:47:58 +0300
 @@ -0,0 +1,765 @@
 +/**
 + * @file dirac.c
@@ -799,9 +799,9 @@ diff -ruN ffmpegsvn_trunk/libavcodec/dirac.c ffmpegsvn_trunk_dirac/libavcodec/di
 +    parse_dirac,
 +    dirac_parse_close,
 +};
-diff -ruN ffmpegsvn_trunk/libavcodec/Makefile ffmpegsvn_trunk_dirac/libavcodec/Makefile
---- ffmpegsvn_trunk/libavcodec/Makefile	2007-10-01 11:15:43.000000000 +0100
-+++ ffmpegsvn_trunk_dirac/libavcodec/Makefile	2007-10-02 10:17:37.000000000 +0100
+diff -urN ffmpeg-svn-r10703.orig/libavcodec/Makefile ffmpeg-svn-r10703/libavcodec/Makefile
+--- ffmpeg-svn-r10703.orig/libavcodec/Makefile	2007-10-11 00:12:59 +0300
++++ ffmpeg-svn-r10703/libavcodec/Makefile	2007-10-11 00:47:58 +0300
 @@ -4,7 +4,7 @@
  #
  include ../config.mak
@@ -811,7 +811,7 @@ diff -ruN ffmpegsvn_trunk/libavcodec/Makefile ffmpegsvn_trunk_dirac/libavcodec/M
  
  OBJS = allcodecs.o \
         audioconvert.o \
-@@ -296,6 +296,7 @@
+@@ -297,6 +297,7 @@
  # external codec libraries
  OBJS-$(CONFIG_LIBA52)                  += liba52.o
  OBJS-$(CONFIG_LIBAMR)                  += libamr.o
@@ -819,9 +819,9 @@ diff -ruN ffmpegsvn_trunk/libavcodec/Makefile ffmpegsvn_trunk_dirac/libavcodec/M
  OBJS-$(CONFIG_LIBFAAC)                 += libfaac.o
  OBJS-$(CONFIG_LIBFAAD)                 += libfaad.o
  OBJS-$(CONFIG_LIBGSM)                  += libgsm.o
-diff -ruN ffmpegsvn_trunk/libavformat/allformats.c ffmpegsvn_trunk_dirac/libavformat/allformats.c
---- ffmpegsvn_trunk/libavformat/allformats.c	2007-09-28 14:53:51.000000000 +0100
-+++ ffmpegsvn_trunk_dirac/libavformat/allformats.c	2007-10-02 10:17:37.000000000 +0100
+diff -urN ffmpeg-svn-r10703.orig/libavformat/allformats.c ffmpeg-svn-r10703/libavformat/allformats.c
+--- ffmpeg-svn-r10703.orig/libavformat/allformats.c	2007-10-02 15:01:18 +0300
++++ ffmpeg-svn-r10703/libavformat/allformats.c	2007-10-11 00:47:58 +0300
 @@ -71,6 +71,7 @@
      REGISTER_DEMUXER  (C93, c93);
      REGISTER_MUXER    (CRC, crc);
@@ -830,9 +830,9 @@ diff -ruN ffmpegsvn_trunk/libavformat/allformats.c ffmpegsvn_trunk_dirac/libavfo
      REGISTER_DEMUXER  (DSICIN, dsicin);
      REGISTER_DEMUXER  (DTS, dts);
      REGISTER_MUXDEMUX (DV, dv);
-diff -ruN ffmpegsvn_trunk/libavformat/raw.c ffmpegsvn_trunk_dirac/libavformat/raw.c
---- ffmpegsvn_trunk/libavformat/raw.c	2007-09-21 14:59:27.000000000 +0100
-+++ ffmpegsvn_trunk_dirac/libavformat/raw.c	2007-10-02 10:17:37.000000000 +0100
+diff -urN ffmpeg-svn-r10703.orig/libavformat/raw.c ffmpeg-svn-r10703/libavformat/raw.c
+--- ffmpeg-svn-r10703.orig/libavformat/raw.c	2007-09-15 00:49:54 +0300
++++ ffmpeg-svn-r10703/libavformat/raw.c	2007-10-11 00:47:58 +0300
 @@ -227,6 +227,23 @@
      return 0;
  }
@@ -891,9 +891,9 @@ diff -ruN ffmpegsvn_trunk/libavformat/raw.c ffmpegsvn_trunk_dirac/libavformat/ra
  /* pcm formats */
  
  #define PCMINPUTDEF(name, long_name, ext, codec) \
-diff -ruN ffmpegsvn_trunk/libavformat/riff.c ffmpegsvn_trunk_dirac/libavformat/riff.c
---- ffmpegsvn_trunk/libavformat/riff.c	2007-09-24 15:58:33.000000000 +0100
-+++ ffmpegsvn_trunk_dirac/libavformat/riff.c	2007-10-02 10:17:37.000000000 +0100
+diff -urN ffmpeg-svn-r10703.orig/libavformat/riff.c ffmpeg-svn-r10703/libavformat/riff.c
+--- ffmpeg-svn-r10703.orig/libavformat/riff.c	2007-09-22 01:38:40 +0300
++++ ffmpeg-svn-r10703/libavformat/riff.c	2007-10-11 00:47:58 +0300
 @@ -172,6 +172,7 @@
      { CODEC_ID_JPEG2000, MKTAG('M', 'J', '2', 'C') },
      { CODEC_ID_VMNC, MKTAG('V', 'M', 'n', 'c') },
