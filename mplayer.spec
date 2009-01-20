@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 23600
-%define ffmpeg_svnrev 9385
+%define svnrev 23606
+%define ffmpeg_svnrev 9389
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -692,6 +692,13 @@ mv ffmpeg-svn-r%ffmpeg_svnrev/lib{av{codec,format,util},postproc} .
 %{?odml_chunklen:sed -r -i -e 's/^(#[[:blank:]]*define[[:blank:]]+ODML_CHUNKLEN[[:blank:]]+)0x[[:xdigit:]]+/\1%odml_chunklen/' libmpdemux/muxer_avi.c}
 
 %{?svnrev:subst 's/UNKNOWN/%svnrev/' version.sh}
+iconv -f cp1251 -t utf-8 >> etc/%lname.desktop <<__MENU__
+Comment[ru]=Проигрыватель мультимедиа
+Comment[uk]=Програвач мультимедіа
+X-MultipleArgs=true
+StartupNotify=true
+__MENU__
+subst '/^MimeType=/s|$|video/3gpp;application/x-flash-video;|' etc/%lname.desktop
 
 %if_enabled nls
 install -d -m 0755 po
@@ -1000,12 +1007,6 @@ install -pD -m 0644 TOOLS/README %buildroot%_docdir/%name-tools-%version/README
 
 # Menus
 [ "%name" = "%lname" ] || mv %buildroot%_desktopdir/%lname.desktop %buildroot%_desktopdir/%name.desktop
-iconv -f cp1251 -t utf-8 >> %buildroot%_desktopdir/%name.desktop <<__MENU__
-Version=1.0
-GenericName[uk]=Програвач мультимедіа
-X-MultipleArgs=true
-StartupNotify=true
-__MENU__
 %endif
 
 # docs
@@ -1215,13 +1216,12 @@ done
 
 
 %changelog
-* Fri Jun 22 2007 Led <led@altlinux.ru> 1.0-alt35.23600.1
-- new SVN snapshot (revision 23600)
+* Sat Jun 23 2007 Led <led@altlinux.ru> 1.0-alt35.23606.1
+- new SVN snapshot (revision 23606)
 - updated %lname-svn-r23600-ext_ffmpeg.patch
-
-* Wed Jun 20 2007 Led <led@altlinux.ru> 1.0-alt35.23592.1
-- new SVN snapshot (revision 23592)
 - updated %lname-svn-r23592-configure.patch
+- added %lname-svn-r23606-desktop.patch
+- fixed %lname.desktop
 
 * Sat Jun 16 2007 Led <led@altlinux.ru> 1.0-alt35.23560.1
 - new SVN snapshot (revision 23560)
