@@ -80,8 +80,8 @@
 %def_enable x264
 %def_enable ffmpeg
 %def_enable shared_ffmpeg
-%def_enable faad_ext
-%def_disable faad_int
+%def_disable faad_ext
+%def_enable faad_int
 %def_disable faad_fixed
 %def_disable tremor_internal
 %def_disable tremor_low
@@ -281,7 +281,7 @@
 Name: %lname
 Version: 1.0
 %define rel 35
-%define subrel 1
+%define subrel 2
 %ifdef svnrev
 Release: alt%rel.%svnrev.%subrel
 %define pkgver svn-r%svnrev
@@ -1234,6 +1234,9 @@ done
 
 
 %changelog
+* Sun Jan 27 2008 Led <led@altlinux.ru> 1.0-alt35.25873.2
+- build with internal FAAD
+
 * Sat Jan 26 2008 Led <led@altlinux.ru> 1.0-alt35.25873.1
 - new SVN snapshot (revision 25873)
 - updated %lname-svn-r25873-ext_ffmpeg.patch
