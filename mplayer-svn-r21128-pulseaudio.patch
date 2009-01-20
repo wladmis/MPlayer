@@ -1,6 +1,6 @@
-diff -urN mplayer-svn-r20837.orig/AUTHORS mplayer-svn-r20837/AUTHORS
---- mplayer-svn-r20837.orig/AUTHORS	2006-11-06 17:08:14 +0200
-+++ mplayer-svn-r20837/AUTHORS	2006-11-10 20:05:15 +0200
+diff -urN mplayer-svn-r21128.orig/AUTHORS mplayer-svn-r21128/AUTHORS
+--- mplayer-svn-r21128.orig/AUTHORS	2006-11-06 17:08:14 +0200
++++ mplayer-svn-r21128/AUTHORS	2006-11-21 17:27:58 +0200
 @@ -627,6 +627,7 @@
  
  Poettering, Lennart <mzzcynlre@0pointer.de>
@@ -9,10 +9,10 @@ diff -urN mplayer-svn-r20837.orig/AUTHORS mplayer-svn-r20837/AUTHORS
  
  Poirier, Guillaume (poirierg) <poirierg@gmail.com>
      * French documentation translation and synchronization
-diff -urN mplayer-svn-r20837.orig/configure mplayer-svn-r20837/configure
---- mplayer-svn-r20837.orig/configure	2006-11-10 19:02:58 +0200
-+++ mplayer-svn-r20837/configure	2006-11-10 20:05:51 +0200
-@@ -368,6 +368,7 @@
+diff -urN mplayer-svn-r21128.orig/configure mplayer-svn-r21128/configure
+--- mplayer-svn-r21128.orig/configure	2006-11-21 15:37:21 +0200
++++ mplayer-svn-r21128/configure	2006-11-21 17:28:46 +0200
+@@ -369,6 +369,7 @@
    --disable-arts         disable aRts audio output [autodetect]
    --disable-esd          disable esd audio output [autodetect]
    --disable-polyp        disable Polypaudio audio output [autodetect]
@@ -28,7 +28,7 @@ diff -urN mplayer-svn-r20837.orig/configure mplayer-svn-r20837/configure
  _jack=auto
  _openal=auto
  _libcdio=auto
-@@ -1810,6 +1812,8 @@
+@@ -1812,6 +1814,8 @@
    --disable-esd)	_esd=no		;;
    --enable-polyp)	_polyp=yes	;;
    --disable-polyp)	_polyp=no		;;
@@ -37,7 +37,7 @@ diff -urN mplayer-svn-r20837.orig/configure mplayer-svn-r20837/configure
    --enable-jack)	_jack=yes	;;
    --disable-jack)	_jack=no	;;
    --enable-openal)	_openal=yes	;;
-@@ -4882,6 +4886,33 @@
+@@ -4862,6 +4866,33 @@
  fi
  
  
@@ -60,7 +60,7 @@ diff -urN mplayer-svn-r20837.orig/configure mplayer-svn-r20837/configure
 +  _def_pulse='#define USE_PULSE 1'
 +  _aosrc="$_aosrc ao_pulse.c"
 +  _aomodules="pulse $_aomodules"
-+  _ld_pulse=`pkg-config --libs libpulse`
++  _libs_mplayer="$_libs_mplayer `$_pkg_config --libs libpulse`"
 +  _inc_extra="$_inc_extra `pkg-config --cflags libpulse`"
 +else
 +  _def_pulse='#undef USE_PULSE'
@@ -71,16 +71,7 @@ diff -urN mplayer-svn-r20837.orig/configure mplayer-svn-r20837/configure
  echocheck "JACK"
  if test "$_jack" = auto ; then
    _jack=yes
-@@ -7418,7 +7449,7 @@
-   $_ld_vesa $_ld_vidix_external $_ld_gl $_ld_dga $_ld_xv $_ld_xvmc $_ld_vm \
-   $_ld_xinerama $_ld_x11 $_ld_sock
- AO_LIBS = $_ld_arts $_ld_esd $_ld_jack $_ld_openal $_ld_nas $_ld_sgiaudio \
--  $_ld_polyp
-+  $_ld_polyp $_ld_pulse
- EXTRA_LIB_MENCODER = $_ld_mp3lame $_ld_x264 $_toolame_lib $_twolame_lib $_ld_faac
- ifeq ($_lavc_faac,yes)
- EXTRA_LIB += $_ld_faac
-@@ -7936,6 +7967,7 @@
+@@ -7876,6 +7907,7 @@
  $_def_esd
  $_def_esd_latency
  $_def_polyp
@@ -88,9 +79,9 @@ diff -urN mplayer-svn-r20837.orig/configure mplayer-svn-r20837/configure
  $_def_jack
  $_def_openal
  $_def_sys_asoundlib_h
-diff -urN mplayer-svn-r20837.orig/libao2/ao_pulse.c mplayer-svn-r20837/libao2/ao_pulse.c
---- mplayer-svn-r20837.orig/libao2/ao_pulse.c	1970-01-01 03:00:00 +0300
-+++ mplayer-svn-r20837/libao2/ao_pulse.c	2006-11-10 20:05:15 +0200
+diff -urN mplayer-svn-r21128.orig/libao2/ao_pulse.c mplayer-svn-r21128/libao2/ao_pulse.c
+--- mplayer-svn-r21128.orig/libao2/ao_pulse.c	1970-01-01 03:00:00 +0300
++++ mplayer-svn-r21128/libao2/ao_pulse.c	2006-11-21 17:27:58 +0200
 @@ -0,0 +1,566 @@
 +#include <assert.h>
 +#include <string.h>
@@ -658,9 +649,9 @@ diff -urN mplayer-svn-r20837.orig/libao2/ao_pulse.c mplayer-svn-r20837/libao2/ao
 +    }
 +}
 +
-diff -urN mplayer-svn-r20837.orig/libao2/audio_out.c mplayer-svn-r20837/libao2/audio_out.c
---- mplayer-svn-r20837.orig/libao2/audio_out.c	2006-08-17 13:36:32 +0300
-+++ mplayer-svn-r20837/libao2/audio_out.c	2006-11-10 20:05:15 +0200
+diff -urN mplayer-svn-r21128.orig/libao2/audio_out.c mplayer-svn-r21128/libao2/audio_out.c
+--- mplayer-svn-r21128.orig/libao2/audio_out.c	2006-08-17 13:36:32 +0300
++++ mplayer-svn-r21128/libao2/audio_out.c	2006-11-21 17:27:58 +0200
 @@ -28,6 +28,9 @@
  #ifdef USE_POLYP
  extern ao_functions_t audio_out_polyp;

@@ -6,8 +6,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc1
-%define svnrev 21093
-%define ffmpeg_svnrev 7131
+%define svnrev 21357
+%define ffmpeg_svnrev 7180
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -316,23 +316,20 @@ Source6: mp_help2msg.awk.gz
 Source7: mp_msg2po.awk.gz
 Patch2: %lname-dvd-ru-svn19389.patch.gz
 Patch3: %Name-1.0pre4-alt-explicit_gif.patch
-Patch4: %lname-svn-r19427-libdha.patch.gz
+Patch4: %lname-svn-r21352-libdha.patch.gz
 Patch5: %lname-svn-r19447-vo_vidix.patch.gz
-Patch6: %lname-svn-r19389-alt-artsc_ldflags.patch.gz
+Patch6: %lname-svn-r21128-alt-artsc_ldflags.patch.gz
 Patch7: %Name-svn-20060707_dirac-0.5.x.patch.bz2
 Patch10: %lname-svn-r20837-generic-x86_64.patch.gz
 Patch11: %lname-svn-r20777-nls.patch.gz
-Patch12: %lname-uni-svn21093.diff.gz
+Patch12: %lname-uni-svn21352.diff.gz
 Patch13: %Name-svn-20060711-vbe.patch.gz
-Patch14: %Name-1.0pre7try2-xmmslibs_fix.patch
-Patch15: %lname-svn-r20837-pulseaudio.patch.bz2
-Patch16: %Name-1.0pre8-udev.patch.gz
-Patch17: %lname-svn-r21093-ext_ffmpeg.patch.bz2
+Patch15: %lname-svn-r21128-pulseaudio.patch.gz
+Patch17: %lname-svn-r21352-ext_ffmpeg.patch.bz2
 Patch18: %lname-mwallp.patch.gz
 Patch19: %lname-svn-r20777-bmovl-test.patch.gz
-Patch21: %Name-svn-20060607-vf_mcdeint.patch.gz
 Patch22: %lname-svn-r19389-polyp0.8.patch.gz
-Patch26: %lname-svn-r21093-configure.patch.gz
+Patch26: %lname-svn-r21357-configure.patch.gz
 Patch27: %lname-svn-r20777-builddocs.patch.gz
 %if_disabled shared_ffmpeg
 Patch31: ffmpeg-svn-r6769-dirac-0.5.x.patch.bz2
@@ -937,12 +934,10 @@ mv ffmpeg-svn-r%ffmpeg_svnrev/lib{av{codec,format,util},postproc} .
 %patch11 -p1
 %patch12 -p1
 %patch13 -p1
-%patch14 -p1
 %patch15 -p1
 %patch17 -p1
 %patch18 -p1
 %patch19 -p1
-%patch21 -p1
 %{?_enable_polyp:%{?_disable_old_polyp:%patch22 -p1}}
 %patch26 -p1
 %patch27 -p1
@@ -1527,6 +1522,15 @@ unset RPM_PYTHON
 
 
 %changelog
+* Tue Nov 28 2006 Led <led@altlinux.ru> 1.0-alt35.21357.1
+- new SVN snapshot (revision 21352)
+- updated %lname-svn-r21352-libdha.patch
+- updated %lname-uni-svn21352.diff
+- removed %lname-svn-r21352-xmmslibs_fix.patch
+- updated %lname-svn-r21352-ext_ffmpeg.patch
+- updated %lname-svn-r21357-configure.patch
+- removed %Name-svn-20060607-vf_mcdeint.patch
+
 * Mon Nov 20 2006 Led <led@altlinux.ru> 1.0-alt35.21093.1
 - new SVN snapshot (revision 21093):
   + obsolete XviD 3 support removed

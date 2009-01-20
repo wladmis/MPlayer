@@ -1,6 +1,6 @@
-diff -urN mplayer-svn-r19427.orig/libdha/Makefile mplayer-svn-r19427/libdha/Makefile
---- mplayer-svn-r19427.orig/libdha/Makefile	2006-08-18 20:55:36 +0300
-+++ mplayer-svn-r19427/libdha/Makefile	2006-08-19 14:13:41 +0300
+diff -urN mplayer-svn-r21352.orig/libdha/Makefile mplayer-svn-r21352/libdha/Makefile
+--- mplayer-svn-r21352.orig/libdha/Makefile	2006-11-27 14:05:38 +0200
++++ mplayer-svn-r21352/libdha/Makefile	2006-11-28 17:00:38 +0200
 @@ -15,12 +15,8 @@
  #SHORTNAME = libdha.so
  VSHORTNAME = libdha.so
@@ -29,7 +29,7 @@ diff -urN mplayer-svn-r19427.orig/libdha/Makefile mplayer-svn-r19427/libdha/Make
  
  all:    $(LIBNAME) $(SHORTNAME)
  
-@@ -85,12 +74,15 @@
+@@ -83,12 +72,15 @@
  	-mkdir -p $(LIBDIR)
  	install -m 755 $(INSTALLSTRIP) -p $(LIBNAME) $(LIBDIR)/$(LIBNAME)
  	rm -f $(LIBDIR)/libdha.so
@@ -45,19 +45,19 @@ diff -urN mplayer-svn-r19427.orig/libdha/Makefile mplayer-svn-r19427/libdha/Make
  
  uninstall:
  	rm -f $(LIBDIR)/libdha.so $(LIBDIR)/$(SHORTNAME) $(LIBDIR)/$(LIBNAME)
-diff -urN mplayer-svn-r19427.orig/Makefile mplayer-svn-r19427/Makefile
---- mplayer-svn-r19427.orig/Makefile	2006-08-17 13:36:39 +0300
-+++ mplayer-svn-r19427/Makefile	2006-08-19 14:15:13 +0300
-@@ -226,7 +226,7 @@
- COMMON_LIBS += tremor/libvorbisidec.a
- endif
- ifeq ($(VIDIX),yes)
--COMMON_DEPS += libdha/libdha.so vidix/libvidix.a
-+COMMON_DEPS += libdha/libdha.a vidix/libvidix.a
- endif
- ifeq ($(FAME),yes)
- COMMON_DEPS += libfame/libfame.a
-@@ -325,10 +325,10 @@
+diff -urN mplayer-svn-r21352.orig/Makefile mplayer-svn-r21352/Makefile
+--- mplayer-svn-r21352.orig/Makefile	2006-11-28 12:50:10 +0200
++++ mplayer-svn-r21352/Makefile	2006-11-28 17:05:44 +0200
+@@ -105,7 +105,7 @@
+ PARTS-$(FAAD_INTERNAL)            += libfaad2
+ COMMON_LIBS-$(TREMOR_INTERNAL)    += tremor/libvorbisidec.a
+ PARTS-$(TREMOR_INTERNAL)          += tremor
+-LIBS_MPLAYER-$(VIDIX)             += vidix/libvidix.a
++LIBS_MPLAYER-$(VIDIX)             += vidix/libvidix.a libdha/libdha.a
+ PARTS-$(VIDIX)                    += libdha vidix
+ COMMON_LIBS-$(DVDREAD_INTERNAL)   += dvdread/libdvdread.a
+ PARTS-$(DVDREAD_INTERNAL)         += dvdread
+@@ -213,10 +213,10 @@
  tremor/libvorbisidec.a:
  	$(MAKE) -C tremor
  
@@ -70,18 +70,18 @@ diff -urN mplayer-svn-r19427.orig/Makefile mplayer-svn-r19427/Makefile
  	$(MAKE) -C vidix
  
  Gui/libgui.a:
-@@ -417,7 +417,6 @@
+@@ -250,7 +250,6 @@
  
  install: $(ALL_PRG)
  ifeq ($(VIDIX),yes)
 -	$(MAKE) -C libdha install
- 	$(MAKE) -C vidix install
+ 	mkdir -p $(LIBDIR)/mplayer/vidix
+ 	-install -m 755 $(INSTALLSTRIP) -p vidix/drivers/*.so $(LIBDIR)/mplayer/vidix
  endif
- 	$(INSTALL) -d $(BINDIR)
-@@ -581,7 +580,7 @@
- loader/dmo/libDMO_Filter.a: .norecurse $(wildcard loader/dmo/*.[ch])
- loader/dshow/libDS_Filter.a: .norecurse $(wildcard loader/dshow/*.[ch])
+@@ -412,7 +411,7 @@
+ libfaad2/libfaad2.a: .norecurse $(wildcard libfaad2/*.[ch] libfaad2/*/*.[ch])
  
+ loader/libloader.a: .norecurse $(wildcard loader/*.[chSs])
 -libdha/libdha.so: .norecurse $(wildcard libdha/*.[ch])
 +libdha/libdha.a: .norecurse $(wildcard libdha/*.[ch])
  vidix/libvidix.a: .norecurse $(wildcard vidix/*.[ch])

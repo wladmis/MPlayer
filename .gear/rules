@@ -1,5 +1,5 @@
-tar.bz2: r21093:. name=@name@-svn-r21093
+tar.bz2: r21357:. name=@name@-svn-r21357
 tar.bz2: standard-1.9:. name=standard-1.9 base=standard
-copy: *.sh *-explicit_gif.patch *-xmmslibs_fix.patch
-gzip: *.in *.diff *.awk *-vf_mcdeint.patch *-configure.patch *-vbe.patch *-artsc_ldflags.patch *-polyp0.8.patch mplayer-dvd-ru-*.patch *-libdha.patch *-vo_vidix.patch *-x86_64.patch *-nls.patch *-bmovl-test.patch *-mwallp.patch *-builddocs.patch *-udev.patch
-bzip2: *_dirac-*.patch *-pulseaudio.patch *-ext_ffmpeg.patch
+copy: *.sh *-explicit_gif.patch
+gzip: *.in *.diff *.awk *-configure.patch *-vbe.patch *-artsc_ldflags.patch *-polyp0.8.patch mplayer-dvd-ru-*.patch *-libdha.patch *-vo_vidix.patch *-x86_64.patch *-nls.patch *-bmovl-test.patch *-mwallp.patch *-builddocs.patch *-pulseaudio.patch
+bzip2: *_dirac-*.patch *-ext_ffmpeg.patch
