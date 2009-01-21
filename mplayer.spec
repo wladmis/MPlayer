@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc2try2
-%define svnrev 27097
-%define ffmpeg_svnrev 13801
+%define svnrev 27330
+%define ffmpeg_svnrev 14318
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -218,8 +218,8 @@
 %define awk gawk
 %set_enable iconv
 %{!?charset:%define charset UTF-8}
-%undefine language
-%define language en
+#%%undefine language
+#%%define language en
 %else
 %define awk awk
 %endif
@@ -311,7 +311,6 @@ Patch1: %{lname}svn_trunk_revision_26980-dirac-0.10.x.patch
 Patch2: %lname-dvd-ru-svn19389.patch
 Patch3: %Name-1.0pre4-alt-explicit_gif.patch
 Patch4: %lname-svn-r26450-gui.patch
-Patch5: %lname-svn-r25454-vo_vidix.patch
 Patch6: %lname-svn-r21128-alt-artsc_ldflags.patch
 Patch7: %lname-svn-r23099-demux_nut.patch
 Patch8: %lname-svn-r23722-VIDM-win32-codec.patch
@@ -320,8 +319,8 @@ Patch11: %lname-svn-r24081-nls.patch
 Patch12: %lname-uni-svn26991.patch
 Patch13: %Name-svn-20060711-vbe.patch
 Patch14: %lname-svn-r26991-gui_nls.patch
-Patch16: %lname-svn-r27097-configure.patch
-Patch17: %lname-svn-r26706-ext_ffmpeg.patch
+Patch16: %lname-svn-r27330-configure.patch
+Patch17: %lname-svn-r27330-ext_ffmpeg.patch
 Patch27: %lname-svn-r26450-builddocs.patch
 %if_disabled shared_ffmpeg
 Patch32: ffmpeg-svn-r12807-xvmc-vld.patch
@@ -670,7 +669,6 @@ mv ffmpeg-svn-r%ffmpeg_svnrev/lib{av{codec,format,util},postproc} .
 %patch2 -p1
 %patch3 -p1
 %patch4 -p1
-%patch5 -p1
 %patch6 -p1
 %patch7 -p1
 %patch8 -p1
@@ -1000,8 +998,16 @@ install -m 0644 etc/{codecs,input,%lname}.conf %buildroot%_sysconfdir/%name/
 %{?_enable_dvb:install -m 0644 etc/dvb-menu.conf %buildroot%_sysconfdir/%name/}
 
 %if_with tools
-install -m 0755 TOOLS/{aconvert,alaw-gen,asfinfo,avi-fix,avisubdump,bmovl-test,calcbpp.pl,countquant.pl,divx2svcd,dump_mp4,encode2mpeglight,mencvcd,midentify,movinfo,mpconsole,mplmult.sh,plotpsnr.pl,psnr-video.sh,subedit.pl,subsearch.sh,vobshift.py,w32codec_dl.pl,wma2ogg.pl} %buildroot/%_bindir/
-%{?_enable_mencoder:install -m 0755 TOOLS/{dvd2divxscript.pl,qepdvcd.sh} %buildroot/%_bindir/}
+install -m 0755 TOOLS/{alaw-gen,asfinfo,avi-fix,avisubdump,bmovl-test,dump_mp4,movinfo} %buildroot/%_bindir/
+for f in vobshift; do
+    install -m 0755 TOOLS/$f.py %buildroot/%_bindir/$f
+done
+for f in calcbpp countquant plotpsnr subedit w32codec_dl wma2ogg %{?_enable_mencoder:dvd2divxscript}; do
+    install -m 0755 TOOLS/$f.pl %buildroot/%_bindir/$f
+done
+for f in aconvert divx2svcd encode2mpeglight mencvcd midentify mpconsole mplmult psnr-video subsearch %{?_enable_mencoder:qepdvcd}; do
+    install -m 0755 TOOLS/$f.sh %buildroot/%_bindir/$f
+done
 install -pD -m 0644 TOOLS/README %buildroot%_docdir/%name-tools-%version/README
 %endif
 
@@ -1009,8 +1015,7 @@ install -pD -m 0644 TOOLS/README %buildroot%_docdir/%name-tools-%version/README
 %endif
 
 # docs
-mv %buildroot{%_mandir/en/man1,%_man1dir}
-for l in $(ls DOCS/man | grep -v 'en'); do
+for l in $(ls DOCS/man | grep -v '^en$'); do
 %if_enabled mplayer
     install -pD -m 0644 DOCS/man/$l/%lname.1 %buildroot%_mandir/$l/man1/%lname.1
     %{?_enable_mencoder:ln -sf %lname.1 %buildroot%_mandir/$l/man1/mencoder.1}
@@ -1183,7 +1188,6 @@ ln -sf %lname %buildroot%_bindir/g%lname
 %lang(ro) %_datadir/locale/ro/LC_MESSAGES/*
 %lang(sk) %_datadir/locale/sk/LC_MESSAGES/*
 %lang(sv) %_datadir/locale/sv/LC_MESSAGES/*
-%lang(sk) %_datadir/locale/sk/LC_MESSAGES/*
 %lang(tr) %_datadir/locale/tr/LC_MESSAGES/*
 %lang(zh_CN) %_datadir/locale/zh_CN/LC_MESSAGES/*
 %lang(zh_TW) %_datadir/locale/zh_TW/LC_MESSAGES/*
@@ -1198,13 +1202,13 @@ ln -sf %lname %buildroot%_bindir/g%lname
 %_bindir/mencvcd
 %_bindir/midentify
 %_bindir/mpconsole
-%_bindir/mplmult.sh
-%_bindir/psnr-video.sh
-%_bindir/wma2ogg.pl
+%_bindir/mplmult
+%_bindir/psnr-video
+%_bindir/wma2ogg
 %if_enabled mencoder
 #mencoder
-%_bindir/dvd2divxscript.pl
-%_bindir/qepdvcd.sh
+%_bindir/dvd2divxscript
+%_bindir/qepdvcd
 %endif
 #common
 %_bindir/aconvert
@@ -1217,19 +1221,38 @@ ln -sf %lname %buildroot%_bindir/g%lname
 %_bindir/avi-fix
 %_bindir/avisubdump
 %_bindir/bmovl-test
-%_bindir/calcbpp.pl
-%_bindir/countquant.pl
+%_bindir/calcbpp
+%_bindir/countquant
 %_bindir/movinfo
-%_bindir/plotpsnr.pl
-%_bindir/subedit.pl
-%_bindir/subsearch.sh
-%_bindir/vobshift.py
-%_bindir/w32codec_dl.pl
+%_bindir/plotpsnr
+%_bindir/subedit
+%_bindir/subsearch
+%_bindir/vobshift
+%_bindir/w32codec_dl
 %endif
 %endif
 
 
 %changelog
+* Mon Jul 21 2008 Led <led@altlinux.ru> 1.0-alt35.27330.1
+- new SVN snapshot (revision 27330):
+  + video game codecs:
+    Playstation MDEC video,
+    ADPCM XA audio,
+    EA Maxis XA ADPCM audio,
+    RL2 video,
+    Beam Software SIFF video,
+    V.Flash PTX video
+  + image decoders:
+    Sun rasterfile,
+    PCX image
+  + support for chapters in lavf demuxer
+- updated:
+  + %lname-svn-r27330-configure.patch
+  + %lname-svn-r27330-ext_ffmpeg.patch
+- removed:
+  + %lname-svn-r25454-vo_vidix.patch
+
 * Wed Jun 18 2008 Led <led@altlinux.ru> 1.0-alt35.27097.1
 - new SVN snapshot (revision 27097):
   + prefer lavf musepack demuxer over libmpdemux

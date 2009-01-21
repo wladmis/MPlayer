@@ -1,7 +1,7 @@
-diff -urN mplayer-svn-r26706.orig/configure mplayer-svn-r26706/configure
---- mplayer-svn-r26706.orig/configure	2008-05-09 17:57:36 +0300
-+++ mplayer-svn-r26706/configure	2008-05-10 01:31:20 +0300
-@@ -294,10 +294,12 @@
+diff -urN mplayer-svn-r27330.orig/configure mplayer-svn-r27330/configure
+--- mplayer-svn-r27330.orig/configure	2008-07-21 03:35:30 +0300
++++ mplayer-svn-r27330/configure	2008-07-21 04:03:30 +0300
+@@ -297,10 +297,12 @@
    --disable-libavcodec_a    disable static libavcodec [autodetect]
    --disable-libavformat_a   disable static libavformat [autodetect]
    --disable-libpostproc_a   disable static libpostproc [autodetect]
@@ -14,7 +14,7 @@ diff -urN mplayer-svn-r26706.orig/configure mplayer-svn-r26706/configure
    --disable-libavcodec_mpegaudio_hp disable high precision audio decoding
                                      in libavcodec [enabled]
    --disable-tremor-internal disable internal Tremor [enabled]
-@@ -513,6 +515,8 @@
+@@ -518,6 +520,8 @@
  _libavformat_so=auto
  _libpostproc_a=auto
  _libpostproc_so=auto
@@ -23,7 +23,7 @@ diff -urN mplayer-svn-r26706.orig/configure mplayer-svn-r26706/configure
  _libavcodec_mpegaudio_hp=yes
  _mencoder=yes
  _mplayer=yes
-@@ -1064,6 +1068,10 @@
+@@ -1076,6 +1080,10 @@
    --disable-libpostproc_a)	_libpostproc_a=no	;;
    --enable-libpostproc_so)	_libpostproc_so=yes	;;
    --disable-libpostproc_so)	_libpostproc_so=no	;;
@@ -34,7 +34,7 @@ diff -urN mplayer-svn-r26706.orig/configure mplayer-svn-r26706/configure
    --enable-libavcodec_mpegaudio_hp)	_libavcodec_mpegaudio_hp=yes	;;
    --disable-libavcodec_mpegaudio_hp)	_libavcodec_mpegaudio_hp=no	;;
  
-@@ -6226,6 +6234,45 @@
+@@ -6268,6 +6276,45 @@
  fi
  echores "$_real"
  
@@ -80,7 +80,7 @@ diff -urN mplayer-svn-r26706.orig/configure mplayer-svn-r26706/configure
  
  echocheck "QuickTime codecs"
  _qtx_emulation=no
-@@ -7771,6 +7818,10 @@
+@@ -7812,6 +7859,10 @@
  LIBPOSTPROC = $_libpostproc
  LIBPOSTPROC_A = $_libpostproc_a
  LIBPOSTPROC_SO = $_libpostproc_so
@@ -91,7 +91,7 @@ diff -urN mplayer-svn-r26706.orig/configure mplayer-svn-r26706/configure
  
  BUILD_STATIC=yes
  SRC_PATH=..
-@@ -8109,6 +8160,10 @@
+@@ -8154,6 +8205,10 @@
  $_def_libpostproc_a
  $_def_libpostproc_so
  
@@ -102,21 +102,21 @@ diff -urN mplayer-svn-r26706.orig/configure mplayer-svn-r26706/configure
  /* Win32 DLL support */
  $_def_win32dll
  #define WIN32_PATH "$_win32codecsdir"
-diff -urN mplayer-svn-r26706.orig/libmpcodecs/vd_ffmpeg.c mplayer-svn-r26706/libmpcodecs/vd_ffmpeg.c
---- mplayer-svn-r26706.orig/libmpcodecs/vd_ffmpeg.c	2008-04-14 00:02:35 +0300
-+++ mplayer-svn-r26706/libmpcodecs/vd_ffmpeg.c	2008-05-10 01:31:20 +0300
-@@ -8,6 +8,7 @@
- #include "help_mp.h"
+diff -urN mplayer-svn-r27330.orig/libmpcodecs/vd_ffmpeg.c mplayer-svn-r27330/libmpcodecs/vd_ffmpeg.c
+--- mplayer-svn-r27330.orig/libmpcodecs/vd_ffmpeg.c	2008-05-22 11:22:55 +0300
++++ mplayer-svn-r27330/libmpcodecs/vd_ffmpeg.c	2008-07-21 04:03:30 +0300
+@@ -9,6 +9,7 @@
+ #include "av_opts.h"
  
  #include "libavutil/common.h"
 +#include "libavutil/avutil.h"
  #include "libavutil/intreadwrite.h"
  #include "mpbswap.h"
  
-diff -urN mplayer-svn-r26706.orig/libmpdemux/demux_lavf.c mplayer-svn-r26706/libmpdemux/demux_lavf.c
---- mplayer-svn-r26706.orig/libmpdemux/demux_lavf.c	2008-04-19 22:33:09 +0300
-+++ mplayer-svn-r26706/libmpdemux/demux_lavf.c	2008-05-10 01:31:20 +0300
-@@ -33,7 +33,6 @@
+diff -urN mplayer-svn-r27330.orig/libmpdemux/demux_lavf.c mplayer-svn-r27330/libmpdemux/demux_lavf.c
+--- mplayer-svn-r27330.orig/libmpdemux/demux_lavf.c	2008-07-21 03:35:29 +0300
++++ mplayer-svn-r27330/libmpdemux/demux_lavf.c	2008-07-21 04:03:30 +0300
+@@ -36,7 +36,6 @@
  
  #include "libavformat/avformat.h"
  #include "libavutil/avutil.h"
@@ -124,10 +124,10 @@ diff -urN mplayer-svn-r26706.orig/libmpdemux/demux_lavf.c mplayer-svn-r26706/lib
  #include "libavcodec/opt.h"
  #include "libavformat/riff.h"
  
-diff -urN mplayer-svn-r26706.orig/Makefile mplayer-svn-r26706/Makefile
---- mplayer-svn-r26706.orig/Makefile	2008-05-09 17:57:36 +0300
-+++ mplayer-svn-r26706/Makefile	2008-05-10 01:34:22 +0300
-@@ -617,7 +617,7 @@
+diff -urN mplayer-svn-r27330.orig/Makefile mplayer-svn-r27330/Makefile
+--- mplayer-svn-r27330.orig/Makefile	2008-07-21 03:35:30 +0300
++++ mplayer-svn-r27330/Makefile	2008-07-21 04:04:36 +0300
+@@ -634,7 +634,7 @@
  COMMON_LIBS-$(LIBAVCODEC_A)       += libavcodec/libavcodec.a
  COMMON_LIBS-$(LIBAVUTIL_A)        += libavutil/libavutil.a
  COMMON_LIBS-$(LIBPOSTPROC_A)      += libpostproc/libpostproc.a
@@ -136,13 +136,13 @@ diff -urN mplayer-svn-r26706.orig/Makefile mplayer-svn-r26706/Makefile
  COMMON_LIBS += $(COMMON_LIBS-yes)
  
  OBJS_COMMON    += $(addsuffix .o, $(basename $(SRCS_COMMON)))
-@@ -930,8 +930,7 @@
- TOOLS/bmovl-test$(EXESUF): TOOLS/bmovl-test.c -lSDL_image
+@@ -941,8 +941,7 @@
  
- TOOLS/subrip$(EXESUF): TOOLS/subrip.c vobsub.o spudec.o unrar_exec.o \
--  libvo/aclib.o libswscale/libswscale.a libavutil/libavutil.a \
--  $(TEST_OBJS)
-+  $(TEST_OBJS) -lswscale
+ TOOLS/bmovl-test$(EXESUF): -lSDL_image
  
- TOOLS/vfw2menc$(EXESUF): TOOLS/vfw2menc.c -lwinmm -lole32
+-TOOLS/subrip$(EXESUF): vobsub.o spudec.o unrar_exec.o libvo/aclib.o \
+-    libswscale/libswscale.a libavutil/libavutil.a $(TEST_OBJS)
++TOOLS/subrip$(EXESUF): vobsub.o spudec.o unrar_exec.o $(TEST_OBJS) -lswscale
+ 
+ TOOLS/vfw2menc$(EXESUF): -lwinmm -lole32
  
