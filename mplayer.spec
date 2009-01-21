@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc2try2
-%define svnrev 26470
-%define ffmpeg_svnrev 12910
+%define svnrev 26706
+%define ffmpeg_svnrev 13104
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -79,7 +79,7 @@
 %def_enable xvid
 %def_enable x264
 %def_enable ffmpeg
-%def_enable shared_ffmpeg
+%def_disable shared_ffmpeg
 %def_disable faad_ext
 %def_enable faad_int
 %def_disable faad_fixed
@@ -281,7 +281,7 @@
 Name: %lname
 Version: 1.0
 %define rel 35
-%define subrel 2
+%define subrel 1
 %ifdef svnrev
 Release: alt%rel.%svnrev.%subrel
 %define pkgver svn-r%svnrev
@@ -321,7 +321,7 @@ Source5: %lname.conf.in
 Source6: mp_help2msg.awk.gz
 Source7: mp_msg2po.awk.gz
 Patch0: %lname-svn-r22221-subreader.patch
-Patch1: %lname-svn-r26470-dirac-0.9.1.patch
+Patch1: %lname-svn-r26706-dirac-0.9.1.patch
 Patch2: %lname-dvd-ru-svn19389.patch.gz
 Patch3: %Name-1.0pre4-alt-explicit_gif.patch
 Patch4: %lname-svn-r26450-gui.patch
@@ -330,16 +330,15 @@ Patch6: %lname-svn-r21128-alt-artsc_ldflags.patch.gz
 Patch7: %lname-svn-r23099-demux_nut.patch
 Patch8: %lname-svn-r23722-VIDM-win32-codec.patch
 Patch11: %lname-svn-r24081-nls.patch
-Patch12: %lname-uni-svn25678.patch
+Patch12: %lname-uni-svn26706.patch
 Patch13: %Name-svn-20060711-vbe.patch.gz
 Patch14: %lname-svn-r26450-gui_nls.patch
-Patch16: %lname-svn-r26450-configure.patch
-Patch17: %lname-svn-r26454-ext_ffmpeg.patch
+Patch16: %lname-svn-r26706-configure.patch
+Patch17: %lname-svn-r26706-ext_ffmpeg.patch
 Patch27: %lname-svn-r26450-builddocs.patch
 %if_disabled shared_ffmpeg
-%{?_enable_dirac:Patch31: ffmpeg-svn-r12807-dirac-0.9.x.patch}
 Patch32: ffmpeg-svn-r12807-xvmc-vld.patch
-Patch33: ffmpeg-svn-r12807-amr.patch
+Patch33: ffmpeg-svn-r13104-amr.patch
 %endif
 
 # Automatically added by buildreq on Wed May 30 2007
@@ -699,7 +698,6 @@ mv ffmpeg-svn-r%ffmpeg_svnrev/lib{av{codec,format,util},postproc} .
 %patch17 -p1
 %patch27 -p1
 %if_disabled shared_ffmpeg
-%patch31 -p1
 %patch32 -p1
 %patch33 -p1
 %endif
@@ -958,7 +956,6 @@ export CFLAGS="%optflags"
 		%{subst_enable_to dynamic_plugins dynamic-plugins} \
 		--with-extraincdir=%_includedir/vidix:%_includedir/directfb
 
-subst 's|^#\(CFLAGS .*\) -Isvgalib_helper/|\1|' vidix/Makefile
 %make_build
 
 # make conf file
@@ -974,11 +971,7 @@ echo "fontconfig = yes" >> etc/%lname.conf
 echo "fontconfig = no" >> etc/%lname.conf
 %endif
 
-%if_enabled mplayer
-%if_with tools
-%make_build -C TOOLS alaw-gen asfinfo avi-fix avisubdump bmovl-test dump_mp4 movinfo
-%endif
-%endif
+%{?_enable_mplayer:%{?_with_tools:%make_build tools}}
 
 %if_with htmldocs
 %ifdef svnrev
@@ -1258,8 +1251,16 @@ ln -sf %lname %buildroot%_bindir/g%lname
 
 
 %changelog
-* Sat Apr 19 2008 Led <led@altlinux.ru> 1.0-alt35.26470.2
-- build with external ffmpeg
+* Sat May 10 2008 Led <led@altlinux.ru> 1.0-alt35.26706.1
+- new SVN snapshot (revision 26706):
+  + BFI video decoder
+- removed ffmpeg-svn-r12807-dirac-0.9.x.patch (added in upstream)
+- updated:
+  + %lname-svn-r26706-ext_ffmpeg.patch (partially fixed in upstream)
+  + %lname-svn-r26706-configure.patch
+  + %lname-svn-r26706-dirac-0.9.1.patch
+  + %lname-uni-svn26706.patch
+  + ffmpeg-svn-r13104-amr.patch
 
 * Sat Apr 19 2008 Led <led@altlinux.ru> 1.0-alt35.26470.1
 - new SVN snapshot (revision 26470)

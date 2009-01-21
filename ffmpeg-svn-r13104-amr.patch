@@ -1,6 +1,6 @@
-diff -urN ffmpeg-svn-r12807.orig/libavcodec/libamr.c ffmpeg-svn-r12807/libavcodec/libamr.c
---- ffmpeg-svn-r12807.orig/libavcodec/libamr.c	2008-03-02 15:47:18 +0200
-+++ ffmpeg-svn-r12807/libavcodec/libamr.c	2008-04-14 02:38:43 +0300
+diff -urN ffmpeg-svn-r13104.orig/libavcodec/libamr.c ffmpeg-svn-r13104/libavcodec/libamr.c
+--- ffmpeg-svn-r13104.orig/libavcodec/libamr.c	2008-05-07 03:41:57 +0300
++++ ffmpeg-svn-r13104/libavcodec/libamr.c	2008-05-09 18:10:32 +0300
 @@ -65,6 +65,25 @@
  
  #include "avcodec.h"
@@ -71,7 +71,7 @@ diff -urN ffmpeg-svn-r12807.orig/libavcodec/libamr.c ffmpeg-svn-r12807/libavcode
      AMR_bitrates rates[]={ {4750,MR475},
                             {5150,MR515},
                             {5900,MR59},
-@@ -106,36 +142,26 @@
+@@ -106,36 +142,27 @@
                             {10200,MR102},
                             {12200,MR122},
                           };
@@ -81,13 +81,14 @@ diff -urN ffmpeg-svn-r12807.orig/libavcodec/libamr.c ffmpeg-svn-r12807/libavcode
      for(i=0;i<8;i++)
      {
 +#ifdef CONFIG_LIBAMRNBBIN
-+     if(rates[i]==bitrate)
-+     {
-+         return i;
++  if(rates[i]==bitrate)
++  {
++      return i;
 +#else
++
          if(rates[i].rate==bitrate)
          {
-             return(rates[i].mode);
+             return rates[i].mode;
 +#endif
          }
      }
@@ -115,7 +116,7 @@ diff -urN ffmpeg-svn-r12807.orig/libavcodec/libamr.c ffmpeg-svn-r12807/libavcode
  #ifdef CONFIG_LIBAMR_NB_FIXED
  /* fixed point version*/
  /* frame size in serial bitstream file (frame type + serial stream + flags) */
-@@ -172,7 +198,7 @@
+@@ -172,7 +199,7 @@
          return -1;
      }
  
@@ -124,7 +125,7 @@ diff -urN ffmpeg-svn-r12807.orig/libavcodec/libamr.c ffmpeg-svn-r12807/libavcode
  
      if(avctx->channels > 1)
      {
-@@ -359,13 +385,54 @@
+@@ -359,13 +386,54 @@
      void * decState;
      int *enstate;
      int enc_bitrate;
@@ -179,7 +180,7 @@ diff -urN ffmpeg-svn-r12807.orig/libavcodec/libamr.c ffmpeg-svn-r12807/libavcode
      s->decState=Decoder_Interface_init();
      if(!s->decState)
      {
-@@ -373,7 +440,7 @@
+@@ -373,7 +441,7 @@
          return -1;
      }
  
@@ -188,7 +189,7 @@ diff -urN ffmpeg-svn-r12807.orig/libavcodec/libamr.c ffmpeg-svn-r12807/libavcode
  
      if(avctx->channels > 1)
      {
-@@ -387,6 +454,9 @@
+@@ -387,6 +455,9 @@
  static int amr_nb_encode_init(AVCodecContext * avctx)
  {
      AMRContext *s = avctx->priv_data;
@@ -198,7 +199,7 @@ diff -urN ffmpeg-svn-r12807.orig/libavcodec/libamr.c ffmpeg-svn-r12807/libavcode
  
      s->frameCount=0;
  
-@@ -405,6 +475,25 @@
+@@ -405,6 +476,25 @@
      avctx->frame_size=160;
      avctx->coded_frame= avcodec_alloc_frame();
  
@@ -224,7 +225,7 @@ diff -urN ffmpeg-svn-r12807.orig/libavcodec/libamr.c ffmpeg-svn-r12807/libavcode
      s->enstate=Encoder_Interface_init(0);
      if(!s->enstate)
      {
-@@ -445,7 +534,11 @@
+@@ -445,7 +535,11 @@
      AMRContext *s = avctx->priv_data;
      uint8_t*amrData=buf;
      static const uint8_t block_size[16]={ 12, 13, 15, 17, 19, 20, 26, 31, 5, 0, 0, 0, 0, 0, 0, 0 };
@@ -236,7 +237,7 @@ diff -urN ffmpeg-svn-r12807.orig/libavcodec/libamr.c ffmpeg-svn-r12807/libavcode
      int packet_size;
  
      /* av_log(NULL,AV_LOG_DEBUG,"amr_decode_frame buf=%p buf_size=%d frameCount=%d!!\n",buf,buf_size,s->frameCount); */
-@@ -479,11 +572,7 @@
+@@ -479,11 +573,7 @@
          return -1;
      }
  
@@ -249,7 +250,7 @@ diff -urN ffmpeg-svn-r12807.orig/libavcodec/libamr.c ffmpeg-svn-r12807/libavcode
      /* av_log(NULL,AV_LOG_DEBUG,"amr_nb_encode_frame encoded %u bytes, bitrate %u, first byte was %#02x\n",written, s->enc_bitrate, frame[0] ); */
  
      return written;
-@@ -491,8 +580,6 @@
+@@ -491,8 +581,6 @@
  
  #endif
  
@@ -258,7 +259,7 @@ diff -urN ffmpeg-svn-r12807.orig/libavcodec/libamr.c ffmpeg-svn-r12807/libavcode
  AVCodec libamr_nb_decoder =
  {
      "libamr_nb",
-@@ -527,11 +614,26 @@
+@@ -529,11 +617,26 @@
  #define typedef_h
  #endif
  
@@ -286,7 +287,7 @@ diff -urN ffmpeg-svn-r12807.orig/libavcodec/libamr.c ffmpeg-svn-r12807/libavcode
  typedef struct AMRWB_bitrates
  {
      int rate;
-@@ -569,12 +671,32 @@
+@@ -571,12 +674,32 @@
      int frameCount;
      void *state;
      int mode;
@@ -319,7 +320,7 @@ diff -urN ffmpeg-svn-r12807.orig/libavcodec/libamr.c ffmpeg-svn-r12807/libavcode
  
      s->frameCount=0;
  
-@@ -599,6 +721,25 @@
+@@ -601,6 +724,25 @@
      avctx->frame_size=320;
      avctx->coded_frame= avcodec_alloc_frame();
  
@@ -345,7 +346,7 @@ diff -urN ffmpeg-svn-r12807.orig/libavcodec/libamr.c ffmpeg-svn-r12807/libavcode
      s->state = E_IF_init();
      s->allow_dtx=0;
  
-@@ -633,11 +774,34 @@
+@@ -635,11 +777,34 @@
  static int amr_wb_decode_init(AVCodecContext * avctx)
  {
      AMRWBContext *s = avctx->priv_data;
@@ -381,3 +382,13 @@ diff -urN ffmpeg-svn-r12807.orig/libavcodec/libamr.c ffmpeg-svn-r12807/libavcode
  
      if(avctx->channels > 1)
      {
+@@ -658,7 +823,9 @@
+     uint8_t*amrData=buf;
+     int mode;
+     int packet_size;
++#ifndef CONFIG_LIBAMRWBBIN
+     static const uint8_t block_size[16] = {18, 23, 33, 37, 41, 47, 51, 59, 61, 6, 6, 0, 0, 0, 1, 1};
++#endif
+ 
+     if(buf_size==0) {
+         /* nothing to do */

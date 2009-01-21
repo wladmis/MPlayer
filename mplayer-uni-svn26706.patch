@@ -1,6 +1,6 @@
-diff -urN mplayer-svn-r25678.orig/codec-cfg.c mplayer-svn-r25678/codec-cfg.c
---- mplayer-svn-r25678.orig/codec-cfg.c	2007-12-03 01:37:09 +0200
-+++ mplayer-svn-r25678/codec-cfg.c	2008-01-11 23:34:42 +0200
+diff -urN mplayer-svn-r26706.orig/codec-cfg.c mplayer-svn-r26706/codec-cfg.c
+--- mplayer-svn-r26706.orig/codec-cfg.c	2008-04-14 00:02:39 +0300
++++ mplayer-svn-r26706/codec-cfg.c	2008-05-09 21:08:51 +0300
 @@ -179,6 +179,7 @@
  		{"ZRMJPEGIT", IMGFMT_ZRMJPEGIT},
  		{"ZRMJPEGIB", IMGFMT_ZRMJPEGIB},
@@ -9,10 +9,10 @@ diff -urN mplayer-svn-r25678.orig/codec-cfg.c mplayer-svn-r25678/codec-cfg.c
  		{"IDCT_MPEG2",IMGFMT_XVMC_IDCT_MPEG2},
  		{"MOCO_MPEG2",IMGFMT_XVMC_MOCO_MPEG2},
  
-diff -urN mplayer-svn-r25678.orig/configure mplayer-svn-r25678/configure
---- mplayer-svn-r25678.orig/configure	2008-01-11 02:30:39 +0200
-+++ mplayer-svn-r25678/configure	2008-01-11 23:34:42 +0200
-@@ -443,7 +443,8 @@
+diff -urN mplayer-svn-r26706.orig/configure mplayer-svn-r26706/configure
+--- mplayer-svn-r26706.orig/configure	2008-05-09 17:57:36 +0300
++++ mplayer-svn-r26706/configure	2008-05-09 21:08:51 +0300
+@@ -445,7 +445,8 @@
    --extra-libs-mencoder=FLAGS extra linker flags for MEncoder
    --with-extraincdir=DIR      extra header search paths in DIR (*)
    --with-extralibdir=DIR      extra linker search paths in DIR (*)
@@ -22,7 +22,7 @@ diff -urN mplayer-svn-r25678.orig/configure mplayer-svn-r25678/configure
  
    --with-freetype-config=PATH path to freetype-config
    --with-fribidi-config=PATH  path to fribidi-config
-@@ -4002,34 +4003,98 @@
+@@ -3980,34 +3981,98 @@
  echores "$_xv"
  
  
@@ -43,7 +43,7 @@ diff -urN mplayer-svn-r25678.orig/configure mplayer-svn-r25678/configure
  #include <X11/extensions/Xvlib.h>
 -#include <X11/extensions/XvMClib.h>
 +#include <X11/extensions/$_xvmcinc>
- int main(void) { 
+ int main(void) {
    (void) XvMCQueryExtension(0,0,0);
    (void) XvMCCreateContext(0,0,0,0,0,0,0);
 -  return 0; }
@@ -144,7 +144,7 @@ diff -urN mplayer-svn-r25678.orig/configure mplayer-svn-r25678/configure
  
  
  echocheck "Xinerama"
-@@ -8500,6 +8565,7 @@
+@@ -8503,6 +8568,7 @@
  $_def_x11
  $_def_xv
  $_def_xvmc
@@ -152,10 +152,10 @@ diff -urN mplayer-svn-r25678.orig/configure mplayer-svn-r25678/configure
  $_def_vm
  $_def_xf86keysym
  $_def_xinerama
-diff -urN mplayer-svn-r25678.orig/etc/codecs.conf mplayer-svn-r25678/etc/codecs.conf
---- mplayer-svn-r25678.orig/etc/codecs.conf	2007-12-22 00:43:11 +0200
-+++ mplayer-svn-r25678/etc/codecs.conf	2008-01-11 23:34:42 +0200
-@@ -130,6 +130,7 @@
+diff -urN mplayer-svn-r26706.orig/etc/codecs.conf mplayer-svn-r26706/etc/codecs.conf
+--- mplayer-svn-r26706.orig/etc/codecs.conf	2008-05-07 03:43:55 +0300
++++ mplayer-svn-r26706/etc/codecs.conf	2008-05-09 21:08:51 +0300
+@@ -144,6 +144,7 @@
    fourcc MMES,mmes   ; matrox mpeg2 in avi
    driver ffmpeg
    dll "mpegvideo_xvmc"
@@ -163,10 +163,10 @@ diff -urN mplayer-svn-r25678.orig/etc/codecs.conf mplayer-svn-r25678/etc/codecs.
    out IDCT_MPEG2
    out MOCO_MPEG2
  
-diff -urN mplayer-svn-r25678.orig/help/help_mp-en.h mplayer-svn-r25678/help/help_mp-en.h
---- mplayer-svn-r25678.orig/help/help_mp-en.h	2008-01-11 02:30:38 +0200
-+++ mplayer-svn-r25678/help/help_mp-en.h	2008-01-11 23:34:42 +0200
-@@ -1652,6 +1652,7 @@
+diff -urN mplayer-svn-r26706.orig/help/help_mp-en.h mplayer-svn-r26706/help/help_mp-en.h
+--- mplayer-svn-r26706.orig/help/help_mp-en.h	2008-05-07 03:43:54 +0300
++++ mplayer-svn-r26706/help/help_mp-en.h	2008-05-09 21:08:51 +0300
+@@ -1653,6 +1653,7 @@
  #define MSGTR_MPCODECS_DRIFailure "[VD_FFMPEG] DRI failure.\n"
  #define MSGTR_MPCODECS_CouldntAllocateImageForCodec "[VD_FFMPEG] Couldn't allocate image for codec.\n"
  #define MSGTR_MPCODECS_XVMCAcceleratedMPEG2 "[VD_FFMPEG] XVMC-accelerated MPEG-2.\n"
@@ -174,9 +174,9 @@ diff -urN mplayer-svn-r25678.orig/help/help_mp-en.h mplayer-svn-r25678/help/help
  #define MSGTR_MPCODECS_TryingPixfmt "[VD_FFMPEG] Trying pixfmt=%d.\n"
  #define MSGTR_MPCODECS_McGetBufferShouldWorkOnlyWithXVMC "[VD_FFMPEG] The mc_get_buffer should work only with XVMC acceleration!!"
  #define MSGTR_MPCODECS_UnexpectedInitVoError "[VD_FFMPEG] Unexpected init_vo error.\n"
-diff -urN mplayer-svn-r25678.orig/libmpcodecs/img_format.c mplayer-svn-r25678/libmpcodecs/img_format.c
---- mplayer-svn-r25678.orig/libmpcodecs/img_format.c	2007-07-12 01:38:41 +0300
-+++ mplayer-svn-r25678/libmpcodecs/img_format.c	2008-01-11 23:34:42 +0200
+diff -urN mplayer-svn-r26706.orig/libmpcodecs/img_format.c mplayer-svn-r26706/libmpcodecs/img_format.c
+--- mplayer-svn-r26706.orig/libmpcodecs/img_format.c	2007-07-12 01:38:41 +0300
++++ mplayer-svn-r26706/libmpcodecs/img_format.c	2008-05-09 21:08:51 +0300
 @@ -67,6 +67,7 @@
  	case IMGFMT_ZRMJPEGIB: return("Zoran MJPEG bottom field first");
  	case IMGFMT_XVMC_MOCO_MPEG2: return("MPEG1/2 Motion Compensation");
@@ -185,10 +185,10 @@ diff -urN mplayer-svn-r25678.orig/libmpcodecs/img_format.c mplayer-svn-r25678/li
      }
      snprintf(unknow_format,20,"Unknown 0x%04x",format);
      return unknow_format;
-diff -urN mplayer-svn-r25678.orig/libmpcodecs/img_format.h mplayer-svn-r25678/libmpcodecs/img_format.h
---- mplayer-svn-r25678.orig/libmpcodecs/img_format.h	2008-01-11 02:30:34 +0200
-+++ mplayer-svn-r25678/libmpcodecs/img_format.h	2008-01-11 23:34:42 +0200
-@@ -107,6 +107,7 @@
+diff -urN mplayer-svn-r26706.orig/libmpcodecs/img_format.h mplayer-svn-r26706/libmpcodecs/img_format.h
+--- mplayer-svn-r26706.orig/libmpcodecs/img_format.h	2008-02-23 00:42:53 +0200
++++ mplayer-svn-r26706/libmpcodecs/img_format.h	2008-05-09 21:08:51 +0300
+@@ -106,6 +106,7 @@
  //these are chroma420
  #define IMGFMT_XVMC_MOCO_MPEG2 (IMGFMT_XVMC|0x02)
  #define IMGFMT_XVMC_IDCT_MPEG2 (IMGFMT_XVMC|0x82)
@@ -196,9 +196,9 @@ diff -urN mplayer-svn-r25678.orig/libmpcodecs/img_format.h mplayer-svn-r25678/li
  
  typedef struct {
      void* data;
-diff -urN mplayer-svn-r25678.orig/libmpcodecs/vd_ffmpeg.c mplayer-svn-r25678/libmpcodecs/vd_ffmpeg.c
---- mplayer-svn-r25678.orig/libmpcodecs/vd_ffmpeg.c	2007-12-03 01:37:09 +0200
-+++ mplayer-svn-r25678/libmpcodecs/vd_ffmpeg.c	2008-01-11 23:43:18 +0200
+diff -urN mplayer-svn-r26706.orig/libmpcodecs/vd_ffmpeg.c mplayer-svn-r26706/libmpcodecs/vd_ffmpeg.c
+--- mplayer-svn-r26706.orig/libmpcodecs/vd_ffmpeg.c	2008-04-14 00:02:35 +0300
++++ mplayer-svn-r26706/libmpcodecs/vd_ffmpeg.c	2008-05-09 21:08:51 +0300
 @@ -12,6 +12,7 @@
  #include "mpbswap.h"
  
@@ -207,7 +207,7 @@ diff -urN mplayer-svn-r25678.orig/libmpcodecs/vd_ffmpeg.c mplayer-svn-r25678/lib
  
  static vd_info_t info = {
  	"FFmpeg's libavcodec codec family",
-@@ -155,6 +156,8 @@
+@@ -151,6 +152,8 @@
          case IMGFMT_XVMC_IDCT_MPEG2:
          case IMGFMT_XVMC_MOCO_MPEG2:
              if(avctx->pix_fmt==PIX_FMT_XVMC_MPEG2_IDCT) return CONTROL_TRUE;
@@ -216,7 +216,7 @@ diff -urN mplayer-svn-r25678.orig/libmpcodecs/vd_ffmpeg.c mplayer-svn-r25678/lib
  #endif
  	}
          return CONTROL_FALSE;
-@@ -225,6 +228,9 @@
+@@ -221,6 +224,9 @@
      vd_ffmpeg_ctx *ctx;
      AVCodec *lavc_codec;
      int lowres_w=0;
@@ -225,8 +225,8 @@ diff -urN mplayer-svn-r25678.orig/libmpcodecs/vd_ffmpeg.c mplayer-svn-r25678/lib
 +#endif
      int do_vis_debug= lavc_param_vismv || (lavc_param_debug&(FF_DEBUG_VIS_MB_TYPE|FF_DEBUG_VIS_QP));
  
-     if(!avcodec_inited){
-@@ -261,10 +267,11 @@
+     if(!avcodec_initialized){
+@@ -257,10 +263,11 @@
  #ifdef HAVE_XVMC
  
  #ifdef CODEC_CAP_HWACCEL
@@ -240,7 +240,7 @@ diff -urN mplayer-svn-r25678.orig/libmpcodecs/vd_ffmpeg.c mplayer-svn-r25678/lib
          mp_msg(MSGT_DECVIDEO, MSGL_INFO, MSGTR_MPCODECS_XVMCAcceleratedCodec);
          assert(ctx->do_dr1);//these are must to!
          assert(ctx->do_slices); //it is (vo_)ffmpeg bug if this fails
-@@ -535,6 +542,7 @@
+@@ -531,6 +538,7 @@
  #ifdef HAVE_XVMC
          case PIX_FMT_XVMC_MPEG2_MC:ctx->best_csp=IMGFMT_XVMC_MOCO_MPEG2;break;
          case PIX_FMT_XVMC_MPEG2_IDCT:ctx->best_csp=IMGFMT_XVMC_IDCT_MPEG2;break;
@@ -248,7 +248,7 @@ diff -urN mplayer-svn-r25678.orig/libmpcodecs/vd_ffmpeg.c mplayer-svn-r25678/lib
  #endif
  	default:
  	    ctx->best_csp=0;
-@@ -919,7 +927,11 @@
+@@ -915,7 +923,11 @@
          avctx->get_buffer= mc_get_buffer;
          avctx->release_buffer= mc_release_buffer;
          avctx->draw_horiz_band = mc_render_slice;
@@ -260,9 +260,9 @@ diff -urN mplayer-svn-r25678.orig/libmpcodecs/vd_ffmpeg.c mplayer-svn-r25678/lib
          assert(ctx->do_dr1);//these are must to!
          assert(ctx->do_slices); //it is (vo_)ffmpeg bug if this fails
          avctx->flags|= CODEC_FLAG_EMU_EDGE;//do i need that??!!
-diff -urN mplayer-svn-r25678.orig/libvo/vo_xvmc.c mplayer-svn-r25678/libvo/vo_xvmc.c
---- mplayer-svn-r25678.orig/libvo/vo_xvmc.c	2007-12-02 17:50:50 +0200
-+++ mplayer-svn-r25678/libvo/vo_xvmc.c	2008-01-11 23:34:42 +0200
+diff -urN mplayer-svn-r26706.orig/libvo/vo_xvmc.c mplayer-svn-r26706/libvo/vo_xvmc.c
+--- mplayer-svn-r26706.orig/libvo/vo_xvmc.c	2007-12-02 17:50:50 +0200
++++ mplayer-svn-r26706/libvo/vo_xvmc.c	2008-05-09 21:08:51 +0300
 @@ -23,6 +23,14 @@
  #include <X11/extensions/Xvlib.h>
  #include <X11/extensions/XvMClib.h>
@@ -546,23 +546,23 @@ diff -urN mplayer-svn-r25678.orig/libvo/vo_xvmc.c mplayer-svn-r25678/libvo/vo_xv
     mpi->priv =
     mpi->planes[2] = (char*)rndr;
  
-diff -urN mplayer-svn-r25678.orig/Makefile mplayer-svn-r25678/Makefile
---- mplayer-svn-r25678.orig/Makefile	2008-01-11 02:30:39 +0200
-+++ mplayer-svn-r25678/Makefile	2008-01-11 23:34:42 +0200
-@@ -345,6 +345,9 @@
- else
- 	iconv -f UTF-8 -t $(CHARSET) "$(HELP_FILE)" >> help_mp.h
+diff -urN mplayer-svn-r26706.orig/Makefile mplayer-svn-r26706/Makefile
+--- mplayer-svn-r26706.orig/Makefile	2008-05-09 17:57:36 +0300
++++ mplayer-svn-r26706/Makefile	2008-05-09 21:08:51 +0300
+@@ -739,6 +739,9 @@
+ 	@echo '// untranslated messages from the English master file:' >> help_mp.h
+ 	@help/help_diff.sh $(HELP_FILE) < help/help_mp-en.h >> help_mp.h
  endif
 +ifeq ($(HAVE_XVMC_ACCEL),yes)
 +CODEC_LIBS += $(X_LIB)
 +endif
  
- ifneq ($(HELP_FILE),help/help_mp-en.h)
- 	@echo "Adding untranslated messages to help_mp.h"
-diff -urN mplayer-svn-r25678.orig/mplayer.c mplayer-svn-r25678/mplayer.c
---- mplayer-svn-r25678.orig/mplayer.c	2008-01-11 02:30:39 +0200
-+++ mplayer-svn-r25678/mplayer.c	2008-01-11 23:34:42 +0200
-@@ -85,6 +85,8 @@
+ define RECURSIVE_RULE
+ $(part)/$(part).a: recurse
+diff -urN mplayer-svn-r26706.orig/mplayer.c mplayer-svn-r26706/mplayer.c
+--- mplayer-svn-r26706.orig/mplayer.c	2008-05-07 03:43:55 +0300
++++ mplayer-svn-r26706/mplayer.c	2008-05-09 21:08:51 +0300
+@@ -87,6 +87,8 @@
  int quiet=0;
  int enable_mouse_movements=0;
  
@@ -571,7 +571,7 @@ diff -urN mplayer-svn-r25678.orig/mplayer.c mplayer-svn-r25678/mplayer.c
  #ifdef WIN32
  char * proc_priority=NULL;
  #endif
-@@ -1973,6 +1975,11 @@
+@@ -2144,6 +2146,11 @@
  
      //shouldn't we set dvideo->id=-2 when we fail?
      vo_config_count=0;
@@ -583,9 +583,9 @@ diff -urN mplayer-svn-r25678.orig/mplayer.c mplayer-svn-r25678/mplayer.c
      //if((mpctx->video_out->preinit(vo_subdevice))!=0){
      if(!(mpctx->video_out=init_best_video_out(video_driver_list))){
        mp_msg(MSGT_CPLAYER,MSGL_FATAL,MSGTR_ErrorInitializingVODevice);
-diff -urN mplayer-svn-r25678.orig/xvmc_render.h mplayer-svn-r25678/xvmc_render.h
---- mplayer-svn-r25678.orig/xvmc_render.h	2008-01-11 02:30:39 +0200
-+++ mplayer-svn-r25678/xvmc_render.h	2008-01-11 23:34:42 +0200
+diff -urN mplayer-svn-r26706.orig/xvmc_render.h mplayer-svn-r26706/xvmc_render.h
+--- mplayer-svn-r26706.orig/xvmc_render.h	2008-02-23 00:42:57 +0200
++++ mplayer-svn-r26706/xvmc_render.h	2008-05-09 21:08:51 +0300
 @@ -8,6 +8,9 @@
  #include <X11/extensions/Xvlib.h>
  #include <X11/extensions/XvMClib.h>

@@ -1,0 +1,148 @@
+diff -urN mplayer-svn-r26706.orig/configure mplayer-svn-r26706/configure
+--- mplayer-svn-r26706.orig/configure	2008-05-09 17:57:36 +0300
++++ mplayer-svn-r26706/configure	2008-05-10 01:31:20 +0300
+@@ -294,10 +294,12 @@
+   --disable-libavcodec_a    disable static libavcodec [autodetect]
+   --disable-libavformat_a   disable static libavformat [autodetect]
+   --disable-libpostproc_a   disable static libpostproc [autodetect]
++  --disable-libswscale_a    disable static libswscale [autodetect]
+   --disable-libavutil_so    disable shared libavutil [autodetect]
+   --disable-libavcodec_so   disable shared libavcodec [autodetect]
+   --disable-libavformat_so  disable shared libavformat [autodetect]
+   --disable-libpostproc_so  disable shared libpostproc [autodetect]
++  --disable-libswscale_so   disable shared libswscale [autodetect]
+   --disable-libavcodec_mpegaudio_hp disable high precision audio decoding
+                                     in libavcodec [enabled]
+   --disable-tremor-internal disable internal Tremor [enabled]
+@@ -513,6 +515,8 @@
+ _libavformat_so=auto
+ _libpostproc_a=auto
+ _libpostproc_so=auto
++_libswscale_a=auto
++_libswscale_so=auto
+ _libavcodec_mpegaudio_hp=yes
+ _mencoder=yes
+ _mplayer=yes
+@@ -1064,6 +1068,10 @@
+   --disable-libpostproc_a)	_libpostproc_a=no	;;
+   --enable-libpostproc_so)	_libpostproc_so=yes	;;
+   --disable-libpostproc_so)	_libpostproc_so=no	;;
++  --enable-libswscale_a)	_libswscale_a=yes	;;
++  --disable-libswscale_a)	_libswscale_a=no	;;
++  --enable-libswscale_so)	_libswscale_so=yes	;;
++  --disable-libswscale_so)	_libswscale_so=no	;;
+   --enable-libavcodec_mpegaudio_hp)	_libavcodec_mpegaudio_hp=yes	;;
+   --disable-libavcodec_mpegaudio_hp)	_libavcodec_mpegaudio_hp=no	;;
+ 
+@@ -6226,6 +6234,45 @@
+ fi
+ echores "$_real"
+ 
++echocheck "FFmpeg libswscale"
++if test "$_libswscale_a" = auto ; then
++  if test -d libswascale ; then
++    _libswscale_a=yes
++    _res_comment="static"
++  else
++    die "MPlayer will not compile without libswscale in the source tree."
++  fi
++elif test "$_libswscale_so" != no ; then
++  _libswscale_so=no
++  cat > $TMPC << EOF
++#include <ffmpeg/swscale.h>
++int main(void) { sws_getIdentityVec(); return 0; }
++EOF
++  if $_pkg_config --exists libswscale ; then
++    _inc_libswscale=`$_pkg_config --cflags libswscale`
++    _ld_tmp=`$_pkg_config --libs libswscale`
++    cc_check $_inc_libswscale $_ld_tmp && _ld_extra="$_ld_extra $_ld_tmp" \
++      && _libswscale_so=yes
++  elif cc_check -lswscale $_ld_lm ; then
++    _ld_extra="$_ld_extra -lswscale"
++    _libswscale_so=yes
++    _res_comment="using libswscale.so, but static libswscale is recommended"
++  fi
++fi
++_libswscale=no
++_def_libswscale='#undef USE_LIBSWSCALE'
++_def_libswscale_a='#undef USE_LIBSWSCALE_A'
++_def_libswscale_so='#undef USE_LIBSWSCALE_SO'
++test "$_libswscale_a" = yes || test "$_libswscale_so" = yes && _libswscale=yes
++test "$_libswscale"    = yes && _def_libswscale='#define USE_LIBSWSCALE 1'
++test "$_libswscale_a"  = yes && _def_libswscale_a='#define USE_LIBSWSCALE_A 1'
++test "$_libswscale_so" = yes && _def_libswscale_so='#define USE_LIBSWSCALE_SO 1'
++# neither static nor shared libswscale is available, but it is mandatory ...
++if test "$_libswscale" = no ; then
++  die "You need static or shared libswscale, MPlayer will not compile without!"
++fi
++echores "$_libswscale"
++
+ 
+ echocheck "QuickTime codecs"
+ _qtx_emulation=no
+@@ -7771,6 +7818,10 @@
+ LIBPOSTPROC = $_libpostproc
+ LIBPOSTPROC_A = $_libpostproc_a
+ LIBPOSTPROC_SO = $_libpostproc_so
++LIBSWSCALE = $_libswscale
++LIBSWSCALE_A = $_libswscale_a
++LIBSWSCALE_SO = $_libswscale_so
++CONFIG_SWSCALE = $_libswscale
+ 
+ BUILD_STATIC=yes
+ SRC_PATH=..
+@@ -8109,6 +8160,10 @@
+ $_def_libpostproc_a
+ $_def_libpostproc_so
+ 
++$_def_libswscale
++$_def_libswscale_a
++$_def_libswscale_so
++
+ /* Win32 DLL support */
+ $_def_win32dll
+ #define WIN32_PATH "$_win32codecsdir"
+diff -urN mplayer-svn-r26706.orig/libmpcodecs/vd_ffmpeg.c mplayer-svn-r26706/libmpcodecs/vd_ffmpeg.c
+--- mplayer-svn-r26706.orig/libmpcodecs/vd_ffmpeg.c	2008-04-14 00:02:35 +0300
++++ mplayer-svn-r26706/libmpcodecs/vd_ffmpeg.c	2008-05-10 01:31:20 +0300
+@@ -8,6 +8,7 @@
+ #include "help_mp.h"
+ 
+ #include "libavutil/common.h"
++#include "libavutil/avutil.h"
+ #include "libavutil/intreadwrite.h"
+ #include "mpbswap.h"
+ 
+diff -urN mplayer-svn-r26706.orig/libmpdemux/demux_lavf.c mplayer-svn-r26706/libmpdemux/demux_lavf.c
+--- mplayer-svn-r26706.orig/libmpdemux/demux_lavf.c	2008-04-19 22:33:09 +0300
++++ mplayer-svn-r26706/libmpdemux/demux_lavf.c	2008-05-10 01:31:20 +0300
+@@ -33,7 +33,6 @@
+ 
+ #include "libavformat/avformat.h"
+ #include "libavutil/avutil.h"
+-#include "libavformat/avi.h"
+ #include "libavcodec/opt.h"
+ #include "libavformat/riff.h"
+ 
+diff -urN mplayer-svn-r26706.orig/Makefile mplayer-svn-r26706/Makefile
+--- mplayer-svn-r26706.orig/Makefile	2008-05-09 17:57:36 +0300
++++ mplayer-svn-r26706/Makefile	2008-05-10 01:34:22 +0300
+@@ -617,7 +617,7 @@
+ COMMON_LIBS-$(LIBAVCODEC_A)       += libavcodec/libavcodec.a
+ COMMON_LIBS-$(LIBAVUTIL_A)        += libavutil/libavutil.a
+ COMMON_LIBS-$(LIBPOSTPROC_A)      += libpostproc/libpostproc.a
+-COMMON_LIBS  = libswscale/libswscale.a
++COMMON_LIBS-$(LIBSWSCALE_A)       += libswscale/libswscale.a
+ COMMON_LIBS += $(COMMON_LIBS-yes)
+ 
+ OBJS_COMMON    += $(addsuffix .o, $(basename $(SRCS_COMMON)))
+@@ -930,8 +930,7 @@
+ TOOLS/bmovl-test$(EXESUF): TOOLS/bmovl-test.c -lSDL_image
+ 
+ TOOLS/subrip$(EXESUF): TOOLS/subrip.c vobsub.o spudec.o unrar_exec.o \
+-  libvo/aclib.o libswscale/libswscale.a libavutil/libavutil.a \
+-  $(TEST_OBJS)
++  $(TEST_OBJS) -lswscale
+ 
+ TOOLS/vfw2menc$(EXESUF): TOOLS/vfw2menc.c -lwinmm -lole32
+ 

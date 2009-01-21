@@ -1,33 +1,33 @@
-diff -urN mplayer-svn-r26470.orig/configure mplayer-svn-r26470/configure
---- mplayer-svn-r26470.orig/configure	2008-04-14 00:02:39 +0300
-+++ mplayer-svn-r26470/configure	2008-04-19 22:37:42 +0300
-@@ -308,6 +308,7 @@
-   --disable-faad-internal   disable internal FAAD2 (AAC) [autodetect]
+diff -urN mplayer-svn-r26706.orig/configure mplayer-svn-r26706/configure
+--- mplayer-svn-r26706.orig/configure	2008-05-09 17:57:36 +0300
++++ mplayer-svn-r26706/configure	2008-05-09 20:56:28 +0300
+@@ -311,6 +311,7 @@
    --enable-faad-fixed       enable fixed-point mode in internal FAAD2 [disabled]
    --disable-faac            disable support for FAAC (AAC encoder) [autodetect]
-+  --disable-dirac            disable libdirac support [autodetect] 
+   --disable-faac-lavc       disable support for FAAC in libavcodec [autodetect]
++  --disable-dirac            disable libdirac support [autodetect]
    --disable-ladspa          disable LADSPA plugin support [autodetect]
    --disable-libdv           disable libdv 0.9.5 en/decoding support [autodetect]
    --disable-mad             disable libmad (MPEG audio) support [autodetect]
-@@ -572,6 +573,7 @@
- _faad_external=auto
+@@ -577,6 +578,7 @@
  _faad_fixed=no
  _faac=auto
+ _faac_lavc=auto
 +_dirac=auto
  _ladspa=auto
  _xmms=no
  _dvdnav=auto
-@@ -929,6 +931,8 @@
-   --disable-faad-fixed)	_faad_fixed=no	;;
+@@ -943,6 +945,8 @@
    --enable-faac)	_faac=yes	;;
    --disable-faac)	_faac=no	;;
-+  --enable-dirac)       _dirac=yes ;;
-+  --disable-dirac)      _dirac=no ;;
+   --enable-faac-lavc)	_faac_lavc=yes	;;
++  --enable-dirac)	_dirac=yes	;;
++  --disable-dirac)	_dirac=no	;;
+   --disable-faac-lavc)	_faac_lavc=no	;;
    --enable-ladspa)	_ladspa=yes	;;
    --disable-ladspa)	_ladspa=no		;;
-   --enable-xmms)	_xmms=yes	;;
-@@ -6131,6 +6135,58 @@
- echores "$_faac (in libavcodec: $_lavc_faac)"
+@@ -6061,6 +6065,58 @@
+ echores "$_faac"
  
  
 +echocheck "Dirac support (version 0.8.x!)"
@@ -85,7 +85,7 @@ diff -urN mplayer-svn-r26470.orig/configure mplayer-svn-r26470/configure
  echocheck "FAAD2 (AAC) support"
  if test "$_faad_internal" = auto ; then
    if x86_32 && test cc_vendor=gnu; then
-@@ -7813,6 +7869,7 @@
+@@ -7741,6 +7797,7 @@
  VIDIX_S3=$_vidix_drv_s3
  VIDIX_SIS=$_vidix_drv_sis
  VIDIX_UNICHROME=$_vidix_drv_unichrome
@@ -93,15 +93,15 @@ diff -urN mplayer-svn-r26470.orig/configure mplayer-svn-r26470/configure
  
  # --- Some stuff for autoconfigure ----
  $_target_arch
-@@ -7868,6 +7925,7 @@
+@@ -7786,6 +7843,7 @@
  CONFIG_LIBAMR_NB=$_libamr_nb
  CONFIG_LIBAMR_WB=$_libamr_wb
- CONFIG_LIBFAAC=$_lavc_faac
+ CONFIG_LIBFAAC=$_faac_lavc
 +CONFIG_LIBDIRAC=$_dirac
- CONFIG_LIBMP3LAME=$_lavc_mp3lame
+ CONFIG_LIBMP3LAME=$_mp3lame_lavc
  CONFIG_LIBVORBIS=$_libvorbis
- CONFIG_LIBX264=$_lavc_x264
-@@ -8512,6 +8570,9 @@
+ CONFIG_LIBX264=$_x264_lavc
+@@ -8431,6 +8489,9 @@
  /* enable libdca support */
  $_def_libdca
  
@@ -111,10 +111,10 @@ diff -urN mplayer-svn-r26470.orig/configure mplayer-svn-r26470/configure
  /* enable LADSPA plugin support */
  $_def_ladspa
  
-diff -urN mplayer-svn-r26470.orig/etc/codecs.conf mplayer-svn-r26470/etc/codecs.conf
---- mplayer-svn-r26470.orig/etc/codecs.conf	2008-04-14 00:02:39 +0300
-+++ mplayer-svn-r26470/etc/codecs.conf	2008-04-19 22:37:43 +0300
-@@ -354,6 +354,16 @@
+diff -urN mplayer-svn-r26706.orig/etc/codecs.conf mplayer-svn-r26706/etc/codecs.conf
+--- mplayer-svn-r26706.orig/etc/codecs.conf	2008-05-07 03:43:55 +0300
++++ mplayer-svn-r26706/etc/codecs.conf	2008-05-09 20:54:05 +0300
+@@ -358,6 +358,16 @@
    dll libtheora
    out YV12
  
@@ -131,7 +131,7 @@ diff -urN mplayer-svn-r26470.orig/etc/codecs.conf mplayer-svn-r26470/etc/codecs.
  ; prefer native codecs over win32?
  ; the win32 codecs probably are (better) optimized and support direct
  ; rendering, so this may be not the best idea...
-@@ -466,6 +476,14 @@
+@@ -478,6 +488,14 @@
    dll snow
    out YV12
  
@@ -146,20 +146,9 @@ diff -urN mplayer-svn-r26470.orig/etc/codecs.conf mplayer-svn-r26470/etc/codecs.
  videocodec ffasv1
    info "FFmpeg ASUS V1"
    status working
-diff -urN mplayer-svn-r26470.orig/libmpcodecs/Makefile mplayer-svn-r26470/libmpcodecs/Makefile
---- mplayer-svn-r26470.orig/libmpcodecs/Makefile	2008-04-14 00:02:35 +0300
-+++ mplayer-svn-r26470/libmpcodecs/Makefile	2008-04-19 22:37:43 +0300
-@@ -127,6 +127,7 @@
- SRCS_COMMON-$(XANIM_CODECS)          += vd_xanim.c
- SRCS_COMMON-$(XVID4)                 += vd_xvid4.c
- SRCS_COMMON-$(ZORAN)                 += vd_zrmjpeg.c vf_zrmjpeg.c
-+SRCS_COMMON-$(LIBDIRAC)              += vd_dirac.c
- 
- 
- SRCS_MENCODER = ae.c \
-diff -urN mplayer-svn-r26470.orig/libmpcodecs/vd.c mplayer-svn-r26470/libmpcodecs/vd.c
---- mplayer-svn-r26470.orig/libmpcodecs/vd.c	2008-03-17 00:11:15 +0200
-+++ mplayer-svn-r26470/libmpcodecs/vd.c	2008-04-19 22:37:43 +0300
+diff -urN mplayer-svn-r26706.orig/libmpcodecs/vd.c mplayer-svn-r26706/libmpcodecs/vd.c
+--- mplayer-svn-r26706.orig/libmpcodecs/vd.c	2008-03-17 00:11:15 +0200
++++ mplayer-svn-r26706/libmpcodecs/vd.c	2008-05-09 20:54:11 +0300
 @@ -48,6 +48,7 @@
  extern vd_functions_t mpcodecs_vd_libdv;
  extern vd_functions_t mpcodecs_vd_lzo;
@@ -178,9 +167,9 @@ diff -urN mplayer-svn-r26470.orig/libmpcodecs/vd.c mplayer-svn-r26470/libmpcodec
      /* Please do not add any new decoders here. If you want to implement a new
       * decoder, add it to libavcodec, except for wrappers around external
       * libraries and decoders requiring binary support. */
-diff -urN mplayer-svn-r26470.orig/libmpcodecs/vd_dirac.c mplayer-svn-r26470/libmpcodecs/vd_dirac.c
---- mplayer-svn-r26470.orig/libmpcodecs/vd_dirac.c	1970-01-01 03:00:00 +0300
-+++ mplayer-svn-r26470/libmpcodecs/vd_dirac.c	2008-04-19 22:37:43 +0300
+diff -urN mplayer-svn-r26706.orig/libmpcodecs/vd_dirac.c mplayer-svn-r26706/libmpcodecs/vd_dirac.c
+--- mplayer-svn-r26706.orig/libmpcodecs/vd_dirac.c	1970-01-01 03:00:00 +0300
++++ mplayer-svn-r26706/libmpcodecs/vd_dirac.c	2008-05-09 20:54:11 +0300
 @@ -0,0 +1,176 @@
 +#include <stdio.h>
 +#include <stdlib.h>
@@ -358,9 +347,9 @@ diff -urN mplayer-svn-r26470.orig/libmpcodecs/vd_dirac.c mplayer-svn-r26470/libm
 +}
 +
 +#endif
-diff -urN mplayer-svn-r26470.orig/libmpdemux/demux_dirac.c mplayer-svn-r26470/libmpdemux/demux_dirac.c
---- mplayer-svn-r26470.orig/libmpdemux/demux_dirac.c	1970-01-01 03:00:00 +0300
-+++ mplayer-svn-r26470/libmpdemux/demux_dirac.c	2008-04-19 22:37:43 +0300
+diff -urN mplayer-svn-r26706.orig/libmpdemux/demux_dirac.c mplayer-svn-r26706/libmpdemux/demux_dirac.c
+--- mplayer-svn-r26706.orig/libmpdemux/demux_dirac.c	1970-01-01 03:00:00 +0300
++++ mplayer-svn-r26706/libmpdemux/demux_dirac.c	2008-05-09 20:54:11 +0300
 @@ -0,0 +1,170 @@
 +#include <stdio.h>
 +#include <stdlib.h>
@@ -532,9 +521,9 @@ diff -urN mplayer-svn-r26470.orig/libmpdemux/demux_dirac.c mplayer-svn-r26470/li
 +	NULL
 +};
 +#endif
-diff -urN mplayer-svn-r26470.orig/libmpdemux/demuxer.c mplayer-svn-r26470/libmpdemux/demuxer.c
---- mplayer-svn-r26470.orig/libmpdemux/demuxer.c	2008-04-19 22:33:09 +0300
-+++ mplayer-svn-r26470/libmpdemux/demuxer.c	2008-04-19 22:38:18 +0300
+diff -urN mplayer-svn-r26706.orig/libmpdemux/demuxer.c mplayer-svn-r26706/libmpdemux/demuxer.c
+--- mplayer-svn-r26706.orig/libmpdemux/demuxer.c	2008-04-19 22:33:09 +0300
++++ mplayer-svn-r26706/libmpdemux/demuxer.c	2008-05-09 20:54:11 +0300
 @@ -73,6 +73,7 @@
  extern const demuxer_desc_t demuxer_desc_lavf_preferred;
  extern const demuxer_desc_t demuxer_desc_aac;
@@ -553,9 +542,9 @@ diff -urN mplayer-svn-r26470.orig/libmpdemux/demuxer.c mplayer-svn-r26470/libmpd
    /* Please do not add any new demuxers here. If you want to implement a new
     * demuxer, add it to libavformat, except for wrappers around external
     * libraries and demuxers requiring binary support. */
-diff -urN mplayer-svn-r26470.orig/libmpdemux/demuxer.h mplayer-svn-r26470/libmpdemux/demuxer.h
---- mplayer-svn-r26470.orig/libmpdemux/demuxer.h	2008-04-14 00:02:38 +0300
-+++ mplayer-svn-r26470/libmpdemux/demuxer.h	2008-04-19 22:37:43 +0300
+diff -urN mplayer-svn-r26706.orig/libmpdemux/demuxer.h mplayer-svn-r26706/libmpdemux/demuxer.h
+--- mplayer-svn-r26706.orig/libmpdemux/demuxer.h	2008-04-14 00:02:38 +0300
++++ mplayer-svn-r26706/libmpdemux/demuxer.h	2008-05-09 20:54:11 +0300
 @@ -62,11 +62,12 @@
  #define DEMUXER_TYPE_NUT 43
  #define DEMUXER_TYPE_LAVF_PREFERRED 44
@@ -570,9 +559,9 @@ diff -urN mplayer-svn-r26470.orig/libmpdemux/demuxer.h mplayer-svn-r26470/libmpd
  
  #define DEMUXER_TYPE_DEMUXERS (1<<16)
  // A virtual demuxer type for the network code
-diff -urN mplayer-svn-r26470.orig/libmpdemux/extension.c mplayer-svn-r26470/libmpdemux/extension.c
---- mplayer-svn-r26470.orig/libmpdemux/extension.c	2007-09-15 00:53:49 +0300
-+++ mplayer-svn-r26470/libmpdemux/extension.c	2008-04-19 22:37:43 +0300
+diff -urN mplayer-svn-r26706.orig/libmpdemux/extension.c mplayer-svn-r26706/libmpdemux/extension.c
+--- mplayer-svn-r26706.orig/libmpdemux/extension.c	2007-09-15 00:53:49 +0300
++++ mplayer-svn-r26706/libmpdemux/extension.c	2008-05-09 20:54:11 +0300
 @@ -62,6 +62,7 @@
          { "ape", DEMUXER_TYPE_LAVF },
          { "apl", DEMUXER_TYPE_LAVF },
@@ -581,20 +570,9 @@ diff -urN mplayer-svn-r26470.orig/libmpdemux/extension.c mplayer-svn-r26470/libm
  
  // At least the following are hacks against broken autodetection
  // that should not be there
-diff -urN mplayer-svn-r26470.orig/libmpdemux/Makefile mplayer-svn-r26470/libmpdemux/Makefile
---- mplayer-svn-r26470.orig/libmpdemux/Makefile	2008-04-14 00:02:38 +0300
-+++ mplayer-svn-r26470/libmpdemux/Makefile	2008-04-19 22:37:43 +0300
-@@ -57,6 +57,7 @@
- SRCS_COMMON-$(STREAMING_LIVE555)       += demux_rtp.cpp demux_rtp_codec.cpp
- SRCS_COMMON-$(WIN32DLL)                += demux_avs.c
- SRCS_COMMON-$(XMMS_PLUGINS)            += demux_xmms.c
-+SRCS_COMMON-$(LIBDIRAC)                += demux_dirac.c parse_dirac.c
- 
- SRCS_MENCODER = muxer.c \
-                 muxer_avi.c \
-diff -urN mplayer-svn-r26470.orig/libmpdemux/parse_dirac.c mplayer-svn-r26470/libmpdemux/parse_dirac.c
---- mplayer-svn-r26470.orig/libmpdemux/parse_dirac.c	1970-01-01 03:00:00 +0300
-+++ mplayer-svn-r26470/libmpdemux/parse_dirac.c	2008-04-19 22:37:43 +0300
+diff -urN mplayer-svn-r26706.orig/libmpdemux/parse_dirac.c mplayer-svn-r26706/libmpdemux/parse_dirac.c
+--- mplayer-svn-r26706.orig/libmpdemux/parse_dirac.c	1970-01-01 03:00:00 +0300
++++ mplayer-svn-r26706/libmpdemux/parse_dirac.c	2008-05-09 20:54:12 +0300
 @@ -0,0 +1,162 @@
 +#include <stdio.h>
 +#include <stdlib.h>
@@ -758,9 +736,9 @@ diff -urN mplayer-svn-r26470.orig/libmpdemux/parse_dirac.c mplayer-svn-r26470/li
 +{
 +	return 0;
 +}
-diff -urN mplayer-svn-r26470.orig/libmpdemux/parse_dirac.h mplayer-svn-r26470/libmpdemux/parse_dirac.h
---- mplayer-svn-r26470.orig/libmpdemux/parse_dirac.h	1970-01-01 03:00:00 +0300
-+++ mplayer-svn-r26470/libmpdemux/parse_dirac.h	2008-04-19 22:37:44 +0300
+diff -urN mplayer-svn-r26706.orig/libmpdemux/parse_dirac.h mplayer-svn-r26706/libmpdemux/parse_dirac.h
+--- mplayer-svn-r26706.orig/libmpdemux/parse_dirac.h	1970-01-01 03:00:00 +0300
++++ mplayer-svn-r26706/libmpdemux/parse_dirac.h	2008-05-09 20:54:12 +0300
 @@ -0,0 +1,10 @@
 +
 +#define MAX_VIDEO_PACKET_SIZE (224*1024+4)
@@ -772,9 +750,9 @@ diff -urN mplayer-svn-r26470.orig/libmpdemux/parse_dirac.h mplayer-svn-r26470/li
 +// return: next packet code
 +int dirac_skip_video_frame(demux_stream_t *ds);
 +
-diff -urN mplayer-svn-r26470.orig/libmpdemux/video.c mplayer-svn-r26470/libmpdemux/video.c
---- mplayer-svn-r26470.orig/libmpdemux/video.c	2008-04-14 00:02:38 +0300
-+++ mplayer-svn-r26470/libmpdemux/video.c	2008-04-19 22:37:44 +0300
+diff -urN mplayer-svn-r26706.orig/libmpdemux/video.c mplayer-svn-r26706/libmpdemux/video.c
+--- mplayer-svn-r26706.orig/libmpdemux/video.c	2008-04-14 00:02:38 +0300
++++ mplayer-svn-r26706/libmpdemux/video.c	2008-05-09 20:54:12 +0300
 @@ -17,6 +17,7 @@
  #include "demuxer.h"
  #include "stheader.h"
@@ -805,3 +783,15 @@ diff -urN mplayer-svn-r26470.orig/libmpdemux/video.c mplayer-svn-r26470/libmpdem
      } else
          sh_video->pts=d_video->pts;
  
+diff -urN mplayer-svn-r26706.orig/Makefile mplayer-svn-r26706/Makefile
+--- mplayer-svn-r26706.orig/Makefile	2008-05-09 17:57:36 +0300
++++ mplayer-svn-r26706/Makefile	2008-05-09 21:01:37 +0300
+@@ -483,6 +483,8 @@
+ SRCS_COMMON-$(XVID4)                 += libmpcodecs/vd_xvid4.c
+ SRCS_COMMON-$(ZORAN)                 += libmpcodecs/vd_zrmjpeg.c \
+                                         libmpcodecs/vf_zrmjpeg.c
++SRCS_COMMON-$(LIBDIRAC)              += libmpcodecs/vd_dirac.c \
++                                        libmpdemux/demux_dirac.c libmpdemux/parse_dirac.c
+ 
+ SRCS_MPLAYER = mplayer.c \
+                m_property.c \

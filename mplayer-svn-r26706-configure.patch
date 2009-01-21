@@ -1,6 +1,6 @@
-diff -urN mplayer-svn-r26450.orig/configure mplayer-svn-r26450/configure
---- mplayer-svn-r26450.orig/configure	2008-04-14 00:02:39 +0300
-+++ mplayer-svn-r26450/configure	2008-04-14 23:14:02 +0300
+diff -urN mplayer-svn-r26706.orig/configure mplayer-svn-r26706/configure
+--- mplayer-svn-r26706.orig/configure	2008-05-09 17:57:36 +0300
++++ mplayer-svn-r26706/configure	2008-05-10 03:00:26 +0300
 @@ -129,7 +129,7 @@
  
  x86_64() {
@@ -10,7 +10,7 @@ diff -urN mplayer-svn-r26450.orig/configure mplayer-svn-r26450/configure
      *) return 1 ;;
    esac
  }
-@@ -1252,7 +1252,7 @@
+@@ -1271,7 +1271,7 @@
        case "`uname -m 2>&1`" in
        i[3-9]86*|x86|x86pc|k5|k6|k6_2|k6_3|k6-2|k6-3|pentium*|athlon*|i586_i686|i586-i686|BePC) host_arch=i386 ;;
        ia64) host_arch=ia64 ;;
@@ -19,7 +19,7 @@ diff -urN mplayer-svn-r26450.orig/configure mplayer-svn-r26450/configure
          if [ -n "`$_cc -dumpmachine | sed -n '/^x86_64-/p;/^amd64-/p'`" -a \
               -z "`echo $CFLAGS | grep -- -m32`"  ]; then
            host_arch=x86_64
-@@ -1895,7 +1895,7 @@
+@@ -1859,7 +1859,7 @@
      _optimizing=''
      ;;
  
@@ -28,7 +28,7 @@ diff -urN mplayer-svn-r26450.orig/configure mplayer-svn-r26450/configure
      _arch='X86 X86_64'
      _target_arch='ARCH_X86_64 = yes'
      _target_arch_x86="ARCH_X86 = yes"
-@@ -2916,6 +2916,7 @@
+@@ -2865,6 +2865,7 @@
    _noinputmodules="network $_noinputmodules"
    _def_network='#undef MPLAYER_NETWORK'
    _ftp=no
@@ -36,7 +36,7 @@ diff -urN mplayer-svn-r26450.orig/configure mplayer-svn-r26450/configure
  fi
  echores "$_network"
  
-@@ -3339,7 +3340,7 @@
+@@ -3288,7 +3289,7 @@
  
  
  echocheck "termcap"
@@ -45,7 +45,7 @@ diff -urN mplayer-svn-r26450.orig/configure mplayer-svn-r26450/configure
    cat > $TMPC <<EOF
  int main(void) { tgetent(); return 0; }
  EOF
-@@ -3362,7 +3363,7 @@
+@@ -3311,7 +3312,7 @@
  _def_termios='#undef HAVE_TERMIOS'
  _def_termios_h='#undef HAVE_TERMIOS_H'
  _def_termios_sys_h='#undef HAVE_SYS_TERMIOS_H'
@@ -54,7 +54,7 @@ diff -urN mplayer-svn-r26450.orig/configure mplayer-svn-r26450/configure
    _termios=no
    for _termios_header in "sys/termios.h" "termios.h"; do
    cat > $TMPC <<EOF
-@@ -4286,7 +4287,7 @@
+@@ -4226,13 +4227,14 @@
    _res_comment="internal"
    _vidix_external=no
    _vidix=yes
@@ -63,7 +63,14 @@ diff -urN mplayer-svn-r26450.orig/configure mplayer-svn-r26450/configure
   _vidix_external=no
   cat > $TMPC <<EOF
  #include <vidix/vidix.h>
-@@ -4320,7 +4321,7 @@
+ int main(void) { return 0; }
+ EOF
+   cc_check -lvidix && _vidix_external=yes && _res_comment="external" \
++                   && _libs_mplayer="$_libs_mplayer -lvidix" \
+                    && _vidix=yes
+ fi
+ echores "$_vidix"
+@@ -4260,7 +4262,7 @@
    _def_vidix_pfx="#define MP_VIDIX_PFX \"$_libdir\" \"/mplayer/vidix/\" "
  elif test "$_vidix_external" = yes ; then
    _libs_mplayer="$_libs_mplayer -lvidix"
@@ -72,7 +79,7 @@ diff -urN mplayer-svn-r26450.orig/configure mplayer-svn-r26450/configure
  fi
  
  if test "$_vidix" = yes && win32; then
-@@ -4442,7 +4443,9 @@
+@@ -4382,7 +4384,9 @@
  if test "$_aa" = yes ; then
    _def_aa='#define HAVE_AA 1'
    if cygwin ; then
@@ -83,7 +90,7 @@ diff -urN mplayer-svn-r26450.orig/configure mplayer-svn-r26450/configure
    fi
    _vosrc="$_vosrc vo_aa.c"
    _vomodules="aa $_vomodules"
-@@ -4470,7 +4473,7 @@
+@@ -4410,7 +4414,7 @@
  if test "$_caca" = yes ; then
    _def_caca='#define HAVE_CACA 1'
    _inc_extra="$_inc_extra `caca-config --cflags`"
@@ -92,7 +99,7 @@ diff -urN mplayer-svn-r26450.orig/configure mplayer-svn-r26450/configure
    _vosrc="$_vosrc vo_caca.c"
    _vomodules="caca $_vomodules"
  else
-@@ -5180,7 +5183,7 @@
+@@ -5114,7 +5118,7 @@
  
  
  echocheck "JACK"
@@ -101,7 +108,7 @@ diff -urN mplayer-svn-r26450.orig/configure mplayer-svn-r26450/configure
    _jack=yes
  
  cat > $TMPC << EOF
-@@ -5207,7 +5210,7 @@
+@@ -5141,7 +5145,7 @@
  echores "$_jack"
  
  echocheck "OpenAL"
@@ -110,7 +117,7 @@ diff -urN mplayer-svn-r26450.orig/configure mplayer-svn-r26450/configure
    _openal=no
  cat > $TMPC << EOF
  #ifdef OPENAL_AL_H
-@@ -5631,7 +5634,7 @@
+@@ -5572,7 +5576,7 @@
      _res_comment="freetype support needed"
  fi
  echocheck "fontconfig"
@@ -119,7 +126,7 @@ diff -urN mplayer-svn-r26450.orig/configure mplayer-svn-r26450/configure
          cat > $TMPC << EOF
  #include <stdio.h>
  #include <fontconfig/fontconfig.h>
-@@ -5953,7 +5956,7 @@
+@@ -5884,7 +5888,7 @@
  echores "$_speex"
  
  echocheck "OggTheora support"
@@ -128,16 +135,16 @@ diff -urN mplayer-svn-r26450.orig/configure mplayer-svn-r26450/configure
    _theora=no
      cat > $TMPC << EOF
  #include <theora/theora.h>
-@@ -6101,7 +6104,7 @@
+@@ -6031,7 +6035,7 @@
  
  
  echocheck "FAAC (AAC encoder) support"
 -if test "$_faac" = auto ; then
 +if test "$_faac" != no ; then
    cat > $TMPC <<EOF
- #include <inttypes.h> 
+ #include <inttypes.h>
  #include <faac.h>
-@@ -6220,7 +6223,7 @@
+@@ -6156,7 +6160,7 @@
  
  
  echocheck "Win32 codecs"
@@ -146,7 +153,7 @@ diff -urN mplayer-svn-r26450.orig/configure mplayer-svn-r26450/configure
    _win32dll=no
    if x86_32 && ! qnx; then
      _win32dll=yes
-@@ -6326,56 +6329,6 @@
+@@ -6264,56 +6268,6 @@
  fi
  echores "$_nemesi"
  
@@ -203,7 +210,7 @@ diff -urN mplayer-svn-r26450.orig/configure mplayer-svn-r26450/configure
  
  echocheck "FFmpeg libavutil"
  if test "$_libavutil_a" = auto ; then
-@@ -6385,7 +6338,7 @@
+@@ -6323,7 +6277,7 @@
    else
      die "MPlayer will not compile without libavutil in the source tree."
    fi
@@ -212,7 +219,7 @@ diff -urN mplayer-svn-r26450.orig/configure mplayer-svn-r26450/configure
    _libavutil_so=no
    cat > $TMPC << EOF
  #include <libavutil/common.h>
-@@ -6423,7 +6376,7 @@
+@@ -6361,7 +6315,7 @@
      _libavcodec_a="yes"
      _res_comment="static"
    fi
@@ -221,7 +228,7 @@ diff -urN mplayer-svn-r26450.orig/configure mplayer-svn-r26450/configure
    _libavcodec_so=no
    _res_comment="libavcodec.so is discouraged over static libavcodec"
    cat > $TMPC << EOF
-@@ -6467,7 +6420,7 @@
+@@ -6405,7 +6359,7 @@
      _libavformat_a=yes
      _res_comment="static"
    fi
@@ -230,7 +237,7 @@ diff -urN mplayer-svn-r26450.orig/configure mplayer-svn-r26450/configure
    _libavformat_so=no
    cat > $TMPC <<EOF
    #include <libavformat/avformat.h>
-@@ -6503,7 +6456,7 @@
+@@ -6441,7 +6395,7 @@
      _libpostproc_a='yes'
      _res_comment="static"
    fi
@@ -239,7 +246,7 @@ diff -urN mplayer-svn-r26450.orig/configure mplayer-svn-r26450/configure
    _libpostproc_so=no
    cat > $TMPC << EOF
    #define USE_LIBPOSTPROC 1
-@@ -6530,7 +6483,7 @@
+@@ -6468,7 +6422,7 @@
  
  
  echocheck "libamr narrowband"
@@ -248,7 +255,7 @@ diff -urN mplayer-svn-r26450.orig/configure mplayer-svn-r26450/configure
    _libamr_nb=no
    cat > $TMPC << EOF
  #include <amrnb/interf_dec.h>
-@@ -6558,7 +6511,7 @@
+@@ -6496,7 +6450,7 @@
  
  
  echocheck "libamr wideband"
@@ -257,7 +264,7 @@ diff -urN mplayer-svn-r26450.orig/configure mplayer-svn-r26450/configure
    _libamr_wb=no
    cat > $TMPC << EOF
  #include <amrwb/dec_if.h>
-@@ -6605,7 +6558,7 @@
+@@ -6543,7 +6497,7 @@
  
  
  echocheck "XviD"
@@ -266,7 +273,7 @@ diff -urN mplayer-svn-r26450.orig/configure mplayer-svn-r26450/configure
    _xvid=no
    cat > $TMPC << EOF
  #include <xvid.h>
-@@ -6645,7 +6598,7 @@
+@@ -6582,7 +6536,7 @@
  
  
  echocheck "x264"
@@ -275,7 +282,7 @@ diff -urN mplayer-svn-r26450.orig/configure mplayer-svn-r26450/configure
    cat > $TMPC << EOF
  #include <inttypes.h>
  #include <x264.h>
-@@ -6682,7 +6635,7 @@
+@@ -6617,7 +6571,7 @@
  
  
  echocheck "libnut"
@@ -284,7 +291,7 @@ diff -urN mplayer-svn-r26450.orig/configure mplayer-svn-r26450/configure
    cat > $TMPC << EOF
  #include <stdio.h>
  #include <stdlib.h>
-@@ -7140,6 +7093,57 @@
+@@ -7068,6 +7022,57 @@
  fi
  echores "$_ftp"
  
@@ -342,7 +349,7 @@ diff -urN mplayer-svn-r26450.orig/configure mplayer-svn-r26450/configure
  echocheck "vstream client"
  if test "$_vstream" = auto ; then
    _vstream=no
-@@ -7223,7 +7227,7 @@
+@@ -7149,7 +7154,7 @@
    if darwin ; then
       _ld_extra="$_ld_extra ${_xmmslibdir}/libxmms.dylib"
    else
@@ -351,7 +358,7 @@ diff -urN mplayer-svn-r26450.orig/configure mplayer-svn-r26450/configure
    fi
  else
    _def_xmms='#undef HAVE_XMMS'
-@@ -7283,10 +7287,7 @@
+@@ -7209,10 +7214,7 @@
  if test "$_gui" = yes ; then
  
    # Required libraries
@@ -363,7 +370,7 @@ diff -urN mplayer-svn-r26450.orig/configure mplayer-svn-r26450/configure
    test "$_freetype" = no && test "$_bitmap_font" = no && \
      die "The GUI requires either FreeType or bitmap font support."
  if ! win32 ; then
-@@ -8549,6 +8550,7 @@
+@@ -8468,6 +8470,7 @@
  $_def_vidix_drv_sis
  $_def_vidix_drv_unichrome
  $_def_vidix_pfx
@@ -371,15 +378,78 @@ diff -urN mplayer-svn-r26450.orig/configure mplayer-svn-r26450/configure
  
  /* enables / disables new input joystick support */
  $_def_joystick
-diff -urN mplayer-svn-r26450.orig/Makefile mplayer-svn-r26450/Makefile
---- mplayer-svn-r26450.orig/Makefile	2008-04-14 22:57:07 +0300
-+++ mplayer-svn-r26450/Makefile	2008-04-14 23:15:01 +0300
-@@ -179,7 +179,7 @@
- LIBS_MPLAYER = libvo/libvo.a \
-                libao2/libao2.a \
+diff -urN mplayer-svn-r26706.orig/Makefile mplayer-svn-r26706/Makefile
+--- mplayer-svn-r26706.orig/Makefile	2008-05-09 17:57:36 +0300
++++ mplayer-svn-r26706/Makefile	2008-05-10 03:00:41 +0300
+@@ -559,8 +559,8 @@
+ SRCS_MPLAYER-$(LIBMENU_DVBIN) += libmenu/menu_dvbin.c
+ SRCS_MPLAYER-$(LIRC)          += input/lirc.c
  
--LIBS_MPLAYER-$(VIDIX)             += vidix/libvidix.a
-+LIBS_MPLAYER-$(VIDIX_INTERNAL)    += vidix/libvidix.a
+-SRCS_MPLAYER-$(VIDIX)         += libvo/vosub_vidix.c \
+-                                 vidix/vidixlib.c \
++SRCS_MPLAYER-$(VIDIX)         += libvo/vosub_vidix.c
++SRCS_MPLAYER-$(VIDIX_INTERNAL)+= vidix/vidixlib.c \
+                                  vidix/drivers.c \
+                                  vidix/dha.c \
+                                  vidix/mtrr.c \
+@@ -568,6 +568,7 @@
+                                  vidix/pci_names.c \
+                                  vidix/pci_dev_ids.c\
  
- LIBS_MENCODER = libmpcodecs/libmpencoders.a \
-                 libmpdemux/libmpmux.a \
++ifeq ($(VIDIX_INTERNAL),yes)
+ SRCS_MPLAYER-$(VIDIX_CYBERBLADE)    += vidix/cyberblade_vid.c
+ SRCS_MPLAYER-$(VIDIX_IVTV)          += vidix/ivtv_vid.c
+ SRCS_MPLAYER-$(VIDIX_MACH64)        += vidix/mach64_vid.c
+@@ -581,6 +582,7 @@
+ SRCS_MPLAYER-$(VIDIX_S3)            += vidix/s3_vid.c
+ SRCS_MPLAYER-$(VIDIX_SIS)           += vidix/sis_vid.c vidix/sis_bridge.c
+ SRCS_MPLAYER-$(VIDIX_UNICHROME)     += vidix/unichrome_vid.c
++endif
+ 
+ SRCS_MENCODER = mencoder.c \
+                 mp_msg-mencoder.c \
+@@ -763,7 +765,7 @@
+ 	$(CC) -DCODECS2HTML codec-cfg.c $^ -o $@
+ 
+ codec-cfg-test$(EXESUF): codecs.conf.h codec-cfg.h mp_msg.o osdep/getch2.o
+-	$(CC) -I. -DTESTING codec-cfg.c mp_msg.o osdep/getch2.o -ltermcap -o $@
++	$(CC) -I. -DTESTING codec-cfg.c mp_msg.o osdep/getch2.o -ltinfo -o $@
+ 
+ osdep/mplayer-rc.o: osdep/mplayer.rc version.h
+ 	$(WINDRES) -o $@ $<
+@@ -778,6 +780,7 @@
+ 
+ mp3lib/decode_i586.o: CFLAGS += -fomit-frame-pointer
+ 
++ifeq ($(VIDIX_INTERNAL),yes)
+ VIDIX_PCI_FILES = vidix/pci_dev_ids.c vidix/pci_ids.h vidix/pci_names.c \
+                   vidix/pci_names.h vidix/pci_vendors.h
+ 
+@@ -788,8 +791,9 @@
+ VIDIX_OBJS = $(filter vidix/%,$(SRCS_MPLAYER:.c=.o))
+ 
+ $(VIDIX_DEPS) $(VIDIX_OBJS): $(VIDIX_PCI_FILES)
++endif
+ 
+-TEST_OBJS = mp_msg-mencoder.o mp_fifo.o osdep/$(GETCH) osdep/$(TIMER) -ltermcap -lm
++TEST_OBJS = mp_msg-mencoder.o mp_fifo.o osdep/$(GETCH) osdep/$(TIMER) -ltinfo -lm
+ 
+ liba52/test$(EXESUF): liba52/test.c cpudetect.o $(filter liba52/%,$(SRCS_COMMON:.c=.o))
+ 
+@@ -909,15 +913,12 @@
+         TOOLS/asfinfo$(EXESUF) \
+         TOOLS/avi-fix$(EXESUF) \
+         TOOLS/avisubdump$(EXESUF) \
++        TOOLS/bmovl-test$(EXESUF) \
+         TOOLS/compare$(EXESUF) \
+         TOOLS/dump_mp4$(EXESUF) \
+         TOOLS/movinfo$(EXESUF) \
+         TOOLS/subrip$(EXESUF) \
+ 
+-ifdef ARCH_X86
+-TOOLS += TOOLS/modify_reg$(EXESUF)
+-endif
+-
+ ALLTOOLS = $(TOOLS) \
+            TOOLS/bmovl-test$(EXESUF) \
+            TOOLS/vfw2menc$(EXESUF) \
