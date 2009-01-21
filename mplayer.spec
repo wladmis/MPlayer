@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc2try2
-%define svnrev 26991
-%define ffmpeg_svnrev 13656
+%define svnrev 27097
+%define ffmpeg_svnrev 13801
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -105,7 +105,6 @@
 
 # Video output:
 %def_enable vidix
-%define vidixlib ext
 %def_enable gl
 %def_disable dga1
 %def_enable dga2
@@ -229,20 +228,7 @@
 %{?_disable_iconv:%set_disable freetype}
 %{?_disable_freetype:%set_disable fontconfig}
 
-%if_disabled vidix
-%ifdef vidixlib
-%undefine vidixlib
-%endif
-%define vidixlib none
-%else
 %ifnarch %ix86 x86_64
-%ifdef vidixlib
-%undefine vidixlib
-%endif
-%define vidixlib int
-%endif
-%endif
-%if %vidixlib == none
 %set_disable vidix
 %endif
 
@@ -281,7 +267,7 @@
 Name: %lname
 Version: 1.0
 %define rel 35
-%define subrel 2
+%define subrel 1
 %ifdef svnrev
 Release: alt%rel.%svnrev.%subrel
 %define pkgver svn-r%svnrev
@@ -309,33 +295,32 @@ Requires: %name-fonts
 %endif
 
 %ifdef svnrev
-Source0: %lname-svn-r%svnrev.tar.bz2
+Source0: %lname-svn-r%svnrev.tar
 %else
-Source0: %Name-%version%prerel.tar.bz2
+Source0: %Name-%version%prerel.tar
 %endif
 # svn checkout svn.mplayerhq.hu/mplayer/trunk
-%{?ffmpeg_svnrev:%{?_disable_shared_ffmpeg:Source1: ffmpeg-svn-r%ffmpeg_svnrev.tar.bz2}}
+%{?ffmpeg_svnrev:%{?_disable_shared_ffmpeg:Source1: ffmpeg-svn-r%ffmpeg_svnrev.tar}}
 Source3: %lname.sh
-Source4: standard-1.9.tar.bz2
+Source4: standard-1.9.tar
 Source5: %lname.conf.in
-Source6: mp_help2msg.awk.gz
-Source7: mp_msg2po.awk.gz
+Source6: mp_help2msg.awk
+Source7: mp_msg2po.awk
 Patch0: %lname-svn-r22221-subreader.patch
-#Patch1: %lname-svn-r26991-dirac-0.9.1.patch
 Patch1: %{lname}svn_trunk_revision_26980-dirac-0.10.x.patch
-Patch2: %lname-dvd-ru-svn19389.patch.gz
+Patch2: %lname-dvd-ru-svn19389.patch
 Patch3: %Name-1.0pre4-alt-explicit_gif.patch
 Patch4: %lname-svn-r26450-gui.patch
 Patch5: %lname-svn-r25454-vo_vidix.patch
-Patch6: %lname-svn-r21128-alt-artsc_ldflags.patch.gz
+Patch6: %lname-svn-r21128-alt-artsc_ldflags.patch
 Patch7: %lname-svn-r23099-demux_nut.patch
 Patch8: %lname-svn-r23722-VIDM-win32-codec.patch
 Patch9: %lname-svn-r26991-dvdread.patch
 Patch11: %lname-svn-r24081-nls.patch
 Patch12: %lname-uni-svn26991.patch
-Patch13: %Name-svn-20060711-vbe.patch.gz
+Patch13: %Name-svn-20060711-vbe.patch
 Patch14: %lname-svn-r26991-gui_nls.patch
-Patch16: %lname-svn-r26909-configure.patch
+Patch16: %lname-svn-r27097-configure.patch
 Patch17: %lname-svn-r26706-ext_ffmpeg.patch
 Patch27: %lname-svn-r26450-builddocs.patch
 %if_disabled shared_ffmpeg
@@ -393,9 +378,6 @@ BuildRequires: cpp >= 3.3 gcc >= 3.3 gcc-c++ >= 3.3
 
 %{?_enable_xvmc:BuildRequires: libXvMC-devel}
 %if_enabled mplayer
-%if %vidixlib == ext
-BuildRequires: libvidix-devel
-%endif
 %{?_enable_gl:BuildRequires: libmesa-devel libGLwrapper}
 %{?_enable_vesa:BuildRequires: libvbe-devel}
 %{?_enable_svga:BuildRequires: svgalib-devel}
@@ -719,8 +701,8 @@ sed -i -e '/^MimeType=/s|$|video/3gpp;application/x-flash-video;|' -e '/^Icon=/s
 
 %if_enabled nls
 install -d -m 0755 po
-gzip -dc %SOURCE6 > po/mp_help2msg.awk
-gzip -dc %SOURCE7 > po/mp_msg2po.awk
+install -m 0644 %SOURCE6  po/mp_help2msg.awk
+install -m 0644 %SOURCE7  po/mp_msg2po.awk
 %endif
 
 %if %dvdreadlib == ext
@@ -877,15 +859,7 @@ export CFLAGS="%optflags"
 		%{subst_enable libmpeg2} \
 		%{subst_enable musepack} \
 		%{subst_enable_to nut libnut} \
-%if_enabled vidix
-%if %vidixlib == ext
-		--enable-vidix-external --disable-vidix-internal \
-%else
-		--disable-vidix-external --enable-vidix-internal \
-%endif
-%else
-		--disable-vidix-external --disable-vidix-internal \
-%endif
+		%{subst_enable vidix} \
 		%{subst_enable gl} \
 		%{subst_enable dga1} \
 		%{subst_enable dga2} \
@@ -957,7 +931,7 @@ export CFLAGS="%optflags"
 		%{subst_enable sighandler} \
 		%{subst_enable_to gdb crash-debug} \
 		%{subst_enable_to dynamic_plugins dynamic-plugins} \
-		--with-extraincdir=%_includedir/vidix:%_includedir/directfb
+		--with-extraincdir=%_includedir/directfb
 
 %make_build
 
@@ -1014,7 +988,7 @@ bzip2 --best --force --keep -- Changelog
 
 %if_enabled mplayer
 install -d -m 0755 %buildroot%_datadir/%name/skins
-tar -C %buildroot%_datadir/%name/skins -xjf %SOURCE4
+tar -C %buildroot%_datadir/%name/skins -xf %SOURCE4
 ln -s standard %buildroot%_datadir/%name/skins/default
 %{?_enable_freetype:%{?_disable_fontconfig:ln -s ../fonts/default/Type1/n019003l.pfb %buildroot%_datadir/%name/subfont.ttf}}
 %endif
@@ -1256,6 +1230,20 @@ ln -sf %lname %buildroot%_bindir/g%lname
 
 
 %changelog
+* Wed Jun 18 2008 Led <led@altlinux.ru> 1.0-alt35.27097.1
+- new SVN snapshot (revision 27097):
+  + prefer lavf musepack demuxer over libmpdemux
+  + prefer lavf MOV demuxer over libmpdemux
+  + support -slang in lavf demuxer
+  + support nosound switching in lavf demuxer
+  + support libass in lavf demuxer
+  + support VOBsub in lavf demuxer
+  + support MOV subtitle format
+  + support for attachments in lavf demuxer
+  + allow specifying the TV standard for each channel
+  + add force-pbo suboption for faster output in vo_gl
+- updated %lname-svn-r27097-configure.patch
+
 * Thu Jun 05 2008 Led <led@altlinux.ru> 1.0-alt35.26991.2
 - updated %{lname}svn_trunk_revision_26980-dirac-0.10.x.patch
 
