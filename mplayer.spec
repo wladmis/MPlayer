@@ -6,9 +6,9 @@
 %define subst_o_pre() %{expand:%%{?_enable_%{2}:%{1}%{2},}}
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
-#define prerel rc2
-%define svnrev 25987
-%define ffmpeg_svnrev 11914
+#define prerel rc2try2
+%define svnrev 26030
+%define ffmpeg_svnrev 12143
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -1234,6 +1234,9 @@ done
 
 
 %changelog
+* Tue Feb 19 2008 Led <led@altlinux.ru> 1.0-alt35.26030.1
+- new SVN snapshot (revision 26030)
+
 * Tue Feb 12 2008 Led <led@altlinux.ru> 1.0-alt35.25987.1
 - new SVN snapshot (revision 25987)
 - updated %lname-svn-r25987-ext_ffmpeg.patch
