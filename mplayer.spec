@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc2try2
-%define svnrev 27498
-%define ffmpeg_svnrev 15051
+%define svnrev 27654
+%define ffmpeg_svnrev 15375
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -78,13 +78,13 @@
 %def_enable xvid
 %def_enable x264
 %def_enable ffmpeg
-%def_enable shared_ffmpeg
-%def_disable faad_ext
+%def_disable shared_ffmpeg
+%def_disable faad
 %def_enable faad_int
 %def_disable faad_fixed
 %def_disable tremor_internal
 %def_disable tremor_low
-%def_disable tremor_external
+%def_disable tremor
 %def_enable vorbis
 %def_enable speex
 %def_enable theora
@@ -106,7 +106,7 @@
 %def_enable vidix
 %def_enable gl
 %def_disable dga1
-%def_enable dga2
+%def_disable dga2
 %def_disable vesa
 %def_enable svga
 %def_enable sdl
@@ -230,7 +230,7 @@
 %set_disable vidix
 %endif
 
-%{?_enable_tremor_external:%set_disable tremor_low}
+%{?_enable_tremor:%set_disable tremor_low}
 
 %ifnarch %ix86
 %set_disable win32
@@ -245,7 +245,7 @@
 %define real_libdir	%_libdir/real
 
 %{?_disable_win32:%set_disable qtx}
-%{?_enable_faad_int:%set_disable faad_ext}
+%{?_enable_faad_int:%set_disable faad}
 
 %if_disabled x11
 %set_disable xv
@@ -265,7 +265,7 @@
 Name: %lname
 Version: 1.0
 %define rel 35
-%define subrel 3
+%define subrel 1
 %ifdef svnrev
 Release: alt%rel.%svnrev.%subrel
 %define pkgver svn-r%svnrev
@@ -317,8 +317,8 @@ Patch11: %lname-svn-r27482-nls.patch
 Patch12: %lname-uni-svn26991.patch
 Patch13: %Name-svn-20060711-vbe.patch
 Patch14: %lname-svn-r27482-gui_nls.patch
-Patch16: %lname-svn-r27482-configure.patch
-Patch17: %lname-svn-r27498-ext_ffmpeg.patch
+Patch16: %lname-svn-r27654-configure.patch
+Patch17: %lname-svn-r27654-ext_ffmpeg.patch
 Patch27: %lname-svn-r26450-builddocs.patch
 %if_disabled shared_ffmpeg
 Patch32: ffmpeg-svn-r14967-xvmc-vld.patch
@@ -357,11 +357,11 @@ BuildRequires: cpp >= 3.3 gcc >= 3.3 gcc-c++ >= 3.3
 %{?_enable_xvid:BuildRequires: libxvid-devel}
 %{?_enable_x264:BuildRequires: libx264-devel}
 %{?_enable_shared_ffmpeg:BuildRequires: libffmpeg-devel >= 1:0.5.0-alt0.12828.1}
-%{?_enable_tremor_external:BuildRequires: libtremor-devel}
+%{?_enable_tremor:BuildRequires: libtremor-devel}
 %{?_enable_vorbis:BuildRequires: libvorbis-devel}
 %{?_enable_speex:BuildRequires: libspeex-devel}
 %{?_enable_theora:BuildRequires: libtheora-devel}
-%{?_enable_faad_ext:BuildRequires: libfaad-devel}
+%{?_enable_faad:BuildRequires: libfaad-devel}
 %{?_enable_faac:BuildRequires: libfaac-devel}
 %{?_enable_ladspa:BuildRequires: ladspa_sdk}
 %{?_enable_libdv:BuildRequires: libdv-devel}
@@ -834,12 +834,12 @@ export CFLAGS="%optflags"
 %endif
 		%{subst_enable_to tremor_internal tremor-internal} \
 		%{subst_enable_to tremor_low tremor-low} \
-		%{subst_enable_to tremor_external tremor-external} \
+		%{subst_enable tremor} \
 		%{subst_enable_to vorbis libvorbis} \
 		%{subst_enable speex} \
 		%{subst_enable theora} \
-		%{?_enable_faad_int:--enable-faad-internal --disable-faad-external %{subst_enable_to faad_fixed faad-fixed}} \
-		%{?_enable_faad_ext:--enable-faad-external --disable-faad-internal} \
+		%{?_enable_faad_int:--enable-faad-internal --disable-faad %{subst_enable_to faad_fixed faad-fixed}} \
+		%{?_enable_faad:--enable-faad --disable-faad-internal} \
 		%{subst_enable faac} \
 		%{subst_enable_to dirac libdirac-lavc} \
 		%{subst_enable ladspa} \
@@ -1005,7 +1005,7 @@ done
 %ifarch %ix86
 install -m 0755 TOOLS/w32codec_dl.pl %buildroot/%_bindir/w32codec_dl
 %endif
-for f in aconvert divx2svcd encode2mpeglight mencvcd midentify mpconsole mplmult psnr-video subsearch %{?_enable_mencoder:qepdvcd}; do
+for f in aconvert divx2svcd mencvcd midentify mpconsole mplmult psnr-video subsearch %{?_enable_mencoder:qepdvcd}; do
     install -m 0755 TOOLS/$f.sh %buildroot/%_bindir/$f
 done
 install -pD -m 0644 TOOLS/README %buildroot%_docdir/%name-tools-%version/README
@@ -1214,7 +1214,6 @@ ln -sf %lname %buildroot%_bindir/g%lname
 %_bindir/aconvert
 %_bindir/divx2svcd
 %_bindir/dump_mp4
-%_bindir/encode2mpeglight
 #other
 %_bindir/alaw-gen
 %_bindir/asfinfo
@@ -1236,8 +1235,11 @@ ln -sf %lname %buildroot%_bindir/g%lname
 
 
 %changelog
-* Sun Aug 31 2008 Led <led@altlinux.ru> 1.0-alt35.27498.3
-- build with shared ffmpeg
+* Mon Sep 22 2008 Led <led@altlinux.ru> 1.0-alt35.27654.1
+- new SVN snapshot (revision 27654)
+- updated %lname-svn-r27654-configure.patch
+- cleaned up %lname-svn-r27654-ext_ffmpeg.patch
+  (partially fixed in upstream)
 
 * Sun Aug 31 2008 Led <led@altlinux.ru> 1.0-alt35.27498.2
 - updated:

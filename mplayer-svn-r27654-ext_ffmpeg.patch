@@ -1,0 +1,25 @@
+diff -urN mplayer-svn-r27654.orig/libmpcodecs/vd_ffmpeg.c mplayer-svn-r27654/libmpcodecs/vd_ffmpeg.c
+--- mplayer-svn-r27654.orig/libmpcodecs/vd_ffmpeg.c	2008-09-22 00:11:30 +0300
++++ mplayer-svn-r27654/libmpcodecs/vd_ffmpeg.c	2008-09-22 01:01:19 +0300
+@@ -9,6 +9,7 @@
+ #include "av_opts.h"
+ 
+ #include "libavutil/common.h"
++#include "libavutil/avutil.h"
+ #include "libavutil/intreadwrite.h"
+ #include "mpbswap.h"
+ 
+diff -urN mplayer-svn-r27654.orig/Makefile mplayer-svn-r27654/Makefile
+--- mplayer-svn-r27654.orig/Makefile	2008-09-22 00:11:33 +0300
++++ mplayer-svn-r27654/Makefile	2008-09-22 01:01:43 +0300
+@@ -942,8 +942,8 @@
+ 
+ TOOLS/bmovl-test$(EXESUF): -lSDL_image
+ 
+-TOOLS/subrip$(EXESUF): vobsub.o spudec.o unrar_exec.o libvo/aclib.o \
+-    libswscale/libswscale.a libavutil/libavutil.a $(TEST_OBJS)
++TOOLS/subrip$(EXESUF): vobsub.o spudec.o unrar_exec.o $(TEST_OBJS)
++	$(CC) $(CFLAGS) -o $@ TOOLS/subrip.c $^ -Llibswscale -lswscale -Llibavutil -lavutil -ltinfo -lm
+ 
+ TOOLS/vfw2menc$(EXESUF): -lwinmm -lole32
+ 
