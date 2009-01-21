@@ -79,8 +79,8 @@
 %def_enable x264
 %def_enable ffmpeg
 %def_disable shared_ffmpeg
-%def_disable faad
-%def_enable faad_int
+%def_enable faad
+%def_disable faad_int
 %def_disable faad_fixed
 %def_disable tremor_internal
 %def_disable tremor_low
@@ -265,7 +265,7 @@
 Name: %lname
 Version: 1.0
 %define rel 35
-%define subrel 2
+%define subrel 3
 %ifdef svnrev
 Release: alt%rel.%svnrev.%subrel
 %define pkgver svn-r%svnrev
@@ -1224,6 +1224,9 @@ ln -sf %lname %buildroot%_bindir/g%lname
 
 
 %changelog
+* Sat Jan 10 2009 Led <led@altlinux.ru> 1.0-alt35.27654.3
+- build with external libfaad (#6638)
+
 * Sun Dec 14 2008 Led <led@altlinux.ru> 1.0-alt35.27654.2
 - cleaned up spec
 - fixed build with libx264.so.65
