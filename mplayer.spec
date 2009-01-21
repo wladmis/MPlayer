@@ -283,10 +283,10 @@ Version: 1.0
 %define rel 35
 %define subrel 1
 %ifdef svnrev
-Release: alt%rel.%svnrev.%subrel
+Release: alt%rel.%svnrev.%subrel.1
 %define pkgver svn-r%svnrev
 %else
-Release: alt%rel
+Release: alt%rel.1
 %define pkgver %version%prerel
 %endif
 Summary: Media player
@@ -1234,6 +1234,9 @@ done
 
 
 %changelog
+* Sun Feb 10 2008 Grigory Batalov <bga@altlinux.ru> 1.0-alt35.25957.1.1
+- Rebuilt with python-2.5.
+
 * Wed Feb 06 2008 Led <led@altlinux.ru> 1.0-alt35.25957.1
 - new SVN snapshot (revision 25957):
   + stack overflow in demuxer_audio.c fixed
