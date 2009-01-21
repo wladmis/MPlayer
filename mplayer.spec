@@ -281,7 +281,7 @@
 Name: %lname
 Version: 1.0
 %define rel 35
-%define subrel 3
+%define subrel 4
 %ifdef svnrev
 Release: alt%rel.%svnrev.%subrel
 %define pkgver svn-r%svnrev
@@ -940,7 +940,7 @@ export CFLAGS="%optflags"
 		%{subst_enable altivec} \
 		%{subst_enable fastmemcpy} \
 %if_enabled debug
-		--enable-debug=3} \
+		--enable-debug=3 \
 %else
 		--disable-debug \
 %endif
@@ -1249,6 +1249,9 @@ done
 
 
 %changelog
+* Tue Mar 04 2008 Led <led@altlinux.ru> 1.0-alt35.25957.4
+- fixed typo in spec (#14746)
+
 * Sun Mar 02 2008 Led <led@altlinux.ru> 1.0-alt35.25957.3
 - added icons
 - fixed BuildRequires
