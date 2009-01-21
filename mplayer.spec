@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc2try2
-%define svnrev 26030
-%define ffmpeg_svnrev 12143
+%define svnrev 26031
+%define ffmpeg_svnrev 12146
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -337,7 +337,7 @@ Patch16: %lname-svn-r25826-configure.patch
 Patch17: %lname-svn-r25987-ext_ffmpeg.patch
 Patch27: %lname-svn-r22518-builddocs.patch
 %if_disabled shared_ffmpeg
-%{?_enable_dirac:Patch31: ffmpeg-svn-r11872-dirac-0.9.x.patch}
+%{?_enable_dirac:Patch31: ffmpeg-svn-r12146-dirac-0.9.x.patch}
 Patch32: ffmpeg-uni-svn-r10644.patch
 Patch33: ffmpeg-svn-r10644-amr.patch
 %endif
@@ -939,7 +939,7 @@ export CFLAGS="%optflags"
 		%{subst_enable altivec} \
 		%{subst_enable fastmemcpy} \
 %if_enabled debug
-		--enable-debug=3} \
+		--enable-debug=3 \
 %else
 		--disable-debug \
 %endif
@@ -1234,6 +1234,10 @@ done
 
 
 %changelog
+* Tue Feb 19 2008 Led <led@altlinux.ru> 1.0-alt35.26031.1
+- new SVN snapshot (revision 26031)
+- fixed ffmpeg-svn-r11246-dirac-0.9.x.patch
+
 * Tue Feb 19 2008 Led <led@altlinux.ru> 1.0-alt35.26030.1
 - new SVN snapshot (revision 26030)
 
