@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc2try2
-%define svnrev 26909
-%define ffmpeg_svnrev 13471
+%define svnrev 26991
+%define ffmpeg_svnrev 13656
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -321,7 +321,7 @@ Source5: %lname.conf.in
 Source6: mp_help2msg.awk.gz
 Source7: mp_msg2po.awk.gz
 Patch0: %lname-svn-r22221-subreader.patch
-Patch1: %lname-svn-r26706-dirac-0.9.1.patch
+Patch1: %lname-svn-r26991-dirac-0.9.1.patch
 Patch2: %lname-dvd-ru-svn19389.patch.gz
 Patch3: %Name-1.0pre4-alt-explicit_gif.patch
 Patch4: %lname-svn-r26450-gui.patch
@@ -329,10 +329,11 @@ Patch5: %lname-svn-r25454-vo_vidix.patch
 Patch6: %lname-svn-r21128-alt-artsc_ldflags.patch.gz
 Patch7: %lname-svn-r23099-demux_nut.patch
 Patch8: %lname-svn-r23722-VIDM-win32-codec.patch
+Patch9: %lname-svn-r26991-dvdread.patch
 Patch11: %lname-svn-r24081-nls.patch
-Patch12: %lname-uni-svn26909.patch
+Patch12: %lname-uni-svn26991.patch
 Patch13: %Name-svn-20060711-vbe.patch.gz
-Patch14: %lname-svn-r26909-gui_nls.patch
+Patch14: %lname-svn-r26991-gui_nls.patch
 Patch16: %lname-svn-r26909-configure.patch
 Patch17: %lname-svn-r26706-ext_ffmpeg.patch
 Patch27: %lname-svn-r26450-builddocs.patch
@@ -690,6 +691,7 @@ mv ffmpeg-svn-r%ffmpeg_svnrev/lib{av{codec,format,util},postproc} .
 %patch6 -p1
 %patch7 -p1
 %patch8 -p1
+%patch9 -p1
 %patch11 -p1
 %patch12 -p1
 %patch13 -p1
@@ -1253,6 +1255,14 @@ ln -sf %lname %buildroot%_bindir/g%lname
 
 
 %changelog
+* Wed Jun 04 2008 Led <led@altlinux.ru> 1.0-alt35.26991.1
+- new SVN snapshot (revision 26991)
+- updated:
+  + %lname-svn-r26991-dirac-0.9.1.patch
+  + %lname-svn-r26992-gui_nls.patch
+  + %lname-uni-svn26991.patch
+-added %lname-svn-r26991-dvdread.patch
+
 * Tue May 27 2008 Led <led@altlinux.ru> 1.0-alt35.26909.1
 - new SVN snapshot (revision 26909)
 - updated:

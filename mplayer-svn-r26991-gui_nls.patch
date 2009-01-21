@@ -1,6 +1,6 @@
-diff -urN mplayer-svn-r26909.orig/gui/interface.c mplayer-svn-r26909/gui/interface.c
---- mplayer-svn-r26909.orig/gui/interface.c	2008-05-07 03:43:52 +0300
-+++ mplayer-svn-r26909/gui/interface.c	2008-05-27 23:05:45 +0300
+diff -urN mplayer-svn-r26991.orig/gui/interface.c mplayer-svn-r26991/gui/interface.c
+--- mplayer-svn-r26991.orig/gui/interface.c	2008-05-07 03:43:52 +0300
++++ mplayer-svn-r26991/gui/interface.c	2008-06-04 23:22:44 +0300
 @@ -226,7 +226,7 @@
  // --- initialize windows
   if ( ( mplDrawBuffer = malloc( appMPlayer.main.Bitmap.ImageSize ) ) == NULL )
@@ -28,9 +28,9 @@ diff -urN mplayer-svn-r26909.orig/gui/interface.c mplayer-svn-r26909/gui/interfa
  
  	{
  	 int i = 0;
-diff -urN mplayer-svn-r26909.orig/gui/mplayer/gtk/about.c mplayer-svn-r26909/gui/mplayer/gtk/about.c
---- mplayer-svn-r26909.orig/gui/mplayer/gtk/about.c	2008-05-07 03:43:52 +0300
-+++ mplayer-svn-r26909/gui/mplayer/gtk/about.c	2008-05-27 23:05:45 +0300
+diff -urN mplayer-svn-r26991.orig/gui/mplayer/gtk/about.c mplayer-svn-r26991/gui/mplayer/gtk/about.c
+--- mplayer-svn-r26991.orig/gui/mplayer/gtk/about.c	2008-05-07 03:43:52 +0300
++++ mplayer-svn-r26991/gui/mplayer/gtk/about.c	2008-06-04 23:22:44 +0300
 @@ -59,10 +59,10 @@
    accel_group=gtk_accel_group_new();
  
@@ -54,9 +54,9 @@ diff -urN mplayer-svn-r26909.orig/gui/mplayer/gtk/about.c mplayer-svn-r26909/gui
  
    gtk_signal_connect( GTK_OBJECT( About ),"destroy",GTK_SIGNAL_FUNC( WidgetDestroy ),&About );
    gtk_signal_connect_object( GTK_OBJECT( Ok ),"clicked",GTK_SIGNAL_FUNC( abWidgetDestroy ),NULL );
-diff -urN mplayer-svn-r26909.orig/gui/mplayer/gtk/eq.c mplayer-svn-r26909/gui/mplayer/gtk/eq.c
---- mplayer-svn-r26909.orig/gui/mplayer/gtk/eq.c	2008-05-07 03:43:52 +0300
-+++ mplayer-svn-r26909/gui/mplayer/gtk/eq.c	2008-05-27 23:05:45 +0300
+diff -urN mplayer-svn-r26991.orig/gui/mplayer/gtk/eq.c mplayer-svn-r26991/gui/mplayer/gtk/eq.c
+--- mplayer-svn-r26991.orig/gui/mplayer/gtk/eq.c	2008-05-07 03:43:52 +0300
++++ mplayer-svn-r26991/gui/mplayer/gtk/eq.c	2008-06-04 23:22:44 +0300
 @@ -103,7 +103,7 @@
   gchar * str[2];
   gtk_clist_clear( GTK_CLIST( ChannelsList ) );
@@ -227,9 +227,9 @@ diff -urN mplayer-svn-r26909.orig/gui/mplayer/gtk/eq.c mplayer-svn-r26909/gui/mp
  
    gtk_widget_add_accelerator( ecOk,"clicked",accel_group,GDK_Return,0,GTK_ACCEL_VISIBLE );
    gtk_widget_add_accelerator( ecCancel,"clicked",accel_group,GDK_Escape,0,GTK_ACCEL_VISIBLE );
-diff -urN mplayer-svn-r26909.orig/gui/mplayer/gtk/fs.c mplayer-svn-r26909/gui/mplayer/gtk/fs.c
---- mplayer-svn-r26909.orig/gui/mplayer/gtk/fs.c	2008-05-07 03:43:52 +0300
-+++ mplayer-svn-r26909/gui/mplayer/gtk/fs.c	2008-05-27 23:05:45 +0300
+diff -urN mplayer-svn-r26991.orig/gui/mplayer/gtk/fs.c mplayer-svn-r26991/gui/mplayer/gtk/fs.c
+--- mplayer-svn-r26991.orig/gui/mplayer/gtk/fs.c	2008-05-07 03:43:52 +0300
++++ mplayer-svn-r26991/gui/mplayer/gtk/fs.c	2008-06-04 23:22:44 +0300
 @@ -237,7 +237,7 @@
   switch ( type )
    {
@@ -295,9 +295,9 @@ diff -urN mplayer-svn-r26909.orig/gui/mplayer/gtk/fs.c mplayer-svn-r26909/gui/mp
  
   gtk_signal_connect( GTK_OBJECT( fsFileSelect ),"destroy",GTK_SIGNAL_FUNC( WidgetDestroy ),&fsFileSelect );
   gtk_signal_connect( GTK_OBJECT( fsFileSelect ),"key_release_event",GTK_SIGNAL_FUNC( on_FileSelect_key_release_event ),NULL );
-diff -urN mplayer-svn-r26909.orig/gui/mplayer/gtk/gtk_url.c mplayer-svn-r26909/gui/mplayer/gtk/gtk_url.c
---- mplayer-svn-r26909.orig/gui/mplayer/gtk/gtk_url.c	2008-05-07 03:43:52 +0300
-+++ mplayer-svn-r26909/gui/mplayer/gtk/gtk_url.c	2008-05-27 23:05:45 +0300
+diff -urN mplayer-svn-r26991.orig/gui/mplayer/gtk/gtk_url.c mplayer-svn-r26991/gui/mplayer/gtk/gtk_url.c
+--- mplayer-svn-r26991.orig/gui/mplayer/gtk/gtk_url.c	2008-05-07 03:43:52 +0300
++++ mplayer-svn-r26991/gui/mplayer/gtk/gtk_url.c	2008-06-04 23:22:44 +0300
 @@ -124,7 +124,7 @@
   gtk_object_set_data( GTK_OBJECT( URL ),"URL",URL );
   gtk_widget_set_usize( URL,384,70 );
@@ -318,9 +318,9 @@ diff -urN mplayer-svn-r26909.orig/gui/mplayer/gtk/gtk_url.c mplayer-svn-r26909/g
   
   gtk_widget_add_accelerator( Ok,"clicked",accel_group,GDK_Return,0,GTK_ACCEL_VISIBLE );
   gtk_widget_add_accelerator( Cancel,"clicked",accel_group,GDK_Escape,0,GTK_ACCEL_VISIBLE );
-diff -urN mplayer-svn-r26909.orig/gui/mplayer/gtk/mb.c mplayer-svn-r26909/gui/mplayer/gtk/mb.c
---- mplayer-svn-r26909.orig/gui/mplayer/gtk/mb.c	2008-05-07 03:43:52 +0300
-+++ mplayer-svn-r26909/gui/mplayer/gtk/mb.c	2008-05-27 23:05:45 +0300
+diff -urN mplayer-svn-r26991.orig/gui/mplayer/gtk/mb.c mplayer-svn-r26991/gui/mplayer/gtk/mb.c
+--- mplayer-svn-r26991.orig/gui/mplayer/gtk/mb.c	2008-05-07 03:43:52 +0300
++++ mplayer-svn-r26991/gui/mplayer/gtk/mb.c	2008-06-04 23:22:44 +0300
 @@ -100,7 +100,7 @@
  
   AddHSeparator( vbox1 );
@@ -330,9 +330,9 @@ diff -urN mplayer-svn-r26909.orig/gui/mplayer/gtk/mb.c mplayer-svn-r26909/gui/mp
  
   gtk_widget_add_accelerator( Ok,"clicked",accel_group,GDK_Return,0,GTK_ACCEL_VISIBLE );
   gtk_widget_add_accelerator( Ok,"clicked",accel_group,GDK_Escape,0,GTK_ACCEL_VISIBLE );
-diff -urN mplayer-svn-r26909.orig/gui/mplayer/gtk/menu.c mplayer-svn-r26909/gui/mplayer/gtk/menu.c
---- mplayer-svn-r26909.orig/gui/mplayer/gtk/menu.c	2008-05-07 03:43:52 +0300
-+++ mplayer-svn-r26909/gui/mplayer/gtk/menu.c	2008-05-27 23:05:45 +0300
+diff -urN mplayer-svn-r26991.orig/gui/mplayer/gtk/menu.c mplayer-svn-r26991/gui/mplayer/gtk/menu.c
+--- mplayer-svn-r26991.orig/gui/mplayer/gtk/menu.c	2008-05-07 03:43:52 +0300
++++ mplayer-svn-r26991/gui/mplayer/gtk/menu.c	2008-06-04 23:22:44 +0300
 @@ -417,68 +417,68 @@
   window1 = gtk_widget_get_toplevel(Menu);
  
@@ -588,9 +588,9 @@ diff -urN mplayer-svn-r26909.orig/gui/mplayer/gtk/menu.c mplayer-svn-r26909/gui/
  
   return Menu;
  }
-diff -urN mplayer-svn-r26909.orig/gui/mplayer/gtk/opts.c mplayer-svn-r26909/gui/mplayer/gtk/opts.c
---- mplayer-svn-r26909.orig/gui/mplayer/gtk/opts.c	2008-05-07 03:43:52 +0300
-+++ mplayer-svn-r26909/gui/mplayer/gtk/opts.c	2008-05-27 23:05:45 +0300
+diff -urN mplayer-svn-r26991.orig/gui/mplayer/gtk/opts.c mplayer-svn-r26991/gui/mplayer/gtk/opts.c
+--- mplayer-svn-r26991.orig/gui/mplayer/gtk/opts.c	2008-05-07 03:43:52 +0300
++++ mplayer-svn-r26991/gui/mplayer/gtk/opts.c	2008-06-04 23:22:44 +0300
 @@ -318,7 +318,7 @@
     int i;
     for ( i=0;lEncoding[i].name;i++ ) 
@@ -1218,9 +1218,9 @@ diff -urN mplayer-svn-r26909.orig/gui/mplayer/gtk/opts.c mplayer-svn-r26909/gui/
  
   gtk_widget_add_accelerator( dxr3BOk,"clicked",accel_group,GDK_Return,0,GTK_ACCEL_VISIBLE );
   gtk_widget_add_accelerator( dxr3BCancel,"clicked",accel_group,GDK_Escape,0,GTK_ACCEL_VISIBLE );
-diff -urN mplayer-svn-r26909.orig/gui/mplayer/gtk/pl.c mplayer-svn-r26909/gui/mplayer/gtk/pl.c
---- mplayer-svn-r26909.orig/gui/mplayer/gtk/pl.c	2008-05-07 03:43:52 +0300
-+++ mplayer-svn-r26909/gui/mplayer/gtk/pl.c	2008-05-27 23:05:45 +0300
+diff -urN mplayer-svn-r26991.orig/gui/mplayer/gtk/pl.c mplayer-svn-r26991/gui/mplayer/gtk/pl.c
+--- mplayer-svn-r26991.orig/gui/mplayer/gtk/pl.c	2008-05-07 03:43:52 +0300
++++ mplayer-svn-r26991/gui/mplayer/gtk/pl.c	2008-06-04 23:22:44 +0300
 @@ -429,7 +429,7 @@
    PlayList=gtk_window_new( GTK_WINDOW_TOPLEVEL );
    gtk_object_set_data( GTK_OBJECT( PlayList ),"PlayList",PlayList );
@@ -1276,9 +1276,9 @@ diff -urN mplayer-svn-r26909.orig/gui/mplayer/gtk/pl.c mplayer-svn-r26909/gui/mp
  
    gtk_widget_add_accelerator( Cancel,"clicked",accel_group,GDK_Escape,0,GTK_ACCEL_VISIBLE );
  
-diff -urN mplayer-svn-r26909.orig/gui/mplayer/gtk/sb.c mplayer-svn-r26909/gui/mplayer/gtk/sb.c
---- mplayer-svn-r26909.orig/gui/mplayer/gtk/sb.c	2008-05-07 03:43:52 +0300
-+++ mplayer-svn-r26909/gui/mplayer/gtk/sb.c	2008-05-27 23:05:45 +0300
+diff -urN mplayer-svn-r26991.orig/gui/mplayer/gtk/sb.c mplayer-svn-r26991/gui/mplayer/gtk/sb.c
+--- mplayer-svn-r26991.orig/gui/mplayer/gtk/sb.c	2008-05-07 03:43:52 +0300
++++ mplayer-svn-r26991/gui/mplayer/gtk/sb.c	2008-06-04 23:22:44 +0300
 @@ -140,13 +140,13 @@
   accel_group = gtk_accel_group_new ();
  
@@ -1316,9 +1316,9 @@ diff -urN mplayer-svn-r26909.orig/gui/mplayer/gtk/sb.c mplayer-svn-r26909/gui/mp
  
   gtk_widget_add_accelerator( Ok,"clicked",accel_group,GDK_Return,0,GTK_ACCEL_VISIBLE );
   gtk_widget_add_accelerator( Cancel,"clicked",accel_group,GDK_Escape,0,GTK_ACCEL_VISIBLE );
-diff -urN mplayer-svn-r26909.orig/gui/mplayer/gui_common.c mplayer-svn-r26909/gui/mplayer/gui_common.c
---- mplayer-svn-r26909.orig/gui/mplayer/gui_common.c	2008-05-07 03:43:52 +0300
-+++ mplayer-svn-r26909/gui/mplayer/gui_common.c	2008-05-27 23:05:45 +0300
+diff -urN mplayer-svn-r26991.orig/gui/mplayer/gui_common.c mplayer-svn-r26991/gui/mplayer/gui_common.c
+--- mplayer-svn-r26991.orig/gui/mplayer/gui_common.c	2008-05-07 03:43:52 +0300
++++ mplayer-svn-r26991/gui/mplayer/gui_common.c	2008-06-04 23:22:44 +0300
 @@ -69,20 +69,20 @@
                av_strlcpy(tmp, guiIntfStruct.Filename, tmplen);
              if ( tmp[strlen( tmp ) - 4] == '.' ) tmp[strlen( tmp ) - 4]=0;
@@ -1345,9 +1345,9 @@ diff -urN mplayer-svn-r26909.orig/gui/mplayer/gui_common.c mplayer-svn-r26909/gu
    }
   if ( c )
    {
-diff -urN mplayer-svn-r26909.orig/gui/mplayer/menu.c mplayer-svn-r26909/gui/mplayer/menu.c
---- mplayer-svn-r26909.orig/gui/mplayer/menu.c	2008-05-07 03:43:52 +0300
-+++ mplayer-svn-r26909/gui/mplayer/menu.c	2008-05-27 23:05:45 +0300
+diff -urN mplayer-svn-r26991.orig/gui/mplayer/menu.c mplayer-svn-r26991/gui/mplayer/menu.c
+--- mplayer-svn-r26991.orig/gui/mplayer/menu.c	2008-05-07 03:43:52 +0300
++++ mplayer-svn-r26991/gui/mplayer/menu.c	2008-06-04 23:22:44 +0300
 @@ -153,7 +153,7 @@
  #ifdef DEBUG
      mp_msg( MSGT_GPLAYER,MSGL_DBG2,"[menu.h] %s",MSGTR_NEMFMR );
@@ -1357,9 +1357,9 @@ diff -urN mplayer-svn-r26909.orig/gui/mplayer/menu.c mplayer-svn-r26909/gui/mpla
     return;
    }
  
-diff -urN mplayer-svn-r26909.orig/gui/mplayer/widgets.c mplayer-svn-r26909/gui/mplayer/widgets.c
---- mplayer-svn-r26909.orig/gui/mplayer/widgets.c	2008-05-07 03:43:52 +0300
-+++ mplayer-svn-r26909/gui/mplayer/widgets.c	2008-05-27 23:05:45 +0300
+diff -urN mplayer-svn-r26991.orig/gui/mplayer/widgets.c mplayer-svn-r26991/gui/mplayer/widgets.c
+--- mplayer-svn-r26991.orig/gui/mplayer/widgets.c	2008-05-07 03:43:52 +0300
++++ mplayer-svn-r26991/gui/mplayer/widgets.c	2008-06-04 23:22:44 +0300
 @@ -144,17 +144,17 @@
   switch( type)
    {
@@ -1381,9 +1381,9 @@ diff -urN mplayer-svn-r26909.orig/gui/mplayer/widgets.c mplayer-svn-r26909/gui/m
           gtk_widget_show( WarningPixmap );
           gtk_widget_hide( ErrorPixmap );
           break;
-diff -urN mplayer-svn-r26909.orig/gui/skin/skin.c mplayer-svn-r26909/gui/skin/skin.c
---- mplayer-svn-r26909.orig/gui/skin/skin.c	2008-05-07 03:43:51 +0300
-+++ mplayer-svn-r26909/gui/skin/skin.c	2008-05-27 23:05:45 +0300
+diff -urN mplayer-svn-r26991.orig/gui/skin/skin.c mplayer-svn-r26991/gui/skin/skin.c
+--- mplayer-svn-r26991.orig/gui/skin/skin.c	2008-05-07 03:43:51 +0300
++++ mplayer-svn-r26991/gui/skin/skin.c	2008-06-04 23:22:44 +0300
 @@ -58,7 +58,7 @@
   vsnprintf( p,512,format,ap );
   va_end( ap );
@@ -1393,20 +1393,21 @@ diff -urN mplayer-svn-r26909.orig/gui/skin/skin.c mplayer-svn-r26909/gui/skin/sk
   gtkMessageBox( GTK_MB_FATAL,tmp );
  }
  
-diff -urN mplayer-svn-r26909.orig/Makefile mplayer-svn-r26909/Makefile
---- mplayer-svn-r26909.orig/Makefile	2008-05-27 22:58:32 +0300
-+++ mplayer-svn-r26909/Makefile	2008-05-27 23:07:33 +0300
-@@ -751,6 +751,13 @@
- 	@echo '// untranslated messages from the English master file:' >> $@
- 	help/help_diff.sh $(HELP_FILE) < help/help_mp-en.h >> $@
- 	@echo '#endif /* MPLAYER_HELP_MP_H */' >> $@
-+	@echo '#include "config.h"' >> help_mp.h
-+	@echo '#ifdef ENABLE_NLS' >> help_mp.h
-+	@echo '#include <libintl.h>' >> help_mp.h
-+	@echo '#define _(x) gettext(x)' >> help_mp.h
-+	@echo '#else' >> help_mp.h
-+	@echo '#define _(x) (x)' >> help_mp.h
-+	@echo '#endif' >> help_mp.h
- ifneq ($(CHARSET),UTF-8)
- 	iconv -f UTF-8 -t $(CHARSET) $@ > $@.tmp; mv $@.tmp $@
- endif
+diff -urN mplayer-svn-r26991.orig/help/help_create.sh mplayer-svn-r26991/help/help_create.sh
+--- mplayer-svn-r26991.orig/help/help_create.sh	2008-06-04 23:16:29 +0300
++++ mplayer-svn-r26991/help/help_create.sh	2008-06-04 23:26:28 +0300
+@@ -37,6 +37,14 @@
+ #ifndef MPLAYER_HELP_MP_H
+ #define MPLAYER_HELP_MP_H
+ 
++#include "config.h"
++#ifdef ENABLE_NLS
++#include <libintl.h>
++#define _(x) gettext(x)
++#else
++#define _(x) (x)
++#endif
++
+ EOF
+ 
+ cat "$TRANSLATION" >> "$TARGET"
