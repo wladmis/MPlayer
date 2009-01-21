@@ -1,0 +1,11 @@
+diff -urN mplayer-svn-r27482.orig/libmpdemux/mp_taglists.c mplayer-svn-r27482/libmpdemux/mp_taglists.c
+--- mplayer-svn-r27482.orig/libmpdemux/mp_taglists.c	2008-08-26 04:01:15 +0300
++++ mplayer-svn-r27482/libmpdemux/mp_taglists.c	2008-08-26 04:08:45 +0300
+@@ -89,6 +89,7 @@
+     { CODEC_ID_WS_VQA,            MKTAG('V', 'Q', 'A', 'V')},
+     { CODEC_ID_XAN_WC3,           MKTAG('W', 'C', '3', 'V')},
+     { CODEC_ID_NUV,               MKTAG('N', 'U', 'V', '1')},
++    { CODEC_ID_DIRAC,             MKTAG('d', 'r', 'a', 'c')},
+     { 0, 0 },
+ };
+ 

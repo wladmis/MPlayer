@@ -1,7 +1,7 @@
-diff -urN mplayer-svn-r26991.orig/configure mplayer-svn-r26991/configure
---- mplayer-svn-r26991.orig/configure	2008-06-04 23:16:30 +0300
-+++ mplayer-svn-r26991/configure	2008-06-04 23:43:35 +0300
-@@ -5367,10 +5367,10 @@
+diff -urN mplayer-svn-r27482.orig/configure mplayer-svn-r27482/configure
+--- mplayer-svn-r27482.orig/configure	2008-08-26 04:01:15 +0300
++++ mplayer-svn-r27482/configure	2008-08-26 04:17:43 +0300
+@@ -5458,10 +5458,10 @@
    if test "$_dl" = yes; then
      cat > $TMPC << EOF
  #include <inttypes.h>
@@ -16,13 +16,13 @@ diff -urN mplayer-svn-r26991.orig/configure mplayer-svn-r26991/configure
  int main(void) { return 0; }
  EOF
    fi
-diff -urN mplayer-svn-r26991.orig/stream/stream_dvd_common.c mplayer-svn-r26991/stream/stream_dvd_common.c
---- mplayer-svn-r26991.orig/stream/stream_dvd_common.c	2008-06-04 23:16:27 +0300
-+++ mplayer-svn-r26991/stream/stream_dvd_common.c	2008-06-04 23:43:56 +0300
+diff -urN mplayer-svn-r27482.orig/stream/stream_dvd_common.c mplayer-svn-r27482/stream/stream_dvd_common.c
+--- mplayer-svn-r27482.orig/stream/stream_dvd_common.c	2008-08-26 04:01:10 +0300
++++ mplayer-svn-r27482/stream/stream_dvd_common.c	2008-08-26 04:18:57 +0300
 @@ -1,9 +1,9 @@
  #include "config.h"
  #include <inttypes.h>
- #ifdef USE_DVDREAD_INTERNAL
+ #ifdef CONFIG_DVDREAD_INTERNAL
 -#include <dvdread/ifo_types.h>
 +#include "dvdread/ifo_types.h"
  #else
@@ -31,13 +31,13 @@ diff -urN mplayer-svn-r26991.orig/stream/stream_dvd_common.c mplayer-svn-r26991/
  #endif
  #include "stream_dvd_common.h"
  
-diff -urN mplayer-svn-r26991.orig/stream/stream_dvd_common.h mplayer-svn-r26991/stream/stream_dvd_common.h
---- mplayer-svn-r26991.orig/stream/stream_dvd_common.h	2008-06-04 23:16:27 +0300
-+++ mplayer-svn-r26991/stream/stream_dvd_common.h	2008-06-04 23:44:09 +0300
-@@ -3,9 +3,9 @@
- 
+diff -urN mplayer-svn-r27482.orig/stream/stream_dvd_common.h mplayer-svn-r27482/stream/stream_dvd_common.h
+--- mplayer-svn-r27482.orig/stream/stream_dvd_common.h	2008-08-26 04:01:10 +0300
++++ mplayer-svn-r27482/stream/stream_dvd_common.h	2008-08-26 04:18:25 +0300
+@@ -4,9 +4,9 @@
+ #include "config.h"
  #include <inttypes.h>
- #ifdef USE_DVDREAD_INTERNAL
+ #ifdef CONFIG_DVDREAD_INTERNAL
 -#include <dvdread/ifo_types.h>
 +#include "dvdread/ifo_types.h"
  #else
@@ -46,10 +46,10 @@ diff -urN mplayer-svn-r26991.orig/stream/stream_dvd_common.h mplayer-svn-r26991/
  #endif
  
  int mp_dvdtimetomsec(dvd_time_t *dt);
-diff -urN mplayer-svn-r26991.orig/stream/stream_dvd.h mplayer-svn-r26991/stream/stream_dvd.h
---- mplayer-svn-r26991.orig/stream/stream_dvd.h	2008-06-04 23:16:27 +0300
-+++ mplayer-svn-r26991/stream/stream_dvd.h	2008-06-04 23:43:43 +0300
-@@ -8,10 +8,10 @@
+diff -urN mplayer-svn-r27482.orig/stream/stream_dvd.h mplayer-svn-r27482/stream/stream_dvd.h
+--- mplayer-svn-r27482.orig/stream/stream_dvd.h	2008-08-26 04:01:10 +0300
++++ mplayer-svn-r27482/stream/stream_dvd.h	2008-08-26 04:17:43 +0300
+@@ -9,10 +9,10 @@
  #include "dvdread/ifo_read.h"
  #include "dvdread/nav_read.h"
  #else

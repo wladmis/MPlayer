@@ -1,4 +1,4 @@
-tar: r27330:. name=@name@-svn-r27330
+tar: r27482:. name=@name@-svn-r27482
 tar: standard-1.9:. name=standard-1.9 base=standard
-tar: ffmpeg-r14318:. name=ffmpeg-svn-r14318
+tar: ffmpeg-r14970:. name=ffmpeg-svn-r14970
 copy: *.awk *.sh *.in *.patch

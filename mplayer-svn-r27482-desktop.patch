@@ -1,0 +1,26 @@
+diff -urN mplayer-svn-r27482.orig/etc/mplayer.desktop mplayer-svn-r27482/etc/mplayer.desktop
+--- mplayer-svn-r27482.orig/etc/mplayer.desktop	2008-04-14 00:02:39 +0300
++++ mplayer-svn-r27482/etc/mplayer.desktop	2008-08-26 05:02:35 +0300
+@@ -1,6 +1,5 @@
+ [Desktop Entry]
+ Type=Application
+-Encoding=UTF-8
+ Name=MPlayer
+ GenericName=Multimedia player
+ Comment=Multimedia player
+@@ -8,10 +7,13 @@
+ Comment[es]=Reproductor multimedia
+ Comment[fr]=Lecteur multimédia
+ Comment[it]=Lettore multimediale
++Comment[ru]=Проигрыватель мультимедиа
++Comment[uk]=Програвач мультимедіа
+ Comment[zh]=多媒体播放器
+ Icon=mplayer
+ TryExec=gmplayer
+-Exec=gmplayer %F
++Exec=gmplayer %U
+ Terminal=false
+ Categories=GTK;AudioVideo;Audio;Video;Player;TV;
+-MimeType=application/ogg;application/x-ogg;application/sdp;application/smil;application/x-smil;application/streamingmedia;application/x-streamingmedia;application/vnd.rn-realmedia;application/vnd.rn-realmedia-vbr;audio/aac;audio/x-aac;audio/m4a;audio/x-m4a;audio/mp1;audio/x-mp1;audio/mp2;audio/x-mp2;audio/mp3;audio/x-mp3;audio/mpeg;audio/x-mpeg;audio/mpegurl;audio/x-mpegurl;audio/mpg;audio/x-mpg;audio/rn-mpeg;audio/scpls;audio/x-scpls;audio/vnd.rn-realaudio;audio/wav;audio/x-pn-windows-pcm;audio/x-realaudio;audio/x-pn-realaudio;audio/x-ms-wma;audio/x-pls;audio/x-wav;video/mpeg;video/x-mpeg;video/x-mpeg2;video/msvideo;video/x-msvideo;video/quicktime;video/vnd.rn-realvideo;video/x-ms-afs;video/x-ms-asf;video/x-ms-wmv;video/x-ms-wmx;video/x-ms-wvxvideo;video/x-avi;video/x-fli;video/x-theora;video/x-matroska;
++MimeType=application/ogg;application/x-ogg;application/sdp;application/smil;application/x-smil;application/streamingmedia;application/x-streamingmedia;application/vnd.rn-realmedia;application/vnd.rn-realmedia-vbr;audio/aac;audio/x-aac;audio/m4a;audio/x-m4a;audio/mp1;audio/x-mp1;audio/mp2;audio/x-mp2;audio/mp3;audio/x-mp3;audio/mpeg;audio/x-mpeg;audio/mpegurl;audio/x-mpegurl;audio/mpg;audio/x-mpg;audio/rn-mpeg;audio/scpls;audio/x-scpls;audio/vnd.rn-realaudio;audio/wav;audio/x-pn-windows-pcm;audio/x-realaudio;audio/x-pn-realaudio;audio/x-ms-wma;audio/x-pls;audio/x-wav;video/mpeg;video/x-mpeg;video/x-mpeg2;video/msvideo;video/x-msvideo;video/quicktime;video/vnd.rn-realvideo;video/x-ms-afs;video/x-ms-asf;video/x-ms-wmv;video/x-ms-wmx;video/x-ms-wvxvideo;video/x-avi;video/x-fli;video/x-theora;video/x-matroska;video/3gpp;application/x-flash-video;
++StartupNotify=true

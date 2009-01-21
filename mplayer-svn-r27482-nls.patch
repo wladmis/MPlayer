@@ -1,7 +1,7 @@
-diff -urN mplayer-svn-r24081.orig/configure mplayer-svn-r24081/configure
---- mplayer-svn-r24081.orig/configure	2007-08-16 22:30:27 +0300
-+++ mplayer-svn-r24081/configure	2007-08-17 01:34:46 +0300
-@@ -232,6 +232,7 @@
+diff -urN mplayer-svn-r27482.orig/configure mplayer-svn-r27482/configure
+--- mplayer-svn-r27482.orig/configure	2008-08-26 04:01:15 +0300
++++ mplayer-svn-r27482/configure	2008-08-26 04:20:54 +0300
+@@ -218,6 +218,7 @@
    --enable-linux-devfs   set default devices to devfs [disable]
    --enable-termcap       use termcap database for key codes [autodetect]
    --enable-termios       use termios database for key codes [autodetect]
@@ -9,7 +9,7 @@ diff -urN mplayer-svn-r24081.orig/configure mplayer-svn-r24081/configure
    --disable-iconv        disable iconv for encoding conversion [autodetect]
    --disable-langinfo     do not use langinfo [autodetect]
    --enable-lirc          enable LIRC (remote control) support [autodetect]
-@@ -546,6 +547,7 @@
+@@ -551,6 +552,7 @@
  _dxr3=auto
  _ivtv=auto
  _v4l2=auto
@@ -17,7 +17,7 @@ diff -urN mplayer-svn-r24081.orig/configure mplayer-svn-r24081/configure
  _iconv=auto
  _langinfo=auto
  _rtc=auto
-@@ -863,6 +865,8 @@
+@@ -890,6 +892,8 @@
    --disable-ivtv)       _ivtv=no        ;;
    --enable-v4l2)        _v4l2=yes       ;;
    --disable-v4l2)       _v4l2=no        ;;
@@ -26,7 +26,7 @@ diff -urN mplayer-svn-r24081.orig/configure mplayer-svn-r24081/configure
    --enable-iconv)	_iconv=yes	;;
    --disable-iconv)	_iconv=no	;;
    --enable-langinfo)	_langinfo=yes	;;
-@@ -3089,6 +3093,14 @@
+@@ -3140,6 +3144,14 @@
  fi
  echores "$_rpath"
  
@@ -41,7 +41,7 @@ diff -urN mplayer-svn-r24081.orig/configure mplayer-svn-r24081/configure
  echocheck "iconv"
  if test "$_iconv" = auto ; then
    cat > $TMPC << EOF
-@@ -7865,6 +7877,10 @@
+@@ -8147,6 +8159,10 @@
     try to recompile MPlayer with this option disabled! */
  $_def_select
  
@@ -52,10 +52,10 @@ diff -urN mplayer-svn-r24081.orig/configure mplayer-svn-r24081/configure
  /* define this to use iconv(3) function to codepage conversions */
  $_def_iconv
  
-diff -urN mplayer-svn-r24081.orig/mp_msg.c mplayer-svn-r24081/mp_msg.c
---- mplayer-svn-r24081.orig/mp_msg.c	2007-06-05 23:28:31 +0300
-+++ mplayer-svn-r24081/mp_msg.c	2007-08-17 01:33:41 +0300
-@@ -8,6 +8,13 @@
+diff -urN mplayer-svn-r27482.orig/mp_msg.c mplayer-svn-r27482/mp_msg.c
+--- mplayer-svn-r27482.orig/mp_msg.c	2008-08-26 04:01:15 +0300
++++ mplayer-svn-r27482/mp_msg.c	2008-08-26 04:22:32 +0300
+@@ -5,6 +5,13 @@
  
  #include "config.h"
  
@@ -66,19 +66,19 @@ diff -urN mplayer-svn-r24081.orig/mp_msg.c mplayer-svn-r24081/mp_msg.c
 +#define _(x) (x)
 +#endif
 +
- #ifdef USE_ICONV
+ #ifdef CONFIG_ICONV
  #include <iconv.h>
  #include <errno.h>
-@@ -25,7 +32,7 @@
+@@ -22,7 +29,7 @@
  #include "mp_msg.h"
  
  /* maximum message length of mp_msg */
 -#define MSGSIZE_MAX 3072
 +#define MSGSIZE_MAX 4096
  
- int mp_msg_levels[MSGT_MAX]; // verbose level of this module. inited to -2
+ int mp_msg_levels[MSGT_MAX]; // verbose level of this module. initialized to -2
  int mp_msg_level_all = MSGL_STATUS;
-@@ -64,6 +71,11 @@
+@@ -63,6 +70,11 @@
      }
      *precoded = '\0';
      return recoded_filename;
@@ -90,8 +90,8 @@ diff -urN mplayer-svn-r24081.orig/mp_msg.c mplayer-svn-r24081/mp_msg.c
  #endif
  }
  
-@@ -77,7 +89,14 @@
- #ifdef USE_ICONV
+@@ -76,7 +88,14 @@
+ #ifdef CONFIG_ICONV
      mp_msg_charset = getenv("MPLAYER_CHARSET");
      if (!mp_msg_charset)
 +      //setlocale(LC_CTYPE, "");
@@ -105,8 +105,8 @@ diff -urN mplayer-svn-r24081.orig/mp_msg.c mplayer-svn-r24081/mp_msg.c
  #endif
  }
  
-@@ -92,14 +111,14 @@
-     
+@@ -174,14 +193,14 @@
+ 
      if (!mp_msg_test(mod, lev)) return; // do not display
      va_start(va, format);
 -    vsnprintf(tmp, MSGSIZE_MAX, format, va);
@@ -115,10 +115,10 @@ diff -urN mplayer-svn-r24081.orig/mp_msg.c mplayer-svn-r24081/mp_msg.c
      tmp[MSGSIZE_MAX-2] = '\n';
      tmp[MSGSIZE_MAX-1] = 0;
  
- #ifdef HAVE_NEW_GUI
+ #ifdef CONFIG_GUI
      if(use_gui)
 -        guiMessageBox(lev, tmp);
 +        guiMessageBox(lev, _(tmp));
  #endif
  
- #if defined(USE_ICONV) && defined(MSG_CHARSET)
+ #if defined(CONFIG_ICONV) && defined(MSG_CHARSET)

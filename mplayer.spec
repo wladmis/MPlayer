@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc2try2
-%define svnrev 27330
-%define ffmpeg_svnrev 14318
+%define svnrev 27482
+%define ffmpeg_svnrev 14970
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -56,7 +56,6 @@
 %def_enable fribidi
 %def_enable enca
 %def_disable macosx
-%def_disable macosx_finder
 %def_disable macosx_bundle
 %def_disable IPv6
 %def_enable gethostbyname2
@@ -208,7 +207,6 @@
 %endif
 
 %if_disabled macosx
-%set_disable macosx_finder
 %set_disable macosx_bundle
 %endif
 
@@ -307,19 +305,20 @@ Source5: %lname.conf.in
 Source6: mp_help2msg.awk
 Source7: mp_msg2po.awk
 Patch0: %lname-svn-r22221-subreader.patch
-Patch1: %{lname}svn_trunk_revision_26980-dirac-0.10.x.patch
+Patch1: %lname-svn-r27482-dirac.patch
 Patch2: %lname-dvd-ru-svn19389.patch
 Patch3: %Name-1.0pre4-alt-explicit_gif.patch
 Patch4: %lname-svn-r26450-gui.patch
+Patch5: %lname-svn-r27482-desktop.patch
 Patch6: %lname-svn-r21128-alt-artsc_ldflags.patch
 Patch7: %lname-svn-r23099-demux_nut.patch
 Patch8: %lname-svn-r23722-VIDM-win32-codec.patch
-Patch9: %lname-svn-r26991-dvdread.patch
-Patch11: %lname-svn-r24081-nls.patch
+Patch9: %lname-svn-r27482-dvdread.patch
+Patch11: %lname-svn-r27482-nls.patch
 Patch12: %lname-uni-svn26991.patch
 Patch13: %Name-svn-20060711-vbe.patch
-Patch14: %lname-svn-r26991-gui_nls.patch
-Patch16: %lname-svn-r27330-configure.patch
+Patch14: %lname-svn-r27482-gui_nls.patch
+Patch16: %lname-svn-r27482-configure.patch
 Patch17: %lname-svn-r27330-ext_ffmpeg.patch
 Patch27: %lname-svn-r26450-builddocs.patch
 %if_disabled shared_ffmpeg
@@ -469,6 +468,7 @@ Summary:  %Name (GUI version)
 Summary(uk_UA.CP1251): Медіаплейер (GUI вариант)
 Summary(ru_RU.CP1251): Медиаплейер (GUI вариант)
 Group: Video
+BuildArch: noarch
 Requires: %name >= 1.0
 Provides: %gname = %version-%release
 Obsoletes: %Name-skin-default
@@ -530,6 +530,7 @@ MEncoder a movie encoder for Unix and is a part of the %name package.
 %package docs
 Group: Documentation
 Summary: %Name all docs
+BuildArch: noarch
 Requires: %name-doc-tech
 Requires: %name-doc-en
 Requires: %name-doc-world
@@ -546,6 +547,7 @@ Obsoletes: %Name-docs
 %package doc-tech
 Group: Documentation
 Summary: %Name Tech docs
+BuildArch: noarch
 
 %description doc-tech
 %Name Tech docs.
@@ -554,6 +556,7 @@ Summary: %Name Tech docs
 %package doc-en
 Group: Documentation
 Summary: %Name English docs
+BuildArch: noarch
 Obsoletes: %Name-doc
 Provides: %Name-doc
 %if %name != %Name
@@ -568,6 +571,7 @@ Obsoletes: %Name-doc-en
 %package doc-world
 Group: Documentation
 Summary: %Name docs
+BuildArch: noarch
 Conflicts: %name-doc-cs %name-doc-de %name-doc-es %name-doc-fr
 Conflicts: %name-doc-hu %name-doc-it %name-doc-pl %name-doc-zh_CN
 
@@ -578,6 +582,7 @@ Conflicts: %name-doc-hu %name-doc-it %name-doc-pl %name-doc-zh_CN
 %package doc-ru
 Group: Documentation
 Summary: %Name Russian docs
+BuildArch: noarch
 %if %name != %Name
 Provides: %Name-doc-ru = %version-%release
 Obsoletes: %Name-doc-ru
@@ -591,6 +596,7 @@ Obsoletes: %Name-doc-ru
 %package i18n
 Group: Video
 Summary: Languages support for %Name
+BuildArch: noarch
 %{?_enable_mencoder:Provides: mencoder-i18n = %version-%release}
 Requires: %name-i18n-world = %version-%release
 Requires: %name-i18n-ru = %version-%release
@@ -603,6 +609,7 @@ Languages support for %Name.
 %package i18n-world
 Group: Video
 Summary: Languages support for %Name
+BuildArch: noarch
 Conflicts: %name-i18n < 1.0-35.22229.1
 %{?_enable_mencoder:Provides: mencoder-i18n-world = %version-%release}
 
@@ -613,6 +620,7 @@ Languages support for %Name (except ru%{?_enable_nls: and uk}).
 %package i18n-ru
 Group: Video
 Summary: Russian language support for %Name
+BuildArch: noarch
 Requires: man-pages-ru
 Conflicts: %name-i18n < 1.0-35.22229.1
 %{?_enable_mencoder:Provides: mencoder-i18n-ru = %version-%release}
@@ -625,6 +633,7 @@ Russian language support for %Name.
 %package i18n-uk
 Group: Video
 Summary: Ukrainian language support for %Name
+BuildArch: noarch
 Conflicts: %name-i18n < 1.0-35.22229.1
 %{?_enable_mencoder:Provides: mencoder-i18n-uk = %version-%release}
 
@@ -669,6 +678,7 @@ mv ffmpeg-svn-r%ffmpeg_svnrev/lib{av{codec,format,util},postproc} .
 %patch2 -p1
 %patch3 -p1
 %patch4 -p1
+%patch5 -p1
 %patch6 -p1
 %patch7 -p1
 %patch8 -p1
@@ -689,22 +699,11 @@ mv ffmpeg-svn-r%ffmpeg_svnrev/lib{av{codec,format,util},postproc} .
 %{?odml_chunklen:sed -r -i -e 's/^(#[[:blank:]]*define[[:blank:]]+ODML_CHUNKLEN[[:blank:]]+)0x[[:xdigit:]]+/\1%odml_chunklen/' libmpdemux/muxer_avi.c}
 
 %{?svnrev:subst 's/UNKNOWN/%svnrev/' version.sh}
-iconv -f cp1251 -t utf-8 >> etc/%lname.desktop <<__MENU__
-Comment[ru]=Проигрыватель мультимедиа
-Comment[uk]=Програвач мультимедіа
-X-MultipleArgs=true
-StartupNotify=true
-__MENU__
-sed -i -e '/^MimeType=/s|$|video/3gpp;application/x-flash-video;|' -e '/^Icon=/s/\.xpm$//' etc/%lname.desktop
 
 %if_enabled nls
 install -d -m 0755 po
 install -m 0644 %SOURCE6  po/mp_help2msg.awk
 install -m 0644 %SOURCE7  po/mp_msg2po.awk
-%endif
-
-%if %dvdreadlib == ext
-#mv dvdread dvdread.internal
 %endif
 
 subst 's|\\/\\/|//|g' help/help_mp-zh_??.h
@@ -777,7 +776,6 @@ export CFLAGS="%optflags"
 		%{?_enable_fribidi:--with-fribidi-config="pkg-config fribidi"} \
 		%{subst_enable enca} \
 		%{subst_enable macosx} \
-		%{subst_enable_to macosx_finder macosx-finder-support} \
 		%{subst_enable_to macosx_bundle macosx-bundle} \
 		%{subst_enable_to IPv6 inet6} \
 		%{subst_enable gethostbyname2} \
@@ -845,7 +843,7 @@ export CFLAGS="%optflags"
 		%{?_enable_faad_int:--enable-faad-internal --disable-faad-external %{subst_enable_to faad_fixed faad-fixed}} \
 		%{?_enable_faad_ext:--enable-faad-external --disable-faad-internal} \
 		%{subst_enable faac} \
-		%{subst_enable_to dirac libdirac} \
+		%{subst_enable_to dirac libdirac-lavc} \
 		%{subst_enable ladspa} \
 		%{subst_enable libdv} \
 		%{subst_enable mad} \
@@ -972,9 +970,9 @@ popd
 %endif
 
 %if_enabled gui
-for s in 128 64 48 32 24 22 16; do
+for s in 128 96 72 64 48 36 32 24 22 16; do
     convert -border 0x13 -bordercolor none gui/mplayer/pixmaps/MPlayer_mini.xpm \
-	-resize ${s}x$s! -depth 8 gui/mplayer/pixmaps/%{lname}_$s.png
+	-resize ${s}x$s! -depth 8 gui/mplayer/pixmaps/%lname-$s.png
 done
 %endif
 
@@ -1045,8 +1043,8 @@ done
 %{?_enable_mplayer:%add_verify_elf_skiplist %_libdir/%lname/vidix/*}
 
 %if_enabled gui
-for s in 128 64 48 32 24 22 16; do
-    install -D -m 0644 {gui/mplayer/pixmaps/%{lname}_$s,%buildroot%_iconsdir/hicolor/${s}x$s/apps/%lname}.png
+for s in 128 96 72 64 48 36 32 24 22 16; do
+    install -D -m 0644 {gui/mplayer/pixmaps/%lname-$s,%buildroot%_iconsdir/hicolor/${s}x$s/apps/%lname}.png
 done
 install -D -m 0644 {etc/%lname,%buildroot%_desktopdir/%name}.desktop
 ln -sf %lname %buildroot%_bindir/g%lname
@@ -1234,6 +1232,18 @@ ln -sf %lname %buildroot%_bindir/g%lname
 
 
 %changelog
+* Tue Aug 26 2008 Led <led@altlinux.ru> 1.0-alt35.27482.1
+- new SVN snapshot (revision 27482):
+  + MLP decoder via lavc
+  + use lavc ADPCM codecs by default
+- updated:
+  + %lname-svn-r27482-dirac.patch
+  + %lname-svn-r27482-dvdread.patch
+  + %lname-svn-r27482-nls.patch
+  + %lname-svn-r27482-gui_nls.patch
+  + %lname-svn-r27482-configure.patch
+- added %lname-svn-r27482-desktop.patch
+
 * Mon Jul 21 2008 Led <led@altlinux.ru> 1.0-alt35.27330.1
 - new SVN snapshot (revision 27330):
   + video game codecs:
