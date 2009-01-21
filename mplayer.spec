@@ -281,7 +281,7 @@
 Name: %lname
 Version: 1.0
 %define rel 35
-%define subrel 4
+%define subrel 5
 %ifdef svnrev
 Release: alt%rel.%svnrev.%subrel
 %define pkgver svn-r%svnrev
@@ -420,7 +420,7 @@ BuildRequires: libvidix-devel
 %{?_enable_nas:BuildRequires: libaudio-devel}
 
 %if_enabled gui
-BuildRequires: ImageMagick
+BuildRequires: ImageMagick desktop-file-utils
 %if_enabled gtk1
 BuildRequires: gtk+-devel
 %else
@@ -1073,9 +1073,11 @@ done
 %if_enabled gui
 %post gui
 %update_menus
+%update_desktopdb
 
 %postun gui
 %clean_menus
+%clean_desktopdb
 %endif
 %endif
 
@@ -1249,6 +1251,9 @@ done
 
 
 %changelog
+* Fri Apr 04 2008 Led <led@altlinux.ru> 1.0-alt35.25957.5
+- fixes desktop-mime-entry
+
 * Tue Mar 04 2008 Led <led@altlinux.ru> 1.0-alt35.25957.4
 - fixed typo in spec (#14746)
 
