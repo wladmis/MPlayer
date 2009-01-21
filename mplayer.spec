@@ -281,12 +281,12 @@
 Name: %lname
 Version: 1.0
 %define rel 35
-%define subrel 1
+%define subrel 2
 %ifdef svnrev
-Release: alt%rel.%svnrev.%subrel.1
+Release: alt%rel.%svnrev.%subrel
 %define pkgver svn-r%svnrev
 %else
-Release: alt%rel.1
+Release: alt%rel
 %define pkgver %version%prerel
 %endif
 Summary: Media player
@@ -333,11 +333,11 @@ Patch11: %lname-svn-r24081-nls.patch
 Patch12: %lname-uni-svn25678.patch
 Patch13: %Name-svn-20060711-vbe.patch.gz
 Patch14: %lname-svn-r25669-gui_nls.patch
-Patch16: %lname-svn-r25826-configure.patch
+Patch16: %lname-svn-r25957-configure.patch
 Patch17: %lname-svn-r25895-ext_ffmpeg.patch
 Patch27: %lname-svn-r22518-builddocs.patch
 %if_disabled shared_ffmpeg
-%{?_enable_dirac:Patch31: ffmpeg-svn-r11872-dirac-0.9.x.patch}
+%{?_enable_dirac:Patch31: ffmpeg-svn-r11246-dirac-0.9.x.patch}
 Patch32: ffmpeg-uni-svn-r10644.patch
 Patch33: ffmpeg-svn-r10644-amr.patch
 %endif
@@ -1234,8 +1234,12 @@ done
 
 
 %changelog
+* Wed Feb 27 2008 Led <led@altlinux.ru> 1.0-alt35.25957.2
+- fixed ffmpeg-svn-r11246-dirac-0.9.x.patch
+- updated %lname-svn-r25957-configure.patch (fixed #13791 again)
+
 * Sun Feb 10 2008 Grigory Batalov <bga@altlinux.ru> 1.0-alt35.25957.1.1
-- Rebuilt with python-2.5.
+- Rebuilt with python-2.5
 
 * Wed Feb 06 2008 Led <led@altlinux.ru> 1.0-alt35.25957.1
 - new SVN snapshot (revision 25957):
@@ -1278,9 +1282,10 @@ done
   + %lname-svn-r25669-gui_nls.patch
   + %lname-svn-r25669-ext_ffmpeg.patch
 
-* Sun Dec 23 2007 Led <led@altlinux.ru> 1.0-alt35.25513.1
-- new SVN snapshot (revision 25513)
+* Tue Dec 25 2007 Led <led@altlinux.ru> 1.0-alt35.25498.1
+- new SVN snapshot (revision 25498)
 - removed %lname-svn-r25454-dvdnav.patch
+- updated %lname-svn-r25505-configure.patch (fixed #13791)
 
 * Sat Dec 22 2007 Led <led@altlinux.ru> 1.0-alt35.25487.1
 - new SVN snapshot (revision 25487)
