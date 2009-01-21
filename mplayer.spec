@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc2try2
-%define svnrev 26107
-%define ffmpeg_svnrev 12255
+%define svnrev 26450
+%define ffmpeg_svnrev 12824
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -321,25 +321,26 @@ Source5: %lname.conf.in
 Source6: mp_help2msg.awk.gz
 Source7: mp_msg2po.awk.gz
 Patch0: %lname-svn-r22221-subreader.patch
-Patch1: %lname-svn-r25957-dirac-0.9.1.patch
+Patch1: %lname-svn-r26450-dirac-0.9.1.patch
 Patch2: %lname-dvd-ru-svn19389.patch.gz
 Patch3: %Name-1.0pre4-alt-explicit_gif.patch
-Patch4: %lname-svn-r26107-gui.patch
+Patch4: %lname-svn-r26450-gui.patch
 Patch5: %lname-svn-r25454-vo_vidix.patch
 Patch6: %lname-svn-r21128-alt-artsc_ldflags.patch.gz
 Patch7: %lname-svn-r23099-demux_nut.patch
 Patch8: %lname-svn-r23722-VIDM-win32-codec.patch
+Patch9: %lname-svn-r26450-mencoder.patch
 Patch11: %lname-svn-r24081-nls.patch
 Patch12: %lname-uni-svn25678.patch
 Patch13: %Name-svn-20060711-vbe.patch.gz
-Patch14: %lname-svn-r25669-gui_nls.patch
-Patch16: %lname-svn-r25957-configure.patch
-Patch17: %lname-svn-r26107-ext_ffmpeg.patch
-Patch27: %lname-svn-r22518-builddocs.patch
+Patch14: %lname-svn-r26450-gui_nls.patch
+Patch16: %lname-svn-r26450-configure.patch
+Patch17: %lname-svn-r26450-ext_ffmpeg.patch
+Patch27: %lname-svn-r26450-builddocs.patch
 %if_disabled shared_ffmpeg
-%{?_enable_dirac:Patch31: ffmpeg-svn-r12146-dirac-0.9.x.patch}
-Patch32: ffmpeg-uni-svn-r10644.patch
-Patch33: ffmpeg-svn-r10644-amr.patch
+%{?_enable_dirac:Patch31: ffmpeg-svn-r12807-dirac-0.9.x.patch}
+Patch32: ffmpeg-svn-r12807-xvmc-vld.patch
+Patch33: ffmpeg-svn-r12807-amr.patch
 %endif
 
 # Automatically added by buildreq on Wed May 30 2007
@@ -372,7 +373,7 @@ BuildRequires: cpp >= 3.3 gcc >= 3.3 gcc-c++ >= 3.3
 %{?_enable_lzo:BuildRequires: liblzo2-devel}
 %{?_enable_xvid:BuildRequires: libxvid-devel}
 %{?_enable_x264:BuildRequires: libx264-devel}
-%{?_enable_shared_ffmpeg:BuildRequires: libffmpeg-devel >= 1:0.5.0-alt0.11878.1}
+%{?_enable_shared_ffmpeg:BuildRequires: libffmpeg-devel >= 1:0.5.0-alt0.12828.1}
 %{?_enable_tremor_external:BuildRequires: libtremor-devel}
 %{?_enable_vorbis:BuildRequires: libvorbis-devel}
 %{?_enable_speex:BuildRequires: libspeex-devel}
@@ -420,6 +421,7 @@ BuildRequires: libvidix-devel
 %{?_enable_nas:BuildRequires: libaudio-devel}
 
 %if_enabled gui
+BuildRequires: ImageMagick desktop-file-utils
 %if_enabled gtk1
 BuildRequires: gtk+-devel
 %else
@@ -432,7 +434,7 @@ BuildRequires: libgtk+2-devel
 
 %if_with tools
 BuildRequires: perl-libwww perl-Math-BigInt libSDL_image-devel
-BuildRequires: normalize sox termutils vcdimager
+BuildRequires: normalize sox termutils vcdimager mjpegtools
 %endif
 
 %description
@@ -689,6 +691,7 @@ mv ffmpeg-svn-r%ffmpeg_svnrev/lib{av{codec,format,util},postproc} .
 %patch6 -p1
 %patch7 -p1
 %patch8 -p1
+%patch9 -p1
 %patch11 -p1
 %patch12 -p1
 %patch13 -p1
@@ -712,7 +715,7 @@ Comment[uk]=Програвач мультимедіа
 X-MultipleArgs=true
 StartupNotify=true
 __MENU__
-subst '/^MimeType=/s|$|video/3gpp;application/x-flash-video;|' etc/%lname.desktop
+sed -i -e '/^MimeType=/s|$|video/3gpp;application/x-flash-video;|' -e '/^Icon=/s/\.xpm$//' etc/%lname.desktop
 
 %if_enabled nls
 install -d -m 0755 po
@@ -994,6 +997,13 @@ done
 popd
 %endif
 
+%if_enabled gui
+for s in 128 64 48 32 24 22 16; do
+    convert -border 0x13 -bordercolor none gui/mplayer/pixmaps/MPlayer_mini.xpm \
+	-resize ${s}x$s! -depth 8 gui/mplayer/pixmaps/%{lname}_$s.png
+done
+%endif
+
 
 %install
 %make_install DESTDIR=%buildroot install
@@ -1018,9 +1028,6 @@ install -pD -m 0644 TOOLS/README %buildroot%_docdir/%name-tools-%version/README
 %endif
 
 %{?_with_soundwrapper:install -pD -m 0755 %SOURCE3 %buildroot%_sysconfdir/bashrc.d/%lname.sh}
-
-# Menus
-[ "%name" = "%lname" ] || mv %buildroot%_desktopdir/%lname.desktop %buildroot%_desktopdir/%name.desktop
 %endif
 
 # docs
@@ -1054,14 +1061,24 @@ done
 
 %{?_enable_mplayer:%add_verify_elf_skiplist %_libdir/%lname/vidix/*}
 
+%if_enabled gui
+for s in 128 64 48 32 24 22 16; do
+    install -D -m 0644 {gui/mplayer/pixmaps/%{lname}_$s,%buildroot%_iconsdir/hicolor/${s}x$s/apps/%lname}.png
+done
+install -D -m 0644 {etc/%lname,%buildroot%_desktopdir/%name}.desktop
+ln -sf %lname %buildroot%_bindir/g%lname
+%endif
+
 
 %if_enabled mplayer
 %if_enabled gui
 %post gui
 %update_menus
+%update_desktopdb
 
 %postun gui
 %clean_menus
+%clean_desktopdb
 %endif
 %endif
 
@@ -1092,7 +1109,8 @@ done
 %files gui
 %_bindir/%gname
 %_desktopdir/*
-%_datadir/pixmaps/*
+#%%_datadir/pixmaps/*
+%_iconsdir/hicolor/*/apps/*
 %dir %_datadir/%name/skins
 %_datadir/%name/skins/standard
 %_datadir/%name/skins/default
@@ -1234,12 +1252,41 @@ done
 
 
 %changelog
+* Tue Apr 15 2008 Led <led@altlinux.ru> 1.0-alt35.26450.1
+- new SVN snapshot (revision 26450)
+- updated:
+  + %lname-svn-r26450-dirac-0.9.1.patch
+  + %lname-svn-r26450-gui.patch
+  + %lname-svn-r26450-gui_nls.patch
+  + %lname-svn-r26450-configure.patch
+  + %lname-svn-r26450-ext_ffmpeg.patch
+  + %lname-svn-r26450-builddocs.patch
+  + ffmpeg-svn-r12807-dirac-0.9.x.patch
+  + ffmpeg-svn-r12807-amr.patch
+- added %lname-svn-r26450-mencoder.patch
+- replaced ffmpeg-uni-svn-r10644.patch with
+  ffmpeg-svn-r12807-xvmc-vld.patch
+
+* Fri Apr 04 2008 Led <led@altlinux.ru> 1.0-alt35.25957.5
+- fixes desktop-mime-entry
+
+* Tue Mar 04 2008 Led <led@altlinux.ru> 1.0-alt35.25957.4
+- fixed typo in spec (#14746)
+
+* Sun Mar 02 2008 Led <led@altlinux.ru> 1.0-alt35.25957.3
+- added icons
+- fixed BuildRequires
+
 * Wed Feb 27 2008 Led <led@altlinux.ru> 1.0-alt35.26107.1
 - new SVN snapshot (revision 26107)
 - updated:
   + %lname-svn-r25957-configure.patch
   + %lname-svn-r26107-gui.patch
   + %lname-svn-r26107-ext_ffmpeg.patch
+
+* Wed Feb 27 2008 Led <led@altlinux.ru> 1.0-alt35.25957.2
+- fixed ffmpeg-svn-r11246-dirac-0.9.x.patch
+- updated %lname-svn-r25957-configure.patch (fixed #13791 again)
 
 * Tue Feb 19 2008 Led <led@altlinux.ru> 1.0-alt35.26031.1
 - new SVN snapshot (revision 26031)

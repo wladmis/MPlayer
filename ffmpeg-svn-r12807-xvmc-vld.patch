@@ -1,17 +1,17 @@
-diff -urN ffmpeg-svn-r10644.orig/libavcodec/allcodecs.c ffmpeg-svn-r10644/libavcodec/allcodecs.c
---- ffmpeg-svn-r10644.orig/libavcodec/allcodecs.c	2007-10-02 15:01:18 +0300
-+++ ffmpeg-svn-r10644/libavcodec/allcodecs.c	2007-10-02 18:21:09 +0300
-@@ -107,6 +107,7 @@
+diff -urN ffmpeg-svn-r12807.orig/libavcodec/allcodecs.c ffmpeg-svn-r12807/libavcodec/allcodecs.c
+--- ffmpeg-svn-r12807.orig/libavcodec/allcodecs.c	2008-04-01 01:42:36 +0300
++++ ffmpeg-svn-r12807/libavcodec/allcodecs.c	2008-04-14 02:25:59 +0300
+@@ -109,6 +109,7 @@
      REGISTER_DECODER (MJPEGB, mjpegb);
      REGISTER_DECODER (MMVIDEO, mmvideo);
      REGISTER_DECODER (MPEG_XVMC, mpeg_xvmc);
-+    REGISTER_DECODER (MPEG_XXMC, mpeg_xxmc);
++    REGISTER_DECODER (MPEG_XVMC, mpeg_xxmc);
      REGISTER_ENCDEC  (MPEG1VIDEO, mpeg1video);
      REGISTER_ENCDEC  (MPEG2VIDEO, mpeg2video);
      REGISTER_ENCDEC  (MPEG4, mpeg4);
-diff -urN ffmpeg-svn-r10644.orig/libavcodec/mpeg12.c ffmpeg-svn-r10644/libavcodec/mpeg12.c
---- ffmpeg-svn-r10644.orig/libavcodec/mpeg12.c	2007-08-04 21:30:33 +0300
-+++ ffmpeg-svn-r10644/libavcodec/mpeg12.c	2007-10-02 18:20:02 +0300
+diff -urN ffmpeg-svn-r12807.orig/libavcodec/mpeg12.c ffmpeg-svn-r12807/libavcodec/mpeg12.c
+--- ffmpeg-svn-r12807.orig/libavcodec/mpeg12.c	2008-04-14 00:01:48 +0300
++++ ffmpeg-svn-r12807/libavcodec/mpeg12.c	2008-04-14 02:25:59 +0300
 @@ -69,6 +69,7 @@
  extern int XVMC_field_end(MpegEncContext *s);
  extern void XVMC_pack_pblocks(MpegEncContext *s,int cbp);
@@ -20,19 +20,10 @@ diff -urN ffmpeg-svn-r10644.orig/libavcodec/mpeg12.c ffmpeg-svn-r10644/libavcode
  
  static const enum PixelFormat pixfmt_yuv_420[]= {PIX_FMT_YUV420P,-1};
  static const enum PixelFormat pixfmt_yuv_422[]= {PIX_FMT_YUV422P,-1};
-@@ -76,6 +77,7 @@
- static const enum PixelFormat pixfmt_xvmc_mpg2_420[] = {
-                                            PIX_FMT_XVMC_MPEG2_IDCT,
-                                            PIX_FMT_XVMC_MPEG2_MC,
-+					   PIX_FMT_XVMC_MPEG2_VLD,
-                                            -1};
- 
- uint8_t ff_mpeg12_static_rl_table_store[2][2][2*MAX_RUN + MAX_LEVEL + 3];
-@@ -1682,6 +1684,16 @@
+@@ -1682,6 +1683,14 @@
          return -1;
      }
  
-+#ifdef HAVE_XVMC
 +    if (s->avctx->xvmc_acceleration == 4){
 +        int used = XVMC_decode_slice(s, mb_y, *buf, buf_size);
 +        if (used < 0)
@@ -40,14 +31,13 @@ diff -urN ffmpeg-svn-r10644.orig/libavcodec/mpeg12.c ffmpeg-svn-r10644/libavcode
 +        *buf += used - 1;
 +        return DECODE_SLICE_OK;
 +    }
-+#endif
 +
      init_get_bits(&s->gb, *buf, buf_size*8);
  
      ff_mpeg1_clean_buffers(s);
-@@ -2472,8 +2484,40 @@
-     .flush= ff_mpeg_flush,
- };
+@@ -2506,6 +2515,39 @@
+ 
+ #endif
  
 +static int mpeg_xxmc_decode_init(AVCodecContext *avctx){
 +    Mpeg1Context *s;
@@ -80,29 +70,26 @@ diff -urN ffmpeg-svn-r10644.orig/libavcodec/mpeg12.c ffmpeg-svn-r10644/libavcode
 +    .flush= ff_mpeg_flush,
 +};
 +
- #endif
- 
++
 +
  /* this is ugly i know, but the alternative is too make
     hundreds of vars global and prefix them with ff_mpeg1_
     which is far uglier. */
-diff -urN ffmpeg-svn-r10644.orig/libavcodec/xvmc_render.h ffmpeg-svn-r10644/libavcodec/xvmc_render.h
---- ffmpeg-svn-r10644.orig/libavcodec/xvmc_render.h	2007-07-11 23:41:51 +0300
-+++ ffmpeg-svn-r10644/libavcodec/xvmc_render.h	2007-10-02 18:20:02 +0300
-@@ -27,7 +27,7 @@
+diff -urN ffmpeg-svn-r12807.orig/libavcodec/xvmc_render.h ffmpeg-svn-r12807/libavcodec/xvmc_render.h
+--- ffmpeg-svn-r12807.orig/libavcodec/xvmc_render.h	2008-02-23 00:51:46 +0200
++++ ffmpeg-svn-r12807/libavcodec/xvmc_render.h	2008-04-14 02:25:59 +0300
+@@ -27,6 +27,7 @@
  #include <X11/extensions/Xv.h>
  #include <X11/extensions/Xvlib.h>
  #include <X11/extensions/XvMClib.h>
--
 +#include <X11/extensions/vldXvMC.h>
  
+ 
  //the surface should be shown, video driver manipulates this
- #define MP_XVMC_STATE_DISPLAY_PENDING 1
-@@ -50,6 +50,14 @@
-   int idct;//Do we use IDCT acceleration?
-   int chroma_format;//420,422,444
-   int unsigned_intra;//+-128 for intra pictures after clip
-+  int reserved1[3];
+@@ -69,6 +70,13 @@
+   int next_free_data_block_num;//used in add_mv_block, pointer to next free block
+ //extensions
+   void * p_osd_target_surface_render;//pointer to the surface where subpicture is rendered
 +  // These are for the XVMC VLD slice interface
 +  int pict_type; //this is for skipping frames
 +  int   slice_code; 
@@ -110,27 +97,26 @@ diff -urN ffmpeg-svn-r10644.orig/libavcodec/xvmc_render.h ffmpeg-svn-r10644/liba
 +  unsigned char *slice_data;
 +  Display *disp;
 +  XvMCContext *ctx;
-   XvMCSurface* p_surface;//pointer to rendered surface, never changed
  
- //these are changed by decoder
-diff -urN ffmpeg-svn-r10644.orig/libavcodec/xvmcvideo.c ffmpeg-svn-r10644/libavcodec/xvmcvideo.c
---- ffmpeg-svn-r10644.orig/libavcodec/xvmcvideo.c	2007-09-19 04:01:18 +0300
-+++ ffmpeg-svn-r10644/libavcodec/xvmcvideo.c	2007-10-02 18:20:02 +0300
-@@ -68,11 +68,64 @@
+ } xvmc_render_state_t;
+ 
+diff -urN ffmpeg-svn-r12807.orig/libavcodec/xvmcvideo.c ffmpeg-svn-r12807/libavcodec/xvmcvideo.c
+--- ffmpeg-svn-r12807.orig/libavcodec/xvmcvideo.c	2008-04-01 01:42:36 +0300
++++ ffmpeg-svn-r12807/libavcodec/xvmcvideo.c	2008-04-14 02:34:43 +0300
+@@ -66,11 +66,63 @@
      }
  }
  
-+static XvMCSurface* findPastSurface(MpegEncContext *s,
-+                                    xvmc_render_state_t *render)
++static XvMCSurface* findPastSurface(MpegEncContext *s, xvmc_render_state_t *render)
 +{
 +    Picture *lastp = s->last_picture_ptr;
 +    xvmc_render_state_t *last = NULL;
 +
 +    if (NULL!=lastp) {
 +        last = (xvmc_render_state_t*)(lastp->data[2]);
-+        if (B_TYPE==last->pict_type)
++        if (FF_B_TYPE==last->pict_type)
 +            av_log(s->avctx,AV_LOG_DEBUG, "Past frame is a B frame in findPastSurface, this is bad.\n");
-+        //assert(B_TYPE!=last->pict_type);
++        //assert(FF_B_TYPE!=last->pict_type);
 +    }
 +
 +    if (NULL==last)
@@ -143,7 +129,7 @@ diff -urN ffmpeg-svn-r10644.orig/libavcodec/xvmcvideo.c ffmpeg-svn-r10644/libavc
 +        return 0;
 +
 +    return (last->state & MP_XVMC_STATE_PREDICTION) ? last->p_surface : 0;
-+}
++ }
 +
 +static XvMCSurface* findFutureSurface(MpegEncContext *s)
 +{
@@ -152,9 +138,9 @@ diff -urN ffmpeg-svn-r10644.orig/libavcodec/xvmcvideo.c ffmpeg-svn-r10644/libavc
 +
 +    if (NULL!=nextp) {
 +        next = (xvmc_render_state_t*)(nextp->data[2]);
-+        if (B_TYPE==next->pict_type)
++        if (FF_B_TYPE==next->pict_type)
 +            av_log(s->avctx,AV_LOG_DEBUG, "Next frame is a B frame in findFutureSurface, thisis bad.\n");
-+        //assert(B_TYPE!=next->pict_type);
++        //assert(FF_B_TYPE!=next->pict_type);
 +    }
 +
 +    assert(NULL!=next);
@@ -165,11 +151,10 @@ diff -urN ffmpeg-svn-r10644.orig/libavcodec/xvmcvideo.c ffmpeg-svn-r10644/libavc
 +    return (next->state & MP_XVMC_STATE_PREDICTION) ? next->p_surface : 0;
 +}
 +
- //these functions should be called on every new field or/and frame
- //They should be safe if they are called few times for same field!
+ //These functions should be called on every new field and/or frame.
+ //They should be safe if they are called a few times for the same field!
  int XVMC_field_start(MpegEncContext*s, AVCodecContext *avctx){
--xvmc_render_state_t * render,* last, * next;
-+    xvmc_render_state_t * render, * last, * next;
+ xvmc_render_state_t * render,* last, * next;
  
 +    XvMCMpegControl     binfo;
 +    XvMCQMatrix         qmatrix;
@@ -178,11 +163,11 @@ diff -urN ffmpeg-svn-r10644.orig/libavcodec/xvmcvideo.c ffmpeg-svn-r10644/libavc
 +
 +    memset(&binfo, 0, sizeof(binfo));
 +    memset(&qmatrix, 0, sizeof(qmatrix));
-+    
++
      assert(avctx != NULL);
  
      render = (xvmc_render_state_t*)s->current_picture.data[2];
-@@ -83,12 +136,49 @@
+@@ -81,12 +133,49 @@
      render->picture_structure = s->picture_structure;
      render->flags = (s->first_field)? 0: XVMC_SECOND_FIELD;
  
@@ -209,9 +194,9 @@ diff -urN ffmpeg-svn-r10644.orig/libavcodec/xvmcvideo.c ffmpeg-svn-r10644/libavc
 +    if (s->avctx->xvmc_acceleration == 4)
 +{
 +    switch(s->pict_type){
-+        case  I_TYPE:
++        case  FF_I_TYPE:
 +            break;
-+        case  B_TYPE:
++        case  FF_B_TYPE:
 +            render->p_past_surface = findPastSurface(s, render);
 +            render->p_future_surface = findFutureSurface(s);
 +            if (!render->p_past_surface)
@@ -220,7 +205,7 @@ diff -urN ffmpeg-svn-r10644.orig/libavcodec/xvmcvideo.c ffmpeg-svn-r10644/libavc
 +                av_log(avctx, AV_LOG_ERROR, "error: decoding B frame and future frame is null!");
 +            break;
 +            
-+        case  P_TYPE:
++        case  FF_P_TYPE:
 +            render->p_past_surface = findPastSurface(s, render);
 +            render->p_future_surface = render->p_surface;
 +            if (!render->p_past_surface)
@@ -230,14 +215,15 @@ diff -urN ffmpeg-svn-r10644.orig/libavcodec/xvmcvideo.c ffmpeg-svn-r10644/libavc
 +} else
 +{
      switch(s->pict_type){
-         case  I_TYPE:
+         case  FF_I_TYPE:
              return 0;// no prediction from other frames
-@@ -109,8 +199,94 @@
+@@ -107,8 +196,94 @@
              render->p_past_surface = last->p_surface;
              return 0;
      }
 +}
-+
+ 
+-return -1;
 +    if (s->avctx->xvmc_acceleration == 4)
 +    {
 +        for (i = 0; i < 64; i++){
@@ -277,9 +263,9 @@ diff -urN ffmpeg-svn-r10644.orig/libavcodec/xvmcvideo.c ffmpeg-svn-r10644/libavc
 +    binfo.picture_structure = s->picture_structure;
 +    switch (s->pict_type)
 +    {
-+    case I_TYPE:    binfo.picture_coding_type = XVMC_I_PICTURE;     break;
-+    case P_TYPE:    binfo.picture_coding_type = XVMC_P_PICTURE;     break;
-+    case B_TYPE:    binfo.picture_coding_type = XVMC_B_PICTURE;     break;
++    case FF_I_TYPE:    binfo.picture_coding_type = XVMC_I_PICTURE;     break;
++    case FF_P_TYPE:    binfo.picture_coding_type = XVMC_P_PICTURE;     break;
++    case FF_B_TYPE:    binfo.picture_coding_type = XVMC_B_PICTURE;     break;
 +    default:    av_log(avctx, AV_LOG_ERROR, "%s: Unknown picture coding type: %d\n", __FUNCTION__, s->pict_type);
 +    }
 +
@@ -322,13 +308,12 @@ diff -urN ffmpeg-svn-r10644.orig/libavcodec/xvmcvideo.c ffmpeg-svn-r10644/libavc
 +    if (!status)
 +        return 0;
 +    }
- 
--return -1;
++
 +    return -1;
  }
  
  void XVMC_field_end(MpegEncContext *s){
-@@ -118,10 +294,20 @@
+@@ -116,10 +291,20 @@
      render = (xvmc_render_state_t*)s->current_picture.data[2];
      assert(render != NULL);
  
@@ -349,10 +334,11 @@ diff -urN ffmpeg-svn-r10644.orig/libavcodec/xvmcvideo.c ffmpeg-svn-r10644/libavc
  }
  
  void XVMC_decode_mb(MpegEncContext *s){
-@@ -311,4 +497,48 @@
+@@ -308,3 +493,46 @@
+ // DumpMBlockInfo(mv_block);
  
  }
- 
++
 +static int length_to_next_start(uint8_t* pbuf_ptr, int buf_size)
 +{
 +    uint8_t*    buf_ptr;
@@ -382,7 +368,7 @@ diff -urN ffmpeg-svn-r10644.orig/libavcodec/xvmcvideo.c ffmpeg-svn-r10644/libavc
 +    {
 +        if ((mb_y == s->mb_height - 1) || 
 +            (!s->progressive_sequence && mb_y == (s->mb_height >> 1) -1) ||
-+	    (s->codec_id != CODEC_ID_MPEG2VIDEO))
++            (s->codec_id != CODEC_ID_MPEG2VIDEO))
 +            slicelen = buf_size;
 +        else
 +            return;
@@ -395,13 +381,10 @@ diff -urN ffmpeg-svn-r10644.orig/libavcodec/xvmcvideo.c ffmpeg-svn-r10644/libavc
 +
 +    ff_draw_horiz_band(s, 0, 0);
 +}
-+
- #endif
-+
-diff -urN ffmpeg-svn-r10644.orig/libavutil/avutil.h ffmpeg-svn-r10644/libavutil/avutil.h
---- ffmpeg-svn-r10644.orig/libavutil/avutil.h	2007-10-02 15:01:18 +0300
-+++ ffmpeg-svn-r10644/libavutil/avutil.h	2007-10-02 18:20:02 +0300
-@@ -84,6 +84,7 @@
+diff -urN ffmpeg-svn-r12807.orig/libavutil/avutil.h ffmpeg-svn-r12807/libavutil/avutil.h
+--- ffmpeg-svn-r12807.orig/libavutil/avutil.h	2008-03-11 03:51:27 +0200
++++ ffmpeg-svn-r12807/libavutil/avutil.h	2008-04-14 02:25:59 +0300
+@@ -95,6 +95,7 @@
      PIX_FMT_YUVJ444P,  ///< Planar YUV 4:4:4, 24bpp, full scale (jpeg)
      PIX_FMT_XVMC_MPEG2_MC,///< XVideo Motion Acceleration via common packet passing(xvmc_render.h)
      PIX_FMT_XVMC_MPEG2_IDCT,

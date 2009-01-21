@@ -1,0 +1,99 @@
+diff -urN mplayer-svn-r26450.orig/cfg-common.h mplayer-svn-r26450/cfg-common.h
+--- mplayer-svn-r26450.orig/cfg-common.h	2008-04-14 22:57:07 +0300
++++ mplayer-svn-r26450/cfg-common.h	2008-04-15 02:43:44 +0300
+@@ -372,8 +372,6 @@
+ };
+ #endif /* WIN32 */
+ 
+-extern const m_option_t noconfig_opts[];
+-
+ extern const m_option_t lavc_decode_opts_conf[];
+ extern const m_option_t xvid_dec_opts[];
+ 
+diff -urN mplayer-svn-r26450.orig/cfg-common-opts.h mplayer-svn-r26450/cfg-common-opts.h
+--- mplayer-svn-r26450.orig/cfg-common-opts.h	2008-04-14 22:57:07 +0300
++++ mplayer-svn-r26450/cfg-common-opts.h	2008-04-15 02:43:36 +0300
+@@ -18,7 +18,6 @@
+ #ifdef WIN32
+ 	{"priority", &proc_priority, CONF_TYPE_STRING, 0, 0, 0, NULL},
+ #endif
+-	{"noconfig", noconfig_opts, CONF_TYPE_SUBCONFIG, CONF_GLOBAL|CONF_NOCFG|CONF_PRE_PARSE, 0, 0, NULL},
+ 
+ // ------------------------- stream options --------------------
+ 
+diff -urN mplayer-svn-r26450.orig/cfg-mplayer.h mplayer-svn-r26450/cfg-mplayer.h
+--- mplayer-svn-r26450.orig/cfg-mplayer.h	2008-04-14 00:02:39 +0300
++++ mplayer-svn-r26450/cfg-mplayer.h	2008-04-15 02:43:22 +0300
+@@ -48,6 +48,7 @@
+ extern char * skinName;
+ extern int guiWinID;
+ 
++extern const m_option_t noconfig_opts[];
+ 
+ /* from libvo/aspect.c */
+ extern float force_monitor_aspect;
+@@ -356,6 +357,7 @@
+ 
+ #include "cfg-common-opts.h"
+ 
++	{"noconfig", noconfig_opts, CONF_TYPE_SUBCONFIG, CONF_GLOBAL|CONF_NOCFG|CONF_PRE_PARSE, 0, 0, NULL},
+ 	{"list-properties", &list_properties, CONF_TYPE_FLAG, CONF_GLOBAL, 0, 1, NULL},
+ 	{"identify", &mp_msg_levels[MSGT_IDENTIFY], CONF_TYPE_FLAG, CONF_GLOBAL, 0, MSGL_V, NULL},
+ 	{"-help", help_text, CONF_TYPE_PRINT, CONF_NOCFG|CONF_GLOBAL, 0, 0, NULL},
+diff -urN mplayer-svn-r26450.orig/mpcommon.c mplayer-svn-r26450/mpcommon.c
+--- mplayer-svn-r26450.orig/mpcommon.c	2008-04-14 22:57:07 +0300
++++ mplayer-svn-r26450/mpcommon.c	2008-04-15 02:40:45 +0300
+@@ -210,24 +210,3 @@
+ /* Parse -noconfig common to both programs */
+ int disable_system_conf=0;
+ int disable_user_conf=0;
+-extern int disable_gui_conf;
+-
+-/* Disable all configuration files */
+-static void noconfig_all(void)
+-{
+-    disable_system_conf = 1;
+-    disable_user_conf = 1;
+-#ifdef HAVE_NEW_GUI
+-    disable_gui_conf = 1;
+-#endif /* HAVE_NEW_GUI */
+-}
+-
+-const m_option_t noconfig_opts[] = {
+-    {"all", noconfig_all, CONF_TYPE_FUNC, CONF_GLOBAL|CONF_NOCFG|CONF_PRE_PARSE, 0, 0, NULL},
+-    {"system", &disable_system_conf, CONF_TYPE_FLAG, CONF_GLOBAL|CONF_NOCFG|CONF_PRE_PARSE, 0, 1, NULL},
+-    {"user", &disable_user_conf, CONF_TYPE_FLAG, CONF_GLOBAL|CONF_NOCFG|CONF_PRE_PARSE, 0, 1, NULL},
+-#ifdef HAVE_NEW_GUI
+-    {"gui", &disable_gui_conf, CONF_TYPE_FLAG, CONF_GLOBAL|CONF_NOCFG|CONF_PRE_PARSE, 0, 1, NULL},
+-#endif /* HAVE_NEW_GUI */
+-    {NULL, NULL, 0, 0, 0, 0, NULL}
+-};
+diff -urN mplayer-svn-r26450.orig/mplayer.c mplayer-svn-r26450/mplayer.c
+--- mplayer-svn-r26450.orig/mplayer.c	2008-04-14 22:57:07 +0300
++++ mplayer-svn-r26450/mplayer.c	2008-04-15 02:40:28 +0300
+@@ -4026,3 +4026,25 @@
+ 
+ return 1;
+ }
++
++extern int disable_gui_conf;
++
++/* Disable all configuration files */
++static void noconfig_all(void)
++{
++    disable_system_conf = 1;
++    disable_user_conf = 1;
++#ifdef HAVE_NEW_GUI
++    disable_gui_conf = 1;
++#endif /* HAVE_NEW_GUI */
++}
++
++const m_option_t noconfig_opts[] = {
++    {"all", noconfig_all, CONF_TYPE_FUNC, CONF_GLOBAL|CONF_NOCFG|CONF_PRE_PARSE, 0, 0, NULL},
++    {"system", &disable_system_conf, CONF_TYPE_FLAG, CONF_GLOBAL|CONF_NOCFG|CONF_PRE_PARSE, 0, 1, NULL},
++    {"user", &disable_user_conf, CONF_TYPE_FLAG, CONF_GLOBAL|CONF_NOCFG|CONF_PRE_PARSE, 0, 1, NULL},
++#ifdef HAVE_NEW_GUI
++    {"gui", &disable_gui_conf, CONF_TYPE_FLAG, CONF_GLOBAL|CONF_NOCFG|CONF_PRE_PARSE, 0, 1, NULL},
++#endif /* HAVE_NEW_GUI */
++    {NULL, NULL, 0, 0, 0, 0, NULL}
++};

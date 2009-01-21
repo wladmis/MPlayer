@@ -1,0 +1,11 @@
+diff -urN mplayer-svn-r26450.orig/libmpdemux/demux_lavf.c mplayer-svn-r26450/libmpdemux/demux_lavf.c
+--- mplayer-svn-r26450.orig/libmpdemux/demux_lavf.c	2008-04-14 00:02:38 +0300
++++ mplayer-svn-r26450/libmpdemux/demux_lavf.c	2008-04-15 02:53:15 +0300
+@@ -33,7 +33,6 @@
+ 
+ #include "libavformat/avformat.h"
+ #include "libavutil/avutil.h"
+-#include "libavformat/avi.h"
+ #include "libavcodec/opt.h"
+ #include "libavformat/riff.h"
+ 

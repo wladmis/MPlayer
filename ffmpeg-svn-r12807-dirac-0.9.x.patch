@@ -1,6 +1,6 @@
-diff -urN ffmpeg-svn-r11872.orig/libavcodec/allcodecs.c ffmpeg-svn-r11872/libavcodec/allcodecs.c
---- ffmpeg-svn-r11872.orig/libavcodec/allcodecs.c	2008-02-06 00:32:46 +0200
-+++ ffmpeg-svn-r11872/libavcodec/allcodecs.c	2008-02-06 01:10:14 +0200
+diff -urN ffmpeg-svn-r12807.orig/libavcodec/allcodecs.c ffmpeg-svn-r12807/libavcodec/allcodecs.c
+--- ffmpeg-svn-r12807.orig/libavcodec/allcodecs.c	2008-04-01 01:42:36 +0300
++++ ffmpeg-svn-r12807/libavcodec/allcodecs.c	2008-04-14 02:22:22 +0300
 @@ -73,6 +73,7 @@
      REGISTER_DECODER (CLJR, cljr);
      REGISTER_DECODER (CSCD, cscd);
@@ -9,7 +9,7 @@ diff -urN ffmpeg-svn-r11872.orig/libavcodec/allcodecs.c ffmpeg-svn-r11872/libavc
      REGISTER_ENCDEC  (DNXHD, dnxhd);
      REGISTER_DECODER (DSICINVIDEO, dsicinvideo);
      REGISTER_ENCDEC  (DVVIDEO, dvvideo);
-@@ -284,6 +285,7 @@
+@@ -289,6 +290,7 @@
      REGISTER_PARSER  (AAC, aac);
      REGISTER_PARSER  (AC3, ac3);
      REGISTER_PARSER  (CAVSVIDEO, cavsvideo);
@@ -17,21 +17,9 @@ diff -urN ffmpeg-svn-r11872.orig/libavcodec/allcodecs.c ffmpeg-svn-r11872/libavc
      REGISTER_PARSER  (DCA, dca);
      REGISTER_PARSER  (DVBSUB, dvbsub);
      REGISTER_PARSER  (DVDSUB, dvdsub);
-diff -urN ffmpeg-svn-r11872.orig/libavcodec/avcodec.h ffmpeg-svn-r11872/libavcodec/avcodec.h
---- ffmpeg-svn-r11872.orig/libavcodec/avcodec.h	2008-02-06 00:32:46 +0200
-+++ ffmpeg-svn-r11872/libavcodec/avcodec.h	2008-02-06 01:10:14 +0200
-@@ -288,6 +288,8 @@
-     /* other specific kind of codecs (generaly used for attachments) */
-     CODEC_ID_TTF= 0x18000,
- 
-+    CODEC_ID_DIRAC = 0x18000,
-+
-     CODEC_ID_MPEG2TS= 0x20000, /**< _FAKE_ codec to indicate a raw MPEG-2 TS
-                                 * stream (only used by libavformat) */
- };
-diff -urN ffmpeg-svn-r11872.orig/libavcodec/dirac.c ffmpeg-svn-r11872/libavcodec/dirac.c
---- ffmpeg-svn-r11872.orig/libavcodec/dirac.c	1970-01-01 03:00:00 +0300
-+++ ffmpeg-svn-r11872/libavcodec/dirac.c	2008-02-06 01:13:24 +0200
+diff -urN ffmpeg-svn-r12807.orig/libavcodec/dirac.c ffmpeg-svn-r12807/libavcodec/dirac.c
+--- ffmpeg-svn-r12807.orig/libavcodec/dirac.c	1970-01-01 03:00:00 +0300
++++ ffmpeg-svn-r12807/libavcodec/dirac.c	2008-04-14 02:22:22 +0300
 @@ -0,0 +1,770 @@
 +/**
 + * @file dirac.c
@@ -803,10 +791,10 @@ diff -urN ffmpeg-svn-r11872.orig/libavcodec/dirac.c ffmpeg-svn-r11872/libavcodec
 +    parse_dirac,
 +    dirac_parse_close,
 +};
-diff -urN ffmpeg-svn-r11872.orig/libavcodec/Makefile ffmpeg-svn-r11872/libavcodec/Makefile
---- ffmpeg-svn-r11872.orig/libavcodec/Makefile	2008-02-06 00:32:46 +0200
-+++ ffmpeg-svn-r11872/libavcodec/Makefile	2008-02-06 01:10:14 +0200
-@@ -306,6 +306,7 @@
+diff -urN ffmpeg-svn-r12807.orig/libavcodec/Makefile ffmpeg-svn-r12807/libavcodec/Makefile
+--- ffmpeg-svn-r12807.orig/libavcodec/Makefile	2008-04-14 00:01:48 +0300
++++ ffmpeg-svn-r12807/libavcodec/Makefile	2008-04-14 02:22:22 +0300
+@@ -317,6 +317,7 @@
  OBJS-$(CONFIG_LIBA52)                  += liba52.o
  OBJS-$(CONFIG_LIBAMR_NB)               += libamr.o
  OBJS-$(CONFIG_LIBAMR_WB)               += libamr.o
@@ -814,9 +802,9 @@ diff -urN ffmpeg-svn-r11872.orig/libavcodec/Makefile ffmpeg-svn-r11872/libavcode
  OBJS-$(CONFIG_LIBFAAC)                 += libfaac.o
  OBJS-$(CONFIG_LIBFAAD)                 += libfaad.o
  OBJS-$(CONFIG_LIBGSM)                  += libgsm.o
-diff -urN ffmpeg-svn-r11872.orig/libavformat/allformats.c ffmpeg-svn-r11872/libavformat/allformats.c
---- ffmpeg-svn-r11872.orig/libavformat/allformats.c	2008-02-06 00:32:48 +0200
-+++ ffmpeg-svn-r11872/libavformat/allformats.c	2008-02-06 01:10:14 +0200
+diff -urN ffmpeg-svn-r12807.orig/libavformat/allformats.c ffmpeg-svn-r12807/libavformat/allformats.c
+--- ffmpeg-svn-r12807.orig/libavformat/allformats.c	2008-04-01 01:42:37 +0300
++++ ffmpeg-svn-r12807/libavformat/allformats.c	2008-04-14 02:22:22 +0300
 @@ -68,6 +68,7 @@
      REGISTER_DEMUXER  (C93, c93);
      REGISTER_MUXER    (CRC, crc);
@@ -825,9 +813,9 @@ diff -urN ffmpeg-svn-r11872.orig/libavformat/allformats.c ffmpeg-svn-r11872/liba
      REGISTER_DEMUXER  (DSICIN, dsicin);
      REGISTER_DEMUXER  (DTS, dts);
      REGISTER_MUXDEMUX (DV, dv);
-diff -urN ffmpeg-svn-r11872.orig/libavformat/raw.c ffmpeg-svn-r11872/libavformat/raw.c
---- ffmpeg-svn-r11872.orig/libavformat/raw.c	2008-01-21 04:07:25 +0200
-+++ ffmpeg-svn-r11872/libavformat/raw.c	2008-02-06 01:10:14 +0200
+diff -urN ffmpeg-svn-r12807.orig/libavformat/raw.c ffmpeg-svn-r12807/libavformat/raw.c
+--- ffmpeg-svn-r12807.orig/libavformat/raw.c	2008-02-23 00:51:51 +0200
++++ ffmpeg-svn-r12807/libavformat/raw.c	2008-04-14 02:22:22 +0300
 @@ -236,6 +236,23 @@
      return 0;
  }
@@ -886,14 +874,14 @@ diff -urN ffmpeg-svn-r11872.orig/libavformat/raw.c ffmpeg-svn-r11872/libavformat
  /* pcm formats */
  
  #define PCMINPUTDEF(name, long_name, ext, codec) \
-diff -urN ffmpeg-svn-r11872.orig/libavformat/riff.c ffmpeg-svn-r11872/libavformat/riff.c
---- ffmpeg-svn-r11872.orig/libavformat/riff.c	2008-02-06 00:32:48 +0200
-+++ ffmpeg-svn-r11872/libavformat/riff.c	2008-02-06 01:10:14 +0200
-@@ -173,6 +173,7 @@
-     { CODEC_ID_JPEG2000, MKTAG('M', 'J', '2', 'C') },
-     { CODEC_ID_VMNC, MKTAG('V', 'M', 'n', 'c') },
-     { CODEC_ID_TARGA, MKTAG('t', 'g', 'a', ' ') },
-+    { CODEC_ID_DIRAC, MKTAG('d', 'r', 'a', 'c') },
-     { CODEC_ID_NONE, 0 },
+diff -urN ffmpeg-svn-r12807.orig/libavformat/riff.c ffmpeg-svn-r12807/libavformat/riff.c
+--- ffmpeg-svn-r12807.orig/libavformat/riff.c	2008-03-11 03:51:28 +0200
++++ ffmpeg-svn-r12807/libavformat/riff.c	2008-04-14 02:23:22 +0300
+@@ -160,6 +160,7 @@
+     { CODEC_ID_VMNC,         MKTAG('V', 'M', 'n', 'c') },
+     { CODEC_ID_TARGA,        MKTAG('t', 'g', 'a', ' ') },
+     { CODEC_ID_CLJR,         MKTAG('c', 'l', 'j', 'r') },
++    { CODEC_ID_DIRAC,        MKTAG('d', 'r', 'a', 'c') },
+     { CODEC_ID_NONE,         0 }
  };
  
