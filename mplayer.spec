@@ -79,7 +79,7 @@
 %def_enable xvid
 %def_enable x264
 %def_enable ffmpeg
-%def_disable shared_ffmpeg
+%def_enable shared_ffmpeg
 %def_disable faad_ext
 %def_enable faad_int
 %def_disable faad_fixed
@@ -281,7 +281,7 @@
 Name: %lname
 Version: 1.0
 %define rel 35
-%define subrel 1
+%define subrel 2
 %ifdef svnrev
 Release: alt%rel.%svnrev.%subrel
 %define pkgver svn-r%svnrev
@@ -342,8 +342,8 @@ Patch32: ffmpeg-svn-r12807-xvmc-vld.patch
 Patch33: ffmpeg-svn-r12807-amr.patch
 %endif
 
-# Automatically added by buildreq on Wed Apr 16 2008
-#BuildRequires: ImageMagick aalib-devel docbook-dtds docbook-style-xsl esound-devel gcc-c++ kdelibs ladspa_sdk libSDL-devel libSDL_image-devel libXScrnSaver-devel libXinerama-devel libXvMC-devel libXxf86dga-devel libamrnb-devel libamrwb-devel libarts-devel libaudio-devel libcaca-devel libcdparanoia-devel libdca-devel libdirac-devel libdv-devel libdvdnav-devel libenca-devel libfaac-devel libfribidi-devel libgpm-devel libgtk+2-devel libjpeg-devel liblame-devel liblirc-devel liblive555-devel liblzo2-devel libmesa-devel libmpcdec-devel libnut-devel libopenal-devel libpulseaudio-devel libslang-devel libsmbclient-devel libspeex-devel libtheora-devel libungif-devel libvidix-devel libx264-devel libxmms-devel libxvid-devel subversion svgalib-devel xsltproc
+# Automatically added by buildreq on Wed May 30 2007
+#BuildRequires: aalib-devel docbook-dtds docbook-style-xsl esound-devel gcc-c++ kdelibs ladspa_sdk libarts-devel libaudio-devel libavformat-devel libcaca-devel libcdparanoia-devel libdv-devel libdvdnav-devel libdvdread-devel libenca-devel libfribidi-devel libgpm-devel libgtk+2-devel libjpeg-devel liblirc-devel liblive555-devel liblzo2-devel libmesa-devel libmpcdec-devel libopenal-devel libpostproc-devel libpulseaudio-devel libSDL-devel libSDL_image-devel libslang-devel libsmbclient-devel libspeex-devel libswscale-devel libungif-devel libvidix-devel libXinerama-devel libxmms-devel libXvMC-devel libXxf86dga-devel subversion svgalib-devel xsltproc
 
 BuildRequires: %awk libncurses-devel libslang-devel zlib-devel
 BuildRequires: libdca-devel
@@ -406,7 +406,7 @@ BuildRequires: libvidix-devel
 %{?_enable_xv:BuildRequires: libXv-devel}
 %{?_enable_vm:BuildRequires: libXxf86vm-devel}
 %{?_enable_xinerama:BuildRequires: libXinerama-devel}
-%{?_enable_x11:BuildRequires: libXt-devel libXScrnSaver-devel}
+%{?_enable_x11:BuildRequires: libXt-devel}
 %{?_enable_dga1:BuildRequires: libXxf86dga-devel}
 %{?_enable_dga2:BuildRequires: libXxf86dga-devel}
 %{?_enable_directfb:BuildRequires: libdirectfb-devel}
@@ -1258,6 +1258,9 @@ ln -sf %lname %buildroot%_bindir/g%lname
 
 
 %changelog
+* Wed Apr 16 2008 Led <led@altlinux.ru> 1.0-alt35.26454.2
+- build with external ffmpeg
+
 * Tue Apr 15 2008 Led <led@altlinux.ru> 1.0-alt35.26454.1
 - new SVN snapshot (revision 26454)
 - removed %lname-svn-r26454-mencoder.patch (fixed in upstream)
