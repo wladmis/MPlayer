@@ -265,7 +265,7 @@
 Name: %lname
 Version: 1.0
 %define rel 35
-%define subrel 1
+%define subrel 2
 %ifdef svnrev
 Release: alt%rel.%svnrev.%subrel
 %define pkgver svn-r%svnrev
@@ -321,6 +321,7 @@ Patch16: %lname-svn-r27654-configure.patch
 Patch17: %lname-svn-r27654-ext_ffmpeg.patch
 Patch27: %lname-svn-r26450-builddocs.patch
 %if_disabled shared_ffmpeg
+Patch31: ffmpeg-svn-r15375-x264-65.patch
 Patch32: ffmpeg-svn-r14967-xvmc-vld.patch
 Patch33: ffmpeg-svn-r14967-amr.patch
 %endif
@@ -386,7 +387,7 @@ BuildRequires: cpp >= 3.3 gcc >= 3.3 gcc-c++ >= 3.3
 %{?_enable_xv:BuildRequires: libXv-devel}
 %{?_enable_vm:BuildRequires: libXxf86vm-devel}
 %{?_enable_xinerama:BuildRequires: libXinerama-devel}
-%{?_enable_x11:BuildRequires: libXt-devel}
+%{?_enable_x11:BuildRequires: libXt-devel xorg-xextproto-devel}
 %{?_enable_dga1:BuildRequires: libXxf86dga-devel}
 %{?_enable_dga2:BuildRequires: libXxf86dga-devel}
 %{?_enable_directfb:BuildRequires: libdirectfb-devel}
@@ -401,7 +402,7 @@ BuildRequires: cpp >= 3.3 gcc >= 3.3 gcc-c++ >= 3.3
 %{?_enable_nas:BuildRequires: libaudio-devel}
 
 %if_enabled gui
-BuildRequires: ImageMagick desktop-file-utils
+BuildRequires: ImageMagick-tools desktop-file-utils
 %if_enabled gtk1
 BuildRequires: gtk+-devel
 %else
@@ -689,6 +690,7 @@ mv ffmpeg-svn-r%ffmpeg_svnrev/lib{av{codec,format,util},postproc} .
 %patch17 -p1
 %patch27 -p1
 %if_disabled shared_ffmpeg
+%patch31 -p1
 %patch32 -p1
 %patch33 -p1
 %endif
@@ -1054,19 +1056,6 @@ ln -sf %lname %buildroot%_bindir/g%lname
 
 
 %if_enabled mplayer
-%if_enabled gui
-%post gui
-%update_menus
-%update_desktopdb
-
-%postun gui
-%clean_menus
-%clean_desktopdb
-%endif
-%endif
-
-
-%if_enabled mplayer
 %files
 %doc README AUTHORS Changelog.*
 %_bindir/%lname
@@ -1235,6 +1224,11 @@ ln -sf %lname %buildroot%_bindir/g%lname
 
 
 %changelog
+* Sun Dec 14 2008 Led <led@altlinux.ru> 1.0-alt35.27654.2
+- cleaned up spec
+- fixed build with libx264.so.65
+- updated BuildRequires
+
 * Mon Sep 22 2008 Led <led@altlinux.ru> 1.0-alt35.27654.1
 - new SVN snapshot (revision 27654)
 - updated %lname-svn-r27654-configure.patch
