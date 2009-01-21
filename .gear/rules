@@ -1,6 +1,6 @@
-tar.bz2: r26031:. name=@name@-svn-r26031
+tar.bz2: r26107:. name=@name@-svn-r26107
 tar.bz2: standard-1.9:. name=standard-1.9 base=standard
-tar.bz2: ffmpeg-r12143:. name=ffmpeg-svn-r12143
+tar.bz2: ffmpeg-r12255:. name=ffmpeg-svn-r12255
 gzip: *.awk
 gzip: *-vbe.patch *-artsc_ldflags.patch mplayer-dvd-ru-*.patch
 copy: *.sh *.in

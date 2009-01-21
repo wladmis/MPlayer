@@ -1,0 +1,32 @@
+diff -urN mplayer-svn-r26107.orig/gui/bitmap.c mplayer-svn-r26107/gui/bitmap.c
+--- mplayer-svn-r26107.orig/gui/bitmap.c	2008-02-27 01:48:45 +0200
++++ mplayer-svn-r26107/gui/bitmap.c	2008-02-27 02:03:27 +0200
+@@ -5,8 +5,16 @@
+ #include "mp_msg.h"
+ #include "help_mp.h"
+ #include "bitmap.h"
++#ifdef USE_LIBAVUTIL_SO
++#include <ffmpeg/avcodec.h>
++#else
+ #include "libavcodec/avcodec.h"
++#endif
++#ifdef USE_LIBAVUTIL_SO
++#include <ffmpeg/intreadwrite.h>
++#else
+ #include "libavutil/intreadwrite.h"
++#endif
+ #include "libvo/fastmemcpy.h"
+ 
+ static int pngRead( unsigned char * fname,txSample * bf )
+diff -urN mplayer-svn-r26107.orig/gui/mplayer/play.h mplayer-svn-r26107/gui/mplayer/play.h
+--- mplayer-svn-r26107.orig/gui/mplayer/play.h	2008-02-23 00:42:54 +0200
++++ mplayer-svn-r26107/gui/mplayer/play.h	2008-02-27 02:01:44 +0200
+@@ -1,7 +1,7 @@
+ #ifndef MPLAYER_GUI_PLAY_H
+ #define MPLAYER_GUI_PLAY_H
+ 
+-#include "../config.h"
++#include "../../config.h"
+ 
+ extern int mplGotoTheNext;
+ 

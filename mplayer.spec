@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc2try2
-%define svnrev 26031
-%define ffmpeg_svnrev 12146
+%define svnrev 26107
+%define ffmpeg_svnrev 12255
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -324,7 +324,7 @@ Patch0: %lname-svn-r22221-subreader.patch
 Patch1: %lname-svn-r25957-dirac-0.9.1.patch
 Patch2: %lname-dvd-ru-svn19389.patch.gz
 Patch3: %Name-1.0pre4-alt-explicit_gif.patch
-Patch4: %lname-svn-r23547-gui.patch
+Patch4: %lname-svn-r26107-gui.patch
 Patch5: %lname-svn-r25454-vo_vidix.patch
 Patch6: %lname-svn-r21128-alt-artsc_ldflags.patch.gz
 Patch7: %lname-svn-r23099-demux_nut.patch
@@ -333,8 +333,8 @@ Patch11: %lname-svn-r24081-nls.patch
 Patch12: %lname-uni-svn25678.patch
 Patch13: %Name-svn-20060711-vbe.patch.gz
 Patch14: %lname-svn-r25669-gui_nls.patch
-Patch16: %lname-svn-r25826-configure.patch
-Patch17: %lname-svn-r25987-ext_ffmpeg.patch
+Patch16: %lname-svn-r25957-configure.patch
+Patch17: %lname-svn-r26107-ext_ffmpeg.patch
 Patch27: %lname-svn-r22518-builddocs.patch
 %if_disabled shared_ffmpeg
 %{?_enable_dirac:Patch31: ffmpeg-svn-r12146-dirac-0.9.x.patch}
@@ -1234,6 +1234,13 @@ done
 
 
 %changelog
+* Wed Feb 27 2008 Led <led@altlinux.ru> 1.0-alt35.26107.1
+- new SVN snapshot (revision 26107)
+- updated:
+  + %lname-svn-r25957-configure.patch
+  + %lname-svn-r26107-gui.patch
+  + %lname-svn-r26107-ext_ffmpeg.patch
+
 * Tue Feb 19 2008 Led <led@altlinux.ru> 1.0-alt35.26031.1
 - new SVN snapshot (revision 26031)
 - fixed ffmpeg-svn-r11246-dirac-0.9.x.patch
@@ -1286,9 +1293,10 @@ done
   + %lname-svn-r25669-gui_nls.patch
   + %lname-svn-r25669-ext_ffmpeg.patch
 
-* Sun Dec 23 2007 Led <led@altlinux.ru> 1.0-alt35.25513.1
-- new SVN snapshot (revision 25513)
+* Tue Dec 25 2007 Led <led@altlinux.ru> 1.0-alt35.25498.1
+- new SVN snapshot (revision 25498)
 - removed %lname-svn-r25454-dvdnav.patch
+- updated %lname-svn-r25505-configure.patch (fixed #13791)
 
 * Sat Dec 22 2007 Led <led@altlinux.ru> 1.0-alt35.25487.1
 - new SVN snapshot (revision 25487)
