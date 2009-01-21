@@ -78,7 +78,7 @@
 %def_enable xvid
 %def_enable x264
 %def_enable ffmpeg
-%def_disable shared_ffmpeg
+%def_enable shared_ffmpeg
 %def_disable faad_ext
 %def_enable faad_int
 %def_disable faad_fixed
@@ -265,7 +265,7 @@
 Name: %lname
 Version: 1.0
 %define rel 35
-%define subrel 2
+%define subrel 3
 %ifdef svnrev
 Release: alt%rel.%svnrev.%subrel
 %define pkgver svn-r%svnrev
@@ -1236,6 +1236,9 @@ ln -sf %lname %buildroot%_bindir/g%lname
 
 
 %changelog
+* Sun Aug 31 2008 Led <led@altlinux.ru> 1.0-alt35.27498.3
+- build with shared ffmpeg
+
 * Sun Aug 31 2008 Led <led@altlinux.ru> 1.0-alt35.27498.2
 - updated:
   + ffmpeg-svn-r14967-xvmc-vld.patch
