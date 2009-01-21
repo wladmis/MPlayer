@@ -78,7 +78,7 @@
 %def_enable xvid
 %def_enable x264
 %def_enable ffmpeg
-%def_enable shared_ffmpeg
+%def_disable shared_ffmpeg
 %def_disable faad_ext
 %def_enable faad_int
 %def_disable faad_fixed
@@ -265,7 +265,7 @@
 Name: %lname
 Version: 1.0
 %define rel 35
-%define subrel 1
+%define subrel 2
 %ifdef svnrev
 Release: alt%rel.%svnrev.%subrel
 %define pkgver svn-r%svnrev
@@ -318,11 +318,11 @@ Patch12: %lname-uni-svn26991.patch
 Patch13: %Name-svn-20060711-vbe.patch
 Patch14: %lname-svn-r27482-gui_nls.patch
 Patch16: %lname-svn-r27482-configure.patch
-Patch17: %lname-svn-r27330-ext_ffmpeg.patch
+Patch17: %lname-svn-r27498-ext_ffmpeg.patch
 Patch27: %lname-svn-r26450-builddocs.patch
 %if_disabled shared_ffmpeg
-Patch32: ffmpeg-svn-r12807-xvmc-vld.patch
-Patch33: ffmpeg-svn-r13104-amr.patch
+Patch32: ffmpeg-svn-r14967-xvmc-vld.patch
+Patch33: ffmpeg-svn-r14967-amr.patch
 %endif
 
 # Automatically added by buildreq on Wed May 30 2007
@@ -371,6 +371,7 @@ BuildRequires: cpp >= 3.3 gcc >= 3.3 gcc-c++ >= 3.3
 %{?_enable_libmpeg2:BuildRequires: libmpeg2-devel}
 %{?_enable_musepack:BuildRequires: libmpcdec-devel >= 1.2.1}
 %{?_enable_nut:BuildRequires: libnut-devel >= 0.0-alt0.272}
+%{?_disable_shared_ffmpeg:%{?_enable_dirac:BuildRequires: libdirac-devel >= 0.10}}
 
 %{?_enable_xvmc:BuildRequires: libXvMC-devel}
 %if_enabled mplayer
@@ -924,7 +925,8 @@ export CFLAGS="%optflags"
 		%{subst_enable sighandler} \
 		%{subst_enable_to gdb crash-debug} \
 		%{subst_enable_to dynamic_plugins dynamic-plugins} \
-		--with-extraincdir=%_includedir/directfb
+		%{?_disable_shared_ffmpeg:%{?_enable_dirac:--extra-libs="-ldirac_encoder -ldirac_decoder"}} \
+		--with-extraincdir=%_includedir/directfb%{?_disable_shared_ffmpeg:%{?_enable_dirac::%_includedir/dirac}}
 
 %make_build
 
@@ -997,9 +999,12 @@ install -m 0755 TOOLS/{alaw-gen,asfinfo,avi-fix,avisubdump,bmovl-test,dump_mp4,m
 for f in vobshift; do
     install -m 0755 TOOLS/$f.py %buildroot/%_bindir/$f
 done
-for f in calcbpp countquant plotpsnr subedit w32codec_dl wma2ogg %{?_enable_mencoder:dvd2divxscript}; do
+for f in calcbpp countquant plotpsnr subedit wma2ogg %{?_enable_mencoder:dvd2divxscript}; do
     install -m 0755 TOOLS/$f.pl %buildroot/%_bindir/$f
 done
+%ifarch %ix86
+install -m 0755 TOOLS/w32codec_dl.pl %buildroot/%_bindir/w32codec_dl
+%endif
 for f in aconvert divx2svcd encode2mpeglight mencvcd midentify mpconsole mplmult psnr-video subsearch %{?_enable_mencoder:qepdvcd}; do
     install -m 0755 TOOLS/$f.sh %buildroot/%_bindir/$f
 done
@@ -1223,12 +1228,21 @@ ln -sf %lname %buildroot%_bindir/g%lname
 %_bindir/subedit
 %_bindir/subsearch
 %_bindir/vobshift
+%ifarch %ix86
 %_bindir/w32codec_dl
+%endif
 %endif
 %endif
 
 
 %changelog
+* Sun Aug 31 2008 Led <led@altlinux.ru> 1.0-alt35.27498.2
+- updated:
+  + ffmpeg-svn-r14967-xvmc-vld.patch
+  + ffmpeg-svn-r14967-amr.patch
+  + %lname-svn-r27498-ext_ffmpeg.patch
+- build without shared ffmpeg
+
 * Sat Aug 30 2008 Led <led@altlinux.ru> 1.0-alt35.27498.1
 - new SVN snapshot (revision 27498)
 - removed %lname-svn-r27482-dvdread.patch (fixed in upstream)

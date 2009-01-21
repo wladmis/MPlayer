@@ -1,26 +1,26 @@
-diff -urN ffmpeg-svn-r12807.orig/libavcodec/allcodecs.c ffmpeg-svn-r12807/libavcodec/allcodecs.c
---- ffmpeg-svn-r12807.orig/libavcodec/allcodecs.c	2008-04-01 01:42:36 +0300
-+++ ffmpeg-svn-r12807/libavcodec/allcodecs.c	2008-04-14 02:25:59 +0300
-@@ -109,6 +109,7 @@
-     REGISTER_DECODER (MJPEGB, mjpegb);
+diff -urN ffmpeg-svn-r14967.orig/libavcodec/allcodecs.c ffmpeg-svn-r14967/libavcodec/allcodecs.c
+--- ffmpeg-svn-r14967.orig/libavcodec/allcodecs.c	2008-08-25 22:37:27 +0300
++++ ffmpeg-svn-r14967/libavcodec/allcodecs.c	2008-08-25 22:47:31 +0300
+@@ -113,6 +113,7 @@
      REGISTER_DECODER (MMVIDEO, mmvideo);
+     REGISTER_DECODER (MOTIONPIXELS, motionpixels);
      REGISTER_DECODER (MPEG_XVMC, mpeg_xvmc);
 +    REGISTER_DECODER (MPEG_XVMC, mpeg_xxmc);
      REGISTER_ENCDEC  (MPEG1VIDEO, mpeg1video);
      REGISTER_ENCDEC  (MPEG2VIDEO, mpeg2video);
      REGISTER_ENCDEC  (MPEG4, mpeg4);
-diff -urN ffmpeg-svn-r12807.orig/libavcodec/mpeg12.c ffmpeg-svn-r12807/libavcodec/mpeg12.c
---- ffmpeg-svn-r12807.orig/libavcodec/mpeg12.c	2008-04-14 00:01:48 +0300
-+++ ffmpeg-svn-r12807/libavcodec/mpeg12.c	2008-04-14 02:25:59 +0300
-@@ -69,6 +69,7 @@
+diff -urN ffmpeg-svn-r14967.orig/libavcodec/mpeg12.c ffmpeg-svn-r14967/libavcodec/mpeg12.c
+--- ffmpeg-svn-r14967.orig/libavcodec/mpeg12.c	2008-08-25 22:37:27 +0300
++++ ffmpeg-svn-r14967/libavcodec/mpeg12.c	2008-08-25 22:50:37 +0300
+@@ -67,6 +67,7 @@
  extern int XVMC_field_end(MpegEncContext *s);
  extern void XVMC_pack_pblocks(MpegEncContext *s,int cbp);
  extern void XVMC_init_block(MpegEncContext *s);//set s->block
 +extern int XVMC_decode_slice(MpegEncContext *s, int start_code, uint8_t *buffer, int buf_size);
  
- static const enum PixelFormat pixfmt_yuv_420[]= {PIX_FMT_YUV420P,-1};
- static const enum PixelFormat pixfmt_yuv_422[]= {PIX_FMT_YUV422P,-1};
-@@ -1682,6 +1683,14 @@
+ static const enum PixelFormat pixfmt_yuv_420[]= {PIX_FMT_YUV420P,PIX_FMT_NONE};
+ static const enum PixelFormat pixfmt_yuv_422[]= {PIX_FMT_YUV422P,PIX_FMT_NONE};
+@@ -1659,6 +1660,14 @@
          return -1;
      }
  
@@ -35,10 +35,11 @@ diff -urN ffmpeg-svn-r12807.orig/libavcodec/mpeg12.c ffmpeg-svn-r12807/libavcode
      init_get_bits(&s->gb, *buf, buf_size*8);
  
      ff_mpeg1_clean_buffers(s);
-@@ -2506,6 +2515,39 @@
+@@ -2486,3 +2495,34 @@
+ };
  
  #endif
- 
++
 +static int mpeg_xxmc_decode_init(AVCodecContext *avctx){
 +    Mpeg1Context *s;
 +    if( avctx->thread_count > 1)
@@ -69,15 +70,9 @@ diff -urN ffmpeg-svn-r12807.orig/libavcodec/mpeg12.c ffmpeg-svn-r12807/libavcode
 +    CODEC_CAP_DRAW_HORIZ_BAND | CODEC_CAP_DR1 | CODEC_CAP_TRUNCATED| CODEC_CAP_HWACCEL,
 +    .flush= ff_mpeg_flush,
 +};
-+
-+
-+
- /* this is ugly i know, but the alternative is too make
-    hundreds of vars global and prefix them with ff_mpeg1_
-    which is far uglier. */
-diff -urN ffmpeg-svn-r12807.orig/libavcodec/xvmc_render.h ffmpeg-svn-r12807/libavcodec/xvmc_render.h
---- ffmpeg-svn-r12807.orig/libavcodec/xvmc_render.h	2008-02-23 00:51:46 +0200
-+++ ffmpeg-svn-r12807/libavcodec/xvmc_render.h	2008-04-14 02:25:59 +0300
+diff -urN ffmpeg-svn-r14967.orig/libavcodec/xvmc_render.h ffmpeg-svn-r14967/libavcodec/xvmc_render.h
+--- ffmpeg-svn-r14967.orig/libavcodec/xvmc_render.h	2008-02-23 00:51:46 +0200
++++ ffmpeg-svn-r14967/libavcodec/xvmc_render.h	2008-08-25 22:47:31 +0300
 @@ -27,6 +27,7 @@
  #include <X11/extensions/Xv.h>
  #include <X11/extensions/Xvlib.h>
@@ -100,9 +95,9 @@ diff -urN ffmpeg-svn-r12807.orig/libavcodec/xvmc_render.h ffmpeg-svn-r12807/liba
  
  } xvmc_render_state_t;
  
-diff -urN ffmpeg-svn-r12807.orig/libavcodec/xvmcvideo.c ffmpeg-svn-r12807/libavcodec/xvmcvideo.c
---- ffmpeg-svn-r12807.orig/libavcodec/xvmcvideo.c	2008-04-01 01:42:36 +0300
-+++ ffmpeg-svn-r12807/libavcodec/xvmcvideo.c	2008-04-14 02:34:43 +0300
+diff -urN ffmpeg-svn-r14967.orig/libavcodec/xvmcvideo.c ffmpeg-svn-r14967/libavcodec/xvmcvideo.c
+--- ffmpeg-svn-r14967.orig/libavcodec/xvmcvideo.c	2008-04-01 01:42:36 +0300
++++ ffmpeg-svn-r14967/libavcodec/xvmcvideo.c	2008-08-25 22:47:31 +0300
 @@ -66,11 +66,63 @@
      }
  }
@@ -222,8 +217,7 @@ diff -urN ffmpeg-svn-r12807.orig/libavcodec/xvmcvideo.c ffmpeg-svn-r12807/libavc
              return 0;
      }
 +}
- 
--return -1;
++
 +    if (s->avctx->xvmc_acceleration == 4)
 +    {
 +        for (i = 0; i < 64; i++){
@@ -308,7 +302,8 @@ diff -urN ffmpeg-svn-r12807.orig/libavcodec/xvmcvideo.c ffmpeg-svn-r12807/libavc
 +    if (!status)
 +        return 0;
 +    }
-+
+ 
+-return -1;
 +    return -1;
  }
  
@@ -381,10 +376,10 @@ diff -urN ffmpeg-svn-r12807.orig/libavcodec/xvmcvideo.c ffmpeg-svn-r12807/libavc
 +
 +    ff_draw_horiz_band(s, 0, 0);
 +}
-diff -urN ffmpeg-svn-r12807.orig/libavutil/avutil.h ffmpeg-svn-r12807/libavutil/avutil.h
---- ffmpeg-svn-r12807.orig/libavutil/avutil.h	2008-03-11 03:51:27 +0200
-+++ ffmpeg-svn-r12807/libavutil/avutil.h	2008-04-14 02:25:59 +0300
-@@ -95,6 +95,7 @@
+diff -urN ffmpeg-svn-r14967.orig/libavutil/avutil.h ffmpeg-svn-r14967/libavutil/avutil.h
+--- ffmpeg-svn-r14967.orig/libavutil/avutil.h	2008-08-25 22:37:28 +0300
++++ ffmpeg-svn-r14967/libavutil/avutil.h	2008-08-25 22:47:31 +0300
+@@ -99,6 +99,7 @@
      PIX_FMT_YUVJ444P,  ///< Planar YUV 4:4:4, 24bpp, full scale (jpeg)
      PIX_FMT_XVMC_MPEG2_MC,///< XVideo Motion Acceleration via common packet passing(xvmc_render.h)
      PIX_FMT_XVMC_MPEG2_IDCT,
