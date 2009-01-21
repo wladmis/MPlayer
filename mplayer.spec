@@ -281,7 +281,7 @@
 Name: %lname
 Version: 1.0
 %define rel 35
-%define subrel 2
+%define subrel 3
 %ifdef svnrev
 Release: alt%rel.%svnrev.%subrel
 %define pkgver svn-r%svnrev
@@ -420,6 +420,7 @@ BuildRequires: libvidix-devel
 %{?_enable_nas:BuildRequires: libaudio-devel}
 
 %if_enabled gui
+BuildRequires: ImageMagick
 %if_enabled gtk1
 BuildRequires: gtk+-devel
 %else
@@ -432,7 +433,7 @@ BuildRequires: libgtk+2-devel
 
 %if_with tools
 BuildRequires: perl-libwww perl-Math-BigInt libSDL_image-devel
-BuildRequires: normalize sox termutils vcdimager
+BuildRequires: normalize sox termutils vcdimager mjpegtools
 %endif
 
 %description
@@ -712,7 +713,7 @@ Comment[uk]=Програвач мультимедіа
 X-MultipleArgs=true
 StartupNotify=true
 __MENU__
-subst '/^MimeType=/s|$|video/3gpp;application/x-flash-video;|' etc/%lname.desktop
+sed -i -e '/^MimeType=/s|$|video/3gpp;application/x-flash-video;|' -e '/^Icon=/s/\.xpm$//' etc/%lname.desktop
 
 %if_enabled nls
 install -d -m 0755 po
@@ -994,6 +995,13 @@ done
 popd
 %endif
 
+%if_enabled gui
+for s in 128 64 48 32 24 22 16; do
+    convert -border 0x13 -bordercolor none gui/mplayer/pixmaps/MPlayer_mini.xpm \
+	-resize ${s}x$s! -depth 8 gui/mplayer/pixmaps/%{lname}_$s.png
+done
+%endif
+
 
 %install
 %make_install DESTDIR=%buildroot install
@@ -1054,6 +1062,12 @@ done
 
 %{?_enable_mplayer:%add_verify_elf_skiplist %_libdir/%lname/vidix/*}
 
+%if_enabled gui
+for s in 128 64 48 32 24 22 16; do
+    install -D -m 0644 {gui/mplayer/pixmaps/%{lname}_$s,%buildroot%_iconsdir/hicolor/${s}x$s/apps/%lname}.png
+done
+%endif
+
 
 %if_enabled mplayer
 %if_enabled gui
@@ -1092,7 +1106,8 @@ done
 %files gui
 %_bindir/%gname
 %_desktopdir/*
-%_datadir/pixmaps/*
+%_iconsdir/hicolor/*/apps/*
+#%%_datadir/pixmaps/*
 %dir %_datadir/%name/skins
 %_datadir/%name/skins/standard
 %_datadir/%name/skins/default
@@ -1234,6 +1249,10 @@ done
 
 
 %changelog
+* Sun Mar 02 2008 Led <led@altlinux.ru> 1.0-alt35.25957.3
+- added icons
+- fixed BuildRequires
+
 * Wed Feb 27 2008 Led <led@altlinux.ru> 1.0-alt35.25957.2
 - fixed ffmpeg-svn-r11246-dirac-0.9.x.patch
 - updated %lname-svn-r25957-configure.patch (fixed #13791 again)
