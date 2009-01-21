@@ -1,6 +1,6 @@
-diff -urN mplayer-svn-r26706.orig/configure mplayer-svn-r26706/configure
---- mplayer-svn-r26706.orig/configure	2008-05-09 17:57:36 +0300
-+++ mplayer-svn-r26706/configure	2008-05-10 03:00:26 +0300
+diff -urN mplayer-svn-r26708.orig/configure mplayer-svn-r26708/configure
+--- mplayer-svn-r26708.orig/configure	2008-05-09 17:57:36 +0300
++++ mplayer-svn-r26708/configure	2008-05-10 03:16:34 +0300
 @@ -129,7 +129,7 @@
  
  x86_64() {
@@ -378,10 +378,10 @@ diff -urN mplayer-svn-r26706.orig/configure mplayer-svn-r26706/configure
  
  /* enables / disables new input joystick support */
  $_def_joystick
-diff -urN mplayer-svn-r26706.orig/Makefile mplayer-svn-r26706/Makefile
---- mplayer-svn-r26706.orig/Makefile	2008-05-09 17:57:36 +0300
-+++ mplayer-svn-r26706/Makefile	2008-05-10 03:00:41 +0300
-@@ -559,8 +559,8 @@
+diff -urN mplayer-svn-r26708.orig/Makefile mplayer-svn-r26708/Makefile
+--- mplayer-svn-r26708.orig/Makefile	2008-05-09 23:46:04 +0300
++++ mplayer-svn-r26708/Makefile	2008-05-10 03:18:29 +0300
+@@ -562,8 +562,8 @@
  SRCS_MPLAYER-$(LIBMENU_DVBIN) += libmenu/menu_dvbin.c
  SRCS_MPLAYER-$(LIRC)          += input/lirc.c
  
@@ -392,7 +392,7 @@ diff -urN mplayer-svn-r26706.orig/Makefile mplayer-svn-r26706/Makefile
                                   vidix/drivers.c \
                                   vidix/dha.c \
                                   vidix/mtrr.c \
-@@ -568,6 +568,7 @@
+@@ -571,6 +571,7 @@
                                   vidix/pci_names.c \
                                   vidix/pci_dev_ids.c\
  
@@ -400,7 +400,7 @@ diff -urN mplayer-svn-r26706.orig/Makefile mplayer-svn-r26706/Makefile
  SRCS_MPLAYER-$(VIDIX_CYBERBLADE)    += vidix/cyberblade_vid.c
  SRCS_MPLAYER-$(VIDIX_IVTV)          += vidix/ivtv_vid.c
  SRCS_MPLAYER-$(VIDIX_MACH64)        += vidix/mach64_vid.c
-@@ -581,6 +582,7 @@
+@@ -584,6 +585,7 @@
  SRCS_MPLAYER-$(VIDIX_S3)            += vidix/s3_vid.c
  SRCS_MPLAYER-$(VIDIX_SIS)           += vidix/sis_vid.c vidix/sis_bridge.c
  SRCS_MPLAYER-$(VIDIX_UNICHROME)     += vidix/unichrome_vid.c
@@ -408,7 +408,7 @@ diff -urN mplayer-svn-r26706.orig/Makefile mplayer-svn-r26706/Makefile
  
  SRCS_MENCODER = mencoder.c \
                  mp_msg-mencoder.c \
-@@ -763,7 +765,7 @@
+@@ -744,7 +746,7 @@
  	$(CC) -DCODECS2HTML codec-cfg.c $^ -o $@
  
  codec-cfg-test$(EXESUF): codecs.conf.h codec-cfg.h mp_msg.o osdep/getch2.o
@@ -417,7 +417,7 @@ diff -urN mplayer-svn-r26706.orig/Makefile mplayer-svn-r26706/Makefile
  
  osdep/mplayer-rc.o: osdep/mplayer.rc version.h
  	$(WINDRES) -o $@ $<
-@@ -778,6 +780,7 @@
+@@ -798,6 +800,7 @@
  
  mp3lib/decode_i586.o: CFLAGS += -fomit-frame-pointer
  
@@ -425,18 +425,24 @@ diff -urN mplayer-svn-r26706.orig/Makefile mplayer-svn-r26706/Makefile
  VIDIX_PCI_FILES = vidix/pci_dev_ids.c vidix/pci_ids.h vidix/pci_names.c \
                    vidix/pci_names.h vidix/pci_vendors.h
  
-@@ -788,8 +791,9 @@
+@@ -808,6 +811,7 @@
  VIDIX_OBJS = $(filter vidix/%,$(SRCS_MPLAYER:.c=.o))
  
  $(VIDIX_DEPS) $(VIDIX_OBJS): $(VIDIX_PCI_FILES)
 +endif
+ 
+ 
+ 
+@@ -898,7 +902,7 @@
+ 
+ ###### tests / tools #######
  
 -TEST_OBJS = mp_msg-mencoder.o mp_fifo.o osdep/$(GETCH) osdep/$(TIMER) -ltermcap -lm
 +TEST_OBJS = mp_msg-mencoder.o mp_fifo.o osdep/$(GETCH) osdep/$(TIMER) -ltinfo -lm
  
  liba52/test$(EXESUF): liba52/test.c cpudetect.o $(filter liba52/%,$(SRCS_COMMON:.c=.o))
  
-@@ -909,15 +913,12 @@
+@@ -926,15 +930,12 @@
          TOOLS/asfinfo$(EXESUF) \
          TOOLS/avi-fix$(EXESUF) \
          TOOLS/avisubdump$(EXESUF) \

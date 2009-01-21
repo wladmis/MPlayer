@@ -7,7 +7,7 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc2try2
-%define svnrev 26706
+%define svnrev 26708
 %define ffmpeg_svnrev 13104
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
@@ -79,7 +79,7 @@
 %def_enable xvid
 %def_enable x264
 %def_enable ffmpeg
-%def_disable shared_ffmpeg
+%def_enable shared_ffmpeg
 %def_disable faad_ext
 %def_enable faad_int
 %def_disable faad_fixed
@@ -333,7 +333,7 @@ Patch11: %lname-svn-r24081-nls.patch
 Patch12: %lname-uni-svn26706.patch
 Patch13: %Name-svn-20060711-vbe.patch.gz
 Patch14: %lname-svn-r26450-gui_nls.patch
-Patch16: %lname-svn-r26706-configure.patch
+Patch16: %lname-svn-r26708-configure.patch
 Patch17: %lname-svn-r26706-ext_ffmpeg.patch
 Patch27: %lname-svn-r26450-builddocs.patch
 %if_disabled shared_ffmpeg
@@ -1251,16 +1251,19 @@ ln -sf %lname %buildroot%_bindir/g%lname
 
 
 %changelog
-* Sat May 10 2008 Led <led@altlinux.ru> 1.0-alt35.26706.1
-- new SVN snapshot (revision 26706):
+* Sat May 10 2008 Led <led@altlinux.ru> 1.0-alt35.26708.1
+- new SVN snapshot (revision 26708):
   + BFI video decoder
 - removed ffmpeg-svn-r12807-dirac-0.9.x.patch (added in upstream)
 - updated:
   + %lname-svn-r26706-ext_ffmpeg.patch (partially fixed in upstream)
-  + %lname-svn-r26706-configure.patch
   + %lname-svn-r26706-dirac-0.9.1.patch
   + %lname-uni-svn26706.patch
+  + %lname-svn-r26708-configure.patch
   + ffmpeg-svn-r13104-amr.patch
+
+* Sat Apr 19 2008 Led <led@altlinux.ru> 1.0-alt35.26470.2
+- build with external ffmpeg
 
 * Sat Apr 19 2008 Led <led@altlinux.ru> 1.0-alt35.26470.1
 - new SVN snapshot (revision 26470)

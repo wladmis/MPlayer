@@ -1,4 +1,4 @@
-tar.bz2: r26706:. name=@name@-svn-r26706
+tar.bz2: r26708:. name=@name@-svn-r26708
 tar.bz2: standard-1.9:. name=standard-1.9 base=standard
 tar.bz2: ffmpeg-r13104:. name=ffmpeg-svn-r13104
 gzip: *.awk
