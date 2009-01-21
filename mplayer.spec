@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc2try2
-%define svnrev 26708
-%define ffmpeg_svnrev 13104
+%define svnrev 26763
+%define ffmpeg_svnrev 13150
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -1251,6 +1251,9 @@ ln -sf %lname %buildroot%_bindir/g%lname
 
 
 %changelog
+* Wed May 14 2008 Led <led@altlinux.ru> 1.0-alt35.26763.1
+- new SVN snapshot (revision 26763)
+
 * Sat May 10 2008 Led <led@altlinux.ru> 1.0-alt35.26708.1
 - new SVN snapshot (revision 26708):
   + BFI video decoder
