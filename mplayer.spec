@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc2try2
-%define svnrev 27482
-%define ffmpeg_svnrev 14970
+%define svnrev 27498
+%define ffmpeg_svnrev 15051
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -313,7 +313,6 @@ Patch5: %lname-svn-r27482-desktop.patch
 Patch6: %lname-svn-r21128-alt-artsc_ldflags.patch
 Patch7: %lname-svn-r23099-demux_nut.patch
 Patch8: %lname-svn-r23722-VIDM-win32-codec.patch
-Patch9: %lname-svn-r27482-dvdread.patch
 Patch11: %lname-svn-r27482-nls.patch
 Patch12: %lname-uni-svn26991.patch
 Patch13: %Name-svn-20060711-vbe.patch
@@ -372,7 +371,6 @@ BuildRequires: cpp >= 3.3 gcc >= 3.3 gcc-c++ >= 3.3
 %{?_enable_libmpeg2:BuildRequires: libmpeg2-devel}
 %{?_enable_musepack:BuildRequires: libmpcdec-devel >= 1.2.1}
 %{?_enable_nut:BuildRequires: libnut-devel >= 0.0-alt0.272}
-%{?_enable_dirac:BuildRequires: libdirac-devel >= 0.10}
 
 %{?_enable_xvmc:BuildRequires: libXvMC-devel}
 %if_enabled mplayer
@@ -682,7 +680,6 @@ mv ffmpeg-svn-r%ffmpeg_svnrev/lib{av{codec,format,util},postproc} .
 %patch6 -p1
 %patch7 -p1
 %patch8 -p1
-%patch9 -p1
 %patch11 -p1
 %patch12 -p1
 %patch13 -p1
@@ -755,7 +752,7 @@ export CFLAGS="%optflags"
 		%{subst_enable pvr} \
 		%{subst_enable rtc} \
 		%{subst_enable network} \
-		%{subst_enable winsock2} \
+		%{subst_enable winsock2}_h \
 		%{subst_enable smb} \
 		%{subst_enable live} \
 		%{subst_enable dvdnav} \
@@ -1232,6 +1229,11 @@ ln -sf %lname %buildroot%_bindir/g%lname
 
 
 %changelog
+* Sat Aug 30 2008 Led <led@altlinux.ru> 1.0-alt35.27498.1
+- new SVN snapshot (revision 27498)
+- removed %lname-svn-r27482-dvdread.patch (fixed in upstream)
+- cleaned up BuildRequires
+
 * Tue Aug 26 2008 Led <led@altlinux.ru> 1.0-alt35.27482.1
 - new SVN snapshot (revision 27482):
   + MLP decoder via lavc
