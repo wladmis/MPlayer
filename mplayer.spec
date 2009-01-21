@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc2
-%define svnrev 25957
-%define ffmpeg_svnrev 11872
+%define svnrev 25987
+%define ffmpeg_svnrev 11914
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -281,7 +281,7 @@
 Name: %lname
 Version: 1.0
 %define rel 35
-%define subrel 5
+%define subrel 1
 %ifdef svnrev
 Release: alt%rel.%svnrev.%subrel
 %define pkgver svn-r%svnrev
@@ -333,11 +333,11 @@ Patch11: %lname-svn-r24081-nls.patch
 Patch12: %lname-uni-svn25678.patch
 Patch13: %Name-svn-20060711-vbe.patch.gz
 Patch14: %lname-svn-r25669-gui_nls.patch
-Patch16: %lname-svn-r25957-configure.patch
-Patch17: %lname-svn-r25895-ext_ffmpeg.patch
+Patch16: %lname-svn-r25826-configure.patch
+Patch17: %lname-svn-r25987-ext_ffmpeg.patch
 Patch27: %lname-svn-r22518-builddocs.patch
 %if_disabled shared_ffmpeg
-%{?_enable_dirac:Patch31: ffmpeg-svn-r11246-dirac-0.9.x.patch}
+%{?_enable_dirac:Patch31: ffmpeg-svn-r11872-dirac-0.9.x.patch}
 Patch32: ffmpeg-uni-svn-r10644.patch
 Patch33: ffmpeg-svn-r10644-amr.patch
 %endif
@@ -372,7 +372,7 @@ BuildRequires: cpp >= 3.3 gcc >= 3.3 gcc-c++ >= 3.3
 %{?_enable_lzo:BuildRequires: liblzo2-devel}
 %{?_enable_xvid:BuildRequires: libxvid-devel}
 %{?_enable_x264:BuildRequires: libx264-devel}
-%{?_enable_shared_ffmpeg:BuildRequires: libffmpeg-devel >= 0:11305}
+%{?_enable_shared_ffmpeg:BuildRequires: libffmpeg-devel >= 1:0.5.0-alt0.11878.1}
 %{?_enable_tremor_external:BuildRequires: libtremor-devel}
 %{?_enable_vorbis:BuildRequires: libvorbis-devel}
 %{?_enable_speex:BuildRequires: libspeex-devel}
@@ -420,7 +420,6 @@ BuildRequires: libvidix-devel
 %{?_enable_nas:BuildRequires: libaudio-devel}
 
 %if_enabled gui
-BuildRequires: ImageMagick desktop-file-utils
 %if_enabled gtk1
 BuildRequires: gtk+-devel
 %else
@@ -433,7 +432,7 @@ BuildRequires: libgtk+2-devel
 
 %if_with tools
 BuildRequires: perl-libwww perl-Math-BigInt libSDL_image-devel
-BuildRequires: normalize sox termutils vcdimager mjpegtools
+BuildRequires: normalize sox termutils vcdimager
 %endif
 
 %description
@@ -713,7 +712,7 @@ Comment[uk]=Програвач мультимедіа
 X-MultipleArgs=true
 StartupNotify=true
 __MENU__
-sed -i -e '/^MimeType=/s|$|video/3gpp;application/x-flash-video;|' -e '/^Icon=/s/\.xpm$//' etc/%lname.desktop
+subst '/^MimeType=/s|$|video/3gpp;application/x-flash-video;|' etc/%lname.desktop
 
 %if_enabled nls
 install -d -m 0755 po
@@ -940,7 +939,7 @@ export CFLAGS="%optflags"
 		%{subst_enable altivec} \
 		%{subst_enable fastmemcpy} \
 %if_enabled debug
-		--enable-debug=3 \
+		--enable-debug=3} \
 %else
 		--disable-debug \
 %endif
@@ -993,13 +992,6 @@ for h in $(ls ../help/help_mp-*.h | grep -v '..help/help_mp-en.h$'); do
     msgfmt -o $l.gmo $l.po
 done
 popd
-%endif
-
-%if_enabled gui
-for s in 128 64 48 32 24 22 16; do
-    convert -border 0x13 -bordercolor none gui/mplayer/pixmaps/MPlayer_mini.xpm \
-	-resize ${s}x$s! -depth 8 gui/mplayer/pixmaps/%{lname}_$s.png
-done
 %endif
 
 
@@ -1062,22 +1054,14 @@ done
 
 %{?_enable_mplayer:%add_verify_elf_skiplist %_libdir/%lname/vidix/*}
 
-%if_enabled gui
-for s in 128 64 48 32 24 22 16; do
-    install -D -m 0644 {gui/mplayer/pixmaps/%{lname}_$s,%buildroot%_iconsdir/hicolor/${s}x$s/apps/%lname}.png
-done
-%endif
-
 
 %if_enabled mplayer
 %if_enabled gui
 %post gui
 %update_menus
-%update_desktopdb
 
 %postun gui
 %clean_menus
-%clean_desktopdb
 %endif
 %endif
 
@@ -1108,8 +1092,7 @@ done
 %files gui
 %_bindir/%gname
 %_desktopdir/*
-%_iconsdir/hicolor/*/apps/*
-#%%_datadir/pixmaps/*
+%_datadir/pixmaps/*
 %dir %_datadir/%name/skins
 %_datadir/%name/skins/standard
 %_datadir/%name/skins/default
@@ -1251,22 +1234,9 @@ done
 
 
 %changelog
-* Fri Apr 04 2008 Led <led@altlinux.ru> 1.0-alt35.25957.5
-- fixes desktop-mime-entry
-
-* Tue Mar 04 2008 Led <led@altlinux.ru> 1.0-alt35.25957.4
-- fixed typo in spec (#14746)
-
-* Sun Mar 02 2008 Led <led@altlinux.ru> 1.0-alt35.25957.3
-- added icons
-- fixed BuildRequires
-
-* Wed Feb 27 2008 Led <led@altlinux.ru> 1.0-alt35.25957.2
-- fixed ffmpeg-svn-r11246-dirac-0.9.x.patch
-- updated %lname-svn-r25957-configure.patch (fixed #13791 again)
-
-* Sun Feb 10 2008 Grigory Batalov <bga@altlinux.ru> 1.0-alt35.25957.1.1
-- Rebuilt with python-2.5
+* Tue Feb 12 2008 Led <led@altlinux.ru> 1.0-alt35.25987.1
+- new SVN snapshot (revision 25987)
+- updated %lname-svn-r25987-ext_ffmpeg.patch
 
 * Wed Feb 06 2008 Led <led@altlinux.ru> 1.0-alt35.25957.1
 - new SVN snapshot (revision 25957):
@@ -1309,10 +1279,9 @@ done
   + %lname-svn-r25669-gui_nls.patch
   + %lname-svn-r25669-ext_ffmpeg.patch
 
-* Tue Dec 25 2007 Led <led@altlinux.ru> 1.0-alt35.25498.1
-- new SVN snapshot (revision 25498)
+* Sun Dec 23 2007 Led <led@altlinux.ru> 1.0-alt35.25513.1
+- new SVN snapshot (revision 25513)
 - removed %lname-svn-r25454-dvdnav.patch
-- updated %lname-svn-r25505-configure.patch (fixed #13791)
 
 * Sat Dec 22 2007 Led <led@altlinux.ru> 1.0-alt35.25487.1
 - new SVN snapshot (revision 25487)
