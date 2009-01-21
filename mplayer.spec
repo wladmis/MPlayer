@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc2try2
-%define svnrev 26450
-%define ffmpeg_svnrev 12824
+%define svnrev 26454
+%define ffmpeg_svnrev 12840
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -79,7 +79,7 @@
 %def_enable xvid
 %def_enable x264
 %def_enable ffmpeg
-%def_enable shared_ffmpeg
+%def_disable shared_ffmpeg
 %def_disable faad_ext
 %def_enable faad_int
 %def_disable faad_fixed
@@ -329,13 +329,12 @@ Patch5: %lname-svn-r25454-vo_vidix.patch
 Patch6: %lname-svn-r21128-alt-artsc_ldflags.patch.gz
 Patch7: %lname-svn-r23099-demux_nut.patch
 Patch8: %lname-svn-r23722-VIDM-win32-codec.patch
-Patch9: %lname-svn-r26450-mencoder.patch
 Patch11: %lname-svn-r24081-nls.patch
 Patch12: %lname-uni-svn25678.patch
 Patch13: %Name-svn-20060711-vbe.patch.gz
 Patch14: %lname-svn-r26450-gui_nls.patch
 Patch16: %lname-svn-r26450-configure.patch
-Patch17: %lname-svn-r26450-ext_ffmpeg.patch
+Patch17: %lname-svn-r26454-ext_ffmpeg.patch
 Patch27: %lname-svn-r26450-builddocs.patch
 %if_disabled shared_ffmpeg
 %{?_enable_dirac:Patch31: ffmpeg-svn-r12807-dirac-0.9.x.patch}
@@ -343,10 +342,11 @@ Patch32: ffmpeg-svn-r12807-xvmc-vld.patch
 Patch33: ffmpeg-svn-r12807-amr.patch
 %endif
 
-# Automatically added by buildreq on Wed May 30 2007
-#BuildRequires: aalib-devel docbook-dtds docbook-style-xsl esound-devel gcc-c++ kdelibs ladspa_sdk libarts-devel libaudio-devel libavformat-devel libcaca-devel libcdparanoia-devel libdv-devel libdvdnav-devel libdvdread-devel libenca-devel libfribidi-devel libgpm-devel libgtk+2-devel libjpeg-devel liblirc-devel liblive555-devel liblzo2-devel libmesa-devel libmpcdec-devel libopenal-devel libpostproc-devel libpulseaudio-devel libSDL-devel libSDL_image-devel libslang-devel libsmbclient-devel libspeex-devel libswscale-devel libungif-devel libvidix-devel libXinerama-devel libxmms-devel libXvMC-devel libXxf86dga-devel subversion svgalib-devel xsltproc
+# Automatically added by buildreq on Wed Apr 16 2008
+#BuildRequires: ImageMagick aalib-devel docbook-dtds docbook-style-xsl esound-devel gcc-c++ kdelibs ladspa_sdk libSDL-devel libSDL_image-devel libXScrnSaver-devel libXinerama-devel libXvMC-devel libXxf86dga-devel libamrnb-devel libamrwb-devel libarts-devel libaudio-devel libcaca-devel libcdparanoia-devel libdca-devel libdirac-devel libdv-devel libdvdnav-devel libenca-devel libfaac-devel libfribidi-devel libgpm-devel libgtk+2-devel libjpeg-devel liblame-devel liblirc-devel liblive555-devel liblzo2-devel libmesa-devel libmpcdec-devel libnut-devel libopenal-devel libpulseaudio-devel libslang-devel libsmbclient-devel libspeex-devel libtheora-devel libungif-devel libvidix-devel libx264-devel libxmms-devel libxvid-devel subversion svgalib-devel xsltproc
 
 BuildRequires: %awk libncurses-devel libslang-devel zlib-devel
+BuildRequires: libdca-devel
 BuildRequires: cpp >= 3.3 gcc >= 3.3 gcc-c++ >= 3.3
 %{?svnrev:%{?_with_htmldocs:BuildRequires: docbook-style-xsl xsltproc sgml-common docbook-dtds}}
 
@@ -406,7 +406,7 @@ BuildRequires: libvidix-devel
 %{?_enable_xv:BuildRequires: libXv-devel}
 %{?_enable_vm:BuildRequires: libXxf86vm-devel}
 %{?_enable_xinerama:BuildRequires: libXinerama-devel}
-%{?_enable_x11:BuildRequires: libXt-devel}
+%{?_enable_x11:BuildRequires: libXt-devel libXScrnSaver-devel}
 %{?_enable_dga1:BuildRequires: libXxf86dga-devel}
 %{?_enable_dga2:BuildRequires: libXxf86dga-devel}
 %{?_enable_directfb:BuildRequires: libdirectfb-devel}
@@ -691,7 +691,6 @@ mv ffmpeg-svn-r%ffmpeg_svnrev/lib{av{codec,format,util},postproc} .
 %patch6 -p1
 %patch7 -p1
 %patch8 -p1
-%patch9 -p1
 %patch11 -p1
 %patch12 -p1
 %patch13 -p1
@@ -732,7 +731,14 @@ subst 's|\\/\\/|//|g' help/help_mp-zh_??.h
 
 %build
 %define _optlevel 3
-%{?_disable_debug:%add_optflags -ffast-math}
+%add_optflags %optflags_notraceback %optflags_fastmath -finline-functions -frename-registers
+%ifarch x86_64
+%add_optflags -mtune=k8 -DARCH_X86_64
+%else
+%ifarch %ix86
+%add_optflags -DARCH_X86_32
+%endif
+%endif
 export CFLAGS="%optflags"
 ./configure \
 		--target=%_target \
@@ -1252,6 +1258,12 @@ ln -sf %lname %buildroot%_bindir/g%lname
 
 
 %changelog
+* Tue Apr 15 2008 Led <led@altlinux.ru> 1.0-alt35.26454.1
+- new SVN snapshot (revision 26454)
+- removed %lname-svn-r26454-mencoder.patch (fixed in upstream)
+- cleaned up %lname-svn-r26454-ext_ffmpeg.patch
+- build with internal ffmpeg
+
 * Tue Apr 15 2008 Led <led@altlinux.ru> 1.0-alt35.26450.1
 - new SVN snapshot (revision 26450)
 - updated:

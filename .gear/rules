@@ -1,8 +1,8 @@
-tar.bz2: r26450:. name=@name@-svn-r26450
+tar.bz2: r26454:. name=@name@-svn-r26454
 tar.bz2: standard-1.9:. name=standard-1.9 base=standard
-tar.bz2: ffmpeg-r12824:. name=ffmpeg-svn-r12824
+tar.bz2: ffmpeg-r12840:. name=ffmpeg-svn-r12840
 gzip: *.awk
 gzip: *-vbe.patch *-artsc_ldflags.patch mplayer-dvd-ru-*.patch
 copy: *.sh *.in
-copy: *-explicit_gif.patch *-ext_ffmpeg.patch *-configure.patch *-dirac-*.patch *-subreader.patch *-gui_nls.patch *-nls.patch *-builddocs.patch *-gui.patch *-demux_nut.patch *-VIDM-win32-codec.patch *-vo_vidix.patch mplayer-uni-*.patch *-mencoder.patch
+copy: *-explicit_gif.patch *-ext_ffmpeg.patch *-configure.patch *-dirac-*.patch *-subreader.patch *-gui_nls.patch *-nls.patch *-builddocs.patch *-gui.patch *-demux_nut.patch *-VIDM-win32-codec.patch *-vo_vidix.patch mplayer-uni-*.patch
 copy: ffmpeg-*.patch
