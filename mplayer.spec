@@ -281,7 +281,7 @@
 Name: %lname
 Version: 1.0
 %define rel 35
-%define subrel 1
+%define subrel 2
 %ifdef svnrev
 Release: alt%rel.%svnrev.%subrel
 %define pkgver svn-r%svnrev
@@ -321,7 +321,8 @@ Source5: %lname.conf.in
 Source6: mp_help2msg.awk.gz
 Source7: mp_msg2po.awk.gz
 Patch0: %lname-svn-r22221-subreader.patch
-Patch1: %lname-svn-r26991-dirac-0.9.1.patch
+#Patch1: %lname-svn-r26991-dirac-0.9.1.patch
+Patch1: %{lname}svn_trunk_revision_26980-dirac-0.10.x.patch
 Patch2: %lname-dvd-ru-svn19389.patch.gz
 Patch3: %Name-1.0pre4-alt-explicit_gif.patch
 Patch4: %lname-svn-r26450-gui.patch
@@ -388,7 +389,7 @@ BuildRequires: cpp >= 3.3 gcc >= 3.3 gcc-c++ >= 3.3
 %{?_enable_libmpeg2:BuildRequires: libmpeg2-devel}
 %{?_enable_musepack:BuildRequires: libmpcdec-devel >= 1.2.1}
 %{?_enable_nut:BuildRequires: libnut-devel >= 0.0-alt0.272}
-%{?_enable_dirac:BuildRequires: libdirac-devel >= 0.9}
+%{?_enable_dirac:BuildRequires: libdirac-devel >= 0.10}
 
 %{?_enable_xvmc:BuildRequires: libXvMC-devel}
 %if_enabled mplayer
@@ -731,7 +732,7 @@ subst 's|\\/\\/|//|g' help/help_mp-zh_??.h
 
 %build
 %define _optlevel 3
-%add_optflags %optflags_notraceback %optflags_fastmath -finline-functions -frename-registers
+%add_optflags %optflags_notraceback %optflags_fastmath -finline-functions -frename-registers -Wno-switch-enum
 %ifarch x86_64
 %add_optflags -mtune=k8 -DARCH_X86_64
 %else
@@ -864,7 +865,7 @@ export CFLAGS="%optflags"
 		%{?_enable_faad_int:--enable-faad-internal --disable-faad-external %{subst_enable_to faad_fixed faad-fixed}} \
 		%{?_enable_faad_ext:--enable-faad-external --disable-faad-internal} \
 		%{subst_enable faac} \
-		%{subst_enable dirac} \
+		%{subst_enable_to dirac libdirac} \
 		%{subst_enable ladspa} \
 		%{subst_enable libdv} \
 		%{subst_enable mad} \
@@ -1255,6 +1256,9 @@ ln -sf %lname %buildroot%_bindir/g%lname
 
 
 %changelog
+* Thu Jun 05 2008 Led <led@altlinux.ru> 1.0-alt35.26991.2
+- updated %{lname}svn_trunk_revision_26980-dirac-0.10.x.patch
+
 * Wed Jun 04 2008 Led <led@altlinux.ru> 1.0-alt35.26991.1
 - new SVN snapshot (revision 26991)
 - updated:

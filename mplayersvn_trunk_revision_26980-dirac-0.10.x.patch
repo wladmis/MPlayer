@@ -1,0 +1,197 @@
+diff --exclude .svn -ruN mplayersvn_trunk/configure mplayersvn_trunk_dirac/configure
+--- mplayersvn_trunk/configure	2008-06-03 10:43:30.000000000 +1000
++++ mplayersvn_trunk_dirac/configure	2008-06-03 10:59:09.000000000 +1000
+@@ -290,6 +290,10 @@
+   --disable-xvid-lavc       disable Xvid in libavcodec [autodetect]
+   --disable-x264            disable x264 [autodetect]
+   --disable-x264-lavc       disable x264 in libavcodec [autodetect]
++  --disable-libdirac        disable dirac in libavcodec [autodetect]
++  --disable-libdirac-lavc   disable dirac in libavcodec [autodetect]
++  --disable-libschroedinger        disable libschroedinger in libavcodec (Schroedinger decoder) [autodetect]
++  --disable-libschroedinger-lavc   disable dirac in libavcodec (Schroedinger decoder) [autodetect]
+   --disable-libnut          disable libnut [autodetect]
+   --disable-libavutil_a     disable static libavutil [autodetect]
+   --disable-libavcodec_a    disable static libavcodec [autodetect]
+@@ -627,6 +631,10 @@
+ _xvid_lavc=auto
+ _x264=auto
+ _x264_lavc=auto
++_libdirac=auto
++_libdirac_lavc=auto
++_libschroedinger=auto
++_libschroedinger_lavc=auto
+ _libnut=auto
+ _lirc=auto
+ _lircc=auto
+@@ -1034,6 +1042,14 @@
+   --disable-x264)       _x264=no        ;;
+   --enable-x264-lavc)   _x264_lavc=yes  ;;
+   --disable-x264-lavc)  _x264_lavc=no   ;;
++  --enable-libdirac)        _libdirac=yes       ;;
++  --disable-libdirac)       _libdirac=no        ;;
++  --enable-libdirac-lavc)   _libdirac_lavc=yes  ;;
++  --disable-libdirac-lavc)  _libdirac_lavc=no   ;;
++  --enable-libschroedinger)       _libschroedinger=yes       ;;
++  --disable-libschroedinger)      _libschroedinger=no        ;;
++  --enable-libschroedinger-lavc)   _libschroedinger_lavc=yes  ;;
++  --disable-libschroedinger-lavc)  _libschroedinger_lavc=no   ;;
+   --enable-libnut)	_libnut=yes	;;
+   --disable-libnut)	_libnut=no	;;
+   --enable-libavutil_a)		_libavutil_a=yes	;;
+@@ -6619,6 +6635,79 @@
+ echores "$_x264"
+ 
+ 
++echocheck "libdirac"
++if test "$_libdirac" = auto ; then
++  _def_libdirac='#define HAVE_LIBDIRAC 1'
++  _codecmodules="libdirac $_codecmodules"
++  cat > $TMPC << EOF
++#include <libdirac_encoder/dirac_encoder.h>
++#include <libdirac_decoder/dirac_parser.h>
++int main(void) 
++{
++    dirac_encoder_context_t enc_ctx;
++    dirac_decoder_t *dec_handle;
++    dirac_encoder_context_init(&enc_ctx, VIDEO_FORMAT_SD_576I50); 
++    dec_handle = dirac_decoder_init(0);
++	if (dec_handle)
++        dirac_decoder_close(dec_handle);
++    return 0;
++}
++EOF
++  _libdirac=no
++    cc_check `$_pkg_config --silence-errors --cflags dirac` `$_pkg_config --libs dirac` && _libdirac=yes 
++fi
++
++if test "$_libdirac" = yes ; then
++  test "$_libdirac_lavc" = auto && _libdirac_lavc=yes
++  if test "$_libdirac_lavc" = yes ; then
++    _def_libdirac_lavc='#define CONFIG_LIBDIRAC 1'
++    _inc_extra="$_inc_extra `$_pkg_config --silence-errors --cflags dirac`"
++    _ld_extra="$_ld_extra `$_pkg_config --silence-errors --libs dirac`"
++    _libavencoders="$_libavencoders LIBDIRAC_ENCODER"
++    _libavdecoders="$_libavdecoders LIBDIRAC_DECODER"
++  fi
++else
++  _def_libdirac='#undef HAVE_LIBDIRAC'
++  _libdirac_lavc=no
++  _def_libdirac_lavc='#undef CONFIG_LIBDIRAC'
++  _nocodecmodules="libdirac $_nocodecmodules"
++fi
++_res_comment="in libavcodec: $_libdirac_lavc"
++echores "$_libdirac"
++
++
++echocheck "libschroedinger"
++if test "$_libschroedinger" = auto ; then
++  _def_libschroedinger='#define HAVE_LIBSCHROEDINGER 1'
++  _codecmodules="libschroedinger $_codecmodules"
++  cat > $TMPC << EOF
++#include <schroedinger/schro.h>
++int main(void) { schro_init(); return 0; }
++EOF
++  _libschroedinger=no
++    cc_check `$_pkg_config --silence-errors --libs --cflags schroedinger-1.0` && _libschroedinger=yes
++fi
++
++if test "$_libschroedinger" = yes ; then
++  test "$_libschroedinger_lavc" = auto && _libschroedinger_lavc=yes
++  if test "$_libschroedinger_lavc" = yes ; then
++    _def_libschroedinger_lavc='#define CONFIG_LIBSCHROEDINGER 1'
++    _inc_extra="$_inc_extra `$_pkg_config --silence-errors --cflags schroedinger-1.0`"
++    _ld_extra="$_ld_extra `$_pkg_config --silence-errors --libs schroedinger-1.0`"
++    _libavencoders="$_libavencoders LIBSCHROEDINGER_ENCODER"
++    _libavdecoders="$_libavdecoders LIBSCHROEDINGER_DECODER"
++	# disable libdirac decoder if Schroedinger is available.
++    _libavdecoders=`echo $_libavdecoders | sed -e s/LIBDIRAC_DECODER// `
++  fi
++else
++  _def_libdirac='#undef HAVE_LIBSCHROEDINGER'
++  _libschroedinger_lavc=no
++  _def_libschroedinger_lavc='#undef CONFIG_LIBSCHROEDINGER'
++  _nocodecmodules="libschroedinger $_nocodecmodules"
++fi
++_res_comment="in libavcodec: $_libschroedinger_lavc"
++echores "$_libschroedinger"
++
+ echocheck "libnut"
+ if test "$_libnut" = auto ; then
+   cat > $TMPC << EOF
+@@ -7749,6 +7838,8 @@
+ WIN32DLL = $_win32dll
+ WIN32_EMULATION = $_win32_emulation
+ X264 = $_x264
++DIRAC = $_libdirac
++SCHROEDINGER = $_libschroedinger
+ XANIM_CODECS = $_xanim
+ XMMS_PLUGINS = $_xmms
+ XVID4 = $_xvid
+@@ -7785,6 +7876,8 @@
+ CONFIG_LIBMP3LAME=$_mp3lame_lavc
+ CONFIG_LIBVORBIS=$_libvorbis
+ CONFIG_LIBX264=$_x264_lavc
++CONFIG_LIBDIRAC=$_libdirac_lavc
++CONFIG_LIBSCHROEDINGER=$_libschroedinger_lavc
+ CONFIG_LIBXVID=$_xvid_lavc
+ CONFIG_MLIB = $_mlib
+ CONFIG_POSTPROC = yes
+@@ -7950,6 +8043,12 @@
+ /* Define if you are using the X.264 library */
+ $_def_x264
+ 
++/* Define if you are using the Dirac library */
++$_def_libdirac
++
++/* Define if you are using the Schroedinger-1.0 library */
++$_def_libschroedinger
++
+ /* Define if you are using libnut */
+ $_def_libnut
+ 
+@@ -8181,6 +8280,8 @@
+ $_def_faac_lavc
+ $_def_mp3lame_lavc
+ $_def_x264_lavc
++$_def_libdirac_lavc
++$_def_libschroedinger_lavc
+ $_def_xvid_lavc
+ 
+ /* Use codec libs included in mplayer CVS / source dist: */
+diff --exclude .svn -ruN mplayersvn_trunk/etc/codecs.conf mplayersvn_trunk_dirac/etc/codecs.conf
+--- mplayersvn_trunk/etc/codecs.conf	2008-06-01 12:27:28.000000000 +1000
++++ mplayersvn_trunk_dirac/etc/codecs.conf	2008-06-01 12:28:27.000000000 +1000
+@@ -699,6 +699,22 @@
+   dll mpeg4
+   out YV12,I420,IYUV flip
+ 
++videocodec fflibdirac
++  info "DIRAC (through ffmpeg)"
++  status working
++  fourcc drac
++  driver ffmpeg
++  dll libdirac
++  out I420,IYUV,422P,444P
++
++videocodec fflibschroedinger
++  info "DIRAC (through ffmpeg)"
++  status working
++  fourcc drac
++  driver ffmpeg
++  dll libschroedinger
++  out I420,IYUV,422P,444P
++
+ videocodec xvid
+   info "Xvid (MPEG-4)"
+   status working
+diff --exclude .svn -ruN mplayersvn_trunk/libmpdemux/mp_taglists.c mplayersvn_trunk_dirac/libmpdemux/mp_taglists.c
+--- mplayersvn_trunk/libmpdemux/mp_taglists.c	2008-05-27 11:03:33.000000000 +1000
++++ mplayersvn_trunk_dirac/libmpdemux/mp_taglists.c	2008-05-29 14:26:38.000000000 +1000
+@@ -78,6 +78,7 @@
+     { CODEC_ID_WS_VQA,            MKTAG('V', 'Q', 'A', 'V')},
+     { CODEC_ID_XAN_WC3,           MKTAG('W', 'C', '3', 'V')},
+     { CODEC_ID_NUV,               MKTAG('N', 'U', 'V', '1')},
++    { CODEC_ID_DIRAC,             MKTAG('d', 'r', 'a', 'c')},
+     { 0, 0 },
+ };
+ 
