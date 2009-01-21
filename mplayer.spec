@@ -7,8 +7,8 @@
 %define subst_o_post() %{expand:%%{?_enable_%{1}:%{1}%{2},}}
 
 #define prerel rc2try2
-%define svnrev 26783
-%define ffmpeg_svnrev 13168
+%define svnrev 26909
+%define ffmpeg_svnrev 13471
 
 #----------------------	BEGIN OF PARAMETERS -------------------------------------
 
@@ -330,10 +330,10 @@ Patch6: %lname-svn-r21128-alt-artsc_ldflags.patch.gz
 Patch7: %lname-svn-r23099-demux_nut.patch
 Patch8: %lname-svn-r23722-VIDM-win32-codec.patch
 Patch11: %lname-svn-r24081-nls.patch
-Patch12: %lname-uni-svn26706.patch
+Patch12: %lname-uni-svn26909.patch
 Patch13: %Name-svn-20060711-vbe.patch.gz
-Patch14: %lname-svn-r26450-gui_nls.patch
-Patch16: %lname-svn-r26708-configure.patch
+Patch14: %lname-svn-r26909-gui_nls.patch
+Patch16: %lname-svn-r26909-configure.patch
 Patch17: %lname-svn-r26706-ext_ffmpeg.patch
 Patch27: %lname-svn-r26450-builddocs.patch
 %if_disabled shared_ffmpeg
@@ -900,7 +900,7 @@ export CFLAGS="%optflags"
 		%{subst_enable dvb} \
 		%{subst_enable dvbhead} \
 		%{subst_enable mga} \
-	        %{subst_enable xmga} \
+		%{subst_enable xmga} \
 		%{subst_enable xv} \
 		%{subst_enable xvmc} \
 		%{?_enable_xvmc:%{?xvmclib:--with-xvmclib=%xvmclib}} \
@@ -1003,6 +1003,8 @@ for s in 128 64 48 32 24 22 16; do
 done
 %endif
 
+bzip2 --best --force --keep -- Changelog
+
 
 %install
 %make_install DESTDIR=%buildroot install
@@ -1030,7 +1032,7 @@ install -pD -m 0644 TOOLS/README %buildroot%_docdir/%name-tools-%version/README
 %endif
 
 # docs
-bzip2 --best --force --keep -- Changelog
+mv %buildroot{%_mandir/en/man1,%_man1dir}
 for l in $(ls DOCS/man | grep -v 'en'); do
 %if_enabled mplayer
     install -pD -m 0644 DOCS/man/$l/%lname.1 %buildroot%_mandir/$l/man1/%lname.1
@@ -1251,6 +1253,13 @@ ln -sf %lname %buildroot%_bindir/g%lname
 
 
 %changelog
+* Tue May 27 2008 Led <led@altlinux.ru> 1.0-alt35.26909.1
+- new SVN snapshot (revision 26909)
+- updated:
+  + %lname-uni-svn26909.patch
+  + %lname-svn-r26909-gui_nls.patch
+  + %lname-svn-r26909-configure.patch
+
 * Thu May 15 2008 Led <led@altlinux.ru> 1.0-alt35.26783.1
 - new SVN snapshot (revision 26783)
 

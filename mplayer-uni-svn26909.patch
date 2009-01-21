@@ -1,6 +1,6 @@
-diff -urN mplayer-svn-r26706.orig/codec-cfg.c mplayer-svn-r26706/codec-cfg.c
---- mplayer-svn-r26706.orig/codec-cfg.c	2008-04-14 00:02:39 +0300
-+++ mplayer-svn-r26706/codec-cfg.c	2008-05-09 21:08:51 +0300
+diff -urN mplayer-svn-r26909.orig/codec-cfg.c mplayer-svn-r26909/codec-cfg.c
+--- mplayer-svn-r26909.orig/codec-cfg.c	2008-05-27 22:58:32 +0300
++++ mplayer-svn-r26909/codec-cfg.c	2008-05-27 23:02:43 +0300
 @@ -179,6 +179,7 @@
  		{"ZRMJPEGIT", IMGFMT_ZRMJPEGIT},
  		{"ZRMJPEGIB", IMGFMT_ZRMJPEGIB},
@@ -9,10 +9,10 @@ diff -urN mplayer-svn-r26706.orig/codec-cfg.c mplayer-svn-r26706/codec-cfg.c
  		{"IDCT_MPEG2",IMGFMT_XVMC_IDCT_MPEG2},
  		{"MOCO_MPEG2",IMGFMT_XVMC_MOCO_MPEG2},
  
-diff -urN mplayer-svn-r26706.orig/configure mplayer-svn-r26706/configure
---- mplayer-svn-r26706.orig/configure	2008-05-09 17:57:36 +0300
-+++ mplayer-svn-r26706/configure	2008-05-09 21:08:51 +0300
-@@ -445,7 +445,8 @@
+diff -urN mplayer-svn-r26909.orig/configure mplayer-svn-r26909/configure
+--- mplayer-svn-r26909.orig/configure	2008-05-27 22:58:32 +0300
++++ mplayer-svn-r26909/configure	2008-05-27 23:02:43 +0300
+@@ -446,7 +446,8 @@
    --extra-libs-mencoder=FLAGS extra linker flags for MEncoder
    --with-extraincdir=DIR      extra header search paths in DIR (*)
    --with-extralibdir=DIR      extra linker search paths in DIR (*)
@@ -22,7 +22,7 @@ diff -urN mplayer-svn-r26706.orig/configure mplayer-svn-r26706/configure
  
    --with-freetype-config=PATH path to freetype-config
    --with-fribidi-config=PATH  path to fribidi-config
-@@ -3980,34 +3981,98 @@
+@@ -3971,34 +3972,98 @@
  echores "$_xv"
  
  
@@ -144,7 +144,7 @@ diff -urN mplayer-svn-r26706.orig/configure mplayer-svn-r26706/configure
  
  
  echocheck "Xinerama"
-@@ -8503,6 +8568,7 @@
+@@ -8495,6 +8560,7 @@
  $_def_x11
  $_def_xv
  $_def_xvmc
@@ -152,10 +152,10 @@ diff -urN mplayer-svn-r26706.orig/configure mplayer-svn-r26706/configure
  $_def_vm
  $_def_xf86keysym
  $_def_xinerama
-diff -urN mplayer-svn-r26706.orig/etc/codecs.conf mplayer-svn-r26706/etc/codecs.conf
---- mplayer-svn-r26706.orig/etc/codecs.conf	2008-05-07 03:43:55 +0300
-+++ mplayer-svn-r26706/etc/codecs.conf	2008-05-09 21:08:51 +0300
-@@ -144,6 +144,7 @@
+diff -urN mplayer-svn-r26909.orig/etc/codecs.conf mplayer-svn-r26909/etc/codecs.conf
+--- mplayer-svn-r26909.orig/etc/codecs.conf	2008-05-27 22:58:32 +0300
++++ mplayer-svn-r26909/etc/codecs.conf	2008-05-27 23:02:43 +0300
+@@ -152,6 +152,7 @@
    fourcc MMES,mmes   ; matrox mpeg2 in avi
    driver ffmpeg
    dll "mpegvideo_xvmc"
@@ -163,10 +163,10 @@ diff -urN mplayer-svn-r26706.orig/etc/codecs.conf mplayer-svn-r26706/etc/codecs.
    out IDCT_MPEG2
    out MOCO_MPEG2
  
-diff -urN mplayer-svn-r26706.orig/help/help_mp-en.h mplayer-svn-r26706/help/help_mp-en.h
---- mplayer-svn-r26706.orig/help/help_mp-en.h	2008-05-07 03:43:54 +0300
-+++ mplayer-svn-r26706/help/help_mp-en.h	2008-05-09 21:08:51 +0300
-@@ -1653,6 +1653,7 @@
+diff -urN mplayer-svn-r26909.orig/help/help_mp-en.h mplayer-svn-r26909/help/help_mp-en.h
+--- mplayer-svn-r26909.orig/help/help_mp-en.h	2008-05-27 22:58:32 +0300
++++ mplayer-svn-r26909/help/help_mp-en.h	2008-05-27 23:02:43 +0300
+@@ -1659,6 +1659,7 @@
  #define MSGTR_MPCODECS_DRIFailure "[VD_FFMPEG] DRI failure.\n"
  #define MSGTR_MPCODECS_CouldntAllocateImageForCodec "[VD_FFMPEG] Couldn't allocate image for codec.\n"
  #define MSGTR_MPCODECS_XVMCAcceleratedMPEG2 "[VD_FFMPEG] XVMC-accelerated MPEG-2.\n"
@@ -174,20 +174,20 @@ diff -urN mplayer-svn-r26706.orig/help/help_mp-en.h mplayer-svn-r26706/help/help
  #define MSGTR_MPCODECS_TryingPixfmt "[VD_FFMPEG] Trying pixfmt=%d.\n"
  #define MSGTR_MPCODECS_McGetBufferShouldWorkOnlyWithXVMC "[VD_FFMPEG] The mc_get_buffer should work only with XVMC acceleration!!"
  #define MSGTR_MPCODECS_UnexpectedInitVoError "[VD_FFMPEG] Unexpected init_vo error.\n"
-diff -urN mplayer-svn-r26706.orig/libmpcodecs/img_format.c mplayer-svn-r26706/libmpcodecs/img_format.c
---- mplayer-svn-r26706.orig/libmpcodecs/img_format.c	2007-07-12 01:38:41 +0300
-+++ mplayer-svn-r26706/libmpcodecs/img_format.c	2008-05-09 21:08:51 +0300
+diff -urN mplayer-svn-r26909.orig/libmpcodecs/img_format.c mplayer-svn-r26909/libmpcodecs/img_format.c
+--- mplayer-svn-r26909.orig/libmpcodecs/img_format.c	2008-05-22 11:22:55 +0300
++++ mplayer-svn-r26909/libmpcodecs/img_format.c	2008-05-27 23:03:49 +0300
 @@ -67,6 +67,7 @@
- 	case IMGFMT_ZRMJPEGIB: return("Zoran MJPEG bottom field first");
- 	case IMGFMT_XVMC_MOCO_MPEG2: return("MPEG1/2 Motion Compensation");
- 	case IMGFMT_XVMC_IDCT_MPEG2: return("MPEG1/2 Motion Compensation and IDCT");
+ 	case IMGFMT_ZRMJPEGIB: return "Zoran MJPEG bottom field first";
+ 	case IMGFMT_XVMC_MOCO_MPEG2: return "MPEG1/2 Motion Compensation";
+ 	case IMGFMT_XVMC_IDCT_MPEG2: return "MPEG1/2 Motion Compensation and IDCT";
 +	case IMGFMT_XVMC_VLD_MPEG2: return("MPEG1/2 Motion Compensation and VLD");
      }
-     snprintf(unknow_format,20,"Unknown 0x%04x",format);
-     return unknow_format;
-diff -urN mplayer-svn-r26706.orig/libmpcodecs/img_format.h mplayer-svn-r26706/libmpcodecs/img_format.h
---- mplayer-svn-r26706.orig/libmpcodecs/img_format.h	2008-02-23 00:42:53 +0200
-+++ mplayer-svn-r26706/libmpcodecs/img_format.h	2008-05-09 21:08:51 +0300
+     snprintf(unknown_format,20,"Unknown 0x%04x",format);
+     return unknown_format;
+diff -urN mplayer-svn-r26909.orig/libmpcodecs/img_format.h mplayer-svn-r26909/libmpcodecs/img_format.h
+--- mplayer-svn-r26909.orig/libmpcodecs/img_format.h	2008-02-23 00:42:53 +0200
++++ mplayer-svn-r26909/libmpcodecs/img_format.h	2008-05-27 23:02:43 +0300
 @@ -106,6 +106,7 @@
  //these are chroma420
  #define IMGFMT_XVMC_MOCO_MPEG2 (IMGFMT_XVMC|0x02)
@@ -196,10 +196,10 @@ diff -urN mplayer-svn-r26706.orig/libmpcodecs/img_format.h mplayer-svn-r26706/li
  
  typedef struct {
      void* data;
-diff -urN mplayer-svn-r26706.orig/libmpcodecs/vd_ffmpeg.c mplayer-svn-r26706/libmpcodecs/vd_ffmpeg.c
---- mplayer-svn-r26706.orig/libmpcodecs/vd_ffmpeg.c	2008-04-14 00:02:35 +0300
-+++ mplayer-svn-r26706/libmpcodecs/vd_ffmpeg.c	2008-05-09 21:08:51 +0300
-@@ -12,6 +12,7 @@
+diff -urN mplayer-svn-r26909.orig/libmpcodecs/vd_ffmpeg.c mplayer-svn-r26909/libmpcodecs/vd_ffmpeg.c
+--- mplayer-svn-r26909.orig/libmpcodecs/vd_ffmpeg.c	2008-05-22 11:22:55 +0300
++++ mplayer-svn-r26909/libmpcodecs/vd_ffmpeg.c	2008-05-27 23:02:43 +0300
+@@ -13,6 +13,7 @@
  #include "mpbswap.h"
  
  #include "vd_internal.h"
@@ -207,7 +207,7 @@ diff -urN mplayer-svn-r26706.orig/libmpcodecs/vd_ffmpeg.c mplayer-svn-r26706/lib
  
  static vd_info_t info = {
  	"FFmpeg's libavcodec codec family",
-@@ -151,6 +152,8 @@
+@@ -147,6 +148,8 @@
          case IMGFMT_XVMC_IDCT_MPEG2:
          case IMGFMT_XVMC_MOCO_MPEG2:
              if(avctx->pix_fmt==PIX_FMT_XVMC_MPEG2_IDCT) return CONTROL_TRUE;
@@ -216,7 +216,7 @@ diff -urN mplayer-svn-r26706.orig/libmpcodecs/vd_ffmpeg.c mplayer-svn-r26706/lib
  #endif
  	}
          return CONTROL_FALSE;
-@@ -221,6 +224,9 @@
+@@ -217,6 +220,9 @@
      vd_ffmpeg_ctx *ctx;
      AVCodec *lavc_codec;
      int lowres_w=0;
@@ -226,7 +226,7 @@ diff -urN mplayer-svn-r26706.orig/libmpcodecs/vd_ffmpeg.c mplayer-svn-r26706/lib
      int do_vis_debug= lavc_param_vismv || (lavc_param_debug&(FF_DEBUG_VIS_MB_TYPE|FF_DEBUG_VIS_QP));
  
      if(!avcodec_initialized){
-@@ -257,10 +263,11 @@
+@@ -253,10 +259,11 @@
  #ifdef HAVE_XVMC
  
  #ifdef CODEC_CAP_HWACCEL
@@ -240,7 +240,7 @@ diff -urN mplayer-svn-r26706.orig/libmpcodecs/vd_ffmpeg.c mplayer-svn-r26706/lib
          mp_msg(MSGT_DECVIDEO, MSGL_INFO, MSGTR_MPCODECS_XVMCAcceleratedCodec);
          assert(ctx->do_dr1);//these are must to!
          assert(ctx->do_slices); //it is (vo_)ffmpeg bug if this fails
-@@ -531,6 +538,7 @@
+@@ -536,6 +543,7 @@
  #ifdef HAVE_XVMC
          case PIX_FMT_XVMC_MPEG2_MC:ctx->best_csp=IMGFMT_XVMC_MOCO_MPEG2;break;
          case PIX_FMT_XVMC_MPEG2_IDCT:ctx->best_csp=IMGFMT_XVMC_IDCT_MPEG2;break;
@@ -248,7 +248,7 @@ diff -urN mplayer-svn-r26706.orig/libmpcodecs/vd_ffmpeg.c mplayer-svn-r26706/lib
  #endif
  	default:
  	    ctx->best_csp=0;
-@@ -915,7 +923,11 @@
+@@ -920,7 +928,11 @@
          avctx->get_buffer= mc_get_buffer;
          avctx->release_buffer= mc_release_buffer;
          avctx->draw_horiz_band = mc_render_slice;
@@ -260,9 +260,9 @@ diff -urN mplayer-svn-r26706.orig/libmpcodecs/vd_ffmpeg.c mplayer-svn-r26706/lib
          assert(ctx->do_dr1);//these are must to!
          assert(ctx->do_slices); //it is (vo_)ffmpeg bug if this fails
          avctx->flags|= CODEC_FLAG_EMU_EDGE;//do i need that??!!
-diff -urN mplayer-svn-r26706.orig/libvo/vo_xvmc.c mplayer-svn-r26706/libvo/vo_xvmc.c
---- mplayer-svn-r26706.orig/libvo/vo_xvmc.c	2007-12-02 17:50:50 +0200
-+++ mplayer-svn-r26706/libvo/vo_xvmc.c	2008-05-09 21:08:51 +0300
+diff -urN mplayer-svn-r26909.orig/libvo/vo_xvmc.c mplayer-svn-r26909/libvo/vo_xvmc.c
+--- mplayer-svn-r26909.orig/libvo/vo_xvmc.c	2008-05-22 11:22:57 +0300
++++ mplayer-svn-r26909/libvo/vo_xvmc.c	2008-05-27 23:02:43 +0300
 @@ -23,6 +23,14 @@
  #include <X11/extensions/Xvlib.h>
  #include <X11/extensions/XvMClib.h>
@@ -286,8 +286,8 @@ diff -urN mplayer-svn-r26706.orig/libvo/vo_xvmc.c mplayer-svn-r26706/libvo/vo_xv
  
  static int benchmark;
  static int use_sleep;
-@@ -59,6 +68,8 @@
- static int xv_port_request = 0;
+@@ -60,6 +69,8 @@
+ static int xv_adaptor = -1; 
  static int bob_deinterlace;
  static int top_field_first;
 +static int use_deint_one;
@@ -295,7 +295,7 @@ diff -urN mplayer-svn-r26706.orig/libvo/vo_xvmc.c mplayer-svn-r26706/libvo/vo_xv
  
  static int image_width,image_height;
  static int image_format;
-@@ -123,7 +134,7 @@
+@@ -124,7 +135,7 @@
    "XVideo Motion Compensation",
    "xvmc",
    "Ivan Kalvachev <iive@users.sf.net>",
@@ -304,7 +304,7 @@ diff -urN mplayer-svn-r26706.orig/libvo/vo_xvmc.c mplayer-svn-r26706/libvo/vo_xv
  };
  
  const LIBVO_EXTERN(xvmc);
-@@ -196,7 +207,23 @@
+@@ -197,7 +208,23 @@
  }
  //end of vo_xv shm/xvimage code
  
@@ -328,7 +328,7 @@ diff -urN mplayer-svn-r26706.orig/libvo/vo_xvmc.c mplayer-svn-r26706/libvo/vo_xv
     if ( format == IMGFMT_XVMC_IDCT_MPEG2 ){ 
        if( surf_info->mc_type != (XVMC_IDCT|XVMC_MPEG_2) ) return -1;
        if( surf_info->chroma_format != XVMC_CHROMA_FORMAT_420 ) return -1;
-@@ -377,9 +404,16 @@
+@@ -383,9 +410,16 @@
    {  "sleep",     OPT_ARG_BOOL, &use_sleep,       NULL },
    {  "queue",     OPT_ARG_BOOL, &use_queue,       NULL },
    {  "bobdeint",  OPT_ARG_BOOL, &bob_deinterlace, NULL },
@@ -345,7 +345,7 @@ diff -urN mplayer-svn-r26706.orig/libvo/vo_xvmc.c mplayer-svn-r26706/libvo/vo_xv
     //Obtain display handler
     if (!vo_init()) return -1;//vo_xv
  
-@@ -415,6 +449,8 @@
+@@ -421,6 +455,8 @@
     use_sleep = 0;
     use_queue = 0;
     bob_deinterlace = 0;
@@ -354,7 +354,7 @@ diff -urN mplayer-svn-r26706.orig/libvo/vo_xvmc.c mplayer-svn-r26706/libvo/vo_xv
  
     /* parse suboptions */
     if ( subopt_parse( arg, subopts ) != 0 )
-@@ -505,20 +541,23 @@
+@@ -511,20 +547,23 @@
     if(surface_info.chroma_format == XVMC_CHROMA_FORMAT_444)
        blocks_per_macroblock = 12;
  
@@ -391,7 +391,7 @@ diff -urN mplayer-svn-r26706.orig/libvo/vo_xvmc.c mplayer-svn-r26706/libvo/vo_xv
  
     if(surface_render==NULL)
        surface_render=malloc(MAX_SURFACES*sizeof(xvmc_render_state_t));//easy mem debug
-@@ -538,6 +577,11 @@
+@@ -544,6 +583,11 @@
        surface_render[i].chroma_format = surface_info.chroma_format;
        surface_render[i].unsigned_intra = (surface_info.flags & XVMC_INTRA_UNSIGNED) == XVMC_INTRA_UNSIGNED;
        surface_render[i].p_surface = &surface_array[i];
@@ -403,7 +403,7 @@ diff -urN mplayer-svn-r26706.orig/libvo/vo_xvmc.c mplayer-svn-r26706/libvo/vo_xv
        if( mp_msg_test(MSGT_VO,MSGL_DBG4) )
            printf("vo_xvmc: surface[%d] = %p .rndr=%p\n",i,&surface_array[i], &surface_render[i]);
     }
-@@ -614,8 +658,7 @@
+@@ -620,8 +664,7 @@
           printf("vo_xvmc: OSD support by additional frontend rendering\n");
           break;
        case BACKEND_SUBPICTURE:
@@ -413,7 +413,7 @@ diff -urN mplayer-svn-r26706.orig/libvo/vo_xvmc.c mplayer-svn-r26706/libvo/vo_xv
           break;
     }
  
-@@ -993,6 +1036,8 @@
+@@ -999,6 +1042,8 @@
  int rez;
  int clipX,clipY,clipW,clipH;
  int i;
@@ -422,7 +422,7 @@ diff -urN mplayer-svn-r26706.orig/libvo/vo_xvmc.c mplayer-svn-r26706/libvo/vo_xv
  
     if(p_render_surface == NULL)
        return;
-@@ -1002,22 +1047,38 @@
+@@ -1008,22 +1053,38 @@
     clipW = vo_dwidth+vo_panscan_x;
     clipH = vo_dheight+vo_panscan_y;
     
@@ -466,7 +466,7 @@ diff -urN mplayer-svn-r26706.orig/libvo/vo_xvmc.c mplayer-svn-r26706/libvo/vo_xv
        assert(0);
     }
     }
-@@ -1109,9 +1170,11 @@
+@@ -1115,9 +1176,11 @@
  
     if( number_of_surfaces ){
  
@@ -479,7 +479,7 @@ diff -urN mplayer-svn-r26706.orig/libvo/vo_xvmc.c mplayer-svn-r26706/libvo/vo_xv
        for(i=0; i<number_of_surfaces; i++)
        {
           XvMCHideSurface(mDisplay,&surface_array[i]);//it doesn't hurt, I hope
-@@ -1145,7 +1208,13 @@
+@@ -1151,7 +1214,13 @@
  static void uninit(void){
     if( mp_msg_test(MSGT_VO,MSGL_DBG4) ) {
        printf("vo_xvmc: uninit called\n"); }
@@ -494,7 +494,7 @@ diff -urN mplayer-svn-r26706.orig/libvo/vo_xvmc.c mplayer-svn-r26706/libvo/vo_xv
   //from vo_xv
  #ifdef HAVE_XF86VM
     vo_vm_close(mDisplay);
-@@ -1189,6 +1258,17 @@
+@@ -1195,6 +1264,17 @@
     assert( rndr != NULL );
     assert( rndr->magic == MP_XVMC_RENDER_MAGIC );
  
@@ -512,7 +512,7 @@ diff -urN mplayer-svn-r26706.orig/libvo/vo_xvmc.c mplayer-svn-r26706/libvo/vo_xv
     rez = XvMCRenderSurface(mDisplay,&ctx,rndr->picture_structure,
               		   rndr->p_surface,
                             rndr->p_past_surface,
-@@ -1200,7 +1280,7 @@
+@@ -1206,7 +1286,7 @@
     if(rez != Success)
     {
     int i;
@@ -521,7 +521,7 @@ diff -urN mplayer-svn-r26706.orig/libvo/vo_xvmc.c mplayer-svn-r26706/libvo/vo_xv
  
        printf("vo_xvmc::slice: pict=%d,flags=%x,start_blocks=%d,num_blocks=%d\n",
               rndr->picture_structure,rndr->flags,rndr->start_mv_blocks_num,
-@@ -1228,6 +1308,7 @@
+@@ -1234,6 +1314,7 @@
     rez = XvMCFlushSurface(mDisplay, rndr->p_surface);
     assert(rez==Success);
  
@@ -529,7 +529,7 @@ diff -urN mplayer-svn-r26706.orig/libvo/vo_xvmc.c mplayer-svn-r26706/libvo/vo_xv
  //   rndr->start_mv_blocks_num += rndr->filled_mv_blocks_num;
     rndr->start_mv_blocks_num = 0;
     rndr->filled_mv_blocks_num = 0;
-@@ -1337,8 +1418,16 @@
+@@ -1343,8 +1424,16 @@
  
  // these are shared!! so watch out
  // do call RenderSurface before overwriting
@@ -546,22 +546,22 @@ diff -urN mplayer-svn-r26706.orig/libvo/vo_xvmc.c mplayer-svn-r26706/libvo/vo_xv
     mpi->priv =
     mpi->planes[2] = (char*)rndr;
  
-diff -urN mplayer-svn-r26706.orig/Makefile mplayer-svn-r26706/Makefile
---- mplayer-svn-r26706.orig/Makefile	2008-05-09 17:57:36 +0300
-+++ mplayer-svn-r26706/Makefile	2008-05-09 21:08:51 +0300
-@@ -739,6 +739,9 @@
- 	@echo '// untranslated messages from the English master file:' >> help_mp.h
- 	@help/help_diff.sh $(HELP_FILE) < help/help_mp-en.h >> help_mp.h
+diff -urN mplayer-svn-r26909.orig/Makefile mplayer-svn-r26909/Makefile
+--- mplayer-svn-r26909.orig/Makefile	2008-05-27 22:58:32 +0300
++++ mplayer-svn-r26909/Makefile	2008-05-27 23:02:43 +0300
+@@ -754,6 +754,9 @@
+ ifneq ($(CHARSET),UTF-8)
+ 	iconv -f UTF-8 -t $(CHARSET) $@ > $@.tmp; mv $@.tmp $@
  endif
 +ifeq ($(HAVE_XVMC_ACCEL),yes)
 +CODEC_LIBS += $(X_LIB)
 +endif
  
- define RECURSIVE_RULE
- $(part)/$(part).a: recurse
-diff -urN mplayer-svn-r26706.orig/mplayer.c mplayer-svn-r26706/mplayer.c
---- mplayer-svn-r26706.orig/mplayer.c	2008-05-07 03:43:55 +0300
-+++ mplayer-svn-r26706/mplayer.c	2008-05-09 21:08:51 +0300
+ # rebuild version.h each time the working copy is updated
+ ifeq ($(wildcard .svn/entries),.svn/entries)
+diff -urN mplayer-svn-r26909.orig/mplayer.c mplayer-svn-r26909/mplayer.c
+--- mplayer-svn-r26909.orig/mplayer.c	2008-05-27 22:58:32 +0300
++++ mplayer-svn-r26909/mplayer.c	2008-05-27 23:02:43 +0300
 @@ -87,6 +87,8 @@
  int quiet=0;
  int enable_mouse_movements=0;
@@ -571,7 +571,7 @@ diff -urN mplayer-svn-r26706.orig/mplayer.c mplayer-svn-r26706/mplayer.c
  #ifdef WIN32
  char * proc_priority=NULL;
  #endif
-@@ -2144,6 +2146,11 @@
+@@ -2147,6 +2149,11 @@
  
      //shouldn't we set dvideo->id=-2 when we fail?
      vo_config_count=0;
@@ -583,9 +583,9 @@ diff -urN mplayer-svn-r26706.orig/mplayer.c mplayer-svn-r26706/mplayer.c
      //if((mpctx->video_out->preinit(vo_subdevice))!=0){
      if(!(mpctx->video_out=init_best_video_out(video_driver_list))){
        mp_msg(MSGT_CPLAYER,MSGL_FATAL,MSGTR_ErrorInitializingVODevice);
-diff -urN mplayer-svn-r26706.orig/xvmc_render.h mplayer-svn-r26706/xvmc_render.h
---- mplayer-svn-r26706.orig/xvmc_render.h	2008-02-23 00:42:57 +0200
-+++ mplayer-svn-r26706/xvmc_render.h	2008-05-09 21:08:51 +0300
+diff -urN mplayer-svn-r26909.orig/xvmc_render.h mplayer-svn-r26909/xvmc_render.h
+--- mplayer-svn-r26909.orig/xvmc_render.h	2008-02-23 00:42:57 +0200
++++ mplayer-svn-r26909/xvmc_render.h	2008-05-27 23:02:43 +0300
 @@ -8,6 +8,9 @@
  #include <X11/extensions/Xvlib.h>
  #include <X11/extensions/XvMClib.h>

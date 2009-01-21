@@ -1,7 +1,7 @@
-diff -urN mplayer-svn-r26450.orig/gui/interface.c mplayer-svn-r26450/gui/interface.c
---- mplayer-svn-r26450.orig/gui/interface.c	2008-01-28 01:03:56 +0200
-+++ mplayer-svn-r26450/gui/interface.c	2008-04-14 23:40:25 +0300
-@@ -209,7 +209,7 @@
+diff -urN mplayer-svn-r26909.orig/gui/interface.c mplayer-svn-r26909/gui/interface.c
+--- mplayer-svn-r26909.orig/gui/interface.c	2008-05-07 03:43:52 +0300
++++ mplayer-svn-r26909/gui/interface.c	2008-05-27 23:05:45 +0300
+@@ -226,7 +226,7 @@
  // --- initialize windows
   if ( ( mplDrawBuffer = malloc( appMPlayer.main.Bitmap.ImageSize ) ) == NULL )
    {
@@ -10,7 +10,7 @@ diff -urN mplayer-svn-r26450.orig/gui/interface.c mplayer-svn-r26450/gui/interfa
     exit( 0 );
    }
  
-@@ -696,7 +696,7 @@
+@@ -713,7 +713,7 @@
  #endif
  	 )
  	 {
@@ -19,7 +19,7 @@ diff -urN mplayer-svn-r26450.orig/gui/interface.c mplayer-svn-r26450/gui/interfa
  	  guiIntfStruct.Playing=0;
  	  return True;
  	 }
-@@ -765,7 +765,7 @@
+@@ -782,7 +782,7 @@
  	     }
  	 }
  	
@@ -28,10 +28,10 @@ diff -urN mplayer-svn-r26450.orig/gui/interface.c mplayer-svn-r26450/gui/interfa
  
  	{
  	 int i = 0;
-diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/about.c mplayer-svn-r26450/gui/mplayer/gtk/about.c
---- mplayer-svn-r26450.orig/gui/mplayer/gtk/about.c	2008-04-14 00:02:36 +0300
-+++ mplayer-svn-r26450/gui/mplayer/gtk/about.c	2008-04-14 23:40:25 +0300
-@@ -41,10 +41,10 @@
+diff -urN mplayer-svn-r26909.orig/gui/mplayer/gtk/about.c mplayer-svn-r26909/gui/mplayer/gtk/about.c
+--- mplayer-svn-r26909.orig/gui/mplayer/gtk/about.c	2008-05-07 03:43:52 +0300
++++ mplayer-svn-r26909/gui/mplayer/gtk/about.c	2008-05-27 23:05:45 +0300
+@@ -59,10 +59,10 @@
    accel_group=gtk_accel_group_new();
  
    About=gtk_window_new( GTK_WINDOW_TOPLEVEL );
@@ -45,7 +45,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/about.c mplayer-svn-r26450/gui
    gtk_window_set_position( GTK_WINDOW( About ),GTK_WIN_POS_CENTER );
    gtk_window_set_policy( GTK_WINDOW( About ),TRUE,FALSE,FALSE );
    gtk_window_set_wmclass( GTK_WINDOW( About ),"About","MPlayer" );
-@@ -315,7 +315,7 @@
+@@ -333,7 +333,7 @@
  	"\n",-1 );
  
    AddHSeparator( vbox );
@@ -54,10 +54,10 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/about.c mplayer-svn-r26450/gui
  
    gtk_signal_connect( GTK_OBJECT( About ),"destroy",GTK_SIGNAL_FUNC( WidgetDestroy ),&About );
    gtk_signal_connect_object( GTK_OBJECT( Ok ),"clicked",GTK_SIGNAL_FUNC( abWidgetDestroy ),NULL );
-diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/eq.c mplayer-svn-r26450/gui/mplayer/gtk/eq.c
---- mplayer-svn-r26450.orig/gui/mplayer/gtk/eq.c	2008-04-14 00:02:36 +0300
-+++ mplayer-svn-r26450/gui/mplayer/gtk/eq.c	2008-04-14 23:40:25 +0300
-@@ -86,7 +86,7 @@
+diff -urN mplayer-svn-r26909.orig/gui/mplayer/gtk/eq.c mplayer-svn-r26909/gui/mplayer/gtk/eq.c
+--- mplayer-svn-r26909.orig/gui/mplayer/gtk/eq.c	2008-05-07 03:43:52 +0300
++++ mplayer-svn-r26909/gui/mplayer/gtk/eq.c	2008-05-27 23:05:45 +0300
+@@ -103,7 +103,7 @@
   gchar * str[2];
   gtk_clist_clear( GTK_CLIST( ChannelsList ) );
   str[1]="";
@@ -66,7 +66,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/eq.c mplayer-svn-r26450/gui/mp
   gtk_clist_append( GTK_CLIST( ChannelsList ) ,str);
   if ( guiIntfStruct.AudioType > 1 )
    {
-@@ -111,12 +111,12 @@
+@@ -128,12 +128,12 @@
   if ( Equalizer ) gtkActive( Equalizer );
      else Equalizer=create_Equalizer();
  
@@ -85,7 +85,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/eq.c mplayer-svn-r26450/gui/mp
  
   eqSetChannelNames();
  
-@@ -262,10 +262,10 @@
+@@ -279,10 +279,10 @@
    accel_group=gtk_accel_group_new();
  
    Equalizer=gtk_window_new( GTK_WINDOW_TOPLEVEL );
@@ -99,7 +99,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/eq.c mplayer-svn-r26450/gui/mp
    gtk_window_set_position( GTK_WINDOW( Equalizer ),GTK_WIN_POS_CENTER );
    gtk_window_set_policy( GTK_WINDOW( Equalizer ),FALSE,FALSE,FALSE );
    gtk_window_set_wmclass( GTK_WINDOW( Equalizer ),"Equalizer","MPlayer" );
-@@ -385,7 +385,7 @@
+@@ -402,7 +402,7 @@
      9,10,1,2,(GtkAttachOptions)( GTK_FILL ),(GtkAttachOptions)( 0 ),0,0 );
  
    gtk_notebook_set_tab_label( GTK_NOTEBOOK( Notebook ),gtk_notebook_get_nth_page( GTK_NOTEBOOK( Notebook ),0 ),
@@ -108,7 +108,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/eq.c mplayer-svn-r26450/gui/mp
  
    table1=gtk_table_new( 4,2,FALSE );
    gtk_widget_set_name( table1,"table1" );
-@@ -393,19 +393,19 @@
+@@ -410,19 +410,19 @@
    gtk_container_add( GTK_CONTAINER( Notebook ),table1 );
    
    gtk_table_attach( GTK_TABLE( table1 ),
@@ -132,7 +132,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/eq.c mplayer-svn-r26450/gui/mp
      0,1,3,4,(GtkAttachOptions)( GTK_FILL ),(GtkAttachOptions)( 0 ),0,0 );
  
    VContrastadj=GTK_ADJUSTMENT( gtk_adjustment_new( 0,-100,100,1,0,0 ) );
-@@ -429,7 +429,7 @@
+@@ -446,7 +446,7 @@
      gtk_widget_set_usize( VSaturation,-1,45 );
  
    gtk_notebook_set_tab_label( GTK_NOTEBOOK( Notebook ),gtk_notebook_get_nth_page( GTK_NOTEBOOK( Notebook ),1 ),
@@ -141,7 +141,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/eq.c mplayer-svn-r26450/gui/mp
  
    AddHSeparator( vbox1 );
  
-@@ -437,9 +437,9 @@
+@@ -454,9 +454,9 @@
      gtk_button_box_set_layout( GTK_BUTTON_BOX( hbuttonbox1 ),GTK_BUTTONBOX_END );
      gtk_button_box_set_spacing( GTK_BUTTON_BOX( hbuttonbox1 ),10 );
  
@@ -154,7 +154,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/eq.c mplayer-svn-r26450/gui/mp
    
    gtk_widget_add_accelerator( Ok,"clicked",accel_group,GDK_Escape,0,GTK_ACCEL_VISIBLE );
    gtk_widget_add_accelerator( Ok,"clicked",accel_group,GDK_Return,0,GTK_ACCEL_VISIBLE );
-@@ -502,12 +502,12 @@
+@@ -519,12 +519,12 @@
   if ( EquConfig ) gtkActive( EquConfig );
      else EquConfig=create_EquConfig();
  	
@@ -173,7 +173,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/eq.c mplayer-svn-r26450/gui/mp
   
   gtk_combo_set_popdown_strings( GTK_COMBO( CBChannel1 ),Items );
   gtk_combo_set_popdown_strings( GTK_COMBO( CBChannel2 ),Items );
-@@ -566,7 +566,7 @@
+@@ -583,7 +583,7 @@
    gtk_object_set_data( GTK_OBJECT( EquConfig ),"EquConfig",EquConfig );
    gtk_widget_set_usize( EquConfig,350,260 );
    GTK_WIDGET_SET_FLAGS( EquConfig,GTK_CAN_DEFAULT );
@@ -182,7 +182,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/eq.c mplayer-svn-r26450/gui/mp
    gtk_window_set_position( GTK_WINDOW( EquConfig ),GTK_WIN_POS_CENTER );
  //  gtk_window_set_modal( GTK_WINDOW( EquConfig ),TRUE );
    gtk_window_set_policy( GTK_WINDOW( EquConfig ),FALSE,FALSE,FALSE );
-@@ -585,27 +585,27 @@
+@@ -602,27 +602,27 @@
    gtk_table_set_col_spacings( GTK_TABLE( table1 ),4 );
  
    gtk_table_attach( GTK_TABLE( table1 ),
@@ -216,7 +216,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/eq.c mplayer-svn-r26450/gui/mp
      0,1,5,6,(GtkAttachOptions)( GTK_FILL ),(GtkAttachOptions)( 0 ),0,0 );
  
    CBChannel1=AddComboBox( NULL );
-@@ -656,8 +656,8 @@
+@@ -673,8 +673,8 @@
      gtk_button_box_set_layout( GTK_BUTTON_BOX( hbuttonbox1 ),GTK_BUTTONBOX_END );
      gtk_button_box_set_spacing( GTK_BUTTON_BOX( hbuttonbox1 ),10 );
  
@@ -227,10 +227,10 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/eq.c mplayer-svn-r26450/gui/mp
  
    gtk_widget_add_accelerator( ecOk,"clicked",accel_group,GDK_Return,0,GTK_ACCEL_VISIBLE );
    gtk_widget_add_accelerator( ecCancel,"clicked",accel_group,GDK_Escape,0,GTK_ACCEL_VISIBLE );
-diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/fs.c mplayer-svn-r26450/gui/mplayer/gtk/fs.c
---- mplayer-svn-r26450.orig/gui/mplayer/gtk/fs.c	2008-04-14 00:02:36 +0300
-+++ mplayer-svn-r26450/gui/mplayer/gtk/fs.c	2008-04-14 23:40:25 +0300
-@@ -220,7 +220,7 @@
+diff -urN mplayer-svn-r26909.orig/gui/mplayer/gtk/fs.c mplayer-svn-r26909/gui/mplayer/gtk/fs.c
+--- mplayer-svn-r26909.orig/gui/mplayer/gtk/fs.c	2008-05-07 03:43:52 +0300
++++ mplayer-svn-r26909/gui/mplayer/gtk/fs.c	2008-05-27 23:05:45 +0300
+@@ -237,7 +237,7 @@
   switch ( type )
    {
     case fsVideoSelector:
@@ -239,7 +239,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/fs.c mplayer-svn-r26450/gui/mp
          fsList_items=NULL;
          for( i=0;fsVideoFilterNames[i][0];i++ )
            fsList_items=g_list_append( fsList_items,fsVideoFilterNames[i][0] );
-@@ -231,7 +231,7 @@
+@@ -248,7 +248,7 @@
  	tmp=guiIntfStruct.Filename;
          break;
     case fsSubtitleSelector:
@@ -248,7 +248,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/fs.c mplayer-svn-r26450/gui/mp
          fsList_items=NULL;
          for( i=0;fsSubtitleFilterNames[i][0];i++ )
            fsList_items=g_list_append( fsList_items,fsSubtitleFilterNames[i][0] );
-@@ -242,7 +242,7 @@
+@@ -259,7 +259,7 @@
  	tmp=guiIntfStruct.Subtitlename;
          break;
     case fsOtherSelector:
@@ -257,7 +257,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/fs.c mplayer-svn-r26450/gui/mp
          fsList_items=NULL;
          for( i=0;fsOtherFilterNames[i][0];i++ )
            fsList_items=g_list_append( fsList_items,fsOtherFilterNames[i][0] );
-@@ -252,7 +252,7 @@
+@@ -269,7 +269,7 @@
  	tmp=guiIntfStruct.Othername;
          break;
     case fsAudioSelector:
@@ -266,7 +266,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/fs.c mplayer-svn-r26450/gui/mp
  	fsList_items=NULL;
  	for( i=0;fsAudioFileNames[i][0];i++ )
  	  fsList_items=g_list_append( fsList_items,fsAudioFileNames[i][0] );
-@@ -263,7 +263,7 @@
+@@ -280,7 +280,7 @@
  	tmp=guiIntfStruct.AudioFile;
  	break;
     case fsFontSelector:
@@ -275,7 +275,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/fs.c mplayer-svn-r26450/gui/mp
  	fsList_items=NULL;
  	for( i=0;fsFontFileNames[i][0];i++ )
  	  fsList_items=g_list_append( fsList_items,fsFontFileNames[i][0] );
-@@ -526,7 +526,7 @@
+@@ -543,7 +543,7 @@
   gtk_widget_set_usize( fsFileSelect,512,300 );
   GTK_WIDGET_SET_FLAGS( fsFileSelect,GTK_CAN_DEFAULT );
   gtk_widget_set_events( fsFileSelect,GDK_EXPOSURE_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK | GDK_KEY_PRESS_MASK | GDK_KEY_RELEASE_MASK | GDK_FOCUS_CHANGE_MASK | GDK_STRUCTURE_MASK | GDK_PROPERTY_CHANGE_MASK | GDK_VISIBILITY_NOTIFY_MASK );
@@ -284,7 +284,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/fs.c mplayer-svn-r26450/gui/mp
   gtk_window_set_position( GTK_WINDOW( fsFileSelect ),GTK_WIN_POS_CENTER );
   gtk_window_set_policy( GTK_WINDOW( fsFileSelect ),TRUE,TRUE,TRUE );
   gtk_window_set_wmclass( GTK_WINDOW( fsFileSelect ),"FileSelect","MPlayer" );
-@@ -611,8 +611,8 @@
+@@ -628,8 +628,8 @@
     gtk_button_box_set_layout( GTK_BUTTON_BOX( hbuttonbox3 ),GTK_BUTTONBOX_END );
     gtk_button_box_set_spacing( GTK_BUTTON_BOX( hbuttonbox3 ),10 );
  
@@ -295,10 +295,10 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/fs.c mplayer-svn-r26450/gui/mp
  
   gtk_signal_connect( GTK_OBJECT( fsFileSelect ),"destroy",GTK_SIGNAL_FUNC( WidgetDestroy ),&fsFileSelect );
   gtk_signal_connect( GTK_OBJECT( fsFileSelect ),"key_release_event",GTK_SIGNAL_FUNC( on_FileSelect_key_release_event ),NULL );
-diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/gtk_url.c mplayer-svn-r26450/gui/mplayer/gtk/gtk_url.c
---- mplayer-svn-r26450.orig/gui/mplayer/gtk/gtk_url.c	2008-04-14 00:02:36 +0300
-+++ mplayer-svn-r26450/gui/mplayer/gtk/gtk_url.c	2008-04-14 23:43:21 +0300
-@@ -107,7 +107,7 @@
+diff -urN mplayer-svn-r26909.orig/gui/mplayer/gtk/gtk_url.c mplayer-svn-r26909/gui/mplayer/gtk/gtk_url.c
+--- mplayer-svn-r26909.orig/gui/mplayer/gtk/gtk_url.c	2008-05-07 03:43:52 +0300
++++ mplayer-svn-r26909/gui/mplayer/gtk/gtk_url.c	2008-05-27 23:05:45 +0300
+@@ -124,7 +124,7 @@
   gtk_object_set_data( GTK_OBJECT( URL ),"URL",URL );
   gtk_widget_set_usize( URL,384,70 );
   GTK_WIDGET_SET_FLAGS( URL,GTK_CAN_DEFAULT );
@@ -307,7 +307,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/gtk_url.c mplayer-svn-r26450/g
   gtk_window_set_position( GTK_WINDOW( URL ),GTK_WIN_POS_CENTER );
   gtk_window_set_policy( GTK_WINDOW( URL ),TRUE,TRUE,FALSE );
   gtk_window_set_wmclass( GTK_WINDOW( URL ),"Network","MPlayer" );
-@@ -136,8 +136,8 @@
+@@ -153,8 +153,8 @@
    gtk_button_box_set_layout( GTK_BUTTON_BOX( hbuttonbox1 ),GTK_BUTTONBOX_END );
    gtk_button_box_set_spacing( GTK_BUTTON_BOX( hbuttonbox1 ),10 );
  
@@ -318,10 +318,10 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/gtk_url.c mplayer-svn-r26450/g
   
   gtk_widget_add_accelerator( Ok,"clicked",accel_group,GDK_Return,0,GTK_ACCEL_VISIBLE );
   gtk_widget_add_accelerator( Cancel,"clicked",accel_group,GDK_Escape,0,GTK_ACCEL_VISIBLE );
-diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/mb.c mplayer-svn-r26450/gui/mplayer/gtk/mb.c
---- mplayer-svn-r26450.orig/gui/mplayer/gtk/mb.c	2008-04-14 00:02:36 +0300
-+++ mplayer-svn-r26450/gui/mplayer/gtk/mb.c	2008-04-14 23:40:25 +0300
-@@ -82,7 +82,7 @@
+diff -urN mplayer-svn-r26909.orig/gui/mplayer/gtk/mb.c mplayer-svn-r26909/gui/mplayer/gtk/mb.c
+--- mplayer-svn-r26909.orig/gui/mplayer/gtk/mb.c	2008-05-07 03:43:52 +0300
++++ mplayer-svn-r26909/gui/mplayer/gtk/mb.c	2008-05-27 23:05:45 +0300
+@@ -100,7 +100,7 @@
  
   AddHSeparator( vbox1 );
   hbuttonbox1=AddHButtonBox( vbox1 );
@@ -330,10 +330,10 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/mb.c mplayer-svn-r26450/gui/mp
  
   gtk_widget_add_accelerator( Ok,"clicked",accel_group,GDK_Return,0,GTK_ACCEL_VISIBLE );
   gtk_widget_add_accelerator( Ok,"clicked",accel_group,GDK_Escape,0,GTK_ACCEL_VISIBLE );
-diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/menu.c mplayer-svn-r26450/gui/mplayer/gtk/menu.c
---- mplayer-svn-r26450.orig/gui/mplayer/gtk/menu.c	2008-04-14 00:02:36 +0300
-+++ mplayer-svn-r26450/gui/mplayer/gtk/menu.c	2008-04-14 23:40:25 +0300
-@@ -400,68 +400,68 @@
+diff -urN mplayer-svn-r26909.orig/gui/mplayer/gtk/menu.c mplayer-svn-r26909/gui/mplayer/gtk/menu.c
+--- mplayer-svn-r26909.orig/gui/mplayer/gtk/menu.c	2008-05-07 03:43:52 +0300
++++ mplayer-svn-r26909/gui/mplayer/gtk/menu.c	2008-05-27 23:05:45 +0300
+@@ -417,68 +417,68 @@
   window1 = gtk_widget_get_toplevel(Menu);
  
  
@@ -431,7 +431,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/menu.c mplayer-svn-r26450/gui/
           AddMenuCheckItem( window1, (const char*)empty1px_xpm, DVDTitleMenu,tmp,
  			   guiIntfStruct.DVD.current_title == i,
  			   (i << 16) + evSetDVDTitle );
-@@ -469,26 +469,26 @@
+@@ -486,26 +486,26 @@
        }
        else
         {
@@ -463,7 +463,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/menu.c mplayer-svn-r26450/gui/
       if ( guiIntfStruct.DVD.nr_of_audio_channels )
        {
         char tmp[64]; int i, id = guiIntfStruct.demuxer ? ((demuxer_t *)guiIntfStruct.demuxer)->audio->id : audio_id;
-@@ -505,14 +505,14 @@
+@@ -522,14 +522,14 @@
        }
        else
         {
@@ -481,7 +481,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/menu.c mplayer-svn-r26450/gui/
         for ( i=0;i < guiIntfStruct.DVD.nr_of_subtitles;i++ )
          {
  	 snprintf( tmp,64,"%s",GetLanguage( guiIntfStruct.DVD.subtitles[i].language ) );
-@@ -523,15 +523,15 @@
+@@ -540,15 +540,15 @@
        }
        else
         {
@@ -500,7 +500,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/menu.c mplayer-svn-r26450/gui/
      AddMenuItem( window1, (const char*)a169_xpm, AspectMenu,"16:9",( 2 << 16 ) + evSetAspect );
      AddMenuItem( window1, (const char*)a43_xpm, AspectMenu,"4:3",( 3 << 16 ) + evSetAspect );
      AddMenuItem( window1, (const char*)a235_xpm, AspectMenu,"2.35",( 4 << 16 ) + evSetAspect );
-@@ -546,13 +546,13 @@
+@@ -563,13 +563,13 @@
      
      if ( c > 1 )
       {
@@ -516,7 +516,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/menu.c mplayer-svn-r26450/gui/
           AddMenuItem( window1, (const char*)empty_xpm, SubMenu,tmp,( aid << 16 ) + evSetAudio );
          }
       }
-@@ -562,13 +562,13 @@
+@@ -579,13 +579,13 @@
      
      if ( c > 1 )
       {
@@ -532,7 +532,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/menu.c mplayer-svn-r26450/gui/
           AddMenuItem( window1, (const char*)empty_xpm, SubMenu,tmp,( vid << 16 ) + evSetVideo );
          }
       }
-@@ -578,23 +578,23 @@
+@@ -595,23 +595,23 @@
    if ( global_sub_size && guiIntfStruct.StreamType != STREAMTYPE_DVD )
     {
      int i;
@@ -564,7 +564,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/menu.c mplayer-svn-r26450/gui/
  
    if ( guiIntfStruct.NoWindow == False )
     {
-@@ -608,10 +608,10 @@
+@@ -625,10 +625,10 @@
                  ( appMPlayer.subWindow.Height == guiIntfStruct.MovieHeight / 2 ) ) b_half=1;
        else b1=1;
       } else b1=!appMPlayer.subWindow.isFullScreen;
@@ -579,7 +579,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/menu.c mplayer-svn-r26450/gui/
    if ( !gtkShowVideoWindow && !guiIntfStruct.Playing )
     {
      gtk_widget_set_sensitive( H,FALSE );
-@@ -622,7 +622,7 @@
+@@ -639,7 +639,7 @@
     }
  
    AddSeparator( Menu );
@@ -588,10 +588,10 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/menu.c mplayer-svn-r26450/gui/
  
   return Menu;
  }
-diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/opts.c mplayer-svn-r26450/gui/mplayer/gtk/opts.c
---- mplayer-svn-r26450.orig/gui/mplayer/gtk/opts.c	2008-04-14 00:02:36 +0300
-+++ mplayer-svn-r26450/gui/mplayer/gtk/opts.c	2008-04-14 23:44:23 +0300
-@@ -301,7 +301,7 @@
+diff -urN mplayer-svn-r26909.orig/gui/mplayer/gtk/opts.c mplayer-svn-r26909/gui/mplayer/gtk/opts.c
+--- mplayer-svn-r26909.orig/gui/mplayer/gtk/opts.c	2008-05-07 03:43:52 +0300
++++ mplayer-svn-r26909/gui/mplayer/gtk/opts.c	2008-05-27 23:05:45 +0300
+@@ -318,7 +318,7 @@
     int i;
     for ( i=0;lEncoding[i].name;i++ ) 
      if ( !gstrcmp( sub_cp,lEncoding[i].name ) ) break;
@@ -600,7 +600,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/opts.c mplayer-svn-r26450/gui/
     gtk_entry_set_text( GTK_ENTRY( ESubEncoding ),lSEncoding );
    }
  #endif
-@@ -321,7 +321,7 @@
+@@ -338,7 +338,7 @@
     int i;
     for ( i=0;lEncoding[i].name;i++ ) 
      if ( !gstrcmp( subtitle_font_encoding,lEncoding[i].name ) ) break;
@@ -609,7 +609,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/opts.c mplayer-svn-r26450/gui/
     gtk_entry_set_text( GTK_ENTRY( EFontEncoding ),lCEncoding );
    }
   switch ( subtitle_autoscale )
-@@ -341,7 +341,7 @@
+@@ -358,7 +358,7 @@
    GList * Items = NULL;
    char  * name = NULL;
  
@@ -618,7 +618,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/opts.c mplayer-svn-r26450/gui/
    for( i=0;mpcodecs_vd_drivers[i];i++ )
     {
      Items=g_list_append( Items,(char *)mpcodecs_vd_drivers[i]->info->name );
-@@ -357,7 +357,7 @@
+@@ -374,7 +374,7 @@
    GList * Items = NULL;
    char  * name = NULL;
  
@@ -627,7 +627,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/opts.c mplayer-svn-r26450/gui/
    for( i=0;mpcodecs_ad_drivers[i];i++ )
     {
      Items=g_list_append( Items,(char *)mpcodecs_ad_drivers[i]->info->name );
-@@ -457,7 +457,7 @@
+@@ -474,7 +474,7 @@
    static int visible = 1;
    if ( visible ) 
     {
@@ -636,7 +636,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/opts.c mplayer-svn-r26450/gui/
      visible=0;
     }
   }
-@@ -767,7 +767,7 @@
+@@ -784,7 +784,7 @@
  	  gtk_widget_set_sensitive( AConfig,TRUE );
  #ifndef HAVE_GTK2_GUI
          if ( !strncmp( ao_driver[0],"arts",4 ) )
@@ -645,7 +645,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/opts.c mplayer-svn-r26450/gui/
  #endif
  	break;
     case 1: // video driver 
-@@ -828,7 +828,7 @@
+@@ -845,7 +845,7 @@
    Preferences=gtk_window_new( GTK_WINDOW_TOPLEVEL );
    gtk_widget_set_name( Preferences,"Preferences" );
    gtk_object_set_data( GTK_OBJECT( Preferences ),"Preferences",Preferences );
@@ -654,7 +654,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/opts.c mplayer-svn-r26450/gui/
    gtk_window_set_position( GTK_WINDOW( Preferences ),GTK_WIN_POS_CENTER );
  //  gtk_window_set_policy( GTK_WINDOW( Preferences ),FALSE,FALSE,FALSE );
    gtk_window_set_wmclass( GTK_WINDOW( Preferences ),"Preferences","MPlayer" );
-@@ -866,9 +866,9 @@
+@@ -883,9 +883,9 @@
    gtk_clist_set_shadow_type( GTK_CLIST( CLADrivers ),GTK_SHADOW_NONE );
    gtk_widget_set_usize( CLADrivers,250,-2 );
    gtk_clist_set_column_widget( GTK_CLIST( CLADrivers ),0,
@@ -666,7 +666,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/opts.c mplayer-svn-r26450/gui/
      AddHButtonBox( vbox2 ) );
  
    vbox3=AddVBox( 
-@@ -876,28 +876,28 @@
+@@ -893,28 +893,28 @@
        AddFrame( NULL,GTK_SHADOW_ETCHED_OUT,hbox1,0 ),1 ),0 );
      gtk_widget_set_usize( vbox3,250,-2 );
  
@@ -702,7 +702,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/opts.c mplayer-svn-r26450/gui/
      gtk_notebook_set_tab_label( GTK_NOTEBOOK( notebook1 ),gtk_notebook_get_nth_page( GTK_NOTEBOOK( notebook1 ),0 ),label );
  
  // --- 2. page
-@@ -923,32 +923,32 @@
+@@ -940,32 +940,32 @@
    gtk_clist_set_shadow_type( GTK_CLIST( CLVDrivers ),GTK_SHADOW_NONE );
    gtk_widget_set_usize( CLVDrivers,250,-2 );
  
@@ -744,7 +744,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/opts.c mplayer-svn-r26450/gui/
      gtk_table_attach( GTK_TABLE( table1 ),label,0,1,1,2,(GtkAttachOptions)( GTK_FILL ),(GtkAttachOptions)( 0 ),0,0 );
  
    HSPanscanadj=GTK_ADJUSTMENT( gtk_adjustment_new( 0,0,1,0.001,0,0 ) );
-@@ -962,7 +962,7 @@
+@@ -979,7 +979,7 @@
      gtk_spin_button_set_numeric( GTK_SPIN_BUTTON( HSFPS ),TRUE );
      gtk_table_attach( GTK_TABLE( table1 ),HSFPS,1,2,1,2,(GtkAttachOptions)( GTK_EXPAND | GTK_FILL ),(GtkAttachOptions)( 0 ),0,0 );
  
@@ -753,7 +753,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/opts.c mplayer-svn-r26450/gui/
      gtk_notebook_set_tab_label( GTK_NOTEBOOK( notebook1 ),gtk_notebook_get_nth_page( GTK_NOTEBOOK( notebook1 ),1 ),label );
  
  // --- 3. page
-@@ -971,21 +971,21 @@
+@@ -988,21 +988,21 @@
  
    vbox600=AddVBox( 
      AddFrame( NULL,GTK_SHADOW_NONE,
@@ -782,7 +782,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/opts.c mplayer-svn-r26450/gui/
  
    ESubtitleName=gtk_entry_new();
    gtk_widget_set_name( ESubtitleName,"ESubtitleName" );
-@@ -994,7 +994,7 @@
+@@ -1011,7 +1011,7 @@
  
    hbuttonbox4=AddHButtonBox( hbuttonbox4 );
      gtk_container_set_border_width( GTK_CONTAINER( hbuttonbox4 ),3 );
@@ -791,7 +791,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/opts.c mplayer-svn-r26450/gui/
  #endif
  
    vbox8=AddVBox( vbox7,0 );
-@@ -1004,17 +1004,17 @@
+@@ -1021,17 +1021,17 @@
    gtk_widget_show( table1 );
    gtk_box_pack_start( GTK_BOX( vbox8 ),table1,FALSE,FALSE,0 );
  
@@ -813,7 +813,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/opts.c mplayer-svn-r26450/gui/
      gtk_table_attach( GTK_TABLE( table1 ),label,0,1,3,4,(GtkAttachOptions)( GTK_FILL ),(GtkAttachOptions)( 0 ),0,0 );
  #endif
  
-@@ -1039,10 +1039,10 @@
+@@ -1056,10 +1056,10 @@
    gtk_widget_set_name( CBSubEncoding,"CBSubEncoding" );
    gtk_widget_show( CBSubEncoding );
    gtk_table_attach( GTK_TABLE( table1 ),CBSubEncoding,1,2,3,4,(GtkAttachOptions)( GTK_FILL ),(GtkAttachOptions)( 0 ),0,0 );
@@ -826,7 +826,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/opts.c mplayer-svn-r26450/gui/
    }
    gtk_combo_set_popdown_strings( GTK_COMBO( CBSubEncoding ),CBSubEncoding_items );
    g_list_free( CBSubEncoding_items );
-@@ -1055,32 +1055,32 @@
+@@ -1072,32 +1072,32 @@
  
    vbox9=AddVBox( vbox8,0 );
  
@@ -869,7 +869,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/opts.c mplayer-svn-r26450/gui/
      gtk_notebook_set_tab_label( GTK_NOTEBOOK( notebook1 ),gtk_notebook_get_nth_page( GTK_NOTEBOOK( notebook1 ),2 ),label );
    vbox601=AddVBox( notebook1,0 );
  
-@@ -1088,36 +1088,36 @@
+@@ -1105,36 +1105,36 @@
  
    vbox603=AddVBox( 
      AddFrame( NULL,GTK_SHADOW_NONE,
@@ -915,7 +915,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/opts.c mplayer-svn-r26450/gui/
      gtk_table_attach( GTK_TABLE( table1 ),label,0,1,0,1,(GtkAttachOptions)( GTK_FILL ),(GtkAttachOptions)( 0 ),0,0 );
    
    CBFontEncoding=gtk_combo_new();
-@@ -1126,7 +1126,7 @@
+@@ -1143,7 +1143,7 @@
    gtk_table_attach( GTK_TABLE( table1 ),CBFontEncoding,1,2,0,1,(GtkAttachOptions)( GTK_FILL ),(GtkAttachOptions)( 0 ),0,0 );
    {
     int i;
@@ -924,7 +924,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/opts.c mplayer-svn-r26450/gui/
    }
    gtk_combo_set_popdown_strings( GTK_COMBO( CBFontEncoding ),CBFontEncoding_items );
    g_list_free( CBFontEncoding_items );
-@@ -1136,28 +1136,28 @@
+@@ -1153,28 +1153,28 @@
    gtk_entry_set_editable( GTK_ENTRY( EFontEncoding ),FALSE );
    gtk_widget_show( EFontEncoding );
  
@@ -957,7 +957,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/opts.c mplayer-svn-r26450/gui/
      gtk_table_attach( GTK_TABLE( table1 ),label,0,1,4,5,(GtkAttachOptions)( GTK_FILL ),(GtkAttachOptions)( 0 ),0,0 );
  
    HSFontOSDScaleadj=GTK_ADJUSTMENT( gtk_adjustment_new( 0,0,100,0.1,0,0 ) );
-@@ -1165,7 +1165,7 @@
+@@ -1182,7 +1182,7 @@
      gtk_table_attach( GTK_TABLE( table1 ),HSFontOSDScale,1,2,4,5,(GtkAttachOptions)( GTK_EXPAND | GTK_FILL ),(GtkAttachOptions)( 0 ),0,0 );
  #endif
  
@@ -966,7 +966,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/opts.c mplayer-svn-r26450/gui/
      gtk_notebook_set_tab_label( GTK_NOTEBOOK( notebook1 ),gtk_notebook_get_nth_page( GTK_NOTEBOOK( notebook1 ),3 ),label );
  
  // --- 5. page
-@@ -1174,14 +1174,14 @@
+@@ -1191,14 +1191,14 @@
  
    vbox602=AddVBox( 
      AddFrame( NULL,GTK_SHADOW_NONE,
@@ -985,7 +985,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/opts.c mplayer-svn-r26450/gui/
  
    CBVFM=gtk_combo_new();
    gtk_widget_set_name( CBVFM,"CBVFM" );
-@@ -1195,7 +1195,7 @@
+@@ -1212,7 +1212,7 @@
  
    hbox5=AddHBox( vbox602,1 );
  
@@ -994,7 +994,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/opts.c mplayer-svn-r26450/gui/
  
    CBAFM=gtk_combo_new();
    gtk_widget_set_name( CBAFM,"CBAFM" );
-@@ -1207,7 +1207,7 @@
+@@ -1224,7 +1224,7 @@
    gtk_entry_set_editable( GTK_ENTRY( EAFM ),FALSE );
    gtk_widget_show( EAFM );
  
@@ -1003,7 +1003,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/opts.c mplayer-svn-r26450/gui/
      gtk_notebook_set_tab_label( GTK_NOTEBOOK( notebook1 ),gtk_notebook_get_nth_page( GTK_NOTEBOOK( notebook1 ),4 ),label );
  
    vbox601=AddVBox( notebook1,0 );
-@@ -1216,13 +1216,13 @@
+@@ -1233,13 +1233,13 @@
  
    vbox602=AddVBox( 
      AddFrame( NULL,GTK_SHADOW_NONE,
@@ -1020,7 +1020,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/opts.c mplayer-svn-r26450/gui/
  
    if ( guiIntfStruct.sh_video && guiIntfStruct.Playing ) HSPPQualityadj=GTK_ADJUSTMENT( gtk_adjustment_new( 0,0,get_video_quality_max( guiIntfStruct.sh_video ),0,0,0 ) );
     else HSPPQualityadj=GTK_ADJUSTMENT( gtk_adjustment_new( 0,0,100,0,0,0 ) );
-@@ -1230,13 +1230,13 @@
+@@ -1247,13 +1247,13 @@
  
    vbox602=AddVBox( 
      AddFrame( NULL,GTK_SHADOW_NONE,
@@ -1037,7 +1037,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/opts.c mplayer-svn-r26450/gui/
  
    SBCacheadj=GTK_ADJUSTMENT( gtk_adjustment_new( 2048,4,65535,1,10,10 ) );
    SBCache=gtk_spin_button_new( GTK_ADJUSTMENT( SBCacheadj ),1,0 );
-@@ -1245,19 +1245,19 @@
+@@ -1262,19 +1262,19 @@
  
    vbox602=AddVBox( 
      AddFrame( NULL,GTK_SHADOW_NONE,
@@ -1065,7 +1065,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/opts.c mplayer-svn-r26450/gui/
    SBAutoSyncadj=GTK_ADJUSTMENT( gtk_adjustment_new( 0,0,10000,1,10,10 ) );
    SBAutoSync=gtk_spin_button_new( GTK_ADJUSTMENT( SBAutoSyncadj ),1,0 );
    gtk_widget_show( SBAutoSync );
-@@ -1270,14 +1270,14 @@
+@@ -1287,14 +1287,14 @@
      gtk_widget_show( table1 );
      gtk_box_pack_start( GTK_BOX( vbox602 ),table1,FALSE,FALSE,0 );
  
@@ -1082,7 +1082,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/opts.c mplayer-svn-r26450/gui/
      gtk_table_attach( GTK_TABLE( table1 ),label,0,1,1,2,(GtkAttachOptions)( GTK_FILL ),(GtkAttachOptions)( 0 ),0,0 );
    prECDRomDevice=gtk_entry_new();
      gtk_widget_set_name( prECDRomDevice,"prECDRomDevice" );
-@@ -1286,7 +1286,7 @@
+@@ -1303,7 +1303,7 @@
  
  //  AddHSeparator( vbox602 );
  
@@ -1091,7 +1091,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/opts.c mplayer-svn-r26450/gui/
      gtk_notebook_set_tab_label( GTK_NOTEBOOK( notebook1 ),gtk_notebook_get_nth_page( GTK_NOTEBOOK( notebook1 ),5 ),label );
  
  // ---
-@@ -1296,8 +1296,8 @@
+@@ -1313,8 +1313,8 @@
    hbuttonbox1=AddHButtonBox( vbox1 );
      gtk_button_box_set_layout( GTK_BUTTON_BOX( hbuttonbox1 ),GTK_BUTTONBOX_END );
      gtk_button_box_set_spacing( GTK_BUTTON_BOX( hbuttonbox1 ),10 );
@@ -1102,7 +1102,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/opts.c mplayer-svn-r26450/gui/
    
    gtk_widget_add_accelerator( BOk,"clicked",accel_group,GDK_Return,0,GTK_ACCEL_VISIBLE );
    gtk_widget_add_accelerator( BCancel,"clicked",accel_group,GDK_Escape,0,GTK_ACCEL_VISIBLE );
-@@ -1457,7 +1457,7 @@
+@@ -1474,7 +1474,7 @@
  // MSGTR_PREFERENCES_DriverDefault as null string.
  const char *getGtkEntryText(GtkWidget *from) {
    const char *tmp = gtk_entry_get_text(GTK_ENTRY(from));
@@ -1111,7 +1111,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/opts.c mplayer-svn-r26450/gui/
      tmp = NULL;
    }
    return tmp;
-@@ -1467,7 +1467,7 @@
+@@ -1484,7 +1484,7 @@
  // null string as MSGTR_PREFERENCES_DriverDefault.
  void setGtkEntryText(GtkWidget *dest, char *to) {
    if (!to) {
@@ -1120,7 +1120,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/opts.c mplayer-svn-r26450/gui/
    }
    gtk_entry_set_text(GTK_ENTRY(dest),to);
  }
-@@ -1574,7 +1574,7 @@
+@@ -1591,7 +1591,7 @@
    AudioConfig = gtk_window_new(GTK_WINDOW_TOPLEVEL);
    gtk_widget_set_name(AudioConfig, "AudioConfig");
    gtk_object_set_data(GTK_OBJECT(AudioConfig), "AudioConfig", AudioConfig);
@@ -1129,7 +1129,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/opts.c mplayer-svn-r26450/gui/
    gtk_window_set_position(GTK_WINDOW(AudioConfig), GTK_WIN_POS_CENTER);
    gtk_window_set_policy(GTK_WINDOW(AudioConfig), FALSE, FALSE, FALSE);
    gtk_window_set_wmclass(GTK_WINDOW(AudioConfig), "Audio Config", "MPlayer");
-@@ -1589,12 +1589,12 @@
+@@ -1606,12 +1606,12 @@
    gtk_widget_show(table);
    gtk_box_pack_start(GTK_BOX(vbox), table, TRUE, TRUE, 0);
  
@@ -1144,7 +1144,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/opts.c mplayer-svn-r26450/gui/
  #ifdef USE_OSS_AUDIO
    if (strncmp(ao_driver[0], "oss", 3) == 0)
      items = appendOSSDevices(items);
-@@ -1619,12 +1619,12 @@
+@@ -1636,12 +1636,12 @@
    gtk_widget_set_name(CEAudioDevice, "CEAudioDevice");
    gtk_widget_show(CEAudioDevice);
  
@@ -1159,7 +1159,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/opts.c mplayer-svn-r26450/gui/
  #ifdef USE_OSS_AUDIO
    if (strncmp(ao_driver[0], "oss", 3) == 0)
      items = appendOSSMixers(items);
-@@ -1641,12 +1641,12 @@
+@@ -1658,12 +1658,12 @@
    gtk_widget_set_name(CEAudioMixer, "CEAudioMixer");
    gtk_widget_show(CEAudioMixer);
  
@@ -1174,7 +1174,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/opts.c mplayer-svn-r26450/gui/
  #ifdef USE_OSS_AUDIO
    if (strncmp(ao_driver[0], "oss", 3) == 0)
      items = appendOSSMixerChannels(items);
-@@ -1668,8 +1668,8 @@
+@@ -1685,8 +1685,8 @@
    hbuttonbox = AddHButtonBox(vbox);
    gtk_button_box_set_layout(GTK_BUTTON_BOX(hbuttonbox), GTK_BUTTONBOX_END);
    gtk_button_box_set_spacing(GTK_BUTTON_BOX(hbuttonbox), 10);
@@ -1185,7 +1185,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/opts.c mplayer-svn-r26450/gui/
  
    gtk_signal_connect(GTK_OBJECT(AudioConfig), "destroy", GTK_SIGNAL_FUNC(WidgetDestroy), &AudioConfig);
    gtk_signal_connect(GTK_OBJECT(BAudioOk), "clicked", GTK_SIGNAL_FUNC(audioButton), (void*)1);
-@@ -1766,7 +1766,7 @@
+@@ -1783,7 +1783,7 @@
   vbox1=AddVBox( AddDialogFrame( DXR3Config ),0 );
   vbox2=AddVBox( vbox1,0 );
   hbox1=AddHBox( vbox2,1 );
@@ -1194,7 +1194,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/opts.c mplayer-svn-r26450/gui/
  
   CBDevice=AddComboBox( hbox1 );
  
-@@ -1786,9 +1786,9 @@
+@@ -1803,9 +1803,9 @@
  #ifdef USE_LIBAVCODEC
   AddHSeparator( vbox2 );
   vbox3=AddVBox( vbox2,0 );
@@ -1207,7 +1207,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/opts.c mplayer-svn-r26450/gui/
  #endif
  
   AddHSeparator( vbox1 );
-@@ -1796,8 +1796,8 @@
+@@ -1813,8 +1813,8 @@
   hbuttonbox1=AddHButtonBox( vbox1 );
     gtk_button_box_set_layout( GTK_BUTTON_BOX( hbuttonbox1 ),GTK_BUTTONBOX_END );
     gtk_button_box_set_spacing( GTK_BUTTON_BOX( hbuttonbox1 ),10 );
@@ -1218,10 +1218,10 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/opts.c mplayer-svn-r26450/gui/
  
   gtk_widget_add_accelerator( dxr3BOk,"clicked",accel_group,GDK_Return,0,GTK_ACCEL_VISIBLE );
   gtk_widget_add_accelerator( dxr3BCancel,"clicked",accel_group,GDK_Escape,0,GTK_ACCEL_VISIBLE );
-diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/pl.c mplayer-svn-r26450/gui/mplayer/gtk/pl.c
---- mplayer-svn-r26450.orig/gui/mplayer/gtk/pl.c	2008-04-14 00:02:36 +0300
-+++ mplayer-svn-r26450/gui/mplayer/gtk/pl.c	2008-04-14 23:40:25 +0300
-@@ -412,7 +412,7 @@
+diff -urN mplayer-svn-r26909.orig/gui/mplayer/gtk/pl.c mplayer-svn-r26909/gui/mplayer/gtk/pl.c
+--- mplayer-svn-r26909.orig/gui/mplayer/gtk/pl.c	2008-05-07 03:43:52 +0300
++++ mplayer-svn-r26909/gui/mplayer/gtk/pl.c	2008-05-27 23:05:45 +0300
+@@ -429,7 +429,7 @@
    PlayList=gtk_window_new( GTK_WINDOW_TOPLEVEL );
    gtk_object_set_data( GTK_OBJECT( PlayList ),"PlayList",PlayList );
    gtk_widget_set_usize( PlayList,512,384 );
@@ -1230,7 +1230,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/pl.c mplayer-svn-r26450/gui/mp
    gtk_window_set_position( GTK_WINDOW( PlayList ),GTK_WIN_POS_CENTER );
  //  gtk_window_set_policy( GTK_WINDOW( PlayList ),FALSE,FALSE,FALSE );
    gtk_window_set_wmclass( GTK_WINDOW( PlayList ),"Playlist","MPlayer" );
-@@ -454,7 +454,7 @@
+@@ -471,7 +471,7 @@
  
    
    gtk_clist_set_column_widget( GTK_CLIST( CTDirTree ),0,
@@ -1239,7 +1239,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/pl.c mplayer-svn-r26450/gui/mp
    
    vbox2=AddVBox(
      AddFrame( NULL,1,hbox1,1 ),0 );
-@@ -473,7 +473,7 @@
+@@ -490,7 +490,7 @@
    gtk_clist_set_shadow_type( GTK_CLIST( CLFiles ),GTK_SHADOW_NONE );
  
    gtk_clist_set_column_widget( GTK_CLIST( CLFiles ),0,
@@ -1248,7 +1248,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/pl.c mplayer-svn-r26450/gui/mp
  
    AddHSeparator( vbox2 );
  
-@@ -492,10 +492,10 @@
+@@ -509,10 +509,10 @@
    gtk_clist_set_shadow_type( GTK_CLIST( CLSelected ),GTK_SHADOW_NONE );
  
    gtk_clist_set_column_widget( GTK_CLIST( CLSelected ),0,
@@ -1261,7 +1261,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/pl.c mplayer-svn-r26450/gui/mp
  
    AddHSeparator( vbox1 );
  
-@@ -503,10 +503,10 @@
+@@ -520,10 +520,10 @@
      gtk_button_box_set_layout( GTK_BUTTON_BOX( hbuttonbox1 ),GTK_BUTTONBOX_END );
      gtk_button_box_set_spacing( GTK_BUTTON_BOX( hbuttonbox1 ),10 );
  
@@ -1276,10 +1276,10 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/pl.c mplayer-svn-r26450/gui/mp
  
    gtk_widget_add_accelerator( Cancel,"clicked",accel_group,GDK_Escape,0,GTK_ACCEL_VISIBLE );
  
-diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/sb.c mplayer-svn-r26450/gui/mplayer/gtk/sb.c
---- mplayer-svn-r26450.orig/gui/mplayer/gtk/sb.c	2008-04-14 00:02:36 +0300
-+++ mplayer-svn-r26450/gui/mplayer/gtk/sb.c	2008-04-14 23:40:25 +0300
-@@ -123,13 +123,13 @@
+diff -urN mplayer-svn-r26909.orig/gui/mplayer/gtk/sb.c mplayer-svn-r26909/gui/mplayer/gtk/sb.c
+--- mplayer-svn-r26909.orig/gui/mplayer/gtk/sb.c	2008-05-07 03:43:52 +0300
++++ mplayer-svn-r26909/gui/mplayer/gtk/sb.c	2008-05-27 23:05:45 +0300
+@@ -140,13 +140,13 @@
   accel_group = gtk_accel_group_new ();
  
   SkinBrowser=gtk_window_new( GTK_WINDOW_TOPLEVEL );
@@ -1296,7 +1296,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/sb.c mplayer-svn-r26450/gui/mp
   gtk_window_set_position( GTK_WINDOW( SkinBrowser ),GTK_WIN_POS_CENTER );
   gtk_window_set_policy( GTK_WINDOW( SkinBrowser ),FALSE,FALSE,TRUE );
   gtk_window_set_wmclass( GTK_WINDOW( SkinBrowser ),"SkinBrowser","MPlayer" );
-@@ -138,7 +138,7 @@
+@@ -155,7 +155,7 @@
   gtkAddIcon( SkinBrowser );
  
   vbox5=AddVBox( AddDialogFrame( SkinBrowser ),0 );
@@ -1305,7 +1305,7 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/sb.c mplayer-svn-r26450/gui/mp
   AddHSeparator( vbox5 );
  
   scrolledwindow1=gtk_scrolled_window_new( NULL,NULL );
-@@ -167,8 +167,8 @@
+@@ -184,8 +184,8 @@
    gtk_button_box_set_layout( GTK_BUTTON_BOX( hbuttonbox4 ),GTK_BUTTONBOX_SPREAD );
    gtk_button_box_set_spacing( GTK_BUTTON_BOX( hbuttonbox4 ),10 );
  
@@ -1316,10 +1316,10 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gtk/sb.c mplayer-svn-r26450/gui/mp
  
   gtk_widget_add_accelerator( Ok,"clicked",accel_group,GDK_Return,0,GTK_ACCEL_VISIBLE );
   gtk_widget_add_accelerator( Cancel,"clicked",accel_group,GDK_Escape,0,GTK_ACCEL_VISIBLE );
-diff -urN mplayer-svn-r26450.orig/gui/mplayer/gui_common.c mplayer-svn-r26450/gui/mplayer/gui_common.c
---- mplayer-svn-r26450.orig/gui/mplayer/gui_common.c	2008-04-14 00:02:36 +0300
-+++ mplayer-svn-r26450/gui/mplayer/gui_common.c	2008-04-14 23:40:25 +0300
-@@ -52,20 +52,20 @@
+diff -urN mplayer-svn-r26909.orig/gui/mplayer/gui_common.c mplayer-svn-r26909/gui/mplayer/gui_common.c
+--- mplayer-svn-r26909.orig/gui/mplayer/gui_common.c	2008-05-07 03:43:52 +0300
++++ mplayer-svn-r26909/gui/mplayer/gui_common.c	2008-05-27 23:05:45 +0300
+@@ -69,20 +69,20 @@
                av_strlcpy(tmp, guiIntfStruct.Filename, tmplen);
              if ( tmp[strlen( tmp ) - 4] == '.' ) tmp[strlen( tmp ) - 4]=0;
              if ( tmp[strlen( tmp ) - 5] == '.' ) tmp[strlen( tmp ) - 5]=0;
@@ -1345,10 +1345,10 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/gui_common.c mplayer-svn-r26450/gu
    }
   if ( c )
    {
-diff -urN mplayer-svn-r26450.orig/gui/mplayer/menu.c mplayer-svn-r26450/gui/mplayer/menu.c
---- mplayer-svn-r26450.orig/gui/mplayer/menu.c	2008-04-14 00:02:36 +0300
-+++ mplayer-svn-r26450/gui/mplayer/menu.c	2008-04-14 23:40:25 +0300
-@@ -136,7 +136,7 @@
+diff -urN mplayer-svn-r26909.orig/gui/mplayer/menu.c mplayer-svn-r26909/gui/mplayer/menu.c
+--- mplayer-svn-r26909.orig/gui/mplayer/menu.c	2008-05-07 03:43:52 +0300
++++ mplayer-svn-r26909/gui/mplayer/menu.c	2008-05-27 23:05:45 +0300
+@@ -153,7 +153,7 @@
  #ifdef DEBUG
      mp_msg( MSGT_GPLAYER,MSGL_DBG2,"[menu.h] %s",MSGTR_NEMFMR );
  #endif
@@ -1357,10 +1357,10 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/menu.c mplayer-svn-r26450/gui/mpla
     return;
    }
  
-diff -urN mplayer-svn-r26450.orig/gui/mplayer/widgets.c mplayer-svn-r26450/gui/mplayer/widgets.c
---- mplayer-svn-r26450.orig/gui/mplayer/widgets.c	2008-04-14 00:02:36 +0300
-+++ mplayer-svn-r26450/gui/mplayer/widgets.c	2008-04-14 23:40:25 +0300
-@@ -127,17 +127,17 @@
+diff -urN mplayer-svn-r26909.orig/gui/mplayer/widgets.c mplayer-svn-r26909/gui/mplayer/widgets.c
+--- mplayer-svn-r26909.orig/gui/mplayer/widgets.c	2008-05-07 03:43:52 +0300
++++ mplayer-svn-r26909/gui/mplayer/widgets.c	2008-05-27 23:05:45 +0300
+@@ -144,17 +144,17 @@
   switch( type)
    {
      case GTK_MB_FATAL:
@@ -1381,10 +1381,10 @@ diff -urN mplayer-svn-r26450.orig/gui/mplayer/widgets.c mplayer-svn-r26450/gui/m
           gtk_widget_show( WarningPixmap );
           gtk_widget_hide( ErrorPixmap );
           break;
-diff -urN mplayer-svn-r26450.orig/gui/skin/skin.c mplayer-svn-r26450/gui/skin/skin.c
---- mplayer-svn-r26450.orig/gui/skin/skin.c	2008-04-14 00:02:36 +0300
-+++ mplayer-svn-r26450/gui/skin/skin.c	2008-04-14 23:40:25 +0300
-@@ -41,7 +41,7 @@
+diff -urN mplayer-svn-r26909.orig/gui/skin/skin.c mplayer-svn-r26909/gui/skin/skin.c
+--- mplayer-svn-r26909.orig/gui/skin/skin.c	2008-05-07 03:43:51 +0300
++++ mplayer-svn-r26909/gui/skin/skin.c	2008-05-27 23:05:45 +0300
+@@ -58,7 +58,7 @@
   vsnprintf( p,512,format,ap );
   va_end( ap );
   mp_msg( MSGT_GPLAYER,MSGL_STATUS,MSGTR_SKIN_ERRORMESSAGE,linenumber,p );
@@ -1393,13 +1393,13 @@ diff -urN mplayer-svn-r26450.orig/gui/skin/skin.c mplayer-svn-r26450/gui/skin/sk
   gtkMessageBox( GTK_MB_FATAL,tmp );
  }
  
-diff -urN mplayer-svn-r26450.orig/Makefile mplayer-svn-r26450/Makefile
---- mplayer-svn-r26450.orig/Makefile	2008-04-14 22:57:07 +0300
-+++ mplayer-svn-r26450/Makefile	2008-04-14 23:40:25 +0300
-@@ -425,6 +425,13 @@
- 	@echo '// See the help/ subdir for the editable files.' >> help_mp.h
- 	@echo '#ifndef MPLAYER_HELP_MP_H' >> help_mp.h
- 	@echo '#define MPLAYER_HELP_MP_H' >> help_mp.h
+diff -urN mplayer-svn-r26909.orig/Makefile mplayer-svn-r26909/Makefile
+--- mplayer-svn-r26909.orig/Makefile	2008-05-27 22:58:32 +0300
++++ mplayer-svn-r26909/Makefile	2008-05-27 23:07:33 +0300
+@@ -751,6 +751,13 @@
+ 	@echo '// untranslated messages from the English master file:' >> $@
+ 	help/help_diff.sh $(HELP_FILE) < help/help_mp-en.h >> $@
+ 	@echo '#endif /* MPLAYER_HELP_MP_H */' >> $@
 +	@echo '#include "config.h"' >> help_mp.h
 +	@echo '#ifdef ENABLE_NLS' >> help_mp.h
 +	@echo '#include <libintl.h>' >> help_mp.h
@@ -1407,6 +1407,6 @@ diff -urN mplayer-svn-r26450.orig/Makefile mplayer-svn-r26450/Makefile
 +	@echo '#else' >> help_mp.h
 +	@echo '#define _(x) (x)' >> help_mp.h
 +	@echo '#endif' >> help_mp.h
- ifeq ($(CHARSET),)
- 	@echo '#include "$(HELP_FILE)"' >> help_mp.h
- else
+ ifneq ($(CHARSET),UTF-8)
+ 	iconv -f UTF-8 -t $(CHARSET) $@ > $@.tmp; mv $@.tmp $@
+ endif
