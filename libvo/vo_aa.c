@@ -689,7 +689,7 @@ static int preinit(const char *arg)
 	if (fstat (fd, &sbuf) != -1) {
 	// vt number stored in device minor
 	vt = sbuf.st_rdev & 0xff;
-	sprintf (fname, "/dev/vcsa%2.2i", vt);
+	sprintf (fname, "/dev/vcsa%i", vt);
 	fp = fopen (fname, "w+");
 	}
 	close (fd);
