@@ -687,7 +687,7 @@ static int preinit(const char *arg)
 	major = sbuf.st_rdev >> 8;
 	vt = minor = sbuf.st_rdev & 0xff;
 	close (fd);
-	sprintf (fname, "/dev/vcsa%2.2i", vt);
+	sprintf (fname, "/dev/vcsa%i", vt);
 	fp = fopen (fname, "w+");
 	if (fp==NULL){
 	    fprintf(stderr,"VO: [aa] cannot open %s for writing,"
