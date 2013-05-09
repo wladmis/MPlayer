@@ -837,7 +837,6 @@ int vo_x11_check_events(Display * mydisplay)
                 continue;
         }
 #endif
-//       printf("\rEvent.type=%X  \n",Event.type);
         switch (Event.type)
         {
             case Expose:
@@ -932,8 +931,6 @@ int vo_x11_check_events(Display * mydisplay)
 
                     if (!name)
                         break;
-
-//          fprintf(stderr,"[ws] PropertyNotify ( 0x%x ) %s ( 0x%x )\n",vo_window,name,Event.xproperty.atom );
 
                     XFree(name);
                 }
