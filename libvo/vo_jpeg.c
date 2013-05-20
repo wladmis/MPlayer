@@ -1,18 +1,25 @@
-/* ------------------------------------------------------------------------- */
-
-/* 
- * vo_jpeg.c, JPEG Renderer for MPlayer
+/*
+ * JPEG Renderer for MPlayer
  *
- * 
- * Changelog
- * 
- * Original version: Copyright 2002 by Pontscho (pontscho@makacs.poliod.hu)
- * 2003-04-25   Spring cleanup -- Alex
- * 2004-08-04   Added multiple subdirectory support -- Ivo (ivop@euronet.nl)
- * 2004-09-01   Cosmetics update -- Ivo
- * 2004-09-05   Added suboptions parser -- Ivo
- * 2005-01-16   Replaced suboption parser by call to subopt-helper --Ivo
+ * Copyright (C) 2002 by Pontscho <pontscho@makacs.poliod.hu>
+ * Copyright (C) 2003 by Alex
+ * Copyright (C) 2004, 2005 by Ivo van Poorten <ivop@euronet.nl>
  *
+ * This file is part of MPlayer.
+ *
+ * MPlayer is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * MPlayer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with MPlayer; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 /* ------------------------------------------------------------------------- */
@@ -51,7 +58,7 @@
 
 /* Info */
 
-static vo_info_t info=
+static const vo_info_t info=
 {
 	"JPEG file",
 	"jpeg",
@@ -59,7 +66,7 @@ static vo_info_t info=
 	""
 };
 
-LIBVO_EXTERN (jpeg)
+const LIBVO_EXTERN (jpeg)
 
 /* ------------------------------------------------------------------------- */
 
@@ -332,20 +339,20 @@ static int int_zero_hundred(int *val)
 
 static int preinit(const char *arg)
 {
-    opt_t subopts[] = {
-        {"progressive", OPT_ARG_BOOL,   &jpeg_progressive_mode, NULL, 0},
-        {"baseline",    OPT_ARG_BOOL,   &jpeg_baseline,         NULL, 0},
+    const opt_t subopts[] = {
+        {"progressive", OPT_ARG_BOOL,   &jpeg_progressive_mode, NULL},
+        {"baseline",    OPT_ARG_BOOL,   &jpeg_baseline,         NULL},
         {"optimize",    OPT_ARG_INT,    &jpeg_optimize,
-                                            (opt_test_f)int_zero_hundred, 0},
+                                            (opt_test_f)int_zero_hundred},
         {"smooth",      OPT_ARG_INT,    &jpeg_smooth,
-                                            (opt_test_f)int_zero_hundred, 0},
+                                            (opt_test_f)int_zero_hundred},
         {"quality",     OPT_ARG_INT,    &jpeg_quality,
-                                            (opt_test_f)int_zero_hundred, 0},
-        {"dpi",         OPT_ARG_INT,    &jpeg_dpi,              NULL, 0},
-        {"outdir",      OPT_ARG_MSTRZ,  &jpeg_outdir,           NULL, 0},
-        {"subdirs",     OPT_ARG_MSTRZ,  &jpeg_subdirs,          NULL, 0},
-        {"maxfiles",    OPT_ARG_INT,    &jpeg_maxfiles, (opt_test_f)int_pos, 0},
-        {NULL, 0, NULL, NULL, 0}
+                                            (opt_test_f)int_zero_hundred},
+        {"dpi",         OPT_ARG_INT,    &jpeg_dpi,              NULL},
+        {"outdir",      OPT_ARG_MSTRZ,  &jpeg_outdir,           NULL},
+        {"subdirs",     OPT_ARG_MSTRZ,  &jpeg_subdirs,          NULL},
+        {"maxfiles",    OPT_ARG_INT,    &jpeg_maxfiles, (opt_test_f)int_pos},
+        {NULL, 0, NULL, NULL}
     };
     const char *info_message = NULL;
 

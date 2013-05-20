@@ -1,11 +1,11 @@
 /*****************************************************************************
  * css.c: Functions for DVD authentication and descrambling
  *****************************************************************************
- * Copyright (C) 1999-2003 VideoLAN
- * $Id: css.c 20629 2006-11-03 12:25:56Z diego $
+ * Copyright (C) 1999-2008 VideoLAN
+ * $Id: css.c 27494 2008-08-29 20:22:36Z diego $
  *
- * Authors: Stéphane Borel <stef@via.ecp.fr>
- *          Håkan Hjort <d95hjort@dtek.chalmers.se>
+ * Authors: StÃ©phane Borel <stef@via.ecp.fr>
+ *          HÃ¥kan Hjort <d95hjort@dtek.chalmers.se>
  *
  * based on:
  *  - css-auth by Derek Fawcus <derek@spider.com>
@@ -325,6 +325,7 @@ int _dvdcss_disckey( dvdcss_t dvdcss )
                                  "cracking title keys instead" );
 
             /* Fallback, but not to DISC as the disc key might be faulty */
+            memset( p_disc_key, 0, KEY_SIZE );
             dvdcss->i_method = DVDCSS_METHOD_TITLE;
             break;
 

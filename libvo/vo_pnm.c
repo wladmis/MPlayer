@@ -1,23 +1,23 @@
-/* ------------------------------------------------------------------------- */
-
-/* 
- * vo_pnm.c, PPM/PGM/PGMYUV Video Output Driver for MPlayer
+/*
+ * PPM/PGM/PGMYUV video output driver
  *
- * 
- * Written by Ivo van Poorten. (C) Copyright 2004, 2005.
- * Licensed under GNU General Public License version 2.
+ * copyright (C) 2004, 2005 Ivo van Poorten
  *
+ * This file is part of MPlayer.
  *
- * Changelog
- * 
- * 2004-01-15   Replaced suboption parser by call to subopt-helper.
- *              Got rid of stupid malloc_failed function.
- * 2004-09-16   Second draft. It now acts on VOCTRL_DRAW_IMAGE and does not
- *              maintain a local copy of the image if the format is YV12.
- *              Speed improvement and uses less memory.
- * 2004-09-09   First draft.
+ * MPlayer is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  *
+ * MPlayer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
+ * You should have received a copy of the GNU General Public License along
+ * with MPlayer; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 /* ------------------------------------------------------------------------- */
@@ -64,7 +64,7 @@
 
 /* Info */
 
-static vo_info_t info=
+static const vo_info_t info=
 {
 	"PPM/PGM/PGMYUV file",
 	"pnm",
@@ -72,7 +72,7 @@ static vo_info_t info=
 	""
 };
 
-LIBVO_EXTERN (pnm)
+const LIBVO_EXTERN (pnm)
 
 /* ------------------------------------------------------------------------- */
 
@@ -120,16 +120,16 @@ static int preinit(const char *arg)
 {
     int ppm_type = 0, pgm_type = 0, pgmyuv_type = 0,
         raw_mode = 0, ascii_mode = 0;
-    opt_t subopts[] = {
-        {"ppm",         OPT_ARG_BOOL,   &ppm_type,      NULL, 0},
-        {"pgm",         OPT_ARG_BOOL,   &pgm_type,      NULL, 0},
-        {"pgmyuv",      OPT_ARG_BOOL,   &pgmyuv_type,   NULL, 0},
-        {"raw",         OPT_ARG_BOOL,   &raw_mode,      NULL, 0},
-        {"ascii",       OPT_ARG_BOOL,   &ascii_mode,    NULL, 0},
-        {"outdir",      OPT_ARG_MSTRZ,  &pnm_outdir,    NULL, 0},
-        {"subdirs",     OPT_ARG_MSTRZ,  &pnm_subdirs,   NULL, 0},
-        {"maxfiles",    OPT_ARG_INT,    &pnm_maxfiles,  (opt_test_f)int_pos, 0},
-        {NULL, 0, NULL, NULL, 0}
+    const opt_t subopts[] = {
+        {"ppm",         OPT_ARG_BOOL,   &ppm_type,      NULL},
+        {"pgm",         OPT_ARG_BOOL,   &pgm_type,      NULL},
+        {"pgmyuv",      OPT_ARG_BOOL,   &pgmyuv_type,   NULL},
+        {"raw",         OPT_ARG_BOOL,   &raw_mode,      NULL},
+        {"ascii",       OPT_ARG_BOOL,   &ascii_mode,    NULL},
+        {"outdir",      OPT_ARG_MSTRZ,  &pnm_outdir,    NULL},
+        {"subdirs",     OPT_ARG_MSTRZ,  &pnm_subdirs,   NULL},
+        {"maxfiles",    OPT_ARG_INT,    &pnm_maxfiles,  (opt_test_f)int_pos},
+        {NULL, 0, NULL, NULL}
     };
     const char *info_message = NULL;
 

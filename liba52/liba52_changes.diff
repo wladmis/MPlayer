@@ -1,6 +1,6 @@
 --- include/a52.h	2006-06-12 15:04:57.000000000 +0200
 +++ liba52/a52.h	2006-06-05 02:23:02.000000000 +0200
-@@ -59,4 +63,9 @@
+@@ -59,4 +66,9 @@
  int a52_block (a52_state_t * state);
  void a52_free (a52_state_t * state);
  
@@ -16,7 +16,7 @@
  #define DELTA_BIT_NONE (2)
  #define DELTA_BIT_RESERVED (3)
  
-+#ifdef ARCH_X86_64
++#if ARCH_X86_64
 +# define REG_a "rax"
 +# define REG_d "rdx"
 +# define REG_S "rsi"
@@ -75,17 +75,11 @@
  
 --- liba52/bitstream.h	2006-06-12 15:05:07.000000000 +0200
 +++ liba52/bitstream.h	2006-06-05 02:23:02.000000000 +0200
-@@ -21,6 +25,48 @@
+@@ -21,6 +25,42 @@
   * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
   */
  
 +/* code from ffmpeg/libavcodec */
-+#if defined(__GNUC__) && (__GNUC__ > 3 || __GNUC_ == 3 && __GNUC_MINOR__ > 0)
-+#    define always_inline __attribute__((always_inline)) inline
-+#else
-+#    define always_inline inline
-+#endif
-+
 +#if defined(__sparc__) || defined(hpux)
 +/*
 + * the alt bitstream reader performs unaligned memory accesses; that doesn't work
@@ -97,11 +91,11 @@
 +#define ALT_BITSTREAM_READER
 +
 +/* used to avoid misaligned exceptions on some archs (alpha, ...) */
-+#if defined (ARCH_X86) || defined(ARCH_ARMV4L)
++#if ARCH_X86 || HAVE_ARMV6
 +#    define unaligned32(a) (*(uint32_t*)(a))
 +#else
 +#    ifdef __GNUC__
-+static always_inline uint32_t unaligned32(const void *v) {
++static inline uint32_t unaligned32(const void *v) {
 +    struct Unaligned {
 +	uint32_t i;
 +    } __attribute__((packed));
@@ -124,7 +118,7 @@
  /* (stolen from the kernel) */
  #ifdef WORDS_BIGENDIAN
  
-@@ -28,7 +74,7 @@
+@@ -28,7 +68,7 @@
  
  #else
  
@@ -133,7 +127,7 @@
  
  #	define swab32(x) __i386_swab32(x)
  	static inline const uint32_t __i386_swab32(uint32_t x)
-@@ -39,19 +85,34 @@
+@@ -39,19 +79,34 @@
  
  #	else
  
@@ -142,7 +136,7 @@
 - (((uint8_t*)&x)[2] << 8)  | (((uint8_t*)&x)[3]))
 -
 +#	define swab32(x) __generic_swab32(x)
-+	static always_inline const uint32_t __generic_swab32(uint32_t x)
++	static inline const uint32_t __generic_swab32(uint32_t x)
 +	{
 +		return ((((uint8_t*)&x)[0] << 24) | (((uint8_t*)&x)[1] << 16) |
 +		 (((uint8_t*)&x)[2] << 8)  | (((uint8_t*)&x)[3]));
@@ -172,7 +166,7 @@
      uint32_t result;
  	
      if (num_bits < state->bits_left) {
-@@ -61,10 +122,29 @@
+@@ -61,10 +116,29 @@
      }
  
      return a52_bitstream_get_bh (state, num_bits);
@@ -202,7 +196,7 @@
      int32_t result;
  	
      if (num_bits < state->bits_left) {
-@@ -74,4 +154,5 @@
+@@ -74,4 +148,5 @@
      }
  
      return a52_bitstream_get_bh_2 (state, num_bits);
@@ -247,7 +241,7 @@
 +{
 +    a52_upmix= upmix_C;
 +    a52_downmix= downmix_C;
-+#if defined(ARCH_X86) || defined(ARCH_X86_64)
++#if ARCH_X86 || ARCH_X86_64
 +    if(mm_accel & MM_ACCEL_X86_MMX) a52_upmix= upmix_MMX;
 +    if(mm_accel & MM_ACCEL_X86_SSE) a52_downmix= downmix_SSE;
 +    if(mm_accel & MM_ACCEL_X86_3DNOW) a52_downmix= downmix_3dnow;
@@ -290,15 +284,15 @@
  {
      switch (CONVERT (acmod, output & A52_CHANNEL_MASK)) {
  
-@@ -653,3 +685,1137 @@
+@@ -653,3 +685,1104 @@
  	goto mix_31to21;
      }
  }
 +
-+#if defined(ARCH_X86) || defined(ARCH_X86_64)
++#if ARCH_X86 || ARCH_X86_64
 +static void mix2to1_SSE (sample_t * dest, sample_t * src, sample_t bias)
 +{
-+	asm volatile(
++	__asm__ volatile(
 +	"movlps %2, %%xmm7		\n\t"
 +	"shufps $0x00, %%xmm7, %%xmm7	\n\t"
 +	"mov $-1024, %%"REG_S"		\n\t"
@@ -321,7 +315,7 @@
 +
 +static void mix3to1_SSE (sample_t * samples, sample_t bias)
 +{
-+	asm volatile(
++	__asm__ volatile(
 +	"movlps %1, %%xmm7		\n\t"
 +	"shufps $0x00, %%xmm7, %%xmm7	\n\t"
 +	"mov $-1024, %%"REG_S"		\n\t"
@@ -342,7 +336,7 @@
 +
 +static void mix4to1_SSE (sample_t * samples, sample_t bias)
 +{
-+	asm volatile(
++	__asm__ volatile(
 +	"movlps %1, %%xmm7		\n\t"
 +	"shufps $0x00, %%xmm7, %%xmm7	\n\t"
 +	"mov $-1024, %%"REG_S"		\n\t"
@@ -364,7 +358,7 @@
 +
 +static void mix5to1_SSE (sample_t * samples, sample_t bias)
 +{
-+	asm volatile(
++	__asm__ volatile(
 +	"movlps %1, %%xmm7		\n\t"
 +	"shufps $0x00, %%xmm7, %%xmm7	\n\t"
 +	"mov $-1024, %%"REG_S"		\n\t"
@@ -387,7 +381,7 @@
 +
 +static void mix3to2_SSE (sample_t * samples, sample_t bias)
 +{
-+	asm volatile(
++	__asm__ volatile(
 +	"movlps %1, %%xmm7		\n\t"
 +	"shufps $0x00, %%xmm7, %%xmm7	\n\t"
 +	"mov $-1024, %%"REG_S"		\n\t"
@@ -410,7 +404,7 @@
 +
 +static void mix21to2_SSE (sample_t * left, sample_t * right, sample_t bias)
 +{
-+	asm volatile(
++	__asm__ volatile(
 +		"movlps %2, %%xmm7		\n\t"
 +		"shufps $0x00, %%xmm7, %%xmm7	\n\t"
 +		"mov $-1024, %%"REG_S"		\n\t"
@@ -433,7 +427,7 @@
 +
 +static void mix21toS_SSE (sample_t * samples, sample_t bias)
 +{
-+	asm volatile(
++	__asm__ volatile(
 +		"movlps %1, %%xmm7		\n\t"
 +		"shufps $0x00, %%xmm7, %%xmm7	\n\t"
 +		"mov $-1024, %%"REG_S"		\n\t"
@@ -457,7 +451,7 @@
 +
 +static void mix31to2_SSE (sample_t * samples, sample_t bias)
 +{
-+	asm volatile(
++	__asm__ volatile(
 +		"movlps %1, %%xmm7		\n\t"
 +		"shufps $0x00, %%xmm7, %%xmm7	\n\t"
 +		"mov $-1024, %%"REG_S"		\n\t"
@@ -481,7 +475,7 @@
 +
 +static void mix31toS_SSE (sample_t * samples, sample_t bias)
 +{
-+	asm volatile(
++	__asm__ volatile(
 +		"movlps %1, %%xmm7		\n\t"
 +		"shufps $0x00, %%xmm7, %%xmm7	\n\t"
 +		"mov $-1024, %%"REG_S"		\n\t"
@@ -507,7 +501,7 @@
 +
 +static void mix22toS_SSE (sample_t * samples, sample_t bias)
 +{
-+	asm volatile(
++	__asm__ volatile(
 +		"movlps %1, %%xmm7		\n\t"
 +		"shufps $0x00, %%xmm7, %%xmm7	\n\t"
 +		"mov $-1024, %%"REG_S"		\n\t"
@@ -532,7 +526,7 @@
 +
 +static void mix32to2_SSE (sample_t * samples, sample_t bias)
 +{
-+	asm volatile(
++	__asm__ volatile(
 +	"movlps %1, %%xmm7		\n\t"
 +	"shufps $0x00, %%xmm7, %%xmm7	\n\t"
 +	"mov $-1024, %%"REG_S"		\n\t"
@@ -556,7 +550,7 @@
 +
 +static void mix32toS_SSE (sample_t * samples, sample_t bias)
 +{
-+	asm volatile(
++	__asm__ volatile(
 +	"movlps %1, %%xmm7		\n\t"
 +	"shufps $0x00, %%xmm7, %%xmm7	\n\t"
 +	"mov $-1024, %%"REG_S"		\n\t"
@@ -583,7 +577,7 @@
 +
 +static void move2to1_SSE (sample_t * src, sample_t * dest, sample_t bias)
 +{
-+	asm volatile(
++	__asm__ volatile(
 +		"movlps %2, %%xmm7		\n\t"
 +		"shufps $0x00, %%xmm7, %%xmm7	\n\t"
 +		"mov $-1024, %%"REG_S"		\n\t"
@@ -606,7 +600,7 @@
 +
 +static void zero_MMX(sample_t * samples)
 +{
-+	asm volatile(
++	__asm__ volatile(
 +		"mov $-1024, %%"REG_S"		\n\t"
 +		"pxor %%mm0, %%mm0		\n\t"
 +		ASMALIGN(4)
@@ -621,39 +615,6 @@
 +	:: "r" (samples+256)
 +	: "%"REG_S
 +	);
-+}
-+
-+/*
-+ I hope dest and src will be at least 8 byte aligned and size
-+ will devide on 8 without remain
-+ Note: untested and unused.
-+*/
-+static void copy_MMX(void *dest,const void *src,unsigned size)
-+{
-+  unsigned i;
-+  size /= 64;
-+	for(i=0;i<size;i++)
-+	{
-+	    __asm __volatile(
-+		"movq	%0,   %%mm0\n\t"
-+		"movq	8%0,  %%mm1\n\t"
-+		"movq	16%0, %%mm2\n\t"
-+		"movq	24%0, %%mm3\n\t"
-+		"movq	32%0, %%mm4\n\t"
-+		"movq	40%0, %%mm5\n\t"
-+		"movq	48%0, %%mm6\n\t"
-+		"movq	56%0, %%mm7\n\t"
-+		"movq	%%mm0, %1\n\t"
-+		"movq	%%mm1, 8%1\n\t"
-+		"movq	%%mm2, 16%1\n\t"
-+		"movq	%%mm3, 24%1\n\t"
-+		"movq	%%mm4, 32%1\n\t"
-+		"movq	%%mm5, 40%1\n\t"
-+		"movq	%%mm6, 48%1\n\t"
-+		"movq	%%mm7, 56%1\n\t"
-+		:
-+		:"m"(src),"m"(dest));
-+	}
 +}
 +
 +static void downmix_SSE (sample_t * samples, int acmod, int output, sample_t bias,
@@ -865,7 +826,7 @@
 +
 +static void mix2to1_3dnow (sample_t * dest, sample_t * src, sample_t bias)
 +{
-+	asm volatile(
++	__asm__ volatile(
 +	"movd  %2, %%mm7	\n\t"
 +	"punpckldq %2, %%mm7	\n\t"
 +	"mov $-1024, %%"REG_S"	\n\t"
@@ -896,7 +857,7 @@
 +
 +static void mix3to1_3dnow (sample_t * samples, sample_t bias)
 +{
-+	asm volatile(
++	__asm__ volatile(
 +	"movd  %1, %%mm7	\n\t"
 +	"punpckldq %1, %%mm7	\n\t"
 +	"mov $-1024, %%"REG_S"	\n\t"
@@ -923,7 +884,7 @@
 +
 +static void mix4to1_3dnow (sample_t * samples, sample_t bias)
 +{
-+	asm volatile(
++	__asm__ volatile(
 +	"movd  %1, %%mm7	\n\t"
 +	"punpckldq %1, %%mm7	\n\t"
 +	"mov $-1024, %%"REG_S"	\n\t"
@@ -952,7 +913,7 @@
 +
 +static void mix5to1_3dnow (sample_t * samples, sample_t bias)
 +{
-+	asm volatile(
++	__asm__ volatile(
 +	"movd  %1, %%mm7	\n\t"
 +	"punpckldq %1, %%mm7	\n\t"
 +	"mov $-1024, %%"REG_S"	\n\t"
@@ -983,7 +944,7 @@
 +
 +static void mix3to2_3dnow (sample_t * samples, sample_t bias)
 +{
-+	asm volatile(
++	__asm__ volatile(
 +	"movd  %1, %%mm7	\n\t"
 +	"punpckldq %1, %%mm7	\n\t"
 +	"mov $-1024, %%"REG_S"	\n\t"
@@ -1014,7 +975,7 @@
 +
 +static void mix21to2_3dnow (sample_t * left, sample_t * right, sample_t bias)
 +{
-+	asm volatile(
++	__asm__ volatile(
 +		"movd  %2, %%mm7	\n\t"
 +		"punpckldq %2, %%mm7	\n\t"
 +		"mov $-1024, %%"REG_S"	\n\t"
@@ -1045,7 +1006,7 @@
 +
 +static void mix21toS_3dnow (sample_t * samples, sample_t bias)
 +{
-+	asm volatile(
++	__asm__ volatile(
 +		"movd  %1, %%mm7	\n\t"
 +		"punpckldq %1, %%mm7	\n\t"
 +		"mov $-1024, %%"REG_S"	\n\t"
@@ -1078,7 +1039,7 @@
 +
 +static void mix31to2_3dnow (sample_t * samples, sample_t bias)
 +{
-+	asm volatile(
++	__asm__ volatile(
 +		"movd  %1, %%mm7	\n\t"
 +		"punpckldq %1, %%mm7	\n\t"
 +		"mov $-1024, %%"REG_S"	\n\t"
@@ -1111,7 +1072,7 @@
 +
 +static void mix31toS_3dnow (sample_t * samples, sample_t bias)
 +{
-+	asm volatile(
++	__asm__ volatile(
 +		"movd  %1, %%mm7	\n\t"
 +		"punpckldq %1, %%mm7	\n\t"
 +		"mov $-1024, %%"REG_S"	\n\t"
@@ -1148,7 +1109,7 @@
 +
 +static void mix22toS_3dnow (sample_t * samples, sample_t bias)
 +{
-+	asm volatile(
++	__asm__ volatile(
 +		"movd  %1, %%mm7	\n\t"
 +		"punpckldq %1, %%mm7	\n\t"
 +		"mov $-1024, %%"REG_S"	\n\t"
@@ -1183,7 +1144,7 @@
 +
 +static void mix32to2_3dnow (sample_t * samples, sample_t bias)
 +{
-+	asm volatile(
++	__asm__ volatile(
 +	"movd  %1, %%mm7	\n\t"
 +	"punpckldq %1, %%mm7	\n\t"
 +	"mov $-1024, %%"REG_S"	\n\t"
@@ -1217,7 +1178,7 @@
 +/* todo: should be optimized better */
 +static void mix32toS_3dnow (sample_t * samples, sample_t bias)
 +{
-+	asm volatile(
++	__asm__ volatile(
 +	"mov $-1024, %%"REG_S"		\n\t"
 +	ASMALIGN(4)
 +	"1:			\n\t"
@@ -1256,7 +1217,7 @@
 +
 +static void move2to1_3dnow (sample_t * src, sample_t * dest, sample_t bias)
 +{
-+	asm volatile(
++	__asm__ volatile(
 +		"movd  %2, %%mm7	\n\t"
 +		"punpckldq %2, %%mm7	\n\t"
 +		"mov $-1024, %%"REG_S"	\n\t"
@@ -1424,13 +1385,13 @@
 +	memcpy (samples + 1024, samples + 768, 256 * sizeof (sample_t));
 +	break;
 +    }
-+    __asm __volatile("femms":::"memory");
++    __asm__ volatile("femms":::"memory");
 +}
 +
 +#endif // ARCH_X86 || ARCH_X86_64
---- liba52/imdct.c	2006-06-12 15:18:27.000000000 +0200
-+++ liba52/imdct.c	2006-06-12 19:18:39.000000000 +0200
-@@ -26,6 +26,11 @@
+--- liba52/imdct.c	2008-02-19 00:18:33.000000000 +0100
++++ liba52/imdct.c	2008-02-19 00:16:40.000000000 +0100
+@@ -22,6 +26,11 @@
   * You should have received a copy of the GNU General Public License
   * along with this program; if not, write to the Free Software
   * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -1442,7 +1403,7 @@
   */
  
  #include "config.h"
-@@ -39,12 +48,49 @@
+@@ -39,12 +48,50 @@
  #include "a52.h"
  #include "a52_internal.h"
  #include "mm_accel.h"
@@ -1451,7 +1412,8 @@
 +void (*a52_imdct_512) (sample_t * data, sample_t * delay, sample_t bias);
 +
 +#ifdef RUNTIME_CPUDETECT
-+#undef HAVE_3DNOWEX
++#undef HAVE_AMD3DNOWEXT
++#define HAVE_AMD3DNOWEXT 0
 +#endif
  
  typedef struct complex_s {
@@ -1492,7 +1454,7 @@
  static uint8_t fftorder[] = {
        0,128, 64,192, 32,160,224, 96, 16,144, 80,208,240,112, 48,176,
        8,136, 72,200, 40,168,232,104,248,120, 56,184, 24,152,216, 88,
-@@ -56,6 +102,40 @@
+@@ -56,6 +103,40 @@
        6,134, 70,198, 38,166,230,102,246,118, 54,182, 22,150,214, 86
  };
  
@@ -1512,7 +1474,7 @@
 +static sample_t __attribute__((aligned(16))) xcos1[128];
 +static sample_t __attribute__((aligned(16))) xsin1[128];
 +
-+#if defined(ARCH_X86) || defined(ARCH_X86_64)
++#if ARCH_X86 || ARCH_X86_64
 +// NOTE: SSE needs 16byte alignment or it will segfault 
 +// 
 +static float __attribute__((aligned(16))) sseSinCos1c[256];
@@ -1533,7 +1495,7 @@
  /* Root values for IFFT */
  static sample_t roots16[3];
  static sample_t roots32[7];
-@@ -241,7 +321,7 @@
+@@ -241,7 +322,7 @@
      ifft_pass (buf, roots128 - 32, 32);
  }
  
@@ -1542,13 +1504,13 @@
  {
      int i, k;
      sample_t t_r, t_i, a_r, a_i, b_r, b_i, w_1, w_2;
-@@ -285,6 +365,714 @@
+@@ -285,6 +366,702 @@
      }
  }
  
-+#ifdef HAVE_ALTIVEC
++#if HAVE_ALTIVEC
 +
-+#ifndef SYS_DARWIN
++#ifdef HAVE_ALTIVEC_H
 +#include <altivec.h>
 +#endif
 +
@@ -1563,11 +1525,10 @@
 +#define WORD_s2 0x18,0x19,0x1a,0x1b
 +#define WORD_s3 0x1c,0x1d,0x1e,0x1f
 +
-+#ifdef SYS_DARWIN
-+#define vcprm(a,b,c,d) (const vector unsigned char)(WORD_ ## a, WORD_ ## b, WORD_ ## c, WORD_ ## d)
-+#else
 +#define vcprm(a,b,c,d) (const vector unsigned char){WORD_ ## a, WORD_ ## b, WORD_ ## c, WORD_ ## d}
-+#endif
++#define vcii(a,b,c,d) (const vector float){FLOAT_ ## a, FLOAT_ ## b, FLOAT_ ## c, FLOAT_ ## d}
++
++#define FOUROF(a) {a,a,a,a}
 +
 +// vcprmle is used to keep the same index as in the SSE version.
 +// it's the same as vcprm, with the index inversed
@@ -1578,18 +1539,6 @@
 +// n is _n_egative, p is _p_ositive
 +#define FLOAT_n -1.
 +#define FLOAT_p 1.
-+
-+#ifdef SYS_DARWIN
-+#define vcii(a,b,c,d) (const vector float)(FLOAT_ ## a, FLOAT_ ## b, FLOAT_ ## c, FLOAT_ ## d)
-+#else
-+#define vcii(a,b,c,d) (const vector float){FLOAT_ ## a, FLOAT_ ## b, FLOAT_ ## c, FLOAT_ ## d}
-+#endif
-+
-+#ifdef SYS_DARWIN
-+#define FOUROF(a) (a)
-+#else
-+#define FOUROF(a) {a,a,a,a}
-+#endif
 +
 +
 +void
@@ -1904,19 +1853,20 @@
 +
 +// Stuff below this line is borrowed from libac3
 +#include "srfftp.h"
-+#if defined(ARCH_X86) || defined(ARCH_X86_64)
-+#ifndef HAVE_3DNOW
-+#define HAVE_3DNOW 1
-+#endif
++#if ARCH_X86 || ARCH_X86_64
++#undef HAVE_AMD3DNOW
++#define HAVE_AMD3DNOW 1
 +#include "srfftp_3dnow.h"
 +
 +const i_cmplx_t x_plus_minus_3dnow __attribute__ ((aligned (8))) = {{ 0x00000000UL, 0x80000000UL }}; 
 +const i_cmplx_t x_minus_plus_3dnow __attribute__ ((aligned (8))) = {{ 0x80000000UL, 0x00000000UL }}; 
 +const complex_t HSQRT2_3DNOW __attribute__ ((aligned (8))) = { 0.707106781188, 0.707106781188 };
 +
-+#undef HAVE_3DNOWEX
++#undef HAVE_AMD3DNOWEXT
++#define HAVE_AMD3DNOWEXT 0
 +#include "imdct_3dnow.h"
-+#define HAVE_3DNOWEX
++#undef HAVE_AMD3DNOWEXT
++#define HAVE_AMD3DNOWEXT 1
 +#include "imdct_3dnow.h"
 +
 +void
@@ -1944,7 +1894,7 @@
 +
 +    /* Pre IFFT complex multiply plus IFFT cmplx conjugate */
 +    /* Bit reversed shuffling */
-+	asm volatile(
++	__asm__ volatile(
 +		"xor %%"REG_S", %%"REG_S"		\n\t"
 +		"lea "MANGLE(bit_reverse_512)", %%"REG_a"\n\t"
 +		"mov $1008, %%"REG_D"			\n\t"
@@ -2004,7 +1954,7 @@
 +    
 +    /* 1. iteration */
 +	// Note w[0][0]={1,0}
-+	asm volatile(
++	__asm__ volatile(
 +		"xorps %%xmm1, %%xmm1	\n\t"
 +		"xorps %%xmm2, %%xmm2	\n\t"
 +		"mov %0, %%"REG_S"	\n\t"
@@ -2026,7 +1976,7 @@
 +        
 +    /* 2. iteration */
 +	// Note w[1]={{1,0}, {0,-1}}
-+	asm volatile(
++	__asm__ volatile(
 +		"movaps "MANGLE(ps111_1)", %%xmm7\n\t" // 1,1,1,-1
 +		"mov %0, %%"REG_S"		\n\t"
 +		ASMALIGN(4)
@@ -2054,7 +2004,7 @@
 + Note sseW2+32={0,0,-sqrt(2),-sqrt(2))
 + Note sseW2+48={1,-1,sqrt(2),-sqrt(2))
 +*/
-+	asm volatile(
++	__asm__ volatile(
 +		"movaps 48+"MANGLE(sseW2)", %%xmm6\n\t" 
 +		"movaps 16+"MANGLE(sseW2)", %%xmm7\n\t" 
 +		"xorps %%xmm5, %%xmm5		\n\t"
@@ -2099,7 +2049,7 @@
 +	two_m_plus_one = two_m<<1;
 +	two_m_plus_one_shl3 = (two_m_plus_one<<3);
 +	buf_offset = buf+128;
-+	asm volatile(
++	__asm__ volatile(
 +		"mov %0, %%"REG_S"			\n\t"
 +		ASMALIGN(4)
 +		"1:					\n\t"
@@ -2131,7 +2081,7 @@
 +    }
 +
 +    /* Post IFFT complex multiply  plus IFFT complex conjugate*/
-+	asm volatile(
++	__asm__ volatile(
 +		"mov $-1024, %%"REG_S"			\n\t"
 +		ASMALIGN(4)
 +		"1:					\n\t"
@@ -2154,7 +2104,7 @@
 +    window_ptr = a52_imdct_window;
 +
 +    /* Window and convert to real valued signal */
-+	asm volatile(
++	__asm__ volatile(
 +		"xor %%"REG_D", %%"REG_D"		\n\t"  // 0
 +		"xor %%"REG_S", %%"REG_S"		\n\t"  // 0
 +		"movss %3, %%xmm2			\n\t"  // bias
@@ -2181,7 +2131,7 @@
 +	delay_ptr+=128;
 +//	window_ptr+=128;
 +	
-+	asm volatile(
++	__asm__ volatile(
 +		"mov $1024, %%"REG_D"			\n\t"  // 512
 +		"xor %%"REG_S", %%"REG_S"		\n\t"  // 0
 +		"movss %3, %%xmm2			\n\t"  // bias
@@ -2210,7 +2160,7 @@
 +    /* The trailing edge of the window goes into the delay line */
 +    delay_ptr = delay;
 +
-+	asm volatile(
++	__asm__ volatile(
 +		"xor %%"REG_D", %%"REG_D"		\n\t"  // 0
 +		"xor %%"REG_S", %%"REG_S"		\n\t"  // 0
 +		ASMALIGN(4)
@@ -2232,7 +2182,7 @@
 +	delay_ptr+=128;
 +//	window_ptr-=128;
 +	
-+	asm volatile(
++	__asm__ volatile(
 +		"mov $1024, %%"REG_D"			\n\t"  // 1024
 +		"xor %%"REG_S", %%"REG_S"		\n\t"  // 0
 +		ASMALIGN(4)
@@ -2257,7 +2207,7 @@
  void a52_imdct_256(sample_t * data, sample_t * delay, sample_t bias)
  {
      int i, k;
-@@ -364,7 +1152,7 @@
+@@ -364,7 +1141,7 @@
  
  void a52_imdct_init (uint32_t mm_accel)
  {
@@ -2266,7 +2216,7 @@
      double sum;
  
      /* compute imdct window - kaiser-bessel derived window, alpha = 5.0 */
-@@ -416,6 +1204,99 @@
+@@ -416,6 +1193,99 @@
  	post2[i].real = cos ((M_PI / 128) * (i + 0.5));
  	post2[i].imag = sin ((M_PI / 128) * (i + 0.5));
      }
@@ -2281,7 +2231,7 @@
 +	    w[i][k].imag = sin (-M_PI * k / j);
 +	}
 +    }
-+#if defined(ARCH_X86) || defined(ARCH_X86_64)
++#if ARCH_X86 || ARCH_X86_64
 +	for (i = 0; i < 128; i++) {
 +	    sseSinCos1c[2*i+0]= xcos1[i];
 +	    sseSinCos1c[2*i+1]= -xcos1[i];
@@ -2335,7 +2285,7 @@
 +	ifft128 = ifft128_c;
 +	ifft64 = ifft64_c;
 +
-+#if defined(ARCH_X86) || defined(ARCH_X86_64)
++#if ARCH_X86 || ARCH_X86_64
 +	if(mm_accel & MM_ACCEL_X86_SSE)
 +	{
 +	  fprintf (stderr, "Using SSE optimized IMDCT transform\n");
@@ -2355,7 +2305,7 @@
 +	}
 +	else
 +#endif // ARCH_X86 || ARCH_X86_64
-+#ifdef HAVE_ALTIVEC
++#if HAVE_ALTIVEC
 +        if (mm_accel & MM_ACCEL_PPC_ALTIVEC)
 +	{
 +	  fprintf(stderr, "Using AltiVec optimized IMDCT transform\n");
@@ -2366,7 +2316,7 @@
  
  #ifdef LIBA52_DJBFFT
      if (mm_accel & MM_ACCEL_DJBFFT) {
-@@ -426,7 +1307,5 @@
+@@ -426,7 +1296,5 @@
  #endif
      {
  	fprintf (stderr, "No accelerated IMDCT transform found\n");
@@ -2391,7 +2341,7 @@
  
 --- liba52/parse.c	2006-12-05 08:08:01.000000000 +0100
 +++ liba52/parse.c	2006-12-05 08:08:44.000000000 +0100
-@@ -28,6 +28,7 @@
+@@ -24,6 +28,7 @@
  #include "config.h"
  
  #include <stdlib.h>
@@ -2399,14 +2349,15 @@
  #include <string.h>
  #include <inttypes.h>
  
-@@ -35,13 +36,12 @@
+@@ -31,13 +36,12 @@
  #include "a52_internal.h"
  #include "bitstream.h"
  #include "tables.h"
 +#include "mm_accel.h"
 +#include "libavutil/avutil.h"
  
- #ifdef HAVE_MEMALIGN
+-#ifdef HAVE_MEMALIGN
++#if HAVE_MEMALIGN
  /* some systems have memalign() but no declaration for it */
  void * memalign (size_t align, size_t size);
 -#else
@@ -2415,7 +2366,7 @@
  #endif
  
  typedef struct {
-@@ -64,7 +64,16 @@
+@@ -60,7 +64,16 @@
      if (state == NULL)
  	return NULL;
  
@@ -2432,7 +2383,7 @@
      if (state->samples == NULL) {
  	free (state);
  	return NULL;
-@@ -78,6 +87,7 @@
+@@ -74,6 +87,7 @@
      state->lfsr_state = 1;
  
      a52_imdct_init (mm_accel);
@@ -2440,7 +2391,7 @@
  
      return state;
  }
-@@ -145,7 +155,7 @@
+@@ -141,7 +155,7 @@
      state->acmod = acmod = buf[6] >> 5;
  
      a52_bitstream_set_ptr (state, buf + 6);
@@ -2449,7 +2400,7 @@
  
      if ((acmod == 2) && (bitstream_get (state, 2) == 2))	/* dsurmod */
  	acmod = A52_DOLBY;
-@@ -176,28 +186,28 @@
+@@ -172,28 +186,28 @@
  
      chaninfo = !acmod;
      do {
@@ -2486,7 +2437,7 @@
  	} while (addbsil--);
      }
  
-@@ -684,7 +694,7 @@
+@@ -680,7 +694,7 @@
  				 state->fbw_expbap[i].exp[0],
  				 state->fbw_expbap[i].exp + 1))
  		return 1;
@@ -2495,7 +2446,7 @@
  	}
      if (lfeexpstr != EXP_REUSE) {
  	do_bit_alloc |= 32;
-@@ -759,7 +769,7 @@
+@@ -755,7 +769,7 @@
      if (bitstream_get (state, 1)) {	/* skiple */
  	i = bitstream_get (state, 9);	/* skipl */
  	while (i--)
@@ -2504,7 +2455,7 @@
      }
  
      samples = state->samples;
-@@ -900,6 +910,10 @@
+@@ -896,6 +910,10 @@
  
  void a52_free (a52_state_t * state)
  {

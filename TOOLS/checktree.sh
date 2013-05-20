@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # -----------------------------------------------------------------------------
 
@@ -23,35 +23,15 @@
 # Thanks to Melchior Franz of the FlightGear project for the original idea
 # of a source-tree checker and Torinthiel for the feedback along the way.
 
-# $Id: checktree.sh 23971 2007-07-31 15:10:10Z ivo $
+# $Id: checktree.sh 27231 2008-07-07 09:32:21Z diego $
 
 # -----------------------------------------------------------------------------
 
 # All yes/no flags. Spaces around flagnames are important!
 
 testflags=" spaces extensions crlf tabs trailws rcsid oll charset stupid gnu \
-res "
+res depr "
 allflags="$testflags showcont color head svn "
-
-# Default settings
-
-_spaces=yes
-_extensions=yes
-_crlf=yes
-_tabs=no
-_trailws=no
-_rcsid=no
-_oll=no
-_charset=no
-_stupid=no
-_showcont=no
-_gnu=no
-_res=no
-
-_color=yes
-_head=yes
-_svn=yes
-_files=
 
 # -----------------------------------------------------------------------------
 
@@ -86,12 +66,28 @@ all_filenames() {
         | grep -v "\.\#\|\~$\|\.depend\|\/\.svn\/\|config.mak\|^\./config\.h" \
         | grep -v "^\./version\.h\|\.o$\|\.a$\|configure.log\|^\./help_mp.h"
     else
-        svn info -R | sed -n '/Path:/bb; :a; d; b; :b; s/Path: /.\//; h; :c; n;
-                              /Node Kind:/bd; bc; :d; /directory/ba; g; p;'
+        for p in . libavcodec libavutil libavformat libpostproc ; do
+            svn info -R $p 2>/dev/null | sed -n \
+                '/Path:/bb; :a; d; b; :b; s/Path: /.\//; h; :c; n;
+                 /Node Kind:/bd; bc; :d; /directory/ba; g; p;'
+        done
     fi
 }
 
 # -----------------------------------------------------------------------------
+
+# Default settings
+
+set_all_tests no
+_spaces=yes
+_extensions=yes
+_crlf=yes
+
+_showcont=no
+_color=yes
+_head=yes
+_svn=yes
+_files=
 
 # Parse command line
 
@@ -111,6 +107,7 @@ for i in "$@"; do
         printoption "stupid    " "test for stupid code"
         printoption "gnu       " "test for GNUisms"
         printoption "res       " "test for reserved identifiers"
+        printoption "depr      " "test for deprecated function calls"
         echo
         printoption "all       " "enable all tests" "no"
         echo  "                   (-noall can be specified as -none)"
@@ -171,15 +168,24 @@ else
     COLE=""
 fi
 
+# Test presence of svn info
+
+if [ "$_svn" = "yes" -a ! -d .svn ] ; then
+    echo "No svn info available. Please use -nosvn." >&2
+    exit 1
+fi
+
 # Generate filelist once so -svn isn't _that_ much slower than -nosvn anymore
 
 filelist=`all_filenames`
 
-if [ "$_stupid" = "yes" -o "$_res" = "yes" ] ; then
+case "$_stupid$_res$_depr$_gnu" in
+    *yes*)
     # generate 'shortlist' to avoid false positives in xpm files, docs, etc,
     # when one only needs to check .c and .h files
     chfilelist=`echo $filelist | tr ' ' '\n' | grep "[\.][ch]$"`
-fi
+    ;;
+esac
 
 if [ "$_showcont" = "yes" ]; then
   _diffopts="-u"
@@ -247,9 +253,9 @@ fi
 
 # -----------------------------------------------------------------------------
 
-if [ "$_gnu" = "yes" ]; then
+if [ "$_gnu" = "yes" -a -n "$chfilelist" ]; then
     printhead "checking for GNUisms ..."
-    grep $_grepopts "case.*\.\.\..*:" $filelist
+    grep $_grepopts "case.*\.\.\..*:" $chfilelist
 fi
 
 # -----------------------------------------------------------------------------
@@ -325,3 +331,20 @@ if [ "$_stupid" = "yes" -a -n "$chfilelist" ]; then
 fi
 
 # -----------------------------------------------------------------------------
+
+if [ "$_depr" = "yes" -a -n "$chfilelist" ]; then
+    printhead "checking for deprecated and obsolete function calls ..."
+
+    for i in bcmp bcopy bzero getcwd getipnodebyname inet_ntoa inet_addr \
+        atoq ecvt fcvt ecvt_r fcvt_r qecvt_r qfcvt_r finite ftime gcvt herror \
+        hstrerror getpass getpw getutent getutid getutline pututline setutent \
+        endutent utmpname gsignal ssignal gsignal_r ssignal_r infnan memalign \
+        valloc re_comp re_exec drem dremf dreml rexec svc_getreq sigset \
+        sighold sigrelse sigignore sigvec sigmask sigblock sigsetmask \
+        siggetmask ualarm ulimit usleep statfs fstatfs ustat get_kernel_syms \
+        query_module sbrk tempnam tmpnam mktemp mkstemp
+    do
+        printhead "--> $i()"
+        grep $_grepopts "[^a-zA-Z0-9]$i[ $TAB]*(" $chfilelist
+    done
+fi

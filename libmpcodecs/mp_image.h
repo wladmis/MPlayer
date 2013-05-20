@@ -1,5 +1,10 @@
-#ifndef MP_IMAGE_H
-#define MP_IMAGE_H
+#ifndef MPLAYER_MP_IMAGE_H
+#define MPLAYER_MP_IMAGE_H
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "mp_msg.h"
 
 //--------- codec's requirements (filled by the codec/vf) ---------
 
@@ -61,6 +66,8 @@
 #define MP_IMGTYPE_IP 3
 // I+P+B type, requires 2+ independent static R/W and 1+ temp WO buffers
 #define MP_IMGTYPE_IPB 4
+// Upper 16 bits give desired buffer number, -1 means get next available
+#define MP_IMGTYPE_NUMBERED 5
 
 #define MP_MAX_PLANES	4
 
@@ -72,8 +79,9 @@
 #define MP_IMGFIELD_INTERLACED 0x20
 
 typedef struct mp_image_s {
-    unsigned short flags;
+    unsigned int flags;
     unsigned char type;
+    int number;
     unsigned char bpp;  // bits/pixel. NOT depth! for RGB it will be n*8
     unsigned int imgfmt;
     int width,height;  // stored dimensions
@@ -91,6 +99,7 @@ typedef struct mp_image_s {
     int chroma_height;
     int chroma_x_shift; // horizontal
     int chroma_y_shift; // vertical
+    int usage_count;
     /* for private use by filter or vo driver (to store buffer id or dmpi) */
     void* priv;
 } mp_image_t;
@@ -99,17 +108,10 @@ typedef struct mp_image_s {
 static inline void mp_image_setfmt(mp_image_t* mpi,unsigned int out_fmt){
     mpi->flags&=~(MP_IMGFLAG_PLANAR|MP_IMGFLAG_YUV|MP_IMGFLAG_SWAPPED);
     mpi->imgfmt=out_fmt;
-    if(out_fmt == IMGFMT_MPEGPES){
-	mpi->bpp=0;
-	return;
-    }
-    if(out_fmt == IMGFMT_ZRMJPEGNI ||
-	    out_fmt == IMGFMT_ZRMJPEGIT ||
-	    out_fmt == IMGFMT_ZRMJPEGIB){
-	mpi->bpp=0;
-	return;
-    }
-    if(IMGFMT_IS_XVMC(out_fmt)){
+    // compressed formats
+    if(out_fmt == IMGFMT_MPEGPES ||
+       out_fmt == IMGFMT_ZRMJPEGNI || out_fmt == IMGFMT_ZRMJPEGIT || out_fmt == IMGFMT_ZRMJPEGIB ||
+       IMGFMT_IS_VDPAU(out_fmt) || IMGFMT_IS_XVMC(out_fmt)){
 	mpi->bpp=0;
 	return;
     }
@@ -202,7 +204,7 @@ static inline void mp_image_setfmt(mp_image_t* mpi,unsigned int out_fmt){
 	mpi->chroma_y_shift=1;
 	return;
     }
-    fprintf(stderr,"mp_image: unknown out_fmt: 0x%X\n",out_fmt);
+    mp_msg(MSGT_DECVIDEO,MSGL_WARN,"mp_image: unknown out_fmt: 0x%X\n",out_fmt);
     mpi->bpp=0;
 }
 #endif
@@ -228,4 +230,4 @@ static inline void free_mp_image(mp_image_t* mpi){
 mp_image_t* alloc_mpi(int w, int h, unsigned long int fmt);
 void copy_mpi(mp_image_t *dmpi, mp_image_t *mpi);
 
-#endif
+#endif /* MPLAYER_MP_IMAGE_H */

@@ -2,14 +2,14 @@
  * ioctl.c: DVD ioctl replacement function
  *****************************************************************************
  * Copyright (C) 1999-2001 VideoLAN
- * $Id: ioctl.c 20629 2006-11-03 12:25:56Z diego $
+ * $Id: ioctl.c 27494 2008-08-29 20:22:36Z diego $
  *
  * Authors: Markus Kuespert <ltlBeBoy@beosmail.com>
- *          Samuel Hocevar <sam@zoy.org>
+ *          Sam Hocevar <sam@zoy.org>
  *          Jon Lech Johansen <jon-vl@nanocrew.net>
- *          Håkan Hjort <d95hjort@dtek.chalmers.se>
+ *          HÃ¥kan Hjort <d95hjort@dtek.chalmers.se>
  *          Eugenio Jarosiewicz <ej0@cise.ufl.edu>
- *          David Siebörger <drs-videolan@rucus.ru.ac.za>
+ *          David SiebÃ¶rger <drs-videolan@rucus.ru.ac.za>
  *          Alex Strelnikov <lelik@os2.ru>
  *          Gildas Bazin <gbazin@netcourrier.com>
  *

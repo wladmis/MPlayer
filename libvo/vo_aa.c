@@ -1,13 +1,23 @@
 /*
- * MPlayer
- * 
- * Video driver for AAlib - 1.0
- * 
- * by Folke Ashberg <folke@ashberg.de>
- * 
- * Code started: Sun Aug 12 2001
- * Version 1.0 : Thu Aug 16 2001
+ * video output driver for AAlib
  *
+ * copyright (c) 2001 Folke Ashberg <folke@ashberg.de>
+ *
+ * This file is part of MPlayer.
+ *
+ * MPlayer is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * MPlayer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with MPlayer; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 #include <stdio.h>
@@ -44,14 +54,14 @@
 #define MESSAGE_SIZE 512
 #define MESSAGE_DEKO " +++ %s +++ "
 
-	static vo_info_t info = {
+	static const vo_info_t info = {
 	    "AAlib",
 	    "aa",
 	    "Alban Bedel <albeu@free.fr> and Folke Ashberg <folke@ashberg.de>",
 	    ""
 	};
 
-LIBVO_EXTERN(aa)
+const LIBVO_EXTERN(aa)
 
 /* aa's main context we use */
 aa_context *c;
@@ -237,7 +247,7 @@ config(uint32_t width, uint32_t height, uint32_t d_width,
     /* nothing will change its size, be we need some values initialized */
     resize();
 
-    /* now init out own 'font' (to use vo_draw_text_sub without edit them) */
+    /* now init our own 'font' */
     if(!vo_font_save) vo_font_save = vo_font;
     if(vo_font == vo_font_save) {
       vo_font=malloc(sizeof(font_desc_t));//if(!desc) return NULL;
@@ -247,7 +257,7 @@ config(uint32_t width, uint32_t height, uint32_t d_width,
       vo_font->pic_b[0]=malloc(sizeof(raw_file));
       memset(vo_font->pic_b[0],0,sizeof(raw_file));
 
-#ifdef HAVE_FREETYPE
+#ifdef CONFIG_FREETYPE
       vo_font->dynamic = 0;
 #endif
 
@@ -568,19 +578,19 @@ static int parse_suboptions(const char *arg) {
     char *pseudoargv[4], *osdcolor = NULL, *subcolor = NULL, **strings,
          *helpmsg = NULL;
     int pseudoargc, displayhelp = 0, *booleans;
-    opt_t extra_opts[] = {
-            {"osdcolor", OPT_ARG_MSTRZ, &osdcolor,    NULL, 0},
-            {"subcolor", OPT_ARG_MSTRZ, &subcolor,    NULL, 0},
-            {"help",     OPT_ARG_BOOL,  &displayhelp, NULL, 0} };
+    const opt_t extra_opts[] = {
+            {"osdcolor", OPT_ARG_MSTRZ, &osdcolor,    NULL},
+            {"subcolor", OPT_ARG_MSTRZ, &subcolor,    NULL},
+            {"help",     OPT_ARG_BOOL,  &displayhelp, NULL} };
     opt_t *subopts = NULL, *p;
-    char *strings_list[] = {"-driver", "-kbddriver", "-mousedriver", "-font",
+    char * const strings_list[] = {"-driver", "-kbddriver", "-mousedriver", "-font",
         "-width", "-height", "-minwidth", "-minheight", "-maxwidth",
         "-maxheight", "-recwidth", "-recheight", "-bright",  "-contrast",
         "-gamma",  "-dimmul", "-boldmul", "-random" };
-    char *booleans_list[] = {"-dim", "-bold", "-reverse", "-normal",
+    char * const booleans_list[] = {"-dim", "-bold", "-reverse", "-normal",
         "-boldfont", "-inverse", "-extended", "-eight", "-dither",
         "-floyd_steinberg", "-error_distribution"};
-    char *nobooleans_list[] = {"-nodim", "-nobold", "-noreverse", "-nonormal",
+    char * const nobooleans_list[] = {"-nodim", "-nobold", "-noreverse", "-nonormal",
         "-noboldfont", "-noinverse", "-noextended", "-noeight", "-nodither",
         "-nofloyd_steinberg", "-noerror_distribution"};
     const int nstrings = sizeof(strings_list) / sizeof(char*);

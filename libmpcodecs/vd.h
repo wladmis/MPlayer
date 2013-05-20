@@ -1,6 +1,10 @@
+#ifndef MPLAYER_VD_H
+#define MPLAYER_VD_H
 
 #include "mp_image.h"
 #include "mpc_info.h"
+#include "libmpdemux/stheader.h"
+
 typedef mp_codec_info_t vd_info_t;
 
 /* interface of video decoder drivers */
@@ -14,7 +18,7 @@ typedef struct vd_functions_s
 } vd_functions_t;
 
 // NULL terminated array of all drivers
-extern vd_functions_t* mpcodecs_vd_drivers[];
+extern const vd_functions_t * const mpcodecs_vd_drivers[];
 
 extern int vd_use_slices;
 
@@ -32,3 +36,5 @@ mp_image_t* mpcodecs_get_image(sh_video_t *sh, int mp_imgtype, int mp_imgflag, i
 void mpcodecs_draw_slice(sh_video_t *sh, unsigned char** src, int* stride, int w,int h, int x, int y);
 
 #define VDFLAGS_DROPFRAME 3
+
+#endif /* MPLAYER_VD_H */

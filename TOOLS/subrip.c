@@ -1,4 +1,3 @@
-/* -*- compile-command: "gcc -g -Wall -I.. -o subrip subrip.c ../vobsub.o ../spudec.o ../mp_msg.o ../unrarlib.o ../libswscale/swscale.o ../libswscale/rgb2rgb.o ../libswscale/yuv2rgb.o ../libmpcodecs/img_format.o -lm" -*- */
 /*
  * Use with CVS JOCR/GOCR.
  *
@@ -21,8 +20,6 @@
 #include "libvo/video_out.h"
 #include "vobsub.h"
 #include "spudec.h"
-
-void guiMessageBox(int level, char * str) {};
 
 /* XXX Kludge ahead, this MUST be the same as the definitions found in ../spudec.c */
 typedef struct packet_t packet_t;
@@ -71,13 +68,10 @@ typedef struct {
   unsigned char *scaled_aimage;
   int auto_palette; /* 1 if we lack a palette and must use an heuristic. */
   int font_start_level;  /* Darkest value used for the computed font */
-  vo_functions_t *hw_spu;
+  const vo_functions_t *hw_spu;
   int spu_changed;
 } spudec_handle_t;
 
-int use_gui;
-int gtkMessageBox;
-int identify=0;
 int vobsub_id=0;
 int sub_pos=0;
 
@@ -186,12 +180,6 @@ draw_alpha(int x0, int y0, int w, int h, unsigned char *src, unsigned char *srca
     process_gocr_output(tmpfname, spudec->start_pts, spudec->end_pts);
     unlink(buf);
     unlink(tmpfname);
-}
-
-void
-fast_memcpy(void *a, void *b, int s)
-{ //FIXME
-    memcpy(a, b, s);
 }
 
 int

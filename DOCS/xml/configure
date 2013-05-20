@@ -11,7 +11,7 @@ for _try_catalog in \
   /etc/sgml/catalog \
   /usr/share/xml/docbook/*/catalog.xml \
   /opt/local/share/xml/docbook-xml/*/catalog.xml \
-  /usr/share/sgml/docbook/xml-dtd-4.1.2/xmlcatalog \
+  /usr/share/sgml/docbook/*/*catalog \
   /usr/share/apps/ksgmltools2/customization/en/catalog \
   /usr/share/sgml/catalog \
   /usr/local/share/sgml/catalog \
@@ -40,6 +40,7 @@ fi
 echo "Searching for stylesheets..."
 echo "Searching for html/chunk.xsl..."
 for _try_chunk_xsl in \
+  /usr/share/xml/docbook/*/html/chunk.xsl \
   /usr/share/sgml/docbook/stylesheet/xsl/nwalsh/html/chunk.xsl \
   /usr/share/sgml/docbook/yelp/docbook/html/chunk.xsl \
   /usr/local/share/sgml/docbook/stylesheet/xsl/nwalsh/html/chunk.xsl \
@@ -68,6 +69,7 @@ fi
 
 echo "Searching for html/docbook.xsl..."
 for _try_docbook_xsl in \
+  /usr/share/xml/docbook/*/html/docbook.xsl \
   /usr/share/sgml/docbook/stylesheet/xsl/nwalsh/html/docbook.xsl \
   /usr/share/sgml/docbook/yelp/docbook/html/docbook.xsl \
   /usr/local/share/sgml/docbook/stylesheet/xsl/nwalsh/html/docbook.xsl \
@@ -132,7 +134,7 @@ for _try_dtd in \
   /usr/share/sgml/docbook/dtd/*/docbookx.dtd \
   /usr/share/sgml/docbook/dtd/xml/*/docbookx.dtd \
   /usr/share/docbook-xml*/docbookx.dtd \
-  /opt/local/share/xml/docbook-xml/*/docbookx.dtd \
+  /opt/local/share/xml/docbook*/*/docbookx.dtd \
   /usr/share/apps/ksgmltools2/docbook/*/docbookx.dtd
 do
   if test -f "$_try_dtd"
@@ -150,7 +152,7 @@ else
   echo "Found docbookx.dtd at $_dtd"
 fi
 
-for lang in `grep 'SUBDIRS =' Makefile|cut -d= -f2`; do
+for lang in `grep 'DOC_LANGS =' ../../config.mak|cut -d= -f2`; do
   cat > $lang/main.xml << EOF
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <!-- **************************************************
@@ -184,11 +186,13 @@ then
   if test -z "$_fake_chunk_xsl"
   then
     echo "Found xsltproc. If it works, it's probably the best choice."
+    # HACK: xslt always need a target file if a doctype is set
+    _xsltcommand="OUTPUT=\"\$1\"; if test -d \"\$OUTPUT\" ; then OUTPUT=\"\$OUTPUT/dummy.html\" ; fi;"
     if test -n "$_catalog"
     then
-      _xsltcommand="xsltproc --catalogs -o \$1 \$2 \$3"
+      _xsltcommand="$_xsltcommand xsltproc --catalogs -o \$OUTPUT \$2 \$3"
     else
-      _xsltcommand="xsltproc -o \$1 \$2 \$3"
+      _xsltcommand="$_xsltcommand xsltproc -o \$OUTPUT \$2 \$3"
     fi
   else
     echo "Found xsltproc but no stylesheets on your system."

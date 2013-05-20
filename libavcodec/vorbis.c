@@ -1,5 +1,5 @@
 /**
- * @file vorbis.c
+ * @file libavcodec/vorbis.c
  * Common code for Vorbis I encoder and decoder
  * @author Denes Balatoni  ( dbalatoni programozo hu )
 
@@ -40,11 +40,14 @@ unsigned int ff_vorbis_nth_root(unsigned int x, unsigned int n) {   // x^(1/n)
         for(i=0,j=ret;i<n-1;i++) j*=ret;
     } while (j<=x);
 
-    return (ret-1);
+    return ret - 1;
 }
 
 // Generate vlc codes from vorbis huffman code lengths
 
+// the two bits[p] > 32 checks should be redundant, all calling code should
+// already ensure that, but since it allows overwriting the stack it seems
+// reasonable to check redundantly.
 int ff_vorbis_len2vlc(uint8_t *bits, uint32_t *codes, uint_fast32_t num) {
     uint_fast32_t exit_at_level[33]={404,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
         0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
@@ -63,6 +66,7 @@ int ff_vorbis_len2vlc(uint8_t *bits, uint32_t *codes, uint_fast32_t num) {
     }
 
     codes[p]=0;
+    if (bits[p] > 32) return 1;
     for(i=0;i<bits[p];++i) {
         exit_at_level[i+1]=1<<i;
     }
@@ -79,6 +83,7 @@ int ff_vorbis_len2vlc(uint8_t *bits, uint32_t *codes, uint_fast32_t num) {
     ++p;
 
     for(;p<num;++p) {
+        if (bits[p] > 32) return 1;
         if (bits[p]==0) continue;
         // find corresponding exit(node which the tree can grow further from)
         for(i=bits[p];i>0;--i) {
@@ -111,7 +116,7 @@ int ff_vorbis_len2vlc(uint8_t *bits, uint32_t *codes, uint_fast32_t num) {
     return 0;
 }
 
-void ff_vorbis_ready_floor1_list(floor1_entry_t * list, int values) {
+void ff_vorbis_ready_floor1_list(vorbis_floor1_entry * list, int values) {
     int i;
     list[0].sort = 0;
     list[1].sort = 1;
@@ -141,45 +146,42 @@ void ff_vorbis_ready_floor1_list(floor1_entry_t * list, int values) {
     }
 }
 
-static void render_line(int x0, int y0, int x1, int y1, float * buf, int n) {
+static void render_line(int x0, int y0, int x1, int y1, float * buf) {
     int dy = y1 - y0;
     int adx = x1 - x0;
-    int ady = FFABS(dy);
     int base = dy / adx;
+    int ady = FFABS(dy) - FFABS(base) * adx;
     int x = x0;
     int y = y0;
     int err = 0;
-    int sy;
-    if (dy < 0) sy = base - 1;
-    else        sy = base + 1;
-    ady = ady - FFABS(base) * adx;
-    if (x >= n) return;
+    int sy = dy<0 ? -1 : 1;
     buf[x] = ff_vorbis_floor1_inverse_db_table[y];
-    for (x = x0 + 1; x < x1; x++) {
-        if (x >= n) return;
+    while (++x < x1) {
         err += ady;
         if (err >= adx) {
             err -= adx;
             y += sy;
-        } else {
-            y += base;
         }
+        y += base;
         buf[x] = ff_vorbis_floor1_inverse_db_table[y];
     }
 }
 
-void ff_vorbis_floor1_render_list(floor1_entry_t * list, int values, uint_fast16_t * y_list, int * flag, int multiplier, float * out, int samples) {
+void ff_vorbis_floor1_render_list(vorbis_floor1_entry * list, int values, uint_fast16_t * y_list, int * flag, int multiplier, float * out, int samples) {
     int lx, ly, i;
     lx = 0;
     ly = y_list[0] * multiplier;
     for (i = 1; i < values; i++) {
         int pos = list[i].sort;
         if (flag[pos]) {
-            render_line(lx, ly, list[pos].x, y_list[pos] * multiplier, out, samples);
-            lx = list[pos].x;
-            ly = y_list[pos] * multiplier;
+            int x1 = list[pos].x;
+            int y1 = y_list[pos] * multiplier;
+            if (lx < samples)
+                render_line(lx, ly, FFMIN(x1,samples), y1, out);
+            lx = x1;
+            ly = y1;
         }
         if (lx >= samples) break;
     }
-    if (lx < samples) render_line(lx, ly, samples, ly, out, samples);
+    if (lx < samples) render_line(lx, ly, samples, ly, out);
 }

@@ -4,13 +4,13 @@
 #include <inttypes.h>
 
 #include "loader/wine/mmreg.h"
-#include "loader/wine/avifmt.h"
 #include "loader/wine/vfw.h"
 
 #include "stream/stream.h"
 #include "libmpdemux/muxer.h"
 #include "libmpdemux/demuxer.h"
 
+/* linking hacks */
 char *info_name;
 char *info_artist;
 char *info_genre;
@@ -18,6 +18,10 @@ char *info_subject;
 char *info_copyright;
 char *info_sourceform;
 char *info_comment;
+
+char* out_filename = NULL;
+char* force_fourcc=NULL;
+char* passtmpfile="divx2pass.log";
 
 static const short h263_format[8][2] = {
     { 0, 0 },
@@ -34,7 +38,7 @@ int bufptr=0;
 int bitcnt=0;
 unsigned char buf=0;
 
-unsigned int x_get_bits(int n){
+static unsigned int x_get_bits(int n){
     unsigned int x=0;
     while(n-->0){
 	if(!bitcnt){
@@ -59,7 +63,7 @@ int width=320;
 int height=240;
 
 /* most is hardcoded. should extend to handle all h263 streams */
-int h263_decode_picture_header(unsigned char *b_ptr)
+static int h263_decode_picture_header(unsigned char *b_ptr)
 {
     int i;
         
@@ -210,14 +214,14 @@ for(i=0;i<len;i++) fgetc(f);
 
 while((c=fgetc(f))>=0){
 
-    printf("%08X  %02X\n",ftell(f),c);
+    printf("%08lX  %02X\n",ftell(f),c);
 
     prefix=0;
     if(c==0x82){
 	prefix=1;
 	//continue;
 	c=fgetc(f);
-	printf("%08X  %02X\n",ftell(f),c);
+	printf("%08lX  %02X\n",ftell(f),c);
     }
 
     if(c==0x00){

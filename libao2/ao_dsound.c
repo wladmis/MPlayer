@@ -1,22 +1,25 @@
-/******************************************************************************
- * ao_dsound.c: Windows DirectSound interface for MPlayer
+/*
+ * Windows DirectSound interface
+ *
  * Copyright (c) 2004 Gabor Szecsi <deje@miki.hu>
  *
- * This program is free software; you can redistribute it and/or modify
+ * This file is part of MPlayer.
+ *
+ * MPlayer is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
+ * MPlayer is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
- *****************************************************************************/
+ * You should have received a copy of the GNU General Public License along
+ * with MPlayer; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ */
+
 /**
 \todo verify/extend multichannel support
 */
@@ -39,7 +42,7 @@
 #include "subopt-helper.h"
 
 
-static ao_info_t info =
+static const ao_info_t info =
 {
 	"Windows DirectSound audio output",
 	"dsound",
@@ -428,7 +431,7 @@ static int init(int rate, int channels, int format, int flags)
 		case AF_FORMAT_AC3:
 		case AF_FORMAT_S24_LE:
 		case AF_FORMAT_S16_LE:
-		case AF_FORMAT_S8:
+		case AF_FORMAT_U8:
 			break;
 		default:
 			mp_msg(MSGT_AO, MSGL_V,"ao_dsound: format %s not supported defaulting to Signed 16-bit Little-Endian\n",af_fmt2str_short(format));
