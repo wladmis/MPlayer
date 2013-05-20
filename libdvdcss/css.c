@@ -2,7 +2,7 @@
  * css.c: Functions for DVD authentication and descrambling
  *****************************************************************************
  * Copyright (C) 1999-2008 VideoLAN
- * $Id: css.c 27494 2008-08-29 20:22:36Z diego $
+ * $Id: css.c 31890 2010-08-01 20:10:42Z siretart $
  *
  * Authors: Stéphane Borel <stef@via.ecp.fr>
  *          Håkan Hjort <d95hjort@dtek.chalmers.se>
@@ -16,19 +16,19 @@
  *  - DecVOB
  *  see http://www.lemuria.org/DeCSS/ by Tom Vogt for more information.
  *
- * This program is free software; you can redistribute it and/or modify
+ * This library is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
+ * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * You should have received a copy of the GNU General Public License along
+ * with this library; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -89,40 +89,75 @@ static int  AttackPadding   ( uint8_t const[], int, uint8_t * );
 
 /*****************************************************************************
  * _dvdcss_test: check if the disc is encrypted or not
+ *****************************************************************************
+ * Sets b_scrambled, b_ioctls
  *****************************************************************************/
-int _dvdcss_test( dvdcss_t dvdcss )
+void _dvdcss_test( dvdcss_t dvdcss )
 {
-    int i_ret, i_copyright;
+    char const *psz_type, *psz_rpc;
+    int i_ret, i_copyright, i_type, i_mask, i_rpc;
 
     i_ret = ioctl_ReadCopyright( dvdcss->i_fd, 0 /* i_layer */, &i_copyright );
 
-#ifdef WIN32
     if( i_ret < 0 )
     {
         /* Maybe we didn't have enough privileges to read the copyright
          * (see ioctl_ReadCopyright comments).
          * Apparently, on unencrypted DVDs _dvdcss_disckey() always fails, so
          * we can check this as a workaround. */
+#ifdef WIN32
         i_ret = 0;
+#else
+        /* Since it's the first ioctl we try to issue, we add a notice */
+        print_error( dvdcss, "css error: could not get \"copyright\""
+                     " information, make sure there is a DVD in the drive,"
+                     " and that you have used the correct device node." );
+        /* Try without ioctls */
+        dvdcss->b_ioctls = 0;
+#endif
         i_copyright = 1;
         if( _dvdcss_disckey( dvdcss ) < 0 )
         {
             i_copyright = 0;
         }
     }
-#endif
+
+    print_debug( dvdcss, "disc reports copyright information 0x%x",
+                         i_copyright );
+    dvdcss->b_scrambled = i_copyright;
+
+    i_ret = ioctl_ReportRPC( dvdcss->i_fd, &i_type, &i_mask, &i_rpc);
 
     if( i_ret < 0 )
     {
-        /* Since it's the first ioctl we try to issue, we add a notice */
-        print_error( dvdcss, "css error: ioctl_ReadCopyright failed, "
-                     "make sure there is a DVD in the drive, and that "
-                     "you have used the correct device node." );
-
-        return i_ret;
+        print_error( dvdcss, "css error: could not get RPC status, region-free drive?" );
+        return;
     }
 
-    return i_copyright;
+    switch( i_rpc )
+    {
+        case 0: psz_rpc = "RPC-I"; break;
+        case 1: psz_rpc = "RPC-II"; break;
+        default: psz_rpc = "unknown RPC scheme"; break;
+    }
+
+    switch( i_type )
+    {
+        case 0: psz_type = "no region code set"; break;
+        case 1: psz_type = "region code set"; break;
+        case 2: psz_type = "one region change remaining"; break;
+        case 3: psz_type = "region code set permanently"; break;
+        default: psz_type = "unknown status"; break;
+    }
+
+    print_debug( dvdcss, "drive region mask 0x%x, %s, %s",
+                         i_mask, psz_rpc, psz_type );
+
+    if( i_copyright && i_rpc == 1 && i_type == 0 )
+    {
+        print_error( dvdcss, "css error: drive will prevent access to "
+                             "scrambled data" );
+    }
 }
 
 /*****************************************************************************
@@ -379,7 +414,7 @@ int _dvdcss_titlekey( dvdcss_t dvdcss, int i_pos, dvd_key_t p_title_key )
         /* We need to authenticate again every time to get a new session key */
         if( GetBusKey( dvdcss ) < 0 )
         {
-            return -1;
+            i_ret = -1;
         }
 
         /* Get encrypted title key */
