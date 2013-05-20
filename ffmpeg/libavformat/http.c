@@ -54,9 +54,6 @@ typedef struct {
     int chunked_post;
     int end_chunked_post;   /**< A flag which indicates if the end of chunked encoding has been sent. */
     int end_header;         /**< A flag which indicates we have finished to read POST reply. */
-    int multiple_requests;  /**< A flag which indicates if we use persistent connections. */
-    uint8_t *post_data;
-    int post_datalen;
 } HTTPContext;
 
 #define OFFSET(x) offsetof(HTTPContext, x)
@@ -67,8 +64,6 @@ static const AVOption options[] = {
 {"chunked_post", "use chunked transfer-encoding for posts", OFFSET(chunked_post), AV_OPT_TYPE_INT, {.dbl = 1}, 0, 1, E },
 {"headers", "custom HTTP headers, can override built in default headers", OFFSET(headers), AV_OPT_TYPE_STRING, { 0 }, 0, 0, D|E },
 {"user-agent", "override User-Agent header", OFFSET(user_agent), AV_OPT_TYPE_STRING, {.str = NULL}, 0, 0, DEC},
-{"multiple_requests", "use persistent connections", OFFSET(multiple_requests), AV_OPT_TYPE_INT, {.dbl = 0}, 0, 1, D|E },
-{"post_data", "custom HTTP post data", OFFSET(post_data), AV_OPT_TYPE_BINARY, .flags = D|E },
 {NULL}
 };
 #define HTTP_CLASS(flavor)\
@@ -106,6 +101,7 @@ static int http_open_cnx(URLContext *h)
     int port, use_proxy, err, location_changed = 0, redirects = 0, attempts = 0;
     HTTPAuthType cur_auth_type, cur_proxy_auth_type;
     HTTPContext *s = h->priv_data;
+    URLContext *hd = NULL;
 
     proxy_path = getenv("http_proxy");
     use_proxy = (proxy_path != NULL) && !getenv("no_proxy") &&
@@ -144,14 +140,12 @@ static int http_open_cnx(URLContext *h)
     }
 
     ff_url_join(buf, sizeof(buf), lower_proto, NULL, hostname, port, NULL);
+    err = ffurl_open(&hd, buf, AVIO_FLAG_READ_WRITE,
+                     &h->interrupt_callback, NULL);
+    if (err < 0)
+        goto fail;
 
-    if (!s->hd) {
-        err = ffurl_open(&s->hd, buf, AVIO_FLAG_READ_WRITE,
-                         &h->interrupt_callback, NULL);
-        if (err < 0)
-            goto fail;
-    }
-
+    s->hd = hd;
     cur_auth_type = s->auth_state.auth_type;
     cur_proxy_auth_type = s->auth_state.auth_type;
     if (http_connect(h, path, local_path, hoststr, auth, proxyauth, &location_changed) < 0)
@@ -160,7 +154,7 @@ static int http_open_cnx(URLContext *h)
     if (s->http_code == 401) {
         if ((cur_auth_type == HTTP_AUTH_NONE || s->auth_state.stale) &&
             s->auth_state.auth_type != HTTP_AUTH_NONE && attempts < 4) {
-            ffurl_closep(&s->hd);
+            ffurl_close(hd);
             goto redo;
         } else
             goto fail;
@@ -168,7 +162,7 @@ static int http_open_cnx(URLContext *h)
     if (s->http_code == 407) {
         if ((cur_proxy_auth_type == HTTP_AUTH_NONE || s->proxy_auth_state.stale) &&
             s->proxy_auth_state.auth_type != HTTP_AUTH_NONE && attempts < 4) {
-            ffurl_closep(&s->hd);
+            ffurl_close(hd);
             goto redo;
         } else
             goto fail;
@@ -176,7 +170,7 @@ static int http_open_cnx(URLContext *h)
     if ((s->http_code == 301 || s->http_code == 302 || s->http_code == 303 || s->http_code == 307)
         && location_changed == 1) {
         /* url moved, get next */
-        ffurl_closep(&s->hd);
+        ffurl_close(hd);
         if (redirects++ >= MAX_REDIRECTS)
             return AVERROR(EIO);
         /* Restart the authentication process with the new target, which
@@ -188,19 +182,10 @@ static int http_open_cnx(URLContext *h)
     }
     return 0;
  fail:
-    if (s->hd)
-        ffurl_closep(&s->hd);
+    if (hd)
+        ffurl_close(hd);
+    s->hd = NULL;
     return AVERROR(EIO);
-}
-
-int ff_http_do_new_request(URLContext *h, const char *uri)
-{
-    HTTPContext *s = h->priv_data;
-
-    s->off = 0;
-    av_strlcpy(s->location, uri, sizeof(s->location));
-
-    return http_open_cnx(h);
 }
 
 static int http_open(URLContext *h, const char *uri, int flags)
@@ -226,7 +211,7 @@ static int http_getc(HTTPContext *s)
     if (s->buf_ptr >= s->buf_end) {
         len = ffurl_read(s->hd, s->buffer, BUFFER_SIZE);
         if (len < 0) {
-            return len;
+            return AVERROR(EIO);
         } else if (len == 0) {
             return -1;
         } else {
@@ -246,7 +231,7 @@ static int http_get_line(HTTPContext *s, char *line, int line_size)
     for(;;) {
         ch = http_getc(s);
         if (ch < 0)
-            return ch;
+            return AVERROR(EIO);
         if (ch == '\n') {
             /* process line */
             if (q > line && q[-1] == '\r')
@@ -353,8 +338,8 @@ static int http_read_header(URLContext *h, int *new_location)
     int err = 0;
 
     for (;;) {
-        if ((err = http_get_line(s, line, sizeof(line))) < 0)
-            return err;
+        if (http_get_line(s, line, sizeof(line)) < 0)
+            return AVERROR(EIO);
 
         av_dlog(NULL, "header='%s'\n", line);
 
@@ -384,14 +369,6 @@ static int http_connect(URLContext *h, const char *path, const char *local_path,
 
     /* send http header */
     post = h->flags & AVIO_FLAG_WRITE;
-
-    if (s->post_data) {
-        /* force POST method and disable chunked encoding when
-         * custom HTTP post data is set */
-        post = 1;
-        s->chunked_post = 0;
-    }
-
     method = post ? "POST" : "GET";
     authstr = ff_http_auth_create_response(&s->auth_state, auth, local_path,
                                            method);
@@ -409,23 +386,12 @@ static int http_connect(URLContext *h, const char *path, const char *local_path,
     if (!has_header(s->headers, "\r\nRange: ") && !post)
         len += av_strlcatf(headers + len, sizeof(headers) - len,
                            "Range: bytes=%"PRId64"-\r\n", s->off);
-
-    if (!has_header(s->headers, "\r\nConnection: ")) {
-        if (s->multiple_requests) {
-            len += av_strlcpy(headers + len, "Connection: keep-alive\r\n",
-                              sizeof(headers) - len);
-        } else {
-            len += av_strlcpy(headers + len, "Connection: close\r\n",
-                              sizeof(headers) - len);
-        }
-    }
-
+    if (!has_header(s->headers, "\r\nConnection: "))
+        len += av_strlcpy(headers + len, "Connection: close\r\n",
+                          sizeof(headers)-len);
     if (!has_header(s->headers, "\r\nHost: "))
         len += av_strlcatf(headers + len, sizeof(headers) - len,
                            "Host: %s\r\n", hoststr);
-    if (!has_header(s->headers, "\r\nContent-Length: ") && s->post_data)
-        len += av_strlcatf(headers + len, sizeof(headers) - len,
-                           "Content-Length: %d\r\n", s->post_datalen);
 
     /* now add in custom headers */
     if (s->headers)
@@ -447,12 +413,8 @@ static int http_connect(URLContext *h, const char *path, const char *local_path,
 
     av_freep(&authstr);
     av_freep(&proxyauthstr);
-    if ((err = ffurl_write(s->hd, s->buffer, strlen(s->buffer))) < 0)
-        return err;
-
-    if (s->post_data)
-        if ((err = ffurl_write(s->hd, s->post_data, s->post_datalen)) < 0)
-            return err;
+    if (ffurl_write(s->hd, s->buffer, strlen(s->buffer)) < 0)
+        return AVERROR(EIO);
 
     /* init input buffer */
     s->buf_ptr = s->buffer;
@@ -462,8 +424,7 @@ static int http_connect(URLContext *h, const char *path, const char *local_path,
     s->filesize = -1;
     s->willclose = 0;
     s->end_chunked_post = 0;
-    s->end_header = 0;
-    if (post && !s->post_data) {
+    if (post) {
         /* Pretend that it did work. We didn't read any header yet, since
          * we've still to send the POST data, but the code calling this
          * function will check http_code after we return. */
@@ -526,8 +487,8 @@ static int http_read(URLContext *h, uint8_t *buf, int size)
 
             for(;;) {
                 do {
-                    if ((err = http_get_line(s, line, sizeof(line))) < 0)
-                        return err;
+                    if (http_get_line(s, line, sizeof(line)) < 0)
+                        return AVERROR(EIO);
                 } while (!*line);    /* skip CR LF from last chunk */
 
                 s->chunksize = strtoll(line, NULL, 16);
@@ -598,7 +559,7 @@ static int http_close(URLContext *h)
     }
 
     if (s->hd)
-        ffurl_closep(&s->hd);
+        ffurl_close(s->hd);
     return ret;
 }
 
@@ -669,7 +630,6 @@ URLProtocol ff_https_protocol = {
     .url_seek            = http_seek,
     .url_close           = http_close,
     .url_get_file_handle = http_get_file_handle,
-    .url_shutdown        = http_shutdown,
     .priv_data_size      = sizeof(HTTPContext),
     .priv_data_class     = &https_context_class,
     .flags               = URL_PROTOCOL_FLAG_NETWORK,
@@ -681,7 +641,7 @@ static int http_proxy_close(URLContext *h)
 {
     HTTPContext *s = h->priv_data;
     if (s->hd)
-        ffurl_closep(&s->hd);
+        ffurl_close(s->hd);
     return 0;
 }
 
@@ -752,7 +712,8 @@ redo:
     if (s->http_code == 407 &&
         (cur_auth_type == HTTP_AUTH_NONE || s->proxy_auth_state.stale) &&
         s->proxy_auth_state.auth_type != HTTP_AUTH_NONE && attempts < 2) {
-        ffurl_closep(&s->hd);
+        ffurl_close(s->hd);
+        s->hd = NULL;
         goto redo;
     }
 

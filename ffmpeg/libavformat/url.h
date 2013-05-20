@@ -179,12 +179,11 @@ int64_t ffurl_seek(URLContext *h, int64_t pos, int whence);
 
 /**
  * Close the resource accessed by the URLContext h, and free the
- * memory used by it. Also set the URLContext pointer to NULL.
+ * memory used by it.
  *
  * @return a negative value if an error condition occurred, 0
  * otherwise
  */
-int ffurl_closep(URLContext **h);
 int ffurl_close(URLContext *h);
 
 /**

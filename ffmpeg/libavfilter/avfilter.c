@@ -373,9 +373,10 @@ static const char *filter_name(void *p)
 }
 
 static const AVClass avfilter_class = {
-    .class_name = "AVFilter",
-    .item_name  = filter_name,
-    .version    = LIBAVUTIL_VERSION_INT,
+    "AVFilter",
+    filter_name,
+    NULL,
+    LIBAVUTIL_VERSION_INT,
 };
 
 int avfilter_open(AVFilterContext **filter_ctx, AVFilter *filter, const char *inst_name)

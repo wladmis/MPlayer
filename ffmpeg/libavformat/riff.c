@@ -199,7 +199,6 @@ const AVCodecTag ff_codec_bmp_tags[] = {
     { CODEC_ID_RAWVIDEO,     MKTAG('Y', 'U', 'V', '9') },
     { CODEC_ID_RAWVIDEO,     MKTAG('Y', 'V', 'U', '9') },
     { CODEC_ID_RAWVIDEO,     MKTAG('a', 'u', 'v', '2') },
-    { CODEC_ID_RAWVIDEO,     MKTAG('Y', 'V', 'Y', 'U') },
     { CODEC_ID_FRWU,         MKTAG('F', 'R', 'W', 'U') },
     { CODEC_ID_R10K,         MKTAG('R', '1', '0', 'k') },
     { CODEC_ID_R210,         MKTAG('r', '2', '1', '0') },
@@ -736,8 +735,13 @@ int ff_read_riff_info(AVFormatContext *s, int64_t size)
         chunk_code = avio_rl32(pb);
         chunk_size = avio_rl32(pb);
         if (chunk_size > end || end - chunk_size < cur || chunk_size == UINT_MAX) {
-            av_log(s, AV_LOG_ERROR, "too big INFO subchunk\n");
-            return AVERROR_INVALIDDATA;
+            avio_seek(pb, -9, SEEK_CUR);
+            chunk_code = avio_rl32(pb);
+            chunk_size = avio_rl32(pb);
+            if (chunk_size > end || end - chunk_size < cur || chunk_size == UINT_MAX) {
+                av_log(s, AV_LOG_ERROR, "too big INFO subchunk\n");
+                return AVERROR_INVALIDDATA;
+            }
         }
 
         chunk_size += (chunk_size & 1);
