@@ -39,6 +39,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "mp_msg.h"
 #include "af.h"
 #include "dsp.h"
 
@@ -109,10 +110,8 @@ static int control(struct af_instance_s* af, int cmd, void* arg)
     }
 
     // Free previous delay queues
-    if(s->dl)
-      free(s->dl);
-    if(s->dr)
-      free(s->dr);
+    free(s->dl);
+    free(s->dr);
     // Allocate new delay queues
     s->dl = calloc(LD,af->data->bps);
     s->dr = calloc(LD,af->data->bps);

@@ -28,9 +28,9 @@
 #include "img_format.h"
 #include "mp_image.h"
 #include "vf.h"
+#include "av_helpers.h"
 #include "libavcodec/avcodec.h"
 
-extern int avcodec_initialized;
 
 struct vf_priv_s {
     unsigned char* outbuf;
@@ -69,18 +69,13 @@ static int config(struct vf_instance *vf,
 	}
     }
 
-    if(vf->priv->outbuf) free(vf->priv->outbuf);
+    free(vf->priv->outbuf);
 
     vf->priv->outbuf_size=10000+width*height;  // must be enough!
     vf->priv->outbuf = malloc(vf->priv->outbuf_size);
 
-    if (avcodec_open(&lavc_venc_context, vf->priv->codec) != 0) {
+    if (avcodec_open2(&lavc_venc_context, vf->priv->codec, NULL) != 0) {
 	mp_msg(MSGT_MENCODER,MSGL_ERR,MSGTR_CantOpenCodec);
-	return 0;
-    }
-
-    if (lavc_venc_context.codec->encode == NULL) {
-	mp_msg(MSGT_MENCODER,MSGL_ERR,"avcodec init failed (ctx->codec->encode == NULL)!\n");
 	return 0;
     }
 
@@ -115,7 +110,7 @@ static int put_image(struct vf_instance *vf, mp_image_t *mpi, double pts){
 
     dmpi->planes[0]=(unsigned char*)&vf->priv->pes;
 
-    return vf_next_put_image(vf,dmpi, MP_NOPTS_VALUE);
+    return vf_next_put_image(vf,dmpi, pts);
 }
 
 //===========================================================================//
@@ -140,19 +135,15 @@ static int vf_open(vf_instance_t *vf, char *args){
     vf->priv=malloc(sizeof(struct vf_priv_s));
     memset(vf->priv,0,sizeof(struct vf_priv_s));
 
-    if (!avcodec_initialized){
-	avcodec_init();
-	avcodec_register_all();
-	avcodec_initialized=1;
-    }
+    init_avcodec();
 
-    vf->priv->codec = (AVCodec *)avcodec_find_encoder_by_name("mpeg1video");
+    vf->priv->codec = avcodec_find_encoder_by_name("mpeg1video");
     if (!vf->priv->codec) {
 	mp_msg(MSGT_MENCODER,MSGL_ERR,MSGTR_MissingLAVCcodec, "mpeg1video");
 	return 0;
     }
 
-    vf->priv->context=avcodec_alloc_context();
+    vf->priv->context=avcodec_alloc_context3(vf->priv->codec);
     vf->priv->pic = avcodec_alloc_frame();
 
     // TODO: parse args ->

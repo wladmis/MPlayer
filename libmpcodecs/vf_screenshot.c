@@ -69,13 +69,12 @@ static int config(struct vf_instance *vf,
     vf->priv->outbuffer = realloc(vf->priv->outbuffer, vf->priv->outbuffer_size);
     vf->priv->avctx->width = d_width;
     vf->priv->avctx->height = d_height;
-    vf->priv->avctx->pix_fmt = PIX_FMT_RGB24;
     vf->priv->avctx->compression_level = 0;
     vf->priv->dw = d_width;
     vf->priv->dh = d_height;
     vf->priv->stride = (3*vf->priv->dw+15)&~15;
 
-    if (vf->priv->buffer) free(vf->priv->buffer); // probably reconfigured
+    free(vf->priv->buffer); // probably reconfigured
     vf->priv->buffer = NULL;
 
     return vf_next_config(vf,width,height,d_width,d_height,flags,outfmt);
@@ -278,7 +277,7 @@ static void uninit(vf_instance_t *vf)
     avcodec_close(vf->priv->avctx);
     av_freep(&vf->priv->avctx);
     if(vf->priv->ctx) sws_freeContext(vf->priv->ctx);
-    if (vf->priv->buffer) av_free(vf->priv->buffer);
+    av_free(vf->priv->buffer);
     free(vf->priv->outbuffer);
     free(vf->priv);
 }
@@ -300,9 +299,10 @@ static int vf_open(vf_instance_t *vf, char *args)
     vf->priv->buffer=0;
     vf->priv->outbuffer=0;
     vf->priv->ctx=0;
-    vf->priv->avctx = avcodec_alloc_context();
+    vf->priv->avctx = avcodec_alloc_context3(NULL);
+    vf->priv->avctx->pix_fmt = PIX_FMT_RGB24;
     avcodec_register_all();
-    if (avcodec_open(vf->priv->avctx, avcodec_find_encoder(CODEC_ID_PNG))) {
+    if (avcodec_open2(vf->priv->avctx, avcodec_find_encoder(CODEC_ID_PNG), NULL)) {
         mp_msg(MSGT_VFILTER, MSGL_FATAL, "Could not open libavcodec PNG encoder\n");
         return 0;
     }

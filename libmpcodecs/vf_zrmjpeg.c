@@ -27,7 +27,7 @@
  */
 
 /**
- * \file vf_zrmjpeg.c
+ * \file
  *
  * \brief Does mjpeg encoding as required by the zrmjpeg filter as well
  * as by the zr video driver.
@@ -39,8 +39,8 @@
 #include <inttypes.h>
 
 #include "config.h"
+#include "av_helpers.h"
 #include "mp_msg.h"
-
 #include "img_format.h"
 #include "mp_image.h"
 #include "vf.h"
@@ -53,6 +53,7 @@
 
 #undef malloc
 #undef free
+#undef strcasecmp
 
 /* some convenient #define's, is this portable enough? */
 /// Printout  with vf_zrmjpeg: prefix at VERBOSE level
@@ -62,10 +63,6 @@
 /// Printout with vf_zrmjpeg: prefix at WARNING level
 #define WARNING(...) mp_msg(MSGT_DECVIDEO, MSGL_WARN, \
 		"vf_zrmjpeg: " __VA_ARGS__)
-
-// "local" flag in vd_ffmpeg.c. If not set, avcodec_init() et. al. need to be called
-// set when init is done, so that initialization is not done twice.
-extern int avcodec_initialized;
 
 /// The get_pixels() routine to use. The real routine comes from dsputil
 static void (*get_pixels)(DCTELEM *restrict block, const uint8_t *pixels, int line_size);
@@ -114,7 +111,7 @@ static void convert_matrix(MpegEncContext *s, int (*qmat)[64],
 
 	for(qscale = qmin; qscale <= qmax; qscale++) {
 		int i;
-		if (s->dsp.fdct == ff_jpeg_fdct_islow) {
+		if (s->dsp.fdct == ff_jpeg_fdct_islow_8) {
 			for (i = 0; i < 64; i++) {
 				const int j = s->dsp.idct_permutation[i];
 /* 16 <= qscale * quant_matrix[i] <= 7905
@@ -126,7 +123,7 @@ static void convert_matrix(MpegEncContext *s, int (*qmat)[64],
 					(QMAT_SHIFT-3))/
 					(qscale*quant_matrix[j]));
 			}
-		} else if (s->dsp.fdct == fdct_ifast) {
+		} else if (s->dsp.fdct == ff_fdct_ifast) {
 			for (i = 0; i < 64; i++) {
 				const int j = s->dsp.idct_permutation[i];
 /* 16 <= qscale * quant_matrix[i] <= 7905
@@ -450,7 +447,7 @@ static jpeg_enc_t *jpeg_enc_init(int w, int h, int y_rsize,
 	j->s->out_format = FMT_MJPEG;
 	j->s->intra_only = 1;		// Generate only intra pictures for jpeg
 	j->s->encoding = 1;		// Set mode to encode
-	j->s->pict_type = FF_I_TYPE;
+	j->s->pict_type = AV_PICTURE_TYPE_I;
 	j->s->y_dc_scale = 8;
 	j->s->c_dc_scale = 8;
 
@@ -473,15 +470,7 @@ static jpeg_enc_t *jpeg_enc_init(int w, int h, int y_rsize,
 	j->cheap_upsample = cu;
 	j->bw = b;
 
-	// Is this needed?
-	/* if libavcodec is used by the decoder then we must not
-	 * initialize again, but if it is not initialized then we must
-	 * initialize it here. */
-	if (!avcodec_initialized) {
-		avcodec_init();
-		avcodec_register_all();
-		avcodec_initialized=1;
-	}
+	init_avcodec();
 
 	// Build mjpeg huffman code tables, setting up j->s->mjpeg_ctx
 	if (ff_mjpeg_encode_init(j->s) < 0) {
@@ -511,7 +500,7 @@ static jpeg_enc_t *jpeg_enc_init(int w, int h, int y_rsize,
 
 	/* make MPV_common_init allocate important buffers, like s->block
 	 * Also initializes dsputil */
-	if (MPV_common_init(j->s) < 0) {
+	if (ff_MPV_common_init(j->s) < 0) {
 		av_free(j->s);
 		av_free(j);
 		return NULL;
@@ -919,14 +908,7 @@ static int vf_open(vf_instance_t *vf, char *args){
 	priv->hdec = 1;
 	priv->vdec = 1;
 
-	/* if libavcodec is already initialized, we must not initialize it
-	 * again, but if it is not initialized then we mustinitialize it now. */
-	if (!avcodec_initialized) {
-		/* we need to initialize libavcodec */
-		avcodec_init();
-		avcodec_register_all();
-		avcodec_initialized=1;
-	}
+	init_avcodec();
 
 	if (args) {
 		char *arg, *tmp, *ptr, junk;

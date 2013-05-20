@@ -86,7 +86,7 @@ static int init_audio_codec(sh_audio_t *sh_audio)
     /* allocate audio in buffer: */
     if (sh_audio->audio_in_minsize > 0) {
 	sh_audio->a_in_buffer_size = sh_audio->audio_in_minsize;
-	mp_msg(MSGT_DECAUDIO, MSGL_V, MSGTR_AllocatingBytesForInputBuffer,
+	mp_msg(MSGT_DECAUDIO, MSGL_V, "dec_audio: Allocating %d bytes for input buffer.\n",
 	       sh_audio->a_in_buffer_size);
 	sh_audio->a_in_buffer = av_mallocz(sh_audio->a_in_buffer_size);
 	sh_audio->a_in_buffer_len = 0;
@@ -94,7 +94,7 @@ static int init_audio_codec(sh_audio_t *sh_audio)
 
     sh_audio->a_buffer_size = sh_audio->audio_out_minsize + MAX_OUTBURST;
 
-    mp_msg(MSGT_DECAUDIO, MSGL_V, MSGTR_AllocatingBytesForOutputBuffer,
+    mp_msg(MSGT_DECAUDIO, MSGL_V, "dec_audio: Allocating %d + %d = %d bytes for output buffer.\n",
 	   sh_audio->audio_out_minsize, MAX_OUTBURST, sh_audio->a_buffer_size);
 
     sh_audio->a_buffer = av_mallocz(sh_audio->a_buffer_size);
@@ -305,7 +305,7 @@ void uninit_audio(sh_audio_t *sh_audio)
 	sh_audio->afilter = NULL;
     }
     if (sh_audio->initialized) {
-	mp_msg(MSGT_DECAUDIO, MSGL_V, MSGTR_UninitAudioStr,
+	mp_msg(MSGT_DECAUDIO, MSGL_V, "Uninit audio: %s\n",
 	       sh_audio->codec->drv);
 	sh_audio->ad_driver->uninit(sh_audio);
 #ifdef CONFIG_DYNAMIC_PLUGINS
@@ -345,7 +345,8 @@ int init_audio_filters(sh_audio_t *sh_audio, int in_samplerate,
     // filter config:
     memcpy(&afs->cfg, &af_cfg, sizeof(af_cfg_t));
 
-    mp_msg(MSGT_DECAUDIO, MSGL_V, MSGTR_BuildingAudioFilterChain,
+    mp_msg(MSGT_DECAUDIO, MSGL_V,
+           "Building audio filter chain for %dHz/%dch/%s -> %dHz/%dch/%s...\n",
 	   afs->input.rate, afs->input.nch,
 	   af_fmt2str_short(afs->input.format), afs->output.rate,
 	   afs->output.nch, af_fmt2str_short(afs->output.format));
@@ -361,7 +362,9 @@ int init_audio_filters(sh_audio_t *sh_audio, int in_samplerate,
     *out_channels = afs->output.nch;
     *out_format = afs->output.format;
 
-    sh_audio->a_out_buffer_len = 0;
+    // Do not reset a_out_buffer_len. This may cause some
+    // glitches/slow adaption of changes but it is better than
+    // losing audio even for minor adjustments and avoids sync issues.
 
     // ok!
     sh_audio->afilter = (void *) afs;
@@ -388,8 +391,11 @@ static int filter_n_bytes(sh_audio_t *sh, int len)
 	int minlen = len - sh->a_buffer_len;
 	int maxlen = sh->a_buffer_size - sh->a_buffer_len;
 	int ret = sh->ad_driver->decode_audio(sh, buf, minlen, maxlen);
-	if (ret <= 0) {
-	    error = -1;
+	int format_change = sh->samplerate != filter_input.rate ||
+	                    sh->channels != filter_input.nch ||
+	                    sh->sample_format != filter_input.format;
+	if (ret <= 0 || format_change) {
+	    error = format_change ? -2 : -1;
 	    len = sh->a_buffer_len;
 	    break;
 	}
@@ -425,7 +431,7 @@ static int filter_n_bytes(sh_audio_t *sh, int len)
  * In the former case sh_audio->a_out_buffer_len is always >= minlen
  * on return. In case of EOF/error it might or might not be.
  * Can reallocate sh_audio->a_out_buffer if needed to fit all filter output. */
-int decode_audio(sh_audio_t *sh_audio, int minlen)
+int mp_decode_audio(sh_audio_t *sh_audio, int minlen)
 {
     // Indicates that a filter seems to be buffering large amounts of data
     int huge_filter_buffer = 0;
@@ -443,9 +449,12 @@ int decode_audio(sh_audio_t *sh_audio, int minlen)
      * more space in the output buffer than the minimum length we try to
      * decode. */
     int max_decode_len = sh_audio->a_buffer_size - sh_audio->audio_out_minsize;
+    if (!unitsize)
+        return -1;
     max_decode_len -= max_decode_len % unitsize;
 
     while (sh_audio->a_out_buffer_len < minlen) {
+	int res;
 	int declen = (minlen - sh_audio->a_out_buffer_len) / filter_multiplier
 	    + (unitsize << 5); // some extra for possible filter buffering
 	if (huge_filter_buffer)
@@ -465,8 +474,9 @@ int decode_audio(sh_audio_t *sh_audio, int minlen)
 	    /* if this iteration does not fill buffer, we must have lots
 	     * of buffering in filters */
 	    huge_filter_buffer = 1;
-	if (filter_n_bytes(sh_audio, declen) < 0)
-	    return -1;
+	res = filter_n_bytes(sh_audio, declen);
+	if (res < 0)
+	    return res;
     }
     return 0;
 }

@@ -48,7 +48,7 @@
 #include "m_option.h"
 #include "mp_fifo.h"
 #include "mpbswap.h"
-#include "sub.h"
+#include "sub/sub.h"
 
 #include "input/input.h"
 #include "input/mouse.h"
@@ -130,7 +130,6 @@ static int lastMouseHide = 0;
 
 enum
 {
-    kQuitCmd         = 1,
     kHalfScreenCmd   = 2,
     kNormalScreenCmd = 3,
     kDoubleScreenCmd = 4,
@@ -470,10 +469,6 @@ static OSStatus WindowEventHandler(EventHandlerCallRef nextHandler, EventRef eve
 
 static void quartz_CreateWindow(uint32_t d_width, uint32_t d_height, WindowAttributes windowAttrs)
 {
-    CFStringRef titleKey;
-    CFStringRef windowTitle;
-    OSStatus result;
-
     MenuItemIndex index;
     CFStringRef movMenuTitle;
     CFStringRef aspMenuTitle;
@@ -554,13 +549,6 @@ static void quartz_CreateWindow(uint32_t d_width, uint32_t d_height, WindowAttri
     CreateWindowGroup(0, &winGroup);
     SetWindowGroup(theWindow, winGroup);
 
-    // Set window title
-    titleKey = CFSTR("MPlayer - The Movie Player");
-    windowTitle = CFCopyLocalizedString(titleKey, NULL);
-    result = SetWindowTitleWithCFString(theWindow, windowTitle);
-    CFRelease(titleKey);
-    CFRelease(windowTitle);
-
     // Install event handler
     InstallApplicationEventHandler(NewEventHandlerUPP(KeyEventHandler), GetEventTypeCount(key_events), key_events, NULL, NULL);
     InstallApplicationEventHandler(NewEventHandlerUPP(MouseEventHandler), GetEventTypeCount(mouse_events), mouse_events, NULL, NULL);
@@ -610,6 +598,7 @@ static void free_video_specific(void)
 
 static int config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uint32_t flags, char *title, uint32_t format)
 {
+    CFStringRef windowTitle;
     WindowAttributes windowAttrs;
     OSErr qterr;
     CGRect tmpBounds;
@@ -670,6 +659,11 @@ static int config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_
         SetRect(&oldWinRect, 0, 0, d_width, d_height);
         SizeWindow(theWindow, d_width, d_height, 1);
     }
+
+    // Set window title
+    windowTitle = CFStringCreateWithCString(NULL, vo_wintitle ? vo_wintitle : title, kCFStringEncodingUTF8);
+    SetWindowTitleWithCFString(theWindow, windowTitle);
+    CFRelease(windowTitle);
 
     switch (image_format)
     {
@@ -1159,7 +1153,7 @@ static uint32_t get_yuv_image(mp_image_t * mpi)
     return VO_FALSE;
 }
 
-static int control(uint32_t request, void *data, ...)
+static int control(uint32_t request, void *data)
 {
     switch (request)
     {

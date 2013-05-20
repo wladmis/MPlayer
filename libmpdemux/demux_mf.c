@@ -83,18 +83,23 @@ static const struct {
 } type2format[] = {
   { "bmp",  mmioFOURCC('b', 'm', 'p', ' ') },
   { "dpx",  mmioFOURCC('d', 'p', 'x', ' ') },
+  { "j2c",  mmioFOURCC('M', 'J', '2', 'C') },
   { "j2k",  mmioFOURCC('M', 'J', '2', 'C') },
   { "jp2",  mmioFOURCC('M', 'J', '2', 'C') },
+  { "jpc",  mmioFOURCC('M', 'J', '2', 'C') },
   { "jpeg", mmioFOURCC('I', 'J', 'P', 'G') },
   { "jpg",  mmioFOURCC('I', 'J', 'P', 'G') },
+  { "jps",  mmioFOURCC('I', 'J', 'P', 'G') },
   { "jls",  mmioFOURCC('I', 'J', 'P', 'G') },
   { "thm",  mmioFOURCC('I', 'J', 'P', 'G') },
   { "db",   mmioFOURCC('I', 'J', 'P', 'G') },
   { "pcx",  mmioFOURCC('p', 'c', 'x', ' ') },
   { "png",  mmioFOURCC('M', 'P', 'N', 'G') },
+  { "pns",  mmioFOURCC('M', 'P', 'N', 'G') },
   { "ptx",  mmioFOURCC('p', 't', 'x', ' ') },
   { "tga",  mmioFOURCC('M', 'T', 'G', 'A') },
   { "tif",  mmioFOURCC('t', 'i', 'f', 'f') },
+  { "tiff",  mmioFOURCC('t', 'i', 'f', 'f') },
   { "sgi",  mmioFOURCC('S', 'G', 'I', '1') },
   { "sun",  mmioFOURCC('s', 'u', 'n', ' ') },
   { "ras",  mmioFOURCC('s', 'u', 'n', ' ') },
@@ -160,8 +165,7 @@ static demuxer_t* demux_open_mf(demuxer_t* demuxer){
   sh_video->frametime = 1 / sh_video->fps;
 
   // emulate BITMAPINFOHEADER:
-  sh_video->bih=malloc(sizeof(BITMAPINFOHEADER));
-  memset(sh_video->bih,0,sizeof(BITMAPINFOHEADER));
+  sh_video->bih=calloc(1, sizeof(*sh_video->bih));
   sh_video->bih->biSize=40;
   sh_video->bih->biWidth = mf_w;
   sh_video->bih->biHeight = mf_h;
@@ -181,8 +185,6 @@ static demuxer_t* demux_open_mf(demuxer_t* demuxer){
 static void demux_close_mf(demuxer_t* demuxer) {
   mf_t *mf = demuxer->priv;
 
-  if(!mf)
-    return;
   free(mf);
 }
 

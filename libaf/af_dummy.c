@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "mp_msg.h"
 #include "af.h"
 
 // Initialization and runtime control
@@ -41,7 +42,6 @@ static int control(struct af_instance_s* af, int cmd, void* arg)
 // Deallocate memory
 static void uninit(struct af_instance_s* af)
 {
-  if(af->data)
     free(af->data);
 }
 

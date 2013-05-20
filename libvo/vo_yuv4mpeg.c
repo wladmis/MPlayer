@@ -52,7 +52,7 @@
 #include "mp_msg.h"
 #include "help_mp.h"
 
-#include "sub.h"
+#include "sub/sub.h"
 
 #include "fastmemcpy.h"
 #include "libavutil/rational.h"
@@ -105,7 +105,6 @@ static int config(uint32_t width, uint32_t height, uint32_t d_width,
 	    "Video formats differ (w:%i=>%i, h:%i=>%i, fps:%f=>%f), "
 	    "restarting output.\n",
 	    image_width, width, image_height, height, image_fps, vo_fps);
-	  uninit();
 	}
 	image_height = height;
 	image_width = width;
@@ -130,9 +129,11 @@ static int config(uint32_t width, uint32_t height, uint32_t d_width,
 	}
 
 	write_bytes = image_width * image_height * 3 / 2;
+	free(image);
 	image = malloc(write_bytes);
 
-	yuv_out = fopen(yuv_filename, "wb");
+	if (!yuv_out)
+		yuv_out = strcmp(yuv_filename, "-") ? fopen(yuv_filename, "wb") : stdout;
 	if (!yuv_out || image == 0)
 	{
 		mp_msg(MSGT_VO,MSGL_FATAL,
@@ -169,6 +170,7 @@ static void vo_y4m_write(const void *ptr, const size_t num_bytes)
 	if (fwrite(ptr, 1, num_bytes, yuv_out) != num_bytes)
 		mp_msg(MSGT_VO,MSGL_ERR,
 			MSGTR_VO_YUV4MPEG_OutFileWriteError);
+	fflush(yuv_out);
 }
 
 static int write_last_frame(void)
@@ -235,16 +237,14 @@ static int query_format(uint32_t format)
 // WARNING: config(...) also uses this
 static void uninit(void)
 {
-    if(image)
-		free(image);
+	free(image);
 	image = NULL;
 
-	if(yuv_out)
+	if(yuv_out && yuv_out != stdout)
 		fclose(yuv_out);
 	yuv_out = NULL;
 
-	if (yuv_filename)
-		free(yuv_filename);
+	free(yuv_filename);
 	yuv_filename = NULL;
 	image_width = 0;
 	image_height = 0;
@@ -299,7 +299,7 @@ static int preinit(const char *arg)
     return 0;
 }
 
-static int control(uint32_t request, void *data, ...)
+static int control(uint32_t request, void *data)
 {
   switch (request) {
   case VOCTRL_QUERY_FORMAT:

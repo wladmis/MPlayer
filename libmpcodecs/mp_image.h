@@ -22,7 +22,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "mp_msg.h"
 
 //--------- codec's requirements (filled by the codec/vf) ---------
 
@@ -86,8 +85,12 @@
 #define MP_IMGTYPE_IPB 4
 // Upper 16 bits give desired buffer number, -1 means get next available
 #define MP_IMGTYPE_NUMBERED 5
+// Doesn't need any buffer, incomplete image (probably a first field only)
+// we need this type to be able to differentiate between half frames and
+// all other cases
+#define MP_IMGTYPE_INCOMPLETE 6
 
-#define MP_MAX_PLANES	4
+#define MP_MAX_PLANES 4
 
 #define MP_IMGFIELD_ORDERED 0x01
 #define MP_IMGFIELD_TOP_FIRST 0x02

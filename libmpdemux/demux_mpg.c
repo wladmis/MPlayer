@@ -26,8 +26,10 @@
 
 #include "config.h"
 #include "mp_msg.h"
+#include "mpcommon.h"
 #include "help_mp.h"
 
+#include "libmpcodecs/dec_audio.h"
 #include "stream/stream.h"
 #include "demuxer.h"
 #include "parse_es.h"
@@ -59,7 +61,6 @@ typedef struct mpg_demuxer {
   int a_stream_ids[MAX_A_STREAMS];
 } mpg_demuxer_t;
 
-extern char* dvdsub_lang;
 static int mpeg_pts_error=0;
 off_t ps_probe = 0;
 
@@ -247,7 +248,7 @@ static demuxer_t* demux_mpg_open(demuxer_t* demuxer) {
 
 static void demux_close_mpg(demuxer_t* demuxer) {
   mpg_demuxer_t* mpg_d = demuxer->priv;
-  if (mpg_d) free(mpg_d);
+  free(mpg_d);
 }
 
 
@@ -261,7 +262,7 @@ static unsigned long long read_mpeg_timestamp(stream_t *s,int c){
     return 0; // invalid pts
   }
   pts=(((uint64_t)((c>>1)&7))<<30)|((d>>1)<<15)|(e>>1);
-  mp_dbg(MSGT_DEMUX,MSGL_DBG3," pts {%"PRIu64"}",pts);
+  mp_dbg(MSGT_DEMUX,MSGL_DBG3," pts {%llu}",pts);
   return pts;
 }
 
@@ -269,7 +270,7 @@ static void new_audio_stream(demuxer_t *demux, int aid){
   if(!demux->a_streams[aid]){
     mpg_demuxer_t *mpg_d=(mpg_demuxer_t*)demux->priv;
     sh_audio_t* sh_a;
-    new_sh_audio(demux,aid);
+    new_sh_audio(demux,aid, NULL);
     sh_a = (sh_audio_t*)demux->a_streams[aid];
     sh_a->needs_parsing = 1;
     switch(aid & 0xE0){  // 1110 0000 b  (high 3 bit: type  low 5: id)
@@ -477,7 +478,7 @@ static int demux_mpg_read_packet(demuxer_t *demux,int id){
         aid&=0x1F;
 
         if(!demux->s_streams[aid]){
-            sh_sub_t *sh = new_sh_sub(demux, aid);
+            sh_sub_t *sh = new_sh_sub(demux, aid, NULL);
             if (sh) sh->type = 'v';
             mp_msg(MSGT_DEMUX,MSGL_V,"==> Found subtitle: %d\n",aid);
         }
@@ -729,7 +730,7 @@ static int demux_mpg_probe(demuxer_t *demuxer) {
           if(demuxer->synced==2)
             mp_msg(MSGT_DEMUXER,MSGL_ERR,"MPEG: " MSGTR_MissingVideoStreamBug);
           else
-            mp_msg(MSGT_DEMUXER,MSGL_V,MSGTR_NotSystemStream);
+            mp_msg(MSGT_DEMUXER, MSGL_V, "Not MPEG System Stream format... (maybe Transport Stream?)\n");
         }
   }
   //FIXME this shouldn't be necessary
@@ -899,8 +900,6 @@ do{
   return 1;
 }
 
-void skip_audio_frame(sh_audio_t *sh_audio);
-
 static void demux_seek_mpg(demuxer_t *demuxer, float rel_seek_secs,
                            float audio_delay, int flags)
 {
@@ -1016,7 +1015,7 @@ static int demux_mpg_control(demuxer_t *demuxer, int cmd, void *arg)
     switch(cmd) {
 	case DEMUXER_CTRL_GET_TIME_LENGTH:
             if(stream_control(demuxer->stream, STREAM_CTRL_GET_TIME_LENGTH, arg) != STREAM_UNSUPPORTED) {
-              mp_msg(MSGT_DEMUXER,MSGL_DBG2,"\r\nDEMUX_MPG_CTRL, (%.3lf)\r\n", *((double*)arg));
+              mp_msg(MSGT_DEMUXER,MSGL_DBG2,"\r\nDEMUX_MPG_CTRL, (%.3f)\r\n", *((double*)arg));
               return DEMUXER_CTRL_GUESS;
             }
             if (mpg_d && mpg_d->has_valid_timestamps) {

@@ -31,8 +31,10 @@
 #include "img_format.h"
 #include "mp_image.h"
 #include "vf.h"
+#include "libmpdemux/demuxer.h"
 #include "libvo/fastmemcpy.h"
 #include "libavutil/common.h"
+#include "libavutil/x86_cpu.h"
 
 //===========================================================================//
 
@@ -58,12 +60,23 @@ static void store_ref(struct vf_priv_s *p, uint8_t *src[3], int src_stride[3], i
 
     for(i=0; i<3; i++){
         int is_chroma= !!i;
+        int pn_width  = width >>is_chroma;
+        int pn_height = height>>is_chroma;
 
-        memcpy_pic(p->ref[2][i], src[i], width>>is_chroma, height>>is_chroma, p->stride[i], src_stride[i]);
+
+        memcpy_pic(p->ref[2][i], src[i], pn_width, pn_height, p->stride[i], src_stride[i]);
+
+        fast_memcpy(p->ref[2][i] +  pn_height   * p->stride[i],
+                          src[i] + (pn_height-1)*src_stride[i], pn_width);
+        fast_memcpy(p->ref[2][i] + (pn_height+1)* p->stride[i],
+                          src[i] + (pn_height-1)*src_stride[i], pn_width);
+
+        fast_memcpy(p->ref[2][i] -   p->stride[i], src[i], pn_width);
+        fast_memcpy(p->ref[2][i] - 2*p->stride[i], src[i], pn_width);
     }
 }
 
-#if HAVE_MMX && defined(NAMED_ASM_ARGS)
+#if HAVE_MMX
 
 #define LOAD4(mem,dst) \
             "movd      "mem", "#dst" \n\t"\
@@ -196,7 +209,7 @@ static void filter_line_mmx2(struct vf_priv_s *p, uint8_t *dst, uint8_t *prev, u
 \
             /* if(p->mode<2) ... */\
             "movq    %[tmp3], %%mm6 \n\t" /* diff */\
-            "cmp       $2, %[mode] \n\t"\
+            "cmpl      $2, %[mode] \n\t"\
             "jge       1f \n\t"\
             LOAD4("(%["prev2"],%[mrefs],2)", %%mm2) /* prev2[x-2*refs] */\
             LOAD4("(%["next2"],%[mrefs],2)", %%mm4) /* next2[x-2*refs] */\
@@ -276,7 +289,7 @@ static void filter_line_mmx2(struct vf_priv_s *p, uint8_t *dst, uint8_t *prev, u
 #undef CHECK2
 #undef FILTER
 
-#endif /* HAVE_MMX && defined(NAMED_ASM_ARGS) */
+#endif /* HAVE_MMX */
 
 static void filter_line_c(struct vf_priv_s *p, uint8_t *dst, uint8_t *prev, uint8_t *cur, uint8_t *next, int w, int refs, int parity){
     int x;
@@ -358,7 +371,7 @@ static void filter(struct vf_priv_s *p, uint8_t *dst[3], int dst_stride[3], int 
             }
         }
     }
-#if HAVE_MMX && defined(NAMED_ASM_ARGS)
+#if HAVE_MMX
     if(gCpuCaps.hasMMX2) __asm__ volatile("emms \n\t" : : : "memory");
 #endif
 }
@@ -371,18 +384,17 @@ static int config(struct vf_instance *vf,
         for(i=0; i<3; i++){
             int is_chroma= !!i;
             int w= ((width   + 31) & (~31))>>is_chroma;
-            int h= ((height+6+ 31) & (~31))>>is_chroma;
+            int h=(((height  +  1) & ( ~1))>>is_chroma) + 6;
 
             vf->priv->stride[i]= w;
             for(j=0; j<3; j++)
-                vf->priv->ref[j][i]= malloc(w*h*sizeof(uint8_t))+3*w;
+                vf->priv->ref[j][i]= (uint8_t *)malloc(w*h*sizeof(uint8_t))+3*w;
         }
 
 	return vf_next_config(vf,width,height,d_width,d_height,flags,outfmt);
 }
 
 static int continue_buffered_image(struct vf_instance *vf);
-extern int correct_pts;
 
 static int put_image(struct vf_instance *vf, mp_image_t *mpi, double pts){
     int tff;
@@ -496,7 +508,7 @@ static int vf_open(vf_instance_t *vf, char *args){
     if (args) sscanf(args, "%d:%d", &vf->priv->mode, &vf->priv->parity);
 
     filter_line = filter_line_c;
-#if HAVE_MMX && defined(NAMED_ASM_ARGS)
+#if HAVE_MMX
     if(gCpuCaps.hasMMX2) filter_line = filter_line_mmx2;
 #endif
 

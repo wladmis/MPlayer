@@ -3,7 +3,7 @@
  * Collection of useful common types and macros definitions
  *****************************************************************************
  * Copyright (C) 1998, 1999, 2000 VideoLAN
- * $Id: common.h 31155 2010-05-11 10:51:46Z diego $
+ * $Id: common.h 34267 2011-10-26 17:02:09Z diego $
  *
  * Authors: Sam Hocevar <sam@via.ecp.fr>
  *          Vincent Seguin <seguin@via.ecp.fr>
@@ -23,6 +23,9 @@
  * with libdvdcss; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *****************************************************************************/
+
+#ifndef DVDCSS_COMMON_H
+#define DVDCSS_COMMON_H
 
 /*****************************************************************************
  * Basic types definitions
@@ -73,9 +76,6 @@ typedef __int64 off_t;
 #       define stat _stati64
 #   endif
 
-#   ifndef snprintf
-#       define snprintf _snprintf  /* snprintf not defined in mingw32 (bug?) */
-#   endif
-
 #endif
 
+#endif /* DVDCSS_COMMON_H */

@@ -147,7 +147,7 @@ mp_msg(MSGT_WIN32,MSGL_INFO,"\n");
         return NULL;
       }
       fclose(fd);
-      mp_msg(MSGT_WIN32,MSGL_ERR,"Compressor data %d bytes\n", st.st_size);
+      mp_msg(MSGT_WIN32,MSGL_ERR,"Compressor data %"PRIu64" bytes\n", st.st_size);
       if (!(temp_len = (unsigned int) ICSendMessage(encoder_hic, ICM_SETSTATE, (LPARAM) drvdata, (int) st.st_size))){
         mp_msg(MSGT_WIN32,MSGL_ERR,"ICSetState failed!\n");
         free(drvdata);
@@ -367,7 +367,7 @@ static int vf_open(vf_instance_t *vf, char* args){
     return 1;
 }
 
-vf_info_t ve_info_vfw = {
+const vf_info_t ve_info_vfw = {
     "Win32/VfW encoders",
     "vfw",
     "A'rpi",

@@ -57,7 +57,7 @@ static const vo_info_t info = {
 };
 
 LIBVO_EXTERN(xvidix)
-#define UNUSED(x) ((void)(x))   /* Removes warning about unused arguments */
+
 /* X11 related variables */
 /* Colorkey handling */
 static int colorkey;
@@ -110,7 +110,6 @@ static void set_window(int force_update)
         drwHeight = vo_dheight;
     }
 
-#if X11_FULLSCREEN
     if (vo_fs)
     {
         aspect(&dwidth, &dheight, A_ZOOM);
@@ -129,7 +128,6 @@ static void set_window(int force_update)
                "[xvidix-fs] dcx: %d dcy: %d dx: %d dy: %d dw: %d dh: %d\n",
                drwcX, drwcY, drwX, drwY, drwWidth, drwHeight);
     }
-#endif
 
     vo_dwidth = drwWidth;
     vo_dheight = drwHeight;
@@ -247,10 +245,8 @@ static int config(uint32_t width, uint32_t height, uint32_t d_width,
     }
     mp_msg(MSGT_VO, MSGL_V, "Using colorkey: %x\n", colorkey);
 
-#ifdef X11_FULLSCREEN
         if ((flags & VOFLAG_FULLSCREEN) || (flags & VOFLAG_SWSCALE))
             aspect(&d_width, &d_height, A_ZOOM);
-#endif
         dwidth = d_width;
         dheight = d_height;
         /* Make the window */
@@ -314,7 +310,7 @@ static void check_events(void)
 {
     const int event = vo_x11_check_events(mDisplay);
 
-    if ((event & VO_EVENT_RESIZE) || (event & VO_EVENT_EXPOSE))
+    if (event & (VO_EVENT_RESIZE | VO_EVENT_MOVE | VO_EVENT_EXPOSE))
         set_window(0);
 
     return;
@@ -339,12 +335,6 @@ static void flip_page(void)
 static int draw_slice(uint8_t * src[], int stride[],
                            int w, int h, int x, int y)
 {
-    UNUSED(src);
-    UNUSED(stride);
-    UNUSED(w);
-    UNUSED(h);
-    UNUSED(x);
-    UNUSED(y);
     mp_msg(MSGT_VO, MSGL_FATAL,
            "[xvidix] error: didn't used vidix draw_slice!\n");
     return -1;
@@ -352,7 +342,6 @@ static int draw_slice(uint8_t * src[], int stride[],
 
 static int draw_frame(uint8_t * src[])
 {
-    UNUSED(src);
     mp_msg(MSGT_VO, MSGL_FATAL,
            "[xvidix] error: didn't used vidix draw_frame!\n");
     return -1;
@@ -369,11 +358,8 @@ static void uninit(void)
         return;
     vidix_term();
 
-    if (vidix_name)
-    {
-        free(vidix_name);
-        vidix_name = NULL;
-    }
+    free(vidix_name);
+    vidix_name = NULL;
 
     vo_x11_uninit();
 }
@@ -399,7 +385,7 @@ static int preinit(const char *arg)
     return 0;
 }
 
-static int control(uint32_t request, void *data, ...)
+static int control(uint32_t request, void *data)
 {
     switch (request)
     {
@@ -423,30 +409,6 @@ static int control(uint32_t request, void *data, ...)
                 set_window(0);
             }
             return VO_TRUE;
-        case VOCTRL_SET_EQUALIZER:
-            {
-                va_list ap;
-                int value;
-
-                va_start(ap, data);
-                value = va_arg(ap, int);
-
-                va_end(ap);
-
-                return vidix_control(request, data, value);
-            }
-        case VOCTRL_GET_EQUALIZER:
-            {
-                va_list ap;
-                int *value;
-
-                va_start(ap, data);
-                value = va_arg(ap, int *);
-
-                va_end(ap);
-
-                return vidix_control(request, data, value);
-            }
         case VOCTRL_UPDATE_SCREENINFO:
             aspect_save_screenres(vo_screenwidth, vo_screenheight);
             return VO_TRUE;

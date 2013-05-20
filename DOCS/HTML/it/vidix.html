@@ -1,4 +1,4 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><title>7.15. VIDIX</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.75.2"><link rel="home" href="index.html" title="MPlayer - Il Visualizzatore di film"><link rel="up" href="video.html" title="Capitolo 7. Dispositivi di uscita video"><link rel="prev" href="x11.html" title="7.14. X11"><link rel="next" href="directfb.html" title="7.16. DirectFB"><link rel="preface" href="howtoread.html" title="Come leggere questa documentazione"><link rel="chapter" href="intro.html" title="Capitolo 1. Introduzione"><link rel="chapter" href="install.html" title="Capitolo 2. Installazione"><link rel="chapter" href="usage.html" title="Capitolo 3. Utilizzo"><link rel="chapter" href="cd-dvd.html" title="Capitolo 4. Utilizzo CD/DVD"><link rel="chapter" href="tv.html" title="Capitolo 5. TV"><link rel="chapter" href="radio.html" title="Capitolo 6. Radio"><link rel="chapter" href="video.html" title="Capitolo 7. Dispositivi di uscita video"><link rel="chapter" href="ports.html" title="Capitolo 8. Ports"><link rel="chapter" href="mencoder.html" title="Capitolo 9. Utilizzo base di MEncoder"><link rel="chapter" href="encoding-guide.html" title="Capitolo 10. La codifica con MEncoder"><link rel="chapter" href="faq.html" title="Capitolo 11. Frequently Asked Questions"><link rel="appendix" href="bugreports.html" title="Appendice A. Come segnalare i bug (errori)"><link rel="appendix" href="skin.html" title="Appendice B. MPlayer skin format"><link rel="subsection" href="vidix.html#svgalib_helper" title="7.15.1. svgalib_helper"><link rel="subsection" href="vidix.html#vidix-ati" title="7.15.2. Schede ATI"><link rel="subsection" href="vidix.html#vidix-mga" title="7.15.3. Schede Matrox"><link rel="subsection" href="vidix.html#vidix-trident" title="7.15.4. Schede Trident"><link rel="subsection" href="vidix.html#vidix-3dlabs" title="7.15.5. Schede 3DLabs"><link rel="subsection" href="vidix.html#vidix-nvidia" title="7.15.6. Schede nVidia"><link rel="subsection" href="vidix.html#vidix-sis" title="7.15.7. Schede SiS"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">7.15. VIDIX</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="x11.html">Indietro</a> </td><th width="60%" align="center">Capitolo 7. Dispositivi di uscita video</th><td width="20%" align="right"> <a accesskey="n" href="directfb.html">Avanti</a></td></tr></table><hr></div><div class="sect1" title="7.15. VIDIX"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="vidix"></a>7.15. VIDIX</h2></div></div></div><p title="PREAMBOLO"><b>PREAMBOLO. </b>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><title>4.15. VIDIX</title><link rel="stylesheet" type="text/css" href="default.css"><meta name="generator" content="DocBook XSL Stylesheets V1.76.1"><link rel="home" href="index.html" title="MPlayer - Il Visualizzatore di film"><link rel="up" href="video.html" title="Capitolo 4. Dispositivi di uscita video"><link rel="prev" href="x11.html" title="4.14. X11"><link rel="next" href="directfb.html" title="4.16. DirectFB"><link rel="preface" href="howtoread.html" title="Come leggere questa documentazione"><link rel="chapter" href="intro.html" title="Capitolo 1. Introduzione"><link rel="chapter" href="install.html" title="Capitolo 2. Installazione"><link rel="chapter" href="usage.html" title="Capitolo 3. Utilizzo"><link rel="chapter" href="video.html" title="Capitolo 4. Dispositivi di uscita video"><link rel="chapter" href="ports.html" title="Capitolo 5. Ports"><link rel="chapter" href="mencoder.html" title="Capitolo 6. Utilizzo base di MEncoder"><link rel="chapter" href="encoding-guide.html" title="Capitolo 7. La codifica con MEncoder"><link rel="chapter" href="faq.html" title="Capitolo 8. Frequently Asked Questions"><link rel="appendix" href="bugreports.html" title="Appendice A. Come segnalare i bug (errori)"><link rel="appendix" href="skin.html" title="Appendice B. MPlayer skin format"><link rel="subsection" href="vidix.html#svgalib_helper" title="4.15.1. svgalib_helper"><link rel="subsection" href="vidix.html#vidix-ati" title="4.15.2. Schede ATI"><link rel="subsection" href="vidix.html#vidix-mga" title="4.15.3. Schede Matrox"><link rel="subsection" href="vidix.html#vidix-trident" title="4.15.4. Schede Trident"><link rel="subsection" href="vidix.html#vidix-3dlabs" title="4.15.5. Schede 3DLabs"><link rel="subsection" href="vidix.html#vidix-nvidia" title="4.15.6. Schede nVidia"><link rel="subsection" href="vidix.html#vidix-sis" title="4.15.7. Schede SiS"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">4.15. VIDIX</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="x11.html">Indietro</a> </td><th width="60%" align="center">Capitolo 4. Dispositivi di uscita video</th><td width="20%" align="right"> <a accesskey="n" href="directfb.html">Avanti</a></td></tr></table><hr></div><div class="sect1" title="4.15. VIDIX"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="vidix"></a>4.15. VIDIX</h2></div></div></div><p title="PREAMBOLO"><b>PREAMBOLO. </b>
 <acronym class="acronym">VIDIX</acronym> è un nome breve che sta per
 <span class="bold"><strong>VID</strong></span>eo
 <span class="bold"><strong>I</strong></span>nterface
@@ -33,7 +33,7 @@ quest'intarfaccia è quello di velocizzare la riproduzione video.
   otterrai un effetto simile a <tt class="option">-vo mga</tt> o
   <tt class="option">-vo fbdev</tt>. Le schede nVidia tuttavia sono in grado di
   emettere video completamente grafico su vere console di testo. Vedi la sezione
-  <a class="link" href="vidix.html#vidix-nvidia" title="7.15.6. Schede nVidia">nvidia_vid</a> per ulteriori informazioni.
+  <a class="link" href="vidix.html#vidix-nvidia" title="4.15.6. Schede nVidia">nvidia_vid</a> per ulteriori informazioni.
   Per evitare il testo sui bordi e il cursore lampeggiante, prova qualcosa tipo
   </p><pre class="screen">setterm -cursor off &gt; /dev/tty9</pre><p>
   (presumendo che <code class="systemitem">tty9</code> non venga utilizzata) e poi
@@ -83,7 +83,7 @@ assolutamente sicuro che funzionerà e <span class="application">MPlayer</span> 
 lo farà automaticamente. Per favore dillo agli sviluppatori. Il modo corretto
 è utilizzare VIDIX senza argomenti per abilitare la rilevazione automatica del
 driver.
-</p><div class="sect2" title="7.15.1. svgalib_helper"><div class="titlepage"><div><div><h3 class="title"><a name="svgalib_helper"></a>7.15.1. svgalib_helper</h3></div></div></div><p>
+</p><div class="sect2" title="4.15.1. svgalib_helper"><div class="titlepage"><div><div><h3 class="title"><a name="svgalib_helper"></a>4.15.1. svgalib_helper</h3></div></div></div><p>
 Visto che VIDIX richiede un accesso diretto all'hardware puoi sia eseguirlo come
 root, sia impostare il bit SUID sull'eseguibile di
 <span class="application">MPlayer</span>.
@@ -105,12 +105,12 @@ Alternativamente puoi usare uno modulo del kernel speciale, come questo:
 </p></li><li class="step" title="Passo 4"><p>
   Poi esegui di nuovo <tt class="filename">configure</tt> passando i parametri
   <tt class="option">--enable-svgalib_helper</tt> e
-  <tt class="option">--with-extraincdir=<em class="replaceable"><code>/percorso/dei/sorgenti/di/svgalib_helper</code></em>kernel/svgalib_helper</tt>,
+  <tt class="option">--extra-cflags=<em class="replaceable"><code>/percorso/dei/sorgenti/di/svgalib_helper</code></em>kernel/svgalib_helper</tt>,
   dove <em class="replaceable"><code>/percorso/dei/sorgenti/di/svgalib_helper</code></em> deve
   puntare al percorso dove hai estratto i sorgenti di svgalib_helper.
 </p></li><li class="step" title="Passo 5"><p>
   Ricompila.
-</p></li></ol></div></div><div class="sect2" title="7.15.2. Schede ATI"><div class="titlepage"><div><div><h3 class="title"><a name="vidix-ati"></a>7.15.2. Schede ATI</h3></div></div></div><p>
+</p></li></ol></div></div><div class="sect2" title="4.15.2. Schede ATI"><div class="titlepage"><div><div><h3 class="title"><a name="vidix-ati"></a>4.15.2. Schede ATI</h3></div></div></div><p>
 Attualmente la maggior parte delle schede ATI è supportata nativamente, dalle
 Mach64 alle più recenti Radeon.
 </p><p>
@@ -118,32 +118,32 @@ Ci sono due binari compilati: <tt class="filename">radeon_vid</tt> per le Radeon
 <tt class="filename">rage128_vid</tt> per le schede Rage 128. Puoi forzare
 l'utilizzo di uno dei due, oppure lasciare che il sistema VIDIX provi tutti i
 driver disponibili.
-</p></div><div class="sect2" title="7.15.3. Schede Matrox"><div class="titlepage"><div><div><h3 class="title"><a name="vidix-mga"></a>7.15.3. Schede Matrox</h3></div></div></div><p>
+</p></div><div class="sect2" title="4.15.3. Schede Matrox"><div class="titlepage"><div><div><h3 class="title"><a name="vidix-mga"></a>4.15.3. Schede Matrox</h3></div></div></div><p>
 Le Matrox G200, G400, G450 and G550 sono state riportate come funzionanti.
 </p><p>
 Il driver supporta gli equalizzatori video e dovrebbe essere veloce quasi quanto
-il <a class="link" href="mga_vid.html" title="7.7. Framebuffer Matrox (mga_vid)">framebuffer Matrox</a>.
-</p></div><div class="sect2" title="7.15.4. Schede Trident"><div class="titlepage"><div><div><h3 class="title"><a name="vidix-trident"></a>7.15.4. Schede Trident</h3></div></div></div><p>
+il <a class="link" href="mga_vid.html" title="4.7. Framebuffer Matrox (mga_vid)">framebuffer Matrox</a>.
+</p></div><div class="sect2" title="4.15.4. Schede Trident"><div class="titlepage"><div><div><h3 class="title"><a name="vidix-trident"></a>4.15.4. Schede Trident</h3></div></div></div><p>
 C'è un driver disponibile per il chipset Trident Cyberblade/i1, che si può
 trovare sulle schede madri VIA Epia.
 </p><p>
 Il driver è scritto e mantenuto da
 <a class="ulink" href="http://www.blackfiveservices.co.uk/EPIAVidix.shtml" target="_top">Alastair M. Robinson</a>.
-</p></div><div class="sect2" title="7.15.5. Schede 3DLabs"><div class="titlepage"><div><div><h3 class="title"><a name="vidix-3dlabs"></a>7.15.5. Schede 3DLabs</h3></div></div></div><p>
+</p></div><div class="sect2" title="4.15.5. Schede 3DLabs"><div class="titlepage"><div><div><h3 class="title"><a name="vidix-3dlabs"></a>4.15.5. Schede 3DLabs</h3></div></div></div><p>
 Anche se esiste un driver per i chip 3DLabs GLINT R3 e Permedia3, nessuno lo ha
 provato, perciò delle informazioni sono benvenute.
-</p></div><div class="sect2" title="7.15.6. Schede nVidia"><div class="titlepage"><div><div><h3 class="title"><a name="vidix-nvidia"></a>7.15.6. Schede nVidia</h3></div></div></div><p>
+</p></div><div class="sect2" title="4.15.6. Schede nVidia"><div class="titlepage"><div><div><h3 class="title"><a name="vidix-nvidia"></a>4.15.6. Schede nVidia</h3></div></div></div><p>
 Una caratteristica unica del driver nvidia_vid è la sua abilità nel mostrare
 video su di una
 <span class="bold"><strong>semplice, pura, console di testo</strong></span> - senza alcun
 framebuffer o qualche magia di X. Per questo fine, dovremo usare il driver di
 uscita video <tt class="option">cvidix</tt>, come mostrato nell'esempio che segue:
 </p><pre class="screen">mplayer -vo cvidix <em class="replaceable"><code>esempio.avi</code></em></pre><p>
-</p></div><div class="sect2" title="7.15.7. Schede SiS"><div class="titlepage"><div><div><h3 class="title"><a name="vidix-sis"></a>7.15.7. Schede SiS</h3></div></div></div><p>
+</p></div><div class="sect2" title="4.15.7. Schede SiS"><div class="titlepage"><div><div><h3 class="title"><a name="vidix-sis"></a>4.15.7. Schede SiS</h3></div></div></div><p>
 Questo codice è davvero sperimentale, proprio come nvidia_vid.
 </p><p>
 E' stato testato su SiS 650/651/740 (i chipset più diffusi usati nelle versioni
 SiS dello "Shuttle XPC").
 </p><p>
 Si attendono resoconti!
-</p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="x11.html">Indietro</a> </td><td width="20%" align="center"><a accesskey="u" href="video.html">Risali</a></td><td width="40%" align="right"> <a accesskey="n" href="directfb.html">Avanti</a></td></tr><tr><td width="40%" align="left" valign="top">7.14. X11 </td><td width="20%" align="center"><a accesskey="h" href="index.html">Partenza</a></td><td width="40%" align="right" valign="top"> 7.16. DirectFB</td></tr></table></div></body></html>
+</p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="x11.html">Indietro</a> </td><td width="20%" align="center"><a accesskey="u" href="video.html">Risali</a></td><td width="40%" align="right"> <a accesskey="n" href="directfb.html">Avanti</a></td></tr><tr><td width="40%" align="left" valign="top">4.14. X11 </td><td width="20%" align="center"><a accesskey="h" href="index.html">Partenza</a></td><td width="40%" align="right" valign="top"> 4.16. DirectFB</td></tr></table></div></body></html>

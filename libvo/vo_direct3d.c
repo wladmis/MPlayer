@@ -30,8 +30,8 @@
 #include "aspect.h"
 #include "w32_common.h"
 #include "libavutil/common.h"
-#include "font_load.h"
-#include "sub.h"
+#include "sub/font_load.h"
+#include "sub/sub.h"
 
 static const vo_info_t info =
 {
@@ -235,6 +235,12 @@ static int create_d3d_surfaces(void)
                                               &priv->d3d_backbuf))) {
         mp_msg(MSGT_VO, MSGL_ERR, "<vo_direct3d>Allocating backbuffer failed.\n");
         return 0;
+    }
+
+    if (!tex_width || !tex_height) {
+      mp_msg(MSGT_VO, MSGL_V,
+             "<vo_direct3d>Deferring surface creation because width or height is 0.\n");
+      return 0;
     }
 
     /* calculate the best size for the OSD depending on the factors from the device */
@@ -760,7 +766,7 @@ err_out:
 /** @brief libvo Callback: Handle control requests.
  *  @return VO_TRUE on success, VO_NOTIMPL when not implemented
  */
-static int control(uint32_t request, void *data, ...)
+static int control(uint32_t request, void *data)
 {
     switch (request) {
     case VOCTRL_QUERY_FORMAT:
@@ -981,8 +987,9 @@ static int draw_frame(uint8_t *src[])
  *         These values are then inverted again with
            the texture filter D3DBLEND_INVSRCALPHA
  */
-void vo_draw_alpha_l8a8(int w, int h, unsigned char* src, unsigned char *srca,
-                        int srcstride, unsigned char* dstbase, int dststride)
+static void vo_draw_alpha_l8a8(int w, int h, unsigned char* src,
+                               unsigned char *srca, int srcstride,
+                               unsigned char* dstbase, int dststride)
 {
     int y;
     for (y = 0; y < h; y++) {
@@ -1028,7 +1035,8 @@ static void draw_alpha(int x0, int y0, int w, int h, unsigned char *src,
 static void draw_osd(void)
 {
     // we can not render OSD if we lost the device e.g. because it was uncooperative
-    if (!priv->d3d_device)
+    // or if the OSD textures are not allocated (e.g. the window is minimized)
+    if (!priv->d3d_device || !priv->d3d_texture_osd)
         return;
 
     if (vo_osd_changed(0)) {

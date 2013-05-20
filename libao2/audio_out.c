@@ -39,7 +39,6 @@ extern const ao_functions_t audio_out_pulse;
 extern const ao_functions_t audio_out_jack;
 extern const ao_functions_t audio_out_openal;
 extern const ao_functions_t audio_out_null;
-extern const ao_functions_t audio_out_alsa5;
 extern const ao_functions_t audio_out_alsa;
 extern const ao_functions_t audio_out_nas;
 extern const ao_functions_t audio_out_sdl;
@@ -79,9 +78,6 @@ const ao_functions_t* const audio_out_drivers[] =
 #endif
 #ifdef CONFIG_ALSA
         &audio_out_alsa,
-#endif
-#ifdef CONFIG_ALSA5
-        &audio_out_alsa5,
 #endif
 #ifdef CONFIG_SGI_AUDIO
         &audio_out_sgi,
@@ -149,10 +145,8 @@ const ao_functions_t* init_best_audio_out(char** ao_list,int use_plugin,int rate
             mp_msg(MSGT_AO, MSGL_FATAL, MSGTR_AO_ALSA9_1x_Removed);
             exit_player(EXIT_NONE);
         }
-        if (ao_subdevice) {
-            free(ao_subdevice);
-            ao_subdevice = NULL;
-        }
+        free(ao_subdevice);
+        ao_subdevice = NULL;
         ao_subdevice=strchr(ao,':');
         if(ao_subdevice){
             ao_len = ao_subdevice - ao;
@@ -161,7 +155,7 @@ const ao_functions_t* init_best_audio_out(char** ao_list,int use_plugin,int rate
         else
             ao_len = strlen(ao);
 
-        mp_msg(MSGT_AO, MSGL_V, MSGTR_AO_TryingPreferredAudioDriver,
+        mp_msg(MSGT_AO, MSGL_V, "Trying preferred audio driver '%.*s', options '%s'\n",
                ao_len, ao, ao_subdevice ? ao_subdevice : "[none]");
 
         for(i=0;audio_out_drivers[i];i++){
@@ -181,12 +175,10 @@ const ao_functions_t* init_best_audio_out(char** ao_list,int use_plugin,int rate
         ++ao_list;
         if(!(ao_list[0])) return NULL; // do NOT fallback to others
       }
-    if (ao_subdevice) {
-        free(ao_subdevice);
-        ao_subdevice = NULL;
-    }
+    free(ao_subdevice);
+    ao_subdevice = NULL;
 
-    mp_msg(MSGT_AO, MSGL_V, MSGTR_AO_TryingEveryKnown);
+    mp_msg(MSGT_AO, MSGL_V, "Trying every known audio driver...\n");
 
     // now try the rest...
     for(i=0;audio_out_drivers[i];i++){
@@ -196,4 +188,14 @@ const ao_functions_t* init_best_audio_out(char** ao_list,int use_plugin,int rate
             return audio_out; // success!
     }
     return NULL;
+}
+
+void mp_ao_resume_refill(const ao_functions_t *ao, int prepause_space)
+{
+    int fillcnt = ao->get_space() - prepause_space;
+    if (fillcnt > 0 && !(ao_data.format & AF_FORMAT_SPECIAL_MASK)) {
+      void *silence = calloc(fillcnt, 1);
+      ao->play(silence, fillcnt, 0);
+      free(silence);
+    }
 }

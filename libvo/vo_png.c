@@ -54,6 +54,8 @@ const LIBVO_EXTERN (png)
 
 static int z_compression;
 static char *png_outdir;
+static char *png_outfile_prefix;
+static uint32_t png_format;
 static int framenum;
 static int use_alpha;
 static AVCodecContext *avctx;
@@ -121,6 +123,22 @@ config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uin
     png_mkdir(buf, 1);
     mp_msg(MSGT_VO,MSGL_DBG2, "PNG Compression level %i\n", z_compression);
 
+
+    if (avctx && png_format != format) {
+        avcodec_close(avctx);
+        av_freep(&avctx);
+    }
+
+    if (!avctx) {
+        avctx = avcodec_alloc_context3(NULL);
+        avctx->compression_level = z_compression;
+        avctx->pix_fmt = imgfmt2pixfmt(format);
+        if (avcodec_open2(avctx, avcodec_find_encoder(CODEC_ID_PNG), NULL) < 0) {
+            uninit();
+            return -1;
+        }
+        png_format = format;
+    }
     return 0;
 }
 
@@ -135,7 +153,7 @@ static uint32_t draw_image(mp_image_t* mpi){
     // if -dr or -slices then do nothing:
     if(mpi->flags&(MP_IMGFLAG_DIRECT|MP_IMGFLAG_DRAW_CALLBACK)) return VO_TRUE;
 
-    snprintf (buf, 100, "%s/%08d.png", png_outdir, ++framenum);
+    snprintf (buf, 100, "%s/%s%08d.png", png_outdir, png_outfile_prefix, ++framenum);
     outfile = fopen(buf, "wb");
     if (!outfile) {
         mp_msg(MSGT_VO,MSGL_WARN, MSGTR_LIBVO_PNG_ErrorOpeningForWriting, strerror(errno));
@@ -144,7 +162,6 @@ static uint32_t draw_image(mp_image_t* mpi){
 
     avctx->width = mpi->w;
     avctx->height = mpi->h;
-    avctx->pix_fmt = imgfmt2pixfmt(mpi->imgfmt);
     pic.data[0] = mpi->planes[0];
     pic.linesize[0] = mpi->stride[0];
     buffersize = mpi->w * mpi->h * 8;
@@ -188,7 +205,7 @@ query_format(uint32_t format)
     switch(format){
     case IMGFMT_RGB24:
         return use_alpha ? 0 : supported_flags;
-    case IMGFMT_BGR32:
+    case IMGFMT_RGBA:
         return use_alpha ? supported_flags : 0;
     }
     return 0;
@@ -199,10 +216,10 @@ static void uninit(void){
     av_freep(&avctx);
     av_freep(&outbuffer);
     outbuffer_size = 0;
-    if (png_outdir) {
-        free(png_outdir);
-        png_outdir = NULL;
-    }
+    free(png_outdir);
+    png_outdir = NULL;
+    free(png_outfile_prefix);
+    png_outfile_prefix = NULL;
 }
 
 static void check_events(void){}
@@ -217,6 +234,7 @@ static const opt_t subopts[] = {
     {"alpha", OPT_ARG_BOOL, &use_alpha, NULL},
     {"z",   OPT_ARG_INT, &z_compression, int_zero_to_nine},
     {"outdir",      OPT_ARG_MSTRZ,  &png_outdir,           NULL},
+    {"prefix", OPT_ARG_MSTRZ, &png_outfile_prefix, NULL },
     {NULL}
 };
 
@@ -224,21 +242,16 @@ static int preinit(const char *arg)
 {
     z_compression = 0;
     png_outdir = strdup(".");
+    png_outfile_prefix = strdup("");
     use_alpha = 0;
     if (subopt_parse(arg, subopts) != 0) {
         return -1;
     }
     avcodec_register_all();
-    avctx = avcodec_alloc_context();
-    if (avcodec_open(avctx, avcodec_find_encoder(CODEC_ID_PNG)) < 0) {
-        uninit();
-        return -1;
-    }
-    avctx->compression_level = z_compression;
     return 0;
 }
 
-static int control(uint32_t request, void *data, ...)
+static int control(uint32_t request, void *data)
 {
   switch (request) {
   case VOCTRL_DRAW_IMAGE:

@@ -260,6 +260,97 @@ get_flac_metadata (demuxer_t* demuxer)
 }
 #endif
 
+/**
+ * @brief Determine the number of frames of a file encoded with
+ *        variable bitrate mode (VBR).
+ *
+ * @param s stream to be read
+ * @param off offset in stream to start reading from
+ *
+ * @return 0 (error or no variable bitrate mode) or number of frames
+ */
+static unsigned int mp3_vbr_frames(stream_t *s, off_t off) {
+  static const int xing_offset[2][2] = {{32, 17}, {17, 9}};
+  unsigned int data;
+  unsigned char hdr[4];
+  int framesize, chans, spf, layer;
+
+  if ((s->flags & MP_STREAM_SEEK) == MP_STREAM_SEEK) {
+
+    if (!stream_seek(s, off)) return 0;
+
+    data = stream_read_dword(s);
+    hdr[0] = data >> 24;
+    hdr[1] = data >> 16;
+    hdr[2] = data >> 8;
+    hdr[3] = data;
+
+    if (!mp_check_mp3_header(data)) return 0;
+
+    framesize = mp_get_mp3_header(hdr, &chans, NULL, &spf, &layer, NULL);
+
+    if (framesize == -1 || layer != 3) return 0;
+
+    /* Xing / Info (at variable position: 32, 17 or 9 bytes after header) */
+
+    if (!stream_skip(s, xing_offset[spf < 1152][chans == 1])) return 0;
+
+    data = stream_read_dword(s);
+
+    if (data == MKBETAG('X','i','n','g') || data == MKBETAG('I','n','f','o')) {
+      data = stream_read_dword(s);
+
+      if (data & 0x1)                   // frames field is present
+        return stream_read_dword(s);    // frames
+    }
+
+    /* VBRI (at fixed position: 32 bytes after header) */
+
+    if (!stream_seek(s, off + 4 + 32)) return 0;
+
+    data = stream_read_dword(s);
+
+    if (data == MKBETAG('V','B','R','I')) {
+      data = stream_read_word(s);
+
+      if (data == 1) {                       // check version
+        if (!stream_skip(s, 8)) return 0;    // skip delay, quality and bytes
+        return stream_read_dword(s);         // frames
+      }
+    }
+  }
+
+  return 0;
+}
+
+/**
+ * @brief Determine the total size of an ID3v2 tag.
+ *
+ * @param maj_ver major version of the ID3v2 tag
+ * @param s stream to be read, assumed to be positioned at revision byte
+ *
+ * @return 0 (error or malformed tag) or tag size
+ */
+static unsigned int id3v2_tag_size(uint8_t maj_ver, stream_t *s) {
+  unsigned int header_footer_size;
+  unsigned int size;
+  int i;
+
+  if(stream_read_char(s) == 0xff)
+    return 0;
+  header_footer_size = ((stream_read_char(s) & 0x10) && maj_ver >= 4) ? 20 : 10;
+
+  size = 0;
+  for(i = 0; i < 4; i++) {
+    uint8_t data = stream_read_char(s);
+    if (data & 0x80)
+      return 0;
+    size = size << 7 | data;
+  }
+
+  return header_footer_size + size;
+}
+
 static int demux_audio_open(demuxer_t* demuxer) {
   stream_t *s;
   sh_audio_t* sh_audio;
@@ -269,6 +360,8 @@ static int demux_audio_open(demuxer_t* demuxer) {
   // mp3_hdrs list is sorted first by next_frame_pos and then by frame_pos
   mp3_hdr_t *mp3_hdrs = NULL, *mp3_found = NULL;
   da_priv_t* priv;
+  double duration;
+  int found_WAVE = 0;
 
   s = demuxer->stream;
 
@@ -291,14 +384,12 @@ static int demux_audio_open(demuxer_t* demuxer) {
       // We found wav header. Now we can have 'fmt ' or a mp3 header
       // empty the buffer
 	step = 4;
-    } else if( hdr[0] == 'I' && hdr[1] == 'D' && hdr[2] == '3' && (hdr[3] >= 2)) {
-      int len;
-      stream_skip(s,2);
-      stream_read(s,hdr,4);
-      len = (hdr[0]<<21) | (hdr[1]<<14) | (hdr[2]<<7) | hdr[3];
-      stream_skip(s,len);
+    } else if( hdr[0] == 'I' && hdr[1] == 'D' && hdr[2] == '3' && hdr[3] >= 2 && hdr[3] != 0xff) {
+      unsigned int len = id3v2_tag_size(hdr[3], s);
+      if(len > 0)
+        stream_skip(s,len-10);
       step = 4;
-    } else if( hdr[0] == 'f' && hdr[1] == 'm' && hdr[2] == 't' && hdr[3] == ' ' ) {
+    } else if( found_WAVE && hdr[0] == 'f' && hdr[1] == 'm' && hdr[2] == 't' && hdr[3] == ' ' ) {
       frmt = WAV;
       break;
     } else if((mp3_flen = mp_get_mp3_header(hdr, &mp3_chans, &mp3_freq,
@@ -314,6 +405,7 @@ static int demux_audio_open(demuxer_t* demuxer) {
       if (!mp3_hdrs || mp3_hdrs->cons_hdrs < 3)
         break;
     }
+    found_WAVE = hdr[0] == 'W' && hdr[1] == 'A' && hdr[2] == 'V' && hdr[3] == 'E';
     // Add here some other audio format detection
     if(step < HDR_SIZE)
       memmove(hdr,&hdr[step],HDR_SIZE-step);
@@ -326,17 +418,18 @@ static int demux_audio_open(demuxer_t* demuxer) {
   if(!frmt)
     return 0;
 
-  sh_audio = new_sh_audio(demuxer,0);
+  sh_audio = new_sh_audio(demuxer,0, NULL);
 
   switch(frmt) {
   case MP3:
     sh_audio->format = (mp3_found->mpa_layer < 3 ? 0x50 : 0x55);
     demuxer->movi_start = mp3_found->frame_pos;
+    demuxer->movi_end = s->end_pos;
     next_frame_pos = mp3_found->next_frame_pos;
     sh_audio->audio.dwSampleSize= 0;
     sh_audio->audio.dwScale = mp3_found->mpa_spf;
     sh_audio->audio.dwRate = mp3_found->mp3_freq;
-    sh_audio->wf = malloc(sizeof(WAVEFORMATEX));
+    sh_audio->wf = malloc(sizeof(*sh_audio->wf));
     sh_audio->wf->wFormatTag = sh_audio->format;
     sh_audio->wf->nChannels = mp3_found->mp3_chans;
     sh_audio->wf->nSamplesPerSec = mp3_found->mp3_freq;
@@ -344,20 +437,17 @@ static int demux_audio_open(demuxer_t* demuxer) {
     sh_audio->wf->nBlockAlign = mp3_found->mpa_spf;
     sh_audio->wf->wBitsPerSample = 16;
     sh_audio->wf->cbSize = 0;
-    sh_audio->i_bps = sh_audio->wf->nAvgBytesPerSec;
+    duration = (double) mp3_vbr_frames(s, demuxer->movi_start) * mp3_found->mpa_spf / mp3_found->mp3_freq;
     free(mp3_found);
     mp3_found = NULL;
-    if(s->end_pos && (s->flags & MP_STREAM_SEEK) == MP_STREAM_SEEK) {
-      char tag[4];
-      stream_seek(s,s->end_pos-128);
-      stream_read(s,tag,3);
-      tag[3] = '\0';
-      if(strcmp(tag,"TAG"))
-	demuxer->movi_end = s->end_pos;
-      else {
+    if(demuxer->movi_end && (s->flags & MP_STREAM_SEEK) == MP_STREAM_SEEK) {
+      if(demuxer->movi_end >= 128) {
+        stream_seek(s,demuxer->movi_end-128);
+      stream_read(s,hdr,3);
+      if(!memcmp(hdr,"TAG",3)) {
 	char buf[31];
 	uint8_t g;
-	demuxer->movi_end = stream_tell(s)-3;
+          demuxer->movi_end -= 128;
 	stream_read(s,buf,30);
 	buf[30] = '\0';
 	demux_info_add(demuxer,"Title",buf);
@@ -381,7 +471,31 @@ static int demux_audio_open(demuxer_t* demuxer) {
 	g = stream_read_char(s);
 	demux_info_add(demuxer,"Genre",genres[g]);
       }
+      }
+      if(demuxer->movi_end >= 10) {
+      stream_seek(s,demuxer->movi_end-10);
+      stream_read(s,hdr,4);
+      if(!memcmp(hdr,"3DI",3) && hdr[3] >= 4 && hdr[3] != 0xff) {
+        unsigned int len = id3v2_tag_size(hdr[3], s);
+        if(len > 0) {
+          if(len > demuxer->movi_end - demuxer->movi_start) {
+            mp_msg(MSGT_DEMUX,MSGL_WARN,MSGTR_MPDEMUX_AUDIO_BadID3v2TagSize,len);
+            len = FFMIN(10,demuxer->movi_end-demuxer->movi_start);
+          } else {
+            stream_seek(s,demuxer->movi_end-len);
+            stream_read(s,hdr,4);
+            if(memcmp(hdr,"ID3",3) || hdr[3] < 4 || hdr[3] == 0xff || id3v2_tag_size(hdr[3], s) != len) {
+              mp_msg(MSGT_DEMUX,MSGL_WARN,MSGTR_MPDEMUX_AUDIO_DamagedAppendedID3v2Tag);
+              len = FFMIN(10,demuxer->movi_end-demuxer->movi_start);
+            }
+          }
+          demuxer->movi_end -= len;
+        }
+      }
     }
+    }
+    if (duration && demuxer->movi_end && demuxer->movi_end > demuxer->movi_start) sh_audio->wf->nAvgBytesPerSec = (demuxer->movi_end - demuxer->movi_start) / duration;
+    sh_audio->i_bps = sh_audio->wf->nAvgBytesPerSec;
     break;
   case WAV: {
     unsigned int chunk_type;
@@ -397,7 +511,7 @@ static int demux_audio_open(demuxer_t* demuxer) {
       mp_msg(MSGT_DEMUX,MSGL_ERR,"[demux_audio] Bad wav header length: too long (%d)!!!\n",l);
       l = 16;
     }
-    sh_audio->wf = w = malloc(l > sizeof(WAVEFORMATEX) ? l : sizeof(WAVEFORMATEX));
+    sh_audio->wf = w = malloc(l > sizeof(*w) ? l : sizeof(*w));
     w->wFormatTag = sh_audio->format = stream_read_word_le(s);
     w->nChannels = sh_audio->channels = stream_read_word_le(s);
     w->nSamplesPerSec = sh_audio->samplerate = stream_read_dword_le(s);
@@ -416,10 +530,10 @@ static int demux_audio_open(demuxer_t* demuxer) {
                l,w->cbSize);
         w->cbSize = l;
       }
-      stream_read(s,(char*)((char*)(w)+sizeof(WAVEFORMATEX)),w->cbSize);
+      stream_read(s,(char*)(w + 1),w->cbSize);
       l -= w->cbSize;
-      if (w->wFormatTag & 0xfffe && w->cbSize >= 22)
-          sh_audio->format = ((WAVEFORMATEXTENSIBLE *)w)->SubFormat;
+      if (w->wFormatTag == 0xfffe && w->cbSize >= 22)
+          sh_audio->format = av_le2ne16(((WAVEFORMATEXTENSIBLE *)w)->SubFormat);
     }
 
     if( mp_msg_test(MSGT_DEMUX,MSGL_V) ) print_wave_header(w, MSGL_V);
@@ -471,8 +585,10 @@ static int demux_audio_open(demuxer_t* demuxer) {
 		break;
 	    }
 	}
-	if (sh_audio->format == 0x2001)
+	if (sh_audio->format == 0x2001) {
+	    sh_audio->needs_parsing = 1;
 	    mp_msg(MSGT_DEMUX,MSGL_DBG2,"[demux_audio] DTS sync offset = %u\n", i);
+        }
 
     }
     stream_seek(s,demuxer->movi_start);
@@ -484,18 +600,18 @@ static int demux_audio_open(demuxer_t* demuxer) {
 	    if (demuxer->movi_end > demuxer->movi_start) {
 	      // try to find out approx. bitrate
 	      int64_t size = demuxer->movi_end - demuxer->movi_start;
-	      int64_t num_samples = 0;
-	      int32_t srate = 0;
+	      int64_t num_samples;
+	      int32_t srate;
 	      stream_skip(s, 14);
-	      stream_read(s, (char *)&srate, 3);
-	      srate = be2me_32(srate) >> 12;
-	      stream_read(s, (char *)&num_samples, 5);
-	      num_samples = (be2me_64(num_samples) >> 24) & 0xfffffffffULL;
+	      srate = stream_read_int24(s) >> 4;
+	      num_samples  = stream_read_int24(s) << 16;
+	      num_samples |= stream_read_word(s);
 	      if (num_samples && srate)
 	        sh_audio->i_bps = size * srate / num_samples;
 	    }
 	    if (sh_audio->i_bps < 1) // guess value to prevent crash
 	      sh_audio->i_bps = 64 * 1024;
+	    sh_audio->needs_parsing = 1;
 //	    get_flac_metadata (demuxer);
 	    break;
   }
@@ -586,8 +702,7 @@ static int demux_audio_fill_buffer(demuxer_t *demux, demux_stream_t *ds) {
     l = 65535;
     dp = new_demux_packet(l);
     l = stream_read(s,dp->buffer,l);
-    /* FLAC is not a constant-bitrate codec. These values will be wrong. */
-    priv->next_pts += l/(double)sh_audio->i_bps;
+    priv->next_pts = MP_NOPTS_VALUE;
     break;
   }
   default:
@@ -672,14 +787,13 @@ static void demux_audio_seek(demuxer_t *demuxer,float rel_seek_secs,float audio_
 static void demux_close_audio(demuxer_t* demuxer) {
   da_priv_t* priv = demuxer->priv;
 
-  if(!priv)
-    return;
   free(priv);
 }
 
 static int demux_audio_control(demuxer_t *demuxer,int cmd, void *arg){
     sh_audio_t *sh_audio=demuxer->audio->sh;
-    int audio_length = sh_audio->i_bps ? demuxer->movi_end / sh_audio->i_bps : 0;
+    int audio_length = sh_audio->i_bps && demuxer->movi_end > demuxer->movi_start ?
+                       (demuxer->movi_end - demuxer->movi_start) / sh_audio->i_bps : 0;
     da_priv_t* priv = demuxer->priv;
 
     switch(cmd) {

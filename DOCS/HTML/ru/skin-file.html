@@ -1,4 +1,4 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><title>B.2. Файл skin</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.75.2"><link rel="home" href="index.html" title="MPlayer - Медиа Проигрыватель"><link rel="up" href="skin.html" title="Приложение B. Формат скинов MPlayer"><link rel="prev" href="skin-overview.html" title="B.1. Обзор"><link rel="next" href="skin-fonts.html" title="B.3. Шрифты"><link rel="preface" href="howtoread.html" title="Как читать эту документацию"><link rel="chapter" href="intro.html" title="Глава 1. Введение"><link rel="chapter" href="install.html" title="Глава 2. Установка"><link rel="chapter" href="usage.html" title="Глава 3. Использование"><link rel="chapter" href="cd-dvd.html" title="Глава 4. Использование CD/DVD"><link rel="chapter" href="tv.html" title="Глава 5. TV"><link rel="chapter" href="radio.html" title="Глава 6. Радио"><link rel="chapter" href="video.html" title="Глава 7. Устройства вывода видео"><link rel="chapter" href="ports.html" title="Глава 8. Портинг"><link rel="chapter" href="mencoder.html" title="Глава 9. Основы использования MEncoder"><link rel="chapter" href="encoding-guide.html" title="Глава 10. Кодирование с MEncoder"><link rel="chapter" href="faq.html" title="Глава 11. Часто Задаваемые вопросы"><link rel="appendix" href="bugreports.html" title="Приложение A. Как сообщать об ошибках"><link rel="appendix" href="skin.html" title="Приложение B. Формат скинов MPlayer"><link rel="subsection" href="skin-file.html#skin-file-main" title="B.2.1. Главное окно и полоса воспроизведения"><link rel="subsection" href="skin-file.html#skin-file-subwindow" title="B.2.2. Вспомогательное окно"><link rel="subsection" href="skin-file.html#skin-file-menu" title="B.2.3. Меню со скинами"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">B.2. Файл skin</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="skin-overview.html">Пред.</a> </td><th width="60%" align="center">Приложение B. Формат скинов <span class="application">MPlayer</span></th><td width="20%" align="right"> <a accesskey="n" href="skin-fonts.html">След.</a></td></tr></table><hr></div><div class="sect1" title="B.2. Файл skin"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="skin-file"></a>B.2. Файл skin</h2></div></div></div><p>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><title>B.2. Файл skin</title><link rel="stylesheet" type="text/css" href="default.css"><meta name="generator" content="DocBook XSL Stylesheets V1.76.1"><link rel="home" href="index.html" title="MPlayer - Медиа Проигрыватель"><link rel="up" href="skin.html" title="Приложение B. Формат скинов MPlayer"><link rel="prev" href="skin-overview.html" title="B.1. Обзор"><link rel="next" href="skin-fonts.html" title="B.3. Шрифты"><link rel="preface" href="howtoread.html" title="Как читать эту документацию"><link rel="chapter" href="intro.html" title="Глава 1. Введение"><link rel="chapter" href="install.html" title="Глава 2. Установка"><link rel="chapter" href="usage.html" title="Глава 3. Использование"><link rel="chapter" href="video.html" title="Глава 4. Устройства вывода видео"><link rel="chapter" href="ports.html" title="Глава 5. Портинг"><link rel="chapter" href="mencoder.html" title="Глава 6. Основы использования MEncoder"><link rel="chapter" href="encoding-guide.html" title="Глава 7. Кодирование с MEncoder"><link rel="chapter" href="faq.html" title="Глава 8. Часто Задаваемые вопросы"><link rel="appendix" href="bugreports.html" title="Приложение A. Как сообщать об ошибках"><link rel="appendix" href="skin.html" title="Приложение B. Формат скинов MPlayer"><link rel="subsection" href="skin-file.html#skin-file-main" title="B.2.1. Главное окно и полоса воспроизведения"><link rel="subsection" href="skin-file.html#skin-file-subwindow" title="B.2.2. Вспомогательное окно"><link rel="subsection" href="skin-file.html#skin-file-menu" title="B.2.3. Меню со скинами"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">B.2. Файл skin</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="skin-overview.html">Пред.</a> </td><th width="60%" align="center">Приложение B. Формат скинов <span class="application">MPlayer</span></th><td width="20%" align="right"> <a accesskey="n" href="skin-fonts.html">След.</a></td></tr></table><hr></div><div class="sect1" title="B.2. Файл skin"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="skin-file"></a>B.2. Файл skin</h2></div></div></div><p>
 Как описано выше, это файл конфигурации скина. он строчно-орентирован:
 строки комментариев начинаются с символа '<code class="literal">;</code>' в начале
 строки (только пробелы и табуляция допускается перед символом '<code class="literal">;</code>').
@@ -105,9 +105,9 @@ end
   Позволяет вам указать фоновое изображение, используемое в главном окне.
   Окно будет появляться в указанной <code class="literal">X,Y</code> позиции на экране и
   иметь размер изображения.
-  </p><div class="note" title="Замечание" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Замечание</h3><p>
+  </p><div class="note" title="Примечание" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Примечание</h3><p>
   Эти координаты пока не работают для окна отображения.
-  </p></div><div class="warning" title="Внимание" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Внимание</h3><p>Прозрачные регионы в изображении (цвет #FF00FF) станут черными
+  </p></div><div class="warning" title="Предупреждение" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Предупреждение</h3><p>Прозрачные регионы в изображении (цвет #FF00FF) станут черными
   на X сервере без расширения XShape. Ширина картинки должна делиться
   на 8.</p></div></dd><dt><span class="term"><code class="literal">
   <a name="skin-button"></a>button = image, X, Y, width, height, message
@@ -129,7 +129,7 @@ end
   </code></span></dt><dd><p>
   Включает или выключает декорации главного окна, осуществляемые window manager . По-умолчанию
   <span class="bold"><strong>disable</strong></span>.
-  </p><div class="note" title="Замечание" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Замечание</h3><p>
+  </p><div class="note" title="Примечание" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Примечание</h3><p>
   Это не работает для окна отображения, в этом нет надобности.
   </p></div></dd><dt><span class="term"><code class="literal">
   <a name="skin-hpotmeter"></a>hpotmeter = button, bwidth, bheight, phases, numphases, default, X, Y, width, height, message
@@ -208,11 +208,11 @@ end
   быть заключена в двойные кавычки (но символ " не может быть частью текста).
   Метка отображается, используя шрифт определенный по <code class="literal">fontid</code>.
   </p></dd><dt><span class="term"><code class="literal">
-  <a name="skin-dlabel"></a>dlabel = X, Y, length, align, fontid, "text"
+  <a name="skin-dlabel"></a>dlabel = X, Y, width, align, fontid, "text"
   </code></span></dt><dd><p>
   Размещает динамическую метку на позиции <code class="literal">X,Y</code>. Метка зовется
   динамической, потому что ее текст периодически обновляется. Максимальная длина
-  метки задается параметром <code class="literal">length</code> (ее высота равна высоте символа).
+  метки задается параметром <code class="literal">width</code> (ее высота равна высоте символа).
   Если отображаемый текст шире этого значения, он будет скроллироваться,
   иначе он выравнивается в пределах указанного пространства в соответствии со
   значением параметра
@@ -237,7 +237,7 @@ end
     </td></tr><tr><td>$e</td><td>
     символ <span class="keycap"><b>e</b></span> (если фильм на паузе и шрифт имеет
     символ <span class="keycap"><b>e</b></span>)
-    </td></tr><tr><td>$x</td><td>ширина фильма</td></tr><tr><td>$y</td><td>высота фильма</td></tr><tr><td>$C</td><td>название используемого кодека</td></tr></tbody></table></div><div class="note" title="Замечание" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Замечание</h3><p>
+    </td></tr><tr><td>$x</td><td>ширина фильма</td></tr><tr><td>$y</td><td>высота фильма</td></tr><tr><td>$C</td><td>название используемого кодека</td></tr></tbody></table></div><div class="note" title="Примечание" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Примечание</h3><p>
   Переменные <code class="literal">$a, $T, $p, $s</code> и <code class="literal">$e</code> все
   возвращают символы, которые должны быть отображены в качестве специальных значков
   (например, <span class="keycap"><b>e</b></span> - для значка паузы, который обычно выглядит как ||).
@@ -287,4 +287,4 @@ end
   Определяет позицию <code class="literal">X,Y</code> и размер элемента меню в изображении.
   <code class="literal">message</code> - это сообщение, генерируемое, когда кнопка мыши будет отпущена
   над элементом меню.
-  </p></dd></dl></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="skin-overview.html">Пред.</a> </td><td width="20%" align="center"><a accesskey="u" href="skin.html">Уровень выше</a></td><td width="40%" align="right"> <a accesskey="n" href="skin-fonts.html">След.</a></td></tr><tr><td width="40%" align="left" valign="top">B.1. Обзор </td><td width="20%" align="center"><a accesskey="h" href="index.html">Начало</a></td><td width="40%" align="right" valign="top"> B.3. Шрифты</td></tr></table></div></body></html>
+  </p></dd></dl></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="skin-overview.html">Пред.</a> </td><td width="20%" align="center"><a accesskey="u" href="skin.html">Наверх</a></td><td width="40%" align="right"> <a accesskey="n" href="skin-fonts.html">След.</a></td></tr><tr><td width="40%" align="left" valign="top">B.1. Обзор </td><td width="20%" align="center"><a accesskey="h" href="index.html">Начало</a></td><td width="40%" align="right" valign="top"> B.3. Шрифты</td></tr></table></div></body></html>

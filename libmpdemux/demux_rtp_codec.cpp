@@ -23,11 +23,13 @@
 extern "C" {
 #include <limits.h>
 #include <math.h>
+
+#include "mpcommon.h"
 #include "stheader.h"
 #include "libavutil/base64.h"
 }
 
-#ifdef CONFIG_LIBAVCODEC
+#ifdef CONFIG_FFMPEG
 AVCodecParserContext * h264parserctx;
 AVCodecContext *avcctx;
 #endif
@@ -70,7 +72,7 @@ static unsigned char* parseH264ConfigStr( char const* configStr,
 
     psz += strlen(psz)+1;
     }
-    if( dup ) free( dup );
+    free( dup );
 
     return cfg;
 }
@@ -134,12 +136,12 @@ void rtpCodecInitialize_video(demuxer_t* demuxer,
     unsigned char* configData
       = parseH264ConfigStr(subsession->fmtp_spropparametersets(), configLen);
     sh_video->bih = bih = insertVideoExtradata(bih, configData, configLen);
-#ifdef CONFIG_LIBAVCODEC
+#ifdef CONFIG_FFMPEG
     int fooLen;
     const uint8_t* fooData;
     avcodec_register_all();
     h264parserctx = av_parser_init(CODEC_ID_H264);
-    avcctx = avcodec_alloc_context();
+    avcctx = avcodec_alloc_context3(NULL);
     // Pass the config to the parser
     h264parserctx->parser->parser_parse(h264parserctx, avcctx,
                   &fooData, &fooLen, configData, configLen);
@@ -220,7 +222,7 @@ void rtpCodecInitialize_audio(demuxer_t* demuxer,
   flags = 0;
   // Create a dummy audio stream header
   // to make the main MPlayer code happy:
-  sh_audio_t* sh_audio = new_sh_audio(demuxer,0);
+  sh_audio_t* sh_audio = new_sh_audio(demuxer,0, NULL);
   WAVEFORMATEX* wf = (WAVEFORMATEX*)calloc(1,sizeof(WAVEFORMATEX));
   sh_audio->wf = wf;
   demux_stream_t* d_audio = demuxer->audio;
@@ -359,7 +361,7 @@ static void needVideoFrameRate(demuxer_t* demuxer,
   // figure out the frame rate by itself, so (unless the user specifies
   // it manually, using "-fps") we figure it out ourselves here, using the
   // presentation timestamps in successive packets,
-  extern double force_fps; if (force_fps != 0.0) return; // user used "-fps"
+  if (force_fps != 0.0) return; // user used "-fps"
 
   demux_stream_t* d_video = demuxer->video;
   sh_video_t* sh_video = (sh_video_t*)(d_video->sh);

@@ -22,7 +22,7 @@
 
 #include "osdep.h"
 
-#ifdef _WIN32
+#ifndef __OS2__
 #include <windows.h>
 #endif
 

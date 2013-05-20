@@ -37,8 +37,9 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include "af.h"
+#include "mp_msg.h"
 #include "path.h"
+#include "af.h"
 
 #define DEF_SZ 512 // default buffer size (in samples)
 #define SHARED_FILE "mplayer-af_export" /* default file name
@@ -73,7 +74,7 @@ static int control(struct af_instance_s* af, int cmd, void* arg)
     int mapsize;
 
     // Free previous buffers
-    if (s->buf && s->buf[0])
+    if (s->buf)
       free(s->buf[0]);
 
     // unmap previous area
@@ -136,8 +137,7 @@ static int control(struct af_instance_s* af, int cmd, void* arg)
     char *str = arg;
 
     if (!str){
-      if(s->filename)
-	free(s->filename);
+      free(s->filename);
 
       s->filename = get_path(SHARED_FILE);
       return AF_OK;
@@ -146,8 +146,7 @@ static int control(struct af_instance_s* af, int cmd, void* arg)
     while((str[i]) && (str[i] != ':'))
       i++;
 
-    if(s->filename)
-      free(s->filename);
+    free(s->filename);
 
     s->filename = calloc(i + 1, 1);
     memcpy(s->filename, str, i);
@@ -177,14 +176,12 @@ static int control(struct af_instance_s* af, int cmd, void* arg)
 */
 static void uninit( struct af_instance_s* af )
 {
-  if (af->data){
-    free(af->data);
-    af->data = NULL;
-  }
+  free(af->data);
+  af->data = NULL;
 
   if(af->setup){
     af_export_t* s = af->setup;
-    if (s->buf && s->buf[0])
+    if (s->buf)
       free(s->buf[0]);
 
     // Free mmaped area
@@ -194,8 +191,7 @@ static void uninit( struct af_instance_s* af )
     if(s->fd > -1)
       close(s->fd);
 
-    if(s->filename)
-	free(s->filename);
+    free(s->filename);
 
     free(af->setup);
     af->setup = NULL;

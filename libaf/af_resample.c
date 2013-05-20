@@ -26,6 +26,7 @@
 
 #include "libavutil/common.h"
 #include "libavutil/mathematics.h"
+#include "mp_msg.h"
 #include "af.h"
 #include "dsp.h"
 
@@ -236,8 +237,7 @@ static int control(struct af_instance_s* af, int cmd, void* arg)
       fc = 1/(float)(max(s->up,s->dn));
       // Allocate space for polyphase filter bank and prototype filter
       w = malloc(sizeof(float) * s->up *L);
-      if(NULL != s->w)
-	free(s->w);
+      free(s->w);
       s->w = malloc(L*s->up*af->data->bps);
 
       // Design prototype filter type using Kaiser window with beta = 10

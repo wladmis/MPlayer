@@ -37,13 +37,9 @@
 #include <unistd.h>
 #include <inttypes.h>
 
+#include "dvdread_internal.h"
 #include "dvdread/dvd_reader.h"
 #include "dvdread/dvd_udf.h"
-
-/* Private but located in/shared with dvd_reader.c */
-extern int UDFReadBlocksRaw( dvd_reader_t *device, uint32_t lb_number,
-                             size_t block_count, unsigned char *data,
-                             int encrypted );
 
 /* It's required to either fail or deliver all the blocks asked for. */
 static int DVDReadLBUDF( dvd_reader_t *device, uint32_t lb_number,
@@ -333,16 +329,17 @@ static int SetUDFCache(dvd_reader_t *device, UDFCacheType type,
 static int Unicodedecode( uint8_t *data, int len, char *target )
 {
   int p = 1, i = 0;
+  int err = 0;
 
   if( ( data[ 0 ] == 8 ) || ( data[ 0 ] == 16 ) ) do {
-    if( data[ 0 ] == 16 ) p++;  /* Ignore MSB of unicode16 */
+    if( data[ 0 ] == 16 ) err |= data[p++];  /* character cannot be converted to 8bit, return error */
     if( p < len ) {
       target[ i++ ] = data[ p++ ];
     }
   } while( p < len );
 
   target[ i ] = '\0';
-  return 0;
+  return !err;
 }
 
 static int UDFDescriptor( uint8_t *data, uint16_t *TagID )
@@ -494,8 +491,9 @@ static int UDFFileIdentifier( uint8_t *data, uint8_t *FileCharacteristics,
   L_FI = GETN1(19);
   UDFLongAD(&data[20], FileICB);
   L_IU = GETN2(36);
-  if (L_FI) Unicodedecode(&data[38 + L_IU], L_FI, FileName);
-  else FileName[0] = '\0';
+  if (L_FI) {
+    if (!Unicodedecode(&data[38 + L_IU], L_FI, FileName)) FileName[0] = 0;
+  } else FileName[0] = '\0';
   return 4 * ((38 + L_FI + L_IU + 3) / 4);
 }
 

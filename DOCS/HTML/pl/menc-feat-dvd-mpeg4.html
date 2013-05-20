@@ -1,4 +1,4 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><title>10.1. Rippowanie DVD do wysokiej jakości pliku MPEG-4 ("DivX")</title><link rel="stylesheet" href="default.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.75.2"><link rel="home" href="index.html" title="MPlayer - Odtwarzacz filmów"><link rel="up" href="encoding-guide.html" title="Rozdział 10. Kodowanie przy użyciu MEncodera"><link rel="prev" href="encoding-guide.html" title="Rozdział 10. Kodowanie przy użyciu MEncodera"><link rel="next" href="menc-feat-telecine.html" title="10.2. How to deal with telecine and interlacing within NTSC DVDs"><link rel="preface" href="howtoread.html" title="Jak czytać tę dokumentację"><link rel="chapter" href="intro.html" title="Rozdział 1. Wprowadzenie"><link rel="chapter" href="install.html" title="Rozdział 2. Instalacja"><link rel="chapter" href="usage.html" title="Rozdział 3. Sposób użycia"><link rel="chapter" href="cd-dvd.html" title="Rozdział 4. Używanie CD/DVD"><link rel="chapter" href="tv.html" title="Rozdział 5. TV"><link rel="chapter" href="radio.html" title="Rozdział 6. Radio"><link rel="chapter" href="video.html" title="Rozdział 7. Urządzenia wyjścia video"><link rel="chapter" href="ports.html" title="Rozdział 8. Porty"><link rel="chapter" href="mencoder.html" title="Rozdział 9. Podstawy używania MEncodera"><link rel="chapter" href="encoding-guide.html" title="Rozdział 10. Kodowanie przy użyciu MEncodera"><link rel="chapter" href="faq.html" title="Rozdział 11. FAQ - Często Zadawane Pytania"><link rel="appendix" href="bugreports.html" title="Dodatek A. Jak zgłaszać błędy"><link rel="appendix" href="skin.html" title="Dodatek B. Format skórki MPlayera"><link rel="subsection" href="menc-feat-dvd-mpeg4.html#menc-feat-dvd-mpeg4-preparing-encode" title="10.1.1. Przygotowanie do kodowania: Identyfikowanie materiału źródłowego i framerate"><link rel="subsection" href="menc-feat-dvd-mpeg4.html#menc-feat-dvd-mpeg4-2pass" title="10.1.2. Stały kwantyzator a tryb wieloprzebiegowy"><link rel="subsection" href="menc-feat-dvd-mpeg4.html#menc-feat-dvd-mpeg4-constraints" title="10.1.3. Ograniczenia efektywnego kodowania"><link rel="subsection" href="menc-feat-dvd-mpeg4.html#menc-feat-dvd-mpeg4-crop" title="10.1.4. Kadrowanie i skalowanie"><link rel="subsection" href="menc-feat-dvd-mpeg4.html#menc-feat-dvd-mpeg4-resolution-bitrate" title="10.1.5. Dobieranie rozdzielczości i bitrate"><link rel="subsection" href="menc-feat-dvd-mpeg4.html#menc-feat-dvd-mpeg4-filtering" title="10.1.6. Filtrowanie"><link rel="subsection" href="menc-feat-dvd-mpeg4.html#menc-feat-dvd-mpeg4-interlacing" title="10.1.7. Przeplot i telecine"><link rel="subsection" href="menc-feat-dvd-mpeg4.html#menc-feat-dvd-mpeg4-encoding-interlaced" title="10.1.8. Encoding interlaced video"><link rel="subsection" href="menc-feat-dvd-mpeg4.html#menc-feat-dvd-mpeg4-av-sync" title="10.1.9. Notes on Audio/Video synchronization"><link rel="subsection" href="menc-feat-dvd-mpeg4.html#menc-feat-dvd-mpeg4-codec" title="10.1.10. Choosing the video codec"><link rel="subsection" href="menc-feat-dvd-mpeg4.html#menc-feat-dvd-mpeg4-audio" title="10.1.11. Audio"><link rel="subsection" href="menc-feat-dvd-mpeg4.html#menc-feat-dvd-mpeg4-muxing" title="10.1.12. Muxing"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">10.1. Rippowanie DVD do wysokiej jakości pliku MPEG-4 ("DivX")</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="encoding-guide.html">Poprzedni</a> </td><th width="60%" align="center">Rozdział 10. Kodowanie przy użyciu <span class="application">MEncodera</span></th><td width="20%" align="right"> <a accesskey="n" href="menc-feat-telecine.html">Następny</a></td></tr></table><hr></div><div class="sect1" title='10.1. Rippowanie DVD do wysokiej jakości pliku MPEG-4 ("DivX")'><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="menc-feat-dvd-mpeg4"></a>10.1. Rippowanie DVD do wysokiej jakości pliku MPEG-4 ("DivX")</h2></div></div></div><p>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><title>7.1. Rippowanie DVD do wysokiej jakości pliku MPEG-4 ("DivX")</title><link rel="stylesheet" type="text/css" href="default.css"><meta name="generator" content="DocBook XSL Stylesheets V1.76.1"><link rel="home" href="index.html" title="MPlayer - Odtwarzacz filmów"><link rel="up" href="encoding-guide.html" title="Rozdział 7. Kodowanie przy użyciu MEncodera"><link rel="prev" href="encoding-guide.html" title="Rozdział 7. Kodowanie przy użyciu MEncodera"><link rel="next" href="menc-feat-telecine.html" title="7.2. How to deal with telecine and interlacing within NTSC DVDs"><link rel="preface" href="howtoread.html" title="Jak czytać tę dokumentację"><link rel="chapter" href="intro.html" title="Rozdział 1. Wprowadzenie"><link rel="chapter" href="install.html" title="Rozdział 2. Instalacja"><link rel="chapter" href="usage.html" title="Rozdział 3. Sposób użycia"><link rel="chapter" href="video.html" title="Rozdział 4. Urządzenia wyjścia video"><link rel="chapter" href="ports.html" title="Rozdział 5. Porty"><link rel="chapter" href="mencoder.html" title="Rozdział 6. Podstawy używania MEncodera"><link rel="chapter" href="encoding-guide.html" title="Rozdział 7. Kodowanie przy użyciu MEncodera"><link rel="chapter" href="faq.html" title="Rozdział 8. FAQ - Często Zadawane Pytania"><link rel="appendix" href="bugreports.html" title="Dodatek A. Jak zgłaszać błędy"><link rel="appendix" href="skin.html" title="Dodatek B. Format skórki MPlayera"><link rel="subsection" href="menc-feat-dvd-mpeg4.html#menc-feat-dvd-mpeg4-preparing-encode" title="7.1.1. Przygotowanie do kodowania: Identyfikowanie materiału źródłowego i framerate"><link rel="subsection" href="menc-feat-dvd-mpeg4.html#menc-feat-dvd-mpeg4-2pass" title="7.1.2. Stały kwantyzator a tryb wieloprzebiegowy"><link rel="subsection" href="menc-feat-dvd-mpeg4.html#menc-feat-dvd-mpeg4-constraints" title="7.1.3. Ograniczenia efektywnego kodowania"><link rel="subsection" href="menc-feat-dvd-mpeg4.html#menc-feat-dvd-mpeg4-crop" title="7.1.4. Kadrowanie i skalowanie"><link rel="subsection" href="menc-feat-dvd-mpeg4.html#menc-feat-dvd-mpeg4-resolution-bitrate" title="7.1.5. Dobieranie rozdzielczości i bitrate"><link rel="subsection" href="menc-feat-dvd-mpeg4.html#menc-feat-dvd-mpeg4-filtering" title="7.1.6. Filtrowanie"><link rel="subsection" href="menc-feat-dvd-mpeg4.html#menc-feat-dvd-mpeg4-interlacing" title="7.1.7. Przeplot i telecine"><link rel="subsection" href="menc-feat-dvd-mpeg4.html#menc-feat-dvd-mpeg4-encoding-interlaced" title="7.1.8. Encoding interlaced video"><link rel="subsection" href="menc-feat-dvd-mpeg4.html#menc-feat-dvd-mpeg4-av-sync" title="7.1.9. Notes on Audio/Video synchronization"><link rel="subsection" href="menc-feat-dvd-mpeg4.html#menc-feat-dvd-mpeg4-codec" title="7.1.10. Choosing the video codec"><link rel="subsection" href="menc-feat-dvd-mpeg4.html#menc-feat-dvd-mpeg4-audio" title="7.1.11. Audio"><link rel="subsection" href="menc-feat-dvd-mpeg4.html#menc-feat-dvd-mpeg4-muxing" title="7.1.12. Muxing"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">7.1. Rippowanie DVD do wysokiej jakości pliku MPEG-4 ("DivX")</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="encoding-guide.html">Poprzedni</a> </td><th width="60%" align="center">Rozdział 7. Kodowanie przy użyciu <span class="application">MEncodera</span></th><td width="20%" align="right"> <a accesskey="n" href="menc-feat-telecine.html">Następny</a></td></tr></table><hr></div><div class="sect1" title='7.1. Rippowanie DVD do wysokiej jakości pliku MPEG-4 ("DivX")'><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="menc-feat-dvd-mpeg4"></a>7.1. Rippowanie DVD do wysokiej jakości pliku MPEG-4 ("DivX")</h2></div></div></div><p>
   Jednym z często zadawanych pytań jest "Jak zrobić rip najlepszej jakości
   przy danej objętości?". Innym pytaniem jest "Jak zrobić najlepszy możliwy
   rip? Nie ważne jaka będzie objętość, chcę najlepszej jakości."
@@ -26,7 +26,7 @@
   W ten sposób, powinno się udać otrzymać ripy wysokiej jakości bez zbyt
   myślenia za dużo, ponieważ te narzędzia są projektowane by podejmować za
   Ciebie mądre decyzje.
-</p><div class="sect2" title="10.1.1. Przygotowanie do kodowania: Identyfikowanie materiału źródłowego i framerate"><div class="titlepage"><div><div><h3 class="title"><a name="menc-feat-dvd-mpeg4-preparing-encode"></a>10.1.1. Przygotowanie do kodowania: Identyfikowanie materiału źródłowego
+</p><div class="sect2" title="7.1.1. Przygotowanie do kodowania: Identyfikowanie materiału źródłowego i framerate"><div class="titlepage"><div><div><h3 class="title"><a name="menc-feat-dvd-mpeg4-preparing-encode"></a>7.1.1. Przygotowanie do kodowania: Identyfikowanie materiału źródłowego
 i framerate</h3></div></div></div><p>
   Zanim w ogóle zaczniesz myśleć o kodowaniu filmu, musisz przejść kilka
   wstępnych kroków.
@@ -46,7 +46,7 @@ i framerate</h3></div></div></div><p>
   brzydkie artefakty przeplotu i powtórzone albo zagubione klatki.
   Poza tym że są brzydkie, artefakty są też szkodliwe dla kodowania:
   Dostaniesz gorszą jakość na jednostkę bitrate.
-</p><div class="sect3" title="10.1.1.1. Ustalanie źródłowego framerate"><div class="titlepage"><div><div><h4 class="title"><a name="menc-feat-dvd-mpeg4-preparing-encode-fps"></a>10.1.1.1. Ustalanie źródłowego framerate</h4></div></div></div><p>
+</p><div class="sect3" title="7.1.1.1. Ustalanie źródłowego framerate"><div class="titlepage"><div><div><h4 class="title"><a name="menc-feat-dvd-mpeg4-preparing-encode-fps"></a>7.1.1.1. Ustalanie źródłowego framerate</h4></div></div></div><p>
   Poniżej jest lista popularnych typów materiału źródłowego, gdzie można je
   najczęściej znaleźć i ich własności:
 </p><div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem"><p>
@@ -77,7 +77,7 @@ i framerate</h3></div></div></div><p>
   sekundę są typowe dla NTSC, a 25fps jest typowe dla PAL.
 </p></li><li class="listitem"><p>
   <span class="bold"><strong>Stary film</strong></span>: Rozmaite niższe framerate.
-</p></li></ul></div></div><div class="sect3" title="10.1.1.2. Identyfikowanie materiału źródłowego"><div class="titlepage"><div><div><h4 class="title"><a name="menc-feat-dvd-mpeg4-preparing-encode-material"></a>10.1.1.2. Identyfikowanie materiału źródłowego</h4></div></div></div><p>
+</p></li></ul></div></div><div class="sect3" title="7.1.1.2. Identyfikowanie materiału źródłowego"><div class="titlepage"><div><div><h4 class="title"><a name="menc-feat-dvd-mpeg4-preparing-encode-material"></a>7.1.1.2. Identyfikowanie materiału źródłowego</h4></div></div></div><p>
   Filmy składające się z klatek nazywa się progresywnymi,
   podczas gdy te składające się z niezależnych pól nazywa się
   z przeplotem, albo filmem - chociaż ten drugi termin jest niejasny.
@@ -141,7 +141,7 @@ i framerate</h3></div></div></div><p>
   w zakodowanym MPEG-2.
 </p><p>
   Procedury radzenia sobie z takimi przypadkami będą omówione
-  <a class="link" href="menc-feat-telecine.html" title="10.2. How to deal with telecine and interlacing within NTSC DVDs">w dalszej części przewodnika</a>.
+  <a class="link" href="menc-feat-telecine.html" title="7.2. How to deal with telecine and interlacing within NTSC DVDs">w dalszej części przewodnika</a>.
   Teraz podamy tylko kilka wskazówek jak identyfikować z jakim typem materiału
   mamy do czynienia.
 </p><div class="itemizedlist" title="Regiony NTSC:"><p class="title"><b>Regiony NTSC:</b></p><ul class="itemizedlist" type="disc"><li class="listitem"><p>
@@ -183,7 +183,7 @@ i framerate</h3></div></div></div><p>
   wyświetlać klatka po klatce.
   Może to pomóc zidentyfikować wzorzec jeśli
   nie możesz go dostrzec przy pełnej prędkości.
-</p></div></div></div><div class="sect2" title="10.1.2. Stały kwantyzator a tryb wieloprzebiegowy"><div class="titlepage"><div><div><h3 class="title"><a name="menc-feat-dvd-mpeg4-2pass"></a>10.1.2. Stały kwantyzator a tryb wieloprzebiegowy</h3></div></div></div><p>
+</p></div></div></div><div class="sect2" title="7.1.2. Stały kwantyzator a tryb wieloprzebiegowy"><div class="titlepage"><div><div><h3 class="title"><a name="menc-feat-dvd-mpeg4-2pass"></a>7.1.2. Stały kwantyzator a tryb wieloprzebiegowy</h3></div></div></div><p>
   Jest możliwe zakodowanie filmu z szeroką gamą jakości.
   Z nowoczesnymi koderami i odrobiną kompresji przed kodekiem (zmniejszenie
   rozdzielczości i usuwanie szumu), możliwe jest osiągnięcie bardzo dobrej
@@ -281,7 +281,7 @@ i framerate</h3></div></div></div><p>
 </p><p>
   Jeśli chcesz konkretnej wielkości, musisz jakoś obliczyć bitrare.
   Ale zanim to zrobisz, musisz wiedzieć ile miejsca potrzebujesz na dźwięk,
-  więc powinieneś <a class="link" href="menc-feat-dvd-mpeg4.html#menc-feat-dvd-mpeg4-audio" title="10.1.11. Audio">ściągnąć go</a>
+  więc powinieneś <a class="link" href="menc-feat-dvd-mpeg4.html#menc-feat-dvd-mpeg4-audio" title="7.1.11. Audio">ściągnąć go</a>
   najpierw.
   Możesz wyliczyć bitrate z następującego równania:
   <code class="systemitem">bitrate = (wielkość_docelowa_w_MBajtach - wielkość_dźwięku_w_MBajtach)
@@ -290,7 +290,7 @@ i framerate</h3></div></div></div><p>
   dźwiękowej, bitrate video musi być:
   <code class="systemitem">(702 - 60) * 1024 * 1024 / (120*60) * 8 / 1000
   = 740kbps</code>
-</p></div><div class="sect2" title="10.1.3. Ograniczenia efektywnego kodowania"><div class="titlepage"><div><div><h3 class="title"><a name="menc-feat-dvd-mpeg4-constraints"></a>10.1.3. Ograniczenia efektywnego kodowania</h3></div></div></div><p>
+</p></div><div class="sect2" title="7.1.3. Ograniczenia efektywnego kodowania"><div class="titlepage"><div><div><h3 class="title"><a name="menc-feat-dvd-mpeg4-constraints"></a>7.1.3. Ograniczenia efektywnego kodowania</h3></div></div></div><p>
 Ze względu na naturę kodowania typu MPEG istnieją różne ograniczenia których
 warto się trzymać żeby osiągnąć najlepszą jakość.
 MPEG dzieli obraz na kwadraty 16x16 pikseli nazywane makroblokami,
@@ -368,7 +368,7 @@ go również poprawi efektywność kodowania.
 Puryści, którzy chcą możliwie dokładnie zachować oryginał mogą się sprzeciwiać,
 ale jeśli nie planujesz używać stałego kwantyzatora to jakość uzyskana dzięki
 skadrowaniu znacząco przewyższy utratę informacji przy brzegach.
-</p></div><div class="sect2" title="10.1.4. Kadrowanie i skalowanie"><div class="titlepage"><div><div><h3 class="title"><a name="menc-feat-dvd-mpeg4-crop"></a>10.1.4. Kadrowanie i skalowanie</h3></div></div></div><p>
+</p></div><div class="sect2" title="7.1.4. Kadrowanie i skalowanie"><div class="titlepage"><div><div><h3 class="title"><a name="menc-feat-dvd-mpeg4-crop"></a>7.1.4. Kadrowanie i skalowanie</h3></div></div></div><p>
 Przypomnijmy z poprzedniej części że ostateczna wielkość (wysokość i szerokość)
 obrazu do kodowania powinna być wielokrotnością 16.
 Można to osiągnąć kadrowaniem, skalowaniem albo kombinacją obydwu.
@@ -379,7 +379,7 @@ Zwykły format YUV, 4:2:0, przechowuje wartości koloru podpróbkowane, czyli
 kolor jest próbkowany o połowę rzadziej w każdym kierunku niż jasność.
 Spójrzmy na diagram, na którym L oznacza punkty próbkowania jasności (luma)
 a C koloru (chroma).
-</p><div class="informaltable"><table border="1" width="40%"><colgroup><col align="center"><col align="center"><col align="center"><col align="center"><col align="center"><col align="center"><col align="center"><col align="center"></colgroup><tbody><tr><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td></tr><tr><td colspan="2" align="center">C</td><td colspan="2" align="center">C</td><td colspan="2" align="center">C</td><td colspan="2" align="center">C</td></tr><tr><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td></tr><tr><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td></tr><tr><td colspan="2" align="center">C</td><td colspan="2" align="center">C</td><td colspan="2" align="center">C</td><td colspan="2" align="center">C</td></tr><tr><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td></tr></tbody></table></div><p>
+</p><div class="informaltable"><table border="1" width="40%"><colgroup><col align="center" class="col1"><col align="center" class="col2"><col align="center" class="col3"><col align="center" class="col4"><col align="center" class="col5"><col align="center" class="col6"><col align="center" class="col7"><col align="center" class="col8"></colgroup><tbody><tr><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td></tr><tr><td colspan="2" align="center">C</td><td colspan="2" align="center">C</td><td colspan="2" align="center">C</td><td colspan="2" align="center">C</td></tr><tr><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td></tr><tr><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td></tr><tr><td colspan="2" align="center">C</td><td colspan="2" align="center">C</td><td colspan="2" align="center">C</td><td colspan="2" align="center">C</td></tr><tr><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td></tr></tbody></table></div><p>
 Jak widać, wiersze i kolumny obrazu w sposób naturalny łączą się w pary.
 Dlatego przesunięcia i wymiary kadrowania <span class="emphasis"><em>muszą</em></span> być
 liczbami parzystymi.
@@ -389,7 +389,7 @@ to przepróbkowania kolorów, co jest potencjalnie stratną operacją nie
 obsługiwaną przez filtr kadrowania.
 </p><p>
 Dalej, film z przeplotem jest kodowany jak poniżej:
-</p><div class="informaltable"><table border="1" width="80%"><colgroup><col align="center"><col align="center"><col align="center"><col align="center"><col align="center"><col align="center"><col align="center"><col align="center"><col align="center"><col align="center"><col align="center"><col align="center"><col align="center"><col align="center"><col align="center"><col align="center"></colgroup><tbody><tr><td colspan="8" align="center">Górne pole</td><td colspan="8" align="center">Dolne pole</td></tr><tr><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td></tr><tr><td colspan="2" align="center">C</td><td colspan="2" align="center">C</td><td colspan="2" align="center">C</td><td colspan="2" align="center">C</td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td></tr><tr><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td></tr><tr><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td></tr><tr><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td colspan="2" align="center">C</td><td colspan="2" align="center">C</td><td colspan="2" align="center">C</td><td colspan="2" align="center">C</td></tr><tr><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td></tr><tr><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td></tr><tr><td colspan="2" align="center">C</td><td colspan="2" align="center">C</td><td colspan="2" align="center">C</td><td colspan="2" align="center">C</td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td></tr><tr><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td></tr><tr><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td></tr><tr><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td colspan="2" align="center">C</td><td colspan="2" align="center">C</td><td colspan="2" align="center">C</td><td colspan="2" align="center">C</td></tr><tr><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td></tr></tbody></table></div><p>
+</p><div class="informaltable"><table border="1" width="80%"><colgroup><col align="center" class="col1"><col align="center" class="col2"><col align="center" class="col3"><col align="center" class="col4"><col align="center" class="col5"><col align="center" class="col6"><col align="center" class="col7"><col align="center" class="col8"><col align="center" class="col9"><col align="center" class="col10"><col align="center" class="col11"><col align="center" class="col12"><col align="center" class="col13"><col align="center" class="col14"><col align="center" class="col15"><col align="center" class="col16"></colgroup><tbody><tr><td colspan="8" align="center">Górne pole</td><td colspan="8" align="center">Dolne pole</td></tr><tr><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td></tr><tr><td colspan="2" align="center">C</td><td colspan="2" align="center">C</td><td colspan="2" align="center">C</td><td colspan="2" align="center">C</td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td></tr><tr><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td></tr><tr><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td></tr><tr><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td colspan="2" align="center">C</td><td colspan="2" align="center">C</td><td colspan="2" align="center">C</td><td colspan="2" align="center">C</td></tr><tr><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td></tr><tr><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td></tr><tr><td colspan="2" align="center">C</td><td colspan="2" align="center">C</td><td colspan="2" align="center">C</td><td colspan="2" align="center">C</td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td></tr><tr><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td></tr><tr><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td></tr><tr><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td colspan="2" align="center">C</td><td colspan="2" align="center">C</td><td colspan="2" align="center">C</td><td colspan="2" align="center">C</td></tr><tr><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center"> </td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td><td align="center">L</td></tr></tbody></table></div><p>
 Jak widać, wzór powtarza się dopiero po 4 liniach.
 Dlatego przy filmie z przeplotem, pionowa współrzędna i wysokość kadrowania
 muszą być wielokrotnościami 4.
@@ -455,14 +455,14 @@ Skalowanie powinno być robione przy odtwarzaniu, a odtwarzacz używa informacji
 o proporcjach zapisanych w AVI żeby określić prawidłową rozdzielczość.
 Niestety, nie wszystkie odtwarzacze uznają te informacje,
 dlatego mimo wszystko możesz chcieć przeskalować.
-</p></div><div class="sect2" title="10.1.5. Dobieranie rozdzielczości i bitrate"><div class="titlepage"><div><div><h3 class="title"><a name="menc-feat-dvd-mpeg4-resolution-bitrate"></a>10.1.5. Dobieranie rozdzielczości i bitrate</h3></div></div></div><p>
+</p></div><div class="sect2" title="7.1.5. Dobieranie rozdzielczości i bitrate"><div class="titlepage"><div><div><h3 class="title"><a name="menc-feat-dvd-mpeg4-resolution-bitrate"></a>7.1.5. Dobieranie rozdzielczości i bitrate</h3></div></div></div><p>
 Jeśli nie kodujesz w trybie stałego kwantyzatora, musisz wybrać bitrate.
 Jest to dość prosta rzecz – to (średnia) ilość bitów jaka będzie
 używana do zakodowania jednej sekundy filmu.
 Zazwyczaj bitrate mierzy się w kilobitach (1000 bitów) na sekundę.
 Wielkość filmu na dysku to bitrate razy długość filmu,
 plus drobne "dodatki" (patrz na przykład sekcja o
-<a class="link" href="menc-feat-dvd-mpeg4.html#menc-feat-dvd-mpeg4-muxing-avi-limitations" title="10.1.12.2. Limitations of the AVI container">kontenerze AVI</a>
+<a class="link" href="menc-feat-dvd-mpeg4.html#menc-feat-dvd-mpeg4-muxing-avi-limitations" title="7.1.12.2. Limitations of the AVI container">kontenerze AVI</a>
 ).
 Pozostałe parametry, takie jak skalowanie, kadrowanie itp.
 <span class="bold"><strong>nie</strong></span> zmienią wielkości pliku jeśli nie
@@ -502,7 +502,7 @@ szczegóły, ilość ruchu itp. bezsensowne jest podawanie ogólnych zaleceń na
 na przekątą (analogia bitów na piksel używająca pierwiastka).
 </p><p>
 Omówiliśmy więc problemy z wyborem bitrate i rozdzielczości.
-</p><div class="sect3" title="10.1.5.1. Obliczanie rozdzielczości"><div class="titlepage"><div><div><h4 class="title"><a name="menc-feat-dvd-mpeg4-resolution-bitrate-compute"></a>10.1.5.1. Obliczanie rozdzielczości</h4></div></div></div><p>
+</p><div class="sect3" title="7.1.5.1. Obliczanie rozdzielczości"><div class="titlepage"><div><div><h4 class="title"><a name="menc-feat-dvd-mpeg4-resolution-bitrate-compute"></a>7.1.5.1. Obliczanie rozdzielczości</h4></div></div></div><p>
 Następne kroki przeprowadzą Cię przez obliczenie rozdzielczości dla Twojego
 filmu bez zniekształcania go za bardzo, biorąc pod uwagę kilka typów informacji
 o źródłowym filmie.
@@ -545,16 +545,16 @@ skompresować obraz. Jeśli nie ma dość bitów widać krawędzie tych bloków.
 Dlatego też mądrze jest wybrać CQ w zakresie 0,20 do 0,22 na film jednopłytkowy
 i 0,26-0,28 na dwupłytkowy przy standardowych opcjach kodowania.
 Bardziej zaawansowane opcje kodowania, takie jak te podane tutaj dla
-<a class="link" href="menc-feat-enc-libavcodec.html#menc-feat-mpeg4-lavc-example-settings" title="10.3.4. Encoding setting examples"><code class="systemitem">libavcodec</code></a>
+<a class="link" href="menc-feat-enc-libavcodec.html#menc-feat-mpeg4-lavc-example-settings" title="7.3.4. Encoding setting examples"><code class="systemitem">libavcodec</code></a>
 i
-<a class="link" href="menc-feat-xvid.html#menc-feat-xvid-example-settings" title="10.4.4. Encoding setting examples"><code class="systemitem">Xvid</code></a>
+<a class="link" href="menc-feat-xvid.html#menc-feat-xvid-example-settings" title="7.4.4. Encoding setting examples"><code class="systemitem">Xvid</code></a>
 powinny umożliwić otrzymanie takiej samej jakości z CQ w zakresie 0,18 do 0,20
 na 1 CD i 0,24 do 0,26 na 2 CD.
 Z kodekami MPEG-4 AVC, takimi jak
 <code class="systemitem">x264</code>, możesz używać CQ w zakresie
 0,14 do 0,16 przy standardowych opcjach
 a powinno się też udać zejść do 0,10 do 0,12 z
-<a class="link" href="menc-feat-x264.html#menc-feat-x264-example-settings" title="10.5.2. Encoding setting examples">zaawansowanymi opcjami kodowania <code class="systemitem">x264</code></a>.
+<a class="link" href="menc-feat-x264.html#menc-feat-x264-example-settings" title="7.5.2. Encoding setting examples">zaawansowanymi opcjami kodowania <code class="systemitem">x264</code></a>.
 </p><p>
 Pamiętajmy, że CQ jest tylko przydatnym odnośnikiem, zależnym od kodowanego
 filmu. CQ równe ,018 może wyglądać dobrze przy Bergmanie, w przeciwieństwie do
@@ -563,7 +563,7 @@ Z drugiej strony, bezsensowne jest podnoszenie CQ powyżej 0,30 jako że marnuje
 Pamiętajmy też że, jak było wspomniane wcześniej, filmy w niższej
 rozdzielczości potrzebują większego CQ (w porównaniu do na przykład
 rozdzielczości DVD) żeby dobrze wyglądać.
-</p></div></div><div class="sect2" title="10.1.6. Filtrowanie"><div class="titlepage"><div><div><h3 class="title"><a name="menc-feat-dvd-mpeg4-filtering"></a>10.1.6. Filtrowanie</h3></div></div></div><p>
+</p></div></div><div class="sect2" title="7.1.6. Filtrowanie"><div class="titlepage"><div><div><h3 class="title"><a name="menc-feat-dvd-mpeg4-filtering"></a>7.1.6. Filtrowanie</h3></div></div></div><p>
 Bardzo ważne do robienia dobrych kodowań jest nauczenie się posługiwania
 systemem filtrów <span class="application">MEncodera</span>.
 Całe przetwarzanie video jest wykonywane przez filtry – kadrowanie, skalowanie,
@@ -618,7 +618,7 @@ Zwiększenie parametrów dla <tt class="option">hqdn3d</tt> jeszcze bardziej pop
 kompresowalność, ale jeśli przesadzisz to zauważalnie zniekształcisz obraz.
 Wartości sugerowane powyżej (<tt class="option">2:1:2</tt>) są dość konserwatywne; nie
 bój się eksperymentować z wyższymi wartościami i samemu oceniać wyniki.
-</p></div><div class="sect2" title="10.1.7. Przeplot i telecine"><div class="titlepage"><div><div><h3 class="title"><a name="menc-feat-dvd-mpeg4-interlacing"></a>10.1.7. Przeplot i telecine</h3></div></div></div><p>
+</p></div><div class="sect2" title="7.1.7. Przeplot i telecine"><div class="titlepage"><div><div><h3 class="title"><a name="menc-feat-dvd-mpeg4-interlacing"></a>7.1.7. Przeplot i telecine</h3></div></div></div><p>
 Prawie wszystkie filmy są kręcone przy 24 fps.
 Ponieważ NTSC ma 30000/1001 fps potrzebna jest pewna przeróbka żeby film 24 fps
 mógł być wyświetlany z prawidłową szybkością NTSC.
@@ -652,14 +652,14 @@ przeplot, a inne są mieszanką progresywnego i przeplotu (Angel, 24).
 </p><p>
 Jest wysoce zalecane żebyś przeczytał sekcję
 
-<a class="link" href="menc-feat-telecine.html" title="10.2. How to deal with telecine and interlacing within NTSC DVDs">How to deal with telecine and interlacing in NTSC DVDs</a>
+<a class="link" href="menc-feat-telecine.html" title="7.2. How to deal with telecine and interlacing within NTSC DVDs">How to deal with telecine and interlacing in NTSC DVDs</a>
 żeby dowiedzieć się jak sobie radzić z różnymi możliwościami.
 </p><p>
 Jednak jeśli zazwyczaj tylko ripujesz filmy, prawdopodobnie masz doczynienia
 z filmem 24 fps progresywnym lub poddanym telecine, a w takim przypadku możesz
 użyć filtra <tt class="option">pullup</tt> podając parametr
 <tt class="option">-vf pullup,softskip</tt>.
-</p></div><div class="sect2" title="10.1.8. Encoding interlaced video"><div class="titlepage"><div><div><h3 class="title"><a name="menc-feat-dvd-mpeg4-encoding-interlaced"></a>10.1.8. Encoding interlaced video</h3></div></div></div><p>
+</p></div><div class="sect2" title="7.1.8. Encoding interlaced video"><div class="titlepage"><div><div><h3 class="title"><a name="menc-feat-dvd-mpeg4-encoding-interlaced"></a>7.1.8. Encoding interlaced video</h3></div></div></div><p>
 If the movie you want to encode is interlaced (NTSC video or
 PAL video), you will need to choose whether you want to
 deinterlace or not.
@@ -697,7 +697,7 @@ mencoder <em class="replaceable"><code>capture.avi</code></em> -mc 0 -oac lavc -
     vcodec=mpeg2video:vbitrate=6000:ilme:ildct:acodec=mp2:abitrate=224
 </pre><p>
 Note the <tt class="option">ilme</tt> and <tt class="option">ildct</tt> options.
-</p></div><div class="sect2" title="10.1.9. Notes on Audio/Video synchronization"><div class="titlepage"><div><div><h3 class="title"><a name="menc-feat-dvd-mpeg4-av-sync"></a>10.1.9. Notes on Audio/Video synchronization</h3></div></div></div><p>
+</p></div><div class="sect2" title="7.1.9. Notes on Audio/Video synchronization"><div class="titlepage"><div><div><h3 class="title"><a name="menc-feat-dvd-mpeg4-av-sync"></a>7.1.9. Notes on Audio/Video synchronization</h3></div></div></div><p>
 <span class="application">MEncoder</span>'s audio/video synchronization
 algorithms were designed with the intention of recovering files with
 broken sync.
@@ -734,7 +734,7 @@ even mentioned it!
 There have also been reports of A/V desync when encoding from stdin
 with <span class="application">MEncoder</span>.
 Do not do this! Always use a file or CD/DVD/etc device as input.
-</p></div><div class="sect2" title="10.1.10. Choosing the video codec"><div class="titlepage"><div><div><h3 class="title"><a name="menc-feat-dvd-mpeg4-codec"></a>10.1.10. Choosing the video codec</h3></div></div></div><p>
+</p></div><div class="sect2" title="7.1.10. Choosing the video codec"><div class="titlepage"><div><div><h3 class="title"><a name="menc-feat-dvd-mpeg4-codec"></a>7.1.10. Choosing the video codec</h3></div></div></div><p>
 Which video codec is best to choose depends on several factors,
 like size, quality, streamability, usability and popularity, some of
 which widely depend on personal taste and technical constraints.
@@ -817,9 +817,9 @@ which widely depend on personal taste and technical constraints.
   <sup>[<a name="fn-menc-feat-dvd-mpeg4-codec-playback" href="#ftn.fn-menc-feat-dvd-mpeg4-codec-playback" class="footnote">2</a>]</sup>!
   </p></li></ul></div><p>
 Please refer to the section
-<a class="link" href="menc-feat-selecting-codec.html" title="9.1. Wybieranie kodeka i formatu">selecting codecs and container formats</a>
+<a class="link" href="menc-feat-selecting-codec.html" title="6.1. Wybieranie kodeka i formatu">selecting codecs and container formats</a>
 to get a list of supported codecs.
-</p></div><div class="sect2" title="10.1.11. Audio"><div class="titlepage"><div><div><h3 class="title"><a name="menc-feat-dvd-mpeg4-audio"></a>10.1.11. Audio</h3></div></div></div><p>
+</p></div><div class="sect2" title="7.1.11. Audio"><div class="titlepage"><div><div><h3 class="title"><a name="menc-feat-dvd-mpeg4-audio"></a>7.1.11. Audio</h3></div></div></div><p>
 Audio is a much simpler problem to solve: if you care about quality, just
 leave it as is.
 Even AC-3 5.1 streams are at most 448Kbit/s, and they are worth every bit.
@@ -828,7 +828,7 @@ just because you do not have an A/V receiver for AC-3 pass-through today
 does not mean you will not have one tomorrow. Future-proof your DVD rips by
 preserving the AC-3 stream.
 You can keep the AC-3 stream either by copying it directly into the video
-stream <a class="link" href="menc-feat-mpeg4.html" title='9.3. Kodowanie dwuprzebiegowe MPEG-4 ("DivX")'>during the encoding</a>.
+stream <a class="link" href="menc-feat-mpeg4.html" title='6.3. Kodowanie dwuprzebiegowe MPEG-4 ("DivX")'>during the encoding</a>.
 You can also extract the AC-3 stream in order to mux it into containers such
 as NUT or Matroska.
 </p><pre class="screen">
@@ -910,7 +910,7 @@ playback synchronization problems with some players when the AVI file
 contain VBR audio streams such as Vorbis.
 Do not worry, this document will show you how you can do that with third
 party programs.
-</p></div><div class="sect2" title="10.1.12. Muxing"><div class="titlepage"><div><div><h3 class="title"><a name="menc-feat-dvd-mpeg4-muxing"></a>10.1.12. Muxing</h3></div></div></div><p>
+</p></div><div class="sect2" title="7.1.12. Muxing"><div class="titlepage"><div><div><h3 class="title"><a name="menc-feat-dvd-mpeg4-muxing"></a>7.1.12. Muxing</h3></div></div></div><p>
 Now that you have encoded your video, you will most likely want
 to mux it with one or more audio tracks into a movie container, such
 as AVI, MPEG, Matroska or NUT.
@@ -943,7 +943,7 @@ better every day), and will only work if you compiled
 <span class="application">MPlayer</span> with the support for
 <code class="systemitem">libavformat</code> enabled (which
 means that a pre-packaged binary version will not work in most cases).
-</p><div class="sect3" title="10.1.12.1. Improving muxing and A/V sync reliability"><div class="titlepage"><div><div><h4 class="title"><a name="menc-feat-dvd-mpeg4-muxing-filter-issues"></a>10.1.12.1. Improving muxing and A/V sync reliability</h4></div></div></div><p>
+</p><div class="sect3" title="7.1.12.1. Improving muxing and A/V sync reliability"><div class="titlepage"><div><div><h4 class="title"><a name="menc-feat-dvd-mpeg4-muxing-filter-issues"></a>7.1.12.1. Improving muxing and A/V sync reliability</h4></div></div></div><p>
 You may experience some serious A/V sync problems while trying to mux
 your video and some audio tracks, where no matter how you adjust the
 audio delay, you will never get proper sync.
@@ -969,7 +969,7 @@ container formats that are not too tightly linked with
 <span class="application">MEncoder</span> such as the ones supported through
 <code class="systemitem">libavformat</code>, which may not
 support frame duplication at the container level.
-</p></div><div class="sect3" title="10.1.12.2. Limitations of the AVI container"><div class="titlepage"><div><div><h4 class="title"><a name="menc-feat-dvd-mpeg4-muxing-avi-limitations"></a>10.1.12.2. Limitations of the AVI container</h4></div></div></div><p>
+</p></div><div class="sect3" title="7.1.12.2. Limitations of the AVI container"><div class="titlepage"><div><div><h4 class="title"><a name="menc-feat-dvd-mpeg4-muxing-avi-limitations"></a>7.1.12.2. Limitations of the AVI container</h4></div></div></div><p>
 Although it is the most widely-supported container format after MPEG-1,
 AVI also has some major drawbacks.
 Perhaps the most obvious is the overhead.
@@ -1005,7 +1005,7 @@ only tool you will be using to produce your encodes.
 However, it is possible to use <span class="application">MEncoder</span>
 only for video encoding, and then use external tools to encode
 audio and mux it into another container format.
-</p></div><div class="sect3" title="10.1.12.3. Muxing into the Matroska container"><div class="titlepage"><div><div><h4 class="title"><a name="menc-feat-dvd-mpeg4-muxing-matroska"></a>10.1.12.3. Muxing into the Matroska container</h4></div></div></div><p>
+</p></div><div class="sect3" title="7.1.12.3. Muxing into the Matroska container"><div class="titlepage"><div><div><h4 class="title"><a name="menc-feat-dvd-mpeg4-muxing-matroska"></a>7.1.12.3. Muxing into the Matroska container</h4></div></div></div><p>
 Matroska is a free, open standard container format, aiming
 to offer a lot of advanced features, which older containers
 like AVI cannot handle.
@@ -1041,12 +1041,12 @@ multiple audio tracks (including fine-tuning of audio/video
 synchronization), chapters, subtitles, splitting, etc...
 Please refer to the documentation of those applications for
 more details.
-</p></div></div><div class="footnotes"><br><hr width="100" align="left"><div class="footnote"><p><sup>[<a name="ftn.fn-menc-feat-dvd-mpeg4-codec-cpu" href="#fn-menc-feat-dvd-mpeg4-codec-cpu" class="para">1</a>] </sup>
+</p></div></div><div class="footnotes"><br><hr width="100" align="left"><div class="footnote"><p><sup>[<a id="ftn.fn-menc-feat-dvd-mpeg4-codec-cpu" href="#fn-menc-feat-dvd-mpeg4-codec-cpu" class="para">1</a>] </sup>
   Be careful, however: Decoding DVD-resolution MPEG-4 AVC videos
   requires a fast machine (i.e. a Pentium 4 over 1.5GHz or a Pentium M
   over 1GHz).
-  </p></div><div class="footnote"><p><sup>[<a name="ftn.fn-menc-feat-dvd-mpeg4-codec-playback" href="#fn-menc-feat-dvd-mpeg4-codec-playback" class="para">2</a>] </sup>
+  </p></div><div class="footnote"><p><sup>[<a id="ftn.fn-menc-feat-dvd-mpeg4-codec-playback" href="#fn-menc-feat-dvd-mpeg4-codec-playback" class="para">2</a>] </sup>
   The same encode may not look the same on someone else's monitor or
   when played back by a different decoder, so future-proof your encodes by
   playing them back on different setups.
-  </p></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="encoding-guide.html">Poprzedni</a> </td><td width="20%" align="center"><a accesskey="u" href="encoding-guide.html">Początek rozdziału</a></td><td width="40%" align="right"> <a accesskey="n" href="menc-feat-telecine.html">Następny</a></td></tr><tr><td width="40%" align="left" valign="top">Rozdział 10. Kodowanie przy użyciu <span class="application">MEncodera</span> </td><td width="20%" align="center"><a accesskey="h" href="index.html">Spis treści</a></td><td width="40%" align="right" valign="top"> 10.2. How to deal with telecine and interlacing within NTSC DVDs</td></tr></table></div></body></html>
+  </p></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="encoding-guide.html">Poprzedni</a> </td><td width="20%" align="center"><a accesskey="u" href="encoding-guide.html">Początek rozdziału</a></td><td width="40%" align="right"> <a accesskey="n" href="menc-feat-telecine.html">Następny</a></td></tr><tr><td width="40%" align="left" valign="top">Rozdział 7. Kodowanie przy użyciu <span class="application">MEncodera</span> </td><td width="20%" align="center"><a accesskey="h" href="index.html">Spis treści</a></td><td width="40%" align="right" valign="top"> 7.2. How to deal with telecine and interlacing within NTSC DVDs</td></tr></table></div></body></html>

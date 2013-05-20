@@ -23,6 +23,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -75,7 +76,8 @@ static int demux_nsv_fill_buffer ( demuxer_t *demuxer, demux_stream_t *ds )
     // sometimes instead of 0xBEEF as described for the next audio/video chunk we get
     // a whole new header
 
-    mp_dbg(MSGT_DEMUX,MSGL_DBG2,"demux_nsv: %08X %08X\n",hdr[0]<<8|hdr[1],stream_tell(demuxer->stream));
+    mp_dbg(MSGT_DEMUX, MSGL_DBG2, "demux_nsv: %08X %08"PRIX64"\n",
+           hdr[0] << 8 | hdr[1], stream_tell(demuxer->stream));
     switch(hdr[0]<<8|hdr[1]) {
         case 0x4E53:
             if(hdr[2]==0x56 && hdr[3]==0x73){
@@ -194,7 +196,7 @@ static demuxer_t* demux_open_nsv ( demuxer_t* demuxer )
         //   bytes 8-11   audio codec fourcc
         // PCM fourcc needs extra parsing for every audio chunk, yet to implement
         if((demuxer->audio->id != -2) && strncmp(hdr+8,"NONE", 4)){//&&strncmp(hdr+8,"VLB ", 4)){
-            sh_audio = new_sh_audio ( demuxer, 0 );
+            sh_audio = new_sh_audio ( demuxer, 0, NULL );
             demuxer->audio->id = 0;
             demuxer->audio->sh = sh_audio;
             sh_audio->format=mmioFOURCC(hdr[8],hdr[9],hdr[10],hdr[11]);
@@ -226,8 +228,8 @@ static demuxer_t* demux_open_nsv ( demuxer_t* demuxer )
             // new video stream! parse header
             sh_video->disp_w=hdr[12]|(hdr[13]<<8);
             sh_video->disp_h=hdr[14]|(hdr[15]<<8);
-            sh_video->bih=calloc(1,sizeof(BITMAPINFOHEADER));
-            sh_video->bih->biSize=sizeof(BITMAPINFOHEADER);
+            sh_video->bih=calloc(1,sizeof(*sh_video->bih));
+            sh_video->bih->biSize=sizeof(*sh_video->bih);
             sh_video->bih->biPlanes=1;
             sh_video->bih->biBitCount=24;
             sh_video->bih->biWidth=hdr[12]|(hdr[13]<<8);
@@ -323,8 +325,6 @@ static int nsv_check_file ( demuxer_t* demuxer )
 static void demux_close_nsv(demuxer_t* demuxer) {
     nsv_priv_t* priv = demuxer->priv;
 
-    if(!priv)
-        return;
     free(priv);
 
 }

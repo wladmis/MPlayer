@@ -23,6 +23,7 @@
  * config for cfgparser
  */
 
+#include <stddef.h>
 #include "cfg-common.h"
 #include "gui/interface.h"
 #include "input/lirc.h"
@@ -34,7 +35,6 @@
 #include "libvo/vo_fbdev.h"
 #include "libvo/vo_zr.h"
 #include "mp_fifo.h"
-#include "unrar_exec.h"
 
 
 const m_option_t vd_conf[]={
@@ -103,6 +103,8 @@ const m_option_t mplayer_opts[]={
      CONF_TYPE_PRINT, 0, 0, 0, NULL},
     {"edlout", &edl_output_filename,  CONF_TYPE_STRING, 0, 0, 0, NULL},
     {"edl-backward-delay", &edl_backward_delay,  CONF_TYPE_INT, CONF_MIN, 0, 0, NULL},
+    {"edl-start-pts", &edl_start_pts,  CONF_TYPE_FLAG, 0, 0, 1, NULL},
+    {"noedl-start-pts", &edl_start_pts,  CONF_TYPE_FLAG, 0, 1, 0, NULL},
 
 #ifdef CONFIG_X11
     {"display", &mDisplayName, CONF_TYPE_STRING, 0, 0, 0, NULL},
@@ -135,11 +137,6 @@ const m_option_t mplayer_opts[]={
 #ifdef CONFIG_FBDEV
     {"fbmode", &fb_mode_name, CONF_TYPE_STRING, 0, 0, 0, NULL},
     {"fbmodeconfig", &fb_mode_cfgfile, CONF_TYPE_STRING, 0, 0, 0, NULL},
-#endif
-#ifdef CONFIG_DIRECTFB
-#if DIRECTFBVERSION > 912
-    {"dfbopts", "-dfbopts has been removed. Use -vf directfb:dfbopts=... instead.\n", CONF_TYPE_PRINT, 0, 0, 0, NULL},
-#endif
 #endif
 
     // force window width/height or resolution (with -vm)
@@ -201,6 +198,7 @@ const m_option_t mplayer_opts[]={
     {"saturation",&vo_gamma_saturation, CONF_TYPE_INT, CONF_RANGE, -100, 100, NULL},
     {"contrast",&vo_gamma_contrast, CONF_TYPE_INT, CONF_RANGE, -100, 100, NULL},
     {"hue",&vo_gamma_hue, CONF_TYPE_INT, CONF_RANGE, -100, 100, NULL},
+    {"gamma",&vo_gamma_gamma, CONF_TYPE_INT, CONF_RANGE, -100, 100, NULL},
     {"keepaspect", &vo_keepaspect, CONF_TYPE_FLAG, 0, 0, 1, NULL},
     {"nokeepaspect", &vo_keepaspect, CONF_TYPE_FLAG, 0, 1, 0, NULL},
 
@@ -237,6 +235,7 @@ const m_option_t mplayer_opts[]={
 #endif
     {"osdlevel", &osd_level, CONF_TYPE_INT, CONF_RANGE, 0, 3, NULL},
     {"osd-duration", &osd_duration, CONF_TYPE_INT, CONF_MIN, 0, 0, NULL},
+    {"osd-fractions", &osd_fractions, CONF_TYPE_INT, CONF_RANGE, 0, 2, NULL},
 #ifdef CONFIG_MENU
     {"menu", &use_menu, CONF_TYPE_FLAG, CONF_GLOBAL, 0, 1, NULL},
     {"nomenu", &use_menu, CONF_TYPE_FLAG, CONF_GLOBAL, 1, 0, NULL},
@@ -256,13 +255,6 @@ const m_option_t mplayer_opts[]={
     {"menu", "OSD menu support was not compiled in.\n", CONF_TYPE_PRINT,0, 0, 0, NULL},
 #endif /* CONFIG_MENU */
 
-    // these should be moved to -common, and supported in MEncoder
-    {"vobsub", &vobsub_name, CONF_TYPE_STRING, 0, 0, 0, NULL},
-    {"vobsubid", &vobsub_id, CONF_TYPE_INT, CONF_RANGE, 0, 31, NULL},
-#ifdef CONFIG_UNRAR_EXEC
-    {"unrarexec", &unrar_executable, CONF_TYPE_STRING, 0, 0, 0, NULL},
-#endif
-
     {"sstep", &step_sec, CONF_TYPE_INT, CONF_MIN, 0, 0, NULL},
 
     {"framedrop", &frame_dropping, CONF_TYPE_FLAG, 0, 0, 1, NULL},
@@ -272,6 +264,14 @@ const m_option_t mplayer_opts[]={
     {"autoq", &auto_quality, CONF_TYPE_INT, CONF_RANGE, 0, 100, NULL},
 
     {"benchmark", &benchmark, CONF_TYPE_FLAG, 0, 0, 1, NULL},
+
+#ifdef CONFIG_NETWORKING
+    {"udp-slave", &udp_slave, CONF_TYPE_FLAG, 0, 0, 1, NULL},
+    {"udp-master", &udp_master, CONF_TYPE_FLAG, 0, 0, 1, NULL},
+    {"udp-ip", &udp_ip, CONF_TYPE_STRING, 0, 0, 1, NULL},
+    {"udp-port", &udp_port, CONF_TYPE_INT, 0, 1, 65535, NULL},
+    {"udp-seek-threshold", &udp_seek_threshold, CONF_TYPE_FLOAT, CONF_RANGE, 0.1, 100, NULL},
+#endif /* CONFIG_NETWORKING */
 
     // dump some stream out instead of playing the file
     // this really should be in MEncoder instead of MPlayer... -> TODO
@@ -286,23 +286,29 @@ const m_option_t mplayer_opts[]={
     {"dumpjacosub", &stream_dump_type, CONF_TYPE_FLAG, 0, 0, 8, NULL},
     {"dumpsami", &stream_dump_type, CONF_TYPE_FLAG, 0, 0, 9, NULL},
 
+    {"capture", &capture_dump, CONF_TYPE_FLAG, 0, 0, 1, NULL},
+
 #ifdef CONFIG_LIRC
     {"lircconf", &lirc_configfile, CONF_TYPE_STRING, CONF_GLOBAL, 0, 0, NULL},
 #endif
 
-    {"gui", "The -gui option will only work as the first command line argument.\n", CONF_TYPE_PRINT, 0, 0, 0, (void *)1},
-    {"nogui", "The -nogui option will only work as the first command line argument.\n", CONF_TYPE_PRINT, 0, 0, 0, (void *)1},
+    {"gui", "The -gui option will only work as the first command line argument.\n", CONF_TYPE_PRINT, 0, 0, 0, PRIV_NO_EXIT},
+    {"nogui", "The -nogui option will only work as the first command line argument.\n", CONF_TYPE_PRINT, 0, 0, 0, PRIV_NO_EXIT},
 
 #ifdef CONFIG_GUI
     {"skin", &skinName, CONF_TYPE_STRING, CONF_GLOBAL, 0, 0, NULL},
     {"enqueue", &enqueue, CONF_TYPE_FLAG, 0, 0, 1, NULL},
     {"noenqueue", &enqueue, CONF_TYPE_FLAG, 0, 1, 0, NULL},
-    {"guiwid", &guiWinID, CONF_TYPE_INT, 0, 0, 0, NULL},
+    {"guiwid", "-guiwid has been removed, use -gui-wid instead.\n", CONF_TYPE_PRINT, 0, 0, 0, NULL},
+    {"gui-wid", &guiWinID, CONF_TYPE_INT, 0, 0, 0, NULL},
+    {"gui-include", cfg_gui_include, CONF_TYPE_FUNC_PARAM, CONF_NOCFG|CONF_NOSAVE, 0, 0, NULL},
 #endif
 
     {"noloop", &mpctx_s.loop_times, CONF_TYPE_FLAG, 0, 0, -1, NULL},
     {"loop", &mpctx_s.loop_times, CONF_TYPE_INT, CONF_RANGE, -1, 10000, NULL},
-    {"playlist", NULL, CONF_TYPE_STRING, 0, 0, 0, NULL},
+    {"playlist", NULL, CONF_TYPE_STRING, CONF_NOCFG, 0, 0, NULL},
+    {"shuffle", NULL, CONF_TYPE_FLAG, CONF_NOCFG, 0, 0, NULL},
+    {"noshuffle", NULL, CONF_TYPE_FLAG, CONF_NOCFG, 0, 0, NULL},
 
     // a-v sync stuff:
     {"correct-pts", &user_correct_pts, CONF_TYPE_FLAG, 0, 0, 1, NULL},
@@ -345,6 +351,7 @@ const m_option_t mplayer_opts[]={
     {"h", help_text, CONF_TYPE_PRINT, CONF_NOCFG|CONF_GLOBAL, 0, 0, NULL},
 
     {"vd", vd_conf, CONF_TYPE_SUBCONFIG, 0, 0, 0, NULL},
+    {"progbar-align", &progbar_align, CONF_TYPE_INT, CONF_GLOBAL, 0, 100, NULL},
     {NULL, NULL, 0, 0, 0, 0, NULL}
 };
 

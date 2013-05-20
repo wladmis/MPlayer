@@ -25,10 +25,11 @@
 #include "config.h"
 #include "mp_msg.h"
 #include "help_mp.h"
-
+#include "mencoder.h"
 #include "aviheader.h"
 #include "ms_hdr.h"
 #include "av_opts.h"
+#include "av_helpers.h"
 
 #include "stream/stream.h"
 #include "muxer.h"
@@ -42,20 +43,12 @@
 
 enum PixelFormat imgfmt2pixfmt(int fmt);
 
-extern char *info_name;
-extern char *info_artist;
-extern char *info_genre;
-extern char *info_subject;
-extern char *info_copyright;
-extern char *info_sourceform;
-extern char *info_comment;
-
 #define BIO_BUFFER_SIZE 32768
 
 typedef struct {
 	//AVInputFormat *avif;
 	AVFormatContext *oc;
-	ByteIOContext *pb;
+	AVIOContext *pb;
 	int audio_streams;
 	int video_streams;
 	int64_t last_pts;
@@ -154,23 +147,23 @@ static muxer_stream_t* lavf_new_stream(muxer_t *muxer, int type)
 	}
 	stream->priv = spriv;
 
-	spriv->avstream = av_new_stream(priv->oc, 1);
+	spriv->avstream = avformat_new_stream(priv->oc, NULL);
 	if(!spriv->avstream)
 	{
 		mp_msg(MSGT_MUXER, MSGL_ERR, "Could not allocate avstream, EXIT.\n");
 		return NULL;
 	}
-	spriv->avstream->stream_copy = 1;
+	spriv->avstream->id = 1;
 
 	ctx = spriv->avstream->codec;
-	ctx->codec_id = muxer->avih.dwStreams;
+	ctx->codec_id = CODEC_ID_NONE;
 	switch(type)
 	{
 		case MUXER_TYPE_VIDEO:
-			ctx->codec_type = CODEC_TYPE_VIDEO;
+			ctx->codec_type = AVMEDIA_TYPE_VIDEO;
 			break;
 		case MUXER_TYPE_AUDIO:
-			ctx->codec_type = CODEC_TYPE_AUDIO;
+			ctx->codec_type = AVMEDIA_TYPE_AUDIO;
 			break;
 	}
 
@@ -197,7 +190,7 @@ static void fix_parameters(muxer_stream_t *stream)
 
 	if(stream->type == MUXER_TYPE_AUDIO)
 	{
-		ctx->codec_id = av_codec_get_id(mp_wav_taglists, stream->wf->wFormatTag);
+		ctx->codec_id = mp_tag2codec_id(stream->wf->wFormatTag, 1);
 #if 0 //breaks aac in mov at least
 		ctx->codec_tag = codec_get_wav_tag(ctx->codec_id);
 #endif
@@ -226,7 +219,7 @@ static void fix_parameters(muxer_stream_t *stream)
 	}
 	else if(stream->type == MUXER_TYPE_VIDEO)
 	{
-		ctx->codec_id = av_codec_get_id(mp_bmp_taglists, stream->bih->biCompression);
+		ctx->codec_id = mp_tag2codec_id(stream->bih->biCompression, 0);
                 if(ctx->codec_id <= 0 || force_fourcc)
                     ctx->codec_tag= stream->bih->biCompression;
 		mp_msg(MSGT_MUXER, MSGL_INFO, "VIDEO CODEC ID: %d\n", ctx->codec_id);
@@ -237,9 +230,9 @@ static void fix_parameters(muxer_stream_t *stream)
 		ctx->bit_rate = 800000;
 		ctx->time_base.den = stream->h.dwRate;
 		ctx->time_base.num = stream->h.dwScale;
-		if(stream->bih+1 && (stream->bih->biSize > sizeof(BITMAPINFOHEADER)))
+		if(stream->bih && (stream->bih->biSize > sizeof(*stream->bih)))
 		{
-			ctx->extradata_size = stream->bih->biSize - sizeof(BITMAPINFOHEADER);
+			ctx->extradata_size = stream->bih->biSize - sizeof(*stream->bih);
 			ctx->extradata = av_malloc(ctx->extradata_size);
 			if(ctx->extradata != NULL)
 				memcpy(ctx->extradata, stream->bih+1, ctx->extradata_size);
@@ -255,8 +248,8 @@ static void fix_parameters(muxer_stream_t *stream)
 
 static void write_chunk(muxer_stream_t *stream, size_t len, unsigned int flags, double dts, double pts)
 {
-	muxer_t *muxer = (muxer_t*) stream->muxer;
-	muxer_priv_t *priv = (muxer_priv_t *) muxer->priv;
+	muxer_t *muxer = stream->muxer;
+	muxer_priv_t *priv = muxer->priv;
 	muxer_stream_priv_t *spriv = (muxer_stream_priv_t *) stream->priv;
 	AVPacket pkt;
 
@@ -268,7 +261,7 @@ static void write_chunk(muxer_stream_t *stream, size_t len, unsigned int flags, 
 	pkt.data = stream->buffer;
 
 	if(flags & AVIIF_KEYFRAME)
-		pkt.flags |= PKT_FLAG_KEY;
+		pkt.flags |= AV_PKT_FLAG_KEY;
 	else
 		pkt.flags = 0;
 
@@ -288,10 +281,21 @@ static void write_chunk(muxer_stream_t *stream, size_t len, unsigned int flags, 
 
 static void write_header(muxer_t *muxer)
 {
-	muxer_priv_t *priv = (muxer_priv_t *) muxer->priv;
+	muxer_priv_t *priv = muxer->priv;
+	AVDictionary *opts = NULL;
+	char tmpstr[50];
 
 	mp_msg(MSGT_MUXER, MSGL_INFO, MSGTR_WritingHeader);
-	av_write_header(priv->oc);
+	if (mux_rate) {
+		snprintf(tmpstr, sizeof(tmpstr), "%i", mux_rate);
+		av_dict_set(&opts, "muxrate", tmpstr, 0);
+	}
+	if (mux_preload) {
+		snprintf(tmpstr, sizeof(tmpstr), "%i", (int)(mux_preload * AV_TIME_BASE));
+		av_dict_set(&opts, "preload", tmpstr, 0);
+	}
+	avformat_write_header(priv->oc, &opts);
+	av_dict_free(&opts);
 	muxer->cont_write_header = NULL;
 }
 
@@ -299,7 +303,7 @@ static void write_header(muxer_t *muxer)
 static void write_trailer(muxer_t *muxer)
 {
 	int i;
-	muxer_priv_t *priv = (muxer_priv_t *) muxer->priv;
+	muxer_priv_t *priv = muxer->priv;
 
 	mp_msg(MSGT_MUXER, MSGL_INFO, MSGTR_WritingTrailer);
 	av_write_trailer(priv->oc);
@@ -316,17 +320,16 @@ static void write_trailer(muxer_t *muxer)
 static void list_formats(void) {
 	AVOutputFormat *fmt;
 	mp_msg(MSGT_DEMUX, MSGL_INFO, "Available lavf output formats:\n");
-	for (fmt = first_oformat; fmt; fmt = fmt->next)
+	for (fmt = av_oformat_next(NULL); fmt; fmt = av_oformat_next(fmt))
 		mp_msg(MSGT_DEMUX, MSGL_INFO, "%15s : %s\n", fmt->name, fmt->long_name);
 }
 
-extern char *out_filename;
 int muxer_init_muxer_lavf(muxer_t *muxer)
 {
 	muxer_priv_t *priv;
 	AVOutputFormat *fmt = NULL;
 
-	av_register_all();
+	init_avformat();
 
 	if (conf_format && strcmp(conf_format, "help") == 0) {
 		list_formats();
@@ -363,25 +366,18 @@ int muxer_init_muxer_lavf(muxer_t *muxer)
 	priv->oc->oformat = fmt;
 
 
-	if(av_set_parameters(priv->oc, NULL) < 0)
-	{
-		mp_msg(MSGT_MUXER, MSGL_FATAL, "invalid output format parameters\n");
-		goto fail;
-	}
 	priv->oc->packet_size= mux_packet_size;
-        priv->oc->mux_rate= mux_rate;
-        priv->oc->preload= (int)(mux_preload*AV_TIME_BASE);
         priv->oc->max_delay= (int)(mux_max_delay*AV_TIME_BASE);
         if (info_name)
-            av_strlcpy(priv->oc->title    , info_name,      sizeof(priv->oc->title    ));
+            av_dict_set(&priv->oc->metadata, "title",     info_name,      0);
         if (info_artist)
-            av_strlcpy(priv->oc->author   , info_artist,    sizeof(priv->oc->author   ));
+            av_dict_set(&priv->oc->metadata, "author",    info_artist,    0);
         if (info_genre)
-            av_strlcpy(priv->oc->genre    , info_genre,     sizeof(priv->oc->genre    ));
+            av_dict_set(&priv->oc->metadata, "genre",     info_genre,     0);
         if (info_copyright)
-            av_strlcpy(priv->oc->copyright, info_copyright, sizeof(priv->oc->copyright));
+            av_dict_set(&priv->oc->metadata, "copyright", info_copyright, 0);
         if (info_comment)
-            av_strlcpy(priv->oc->comment  , info_comment,   sizeof(priv->oc->comment  ));
+            av_dict_set(&priv->oc->metadata, "comment",   info_comment,   0);
 
         if(mux_avopt){
             if(parse_avopts(priv->oc, mux_avopt) < 0){
@@ -390,11 +386,11 @@ int muxer_init_muxer_lavf(muxer_t *muxer)
             }
         }
 
-	priv->oc->pb = av_alloc_put_byte(priv->buffer, BIO_BUFFER_SIZE, 1, muxer, NULL, mp_write, mp_seek);
+	priv->oc->pb = avio_alloc_context(priv->buffer, BIO_BUFFER_SIZE, 1, muxer, NULL, mp_write, mp_seek);
 	if ((muxer->stream->flags & MP_STREAM_SEEK) != MP_STREAM_SEEK)
-            priv->oc->pb->is_streamed = 1;
+            priv->oc->pb->seekable = 0;
 
-	muxer->priv = (void *) priv;
+	muxer->priv = priv;
 	muxer->cont_new_stream = &lavf_new_stream;
 	muxer->cont_write_chunk = &write_chunk;
 	muxer->cont_write_header = &write_header;

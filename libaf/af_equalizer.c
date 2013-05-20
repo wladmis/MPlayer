@@ -29,6 +29,7 @@
 #include <inttypes.h>
 #include <math.h>
 
+#include "mp_msg.h"
 #include "af.h"
 
 #define L   	2      // Storage for filter taps
@@ -181,9 +182,7 @@ static int control(struct af_instance_s* af, int cmd, void* arg)
 // Deallocate memory
 static void uninit(struct af_instance_s* af)
 {
-  if(af->data)
     free(af->data);
-  if(af->setup)
     free(af->setup);
 }
 

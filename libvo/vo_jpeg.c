@@ -105,7 +105,7 @@ static int framenum = 0;
  *                  returns, everything went well.
  */
 
-static void jpeg_mkdir(char *buf, int verbose) {
+static void jpeg_mkdir(const char *buf, int verbose) {
     struct stat stat_p;
 
 #ifndef __MINGW32__
@@ -177,7 +177,7 @@ static int config(uint32_t width, uint32_t height, uint32_t d_width,
 
 /* ------------------------------------------------------------------------- */
 
-static uint32_t jpeg_write(uint8_t * name, uint8_t * buffer)
+static uint32_t jpeg_write(const char * name, uint8_t * buffer)
 {
     FILE *outfile;
     struct jpeg_compress_struct cinfo;
@@ -309,14 +309,10 @@ static int query_format(uint32_t format)
 
 static void uninit(void)
 {
-    if (jpeg_subdirs) {
-        free(jpeg_subdirs);
-        jpeg_subdirs = NULL;
-    }
-    if (jpeg_outdir) {
-        free(jpeg_outdir);
-        jpeg_outdir = NULL;
-    }
+    free(jpeg_subdirs);
+    jpeg_subdirs = NULL;
+    free(jpeg_outdir);
+    jpeg_outdir = NULL;
 }
 
 /* ------------------------------------------------------------------------- */
@@ -403,7 +399,7 @@ static int preinit(const char *arg)
 
 /* ------------------------------------------------------------------------- */
 
-static int control(uint32_t request, void *data, ...)
+static int control(uint32_t request, void *data)
 {
     switch (request) {
         case VOCTRL_QUERY_FORMAT:

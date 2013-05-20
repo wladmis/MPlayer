@@ -25,6 +25,7 @@
 #include <math.h>
 #include <limits.h>
 
+#include "mp_msg.h"
 #include "af.h"
 
 // Data for specific instances of this filter
@@ -144,8 +145,7 @@ static void uninit(struct af_instance_s* af)
   if(af->data)
     free(af->data->audio);
   free(af->data);
-  if(af->setup)
-    free(af->setup);
+  free(af->setup);
 }
 
 // Filter data through filter

@@ -28,6 +28,7 @@
 #include <unistd.h>
 
 #include "config.h"
+#include "mp_msg.h"
 #include "ad_internal.h"
 #include "libaf/af_format.h"
 #include "libvo/fastmemcpy.h"
@@ -121,8 +122,7 @@ static int preinit(sh_audio_t *sh) {
 }
 
 static void uninit(sh_audio_t *sh) {
-  if (sh->context)
-    free(sh->context);
+  free(sh->context);
   sh->context = NULL;
 }
 
@@ -134,8 +134,7 @@ static int init(sh_audio_t *sh) {
     mp_msg(MSGT_DECAUDIO, MSGL_FATAL, "Missing extradata!\n");
     return 0;
   }
-  cd->header = (char *)sh->wf;
-  cd->header = &cd->header[sizeof(WAVEFORMATEX)];
+  cd->header = (char *)(sh->wf + 1);
   cd->header_len = sh->wf->cbSize;
   cd->sh = sh;
   cd->pos = 0;

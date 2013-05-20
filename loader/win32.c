@@ -49,6 +49,7 @@ for DLL to know too much about its environment.
 #include "loader.h"
 #include "com.h"
 #include "ext.h"
+#include "ldt_keeper.h"
 #include "path.h"
 
 #include <stdlib.h>
@@ -65,34 +66,22 @@ for DLL to know too much about its environment.
 #include <dirent.h>
 #include <sys/time.h>
 #include <sys/stat.h>
-#include <sys/timeb.h>
 #ifdef	HAVE_KSTAT
 #include <kstat.h>
 #endif
+#if HAVE_MALLOC_H
+#include <malloc.h>
+#endif
 
-#ifdef HAVE_SYS_MMAN_H
+#if HAVE_SYS_MMAN_H
 #include <sys/mman.h>
 #else
 #include "osdep/mmap.h"
 #endif
 #include "osdep/mmap_anon.h"
 #include "libavutil/avstring.h"
+#include "cpudetect.h"
 
-static void do_cpuid(unsigned int ax, unsigned int *regs)
-{
-    __asm__ volatile
-	(
-	 "pushl %%ebx; pushl %%ecx; pushl %%edx;"
-	 ".byte  0x0f, 0xa2;"
-	 "movl   %%eax, (%2);"
-	 "movl   %%ebx, 4(%2);"
-	 "movl   %%ecx, 8(%2);"
-	 "movl   %%edx, 12(%2);"
-	 "popl %%edx; popl %%ecx; popl %%ebx;"
-	 : "=a" (ax)
-	 :  "0" (ax), "S" (regs)
-	);
-}
 static unsigned int c_localcount_tsc(void)
 {
     int a;
@@ -142,7 +131,7 @@ static void c_longcount_notsc(long long* z)
 }
 static unsigned int localcount_stub(void);
 static void longcount_stub(long long*);
-static unsigned int (*localcount)()=localcount_stub;
+static unsigned int (*localcount)(void)=localcount_stub;
 static void (*longcount)(long long*)=longcount_stub;
 
 static pthread_mutex_t memmut = PTHREAD_MUTEX_INITIALIZER;
@@ -359,7 +348,7 @@ void* mreq_private(int size, int to_zero, int type);
 void* mreq_private(int size, int to_zero, int type)
 {
     int nsize = size + sizeof(alloc_header);
-    alloc_header* header = malloc(nsize);
+    alloc_header* header = memalign(16, nsize);
     if (!header)
         return 0;
     if (to_zero)
@@ -679,8 +668,9 @@ static pthread_mutex_t mlist_lock = PTHREAD_MUTEX_INITIALIZER;
 
 void destroy_event(void* event)
 {
+    mutex_list *pp;
     pthread_mutex_lock(&mlist_lock);
-    mutex_list* pp=mlist;
+    pp=mlist;
     //    printf("garbage collector: destroy_event(%x)\n", event);
     while(pp)
     {
@@ -1013,8 +1003,6 @@ static void WINAPI expGetSystemInfo(SYSTEM_INFO* si)
 
     /* mplayer's way to detect PF's */
     {
-#include "cpudetect.h"
-
 	if (gCpuCaps.hasMMX)
 	    PF[PF_MMX_INSTRUCTIONS_AVAILABLE] = TRUE;
 	if (gCpuCaps.hasSSE)
@@ -1525,8 +1513,6 @@ static int WINAPI expGetCurrentProcess(void)
 // this version is required for Quicktime codecs (.qtx/.qts) to work.
 // (they assume some pointers at FS: segment)
 
-extern void* fs_seg;
-
 //static int tls_count;
 static int tls_use_map[64];
 static int WINAPI expTlsAlloc(void)
@@ -1750,7 +1736,7 @@ static int WINAPI expLoadStringA(long instance, long  id, void* buf, long size)
 
 static long WINAPI expMultiByteToWideChar(long v1, long v2, char* s1, long siz1, short* s2, int siz2)
 {
-#warning FIXME
+    /* FIXME */
     int i;
     int result;
     if(s2==0)
@@ -2758,7 +2744,7 @@ static int WINAPI expMonitorFromPoint(void *p, int flags)
 }
 
 static int WINAPI expEnumDisplayMonitors(void *dc, RECT *r,
-    int WINAPI (*callback_proc)(), void *callback_param)
+    int WINAPI (*callback_proc)(HMONITOR, HDC, LPRECT, LPARAM), void *callback_param)
 {
     dbgprintf("EnumDisplayMonitors(0x%x, 0x%x, 0x%x, 0x%x) => ?\n",
 	dc, r, callback_proc, callback_param);
@@ -2858,7 +2844,7 @@ static int WINAPI expCreateRectRgn(int x, int y, int width, int height)
     return 0;
 }
 
-static int WINAPI expEnumWindows(int (*callback_func)(), void *callback_param)
+static int WINAPI expEnumWindows(int (*callback_func)(HWND, LPARAM), void *callback_param)
 {
     int i, i2;
     dbgprintf("EnumWindows(0x%x, 0x%x) => 1\n", callback_func, callback_param);
@@ -3205,7 +3191,7 @@ static int WINAPI expGetProcessVersion(int pid)
 }
 static int WINAPI expGetCurrentThread(void)
 {
-#warning FIXME!
+    /* FIXME! */
     dbgprintf("GetCurrentThread() => %x\n", 0xcfcf9898);
     return 0xcfcf9898;
 }
@@ -3895,7 +3881,7 @@ static WIN_BOOL WINAPI expWriteFile(HANDLE h,LPCVOID pv,DWORD size,LPDWORD wr,LP
 static DWORD  WINAPI expSetFilePointer(HANDLE h, LONG val, LPLONG ext, DWORD whence)
 {
     int wh;
-    dbgprintf("SetFilePointer(%d, 0x%x, 0x%x = %d, %d)\n", h, val, ext, ext ? *ext : NULL, whence);
+    dbgprintf("SetFilePointer(%d, 0x%x, 0x%x = %d, %d)\n", h, val, ext, ext ? *ext : 0, whence);
     //why would DLL want temporary file with >2Gb size?
     switch(whence)
     {
@@ -3974,6 +3960,13 @@ static LONG WINAPI explstrlenA(const char* str1)
 {
     LONG result=strlen(str1);
     dbgprintf("strlen(0x%x='%.50s') => %d\n", str1, str1, result);
+    return result;
+}
+
+static LONG WINAPI explstrlenW(const uint16_t* s)
+{
+    int result = 0;
+    while (s && s[result]) result++;
     return result;
 }
 
@@ -4325,6 +4318,8 @@ static int expsscanf(const char* str, const char* format, ...)
 static void* expfopen(const char* path, const char* mode)
 {
     printf("fopen: \"%s\"  mode:%s\n", path, mode);
+    if (strcmp(mode, "r") == 0 || strcmp(mode, "rb") == 0)
+        return NULL;
     //return fopen(path, mode);
     return fdopen(0, mode); // everything on screen
 }
@@ -4568,7 +4563,7 @@ static double exp_CIpow(void)
 {
     FPU_DOUBLES(x,y);
 
-    dbgprintf("_CIpow(%lf, %lf)\n", x, y);
+    dbgprintf("_CIpow(%f, %f)\n", x, y);
     return pow(x, y);
 }
 
@@ -4591,10 +4586,37 @@ static double expfrexp(double x, int* expo)
 }
 
 
+static void exp_splitpath(const char *path, char *drive, char *dir, char *name, char *ext)
+{
+    const char *ext_start = strrchr(path, '.');
+    int name_len = ext_start ? ext_start - path : strlen(path);
+    if (drive)
+        strcpy(drive, "");
+    if (dir)
+        strcpy(dir, "");
+    if (name) {
+        strncpy(name, path, name_len);
+        name[name_len] = 0;
+    }
+    if (ext)
+        strcpy(ext, ext_start ? ext_start : "");
+}
+
+static char *exp_mbsupr(char *str)
+{
+    int i;
+    for (i = 0; str[i]; i++) str[i] = toupper(str[i]);
+    return str;
+}
 
 static int exp_stricmp(const char* s1, const char* s2)
 {
     return strcasecmp(s1, s2);
+}
+
+static uint64_t exp_time64(void)
+{
+    return 0;
 }
 
 /* from declaration taken from Wine sources - this fountion seems to be
@@ -4748,7 +4770,7 @@ static void WINAPI expGlobalMemoryStatus(
 	lpmem->dwAvailPageFile = 16*1024*1024;
     }
     expGetSystemInfo(&si);
-    lpmem->dwTotalVirtual  = si.lpMaximumApplicationAddress-si.lpMinimumApplicationAddress;
+    lpmem->dwTotalVirtual  = (uint8_t *)si.lpMaximumApplicationAddress-(uint8_t *)si.lpMinimumApplicationAddress;
     /* FIXME: we should track down all the already allocated VM pages and substract them, for now arbitrarily remove 64KB so that it matches NT */
     lpmem->dwAvailVirtual  = lpmem->dwTotalVirtual-64*1024;
     memcpy(&cached_memstatus,lpmem,sizeof(MEMORYSTATUS));
@@ -4995,8 +5017,8 @@ static WIN_BOOL WINAPI expGetOpenFileNameA(/*LPOPENFILENAMEA*/ void* lpfn)
     return 1;
 }
 
-static char * WINAPI expPathFindExtensionA(const char *path) {
-  char *ext;
+static const char * WINAPI expPathFindExtensionA(const char *path) {
+  const char *ext;
   if (!path)
     ext = NULL;
   else {
@@ -5008,8 +5030,8 @@ static char * WINAPI expPathFindExtensionA(const char *path) {
   return ext;
 }
 
-static char * WINAPI expPathFindFileNameA(const char *path) {
-  char *name;
+static const char * WINAPI expPathFindFileNameA(const char *path) {
+  const char *name;
   if (!path || strlen(path) < 2)
     name = path;
   else {
@@ -5023,7 +5045,7 @@ static char * WINAPI expPathFindFileNameA(const char *path) {
 
 static double expfloor(double x)
 {
-    dbgprintf("floor(%lf)\n", x);
+    dbgprintf("floor(%f)\n", x);
     return floor(x);
 }
 
@@ -5034,7 +5056,7 @@ static double exp_CIcos(void)
 {
     FPU_DOUBLE(x);
 
-    dbgprintf("_CIcos(%lf)\n", x);
+    dbgprintf("_CIcos(%f)\n", x);
     return cos(x);
 }
 
@@ -5042,7 +5064,7 @@ static double exp_CIsin(void)
 {
     FPU_DOUBLE(x);
 
-    dbgprintf("_CIsin(%lf)\n", x);
+    dbgprintf("_CIsin(%f)\n", x);
     return sin(x);
 }
 
@@ -5050,7 +5072,7 @@ static double exp_CIsqrt(void)
 {
     FPU_DOUBLE(x);
 
-    dbgprintf("_CIsqrt(%lf)\n", x);
+    dbgprintf("_CIsqrt(%f)\n", x);
     return sqrt(x);
 }
 
@@ -5143,7 +5165,7 @@ struct libs
 {
     char name[64];
     int length;
-    struct exports* exps;
+    const struct exports* exps;
 };
 
 #define FF(X,Y) \
@@ -5152,7 +5174,7 @@ struct libs
 #define UNDEFF(X, Y) \
     {#X, Y, (void*)-1},
 
-struct exports exp_kernel32[]=
+static const struct exports exp_kernel32[]=
 {
     FF(GetVolumeInformationA,-1)
     FF(GetDriveTypeA,-1)
@@ -5299,6 +5321,7 @@ struct exports exp_kernel32[]=
     FF(MulDiv, -1)
     FF(lstrcmpiA, -1)
     FF(lstrlenA, -1)
+    FF(lstrlenW, -1)
     FF(lstrcpyA, -1)
     FF(lstrcatA, -1)
     FF(lstrcpynA,-1)
@@ -5328,7 +5351,7 @@ struct exports exp_kernel32[]=
     UNDEFF(FlsFree, -1)
 };
 
-struct exports exp_msvcrt[]={
+static const struct exports exp_msvcrt[]={
     FF(malloc, -1)
     FF(_initterm, -1)
     FF(__dllonexit, -1)
@@ -5392,7 +5415,7 @@ struct exports exp_msvcrt[]={
     FF(realloc,-1)
     {"puts",-1,(void*)&puts}
 };
-struct exports exp_winmm[]={
+static const struct exports exp_winmm[]={
     FF(GetDriverModuleHandle, -1)
     FF(timeGetTime, -1)
     FF(DefDriverProc, -1)
@@ -5405,10 +5428,10 @@ struct exports exp_winmm[]={
     FF(waveOutGetNumDevs, -1)
 #endif
 };
-struct exports exp_psapi[]={
+static const struct exports exp_psapi[]={
     FF(GetModuleBaseNameA, -1)
 };
-struct exports exp_user32[]={
+static const struct exports exp_user32[]={
     FF(LoadIconA,-1)
     FF(LoadStringA, -1)
     FF(wsprintfA, -1)
@@ -5456,7 +5479,7 @@ struct exports exp_user32[]={
     FF(CharNextA, -1)
     FF(EnumDisplaySettingsA, -1)
 };
-struct exports exp_advapi32[]={
+static const struct exports exp_advapi32[]={
     FF(RegCloseKey, -1)
     FF(RegCreateKeyA, -1)
     FF(RegCreateKeyExA, -1)
@@ -5468,7 +5491,7 @@ struct exports exp_advapi32[]={
     FF(RegSetValueExA, -1)
     FF(RegQueryInfoKeyA, -1)
 };
-struct exports exp_gdi32[]={
+static const struct exports exp_gdi32[]={
     FF(CreateCompatibleDC, -1)
     FF(CreateFontA, -1)
     FF(DeleteDC, -1)
@@ -5481,10 +5504,10 @@ struct exports exp_gdi32[]={
     FF(CreateRectRgn, -1)
 #endif
 };
-struct exports exp_version[]={
+static const struct exports exp_version[]={
     FF(GetFileVersionInfoSizeA, -1)
 };
-struct exports exp_ole32[]={
+static const struct exports exp_ole32[]={
     FF(CoCreateFreeThreadedMarshaler,-1)
     FF(CoCreateInstance, -1)
     FF(CoInitialize, -1)
@@ -5497,22 +5520,22 @@ struct exports exp_ole32[]={
 };
 // do we really need crtdll ???
 // msvcrt is the correct place probably...
-struct exports exp_crtdll[]={
+static const struct exports exp_crtdll[]={
     FF(memcpy, -1)
     FF(wcscpy, -1)
 };
-struct exports exp_comctl32[]={
+static const struct exports exp_comctl32[]={
     FF(StringFromGUID2, -1)
     FF(InitCommonControls, 17)
 #ifdef CONFIG_QTX_CODECS
     FF(CreateUpDownControl, 16)
 #endif
 };
-struct exports exp_wsock32[]={
+static const struct exports exp_wsock32[]={
     FF(htonl,8)
     FF(ntohl,14)
 };
-struct exports exp_msdmo[]={
+static const struct exports exp_msdmo[]={
     FF(memcpy, -1) // just test
     FF(MoCopyMediaType, -1)
     FF(MoCreateMediaType, -1)
@@ -5521,7 +5544,7 @@ struct exports exp_msdmo[]={
     FF(MoFreeMediaType, -1)
     FF(MoInitMediaType, -1)
 };
-struct exports exp_oleaut32[]={
+static const struct exports exp_oleaut32[]={
     FF(SysAllocStringLen, 4)
     FF(SysFreeString, 6)
     FF(VariantInit, 8)
@@ -5546,7 +5569,7 @@ struct exports exp_oleaut32[]={
 	23022	  411  _purecall
 */
 #ifdef REALPLAYER
-struct exports exp_pncrt[]={
+static const struct exports exp_pncrt[]={
     FF(malloc, -1) // just test
     FF(free, -1) // just test
     FF(fprintf, -1) // just test
@@ -5566,43 +5589,67 @@ struct exports exp_pncrt[]={
 #endif
 
 #ifdef CONFIG_QTX_CODECS
-struct exports exp_ddraw[]={
+static const struct exports exp_ddraw[]={
     FF(DirectDrawCreate, -1)
 };
 #endif
 
-struct exports exp_comdlg32[]={
+static const struct exports exp_comdlg32[]={
     FF(GetOpenFileNameA, -1)
 };
 
-struct exports exp_shlwapi[]={
+static const struct exports exp_shlwapi[]={
     FF(PathFindExtensionA, -1)
     FF(PathFindFileNameA, -1)
 };
 
-struct exports exp_msvcr80[]={
+static const struct exports exp_msvcr80[]={
     FF(_CIpow,-1)
     FF(_CIsin,-1)
     FF(_CIcos,-1)
     FF(_CIsqrt,-1)
+    FF(memcpy,-1)
     FF(memset,-1)
+    FF(sprintf,-1)
+    FF(strncpy,-1)
+    FF(fopen,-1)
+    FF(malloc,-1)
+    FF(free,-1)
     FF(_initterm_e, -1)
     FF(_initterm, -1)
     FF(_decode_pointer, -1)
+
+// For CFDecode2.ax
+    {"_aligned_free",-1,(void*)expfree},
+    {"_aligned_malloc",-1,(void*)expmalloc},
+    FF(_splitpath,-1)
+    FF(_mbsupr,-1)
+    {"_mbscmp", -1, (void*)strcmp},
+    {"clock",-1,(void*)&clock},
+    FF(_time64,-1)
 /* needed by KGV1-VFW.dll */
     {"??2@YAPAXI@Z", -1, expnew},
     {"??3@YAXPAX@Z", -1, expdelete}
 };
 
-struct exports exp_msvcp60[]={
+static const struct exports exp_msvcp60[]={
     {"??0_Lockit@std@@QAE@XZ", -1, exp_0Lockit_dummy},
     {"??1_Lockit@std@@QAE@XZ", -1, exp_1Lockit_dummy}
+};
+
+static const struct exports exp_msvcr100[]={
+    FF(memcpy, -1)
+    FF(memset, -1)
+    FF(_initterm_e, -1)
+    FF(_initterm, -1)
+    {"??2@YAPAXI@Z", -1, expnew},
+    {"??3@YAXPAX@Z", -1, expdelete}
 };
 
 #define LL(X) \
     {#X".dll", sizeof(exp_##X)/sizeof(struct exports), exp_##X},
 
-struct libs libraries[]={
+static const struct libs libraries[]={
     LL(kernel32)
     LL(msvcrt)
     LL(winmm)
@@ -5627,6 +5674,7 @@ struct libs libraries[]={
     LL(shlwapi)
     LL(msvcr80)
     LL(msvcp60)
+    LL(msvcr100)
 };
 
 static WIN_BOOL WINAPI ext_stubs(void)

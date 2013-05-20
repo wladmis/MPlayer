@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- $Revision: 31032 $ -->
+<!-- $Revision: 34785 $ -->
 <appendix id="skin">
 <title><application>MPlayer</application> skin format</title>
 
@@ -20,17 +20,17 @@ for example), so it is up to you to create something great.
 <para>
 Currently there are four windows to be decorated: the
 <link linkend="skin-file-main">main window</link>, the
-<link linkend="skin-file-subwindow">subwindow</link>, the
+<link linkend="skin-file-subwindow">video window</link>, the
 <link linkend="skin-file-main">playbar</link>, and the
-<link linkend="skin-file-menu">skin menu</link> (which can be activated
-by a right click).
+<link linkend="skin-file-menu">skin menu</link>.
 
 <itemizedlist>
 <listitem>
   <para>
-  The <emphasis role="bold">main window</emphasis> and/or the
-  <emphasis role="bold">playbar</emphasis> is where you can control
-  <application>MPlayer</application>. The background of the window is an image.
+  The <emphasis role="bold">main window</emphasis> is where you can control
+  <application>MPlayer</application>. The <emphasis role="bold">playbar</emphasis>
+  shows up in fullscreen mode when moving the mouse to the bottom of
+  the screen. The background of the windows is an image.
   Various items can (and must) be placed in the window:
   <emphasis>buttons</emphasis>, <emphasis>potmeters</emphasis> (sliders) and
   <emphasis>labels</emphasis>.
@@ -73,7 +73,7 @@ by a right click).
 </listitem>
 
 <listitem><para>
-  The <emphasis role="bold">subwindow</emphasis> is where the movie appears. It
+  The <emphasis role="bold">video window</emphasis> is where the video appears. It
   can display a specified image if there is no movie loaded (it is quite boring
   to have an empty window :-)) <emphasis role="bold">Note:</emphasis>
   transparency is <emphasis role="bold">not allowed</emphasis> here.
@@ -82,7 +82,8 @@ by a right click).
 <listitem>
   <para>
   The <emphasis role="bold">skin menu</emphasis> is just a way to control
-  <application>MPlayer</application> by means of menu entries. Two images
+  <application>MPlayer</application> by means of menu entries (which can be
+  activated by a middle mouse button click). Two images
   are required for the menu: one of them is the base image that shows the
   menu in its normal state, the other one is used to display the selected
   entries. When you pop up the menu, the first image is shown. If you move
@@ -141,7 +142,7 @@ You need the following files to build a skin:
   description files needed to draw labels).
 </para></listitem>
 <listitem><para>
-  The image to be displayed in the subwindow (optional).
+  The image to be displayed in the video window (optional).
 </para></listitem>
 <listitem><para>
   Two images for the skin menu (they are needed only if you want to create
@@ -164,8 +165,10 @@ You need the following files to build a skin:
 
 <para>
 As mentioned above, this is the skin configuration file. It is line oriented;
-comment lines start with a '<literal>;</literal>' character at the beginning of
-the line (only spaces and tabs are allowed before the '<literal>;</literal>').
+comments start with a '<literal>;</literal>' character and continue until
+the end of the line, or start with a '<literal>#</literal>' character at the
+beginning of the line (in that case only spaces and tabs are allowed before the
+'<literal>#</literal>').
 </para>
 
 <para>
@@ -203,20 +206,21 @@ where <replaceable>window name</replaceable> can be one of these strings:
   <emphasis role="bold">main</emphasis> - for the main window
 </para></listitem>
 <listitem><para>
-  <emphasis role="bold">sub</emphasis> - for the subwindow
+  <emphasis role="bold">video</emphasis> - for the video window
+</para></listitem>
+<listitem><para>
+  <emphasis role="bold">playbar</emphasis> - for the playbar
 </para></listitem>
 <listitem><para>
   <emphasis role="bold">menu</emphasis> - for the skin menu
-</para></listitem>
-<listitem><para>
-  <emphasis role="bold">playbar</emphasis> - playbar
 </para></listitem>
 </itemizedlist>
 </para>
 
 <para>
-(The sub and menu blocks are optional - you do not need to create a menu or
-decorate the subwindow.)
+(The video, playbar and menu blocks are optional - you do not need to decorate
+the video window, have a playbar or create a menu. A default menu is always
+available by a right mouse button click.)
 </para>
 
 <para>
@@ -236,8 +240,8 @@ section = movieplayer
   ; ... items for main window ...
   end
 
-  window = sub
-  ; ... items for subwindow ...
+  window = video
+  ; ... items for video window ...
   end
 
   window = menu
@@ -262,15 +266,7 @@ and <literal>PNG</literal> are tried for <filename>&lt;ext&gt;</filename>
 </para>
 
 <para>
-Here is an example to make this clear. Suppose that you have an image called
-<filename>main.png</filename> that you use for the main window:
-<programlisting>base = main, -1, -1</programlisting>
-<application>MPlayer</application> tries to load <filename>main</filename>,
-<filename>main.png</filename>, <filename>main.PNG</filename> files.
-</para>
-
-<para>
-Finally some words about positioning. The main window and the subwindow can be
+Finally some words about positioning. The main window and the video window can be
 placed in the different corners of the screen by giving <literal>X</literal>
 and <literal>Y</literal> coordinates. <literal>0</literal> is top or left,
 <literal>-1</literal> is center and <literal>-2</literal> is right or bottom, as
@@ -286,6 +282,14 @@ shown in this illustration:
 (0,-2)----(-1,-2)----(-2,-2)
 </screen>
 </informalfigure>
+</para>
+
+<para>
+Here is an example to make this clear. Suppose that you have an image called
+<filename>main.png</filename> that you use for the main window:
+<programlisting>base = main, -1, -1</programlisting>
+<application>MPlayer</application> tries to load <filename>main</filename>,
+<filename>main.png</filename>, <filename>main.PNG</filename> files and centers it.
 </para>
 
 <!-- ********** -->
@@ -309,11 +313,8 @@ blocks.
   <para>
   Lets you specify the background image to be used for the main window.
   The window will appear at the given <literal>X,Y</literal> position on
-  the screen The window will have the size of the image.
+  the screen. It will have the size of the image.
   </para>
-  <note><para>
-  These coordinates do not currently work for the display window.
-  </para></note>
   <warning><para>Transparent regions in the image (colored #FF00FF) appear black
   on X servers without the XShape extension. The image's width must be dividable
   by 8.</para></warning>
@@ -356,7 +357,7 @@ blocks.
   <emphasis role="bold">disable</emphasis>.
   </para>
   <note><para>
-  This doesn't work for the display window, there is no need to.
+  This isn't available for the playbar.
   </para></note>
   </listitem>
 </varlistentry>
@@ -446,12 +447,12 @@ blocks.
 
 <varlistentry>
   <term><literal>
-  <anchor id="skin-font"/>font = fontfile, fontid
+  <anchor id="skin-font"/>font = fontfile
   </literal></term>
   <listitem><para>
   Defines a font. <literal>fontfile</literal> is the name of a font description
   file with a <filename>.fnt</filename> extension (do not specify the extension
-  here).  <literal>fontid</literal> is used to refer to the font
+  here) and is used to refer to the font
   (see <link linkend="skin-dlabel">dlabel</link>
   and <link linkend="skin-slabel">slabel</link>). Up to 25 fonts can be defined.
   </para></listitem>
@@ -459,27 +460,27 @@ blocks.
 
 <varlistentry>
   <term><literal>
-  <anchor id="skin-slabel"/>slabel = X, Y, fontid, "text"
+  <anchor id="skin-slabel"/>slabel = X, Y, fontfile, "text"
   </literal></term>
   <listitem><para>
   Place a static label at the position <literal>X,Y</literal>.
   <literal>text</literal> is displayed using the font identified by
-  <literal>fontid</literal>. The text is just a raw string
+  <literal>fontfile</literal>. The text is just a raw string
   (<literal>$x</literal> variables do not work) that must be enclosed between
   double quotes (but the " character cannot be part of the text). The
-  label is displayed using the font identified by <literal>fontid</literal>.
+  label is displayed using the font identified by <literal>fontfile</literal>.
   </para></listitem>
 </varlistentry>
 
 <varlistentry>
   <term><literal>
-  <anchor id="skin-dlabel"/>dlabel = X, Y, length, align, fontid, "text"
+  <anchor id="skin-dlabel"/>dlabel = X, Y, width, align, fontfile, "text"
   </literal></term>
   <listitem>
   <para>
   Place a dynamic label at the position <literal>X,Y</literal>. The label is
-  called dynamic because its text is refreshed periodically. The maximum length
-  of the label is given by <literal>length</literal> (its height is the height
+  called dynamic because its text is refreshed periodically. The maximum width
+  of the label is given by <literal>width</literal> (its height is the height
   of a character). If the text to be displayed is wider than that, it will be
   scrolled,
   otherwise it is aligned within the specified space by the value of the
@@ -490,7 +491,7 @@ blocks.
   The text to be displayed is given by <literal>text</literal>: It must be
   written between double quotes (but the " character cannot be part of the
   text). The label is displayed using the font identified by
-  <literal>fontid</literal>. You can use the following variables in the text:
+  <literal>fontfile</literal>. You can use the following variables in the text:
   </para>
 
   <informaltable>
@@ -501,35 +502,35 @@ blocks.
   <tbody>
   <row>
     <entry>$1</entry>
-    <entry>play time in <emphasis>hh:mm:ss</emphasis> format</entry>
+    <entry>elapsed time in <emphasis>hh:mm:ss</emphasis> format</entry>
   </row>
   <row>
     <entry>$2</entry>
-    <entry>play time in <emphasis>mmmm:ss</emphasis> format</entry>
+    <entry>elapsed time in <emphasis>mmmm:ss</emphasis> format</entry>
   </row>
   <row>
     <entry>$3</entry>
-    <entry>play time in <emphasis>hh</emphasis> format (hours)</entry>
+    <entry>elapsed time in <emphasis>hh</emphasis> format (hours)</entry>
   </row>
   <row>
     <entry>$4</entry>
-    <entry>play time in <emphasis>mm</emphasis> format (minutes)</entry>
+    <entry>elapsed time in <emphasis>mm</emphasis> format (minutes)</entry>
   </row>
   <row>
     <entry>$5</entry>
-    <entry>play time in <emphasis>ss</emphasis> format (seconds)</entry>
+    <entry>elapsed time in <emphasis>ss</emphasis> format (seconds)</entry>
   </row>
   <row>
     <entry>$6</entry>
-    <entry>movie length in <emphasis>hh:mm:ss</emphasis> format</entry>
+    <entry>running time in <emphasis>hh:mm:ss</emphasis> format</entry>
   </row>
   <row>
     <entry>$7</entry>
-    <entry>movie length in <emphasis>mmmm:ss</emphasis> format</entry>
+    <entry>running time in <emphasis>mmmm:ss</emphasis> format</entry>
   </row>
   <row>
     <entry>$8</entry>
-    <entry>play time in <emphasis>h:mm:ss</emphasis> format</entry>
+    <entry>elapsed time in <emphasis>h:mm:ss</emphasis> format</entry>
   </row>
   <row>
     <entry>$v</entry>
@@ -553,12 +554,12 @@ blocks.
   </row>
   <row>
     <entry>$a</entry>
-    <entry>a character according to the audio type (none: <literal>n</literal>,
-    mono: <literal>m</literal>, stereo: <literal>t</literal>)</entry>
+    <entry>a character according to the audio type (none: <keycap>n</keycap>,
+    mono: <keycap>m</keycap>, stereo: <keycap>t</keycap>)</entry>
   </row>
   <row>
     <entry>$t</entry>
-    <entry>track number (in playlist)</entry>
+    <entry>track number (DVD, VCD, CD or playlist)</entry>
   </row>
   <row>
     <entry>$o</entry>
@@ -575,33 +576,30 @@ blocks.
   <row>
     <entry>$T</entry>
     <entry>
-    a character according to the stream type (file: <literal>f</literal>,
-    Video CD: <literal>v</literal>, DVD: <literal>d</literal>,
-    URL: <literal>u</literal>)
+    a character according to the stream type (file: <keycap>f</keycap>,
+    CD: <keycap>a</keycap>, Video CD: <keycap>v</keycap>, DVD: <keycap>d</keycap>,
+    URL: <keycap>u</keycap>)
     </entry>
   </row>
   <row>
     <entry>$p</entry>
-    <entry>the <keycap>p</keycap> character (if a movie is playing and the font
-    has the <keycap>p</keycap> character)</entry>
+    <entry>the <keycap>p</keycap> character (if a movie is playing)</entry>
   </row>
   <row>
     <entry>$s</entry>
-    <entry>the <keycap>s</keycap> character (if the movie is stopped and the
-    font has the <keycap>s</keycap> character)</entry>
+    <entry>the <keycap>s</keycap> character (if the movie is stopped)</entry>
   </row>
   <row>
     <entry>$e</entry>
-    <entry>the <keycap>e</keycap> character (if playback is paused and the font
-    has the <keycap>e</keycap> character)</entry>
+    <entry>the <keycap>e</keycap> character (if playback is paused)</entry>
   </row>
   <row>
     <entry>$x</entry>
-    <entry>movie width</entry>
+    <entry>video width</entry>
   </row>
   <row>
     <entry>$y</entry>
-    <entry>movie height</entry>
+    <entry>video height</entry>
   </row>
   <row>
     <entry>$C</entry>
@@ -627,11 +625,11 @@ blocks.
 <!-- ********** -->
 
 <sect2 id="skin-file-subwindow">
-<title>Subwindow</title>
+<title>Video window</title>
 
 <para>
 The following entries can be used in the
-'<literal>window = sub</literal>' . . . '<literal>end</literal>' block.
+'<literal>window = video</literal>' . . . '<literal>end</literal>' block.
 </para>
 
 <variablelist>
@@ -640,11 +638,7 @@ The following entries can be used in the
   <anchor id="skin-sub-base"/>base = image, X, Y, width, height
   </literal></term>
   <listitem><para>
-  The image to be displayed in the window. The window will appear at the given
-  <literal>X,Y</literal> position on the screen (<literal>0,0</literal> is the
-  top left corner). You can specify <literal>-1</literal> for center and
-  <literal>-2</literal> for right (<literal>X</literal>) and bottom
-  (<literal>Y</literal>). The window will be as large as the image.
+  The image to be displayed in the window. The window will be as large as the image.
   <literal>width</literal> and <literal>height</literal>
   denote the size of the window; they are optional (if they are missing, the
   window is the same size as the image).
@@ -731,7 +725,8 @@ file exactly.
 
 <para>
 The font description file (with <filename>.fnt</filename> extension) can have
-comment lines starting with '<literal>;</literal>'. The file must have a line
+comments like the skin configuration file starting with '<literal>;</literal>'
+(or '<literal>#</literal>', but only at the beginning of the line). The file must have a line
 in the form
 <anchor id="skin-font-image"/>
 <programlisting>image = <replaceable>image</replaceable></programlisting>
@@ -742,7 +737,8 @@ image file to be used for the font (you do not have to specify the extension).
 Here <literal>X</literal> and <literal>Y</literal> specify the position of the
 <literal>char</literal> character in the image (<literal>0,0</literal> is the
 upper left corner). <literal>width</literal> and <literal>height</literal> are
-the dimensions of the character in pixels.
+the dimensions of the character in pixels. The character <literal>char</literal>
+shall be in UTF-8 encoding.
 </para>
 
 <para>
@@ -788,6 +784,7 @@ symbols (and thus require a different font).
   <row><entry><keycap>m</keycap></entry><entry>mono sound</entry></row>
   <row><entry><keycap>t</keycap></entry><entry>stereo sound</entry></row>
   <row><entry><keycap>f</keycap></entry><entry>stream is a file</entry></row>
+  <row><entry><keycap>a</keycap></entry><entry>stream is a CD</entry></row>
   <row><entry><keycap>v</keycap></entry><entry>stream is a Video CD</entry></row>
   <row><entry><keycap>d</keycap></entry><entry>stream is a DVD</entry></row>
   <row><entry><keycap>u</keycap></entry><entry>stream is a URL</entry></row>
@@ -810,7 +807,44 @@ menu entries.
 </para>
 
 <variablelist>
+<varlistentry>
+  <term><emphasis role="bold">evNone</emphasis></term>
+  <listitem><para>
+  Empty message, it has no effect.
+  </para></listitem>
+</varlistentry>
+</variablelist>
+
+<variablelist>
 <title>Playback control:</title>
+<varlistentry>
+  <term><emphasis role="bold">evPlay</emphasis></term>
+  <listitem><para>
+  Start playing.
+  </para></listitem>
+</varlistentry>
+
+<varlistentry>
+  <term><emphasis role="bold">evStop</emphasis></term>
+  <listitem><para>
+  Stop playing.
+  </para></listitem>
+</varlistentry>
+
+<varlistentry>
+  <term><emphasis role="bold">evPause</emphasis></term>
+  <listitem><para>
+  Pause playing.
+  </para></listitem>
+</varlistentry>
+
+<varlistentry>
+  <term><emphasis role="bold">evPrev</emphasis></term>
+  <listitem><para>
+  Jump to previous track in the playlist.
+  </para></listitem>
+</varlistentry>
+
 <varlistentry>
   <term><emphasis role="bold">evNext</emphasis></term>
   <listitem><para>
@@ -819,21 +853,73 @@ menu entries.
 </varlistentry>
 
 <varlistentry>
-  <term><emphasis role="bold">evPause</emphasis></term>
+  <term><emphasis role="bold">evLoad</emphasis></term>
   <listitem><para>
-  Forms a switch together with <literal>evPlaySwitchToPause</literal>. They can
-  be used to have a common play/pause button. Both messages should be assigned
-  to buttons displayed at the very same position in the window. This message
-  pauses playing and the image for the <literal>evPlaySwitchToPause</literal>
-  button is displayed (to indicate that the button can be pressed to continue
-  playing).
+  Load a file (by opening a file browser window, where you can choose a file).
   </para></listitem>
 </varlistentry>
 
 <varlistentry>
-  <term><emphasis role="bold">evPlay</emphasis></term>
+  <term><emphasis role="bold">evLoadPlay</emphasis></term>
   <listitem><para>
-  Start playing.
+  Does the same as <literal>evLoad</literal>, but it automatically starts
+  playing after the file is loaded.
+  </para></listitem>
+</varlistentry>
+
+<varlistentry>
+  <term><emphasis role="bold">evLoadAudioFile</emphasis></term>
+  <listitem><para>
+  Loads an audio file (with the file selector).
+  </para></listitem>
+</varlistentry>
+
+<varlistentry>
+  <term><emphasis role="bold">evLoadSubtitle</emphasis></term>
+  <listitem><para>
+  Loads a subtitle file (with the file selector).
+  </para></listitem>
+</varlistentry>
+
+<varlistentry>
+  <term><emphasis role="bold">evDropSubtitle</emphasis></term>
+  <listitem><para>
+  Disables the currently used subtitle.
+  </para></listitem>
+</varlistentry>
+
+<varlistentry>
+  <term><emphasis role="bold">evPlaylist</emphasis></term>
+  <listitem><para>
+  Open/close the playlist window.
+  </para></listitem>
+</varlistentry>
+
+<varlistentry>
+  <term><emphasis role="bold">evPlayCD</emphasis></term>
+  <listitem><para>
+  Tries to open the disc in the given CD-ROM drive.
+  </para></listitem>
+</varlistentry>
+
+<varlistentry>
+  <term><emphasis role="bold">evPlayVCD</emphasis></term>
+  <listitem><para>
+  Tries to open the disc in the given CD-ROM drive.
+  </para></listitem>
+</varlistentry>
+
+<varlistentry>
+  <term><emphasis role="bold">evPlayDVD</emphasis></term>
+  <listitem><para>
+  Tries to open the disc in the given DVD-ROM drive.
+  </para></listitem>
+</varlistentry>
+
+<varlistentry>
+  <term><emphasis role="bold">evLoadURL</emphasis></term>
+  <listitem><para>
+  Displays the URL dialog window.
   </para></listitem>
 </varlistentry>
 
@@ -847,16 +933,14 @@ menu entries.
 </varlistentry>
 
 <varlistentry>
-  <term><emphasis role="bold">evPrev</emphasis></term>
+  <term><emphasis role="bold">evPauseSwitchToPlay</emphasis></term>
   <listitem><para>
-  Jump to previous track in the playlist.
-  </para></listitem>
-</varlistentry>
-
-<varlistentry>
-  <term><emphasis role="bold">evStop</emphasis></term>
-  <listitem><para>
-  Stop playing.
+  Forms a switch together with <literal>evPlaySwitchToPause</literal>. They can
+  be used to have a common play/pause button. Both messages should be assigned
+  to buttons displayed at the very same position in the window. This message
+  pauses playing and the image for the <literal>evPlaySwitchToPause</literal>
+  button is displayed (to indicate that the button can be pressed to continue
+  playing).
   </para></listitem>
 </varlistentry>
 </variablelist>
@@ -919,13 +1003,13 @@ menu entries.
 <varlistentry>
   <term><emphasis role="bold">evHalfSize</emphasis></term>
   <listitem><para>
-  Set the movie window to half size.
+  Set the video window to half size.
   </para></listitem>
 </varlistentry>
 <varlistentry>
   <term><emphasis role="bold">evDoubleSize</emphasis></term>
   <listitem><para>
-  Set the movie window to double size.
+  Set the video window to double size.
   </para></listitem>
 </varlistentry>
 <varlistentry>
@@ -937,27 +1021,19 @@ menu entries.
 <varlistentry>
   <term><emphasis role="bold">evNormalSize</emphasis></term>
   <listitem><para>
-  Set the movie window to its normal size.
+  Set the video window to its normal size.
+  </para></listitem>
+</varlistentry>
+<varlistentry>
+  <term><emphasis role="bold">evSetAspect</emphasis></term>
+  <listitem><para>
+  Set the video window to its original aspect ratio.
   </para></listitem>
 </varlistentry>
 </variablelist>
 
 <variablelist>
 <title>Audio control:</title>
-<varlistentry>
-  <term><emphasis role="bold">evDecAudioBufDelay</emphasis></term>
-  <listitem><para>
-  Decrease audio buffer delay.
-  </para></listitem>
-</varlistentry>
-
-<varlistentry>
-  <term><emphasis role="bold">evDecBalance</emphasis></term>
-  <listitem><para>
-  Decrease balance.
-  </para></listitem>
-</varlistentry>
-
 <varlistentry>
   <term><emphasis role="bold">evDecVolume</emphasis></term>
   <listitem><para>
@@ -966,23 +1042,17 @@ menu entries.
 </varlistentry>
 
 <varlistentry>
-  <term><emphasis role="bold">evIncAudioBufDelay</emphasis></term>
-  <listitem><para>
-  Increase audio buffer delay.
-  </para></listitem>
-</varlistentry>
-
-<varlistentry>
-  <term><emphasis role="bold">evIncBalance</emphasis></term>
-  <listitem><para>
-  Increase balance.
-  </para></listitem>
-</varlistentry>
-
-<varlistentry>
   <term><emphasis role="bold">evIncVolume</emphasis></term>
   <listitem><para>
   Increase volume.
+  </para></listitem>
+</varlistentry>
+
+<varlistentry>
+  <term><emphasis role="bold">evSetVolume</emphasis></term>
+  <listitem><para>
+  Set volume (can be used by a potmeter; the relative
+  value (0-100%) of the potmeter is used).
   </para></listitem>
 </varlistentry>
 
@@ -1002,10 +1072,9 @@ menu entries.
 </varlistentry>
 
 <varlistentry>
-  <term><emphasis role="bold">evSetVolume</emphasis></term>
+  <term><emphasis role="bold">evEqualizer</emphasis></term>
   <listitem><para>
-  Set volume (can be used by a potmeter; the relative
-  value (0-100%) of the potmeter is used).
+  Turn the equalizer on/off.
   </para></listitem>
 </varlistentry>
 </variablelist>
@@ -1020,23 +1089,23 @@ menu entries.
 </varlistentry>
 
 <varlistentry>
-  <term><emphasis role="bold">evDropSubtitle</emphasis></term>
+  <term><emphasis role="bold">evPreferences</emphasis></term>
   <listitem><para>
-  Disables the currently used subtitle.
+  Open the preferences window.
   </para></listitem>
 </varlistentry>
 
 <varlistentry>
-  <term><emphasis role="bold">evEqualizer</emphasis></term>
+  <term><emphasis role="bold">evSkinBrowser</emphasis></term>
   <listitem><para>
-  Turn the equalizer on/off.
+  Open the skin browser window.
   </para></listitem>
 </varlistentry>
 
 <varlistentry>
-  <term><emphasis role="bold">evExit</emphasis></term>
+  <term><emphasis role="bold">evMenu</emphasis></term>
   <listitem><para>
-  Quit the program.
+  Open the (default) menu.
   </para></listitem>
 </varlistentry>
 
@@ -1048,87 +1117,9 @@ menu entries.
 </varlistentry>
 
 <varlistentry>
-  <term><emphasis role="bold">evLoad</emphasis></term>
+  <term><emphasis role="bold">evExit</emphasis></term>
   <listitem><para>
-  Load a file (by opening a file browser window, where you can choose a file).
-  </para></listitem>
-</varlistentry>
-
-<varlistentry>
-  <term><emphasis role="bold">evLoadPlay</emphasis></term>
-  <listitem><para>
-  Does the same as <literal>evLoad</literal>, but it automatically starts
-  playing after the file is loaded.
-  </para></listitem>
-</varlistentry>
-
-<varlistentry>
-  <term><emphasis role="bold">evLoadSubtitle</emphasis></term>
-  <listitem><para>
-  Loads a subtitle file (with the file selector).
-  </para></listitem>
-</varlistentry>
-
-<varlistentry>
-  <term><emphasis role="bold">evLoadAudioFile</emphasis></term>
-  <listitem><para>
-  Loads an audio file (with the file selector).
-  </para></listitem>
-</varlistentry>
-
-<varlistentry>
-  <term><emphasis role="bold">evNone</emphasis></term>
-  <listitem><para>
-  Empty message, it has no effect (except maybe in Subversion versions :-)).
-  </para></listitem>
-</varlistentry>
-
-<varlistentry>
-  <term><emphasis role="bold">evPlaylist</emphasis></term>
-  <listitem><para>
-  Open/close the playlist window.
-  </para></listitem>
-</varlistentry>
-
-<varlistentry>
-  <term><emphasis role="bold">evPlayDVD</emphasis></term>
-  <listitem><para>
-  Tries to open the disc in the given DVD-ROM drive.
-  </para></listitem>
-</varlistentry>
-
-<varlistentry>
-  <term><emphasis role="bold">evPlayVCD</emphasis></term>
-  <listitem><para>
-  Tries to open the disc in the given CD-ROM drive.
-  </para></listitem>
-</varlistentry>
-
-<varlistentry>
-  <term><emphasis role="bold">evPreferences</emphasis></term>
-  <listitem><para>
-  Open the preferences window.
-  </para></listitem>
-</varlistentry>
-
-<varlistentry>
-  <term><emphasis role="bold">evSetAspect</emphasis></term>
-  <listitem><para>
-  Sets displayed image aspect.
-  </para></listitem>
-</varlistentry>
-
-<varlistentry>
-  <term><emphasis role="bold">evSetURL</emphasis></term>
-  <listitem><para>
-  Displays the URL dialog window.
-  </para></listitem>
-</varlistentry>
-
-<varlistentry>
-  <term><emphasis role="bold">evSkinBrowser</emphasis></term>
-  <listitem><para>
-  Open the skin browser window.
+  Quit the program.
   </para></listitem>
 </varlistentry>
 </variablelist>

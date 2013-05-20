@@ -113,7 +113,7 @@ static int demux_rawdv_fill_buffer(demuxer_t *demuxer, demux_stream_t *ds)
    demux_packet_t* dp_video=NULL;
    sh_video_t *sh_video = demuxer->video->sh;
    int bytes_read=0;
-//   fprintf(stderr,"demux_rawdv_fill_buffer() seek to %qu, size: %d\n",frames->current_filepos,frames->frame_size);
+//   fprintf(stderr,"demux_rawdv_fill_buffer() seek to %llu, size: %d\n",frames->current_filepos,frames->frame_size);
    // fetch the frame from the file
    // first, position the file properly since ds_read_packet() doesn't
    // seem to do it, even though it takes a file offset as a parameter
@@ -190,7 +190,7 @@ static demuxer_t* demux_open_rawdv(demuxer_t* demuxer)
    sh_video->frametime = 1.0/sh_video->fps;
 
   // emulate BITMAPINFOHEADER for win32 decoders:
-  sh_video->bih=calloc(1, sizeof(BITMAPINFOHEADER));
+  sh_video->bih=calloc(1, sizeof(*sh_video->bih));
   sh_video->bih->biSize=40;
   sh_video->bih->biWidth = dv_decoder->width;
   sh_video->bih->biHeight = dv_decoder->height;
@@ -205,9 +205,9 @@ static demuxer_t* demux_open_rawdv(demuxer_t* demuxer)
    frames->frame_size=dv_decoder->frame_size;
    frames->frame_number=demuxer->stream->end_pos/frames->frame_size;
 
-   mp_msg(MSGT_DEMUXER,MSGL_V,"demux_open_rawdv() seek to %qu, size: %d, dv_dec->frame_size: %d\n",frames->current_filepos,frames->frame_size, dv_decoder->frame_size);
+   mp_msg(MSGT_DEMUXER,MSGL_V,"demux_open_rawdv() seek to %llu, size: %d, dv_dec->frame_size: %d\n",frames->current_filepos,frames->frame_size, dv_decoder->frame_size);
     if (dv_decoder->audio != NULL && demuxer->audio->id>=-1){
-       sh_audio_t *sh_audio =  new_sh_audio(demuxer, 0);
+       sh_audio_t *sh_audio =  new_sh_audio(demuxer, 0, NULL);
        demuxer->audio->id = 0;
 	    demuxer->audio->sh = sh_audio;
 	    sh_audio->ds = demuxer->audio;
@@ -215,8 +215,7 @@ static demuxer_t* demux_open_rawdv(demuxer_t* demuxer)
        // custom fourcc for internal MPlayer use
        sh_audio->format = mmioFOURCC('R', 'A', 'D', 'V');
 
-	sh_audio->wf = malloc(sizeof(WAVEFORMATEX));
-	memset(sh_audio->wf, 0, sizeof(WAVEFORMATEX));
+	sh_audio->wf = calloc(1, sizeof(*sh_audio->wf));
 	sh_audio->wf->wFormatTag = sh_audio->format;
 	sh_audio->wf->nChannels = dv_decoder->audio->num_channels;
 	sh_audio->wf->wBitsPerSample = 16;

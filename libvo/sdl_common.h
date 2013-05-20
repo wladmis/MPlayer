@@ -22,6 +22,7 @@
 #define MPLAYER_SDL_COMMON_H
 
 #include "config.h"
+#include <stdint.h>
 #ifdef CONFIG_SDL_SDL_H
 #include <SDL/SDL.h>
 #else
@@ -30,8 +31,9 @@
 
 int vo_sdl_init(void);
 void vo_sdl_uninit(void);
+int vo_sdl_config(int w, int h, int flags, const char *title);
 void vo_sdl_fullscreen(void);
-int sdl_set_mode(int bpp, uint32_t flags);
+SDL_Surface *sdl_set_mode(int bpp, uint32_t flags);
 int sdl_default_handle_event(SDL_Event *event);
 
 #endif /* MPLAYER_SDL_COMMON_H */

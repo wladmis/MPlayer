@@ -345,6 +345,8 @@ static const ati_card_ids_t ati_card_ids[] =
  { DEVICE_ATI_RAGE_128_PRO2, 0 },
  { DEVICE_ATI_RAGE_128_PRO3, 0 },
 /* these seem to be based on rage 128 instead of mach64 */
+ { DEVICE_ATI_RAGE_MOBILITY_M4, 0 },
+ { DEVICE_ATI_RAGE_MOBILITY_M42, 0 },
  { DEVICE_ATI_RAGE_MOBILITY_M3, 0 },
  { DEVICE_ATI_RAGE_MOBILITY_M32, 0 },
 #else
@@ -394,15 +396,16 @@ static const ati_card_ids_t ati_card_ids[] =
  { DEVICE_ATI_RADEON_R250_LG,		R_250|R_OVL_SHIFT },
  { DEVICE_ATI_RV250_RADEON_9000,	R_250|R_OVL_SHIFT },
  { DEVICE_ATI_RADEON_RV250_RADEON2,	R_250|R_OVL_SHIFT },
- { DEVICE_ATI_RV280_RADEON_9200,	R_280 },
- { DEVICE_ATI_RV280_RADEON_92002,	R_280 },
- { DEVICE_ATI_RV280_RADEON_92003,	R_280 },
- { DEVICE_ATI_RV280_RADEON_92004,	R_280 },
- { DEVICE_ATI_RV280_RADEON_92005,	R_280 },
- { DEVICE_ATI_RV280_RADEON_92006,	R_280 },
- { DEVICE_ATI_RV280_RADEON_92007,	R_280 },
- { DEVICE_ATI_M9_5C61_RADEON,		R_280 },
- { DEVICE_ATI_M9_5C63_RADEON,		R_280 },
+ // Only 92006 and 92007 tested to actually require this
+ { DEVICE_ATI_RV280_RADEON_9200,	R_280|R_OVL_SHIFT },
+ { DEVICE_ATI_RV280_RADEON_92002,	R_280|R_OVL_SHIFT },
+ { DEVICE_ATI_RV280_RADEON_92003,	R_280|R_OVL_SHIFT },
+ { DEVICE_ATI_RV280_RADEON_92004,	R_280|R_OVL_SHIFT },
+ { DEVICE_ATI_RV280_RADEON_92005,	R_280|R_OVL_SHIFT },
+ { DEVICE_ATI_RV280_RADEON_92006,	R_280|R_OVL_SHIFT },
+ { DEVICE_ATI_RV280_RADEON_92007,	R_280|R_OVL_SHIFT },
+ { DEVICE_ATI_M9_5C61_RADEON,		R_280|R_OVL_SHIFT },
+ { DEVICE_ATI_M9_5C63_RADEON,		R_280|R_OVL_SHIFT },
 /* Radeon3 (indeed: Rage 1024 Pro ;) */
  { DEVICE_ATI_R300_AG_FIREGL,		R_300 },
  { DEVICE_ATI_RADEON_R300_ND,		R_300 },
@@ -544,7 +547,7 @@ static inline uint32_t INREG (uint32_t addr) {
 		OUTREG(addr, _tmp);					\
 	} while (0)
 
-static __inline__ uint32_t INPLL(uint32_t addr)
+static inline uint32_t INPLL(uint32_t addr)
 {
 	OUTREG8(CLOCK_CNTL_INDEX, addr & 0x0000001f);
 	return INREG(CLOCK_CNTL_DATA);
@@ -709,7 +712,7 @@ static void _radeon_fifo_wait(unsigned);
 #define radeon_engine_idle()		_radeon_engine_idle()
 #define radeon_fifo_wait(entries)	_radeon_fifo_wait(entries)
 /* Flush all dirty data in the Pixel Cache to memory. */
-static __inline__ void radeon_engine_flush ( void )
+static inline void radeon_engine_flush(void)
 {
     unsigned i;
 
@@ -747,7 +750,7 @@ static void radeon_engine_reset( void )
 }
 #else
 
-static __inline__ void radeon_engine_flush ( void )
+static inline void radeon_engine_flush(void)
 {
 	int i;
 
@@ -1267,6 +1270,7 @@ typedef struct saved_regs_s
     uint32_t ov0_graphics_key_msk;
     uint32_t ov0_key_cntl;
     uint32_t disp_merge_cntl;
+    uint32_t config_cntl;
 }saved_regs_t;
 static saved_regs_t savreg;
 
@@ -1279,6 +1283,13 @@ static void save_regs( void )
     savreg.ov0_graphics_key_msk = INREG(OV0_GRAPHICS_KEY_MSK);
     savreg.ov0_key_cntl		= INREG(OV0_KEY_CNTL);
     savreg.disp_merge_cntl	= INREG(DISP_MERGE_CNTL);
+#if HAVE_BIGENDIAN
+#ifdef RAGE128
+    savreg.config_cntl          = INREG(CONFIG_CNTL);
+#else
+    savreg.config_cntl          = INREG(SURFACE_CNTL);
+#endif
+#endif
 }
 
 static void restore_regs( void )
@@ -1290,6 +1301,31 @@ static void restore_regs( void )
     OUTREG(OV0_GRAPHICS_KEY_MSK,savreg.ov0_graphics_key_msk);
     OUTREG(OV0_KEY_CNTL,savreg.ov0_key_cntl);
     OUTREG(DISP_MERGE_CNTL,savreg.disp_merge_cntl);
+#if HAVE_BIGENDIAN
+#ifdef RAGE128
+    OUTREG(CONFIG_CNTL, savreg.config_cntl);
+#else
+    OUTREG(SURFACE_CNTL, savreg.config_cntl);
+#endif
+#endif
+}
+
+/**
+ * Clear swap bits of surface data control regs for bigendian
+ */
+static void clear_swap(void)
+{
+#if HAVE_BIGENDIAN
+#ifdef RAGE128
+   OUTREG(CONFIG_CNTL,
+          savreg.config_cntl &
+          ~(APER_0_BIG_ENDIAN_16BPP_SWAP | APER_0_BIG_ENDIAN_32BPP_SWAP));
+#else
+   OUTREG(SURFACE_CNTL,
+          savreg.config_cntl &
+          ~(NONSURF_AP0_SWP_32BPP | NONSURF_AP0_SWP_16BPP));
+#endif
+#endif
 }
 
 static int radeon_init(void)
@@ -1351,6 +1387,7 @@ static int radeon_init(void)
   }
 #endif
   save_regs();
+  clear_swap();
   return 0;
 }
 
@@ -1397,7 +1434,7 @@ static const fourcc_desc_t supported_fourcc[] =
   { IMGFMT_BGR32, 775 }
 };
 
-__inline__ static int is_supported_fourcc(uint32_t fourcc)
+static inline int is_supported_fourcc(uint32_t fourcc)
 {
   unsigned i;
   for(i=0;i<sizeof(supported_fourcc)/sizeof(fourcc_desc_t);i++)
@@ -3150,6 +3187,11 @@ static int radeon_frame_select(unsigned frame)
 {
     uint32_t off[6];
     int prev_frame= (frame-1+besr.vid_nbufs) % besr.vid_nbufs;
+    // This really only needs to be set during data writes,
+    // however we don't have a hook there.
+    // The setup at startup is not enough since X11 regularly
+    // resets this to values to the wrong values for us.
+    clear_swap();
     /*
     buf3-5 always should point onto second buffer for better
     deinterlacing and TV-in

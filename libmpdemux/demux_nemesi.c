@@ -17,12 +17,15 @@
  * with MPlayer; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
+
 #include <stdlib.h>
 #include <stdio.h>
+
 #include "stream/stream.h"
+#include "mpcommon.h"
+#include "mp_msg.h"
 #include "demuxer.h"
 #include "stheader.h"
-#define HAVE_STRUCT_SOCKADDR_STORAGE
 #include "nemesi/rtsp.h"
 #include "nemesi/rtp.h"
 #include <sched.h>
@@ -111,7 +114,6 @@ static void link_session_and_fetch_conf(Nemesi_DemuxerStreamData * ndsd,
                                         rtp_session * sess,
                                         rtp_buff * buff, unsigned int * fps)
 {
-    extern double force_fps;
     rtp_ssrc *ssrc = NULL;
     rtp_frame * fr = &ndsd->first_pkt[stype];
     rtp_buff trash_buff;
@@ -222,7 +224,7 @@ static demuxer_t* demux_open_rtp(demuxer_t* demuxer)
 
         if (ptinfo->type == AU) {
             if (ndsd->session[NEMESI_SESSION_AUDIO] == NULL) {
-                sh_audio_t* sh_audio = new_sh_audio(demuxer,0);
+                sh_audio_t* sh_audio = new_sh_audio(demuxer,0, NULL);
                 WAVEFORMATEX* wf;
                 demux_stream_t* d_audio = demuxer->audio;
                 demuxer->audio->id = 0;
@@ -232,13 +234,9 @@ static demuxer_t* demux_open_rtp(demuxer_t* demuxer)
                 link_session_and_fetch_conf(ndsd, NEMESI_SESSION_AUDIO,
                                             sess, &buff, NULL);
 
-                if (buff.len) {
-                    wf = calloc(1,sizeof(WAVEFORMATEX)+buff.len);
-                    wf->cbSize = buff.len;
-                    memcpy(wf+1, buff.data, buff.len);
-                } else {
-                    wf = calloc(1,sizeof(WAVEFORMATEX));
-                }
+                wf = calloc(1,sizeof(*wf)+buff.len);
+                wf->cbSize = buff.len;
+                memcpy(wf+1, buff.data, buff.len);
 
                 sh_audio->wf = wf;
                 d_audio->sh = sh_audio;
@@ -268,14 +266,9 @@ static demuxer_t* demux_open_rtp(demuxer_t* demuxer)
                 link_session_and_fetch_conf(ndsd, NEMESI_SESSION_VIDEO,
                                             sess, &buff, &fps);
 
-                if (buff.len) {
-                    bih = calloc(1,sizeof(BITMAPINFOHEADER)+buff.len);
-                    bih->biSize = sizeof(BITMAPINFOHEADER)+buff.len;
-                    memcpy(bih+1, buff.data, buff.len);
-                } else {
-                    bih = calloc(1,sizeof(BITMAPINFOHEADER));
-                    bih->biSize = sizeof(BITMAPINFOHEADER);
-                }
+                bih = calloc(1,sizeof(*bih)+buff.len);
+                bih->biSize = sizeof(*bih)+buff.len;
+                memcpy(bih+1, buff.data, buff.len);
 
                 sh_video = new_sh_video(demuxer,0);
                 sh_video->bih = bih;

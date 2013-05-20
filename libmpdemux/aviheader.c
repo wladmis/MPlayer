@@ -36,13 +36,10 @@ static MainAVIHeader avih;
 
 static int odml_get_vstream_id(int id, unsigned char res[])
 {
-    unsigned char *p = (unsigned char *)&id;
-    id = le2me_32(id);
-
-    if (p[2] == 'd') {
+    if ((char)(id >> 16) == 'd') {
 	if (res) {
-	    res[0] = p[0];
-	    res[1] = p[1];
+	    res[0] = id;
+	    res[1] = id >> 8;
 	}
 	return 1;
     }
@@ -96,7 +93,8 @@ while(1){
       // found MOVI header
       if(!demuxer->movi_start) demuxer->movi_start=stream_tell(demuxer->stream);
       demuxer->movi_end=stream_tell(demuxer->stream)+len;
-      mp_msg(MSGT_HEADER,MSGL_V,MSGTR_MPDEMUX_AVIHDR_FoundMovieAt,(int)demuxer->movi_start,(int)demuxer->movi_end);
+      mp_msg(MSGT_HEADER, MSGL_V, "Found movie at 0x%X - 0x%X\n",
+             (int)demuxer->movi_start, (int)demuxer->movi_end);
       if(demuxer->stream->end_pos>demuxer->movi_end) demuxer->movi_end=demuxer->stream->end_pos;
       if(index_mode==-2 || index_mode==2 || index_mode==0)
         break; // reading from non-seekable source (stdin) or forced index or no index forced
@@ -175,7 +173,7 @@ while(1){
     // required to produce the file (the format depends on the hardware used).
     case mmioFOURCC('I','S','H','P'): hdr="Sharpness";break;
     // ISRC - Identifies the name of the person or organization who
-    // suplied the original subject of the file; for example, "Try Research."
+    // supplied the original subject of the file; for example, "Try Research."
     case mmioFOURCC('I','S','R','C'): hdr="Source";break;
     // ISRF - Identifies the original form of the material that was digitized,
     // such as "slide," "paper," "map," and so on. This is not necessarily
@@ -206,7 +204,7 @@ while(1){
         sh_video->stream_delay = (float)sh_video->video.dwStart * sh_video->video.dwScale/sh_video->video.dwRate;
       } else
       if(h.fccType==streamtypeAUDIO){
-        sh_audio=new_sh_audio(demuxer,stream_id);
+        sh_audio=new_sh_audio(demuxer,stream_id, NULL);
         mp_msg(MSGT_DEMUX, MSGL_INFO, MSGTR_AudioID, "aviheader", stream_id);
         memcpy(&sh_audio->audio,&h,sizeof(h));
         sh_audio->stream_delay = (float)sh_audio->audio.dwStart * sh_audio->audio.dwScale/sh_audio->audio.dwRate;
@@ -262,19 +260,21 @@ while(1){
 	  s->aIndex[i].dwSize = stream_read_dword_le(demuxer->stream);
 	  s->aIndex[i].dwDuration = stream_read_dword_le(demuxer->stream);
 	  mp_msg (MSGT_HEADER, MSGL_V, "ODML (%.4s): [%d] 0x%016"PRIx64" 0x%04x %u\n",
-		  (s->dwChunkId), i,
+		  s->dwChunkId, i,
 		  (uint64_t)s->aIndex[i].qwOffset, s->aIndex[i].dwSize, s->aIndex[i].dwDuration);
       }
 
       break; }
     case ckidSTREAMFORMAT: {      // read 'strf'
       if(last_fccType==streamtypeVIDEO){
-        sh_video->bih=calloc(FFMAX(chunksize, sizeof(BITMAPINFOHEADER)), 1);
+        sh_video->bih_size = FFMAX(chunksize, sizeof(*sh_video->bih));
+        sh_video->bih=calloc(sh_video->bih_size, 1);
 //        sh_video->bih=malloc(chunksize); memset(sh_video->bih,0,chunksize);
-        mp_msg(MSGT_HEADER,MSGL_V,MSGTR_MPDEMUX_AVIHDR_FoundBitmapInfoHeader,chunksize,sizeof(BITMAPINFOHEADER));
+        mp_msg(MSGT_HEADER, MSGL_V, "Found 'bih', %u bytes of %zu\n",
+               chunksize, sizeof(*sh_video->bih));
         stream_read(demuxer->stream,(char*) sh_video->bih,chunksize);
 	le2me_BITMAPINFOHEADER(sh_video->bih);  // swap to machine endian
-	if (sh_video->bih->biSize > chunksize && sh_video->bih->biSize > sizeof(BITMAPINFOHEADER))
+	if (sh_video->bih->biSize > chunksize && sh_video->bih->biSize > sizeof(*sh_video->bih))
 		sh_video->bih->biSize = chunksize;
 	// fixup MS-RLE header (seems to be broken for <256 color files)
 	if(sh_video->bih->biCompression<=1 && sh_video->bih->biSize==40)
@@ -292,7 +292,7 @@ while(1){
 	case mmioFOURCC('m', 'p', 'g', '4'):
 	case mmioFOURCC('D', 'I', 'V', '1'):
           idxfix_divx=3; // set index recovery mpeg4 flavour: msmpeg4v1
-	  mp_msg(MSGT_HEADER,MSGL_V,MSGTR_MPDEMUX_AVIHDR_RegeneratingKeyfTableForMPG4V1);
+	  mp_msg(MSGT_HEADER, MSGL_V, "Regenerating keyframe table for M$ mpg4v1 video.\n");
 	  break;
         case mmioFOURCC('D', 'I', 'V', '3'):
 	case mmioFOURCC('d', 'i', 'v', '3'):
@@ -309,7 +309,7 @@ while(1){
 	case mmioFOURCC('D', 'I', 'V', '2'):
         case mmioFOURCC('A', 'P', '4', '1'):
           idxfix_divx=1; // set index recovery mpeg4 flavour: msmpeg4v3
-	  mp_msg(MSGT_HEADER,MSGL_V,MSGTR_MPDEMUX_AVIHDR_RegeneratingKeyfTableForDIVX3);
+	  mp_msg(MSGT_HEADER, MSGL_V, "Regenerating keyframe table for DIVX3 video.\n");
 	  break;
         case mmioFOURCC('D', 'I', 'V', 'X'):
         case mmioFOURCC('d', 'i', 'v', 'x'):
@@ -319,22 +319,25 @@ while(1){
         case mmioFOURCC('F', 'M', 'P', '4'):
         case mmioFOURCC('f', 'm', 'p', '4'):
           idxfix_divx=2; // set index recovery mpeg4 flavour: generic mpeg4
-	  mp_msg(MSGT_HEADER,MSGL_V,MSGTR_MPDEMUX_AVIHDR_RegeneratingKeyfTableForMPEG4);
+	  mp_msg(MSGT_HEADER, MSGL_V, "Regenerating keyframe table for MPEG-4 video.\n");
 	  break;
         }
       } else
       if(last_fccType==streamtypeAUDIO){
-	unsigned wf_size = chunksize<sizeof(WAVEFORMATEX)?sizeof(WAVEFORMATEX):chunksize;
+	unsigned wf_size = chunksize<sizeof(*sh_audio->wf)?sizeof(*sh_audio->wf):chunksize;
         sh_audio->wf=calloc(wf_size,1);
 //        sh_audio->wf=malloc(chunksize); memset(sh_audio->wf,0,chunksize);
-        mp_msg(MSGT_HEADER,MSGL_V,MSGTR_MPDEMUX_AVIHDR_FoundWaveFmt,chunksize,sizeof(WAVEFORMATEX));
+        mp_msg(MSGT_HEADER, MSGL_V, "Found 'wf', %u bytes of %zu\n",
+               chunksize, sizeof(*sh_audio->wf));
         stream_read(demuxer->stream,(char*) sh_audio->wf,chunksize);
 	le2me_WAVEFORMATEX(sh_audio->wf);
 	if (sh_audio->wf->cbSize != 0 &&
-	    wf_size < sizeof(WAVEFORMATEX)+sh_audio->wf->cbSize) {
-	    sh_audio->wf=realloc(sh_audio->wf, sizeof(WAVEFORMATEX)+sh_audio->wf->cbSize);
+	    wf_size < sizeof(*sh_audio->wf)+sh_audio->wf->cbSize) {
+	    sh_audio->wf=realloc(sh_audio->wf, sizeof(*sh_audio->wf)+sh_audio->wf->cbSize);
 	}
 	sh_audio->format=sh_audio->wf->wFormatTag;
+	if (sh_audio->wf->wFormatTag == 0xfffe && sh_audio->wf->cbSize >= 22)
+	    sh_audio->format = av_le2ne16(((WAVEFORMATEXTENSIBLE *)sh_audio->wf)->SubFormat);
 	if (sh_audio->format == 1 &&
 	    last_fccHandler == mmioFOURCC('A', 'x', 'a', 'n'))
 	    sh_audio->format = last_fccHandler;
@@ -370,7 +373,8 @@ while(1){
     case mmioFOURCC('d', 'm', 'l', 'h'): {
 	// dmlh 00 00 00 04 frms
 	unsigned int total_frames = stream_read_dword_le(demuxer->stream);
-	mp_msg(MSGT_HEADER,MSGL_V,MSGTR_MPDEMUX_AVIHDR_FoundAVIV2Header, chunksize, total_frames);
+        mp_msg(MSGT_HEADER, MSGL_V, "AVI: dmlh found (size=%d) (total_frames=%d)\n",
+               chunksize, total_frames);
 	stream_skip(demuxer->stream, chunksize-4);
 	chunksize = 0;
     }
@@ -379,13 +383,16 @@ while(1){
     if(demuxer->movi_end>stream_tell(demuxer->stream))
 	demuxer->movi_end=stream_tell(demuxer->stream); // fixup movi-end
     if(index_mode && !priv->isodml){
+      int read;
       int i;
       priv->idx_size=size2>>4;
-      mp_msg(MSGT_HEADER,MSGL_V,MSGTR_MPDEMUX_AVIHDR_ReadingIndexBlockChunksForFrames,
+      mp_msg(MSGT_HEADER, MSGL_V,
+        "Reading INDEX block, %d chunks for %d frames (fpos=%"PRId64").\n",
         priv->idx_size,avih.dwTotalFrames, (int64_t)stream_tell(demuxer->stream));
       priv->idx=malloc(priv->idx_size<<4);
 //      printf("\nindex to %p !!!!! (priv=%p)\n",priv->idx,priv);
-      stream_read(demuxer->stream,(char*)priv->idx,priv->idx_size<<4);
+      read = stream_read(demuxer->stream,(char*)priv->idx,priv->idx_size<<4);
+      priv->idx_size = FFMAX(read, 0) >> 4;
       for (i = 0; i < priv->idx_size; i++) {	// swap index to machine endian
 	AVIINDEXENTRY *entry=(AVIINDEXENTRY*)priv->idx + i;
 	le2me_AVIINDEXENTRY(entry);
@@ -404,7 +411,7 @@ while(1){
     case mmioFOURCC('R','I','F','F'): {
 	char riff_type[4];
 
-	mp_msg(MSGT_HEADER, MSGL_V, MSGTR_MPDEMUX_AVIHDR_AdditionalRIFFHdr);
+        mp_msg(MSGT_HEADER, MSGL_V, "Additional RIFF header...\n");
 	stream_read(demuxer->stream, riff_type, sizeof riff_type);
 	if (strncmp(riff_type, "AVIX", sizeof riff_type))
 	    mp_msg(MSGT_HEADER, MSGL_WARN, MSGTR_MPDEMUX_AVIHDR_WarnNotExtendedAVIHdr);
@@ -445,7 +452,7 @@ while(1){
   if(list_end>0 &&
      chunksize+stream_tell(demuxer->stream) == list_end) list_end=0;
   if(list_end>0 && chunksize+stream_tell(demuxer->stream)>list_end){
-      mp_msg(MSGT_HEADER,MSGL_V,MSGTR_MPDEMUX_AVIHDR_BrokenChunk,chunksize,(char *) &id);
+      mp_msg(MSGT_HEADER, MSGL_V, "Broken chunk?  chunksize=%d  (id=%.4s)\n", chunksize, (char *) &id);
       stream_seek(demuxer->stream,list_end);
       list_end=0;
   } else

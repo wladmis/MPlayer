@@ -46,13 +46,6 @@
 
 /* ------------------------------------------------------------------------- */
 
-/* Defines */
-
-/* Used for temporary buffers to store file- and pathnames */
-#define BUFLENGTH 512
-
-/* ------------------------------------------------------------------------- */
-
 /* Info */
 
 static const vo_info_t info=
@@ -147,6 +140,9 @@ static int config(uint32_t width, uint32_t height, uint32_t d_width,
         return 0;
     }
 
+    if (strcmp(md5sum_outfile, "-") == 0)
+        md5sum_fd = stdout;
+    else
     if ( (md5sum_fd = fopen(md5sum_outfile, "w") ) == NULL ) {
         mp_msg(MSGT_VO, MSGL_ERR, "\n%s: %s\n", info.short_name,
                 MSGTR_VO_CantCreateFile);
@@ -266,7 +262,7 @@ static int query_format(uint32_t format)
 
 /* ------------------------------------------------------------------------- */
 
-static int control(uint32_t request, void *data, ...)
+static int control(uint32_t request, void *data)
 {
     switch (request) {
         case VOCTRL_QUERY_FORMAT:
@@ -281,11 +277,9 @@ static int control(uint32_t request, void *data, ...)
 
 static void uninit(void)
 {
-    if (md5sum_outfile) {
-        free(md5sum_outfile);
-        md5sum_outfile = NULL;
-    }
-    if (md5sum_fd) fclose(md5sum_fd);
+    free(md5sum_outfile);
+    md5sum_outfile = NULL;
+    if (md5sum_fd && md5sum_fd != stdout) fclose(md5sum_fd);
 }
 
 /* ------------------------------------------------------------------------- */
@@ -305,11 +299,3 @@ static void draw_osd(void)
 static void flip_page (void)
 {
 }
-
-/* ------------------------------------------------------------------------- */
-
-#undef BUFLENGTH
-#undef MD5SUM_RGB_MODE
-#undef MD5SUM_YUV_MODE
-
-/* ------------------------------------------------------------------------- */

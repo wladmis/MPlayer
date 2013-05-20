@@ -23,6 +23,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <limits.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 
@@ -63,8 +64,8 @@ mf_t* open_mf(char * filename){
    FILE *lst_f=fopen(filename + 1,"r");
    if ( lst_f )
     {
-     fname=malloc( 255 );
-     while ( fgets( fname,255,lst_f ) )
+     fname=malloc(PATH_MAX);
+     while ( fgets( fname,PATH_MAX,lst_f ) )
       {
        /* remove spaces from end of fname */
        char *t=fname + strlen( fname ) - 1;
@@ -126,7 +127,7 @@ mf_t* open_mf(char * filename){
    mf->nr_of_files=gg.gl_pathc;
    mf->names=calloc( gg.gl_pathc, sizeof( char* ) );
 
-   mp_msg( MSGT_STREAM,MSGL_INFO,"[mf] number of files: %d (%d)\n",mf->nr_of_files, gg.gl_pathc * sizeof( char* ) );
+   mp_msg( MSGT_STREAM, MSGL_INFO, "[mf] number of files: %d (%zu)\n", mf->nr_of_files, gg.gl_pathc * sizeof( char* ) );
 
    for( i=0;i < gg.gl_pathc;i++ )
     {

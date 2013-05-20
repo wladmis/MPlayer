@@ -153,20 +153,17 @@ static int realtime_samplecounter_available(char *dev)
     info.play.encoding = AUDIO_ENCODING_LINEAR;
     info.play.samples = 0;
     if (ioctl(fd, AUDIO_SETINFO, &info)) {
-	if ( mp_msg_test(MSGT_AO,MSGL_V) )
-	    mp_msg(MSGT_AO, MSGL_ERR, MSGTR_AO_SUN_RtscSetinfoFailed);
+        mp_msg(MSGT_AO, MSGL_ERR, MSGTR_AO_SUN_RtscSetinfoFailed);
 	goto error;
     }
 
     if (write(fd, silence, len) != len) {
-	if ( mp_msg_test(MSGT_AO,MSGL_V) )
-	    mp_msg(MSGT_AO, MSGL_ERR, MSGTR_AO_SUN_RtscWriteFailed);
+        mp_msg(MSGT_AO, MSGL_ERR, MSGTR_AO_SUN_RtscWriteFailed);
 	goto error;
     }
 
     if (ioctl(fd, AUDIO_GETINFO, &info)) {
-	if ( mp_msg_test(MSGT_AO,MSGL_V) )
-	    perror("rtsc: GETINFO1");
+        perror("rtsc: GETINFO1");
 	goto error;
     }
 
@@ -187,13 +184,11 @@ static int realtime_samplecounter_available(char *dev)
 	    break;
 
 	if (ioctl(fd, AUDIO_GETINFO, &info)) {
-	    if ( mp_msg_test(MSGT_AO,MSGL_V) )
-		perror("rtsc: GETINFO2 failed");
+            perror("rtsc: GETINFO2 failed");
 	    goto error;
 	}
 	if (info.play.samples < last_samplecnt) {
-	    if ( mp_msg_test(MSGT_AO,MSGL_V) )
-		mp_msg(MSGT_AO,MSGL_V,"rtsc: %d > %d?\n", last_samplecnt, info.play.samples);
+            mp_msg(MSGT_AO, MSGL_ERR, "rtsc: %d > %d?\n", last_samplecnt, info.play.samples);
 	    goto error;
 	}
 
@@ -228,7 +223,7 @@ static int realtime_samplecounter_available(char *dev)
 
 
 error:
-    if (silence != NULL) free(silence);
+    free(silence);
     if (fd >= 0) {
 	// remove the 0 bytes from the above measurement from the
 	// audio driver's STREAMS queue
@@ -665,9 +660,11 @@ static int get_space(void){
 // it should round it down to outburst*n
 // return: number of bytes played
 static int play(void* data,int len,int flags){
-    if (len < ao_data.outburst) return 0;
-    len /= ao_data.outburst;
-    len *= ao_data.outburst;
+    if (!(flags & AOPLAY_FINAL_CHUNK)) {
+	len /= ao_data.outburst;
+	len *= ao_data.outburst;
+    }
+    if (len <= 0) return 0;
 
     len = write(audio_fd, data, len);
     if(len > 0) {

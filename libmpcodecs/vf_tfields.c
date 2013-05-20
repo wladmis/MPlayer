@@ -27,7 +27,8 @@
 #include "img_format.h"
 #include "mp_image.h"
 #include "vf.h"
-
+#include "libavutil/x86_cpu.h"
+#include "libmpdemux/demuxer.h"
 #include "libvo/fastmemcpy.h"
 
 struct vf_priv_s {
@@ -326,7 +327,6 @@ static void (*qpel_li)(unsigned char *d, unsigned char *s, int w, int h, int ds,
 static void (*qpel_4tap)(unsigned char *d, unsigned char *s, int w, int h, int ds, int ss, int up);
 
 static int continue_buffered_image(struct vf_instance *vf);
-extern int correct_pts;
 
 static int put_image(struct vf_instance *vf, mp_image_t *mpi, double pts)
 {
