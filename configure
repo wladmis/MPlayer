@@ -7064,7 +7064,7 @@ echores "$_libvpx_lavc"
 echocheck "libnut"
 if test "$_libnut" != no ; then
   _libnut=no
-   statement_check libnut.h 'nut_context_tt * nut; nut_error(0)' -lnut && _libnut=yes
+   statement_check libnut.h 'nut_context_t * nut; nut_error(0)' -lnut && _libnut=yes
 fi
 
 if test "$_libnut" = yes ; then

@@ -34,8 +34,8 @@
 #define ID_LENGTH (strlen(ID_STRING) + 1)
 
 typedef struct {
-    nut_context_tt * nut;
-    nut_stream_header_tt * s;
+    nut_context_t * nut;
+    nut_stream_header_t * s;
 } NUTContext;
 
 static const AVCodecTag nut_tags[] = {
@@ -67,7 +67,7 @@ static int nut_write_header(AVFormatContext * avf) {
         .max_distance = 32768,
         .fti = NULL,
     };
-    nut_stream_header_tt * s;
+    nut_stream_header_t * s;
     int i;
 
     priv->s = s = av_mallocz((avf->nb_streams + 1) * sizeof*s);
@@ -126,7 +126,7 @@ static int nut_write_header(AVFormatContext * avf) {
 
 static int nut_write_packet(AVFormatContext * avf, AVPacket * pkt) {
     NUTContext * priv = avf->priv_data;
-    nut_packet_tt p;
+    nut_packet_t p;
 
     p.len = pkt->size;
     p.stream = pkt->stream_index;
@@ -191,7 +191,7 @@ static off_t av_seek(void * h, long long pos, int whence) {
 static int nut_read_header(AVFormatContext * avf) {
     NUTContext * priv = avf->priv_data;
     AVIOContext * bc = avf->pb;
-    nut_demuxer_opts_tt dopts = {
+    nut_demuxer_opts_t dopts = {
         .input = {
             .priv = bc,
             .seek = av_seek,
@@ -203,8 +203,8 @@ static int nut_read_header(AVFormatContext * avf) {
         .read_index = 1,
         .cache_syncpoints = 1,
     };
-    nut_context_tt * nut = priv->nut = nut_demuxer_init(&dopts);
-    nut_stream_header_tt * s;
+    nut_context_t * nut = priv->nut = nut_demuxer_init(&dopts);
+    nut_stream_header_t * s;
     int ret, i;
 
     if(!nut)
@@ -270,7 +270,7 @@ static int nut_read_header(AVFormatContext * avf) {
 
 static int nut_read_packet(AVFormatContext * avf, AVPacket * pkt) {
     NUTContext * priv = avf->priv_data;
-    nut_packet_tt pd;
+    nut_packet_t pd;
     int ret;
 
     ret = nut_read_next_packet(priv->nut, &pd);

@@ -32,9 +32,9 @@
 
 typedef struct {
 	int last_pts; // FIXME
-	nut_context_tt * nut;
-	nut_stream_header_tt * s;
-} nut_priv_tt;
+	nut_context_t * nut;
+	nut_stream_header_t * s;
+} nut_priv_t;
 
 static size_t mp_read(void * h, size_t len, uint8_t * buf) {
 	stream_t * stream = (stream_t*)h;
@@ -82,7 +82,7 @@ static int nut_check_file(demuxer_t * demuxer) {
 }
 
 static demuxer_t * demux_open_nut(demuxer_t * demuxer) {
-	nut_demuxer_opts_tt dopts = {
+	nut_demuxer_opts_t dopts = {
 		.input = {
 			.priv = demuxer->stream,
 			.seek = mp_seek,
@@ -94,9 +94,9 @@ static demuxer_t * demux_open_nut(demuxer_t * demuxer) {
 		.read_index = index_mode,
 		.cache_syncpoints = 1,
 	};
-	nut_priv_tt * priv = demuxer->priv = calloc(1, sizeof(nut_priv_tt));
-	nut_context_tt * nut = priv->nut = nut_demuxer_init(&dopts);
-	nut_stream_header_tt * s;
+	nut_priv_t * priv = demuxer->priv = calloc(1, sizeof(nut_priv_t));
+	nut_context_t * nut = priv->nut = nut_demuxer_init(&dopts);
+	nut_stream_header_t * s;
 	int ret;
 	int i;
 
@@ -193,11 +193,11 @@ static demuxer_t * demux_open_nut(demuxer_t * demuxer) {
 }
 
 static int demux_nut_fill_buffer(demuxer_t * demuxer, demux_stream_t * dsds) {
-	nut_priv_tt * priv = demuxer->priv;
-	nut_context_tt * nut = priv->nut;
+	nut_priv_t * priv = demuxer->priv;
+	nut_context_t * nut = priv->nut;
 	demux_packet_t *dp;
 	demux_stream_t *ds;
-	nut_packet_tt pd;
+	nut_packet_t pd;
 	int ret;
 	double pts;
 
@@ -255,8 +255,8 @@ static int demux_nut_fill_buffer(demuxer_t * demuxer, demux_stream_t * dsds) {
 }
 
 static void demux_seek_nut(demuxer_t * demuxer, float time_pos, float audio_delay, int flags) {
-	nut_context_tt * nut = ((nut_priv_tt*)demuxer->priv)->nut;
-	nut_priv_tt * priv = demuxer->priv;
+	nut_context_t * nut = ((nut_priv_t*)demuxer->priv)->nut;
+	nut_priv_t * priv = demuxer->priv;
 	int nutflags = 0;
 	int ret;
 	const int tmp[] = { 0, -1 };
@@ -278,7 +278,7 @@ static void demux_seek_nut(demuxer_t * demuxer, float time_pos, float audio_dela
 }
 
 static int demux_control_nut(demuxer_t * demuxer, int cmd, void * arg) {
-	nut_priv_tt * priv = demuxer->priv;
+	nut_priv_t * priv = demuxer->priv;
 	switch (cmd) {
 		case DEMUXER_CTRL_GET_TIME_LENGTH:
 			*((double *)arg) = priv->s[0].max_pts *
@@ -297,7 +297,7 @@ static int demux_control_nut(demuxer_t * demuxer, int cmd, void * arg) {
 }
 
 static void demux_close_nut(demuxer_t *demuxer) {
-	nut_priv_tt * priv = demuxer->priv;
+	nut_priv_t * priv = demuxer->priv;
 	if (!priv) return;
 	nut_demuxer_uninit(priv->nut);
 	free(demuxer->priv);
