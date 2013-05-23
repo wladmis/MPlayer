@@ -979,7 +979,7 @@ endif
 
 ###### tests / tools #######
 
-MP_MSG_OBJS = mp_msg.o mp_fifo.o osdep/$(GETCH) osdep/$(TIMER)
+MP_MSG_OBJS = mp_msg.o mp_fifo.o osdep/$(GETCH) osdep/$(TIMER) -ltinfo -lm
 
 libvo/aspecttest$(EXESUF): libvo/aspect.o libvo/geometry.o $(MP_MSG_OBJS)
 libvo/aspecttest$(EXESUF): LIBS = $(MP_MSG_LIBS)
