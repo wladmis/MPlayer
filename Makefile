@@ -1033,7 +1033,7 @@ endif
 
 ###### tests / tools #######
 
-TEST_OBJS = mp_msg.o mp_fifo.o osdep/$(GETCH) osdep/$(TIMER) -ltermcap -lm
+TEST_OBJS = mp_msg.o mp_fifo.o osdep/$(GETCH) osdep/$(TIMER) -ltinfo -lm
 
 codec-cfg-test$(EXESUF): codec-cfg.c codecs.conf.h help_mp.h $(TEST_OBJS)
 	$(CC) -I. -Iffmpeg -DTESTING -o $@ $^
