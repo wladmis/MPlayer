@@ -40,6 +40,14 @@ cat <<EOF > "$TARGET"
 #ifndef MPLAYER_HELP_MP_H
 #define MPLAYER_HELP_MP_H
 
+#include "config.h"
+#ifdef ENABLE_NLS
+#include <libintl.h>
+#define _(x) gettext(x)
+#else
+#define _(x) (x)
+#endif
+
 EOF
 
 cat "$TRANSLATION" >> "$TARGET"

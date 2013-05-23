@@ -68,7 +68,7 @@ static void skin_error(const char *format, ...)
     va_list ap;
 
     va_start(ap, format);
-    vsnprintf(p, sizeof(p), format, ap);
+    vsnprintf(p, sizeof(p), _(format), ap);
     va_end(ap);
 
     gmp_msg(MSGT_GPLAYER, MSGL_ERR, MSGTR_SKIN_ERRORMESSAGE, linenumber, p);

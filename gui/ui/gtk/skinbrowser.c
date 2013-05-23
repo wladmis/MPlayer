@@ -139,13 +139,13 @@ GtkWidget * create_SkinBrowser( void )
  accel_group = gtk_accel_group_new ();
 
  SkinBrowser=gtk_window_new( GTK_WINDOW_TOPLEVEL );
- gtk_widget_set_name( SkinBrowser,MSGTR_SkinBrowser );
- gtk_object_set_data( GTK_OBJECT( SkinBrowser ),MSGTR_SkinBrowser,SkinBrowser );
+ gtk_widget_set_name( SkinBrowser,_(MSGTR_SkinBrowser) );
+ gtk_object_set_data( GTK_OBJECT( SkinBrowser ),_(MSGTR_SkinBrowser),SkinBrowser );
  gtk_widget_set_usize( SkinBrowser,256,320 );
  gtk_container_set_border_width( GTK_CONTAINER( SkinBrowser ),1 );
  GTK_WIDGET_SET_FLAGS( SkinBrowser,GTK_CAN_DEFAULT );
  gtk_widget_set_events( SkinBrowser,GDK_EXPOSURE_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK | GDK_KEY_PRESS_MASK | GDK_KEY_RELEASE_MASK | GDK_FOCUS_CHANGE_MASK | GDK_STRUCTURE_MASK | GDK_PROPERTY_CHANGE_MASK | GDK_VISIBILITY_NOTIFY_MASK );
- gtk_window_set_title( GTK_WINDOW( SkinBrowser ),MSGTR_SkinBrowser );
+ gtk_window_set_title( GTK_WINDOW( SkinBrowser ),_(MSGTR_SkinBrowser) );
  gtk_window_set_position( GTK_WINDOW( SkinBrowser ),GTK_WIN_POS_CENTER );
  gtk_window_set_policy( GTK_WINDOW( SkinBrowser ),FALSE,FALSE,TRUE );
  gtk_window_set_wmclass( GTK_WINDOW( SkinBrowser ),"SkinBrowser","MPlayer" );
@@ -154,7 +154,7 @@ GtkWidget * create_SkinBrowser( void )
  gtkAddIcon( SkinBrowser );
 
  vbox5=AddVBox( AddDialogFrame( SkinBrowser ),0 );
- AddLabel( MSGTR_SKIN_LABEL,vbox5 );
+ AddLabel( _(MSGTR_SKIN_LABEL),vbox5 );
  AddHSeparator( vbox5 );
 
  scrolledwindow1=gtk_scrolled_window_new( NULL,NULL );
@@ -183,8 +183,8 @@ GtkWidget * create_SkinBrowser( void )
   gtk_button_box_set_layout( GTK_BUTTON_BOX( hbuttonbox4 ),GTK_BUTTONBOX_SPREAD );
   gtk_button_box_set_spacing( GTK_BUTTON_BOX( hbuttonbox4 ),10 );
 
- Ok=AddButton( MSGTR_Ok,hbuttonbox4 );
- Cancel=AddButton( MSGTR_Cancel,hbuttonbox4 );
+ Ok=AddButton( _(MSGTR_Ok),hbuttonbox4 );
+ Cancel=AddButton( _(MSGTR_Cancel),hbuttonbox4 );
 
  gtk_widget_add_accelerator( Ok,"clicked",accel_group,GDK_Return,0,GTK_ACCEL_VISIBLE );
  gtk_widget_add_accelerator( Cancel,"clicked",accel_group,GDK_Escape,0,GTK_ACCEL_VISIBLE );

@@ -62,10 +62,10 @@ GtkWidget * create_About( void )
   accel_group=gtk_accel_group_new();
 
   About=gtk_window_new( GTK_WINDOW_TOPLEVEL );
-  gtk_widget_set_name( About,MSGTR_About );
-  gtk_object_set_data( GTK_OBJECT( About ),MSGTR_About,About );
+  gtk_widget_set_name( About,_(MSGTR_About) );
+  gtk_object_set_data( GTK_OBJECT( About ),_(MSGTR_About),About );
   gtk_widget_set_usize( About,340,415 );
-  gtk_window_set_title( GTK_WINDOW( About ),MSGTR_About );
+  gtk_window_set_title( GTK_WINDOW( About ),_(MSGTR_About) );
   gtk_window_set_position( GTK_WINDOW( About ),GTK_WIN_POS_CENTER );
   gtk_window_set_policy( GTK_WINDOW( About ),TRUE,FALSE,FALSE );
   gtk_window_set_wmclass( GTK_WINDOW( About ),"About","MPlayer" );
@@ -340,7 +340,7 @@ GtkWidget * create_About( void )
 	"     * Michael Zeising", -1 );
 
   AddHSeparator( vbox );
-  Ok=AddButton( MSGTR_Ok,AddHButtonBox( vbox ) );
+  Ok=AddButton( _(MSGTR_Ok),AddHButtonBox( vbox ) );
 
   gtk_signal_connect( GTK_OBJECT( About ),"destroy",GTK_SIGNAL_FUNC( WidgetDestroy ),&About );
   gtk_signal_connect_object( GTK_OBJECT( Ok ),"clicked",GTK_SIGNAL_FUNC( abWidgetDestroy ),NULL );

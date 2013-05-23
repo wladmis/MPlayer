@@ -129,7 +129,7 @@ GtkWidget * create_URL( void )
  gtk_object_set_data( GTK_OBJECT( URL ),"URL",URL );
  gtk_widget_set_usize( URL,384,70 );
  GTK_WIDGET_SET_FLAGS( URL,GTK_CAN_DEFAULT );
- gtk_window_set_title( GTK_WINDOW( URL ),MSGTR_Network );
+ gtk_window_set_title( GTK_WINDOW( URL ),_(MSGTR_Network) );
  gtk_window_set_position( GTK_WINDOW( URL ),GTK_WIN_POS_CENTER );
  gtk_window_set_policy( GTK_WINDOW( URL ),TRUE,TRUE,FALSE );
  gtk_window_set_wmclass( GTK_WINDOW( URL ),"Network","MPlayer" );
@@ -158,9 +158,9 @@ GtkWidget * create_URL( void )
   gtk_button_box_set_layout( GTK_BUTTON_BOX( hbuttonbox1 ),GTK_BUTTONBOX_END );
   gtk_button_box_set_spacing( GTK_BUTTON_BOX( hbuttonbox1 ),10 );
 
- Ok=AddButton( MSGTR_Ok,hbuttonbox1 );
- Cancel=AddButton( MSGTR_Cancel,hbuttonbox1 );
-
+ Ok=AddButton( _(MSGTR_Ok),hbuttonbox1 );
+ Cancel=AddButton( _(MSGTR_Cancel),hbuttonbox1 );
+ 
  gtk_widget_add_accelerator( Ok,"clicked",accel_group,GDK_Return,0,GTK_ACCEL_VISIBLE );
  gtk_widget_add_accelerator( Cancel,"clicked",accel_group,GDK_Escape,0,GTK_ACCEL_VISIBLE );
 

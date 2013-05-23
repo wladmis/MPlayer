@@ -265,7 +265,7 @@ void ShowFileSelect( int type,int modal )
  switch ( type )
   {
    case fsVideoSelector:
-        gtk_window_set_title( GTK_WINDOW( fsFileSelect ),MSGTR_FileSelect );
+        gtk_window_set_title( GTK_WINDOW( fsFileSelect ),_(MSGTR_FileSelect) );
         fsList_items=NULL;
         for( i=0;fsVideoFilterNames[i][0];i++ )
           fsList_items=g_list_append( fsList_items,fsVideoFilterNames[i][0] );
@@ -276,7 +276,7 @@ void ShowFileSelect( int type,int modal )
 	tmp=guiInfo.Filename;
         break;
    case fsSubtitleSelector:
-        gtk_window_set_title( GTK_WINDOW( fsFileSelect ),MSGTR_SubtitleSelect );
+        gtk_window_set_title( GTK_WINDOW( fsFileSelect ),_(MSGTR_SubtitleSelect) );
         fsList_items=NULL;
         for( i=0;fsSubtitleFilterNames[i][0];i++ )
           fsList_items=g_list_append( fsList_items,fsSubtitleFilterNames[i][0] );
@@ -287,7 +287,7 @@ void ShowFileSelect( int type,int modal )
 	tmp=guiInfo.SubtitleFilename;
         break;
 /*   case fsOtherSelector:
-        gtk_window_set_title( GTK_WINDOW( fsFileSelect ),MSGTR_OtherSelect );
+        gtk_window_set_title( GTK_WINDOW( fsFileSelect ),_(MSGTR_OtherSelect) );
         fsList_items=NULL;
         for( i=0;fsOtherFilterNames[i][0];i++ )
           fsList_items=g_list_append( fsList_items,fsOtherFilterNames[i][0] );
@@ -297,7 +297,7 @@ void ShowFileSelect( int type,int modal )
 	tmp=guiInfo.Othername;
         break;*/
    case fsAudioSelector:
-	gtk_window_set_title( GTK_WINDOW( fsFileSelect ),MSGTR_AudioFileSelect );
+	gtk_window_set_title( GTK_WINDOW( fsFileSelect ),_(MSGTR_AudioFileSelect) );
 	fsList_items=NULL;
 	for( i=0;fsAudioFileNames[i][0];i++ )
 	  fsList_items=g_list_append( fsList_items,fsAudioFileNames[i][0] );
@@ -308,7 +308,7 @@ void ShowFileSelect( int type,int modal )
 	tmp=guiInfo.AudioFilename;
 	break;
    case fsFontSelector:
-        gtk_window_set_title( GTK_WINDOW( fsFileSelect ),MSGTR_FontSelect );
+        gtk_window_set_title( GTK_WINDOW( fsFileSelect ),_(MSGTR_FontSelect) );
 	fsList_items=NULL;
 	for( i=0;fsFontFileNames[i][0];i++ )
 	  fsList_items=g_list_append( fsList_items,fsFontFileNames[i][0] );
@@ -638,7 +638,7 @@ GtkWidget * create_FileSelect( void )
  gtk_widget_set_usize( fsFileSelect,512,300 );
  GTK_WIDGET_SET_FLAGS( fsFileSelect,GTK_CAN_DEFAULT );
  gtk_widget_set_events( fsFileSelect,GDK_EXPOSURE_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK | GDK_KEY_PRESS_MASK | GDK_KEY_RELEASE_MASK | GDK_FOCUS_CHANGE_MASK | GDK_STRUCTURE_MASK | GDK_PROPERTY_CHANGE_MASK | GDK_VISIBILITY_NOTIFY_MASK );
- gtk_window_set_title( GTK_WINDOW( fsFileSelect ),MSGTR_FileSelect );
+ gtk_window_set_title( GTK_WINDOW( fsFileSelect ),_(MSGTR_FileSelect) );
  gtk_window_set_position( GTK_WINDOW( fsFileSelect ),GTK_WIN_POS_CENTER );
  gtk_window_set_policy( GTK_WINDOW( fsFileSelect ),TRUE,TRUE,TRUE );
  gtk_window_set_wmclass( GTK_WINDOW( fsFileSelect ),"FileSelect","MPlayer" );
@@ -724,8 +724,8 @@ GtkWidget * create_FileSelect( void )
    gtk_button_box_set_layout( GTK_BUTTON_BOX( hbuttonbox3 ),GTK_BUTTONBOX_END );
    gtk_button_box_set_spacing( GTK_BUTTON_BOX( hbuttonbox3 ),10 );
 
- fsOk=AddButton( MSGTR_Ok,hbuttonbox3 );
- fsCancel=AddButton( MSGTR_Cancel,hbuttonbox3 );
+ fsOk=AddButton( _(MSGTR_Ok),hbuttonbox3 );
+ fsCancel=AddButton( _(MSGTR_Cancel),hbuttonbox3 );
 
  gtk_signal_connect( GTK_OBJECT( fsFileSelect ),"destroy",GTK_SIGNAL_FUNC( fs_Destroy ), NULL );
  gtk_signal_connect( GTK_OBJECT( fsFileSelect ),"key_release_event",GTK_SIGNAL_FUNC( on_FileSelect_key_release_event ),NULL );

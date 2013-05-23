@@ -274,7 +274,7 @@ char *TranslateFilename(int how, char *fname, size_t maxlen)
             else if (len > 5 && fname[len - 5] == '.')
                 fname[len - 5] = 0;
         } else
-            av_strlcpy(fname, MSGTR_NoFileLoaded, maxlen);
+            av_strlcpy(fname, _(MSGTR_NoFileLoaded), maxlen);
         break;
 
     case STREAMTYPE_STREAM:
@@ -282,22 +282,22 @@ char *TranslateFilename(int how, char *fname, size_t maxlen)
         break;
 
     case STREAMTYPE_CDDA:
-        snprintf(fname, maxlen, MSGTR_Title, guiInfo.Track);
+        snprintf(fname, maxlen, _(MSGTR_Title), guiInfo.Track);
         break;
 
     case STREAMTYPE_VCD:
-        snprintf(fname, maxlen, MSGTR_Title, guiInfo.Track - 1);
+        snprintf(fname, maxlen, _(MSGTR_Title), guiInfo.Track - 1);
         break;
 
     case STREAMTYPE_DVD:
         if (guiInfo.Chapter)
-            snprintf(fname, maxlen, MSGTR_Chapter, guiInfo.Chapter);
+            snprintf(fname, maxlen, _(MSGTR_Chapter), guiInfo.Chapter);
         else
-            av_strlcat(fname, MSGTR_NoChapter, maxlen);
+            av_strlcat(fname, _(MSGTR_NoChapter), maxlen);
         break;
 
     default:
-        av_strlcpy(fname, MSGTR_NoMediaOpened, maxlen);
+        av_strlcpy(fname, _(MSGTR_NoMediaOpened), maxlen);
         break;
     }
 

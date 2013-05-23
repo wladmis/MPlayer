@@ -473,7 +473,7 @@ GtkWidget * create_PlayList( void )
   PlayList=gtk_window_new( GTK_WINDOW_TOPLEVEL );
   gtk_object_set_data( GTK_OBJECT( PlayList ),"PlayList",PlayList );
   gtk_widget_set_usize( PlayList,512,384 );
-  gtk_window_set_title( GTK_WINDOW( PlayList ),MSGTR_PlayList );
+  gtk_window_set_title( GTK_WINDOW( PlayList ),_(MSGTR_PlayList) );
   gtk_window_set_position( GTK_WINDOW( PlayList ),GTK_WIN_POS_CENTER );
 //  gtk_window_set_policy( GTK_WINDOW( PlayList ),FALSE,FALSE,FALSE );
   gtk_window_set_wmclass( GTK_WINDOW( PlayList ),"Playlist","MPlayer" );
@@ -516,7 +516,7 @@ GtkWidget * create_PlayList( void )
   if ( fsHistory[0] ) old_path = g_filename_from_utf8( fsHistory[0], -1, NULL, NULL, NULL );
 
   gtk_clist_set_column_widget( GTK_CLIST( CTDirTree ),0,
-    AddLabel( MSGTR_PLAYLIST_DirectoryTree,NULL ) );
+    AddLabel( _(MSGTR_PLAYLIST_DirectoryTree),NULL ) );
 
   gtk_clist_column_title_passive( GTK_CLIST( CTDirTree ),0 );
 
@@ -537,7 +537,7 @@ GtkWidget * create_PlayList( void )
   gtk_clist_set_shadow_type( GTK_CLIST( CLFiles ),GTK_SHADOW_NONE );
 
   gtk_clist_set_column_widget( GTK_CLIST( CLFiles ),0,
-    AddLabel( MSGTR_PLAYLIST_Files,NULL ) );
+    AddLabel( _(MSGTR_PLAYLIST_Files),NULL ) );
 
   gtk_clist_column_title_passive( GTK_CLIST( CLFiles ),0 );
 
@@ -558,10 +558,10 @@ GtkWidget * create_PlayList( void )
   gtk_clist_set_shadow_type( GTK_CLIST( CLSelected ),GTK_SHADOW_NONE );
 
   gtk_clist_set_column_widget( GTK_CLIST( CLSelected ),0,
-    AddLabel( MSGTR_PLAYLIST_Selected,NULL ) );
+    AddLabel( _(MSGTR_PLAYLIST_Selected),NULL ) );
 
   gtk_clist_set_column_widget( GTK_CLIST( CLSelected ),1,
-    AddLabel( MSGTR_PLAYLIST_Path,NULL ) );
+    AddLabel( _(MSGTR_PLAYLIST_Path),NULL ) );
 
   gtk_clist_column_title_passive( GTK_CLIST( CLSelected ),0 );
 
@@ -571,10 +571,10 @@ GtkWidget * create_PlayList( void )
     gtk_button_box_set_layout( GTK_BUTTON_BOX( hbuttonbox1 ),GTK_BUTTONBOX_END );
     gtk_button_box_set_spacing( GTK_BUTTON_BOX( hbuttonbox1 ),10 );
 
-  Add=AddButton( MSGTR_Add,hbuttonbox1 );
-  Remove=AddButton( MSGTR_Remove,hbuttonbox1 );
-  Ok=AddButton( MSGTR_Ok,hbuttonbox1 );
-  Cancel=AddButton( MSGTR_Cancel,hbuttonbox1 );
+  Add=AddButton( _(MSGTR_Add),hbuttonbox1 );
+  Remove=AddButton( _(MSGTR_Remove),hbuttonbox1 );
+  Ok=AddButton( _(MSGTR_Ok),hbuttonbox1 );
+  Cancel=AddButton( _(MSGTR_Cancel),hbuttonbox1 );
 
   gtk_widget_add_accelerator( Cancel,"clicked",accel_group,GDK_Escape,0,GTK_ACCEL_VISIBLE );
 
