@@ -519,7 +519,7 @@ static const char help_text[]=
 #define MSGTR_SkinBrowser "Переглядач скінів"
 #define MSGTR_Network "Передача потоку..."
 // Note: If you change MSGTR_Preferences please see if it still fits MSGTR_MENU_Preferences
-#define MSGTR_Preferences "Шалаштування"
+#define MSGTR_Preferences "Налаштування"
 #define MSGTR_AudioPreferences "Налаштування аудіо драйверу"
 #define MSGTR_NoMediaOpened "Носій не відкритий."
 #define MSGTR_NoChapter "Без розділу"
