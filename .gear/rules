@@ -1,4 +1,5 @@
-tar: r27654:. name=@name@-svn-r27654
+tar: @version@:. name=MPlayer-@version@
 tar: standard-1.9:. name=standard-1.9 base=standard
-tar: ffmpeg-r15375:. name=ffmpeg-svn-r15375
-copy: *.awk *.sh *.in *.patch
+diff: @version@:. @version@-alt:.
+diff: @version@:. @version@-nls:. name=@name@-@version@-nls.patch
+copy: *.awk *.in *.desktop
