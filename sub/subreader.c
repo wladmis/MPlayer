@@ -1830,22 +1830,16 @@ char * strreplace( char * in,char * what,char * whereof )
 static void strcpy_trim(char *d, const char *s)
 {
     // skip leading whitespace
-    while (*s && isspace(*s)) {
-	s++;
-    }
-    for (;;) {
+    for (; *s && isascii(*s) && !isalnum(*s); s++);
+    for (;; d++) {
 	// copy word
-	while (*s && !isspace(*s)) {
-	    *d = tolower(*s);
-	    s++; d++;
-	}
+	for (; *s && (!isascii(*s) || isalnum(*s)); s++, d++)
+	    *d = *s;
 	if (*s == 0) break;
 	// trim excess whitespace
-	while (*s && isspace(*s)) {
-	    s++;
-	}
+	for (; *s && isascii(*s) && !isalnum(*s); s++);
 	if (*s == 0) break;
-	*d++ = ' ';
+	*d = ' ';
     }
     *d = 0;
 }
