@@ -5357,7 +5357,7 @@ esac
 echocheck "VESA support"
 if test "$_vesa" != no ; then
   _vesa=no
-  statement_check vbe.h 'vbeInit()' -lvbe -llrmi && _vesa=yes
+  statement_check vbe/vbe.h 'vbeInit()' -lvbe -llrmi && _vesa=yes
 fi
 if test "$_vesa" = yes ; then
   def_vesa='#define CONFIG_VESA 1'
