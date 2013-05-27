@@ -50,13 +50,12 @@ fi
 if ! test -e ffmpeg ; then
     echo "No FFmpeg checkout, press enter to download one with git or CTRL+C to abort"
     read tmp
-    if ! git clone git://git.videolan.org/ffmpeg.git ffmpeg ; then
+    if ! git clone --depth 1 git://git.videolan.org/ffmpeg.git ffmpeg ; then
         rm -rf ffmpeg
         echo "Failed to get a FFmpeg checkout"
         exit 1
     fi
-    ffrevision=fc09bf57a60d4c4a6d339b204b3282337067c06d
-    cd ffmpeg && git checkout $ffrevision && cd ..
+    touch ffmpeg/mp_auto_pull
 fi
 
 # Prevent locale nonsense from breaking basic text processing utilities
@@ -680,7 +679,8 @@ libavparsers=$libavparsers_all
 libavbsfs_all=$(sed -n 's/^[^#]*BSF.*(.*, *\(.*\)).*/\1_bsf/p' ffmpeg/libavcodec/allcodecs.c | tr '[a-z]' '[A-Z]')
 libavbsfs=$libavbsfs_all
 libavhwaccels_all=$(sed -n 's/^[^#]*HWACCEL.*(.*, *\(.*\)).*/\1_hwaccel/p' ffmpeg/libavcodec/allcodecs.c | tr '[a-z]' '[A-Z]')
-libavhwaccels=$(for h in $libavhwaccels_all; do case $h in (*_VAAPI_HWACCEL) echo $h;; esac; done)
+# Disable all hardware accelerators for now.
+libavhwaccels=
 libavdemuxers_all=$(sed -n 's/^[^#]*DEMUX.*(.*, *\(.*\)).*/\1_demuxer/p' ffmpeg/libavformat/allformats.c | tr '[a-z]' '[A-Z]')
 libavdemuxers=$(echo $libavdemuxers_all | sed -e 's/ LIB[A-Z0-9_]*_DEMUXER//g' -e s/REDIR_DEMUXER// -e s/AVISYNTH_DEMUXER//)
 libavmuxers_all=$(sed -n 's/^[^#]*_MUX.*(.*, *\(.*\)).*/\1_muxer/p' ffmpeg/libavformat/allformats.c | tr '[a-z]' '[A-Z]')
@@ -5814,11 +5814,11 @@ if test "$_vaapi" = yes ; then
   extra_cflags="$extra_cflags $_vaapiinc"
   libs_mencoder="$libs_mencoder $_vaapilib -lva"
   libs_mplayer="$libs_mplayer $_vaapilib -lva-x11 -lva"
+  libavhwaccels="$libavhwaccels MPEG2_VAAPI_HWACCEL MPEG4_VAAPI_HWACCEL H263_VAAPI_HWACCEL H264_VAAPI_HWACCEL WMV3_VAAPI_HWACCEL VC1_VAAPI_HWACCEL"
   vomodules="vaapi $vomodules"
 else
   def_vaapi='#define CONFIG_VAAPI 0'
   novomodules="vaapi $novomodules"
-  libavhwaccels=`echo $libavhwaccels | sed -e "s/\(MPEG[124]\|H26[34]\|WMV3\|VC1\)_VAAPI_HWACCEL//g"`
 fi
 echores "$_vaapi"
 
