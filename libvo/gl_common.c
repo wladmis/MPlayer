@@ -140,13 +140,18 @@ void* (GLAPIENTRY *mpglAllocateMemoryMESA)(void *, int, size_t, float, float, fl
 void (GLAPIENTRY *mpglFreeMemoryMESA)(void *, int, void *);
 /** \} */ // end of glextfunctions group
 
-
 void (GLAPIENTRY *mpglVertexPointer)(GLint, GLenum, GLsizei, const GLvoid *);
 void (GLAPIENTRY *mpglTexCoordPointer)(GLint, GLenum, GLsizei, const GLvoid *);
 void (GLAPIENTRY *mpglClientActiveTexture)(GLenum);
 void (GLAPIENTRY *mpglEnableClientState)(GLenum);
 void (GLAPIENTRY *mpglDisableClientState)(GLenum);
 void (GLAPIENTRY *mpglDrawArrays)(GLenum, GLint, GLsizei);
+
+
+void (GLAPIENTRY *mpglXBindTexImage)(Display *, GLXDrawable, int, const int *);
+void (GLAPIENTRY *mpglXReleaseTexImage)(Display *, GLXDrawable, int);
+GLXPixmap (GLAPIENTRY *mpglXCreatePixmap)(Display *, GLXFBConfig, Pixmap, const int *);
+void (GLAPIENTRY *mpglXDestroyPixmap)(Display *, GLXPixmap);
 
 //! \defgroup glgeneral OpenGL general helper functions
 
@@ -490,6 +495,12 @@ static const extfunc_desc_t extfuncs[] = {
   {&mpglEnableClientState, NULL, {"glEnableClientState", NULL}},
   {&mpglDisableClientState, NULL, {"glDisableClientState", NULL}},
   {&mpglDrawArrays, NULL, {"glDrawArrays", NULL}},
+
+  {&mpglXBindTexImage, "GLX_EXT_texture_from_pixmap", {"glXBindTexImageEXT", NULL}},
+  {&mpglXReleaseTexImage, "GLX_EXT_texture_from_pixmap", {"glXReleaseTexImageEXT", NULL}},
+  {&mpglXCreatePixmap, "GLX_EXT_texture_from_pixmap", {"glXCreatePixmap", NULL}},
+  {&mpglXDestroyPixmap, "GLX_EXT_texture_from_pixmap", {"glXDestroyPixmap", NULL}},
+
   {NULL}
 };
 

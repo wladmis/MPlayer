@@ -53,8 +53,46 @@
 int field_dominance = -1;
 
 int divx_quality = 0;
+char *video_hwaccel_name=NULL;
 
 const vd_functions_t *mpvdec = NULL;
+
+int get_video_hwaccel(void)
+{
+    static int video_hwaccel = -1;
+    if (video_hwaccel < 0) {
+        video_hwaccel = HWACCEL_NONE;
+        if (video_hwaccel_name) {
+            if (!strcmp(video_hwaccel_name,"xvmc"))
+                video_hwaccel = HWACCEL_XVMC;
+            else if (!strcmp(video_hwaccel_name,"vaapi"))
+                video_hwaccel = HWACCEL_VAAPI;
+            else if (!strcmp(video_hwaccel_name,"vdpau"))
+                video_hwaccel = HWACCEL_VDPAU;
+        }
+    }
+    return video_hwaccel;
+}
+
+const char *get_video_hwaccel_name(int hwaccel)
+{
+    switch (hwaccel) {
+    case HWACCEL_XVMC:  return "XvMC";
+    case HWACCEL_VAAPI: return "VA API";
+    case HWACCEL_VDPAU: return "VDPAU";
+    }
+    return NULL;
+}
+
+const char *get_video_hwaccel_short_name(int hwaccel)
+{
+    switch (hwaccel) {
+    case HWACCEL_XVMC:  return "xvmc";
+    case HWACCEL_VAAPI: return "vaapi";
+    case HWACCEL_VDPAU: return "vdpau";
+    }
+    return NULL;
+}
 
 int get_video_quality_max(sh_video_t *sh_video)
 {

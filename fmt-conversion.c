@@ -18,6 +18,7 @@
 
 #include "mp_msg.h"
 #include "libavutil/avutil.h"
+#include "libavcodec/avcodec.h"
 #include "libmpcodecs/img_format.h"
 #include "libavutil/pixfmt.h"
 #include "libavutil/samplefmt.h"
@@ -27,6 +28,7 @@
 static const struct {
     int fmt;
     enum PixelFormat pix_fmt;
+    enum CodecID codec_id;
 } conversion_map[] = {
     {IMGFMT_ARGB,    PIX_FMT_ARGB},
     {IMGFMT_BGRA,    PIX_FMT_BGRA},
@@ -124,6 +126,17 @@ static const struct {
     {IMGFMT_VDPAU_WMV3,      PIX_FMT_VDPAU_WMV3},
     {IMGFMT_VDPAU_VC1,       PIX_FMT_VDPAU_VC1},
     {IMGFMT_VDPAU_MPEG4,     PIX_FMT_VDPAU_MPEG4},
+
+    /* VA-API formats */
+    {IMGFMT_VAAPI_MPEG2,     PIX_FMT_VAAPI_VLD,  CODEC_ID_MPEG2VIDEO},
+    {IMGFMT_VAAPI_MPEG2_IDCT,PIX_FMT_VAAPI_IDCT, CODEC_ID_MPEG2VIDEO},
+    {IMGFMT_VAAPI_MPEG2_MOCO,PIX_FMT_VAAPI_MOCO, CODEC_ID_MPEG2VIDEO},
+    {IMGFMT_VAAPI_MPEG4,     PIX_FMT_VAAPI_VLD,  CODEC_ID_MPEG4},
+    {IMGFMT_VAAPI_H263,      PIX_FMT_VAAPI_VLD,  CODEC_ID_H263},
+    {IMGFMT_VAAPI_H264,      PIX_FMT_VAAPI_VLD,  CODEC_ID_H264},
+    {IMGFMT_VAAPI_WMV3,      PIX_FMT_VAAPI_VLD,  CODEC_ID_WMV3},
+    {IMGFMT_VAAPI_VC1,       PIX_FMT_VAAPI_VLD,  CODEC_ID_VC1},
+
     {0, PIX_FMT_NONE}
 };
 
@@ -140,12 +153,14 @@ enum PixelFormat imgfmt2pixfmt(int fmt)
     return pix_fmt;
 }
 
-int pixfmt2imgfmt(enum PixelFormat pix_fmt)
+int pixfmt2imgfmt(enum PixelFormat pix_fmt, int codec_id)
 {
     int i;
     int fmt;
     for (i = 0; conversion_map[i].pix_fmt != PIX_FMT_NONE; i++)
-        if (conversion_map[i].pix_fmt == pix_fmt)
+        if (conversion_map[i].pix_fmt == pix_fmt &&
+            (conversion_map[i].codec_id == 0 ||
+             conversion_map[i].codec_id == codec_id))
             break;
     fmt = conversion_map[i].fmt;
     if (!fmt)

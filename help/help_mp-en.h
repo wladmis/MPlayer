@@ -754,6 +754,7 @@ static const char help_text[]=
 #define MSGTR_PREFERENCES_IDX "Rebuild index table, if needed"
 #define MSGTR_PREFERENCES_VideoCodecFamily "Video codec family:"
 #define MSGTR_PREFERENCES_AudioCodecFamily "Audio codec family:"
+#define MSGTR_PREFERENCES_VideoHardwareAcceleration "Video hardware acceleration:"
 #define MSGTR_PREFERENCES_FRAME_OSD_Level "OSD level"
 #define MSGTR_PREFERENCES_FRAME_Subtitle "Subtitle"
 #define MSGTR_PREFERENCES_FRAME_Font "Font"
@@ -1659,6 +1660,7 @@ static const char help_text[]=
 #define MSGTR_MPCODECS_UnexpectedInitVoError "[VD_FFMPEG] Unexpected init_vo error.\n"
 #define MSGTR_MPCODECS_UnrecoverableErrorRenderBuffersNotTaken "[VD_FFMPEG] Unrecoverable error, render buffers not taken.\n"
 #define MSGTR_MPCODECS_OnlyBuffersAllocatedByVoXvmcAllowed "[VD_FFMPEG] Only buffers allocated by vo_xvmc allowed.\n"
+#define MSGTR_MPCODECS_VAAPIAcceleratedCodec "[VD_FFMPEG] VA API accelerated codec.\n"
 
 // libmpcodecs/ve_lavc.c
 #define MSGTR_MPCODECS_HighQualityEncodingSelected "[VE_LAVC] High quality encoding selected (non-realtime)!\n"
