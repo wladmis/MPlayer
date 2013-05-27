@@ -1396,7 +1396,7 @@ static int config_x11(uint32_t width, uint32_t height,
 
 #ifdef CONFIG_GUI
     if (use_gui)
-        guiGetEvent(guiSetShVideo, 0);  // the GUI will set up / resize our window
+        gui(GUI_SETUP_VIDEO_WINDOW, 0);  // the GUI will set up / resize our window
     else
 #endif
     {
