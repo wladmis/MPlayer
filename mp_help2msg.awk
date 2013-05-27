@@ -27,8 +27,8 @@ return gensub(/([^\\])"/, "\\1\\\\\"", "g")
 BEGIN {
 defs["HELP_MP_DEFINE_STATIC"]=1
 while (getline <"../config.h") {
-    Trim()
-    if ($0~/^#define[[:blank:]]+/) defs[$2]=1
+	Trim()
+	if ($0~/^#define[[:blank:]]+/) defs[$2]=1
 }
 ifdef_level=0
 IsHelp=0
@@ -62,9 +62,9 @@ next
 IsHelp!=0 {
 ClearStr()
 if ($0~/;$/) {
-    IsHelp=0
-    sub(/[[:blank:]]*;$/, "")
-    sub(/"[[:blank:]]*$/, "")
+	IsHelp=0
+	sub(/[[:blank:]]*;$/, "")
+	sub(/"[[:blank:]]*$/, "")
 }
 msg["Help_text"]=msg["Help_text"] $0
 }

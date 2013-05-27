@@ -31,15 +31,15 @@ sub(/[^[:blank:]]+[[:blank:]]+/, "")
 
 BEGIN {
 if (ARGC==1) {
-    print "Usage: " ARGV[0] " <msgid-file> [<msgstr-file>]"
-    exit
+	print "Usage: " ARGV[0] " <msgid-file> [<msgstr-file>]"
+	exit
 } else {
-    idfile=ARGV[1]
-    while (getline <idfile) {
-	Func1()
-	msgid[i]=$0
-    }
-    delete ARGV[1]
+	idfile=ARGV[1]
+	while (getline <idfile) {
+		Func1()
+		msgid[i]=$0
+	}
+	delete ARGV[1]
 }
 }
 
@@ -52,7 +52,7 @@ if (length(msgid[i])!=0) {
 	if (substr($0, length()-1)=="\\n" && substr(msgid[i], length(msgid[i])-1)!="\\n") sub(/(\\n)+$/, "")
 	else if (substr(msgid[i], length(msgid[i])-1)=="\\n" && substr($0, length()-1)!="\\n") $0=$0 "\\n"
 	if (msgid[i]!=$0) msgstr[i]=$0
-    }
+}
 }
 
 
