@@ -2,4 +2,5 @@ tar: @version@:. name=MPlayer-@version@
 tar: standard-1.9:. name=standard-1.9 base=standard
 diff: @version@:. @version@-alt:.
 diff: @version@:. @version@-nls:. name=@name@-@version@-nls.patch
+diff: @version@:. @version@-vaapi:. name=@name@-@version@-vaapi.patch
 copy: *.awk *.in *.desktop
