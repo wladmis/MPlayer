@@ -74,6 +74,9 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_DumpSelectedStreamMissing "дамп: ФАТАЛЬНАЯ ОШИБКА: Выбранный поток потерян!\n"
 #define MSGTR_CantOpenDumpfile "Не могу открыть файл дампа!!!\n"
 #define MSGTR_CoreDumped "Создан дамп ядра ;)\n"
+#define MSGTR_DumpBytesWrittenPercent "дамп: %"PRIu64" байт(а) записано (~%.1f%%)\r"
+#define MSGTR_DumpBytesWritten "дамп: %"PRIu64" байт записано\r"
+#define MSGTR_DumpBytesWrittenTo "дамп: %"PRIu64" байт записано в '%s'.\n"
 #define MSGTR_FPSnotspecified "В заголовке кадры/сек не указаны (или недопустимые)! Используйте опцию -fps!\n"
 #define MSGTR_TryForceAudioFmtStr "Попытка форсировать семейство аудиокодеков %s...\n"
 #define MSGTR_CantFindAudioCodec "Не могу найти кодек для аудиоформата 0x%X!\n"
@@ -161,6 +164,7 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_SoftsleepUnderflow "Предупреждение! Недопустимо низкое значение программной задержки!\n"
 
 #define MSGTR_EdlOutOfMem "Не могу выделить достаточный объём памяти для хранения данных EDL.\n"
+#define MSGTR_EdlOutOfMemFile "Не могу выделить достаточный объём памяти для хранения данных EDL имени файла [%s].\n"
 #define MSGTR_EdlRecordsNo "Чтение %d EDL действий.\n"
 #define MSGTR_EdlQueueEmpty "Нет действий EDL, которые следует исполнить (очередь пуста).\n"
 #define MSGTR_EdlCantOpenForWrite "Не могу открыть файл EDL [%s] для записи.\n"
@@ -184,6 +188,9 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_OSDosd "OSD: %s"
 #define MSGTR_OSDChapter "Раздел: (%d) %s"
 #define MSGTR_OSDAngle "Угол: %d/%d"
+#define MSGTR_OSDDeinterlace "Деинтерлейс: %s"
+#define MSGTR_OSDCapturing "Захват: %s"
+#define MSGTR_OSDCapturingFailure "Сбой захвата"
 
 // property values
 #define MSGTR_Enabled "включено"
@@ -704,6 +711,34 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_VideoTracks "Видео дорожка"
 #define MSGTR_GUI_Warning "Предупреждение!"
 
+// Win32 GUI
+#define MSGTR_Close "Закрыть"
+#define MSGTR_Default "По-умолчанию"
+#define MSGTR_Down "Вниз"
+#define MSGTR_Load "Загрузить"
+#define MSGTR_Save "Сохранить"
+#define MSGTR_Up "Вверх"
+#define MSGTR_DirectorySelect "Выбрать каталог..."
+#define MSGTR_PlaylistSave "Сохранить список воспроизведения..."
+#define MSGTR_PlaylistSelect "Выбрать список воспроизведения..."
+#define MSGTR_SelectTitleChapter "Выбрать ролик/раздел..."
+#define MSGTR_MENU_DebugConsole "Консоль отладки"
+#define MSGTR_MENU_OnlineHelp "Онлай справка"
+#define MSGTR_MENU_PlayDirectory "Воспроизвести каталог..."
+#define MSGTR_MENU_SeekBack "Перейти назад"
+#define MSGTR_MENU_SeekForw "Перейти вперёд"
+#define MSGTR_MENU_ShowHide "Показать/Спрятать"
+#define MSGTR_MENU_SubtitlesOnOff "Видимость субтитров вкл./выкл."
+#define MSGTR_PLAYLIST_AddFile "Добавить файл..."
+#define MSGTR_PLAYLIST_AddURL "Добавить URL..."
+#define MSGTR_PREFERENCES_Priority "Приоритет:"
+#define MSGTR_PREFERENCES_PriorityHigh "высокий"
+#define MSGTR_PREFERENCES_PriorityLow "низкий"
+#define MSGTR_PREFERENCES_PriorityNormal "обычный"
+#define MSGTR_PREFERENCES_PriorityNormalAbove "выше обычного"
+#define MSGTR_PREFERENCES_PriorityNormalBelow "ниже обычного"
+#define MSGTR_PREFERENCES_ShowInVideoWin "Показать в окне видео (только DirectX)"
+
 // ======================= video output drivers ========================
 
 #define MSGTR_VOincompCodec "Извините, выбранное устройство видеовывода не совместимо с этим кодеком.\n"\
@@ -731,6 +766,7 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_LIBVO_FONT_LOAD_FT_CannotPrepareOSDFont "Невозможно подготовить шрифт OSD.\n"
 #define MSGTR_LIBVO_FONT_LOAD_FT_CannotGenerateTables "Невозможно сгенерировать таблицы.\n"
 #define MSGTR_LIBVO_FONT_LOAD_FT_DoneFreeTypeFailed "Сбой FT_Done_FreeType.\n"
+#define MSGTR_LIBVO_FONT_LOAD_FT_FontconfigNoMatch "Сбой fontconfig при выборе шрифта. Попробуйте без fontconfig...\n"
 
 // sub.c
 #define MSGTR_VO_SUB_Seekbar "Навигация"
@@ -1308,7 +1344,19 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_SMBInitError "Не могу инициализировать библиотеку libsmbclient: %d\n"
 #define MSGTR_SMBFileNotFound "Не могу открыть по сети: '%s'\n"
 
-#define MSGTR_CantOpenDVD "Не могу открыть DVD: %s (%s)\n"
+#define MSGTR_CantOpenBluray "Не могу открыть устройство Blu-ray: %s\n"
+#define MSGTR_CantOpenDVD "Не могу открыть устройство DVD: %s (%s)\n"
+
+#define MSGTR_URLParsingFailed "Сбой анализа URL %s\n"
+#define MSGTR_FailedSetStreamOption "Сбой установки опции %s=%s\n"
+#define MSGTR_StreamNeedType "Требуется тип потока!\n"
+#define MSGTR_StreamProtocolNULL "Тип потока %s имеет протокол == NULL, это ошибка\n"
+#define MSGTR_StreamCantHandleURL "Не найден поток для поддержки url %s\n"
+#define MSGTR_StreamNULLFilename "open_output_stream(), имя файла - NULL, сообщите об этой ошибке\n"
+#define MSGTR_StreamErrorWritingCapture "Ошибка записи файла захвата: %s\n"
+#define MSGTR_StreamSeekFailed "Сбой перемещения\n"
+#define MSGTR_StreamNotSeekable "В потоке нельзя перемещаться!\n"
+#define MSGTR_StreamCannotSeekBackward "Невозможно перемещаться в линейном потоке!\n"
 
 // network.c
 #define MSGTR_MPDEMUX_NW_UnknownAF "Неизвестное семейство адресов %d\n"
@@ -1335,7 +1383,9 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_MPDEMUX_NW_CacheSizeSetTo "Установлен размер кэша %d КБайт(а/ов)\n"
 
 // demux_audio.c
-#define MSGTR_MPDEMUX_AUDIO_UnknownFormat "Демультиплексор: неизвестный формат %d.\n"
+#define MSGTR_MPDEMUX_AUDIO_BadID3v2TagSize "Аудио-демультиплексор: плохой размер ID3v2-тага: больше,чем поток (%u).\n"
+#define MSGTR_MPDEMUX_AUDIO_DamagedAppendedID3v2Tag "Аудио-демультиплексор: обнаружен повреждённый присоединённый ID3v2-таг.\n"
+#define MSGTR_MPDEMUX_AUDIO_UnknownFormat "Аудио-демультиплексор: неизвестный формат %d.\n"
 
 // demux_demuxers.c
 #define MSGTR_MPDEMUX_DEMUXERS_FillBufferError "ошибка заполнения_буфера: плохой демультиплексор: не vd, ad или sd.\n"
@@ -1483,6 +1533,7 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_MPCODECS_TryingPixfmt "[VD_FFMPEG] Пробую pixfmt=%d.\n"
 #define MSGTR_MPCODECS_McGetBufferShouldWorkOnlyWithXVMC "[VD_FFMPEG] Буфер mc_get_buffer должен использоваться только с XVMC ускорением!!"
 #define MSGTR_MPCODECS_OnlyBuffersAllocatedByVoXvmcAllowed "[VD_FFMPEG] Разрешены только буферы, выделенные vo_xvmc.\n"
+#define MSGTR_MPCODECS_VAAPIAcceleratedCodec "[VD_FFMPEG] VA API ускоренный кодек.\n"
 
 // libmpcodecs/ve_lavc.c
 #define MSGTR_MPCODECS_HighQualityEncodingSelected "[VE_LAVC] Выбрано высококачественное кодирование (не в реальном времени)!\n"
@@ -1559,6 +1610,7 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_MPDEMUX_AIALSA_PeriodEqualsBufferSize "Не могу использовать период, равный размеру буфера (%u == %lu)\n"
 #define MSGTR_MPDEMUX_AIALSA_CannotInstallSWParams "Не могу установить программные параметры:\n"
 #define MSGTR_MPDEMUX_AIALSA_ErrorOpeningAudio "Ошибка открытия аудио: %s\n"
+#define MSGTR_MPDEMUX_AIALSA_AlsaStatusError "Состояние ошибки ALSA: %s"
 #define MSGTR_MPDEMUX_AIALSA_AlsaXRUN "ALSA xrun!!! (как минимум длительностью %.3f мс)\n"
 #define MSGTR_MPDEMUX_AIALSA_AlsaXRUNPrepareError "ALSA xrun: ошибка подготовки: %s"
 #define MSGTR_MPDEMUX_AIALSA_AlsaReadWriteError "Ошибка чтения/записи ALSA"
@@ -1697,6 +1749,10 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_DVDsubtitleLanguage "субтитры ( sid ): %d язык: %s\n"
 #define MSGTR_DVDnumSubtitles "число субтитров на диске: %d\n"
 
+// stream_bluray.c
+#define MSGTR_BlurayNoDevice "Не было указано Blu-ray устройства/нахождения ...\n"
+#define MSGTR_BlurayNoTitles "Невозможно найти здесь Blu-ray-совместимый ролик.\n"
+
 // stream/stream_radio.c
 #define MSGTR_RADIO_ChannelNamesDetected "[radio] Обнаружены имена радиостанций.\n"
 #define MSGTR_RADIO_WrongFreqForChannel "[radio] Неверная частота для станции %s\n"
@@ -1812,3 +1868,6 @@ static const char help_text[] = MSGTR_Help;
 
 // url.c
 #define MSGTR_MPDEMUX_URL_StringAlreadyEscaped "Похоже, что строка уже пропущена в url_escape %c%c%c\n"
+
+// subtitles
+#define MSGTR_SUBTITLES_SubRip_UnknownFontColor "SubRip: неизвестный цвет шрифта в субтитрах: %s\n"
