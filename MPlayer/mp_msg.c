@@ -84,11 +84,6 @@ const char* filename_recode(const char* filename)
     }
     *precoded = '\0';
     return recoded_filename;
-#ifdef ENABLE_NLS
-    setlocale(LC_ALL, "");
-    bindtextdomain(PACKAGE, LOCALEDIR);
-    textdomain(PACKAGE);
-#endif
 #endif
 }
 
@@ -210,8 +205,8 @@ static void print_msg_module(FILE* stream, int mod)
         fprintf(stream, "\033[%d;3%dm", c2 >> 3, c2 & 7);
     fprintf(stream, "%9s", module_text[mod]);
     if (mp_msg_color)
-        fprintf(stream, "\033[0;37m");
-    fprintf(stream, ": ");
+        fputs("\033[0;37m", stream);
+    fputs(": ", stream);
 }
 
 void mp_msg(int mod, int lev, const char *format, ... ){
@@ -267,7 +262,7 @@ void mp_msg_va(int mod, int lev, const char *format, va_list va){
 
     // as a status line normally is intended to be overwitten by next status line
     // output a '\n' to get a normal message on a separate line
-    if (statusline && lev != MSGL_STATUS) fprintf(stream, "\n");
+    if (statusline && lev != MSGL_STATUS) fputc('\n', stream);
     statusline = lev == MSGL_STATUS;
 
     if (header)
@@ -276,8 +271,8 @@ void mp_msg_va(int mod, int lev, const char *format, va_list va){
     len = strlen(tmp);
     header = len && (tmp[len-1] == '\n' || tmp[len-1] == '\r');
 
-    fprintf(stream, "%s", tmp);
+    fputs(tmp, stream);
     if (mp_msg_color)
-        fprintf(stream, "\033[0m");
+        fputs("\033[0m", stream);
     fflush(stream);
 }
