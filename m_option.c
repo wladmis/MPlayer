@@ -902,11 +902,11 @@ const m_option_type_t m_option_type_func = {
 
 static int parse_print(const m_option_t* opt,const char *name, const char *param, void* dst, int src) {
   if(opt->type == CONF_TYPE_PRINT_INDIRECT)
-    mp_msg(MSGT_CFGPARSER, MSGL_INFO, "%s", *(char **) opt->p);
+    mp_msg(MSGT_CFGPARSER, MSGL_INFO, *(char **) opt->p);
   else if(opt->type == CONF_TYPE_PRINT_FUNC)
     return ((m_opt_func_full_t) opt->p)(opt,name,param);
   else
-    mp_msg(MSGT_CFGPARSER, MSGL_INFO, "%s", (char *) opt->p);
+    mp_msg(MSGT_CFGPARSER, MSGL_INFO, (const char *) opt->p);
 
   if(opt->priv == NULL)
     return M_OPT_EXIT;
