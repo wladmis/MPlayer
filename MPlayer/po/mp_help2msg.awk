@@ -105,5 +105,5 @@ msg[i] = msg[i] ProtectQuote()
 
 END {
 for (i in msg)
-	print i " " msg[i] | "sort --key=2 | uniq --skip-fields=1 | sort"
+	print i " " msg[i] | "sort -k 2 -u"
 }
