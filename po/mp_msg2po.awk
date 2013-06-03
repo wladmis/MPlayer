@@ -42,12 +42,13 @@ if (length(msgid[i]) != 0) {
 
 
 END {
-print "msgid \"\""
-print "msgstr \"\""
-print "\"Project-Id-Version: kshutdown\\n\""
-print "\"MIME-Version: 1.0\\n\""
-print "\"Content-Type: text/plain; charset=UTF-8\\n\""
-print "\"Content-Transfer-Encoding: 8bit\\n\""
+#print "msgid \"\""
+#print "msgstr \"\""
+#print "\"Project-Id-Version: mplayer\\n\""
+#print "\"MIME-Version: 1.0\\n\""
+#print "\"Content-Type: text/plain; charset=UTF-8\\n\""
+#print "\"Content-Transfer-Encoding: 8bit\\n\""
+#print "\n"
 for (i in msgid) {
 	if (msgid[i]!~/^$|^MSGTR_/) {
 		print "# " i "\n" "msgid " "\"" msgid[i] "\"\n" "msgstr " "\"" msgstr[i] "\"\n"
