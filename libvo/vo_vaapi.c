@@ -49,6 +49,9 @@
 #if CONFIG_VAAPI_GLX
 #include <va/va_glx.h>
 #endif
+#if VA_CHECK_VERSION(0,34,0)
+#include <va/va_compat.h>
+#endif
 
 #if CONFIG_XRENDER
 #include <X11/extensions/Xrender.h>
