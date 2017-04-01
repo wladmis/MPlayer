@@ -1016,7 +1016,7 @@ toolsclean:
 	-rm -f $(call ADD_ALL_EXESUFS,$(TOOLS) $(TOOLS-no))
 	-rm -f TOOLS/realcodecs/*.so.6.0
 
-TOOLS/bmovl-test$(EXESUF): LIBS = -lSDL_image
+TOOLS/bmovl-test$(EXESUF): LIBS = -lSDL -lSDL_image
 TOOLS/vfw2menc$(EXESUF):   LIBS = -lwinmm -lole32
 TOOLS/subrip$(EXESUF):     LIBS = $(MP_MSG_LIBS) -lm
 TOOLS/subrip$(EXESUF): path.o sub/vobsub.o sub/spudec.o sub/unrar_exec.o \
