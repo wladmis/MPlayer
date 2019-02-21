@@ -18,6 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include <time.h>
 #include <libsmbclient.h>
 #include "libavutil/avstring.h"
 #include "libavutil/opt.h"
