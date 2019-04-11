@@ -2568,16 +2568,16 @@ case "$host_arch" in
         fi
         # gcc 4.5 and up supports POWER7
         if test "$_cc_major" -ge "4" && test "$_cc_minor" -ge "5" || test "$_cc_major" -ge "5"; then
-            case "$proc" in
-                POWER7*) _march='-mcpu=power7' _mcpu='-mtune=power7'
+            case "$proc$_big_endian" in
+                POWER7*yes) _march='-mcpu=power7' _mcpu='-mtune=power7'
                       def_vsx='#define HAVE_VSX 1' ;;
                 *) ;;
             esac
         fi
         # gcc 4.9 and up supports POWER8
         if test "$_cc_major" -ge "4" && test "$_cc_minor" -ge "9" || test "$_cc_major" -ge "5"; then
-            case "$proc" in
-                POWER8*) _march='-mcpu=power8' _mcpu='-mtune=power8'
+            case "$proc$_big_endian" in
+                POWER8*yes) _march='-mcpu=power8' _mcpu='-mtune=power8'
                       def_vsx='#define HAVE_VSX 1' ;;
                 *) ;;
             esac
