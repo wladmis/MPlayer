@@ -588,9 +588,6 @@ int common_init(void)
     set_priority();
 #endif
 
-    if (codec_path)
-        set_codec_path(codec_path);
-
     /* Check codecs.conf. */
     if (!codecs_file || !parse_codec_cfg(codecs_file)) {
         char *conf_path = get_path("codecs.conf");
@@ -641,6 +638,26 @@ int common_init(void)
     ass_library = ass_init();
 #endif
     return 1;
+}
+
+void common_uninit(void)
+{
+#ifdef CONFIG_FREETYPE
+    current_module = "uninit_font";
+    if (sub_font && sub_font != vo_font)
+        free_font_desc(sub_font);
+    sub_font = NULL;
+    if (vo_font)
+        free_font_desc(vo_font);
+    vo_font = NULL;
+    done_freetype();
+#endif
+    free_osd_list();
+
+#ifdef CONFIG_ASS
+    ass_library_done(ass_library);
+    ass_library = NULL;
+#endif
 }
 
 /// Returns a_pts

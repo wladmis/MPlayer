@@ -124,7 +124,7 @@ static void stringreplace(char *dest, const char *what, const char *format, ... 
 }
 
 /**
- * @brief Convert #guiInfo member Filename.
+ * @brief Convert #guiInfo member @ref guiInterface_t.Filename "Filename".
  *
  * @param how 0 (cut file path and extension),
  *            1 (additionally, convert lower case) or
@@ -278,6 +278,8 @@ static char *generatetextfromlabel(widget *item)
     stringreplace(text, "$f", acp(TranslateFilename(1, tmp, sizeof(tmp))));
     stringreplace(text, "$F", acp(TranslateFilename(2, tmp, sizeof(tmp))));
 
+    stringreplace(text, "$g", "");
+
     return text;
 }
 
@@ -314,7 +316,9 @@ void renderinfobox(skin_t *skin, window_priv_t *priv)
     for (i=0; i<skin->widgetcount; i++)
         if((skin->widgets[i]->type == tyDlabel) || (skin->widgets[i]->type == tySlabel))
         {
-            if(skin->widgets[i]->window == priv->type)
+            char *text = generatetextfromlabel(skin->widgets[i]);
+
+            if(*text && (skin->widgets[i]->window == priv->type))
                 render(skin->desktopbpp,
                        &priv->img,
                        find_background(skin, skin->widgets[i]),
@@ -325,6 +329,8 @@ void renderinfobox(skin_t *skin, window_priv_t *priv)
                        skin->widgets[i]->length,
                        skin->widgets[i]->font->chars[0]->height,
                        1);
+
+            free(text);
         }
 
     /* load all slabels and dlabels */

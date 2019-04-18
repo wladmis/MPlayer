@@ -1136,7 +1136,7 @@ find_breaks(struct vf_priv_s *p, struct frame_stats *s)
 
 #define ITOC(X) (!(X) ? ' ' : (X) + ((X)>9 ? 'a'-10 : '0'))
 
-static int put_image(struct vf_instance *vf, mp_image_t *mpi, double pts)
+static int put_image(struct vf_instance *vf, mp_image_t *mpi, double pts, double endpts)
 {
     mp_image_t *dmpi;
     struct vf_priv_s *p = vf->priv;
@@ -1291,7 +1291,7 @@ static int put_image(struct vf_instance *vf, mp_image_t *mpi, double pts)
              (s->low.noise + s->interlaced_low < (s->num_blocks>>8) ||
               s->sad.noise < 160)) ||
             ((show_fields & 12) == 12 &&
-             (ps->low.noise + ps->interlaced_low < (s->num_blocks>>8) ||
+             (ps->low.noise + ps->interlaced_low < (ps->num_blocks>>8) ||
               ps->sad.noise < 160))) {
             p->export_count++;
             dmpi = vf_get_image(vf->next, mpi->imgfmt, MP_IMGTYPE_EXPORT,
@@ -1331,7 +1331,7 @@ static int put_image(struct vf_instance *vf, mp_image_t *mpi, double pts)
                "" : " @@@@@@@@@@@@@@@@@");
 
     p->merge_time += get_time() - diff_time;
-    return show_fields ? vf_next_put_image(vf, dmpi, MP_NOPTS_VALUE) : 0;
+    return show_fields ? vf_next_put_image(vf, dmpi, MP_NOPTS_VALUE, MP_NOPTS_VALUE) : 0;
 }
 
 static int query_format(struct vf_instance *vf, unsigned int fmt)

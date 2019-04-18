@@ -48,7 +48,8 @@
     <sect2 id="skin-overview-formats">
       <title>Bildformate</title>
       <para>
-        Die Bilder müssen Truecolor-PNGs sein (24 oder 32 bpp).
+        Die Bilder müssen PNGs sein &#x2013; entweder Truecolor
+        (24 oder 32 bpp) oder 8 bpp mit einer RGBA-Farbpalette.
       </para>
 
       <para>
@@ -534,6 +535,12 @@ end
                   <literal>default</literal> - Voreinstellung des Potentiometers
                   (im Bereich <literal>0</literal> bis <literal>100</literal>)
                 </para>
+                <para>
+                  (Für die Nachricht <literal>evSetVolume</literal> ist auch
+                  ein einfaches Bindestrich-Minus als Wert erlaubt. Dieses
+                  bewirkt, dass die aktuell eingestellte Lautstärke nicht
+                  verändert wird.)
+                </para>
               </listitem>
               <listitem>
                 <para>
@@ -784,6 +791,12 @@ end
                     </entry>
                   </row>
                   <row>
+                    <entry>$g</entry>
+                    <entry>
+                      Buchstabe <keycap>g</keycap> (wenn die Lautstärke-Anpassung aktiv ist)
+                    </entry>
+                  </row>
+                  <row>
                     <entry>$x</entry>
                     <entry>Videobreite</entry>
                   </row>
@@ -988,6 +1001,7 @@ image = font.png
             <row><entry><keycap>m</keycap></entry><entry>Mono-Sound</entry></row>
             <row><entry><keycap>t</keycap></entry><entry>Stereo-Sound</entry></row>
             <row><entry><keycap>r</keycap></entry><entry>Surround-Sound</entry></row>
+            <row><entry><keycap>g</keycap></entry><entry>Lautstärke-Anpassung (Replay Gain)</entry></row>
             <row><entry><keycap>Leerzeichen</keycap></entry><entry>kein (bekannter) Stream</entry></row>
             <row><entry><keycap>f</keycap></entry><entry>Stream ist eine Datei</entry></row>
             <row><entry><keycap>a</keycap></entry><entry>Stream ist eine CD</entry></row>

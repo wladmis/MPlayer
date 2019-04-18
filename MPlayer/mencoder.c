@@ -463,9 +463,9 @@ static int slowseek(float end_pts, demux_stream_t *d_video,
 
         if (vfilter) {
             int softskip = (vfilter->control(vfilter, VFCTRL_SKIP_NEXT_FRAME, 0) == CONTROL_TRUE);
-            void *decoded_frame = decode_video(sh_video, frame_data->start, frame_data->in_size, !softskip, MP_NOPTS_VALUE, NULL);
+            void *decoded_frame = decode_video(sh_video, frame_data->start, frame_data->in_size, !softskip, MP_NOPTS_VALUE, MP_NOPTS_VALUE, NULL);
 	    if (decoded_frame)
-		filter_video(sh_video, decoded_frame, MP_NOPTS_VALUE);
+		filter_video(sh_video, decoded_frame, MP_NOPTS_VALUE, MP_NOPTS_VALUE);
 	    else if (frame_data->flush)
 		return 2;
         }
@@ -560,6 +560,8 @@ uint32_t duplicatedframes=0;
 uint32_t badframes=0;
 
 muxer_stream_t* mux_a=NULL;
+// For correct deallocation
+unsigned char *mux_v_buffer = NULL;
 muxer_stream_t* mux_v=NULL;
 off_t muxer_f_size=0;
 
@@ -856,7 +858,7 @@ muxer->audio_delay_fix = audio_delay_fix;
 mux_v=muxer_new_stream(muxer,MUXER_TYPE_VIDEO);
 
 mux_v->buffer_size=0x800000; // 8MB
-mux_v->buffer=malloc(mux_v->buffer_size);
+mux_v->buffer=mux_v_buffer=malloc(mux_v->buffer_size);
 
 mux_v->source=sh_video;
 
@@ -1502,7 +1504,7 @@ default:
                      (!sh_video->vfilter ||
                       ((vf_instance_t *)sh_video->vfilter)->control(sh_video->vfilter, VFCTRL_SKIP_NEXT_FRAME, 0) != CONTROL_TRUE);
     void *decoded_frame = decode_video(sh_video,frame_data.start,frame_data.in_size,
-                                       drop_frame, MP_NOPTS_VALUE, NULL);
+                                       drop_frame, MP_NOPTS_VALUE, MP_NOPTS_VALUE, NULL);
     if (frame_data.flush && !decoded_frame)
         at_eof = 3;
     if (did_seek && sh_video->pts != MP_NOPTS_VALUE) {
@@ -1515,7 +1517,7 @@ default:
     // sh_video->pts causes flickering with subtitles and complaints from MPEG-4
     // encoder due to not being monotonic.
     // If you change this please note the reason here!
-    blit_frame = decoded_frame && filter_video(sh_video, decoded_frame, v_muxer_time + sub_offset);}
+    blit_frame = decoded_frame && filter_video(sh_video, decoded_frame, v_muxer_time + sub_offset, MP_NOPTS_VALUE);}
     v_muxer_time = adjusted_muxer_time(mux_v); // update after muxing
 
     if (sh_video->vf_initialized < 0) mencoder_exit(1, NULL);
@@ -1733,6 +1735,12 @@ if(sh_audio){ uninit_audio(sh_audio);sh_audio=NULL; }
 if(sh_video){ uninit_video(sh_video);sh_video=NULL; }
 if(demuxer) free_demuxer(demuxer);
 if(stream) free_stream(stream); // kill cache thread
+// Do not free mux_v->buffer, it may have been overwritten
+// with something we should not free.
+if(mux_v) free(mux_v_buffer);
+if(mux_a) free(mux_a->buffer);
+common_uninit();
+mp_msg_uninit();
 
 return interrupted;
 }

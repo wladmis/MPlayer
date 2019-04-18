@@ -38,7 +38,7 @@ extern play_tree_t* playtree;
 extern int video_window;
 extern int console;
 extern NOTIFYICONDATA nid;
-extern char *codecname;
+extern const char *codecname;
 
 typedef struct window_priv_t window_priv_t;
 struct window_priv_t
@@ -125,5 +125,9 @@ void display_chapterselwindow(gui_t *gui);
 void display_eqwindow(gui_t *gui);
 void display_prefswindow(gui_t *gui);
 void display_opensubtitlewindow(gui_t *gui);
+
+#ifdef __WINE__
+char *unix_name(const char *win_filename);
+#endif
 
 #endif /* MPLAYER_GUI_GUI_H */

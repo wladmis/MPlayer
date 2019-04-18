@@ -35,6 +35,10 @@
 #include "mp_msg.h"
 #include "libavutil/avstring.h"
 
+#define ASCII_CHRS 128   // number of ASCII characters
+#define EXTRA_CHRS 128   // (arbitrary) number of non-ASCII characters
+#define UTF8LENGTH 4     // length of an UTF-8 encoding according to RFC 3629
+
 #define MAX_FONTS 25
 
 #define fntAlignLeft   0
@@ -42,6 +46,74 @@
 #define fntAlignRight  2
 
 static bmpFont *Fonts[MAX_FONTS];
+
+/**
+ * @brief Allocate and initialize memory for a #bmpFont::Chr array.
+ *
+ * @note If @a Font->Chr is not NULL, memory will be reallocated.
+ *
+ * @param Font pointer to a #Fonts element
+ * @param nmemb number of members the old array should grow by
+ *
+ * @return pointer to the newly allocated array or NULL (error)
+ *
+ * @note As a side effect, @a Font->Chr will point to the newly
+ *       allocated memory and @a Font->chrs will be increased accordingly
+ *       (if and only if memory could be allocated).
+ */
+static void *fntAllocChr(bmpFont *Font, size_t nmemb)
+{
+    void *ptr;
+    int i;
+
+    ptr = realloc(Font->Chr, (Font->chrs + nmemb) * sizeof(*Font->Chr));
+
+    if (ptr) {
+        Font->Chr = ptr;
+
+        for (i = Font->chrs + nmemb - 1; i >= Font->chrs; i--) {
+            Font->Chr[i].x = -1;
+            Font->Chr[i].y = -1;
+            Font->Chr[i].w = -1;
+            Font->Chr[i].h = -1;
+        }
+
+        Font->chrs += nmemb;
+    }
+
+    return ptr;
+}
+
+/**
+ * @brief Allocate and initialize memory for a #bmpFont::bit8_chr array.
+ *
+ * @note If @a Font->bit8_chr is not NULL, memory will be reallocated.
+ *
+ * @param Font pointer to a #Fonts element
+ * @param nmemb number of members the old array should grow by
+ *
+ * @return pointer to the newly allocated array or NULL (error)
+ *
+ * @note As a side effect, @a Font->bit8_chr will point to the newly
+ *       allocated memory and @a Font->extra_chrs will be increased accordingly
+ *       (if and only if memory could be allocated).
+ */
+static void *fntAllocBit8Chr(bmpFont *Font, size_t nmemb)
+{
+    void *ptr;
+
+    ptr = realloc(Font->bit8_chr, (Font->extra_chrs + nmemb) * UTF8LENGTH * sizeof(*Font->bit8_chr));
+
+    if (ptr) {
+        Font->bit8_chr = ptr;
+
+        memset(Font->bit8_chr + Font->extra_chrs * UTF8LENGTH, 0, nmemb * UTF8LENGTH * sizeof(*Font->bit8_chr));
+
+        Font->extra_chrs += nmemb;
+    }
+
+    return ptr;
+}
 
 /**
  * @brief Add a font to #Fonts.
@@ -52,7 +124,7 @@ static bmpFont *Fonts[MAX_FONTS];
  */
 static int fntAddNewFont(char *name)
 {
-    int id, i;
+    int id;
 
     for (id = 0; id < MAX_FONTS; id++)
         if (!Fonts[id])
@@ -68,29 +140,43 @@ static int fntAddNewFont(char *name)
 
     av_strlcpy(Fonts[id]->name, name, MAX_FONT_NAME);
 
-    for (i = 0; i < ASCII_CHRS + EXTRA_CHRS; i++) {
-        Fonts[id]->Fnt[i].x = -1;
-        Fonts[id]->Fnt[i].y = -1;
-        Fonts[id]->Fnt[i].w = -1;
-        Fonts[id]->Fnt[i].h = -1;
+    if (!fntAllocChr(Fonts[id], ASCII_CHRS + EXTRA_CHRS)) {
+        nfree(Fonts[id]);
+        return -1;
+    }
+
+    if (!fntAllocBit8Chr(Fonts[id], EXTRA_CHRS)) {
+        nfree(Fonts[id]->Chr);
+        nfree(Fonts[id]);
+        return -1;
     }
 
     return id;
 }
 
 /**
+ * @brief Free all memory allocated to a font.
+ *
+ * @param id font ID
+ */
+static void fntFreeFont(int id)
+{
+    free(Fonts[id]->Chr);
+    free(Fonts[id]->bit8_chr);
+    bpFree(&Fonts[id]->Bitmap);
+    nfree(Fonts[id]);
+}
+
+/**
  * @brief Free all memory allocated to fonts.
  */
-void fntFreeFont(void)
+void fntFreeFonts(void)
 {
     int i;
 
-    for (i = 0; i < MAX_FONTS; i++) {
-        if (Fonts[i]) {
-            bpFree(&Fonts[i]->Bitmap);
-            nfree(Fonts[i]);
-        }
-    }
+    for (i = 0; i < MAX_FONTS; i++)
+        if (Fonts[i])
+            fntFreeFont(i);
 }
 
 /**
@@ -121,7 +207,7 @@ int fntRead(char *path, char *fname)
     file = fopen(buf, "rt");
 
     if (!file) {
-        nfree(Fonts[id]);
+        fntFreeFont(id);
         return -3;
     }
 
@@ -133,7 +219,7 @@ int fntRead(char *path, char *fname)
         if (!*buf)
             continue;
 
-        n = (strncmp(buf, "\"=", 2) == 0 ? 1 : 0);
+        n = (buf[0] == '"' && buf[1] == '=' ? 1 : 0);
         cutStr(buf, item, '=', n);
         cutStr(buf, param, '=', n + 1);
 
@@ -146,42 +232,39 @@ int fntRead(char *path, char *fname)
                 cutStr(item, item, '"', 1);
 
             if (item[0] & 0x80) {
-                for (i = 0; i < EXTRA_CHRS; i++) {
-                    if (!Fonts[id]->nonASCIIidx[i][0]) {
-                        strncpy(Fonts[id]->nonASCIIidx[i], item, UTF8LENGTH);
-                        break;
-                    }
+                if (Fonts[id]->bit8_count % EXTRA_CHRS == 0) {
+                    if (!fntAllocChr(Fonts[id], EXTRA_CHRS) ||
+                        !fntAllocBit8Chr(Fonts[id], EXTRA_CHRS))
+                        continue;
                 }
 
-                if (i == EXTRA_CHRS)
-                    continue;
+                strncpy(Fonts[id]->bit8_chr + Fonts[id]->bit8_count * UTF8LENGTH, item, UTF8LENGTH);
 
-                i += ASCII_CHRS;
+                i = Fonts[id]->bit8_count++ + ASCII_CHRS;
             } else
                 i = item[0];
 
             cutStr(param, buf, ',', 0);
-            Fonts[id]->Fnt[i].x = atoi(buf);
+            Fonts[id]->Chr[i].x = atoi(buf);
 
             cutStr(param, buf, ',', 1);
-            Fonts[id]->Fnt[i].y = atoi(buf);
+            Fonts[id]->Chr[i].y = atoi(buf);
 
             cutStr(param, buf, ',', 2);
-            Fonts[id]->Fnt[i].w = atoi(buf);
+            Fonts[id]->Chr[i].w = atoi(buf);
 
             cutStr(param, buf, ',', 3);
-            Fonts[id]->Fnt[i].h = atoi(buf);
+            Fonts[id]->Chr[i].h = atoi(buf);
 
-            mp_msg(MSGT_GPLAYER, MSGL_DBG2, "[font]  char: '%s' params: %d,%d %dx%d\n", item, Fonts[id]->Fnt[i].x, Fonts[id]->Fnt[i].y, Fonts[id]->Fnt[i].w, Fonts[id]->Fnt[i].h);
-        } else if (!strcmp(item, "image")) {
+            mp_msg(MSGT_GPLAYER, MSGL_DBG2, "[font]  char: '%s' params: %d,%d %dx%d\n", item, Fonts[id]->Chr[i].x, Fonts[id]->Chr[i].y, Fonts[id]->Chr[i].w, Fonts[id]->Chr[i].h);
+        } else if (strcmp(item, "image") == 0) {
             av_strlcpy(buf, path, sizeof(buf));
             av_strlcat(buf, param, sizeof(buf));
 
             mp_msg(MSGT_GPLAYER, MSGL_DBG2, "[font] image file: %s\n", buf);
 
             if (skinImageRead(buf, &Fonts[id]->Bitmap) != 0) {
-                bpFree(&Fonts[id]->Bitmap);
-                nfree(Fonts[id]);
+                fntFreeFont(id);
                 fclose(file);
                 return -4;
             }
@@ -206,14 +289,14 @@ int fntFindID(char *name)
 
     for (i = 0; i < MAX_FONTS; i++)
         if (Fonts[i])
-            if (!strcmp(name, Fonts[i]->name))
+            if (strcmp(name, Fonts[i]->name) == 0)
                 return i;
 
     return -1;
 }
 
 /**
- * @brief Get the #bmpFont::Fnt index of the character @a str points to.
+ * @brief Get the #bmpFont::Chr index of the character @a str points to.
  *
  *        Move pointer @a str to the character according to @a direction
  *        afterwards.
@@ -243,14 +326,14 @@ static int fntGetCharIndex(int id, unsigned char **str, gboolean utf8, int direc
             *str    += direction;
         }
 
-        for (i = 0; (i < EXTRA_CHRS) && Fonts[id]->nonASCIIidx[i][0]; i++) {
-            if (strncmp(Fonts[id]->nonASCIIidx[i], uchar, UTF8LENGTH) == 0)
+        for (i = 0; i < Fonts[id]->bit8_count; i++) {
+            if (strncmp(Fonts[id]->bit8_chr + i * UTF8LENGTH, uchar, UTF8LENGTH) == 0)
                 return i + ASCII_CHRS;
 
             if (!utf8 &&
-                (Fonts[id]->nonASCIIidx[i][0] == (*uchar >> 6 | 0xc0) &&
-                 Fonts[id]->nonASCIIidx[i][1] == ((*uchar & 0x3f) | 0x80) &&
-                 Fonts[id]->nonASCIIidx[i][2] == 0))
+                ((Fonts[id]->bit8_chr + i * UTF8LENGTH)[0] == (*uchar >> 6 | 0xc0) &&
+                 (Fonts[id]->bit8_chr + i * UTF8LENGTH)[1] == ((*uchar & 0x3f) | 0x80) &&
+                 (Fonts[id]->bit8_chr + i * UTF8LENGTH)[2] == 0))
                 c = i + ASCII_CHRS;
         }
     } else {
@@ -285,11 +368,11 @@ int fntTextWidth(int id, char *str)
     while (*p) {
         c = fntGetCharIndex(id, &p, utf8, 1);
 
-        if (c == -1 || Fonts[id]->Fnt[c].w == -1)
+        if (c == -1 || Fonts[id]->Chr[c].w == -1)
             c = ' ';
 
-        if (Fonts[id]->Fnt[c].w != -1)
-            size += Fonts[id]->Fnt[c].w;
+        if (Fonts[id]->Chr[c].w != -1)
+            size += Fonts[id]->Chr[c].w;
     }
 
     return size;
@@ -315,10 +398,10 @@ static int fntTextHeight(int id, char *str)
     while (*p) {
         c = fntGetCharIndex(id, &p, utf8, 1);
 
-        if (c == -1 || Fonts[id]->Fnt[c].w == -1)
+        if (c == -1 || Fonts[id]->Chr[c].w == -1)
             c = ' ';
 
-        h = Fonts[id]->Fnt[c].h;
+        h = Fonts[id]->Chr[c].h;
 
         if (h > max)
             max = h;
@@ -407,18 +490,18 @@ guiImage *fntTextRender(guiItem *item, int px, char *txt)
         c = fntGetCharIndex(id, &u, utf8, 1);
 
         if (c != -1)
-            fw = Fonts[id]->Fnt[c].w;
+            fw = Fonts[id]->Chr[c].w;
 
         if (c == -1 || fw == -1) {
             c  = ' ';
-            fw = Fonts[id]->Fnt[c].w;
+            fw = Fonts[id]->Chr[c].w;
         }
 
         if (fw == -1)
             continue;
 
-        fh  = Fonts[id]->Fnt[c].h;
-        fyc = Fonts[id]->Fnt[c].y * fbw + Fonts[id]->Fnt[c].x;
+        fh  = Fonts[id]->Chr[c].h;
+        fyc = Fonts[id]->Chr[c].y * fbw + Fonts[id]->Chr[c].x;
         yc  = dx;
 
         if (dx >= 0) {
@@ -443,18 +526,18 @@ guiImage *fntTextRender(guiItem *item, int px, char *txt)
             c = fntGetCharIndex(id, &u, utf8, -1);
 
             if (c != -1)
-                fw = Fonts[id]->Fnt[c].w;
+                fw = Fonts[id]->Chr[c].w;
 
             if (c == -1 || fw == -1) {
                 c  = ' ';
-                fw = Fonts[id]->Fnt[c].w;
+                fw = Fonts[id]->Chr[c].w;
             }
 
             if (fw == -1)
                 continue;
 
-            fh  = Fonts[id]->Fnt[c].h;
-            fyc = Fonts[id]->Fnt[c].y * fbw + Fonts[id]->Fnt[c].x;
+            fh  = Fonts[id]->Chr[c].h;
+            fyc = Fonts[id]->Chr[c].y * fbw + Fonts[id]->Chr[c].x;
 
             dx -= fw;
             yc  = dx;

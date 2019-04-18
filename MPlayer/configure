@@ -385,6 +385,9 @@ Optional features:
   --disable-ass          disable SSA/ASS subtitle support [autodetect]
   --enable-rpath         enable runtime linker path for extra libs [disabled]
   --disable-gnutls       disable GnuTLS [autodetect]
+  --enable-openssl-nondistributable  enable OpenSSL [disable]
+                         due to conflicting MPlayer and OpenSSL licenses, the
+                         resulting binary may be non-distributable.
 
 Codecs:
   --enable-gif              enable GIF support [autodetect]
@@ -401,9 +404,6 @@ Codecs:
   --disable-xvid-lavc       disable Xvid in libavcodec [autodetect]
   --disable-x264            disable x264 [autodetect]
   --disable-x264-lavc       disable x264 in libavcodec [autodetect]
-  --disable-libdirac-lavc   disable Dirac in libavcodec [autodetect]
-  --disable-libschroedinger-lavc   disable Dirac in libavcodec (Schroedinger
-                                   decoder) [autodetect]
   --disable-libvpx-lavc     disable libvpx in libavcodec [autodetect]
   --disable-libnut          disable libnut [autodetect]
   --disable-ffmpeg_a        disable static FFmpeg [autodetect]
@@ -629,6 +629,7 @@ _sse4_1=auto
 _sse4_2=auto
 _avx=auto
 _avx2=auto
+_avx512=no
 _xop=auto
 _fma3=auto
 _fma4=auto
@@ -651,6 +652,9 @@ _ranlib=ranlib
 _windres=windres
 _cc=cc
 _ar=ar
+_arflags=rc
+# create thin archive to save disk space and I/O
+$_ar 2>&1 | grep -q "\[T\] " && _arflags=rcT
 test "$CC" && _cc="$CC"
 _as=auto
 _nm=auto
@@ -734,7 +738,6 @@ _libmpeg2=auto
 _libmpeg2_internal=no
 _faad=auto
 _faac=auto
-_faac_lavc=auto
 _ladspa=auto
 _libbs2b=auto
 _libilbc=auto
@@ -782,6 +785,7 @@ _tv_dshow=auto
 _pvr=auto
 networking=yes
 _winsock2_h=auto
+_struct_pollfd=auto
 _struct_addrinfo=auto
 _getaddrinfo=auto
 _struct_sockaddr_storage=auto
@@ -796,8 +800,6 @@ _xvid=auto
 _xvid_lavc=auto
 _x264=auto
 _x264_lavc=auto
-_libdirac_lavc=auto
-_libschroedinger_lavc=auto
 _libvpx_lavc=auto
 _libnut=auto
 _lirc=auto
@@ -841,13 +843,15 @@ quicktime=auto
 _macosx_finder=no
 _macosx_bundle=auto
 _sortsub=yes
-_freetypeconfig='freetype-config'
+_freetypeconfig='pkg-config freetype2'
+type freetype-config >/dev/null 2>&1 && _freetypeconfig=freetype-config
 _fribidi=auto
 _enca=auto
 _inet6=auto
 _sctp=auto
 _gethostbyname2=auto
 _gnutls=auto
+_openssl=no
 _ftp=auto
 _musepack=no
 _vstream=auto
@@ -865,6 +869,7 @@ def_stream_cache="#define CONFIG_STREAM_CACHE 1"
 def_path_max_check="#define CONFIG_PATH_MAX_CHECK 0"
 def_priority="#undef CONFIG_PRIORITY"
 def_pthread_cache="#undef PTHREAD_CACHE"
+def_simd_align_32='#define HAVE_SIMD_ALIGN_32 0'
 shmem=no
 
 option_value(){
@@ -1146,8 +1151,6 @@ for ac_option do
   --disable-faad)       _faad=no        ;;
   --enable-faac)        _faac=yes       ;;
   --disable-faac)       _faac=no        ;;
-  --enable-faac-lavc)   _faac_lavc=yes  ;;
-  --disable-faac-lavc)  _faac_lavc=no   ;;
   --enable-ladspa)      _ladspa=yes     ;;
   --disable-ladspa)     _ladspa=no      ;;
   --enable-libbs2b)     _libbs2b=yes    ;;
@@ -1250,10 +1253,6 @@ for ac_option do
   --disable-x264)       _x264=no        ;;
   --enable-x264-lavc)   _x264_lavc=yes  ;;
   --disable-x264-lavc)  _x264_lavc=no   ;;
-  --enable-libdirac-lavc)   _libdirac_lavc=yes  ;;
-  --disable-libdirac-lavc)  _libdirac_lavc=no   ;;
-  --enable-libschroedinger-lavc)   _libschroedinger_lavc=yes  ;;
-  --disable-libschroedinger-lavc)  _libschroedinger_lavc=no   ;;
   --enable-libvpx-lavc)   _libvpx_lavc=yes  ;;
   --disable-libvpx-lavc)  _libvpx_lavc=no   ;;
   --enable-libnut)      _libnut=yes     ;;
@@ -1345,6 +1344,7 @@ for ac_option do
   --disable-rpath)      _rpath=no       ;;
   --enable-gnutls)       _gnutls=yes    ;;
   --disable-gnutls)      _gnutls=no     ;;
+  --enable-openssl-nondistributable) _openssl=yes ;;
 
   --enable-fribidi)     _fribidi=yes    ;;
   --disable-fribidi)    _fribidi=no     ;;
@@ -1538,27 +1538,62 @@ list_subparts() {
   return 0
 }
 
+list_subparts_extern() {
+  test ! -e ffmpeg/libav${3} && return 1
+  pattern="s/^[^#]*extern.*${1} *ff_\([^ ]*\)_${2};/\1_${2}/p"
+  sed -n "$pattern" ffmpeg/libav${3} | toupper
+  return 0
+}
+
+list_subparts_filters() {
+  test ! -e ffmpeg/libav${1} && return 1
+  pattern="s/^extern AVFilter ff_([avfsinkrc]{2,5})_([a-zA-Z0-9_]+);/\1_\2_filter/p"
+  sed -E -n "$pattern" ffmpeg/libav${1} | toupper
+  return 0
+}
+
 echocheck "ffmpeg/libavcodec/allcodecs.c"
-libavdecoders_all=$(list_subparts  DEC      decoder  codec/allcodecs.c)
-libavencoders_all=$(list_subparts  ENC      encoder  codec/allcodecs.c)
-libavparsers_all=$(list_subparts   PARSER   parser   codec/allcodecs.c)
-libavbsfs_all=$(list_subparts      BSF      bsf      codec/allcodecs.c)
-libavhwaccels_all=$(list_subparts  HWACCEL  hwaccel  codec/allcodecs.c)
+libavdecoders_all=$(list_subparts_extern  AVCodec       decoder  codec/allcodecs.c)
+libavencoders_all=$(list_subparts_extern  AVCodec       encoder  codec/allcodecs.c)
+libavparsers_all=$(list_subparts_extern   AVCodecParser parser   codec/parsers.c)
+test $? -eq 0 && _list_subparts=found || _list_subparts="not found"
+echores "$_list_subparts"
+
+echocheck "ffmpeg/libavcodec/hwaccels.h"
+libavhwaccels_all=$(list_subparts_extern  AVHWAccel hwaccel codec/hwaccels.h)
+test $? -eq 0 || libavhwaccels_all=$(list_subparts  HWACCEL  hwaccel  codec/allcodecs.c)
 test $? -eq 0 && _list_subparts=found || _list_subparts="not found"
 echores "$_list_subparts"
 
 echocheck "ffmpeg/libavformat/allformats.c"
-libavdemuxers_all=$(list_subparts  DEMUX    demuxer  format/allformats.c)
-libavmuxers_all=$(list_subparts    _MUX     muxer    format/allformats.c)
-libavprotocols_all=$(list_subparts PROTOCOL protocol format/allformats.c)
+libavdemuxers_all=$(list_subparts_extern  AVInputFormat    demuxer  format/allformats.c)
+libavmuxers_all=$(list_subparts_extern    AVOutputFormat   muxer    format/allformats.c)
 test $? -eq 0 && _list_subparts=found || _list_subparts="not found"
 echores "$_list_subparts"
+
+echocheck "ffmpeg/libavcodec/bitsteram_filters.c"
+libavbsfs_all=$(list_subparts_extern AVBitStreamFilter bsf codec/bitstream_filters.c)
+test $? -eq 0 && _list_subparts_extern=found || _list_subparts_extern="not found"
+echores "$_list_subparts_extern"
+
+echocheck "ffmpeg/libavformat/protocols.c"
+libavprotocols_all=$(list_subparts_extern URLProtocol protocol format/protocols.c)
+test $? -eq 0 && _list_subparts_extern=found || _list_subparts_extern="not found"
+echores "$_list_subparts_extern"
 
 echocheck "ffmpeg/libavfilter/allfilters.c"
-libavfilters_all=$(list_subparts   FILTER   filter   filter/allfilters.c)
+libavfilters_all=$(list_subparts_filters filter/allfilters.c)
 test $? -eq 0 && _list_subparts=found || _list_subparts="not found"
 echores "$_list_subparts"
 
+# a white space separated list (1st arg)
+# has an item with the given value (2nd arg)
+contains_item() {
+  for item in $1; do
+    test "$item" = "$2" && return
+  done
+  false
+}
 filter_out_component() {
   eval list=\$libav${1}s
   type=$(echo $1 | toupper)
@@ -1580,12 +1615,13 @@ libavmuxers=$(echo $libavmuxers_all)
 libavprotocols=$(echo $libavprotocols_all)
 libavfilters=$(echo $libavfilters_all)
 
-libavdecoders=$(filter_out_component decoder 'LIB[A-Z0-9_]* H264_QSV MJPEG_QSV MPEG2_MMAL MPEG4_MMAL MPEG2_QSV HEVC_QSV VC1_MMAL VC1_QSV H264_MMAL')
-libavencoders=$(filter_out_component encoder 'LIB[A-Z0-9_]* H264_QSV MJPEG_QSV MPEG2_QSV HEVC_QSV VC1_MMAL VC1_QSV NVENC[A-Z0-9_]* H264_NVENC[A-Z0-9_]* HEVC_NVENC[A-Z0-9_]* HAP')
-libavdemuxers=$(filter_out_component demuxer 'AVISYNTH LIB[A-Z0-9_]* REDIR')
+libavdecoders=$(filter_out_component decoder 'LIB[A-Z0-9_]* H264_QSV MJPEG_QSV MPEG2_MMAL MPEG4_MMAL MPEG2_QSV HEVC_QSV VC1_MMAL VC1_QSV H264_MMAL H264_MEDIACODEC HEVC_MEDIACODEC MPEG2_MEDIACODEC H264_CUVID HEVC_CUVID VC1_CUVID VP8_CUVID VP9_CUVID H263_CUVID MJPEG_CUVID MPEG1_CUVID MPEG2_CUVID MPEG4_CUVID VP8_MEDIACODEC VP9_MEDIACODEC MPEG4_MEDIACODEC VP8_QSV [A-Z0-9_]*_AT [A-Z0-9]*_RKMPP [A-Z0-9]*_V4L2M2M')
+libavencoders=$(filter_out_component encoder 'LIB[A-Z0-9_]* H264_QSV MJPEG_QSV MPEG2_QSV HEVC_QSV VC1_MMAL VC1_QSV NVENC[A-Z0-9_]* H264_NVENC[A-Z0-9_]* HEVC_NVENC[A-Z0-9_]* HAP [A-Z0-9]*_VIDEOTOOLBOX H264_VAAPI HEVC_VAAPI MJPEG_VAAPI MPEG2_VAAPI VP8_VAAPI VP9_VAAPI H264_OMX MPEG4_OMX [A-Z0-9_]*_AT [A-Z0-9]*_V4L2M2M [A-Z0-9]*_AMF')
+libavbsfs=$(filter_out_component bsf 'TRACE_HEADERS [A-Z0-9_]*_METADATA H264_REDUNDANT_PPS FILTER_UNITS')
+libavdemuxers=$(filter_out_component demuxer 'AVISYNTH DASH LIB[A-Z0-9_]* REDIR VAPOURSYNTH')
 libavmuxers=$(filter_out_component muxer 'CHROMAPRINT LIB[A-Z0-9_]* RTP RTSP SAP')
 libavprotocols=$(filter_out_component protocol 'BLURAY FFRTMPCRYPT HTTPS LIB[A-Z0-9_]* TLS TLS_GNUTLS TLS_OPENSSL TLS_SECURETRANSPORT TLS_SCHANNEL')
-libavfilters=$(filter_out_component filter 'FREI0R[A-Z0-9_]* LIB[A-Z0-9_]* MP OCV')
+libavfilters=$(filter_out_component filter 'VF_FREI0R[A-Z0-9_]* LIB[A-Z0-9_]* MP VF_OCV')
 
 # second pass command line parsing for options needing local FFmpeg checkout
 for ac_option do
@@ -1819,6 +1855,8 @@ if os2 ; then
   # And ensure that $ld_static should be at first in a library list because it
   # has effects only libraries after it.
   test -n "$ld_static" && ld_static='-Wl,-static'
+  # OS/2 linker does not support a thin archive. Remove 'T' flag.
+  _arflags=$(echo $_arflags | tr -d T)
 fi
 
 if wine ; then
@@ -2021,9 +2059,8 @@ fi
 def_fast_64bit='#define HAVE_FAST_64BIT 0'
 def_fast_unaligned='#define HAVE_FAST_UNALIGNED 0'
 def_av_fast_unaligned='#define AV_HAVE_FAST_UNALIGNED 0'
-def_local_aligned_8='#define HAVE_LOCAL_ALIGNED_8 0'
-def_local_aligned_16='#define HAVE_LOCAL_ALIGNED_16 0'
-def_local_aligned_32='#define HAVE_LOCAL_ALIGNED_32 0'
+def_local_aligned='#define HAVE_LOCAL_ALIGNED 0'
+def_vsx='#define HAVE_VSX 0'
 arch_all='X86 IA64 SPARC ARM AVR32 SH4 PPC ALPHA MIPS PA_RISC S390 S390X VAX BFIN XTENSA TOMI GENERIC AARCH64'
 subarch_all='X86_32 X86_64 PPC64'
 case "$host_arch" in
@@ -2032,9 +2069,7 @@ case "$host_arch" in
   subarch='x86_32'
   def_fast_unaligned='#define HAVE_FAST_UNALIGNED 1'
   def_av_fast_unaligned='#define AV_HAVE_FAST_UNALIGNED 1'
-  def_local_aligned_8='#define HAVE_LOCAL_ALIGNED_8 1'
-  def_local_aligned_16='#define HAVE_LOCAL_ALIGNED_16 1'
-  def_local_aligned_32='#define HAVE_LOCAL_ALIGNED_32 1'
+  def_local_aligned='#define HAVE_LOCAL_ALIGNED 1'
   iproc=486
   proc=i486
 
@@ -2287,9 +2322,7 @@ case "$host_arch" in
     subarch='x86_64'
     def_fast_unaligned='#define HAVE_FAST_UNALIGNED 1'
     def_av_fast_unaligned='#define AV_HAVE_FAST_UNALIGNED 1'
-    def_local_aligned_8='#define HAVE_LOCAL_ALIGNED_8 1'
-    def_local_aligned_16='#define HAVE_LOCAL_ALIGNED_16 1'
-    def_local_aligned_32='#define HAVE_LOCAL_ALIGNED_32 1'
+    def_local_aligned='#define HAVE_LOCAL_ALIGNED 1'
     def_fast_64bit='#define HAVE_FAST_64BIT 1'
     iproc='x86_64'
 
@@ -2432,9 +2465,7 @@ case "$host_arch" in
     iproc='arm'
     def_fast_unaligned='#define HAVE_FAST_UNALIGNED 1'
     def_av_fast_unaligned='#define AV_HAVE_FAST_UNALIGNED 1'
-    def_local_aligned_8='#define HAVE_LOCAL_ALIGNED_8 1'
-    def_local_aligned_16='#define HAVE_LOCAL_ALIGNED_16 1'
-    def_local_aligned_32='#define HAVE_LOCAL_ALIGNED_32 1'
+    def_local_aligned='#define HAVE_LOCAL_ALIGNED 1'
     test $_fast_clz = "auto" && _fast_clz=yes
     ;;
 
@@ -2457,9 +2488,7 @@ case "$host_arch" in
     def_vsx='#define HAVE_VSX 0'
     def_fast_unaligned='#define HAVE_FAST_UNALIGNED 1'
     def_av_fast_unaligned='#define AV_HAVE_FAST_UNALIGNED 1'
-    def_local_aligned_8='#define HAVE_LOCAL_ALIGNED_8 1'
-    def_local_aligned_16='#define HAVE_LOCAL_ALIGNED_16 1'
-    def_local_aligned_32='#define HAVE_LOCAL_ALIGNED_32 1'
+    def_local_aligned='#define HAVE_LOCAL_ALIGNED 1'
     iproc='ppc'
 
     if test "$host_arch" = "ppc64" ; then
@@ -2732,6 +2761,7 @@ if test "$_runtime_cpudetection" = yes ; then
   fi
 fi
 
+test "$_avx" != no && def_simd_align_32='#define HAVE_SIMD_ALIGN_32 1'
 
 # endian testing
 echocheck "byte order"
@@ -2838,6 +2868,10 @@ cpp_condition_check features.h "defined __GLIBC__" &&
   CFLAGS="-D_POSIX_C_SOURCE=200112 -D_XOPEN_SOURCE=600 $CFLAGS" &&
   HOSTCFLAGS="-D_POSIX_C_SOURCE=200112 -D_XOPEN_SOURCE=600 $HOSTCFLAGS"
 
+if cygwin; then
+  CFLAGS="-D_XOPEN_SOURCE=600 $CFLAGS"
+fi
+
 if test "$cc_vendor" = "gnu" ; then
   cflag_check -fno-tree-vectorize && CFLAGS="$CFLAGS -fno-tree-vectorize"
   cflag_check -Wundef && WARNFLAGS="-Wundef $WARNFLAGS"
@@ -2852,7 +2886,12 @@ fi
 # This provides significant size savings on gcc.
 # I will cause worse backtraces when debug info is missing though,
 # but having non-stripable debug info is not really a desirable feature.
+# Unfortunately MinGW toolchains seem to have a bug where it tries
+# to use SjLj exception handling even if not supported by the toolchain,
+# causing linking failure for C++ code like demux_rtp.cpp
+if ! mingw32 ; then
 cflag_check -fno-asynchronous-unwind-tables && CFLAGS="$CFLAGS -fno-asynchronous-unwind-tables"
+fi
 cflag_check -mno-omit-leaf-frame-pointer && cflags_no_omit_leaf_frame_pointer="-mno-omit-leaf-frame-pointer"
 cflag_check -MMD -MP && DEPFLAGS="-MMD -MP"
 
@@ -3059,11 +3098,13 @@ if test "$_yasm" ; then
   fi
 fi
 if test $_yasm ; then
-  def_yasm='#define HAVE_YASM 1'
+  def_yasm='#define HAVE_YASM 1
+#define HAVE_X86ASM 1'
   have_yasm="yes"
   echores "$_yasm"
 else
-  def_yasm='#define HAVE_YASM 0'
+  def_yasm='#define HAVE_YASM 0
+#define HAVE_X86ASM 0'
   have_yasm="no"
   echores "no"
 fi
@@ -3082,7 +3123,8 @@ echores "$xmm_clobbers"
 
 else
   _yasm=''
-  def_yasm='#define HAVE_YASM 0'
+  def_yasm='#define HAVE_YASM 0
+#define HAVE_X86ASM 0'
   have_yasm="no"
 fi #if x86
 
@@ -3236,7 +3278,7 @@ if arm ; then
   echores "$_iwmmxt"
 fi
 
-cpuexts_all='ALTIVEC XOP AVX AVX2 FMA3 FMA4 MMX MMX2 MMXEXT AMD3DNOW AMD3DNOWEXT SSE SSE2 SSE3 SSSE3 SSE4 SSE42 FAST_CMOV I686 FAST_CLZ ARMV5TE ARMV6 ARMV6T2 VFP VFPV3 SETEND NEON IWMMXT MMI VIS MVI'
+cpuexts_all='ALTIVEC XOP AVX AVX2 AVX512 FMA3 FMA4 MMX MMX2 MMXEXT AMD3DNOW AMD3DNOWEXT SSE SSE2 SSE3 SSSE3 SSE4 SSE42 FAST_CMOV I686 FAST_CLZ ARMV5TE ARMV6 ARMV6T2 VFP VFPV3 SETEND NEON IWMMXT MMI VIS MVI'
 test "$_altivec"   = yes && cpuexts="ALTIVEC $cpuexts"
 test "$_mmx"       = yes && cpuexts="MMX $cpuexts"
 test "$_mmxext"    = yes && cpuexts="MMX2 $cpuexts"
@@ -3251,6 +3293,7 @@ test "$_sse4_1"    = yes && cpuexts="SSE4 $cpuexts"
 test "$_sse4_2"    = yes && cpuexts="SSE42 $cpuexts"
 test "$_avx"       = yes && cpuexts="AVX $cpuexts"
 test "$_avx2"      = yes && cpuexts="AVX2 $cpuexts"
+test "$_avx512"    = yes && cpuexts="AVX512 $cpuexts"
 test "$_xop"       = yes && cpuexts="XOP $cpuexts"
 test "$_fma3"      = yes && cpuexts="FMA3 $cpuexts"
 test "$_fma4"      = yes && cpuexts="FMA4 $cpuexts"
@@ -3267,6 +3310,8 @@ test "$neon"       = yes && cpuexts="NEON $cpuexts"
 test "$_iwmmxt"    = yes && cpuexts="IWMMXT $cpuexts"
 test "$_vis"       = yes && cpuexts="VIS $cpuexts"
 test "$_mvi"       = yes && cpuexts="MVI $cpuexts"
+cpuexts_external=""
+test "$have_yasm"  = yes && cpuexts_external="$cpuexts"
 
 # Checking kernel version...
 if x86_32 && linux ; then
@@ -3464,7 +3509,7 @@ statement_check time.h 'gmtime_r(0, 0)' && _gmtime_r=yes
 if test "$_gmtime_r" = yes ; then
   def_gmtime_r='#define HAVE_GMTIME_R 1'
 else
-  def_gmtime_r='#undef HAVE_GMTIME_R'
+  def_gmtime_r='#define HAVE_GMTIME_R 0'
 fi
 echores "$_gmtime_r"
 
@@ -3474,7 +3519,7 @@ statement_check time.h 'localtime_r(0, 0)' && _localtime_r=yes
 if test "$_localtime_r" = yes ; then
   def_localtime_r='#define HAVE_LOCALTIME_R 1'
 else
-  def_localtime_r='#undef HAVE_LOCALTIME_R'
+  def_localtime_r='#define HAVE_LOCALTIME_R 0'
 fi
 echores "$_localtime_r"
 
@@ -3518,6 +3563,26 @@ else
   cc_check_winsock2_h='-DHAVE_WINSOCK2_H=0'
 fi
 
+echocheck "struct pollfd"
+if test "$_struct_pollfd" = auto; then
+  _struct_pollfd=no
+  cat > $TMPC << EOF
+#if HAVE_WINSOCK2_H
+#include <winsock2.h>
+#else
+#include <poll.h>
+#endif
+int main(void) { struct pollfd p; return 0; }
+EOF
+  cc_check $cc_check_winsock2_h && _struct_pollfd=yes
+fi
+echores "$_struct_pollfd"
+
+if test "$_struct_pollfd" = yes; then
+  def_struct_pollfd="#define HAVE_STRUCT_POLLFD 1"
+else
+  def_struct_pollfd="#define HAVE_STRUCT_POLLFD 0"
+fi
 
 echocheck "netdb.h, struct addrinfo"
 if test "$_struct_addrinfo" = auto; then
@@ -3594,20 +3659,32 @@ fi
 echocheck "struct ipv6_mreq"
 _struct_ipv6_mreq=no
 def_struct_ipv6_mreq="#define HAVE_STRUCT_IPV6_MREQ 0"
-for header in "netinet/in.h" "ws2tcpip.h" ; do
-  statement_check $header 'struct ipv6_mreq mreq6' && _struct_ipv6_mreq=yes &&
-    def_struct_ipv6_mreq="#define HAVE_STRUCT_IPV6_MREQ 1" && break
-done
+cat > $TMPC << EOF
+#if HAVE_WINSOCK2_H
+#include <ws2tcpip.h>
+#else
+#include <netinet/in.h>
+#endif
+int main(void) { struct ipv6_mreq mreq6; return 0; }
+EOF
+cc_check $cc_check_winsock2_h && _struct_ipv6_mreq=yes &&
+  def_struct_ipv6_mreq="#define HAVE_STRUCT_IPV6_MREQ 1"
 echores "$_struct_ipv6_mreq"
 
 
 echocheck "struct sockaddr_in6"
 _struct_sockaddr_in6=no
 def_struct_sockaddr_in6="#define HAVE_STRUCT_SOCKADDR_IN6 0"
-for header in "netinet/in.h" "ws2tcpip.h" ; do
-  statement_check $header 'struct sockaddr_in6 addr' && _struct_sockaddr_in6=yes &&
-    def_struct_sockaddr_in6="#define HAVE_STRUCT_SOCKADDR_IN6 1" && break
-done
+cat > $TMPC << EOF
+#if HAVE_WINSOCK2_H
+#include <ws2tcpip.h>
+#else
+#include <netinet/in.h>
+#endif
+int main(void) { struct sockaddr_in6 addr; return 0; }
+EOF
+cc_check $cc_check_winsock2_h && _struct_sockaddr_in6=yes &&
+  def_struct_sockaddr_in6="#define HAVE_STRUCT_SOCKADDR_IN6 1"
 echores "$_struct_sockaddr_in6"
 
 
@@ -3653,7 +3730,7 @@ echocheck "inet_aton()"
 def_inet_aton='#define HAVE_INET_ATON 0'
 inet_aton=no
 for ld_tmp in "$ld_sock" "$ld_sock -lresolv" ; do
-  statement_check arpa/inet.h 'inet_aton(0, 0)' $ld_tmp && inet_aton=yes && break
+  define_statement_check _BSD_SOURCE arpa/inet.h 'inet_aton(0, 0)' $ld_tmp && inet_aton=yes && break
 done
 if test $inet_aton = yes ; then
   test "$ld_tmp" && res_comment="using $ld_tmp"
@@ -3664,9 +3741,16 @@ echores "$inet_aton"
 
 echocheck "socklen_t"
 _socklen_t=no
-for header in "sys/socket.h" "ws2tcpip.h" "sys/types.h" ; do
-  statement_check $header 'socklen_t v = 0' && _socklen_t=yes && break
-done
+cat > $TMPC << EOF
+#if HAVE_WINSOCK2_H
+#include <ws2tcpip.h>
+#else
+#include <sys/socket.h>
+#include <sys/types.h>
+#endif
+int main(void) { socklen_t v = 0; return 0; }
+EOF
+cc_check $cc_check_winsock2_h && _socklen_t=yes
 if test "$_socklen_t" = yes ; then
   def_socklen_t='#define HAVE_SOCKLEN_T 1'
 else
@@ -3827,7 +3911,7 @@ echores "$_malloc"
 echocheck "aligned malloc"
 aligned_malloc=no
 def_aligned_malloc='#define HAVE_ALIGNED_MALLOC 0'
-statement_check malloc.h '_aligned_malloc(0)' && aligned_malloc=yes &&
+statement_check malloc.h '_aligned_malloc(1, 32)' && aligned_malloc=yes &&
   def_aligned_malloc='#define HAVE_ALIGNED_MALLOC 1'
 echores "$aligned_malloc"
 
@@ -4395,13 +4479,34 @@ if test "$_gnutls" = auto ; then
 fi
 if test "$_gnutls" = yes ; then
   def_gnutls='#define CONFIG_GNUTLS 1'
-  libavprotocols="$libavprotocols HTTPS_PROTOCOL TLS_PROTOCOL TLS_GNUTLS_PROTOCOL"
+  libavprotocols="$libavprotocols HTTPS_PROTOCOL"
+  if contains_item "$libavprotocols_all" 'TLS_GNUTLS_PROTOCOL' ; then
+      libavprotocols="$libavprotocols TLS_GNUTLS_PROTOCOL"
+  else
+      libavprotocols="$libavprotocols TLS_PROTOCOL"
+  fi
   extra_cflags="$extra_cflags $($_pkg_config --cflags gnutls)"
   extra_ldflags="$extra_ldflags $($_pkg_config --libs gnutls)"
 else
   def_gnutls='#define CONFIG_GNUTLS 0'
 fi
 echores "$_gnutls"
+
+echocheck "OpenSSL"
+if test "$_openssl" = yes ; then
+  def_openssl='#define CONFIG_OPENSSL 1'
+  libavprotocols="$libavprotocols HTTPS_PROTOCOL"
+  if contains_item "$libavprotocols_all" 'TLS_OPENSSL_PROTOCOL' ; then
+      libavprotocols="$libavprotocols TLS_OPENSSL_PROTOCOL"
+  else
+      libavprotocols="$libavprotocols TLS_PROTOCOL"
+  fi
+  extra_cflags="$extra_cflags $($_pkg_config --cflags openssl)"
+  extra_ldflags="$extra_ldflags $($_pkg_config --libs openssl)"
+else
+  def_openssl='#define CONFIG_OPENSSL 0'
+fi
+echores "$_openssl"
 
 echocheck "Samba support (libsmbclient)"
 if test "$_smb" = yes; then
@@ -5211,8 +5316,13 @@ fi
 echocheck "MNG support"
 if test "$_mng" = auto ; then
   _mng=no
+  cat > $TMPC << EOF
+#define MNG_NO_INCLUDE_JNG
+#include <libmng.h>
+int main(void) { return !mng_version_text(); }
+EOF
   for mnglibs in '-lmng -lz' '-lmng -ljpeg -lz' ; do
-    return_statement_check libmng.h 'const char * p_ver = mng_version_text()' '!p_ver || p_ver[0] == 0' $mnglibs && _mng=yes
+    cc_check $mnglibs && _mng=yes && break
   done
 fi
 echores "$_mng"
@@ -5245,12 +5355,30 @@ fi
 echocheck "OpenJPEG (JPEG 2000) support"
 if test "$libopenjpeg" = auto ; then
   libopenjpeg=no
-  define_statement_check OPJ_STATIC openjpeg.h 'opj_dparameters_t dec_params; opj_set_default_decoder_parameters(&dec_params);opj_decode_with_info(0,0,0)' -lopenjpeg && libopenjpeg=yes
+  if test "$ffmpeg_a" = no ; then
+    res_comment="dynamic linking to libopenjpeg is irrelevant when using dynamic FFmpeg"
+  else
+    cat > $TMPC << EOF
+#include <openjpeg.h>
+
+int main(void) {
+  opj_dparameters_t dec_params; opj_set_default_decoder_parameters(&dec_params);
+  return opj_decode(0,0,0);
+}
+EOF
+    if $_pkg_config --exists "libopenjp2 >= 2.1.0" ; then
+      inc_libopenjpeg=$($_pkg_config --silence-errors --cflags libopenjp2)
+      ld_libopenjpeg=$($_pkg_config --silence-errors --libs libopenjp2)
+      cc_check $inc_libopenjpeg $ld_libopenjpeg        &&
+        libopenjpeg=yes                                &&
+        extra_cflags="$extra_cflags $inc_libopenjpeg"  &&
+        extra_ldflags="$extra_ldflags $ld_libopenjpeg"
+    fi
+  fi
 fi
 echores "$libopenjpeg"
 if test "$libopenjpeg" = yes ; then
   def_libopenjpeg='#define CONFIG_LIBOPENJPEG 1'
-  extra_ldflags="$extra_ldflags -lopenjpeg"
   libavdecoders="$libavdecoders LIBOPENJPEG_DECODER"
   libavencoders="$libavencoders LIBOPENJPEG_ENCODER"
   codecmodules="OpenJPEG $codecmodules"
@@ -6265,6 +6393,7 @@ if test "$_iconv" = no ; then
 fi
 
 if test "$_freetype" = auto ; then
+    test -n "$ld_static" && _freetypeconfig="$_freetypeconfig --static"
     if ( $_freetypeconfig --version ) >/dev/null 2>&1 ; then
         cat > $TMPC << EOF
 #include <stdio.h>
@@ -6448,8 +6577,8 @@ if test "$_zlib" = yes ; then
   mplayer_encoders="$mplayer_encoders PNG_ENCODER"
 else
   def_zlib='#define CONFIG_ZLIB 0'
-  libavdecoders=$(filter_out_component decoder 'FLASHSV FLASHSV2 PNG ZMBV ZLIB DXA EXR G2M TSCC ZEROCODEC')
-  libavencoders=$(filter_out_component encoder 'FLASHSV FLASHSV2 PNG ZMBV ZLIB')
+  libavdecoders=$(filter_out_component decoder 'APNG FLASHSV FLASHSV2 PNG ZMBV ZLIB DXA EXR G2M MSCC RSCC SCREENPRESSO SRGC TDSC TSCC ZEROCODEC')
+  libavencoders=$(filter_out_component encoder 'APNG FLASHSV FLASHSV2 PNG ZMBV ZLIB')
 fi
 echores "$_zlib"
 
@@ -6778,20 +6907,11 @@ EOF
 fi
 if test "$_faac" = yes ; then
   def_faac="#define CONFIG_FAAC 1"
-  test "$_faac_lavc" = auto && _faac_lavc=yes
-  if test "$_faac_lavc" = yes ; then
-    def_faac_lavc="#define CONFIG_LIBFAAC 1"
-    libs_mplayer="$libs_mplayer $ld_faac"
-    libavencoders="$libavencoders LIBFAAC_ENCODER"
-  fi
   codecmodules="faac $codecmodules"
 else
-  _faac_lavc=no
   def_faac="#undef CONFIG_FAAC"
-  def_faac_lavc="#define CONFIG_LIBFAAC 0"
   nocodecmodules="faac $nocodecmodules"
 fi
-res_comment="in FFmpeg: $_faac_lavc"
 echores "$_faac"
 
 
@@ -7107,10 +7227,9 @@ echores "$_librtmp"
 
 
 echocheck "FFmpeg"
-ffmpeg=no
 if test "$ffmpeg_a" = auto ; then
   ffmpeg_a=no
-  test -d ffmpeg/libavcodec && ffmpeg_a=yes && ffmpeg_so=no && ffmpeg=yes
+  test -d ffmpeg/libavcodec && ffmpeg_a=yes && ffmpeg_so=no
 fi
 if test "$ffmpeg_so" = auto ; then
   ffmpeg_so=no
@@ -7123,9 +7242,12 @@ if test "$ffmpeg_so" = auto ; then
   elif header_check libavutil/avutil.h -lswscale -lswresample -lavformat -lavcodec -lavutil ; then
     extra_ldflags="$extra_ldflags -lswscale -lswresample -lavformat -lavcodec -lavutil"
     ffmpeg_so=yes
-    ffmpeg=yes
   fi
 fi
+
+ffmpeg=no
+test "$ffmpeg_a" = yes && ffmpeg=yes
+test "$ffmpeg_so" = yes && ffmpeg=yes
 
 if test "$ffmpeg" = yes; then
   test -e config.h || touch config.h
@@ -7300,7 +7422,7 @@ if test "$_x264" = auto && test "$_mencoder" = yes ; then
 int main(void) { x264_encoder_open((void*)0); return 0; }
 EOF
   _x264=no
-  for ld_x264 in "-lx264 $ld_pthread" "-lx264 $ld_pthread" ; do
+  for ld_x264 in "-lx264 $ld_pthread" ; do
     cc_check $ld_x264 && libs_mencoder="$libs_mencoder $ld_x264" && _x264=yes && break
   done
 fi
@@ -7323,79 +7445,6 @@ fi
 res_comment="in FFmpeg: $_x264_lavc"
 echores "$_x264"
 
-
-echocheck "libdirac"
-if test "$_libdirac_lavc" = auto; then
-  _libdirac_lavc=no
-  if test "$ffmpeg_a" != yes; then
-    res_comment="ffmpeg (static) is required by libdirac, sorry"
-  else
-    cat > $TMPC << EOF
-#include <libdirac_encoder/dirac_encoder.h>
-#include <libdirac_decoder/dirac_parser.h>
-int main(void)
-{
-    dirac_encoder_context_t enc_ctx;
-    dirac_decoder_t *dec_handle;
-    dirac_encoder_context_init(&enc_ctx, VIDEO_FORMAT_SD_576I50);
-    dec_handle = dirac_decoder_init(0);
-    if (dec_handle)
-        dirac_decoder_close(dec_handle);
-    return 0;
-}
-EOF
-    if $_pkg_config --exists dirac ; then
-      inc_dirac=$($_pkg_config --silence-errors --cflags dirac)
-      ld_dirac=$($_pkg_config --silence-errors --libs dirac)
-      cc_check $inc_dirac $ld_dirac        &&
-      _libdirac_lavc=yes                   &&
-      extra_cflags="$extra_cflags $inc_dirac" &&
-      extra_ldflags="$extra_ldflags $ld_dirac"
-    fi
-  fi
-fi
-if test "$_libdirac_lavc" = yes ; then
-  def_libdirac_lavc='#define CONFIG_LIBDIRAC 1'
-  libavencoders="$libavencoders LIBDIRAC_ENCODER"
-  libavdecoders="$libavdecoders LIBDIRAC_DECODER"
-  codecmodules="libdirac $codecmodules"
-else
-  def_libdirac_lavc='#define CONFIG_LIBDIRAC 0'
-  nocodecmodules="libdirac $nocodecmodules"
-fi
-echores "$_libdirac_lavc"
-
-
-echocheck "libschroedinger"
-if test "$_libschroedinger_lavc" = auto ; then
-  _libschroedinger_lavc=no
-  if test "$ffmpeg_a" != yes; then
-    res_comment="ffmpeg (static) is required by libschroedinger, sorry"
-  else
-    cat > $TMPC << EOF
-#include <schroedinger/schro.h>
-int main(void) { schro_init(); return SCHRO_ENCODER_RATE_CONTROL_CONSTANT_QUALITY; }
-EOF
-    if $_pkg_config --exists schroedinger-1.0 ; then
-      inc_schroedinger=$($_pkg_config --silence-errors --cflags schroedinger-1.0)
-      ld_schroedinger=$($_pkg_config --silence-errors --libs schroedinger-1.0)
-      cc_check $inc_schroedinger $ld_schroedinger   &&
-      _libschroedinger_lavc=yes                     &&
-      extra_cflags="$extra_cflags $inc_schroedinger"   &&
-      extra_ldflags="$extra_ldflags $ld_schroedinger"
-    fi
-  fi
-fi
-if test "$_libschroedinger_lavc" = yes ; then
-  def_libschroedinger_lavc='#define CONFIG_LIBSCHROEDINGER 1'
-  libavencoders="$libavencoders LIBSCHROEDINGER_ENCODER"
-  libavdecoders="$libavdecoders LIBSCHROEDINGER_DECODER"
-  codecmodules="libschroedinger $codecmodules"
-else
-  def_libschroedinger_lavc='#define CONFIG_LIBSCHROEDINGER 0'
-  nocodecmodules="libschroedinger $nocodecmodules"
-fi
-echores "$_libschroedinger_lavc"
 
 echocheck "libvpx"
 if test "$_libvpx_lavc" = auto; then
@@ -7744,7 +7793,10 @@ if test "$_pvr" = auto && test "$_tv_v4l2" = yes && linux ; then
   cat > $TMPC <<EOF
 #include <sys/time.h>
 #include <linux/videodev2.h>
-int main(void) { struct v4l2_ext_controls ext; return ext.controls->value; }
+int main(void) {
+  struct v4l2_ext_controls ext;
+  return ext.controls->value;
+}
 EOF
   cc_check && _pvr=yes
 fi
@@ -7885,7 +7937,7 @@ EOF
     fi
     echores "$_xshape"
 
-    # Check for GTK2
+    # Check for GTK+ 2
     echocheck "GTK+ version"
 
     if $_pkg_config --exists gtk+-2.0 ; then
@@ -7900,7 +7952,9 @@ EOF
         die "$_gtk"
       fi
 
-      # Check for GLIB2
+      # Check for specific minimum version of GLib
+      # (version 2.4.0, required by GTK+ 2.4.0, would have been
+      # checked automatically, but doesn't meet our requirements)
       echocheck "GLib version"
       if $_pkg_config --exists glib-2.0 ; then
         _glib=$($_pkg_config --modversion "glib-2.0 >= 2.6.0" 2>&1)
@@ -8172,7 +8226,7 @@ for try_chunk_xsl in \
 done
 
 if test -z "$chunk_xsl"; then
-  chunk_xsl=/usr/share/sgml/docbook/stylesheet/xsl/nwalsh/html/chunk.xsl
+  chunk_xsl=http://docbook.sourceforge.net/release/xsl/current/html/chunk.xsl
   echores "not found, using default"
   fake_chunk_xsl=yes
 else
@@ -8197,7 +8251,7 @@ for try_docbook_xsl in \
 done
 
 if test -z "$docbook_xsl"; then
-  docbook_xsl=/usr/share/sgml/docbook/stylesheet/xsl/nwalsh/html/docbook.xsl
+  docbook_xsl=http://docbook.sourceforge.net/release/xsl/current/html/docbook.xsl
   echores "not found, using default"
 else
   echores "docbook.xsl"
@@ -8249,7 +8303,7 @@ for try_dtd in \
 done
 
 if test -z "$dtd"; then
-  dtd=/usr/share/sgml/docbook/dtd/xml/4.1.2/docbookx.dtd
+  dtd=http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd
   echores "not found, using default"
 else
   echores "docbookx.dtd"
@@ -8261,7 +8315,7 @@ for lang in $language_doc; do
 <!-- **************************************************
      This file is generated automatically. DO NOT EDIT.
      ************************************************** -->
-<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
     "$dtd"
 [
 <!ENTITY bugreports.xml SYSTEM "bugreports.xml">
@@ -8347,7 +8401,7 @@ MANDIR  = \$(DESTDIR)$_mandir
 CONFDIR = \$(DESTDIR)$_confdir
 
 AR      = $_ar
-ARFLAGS = rc
+ARFLAGS = $_arflags
 AR_O    = \$@
 AS      = $_cc
 CC      = $_cc
@@ -8585,8 +8639,12 @@ CXX_C      = -c
 LD         = gcc
 RANLIB     = $_ranlib
 YASM       = $_yasm
+X86ASM     = $_yasm
 DEPYASM    = $_yasm
+DEPX86ASM  = $_yasm
 YASMFLAGS  = $YASMFLAGS
+X86ASMFLAGS = $YASMFLAGS -o\$@
+DEPX86ASMFLAGS=\$(X86ASMFLAGS)
 STRIP      = strip
 
 CONFIG_FFPROBE       = no
@@ -8611,11 +8669,19 @@ SLIBNAME_WITH_MAJOR = \$(SLIBNAME)-42
 
 # Some FFmpeg codecs depend on these. Enable them unconditionally for now.
 CONFIG_AANDCTTABLES  = yes
+CONFIG_ADTS_HEADER = yes
 CONFIG_AUDIODSP = yes
 CONFIG_AUDIO_FRAME_QUEUE = yes
 CONFIG_BLOCKDSP= yes
 CONFIG_BSWAPDSP= yes
 CONFIG_CABAC   = yes
+CONFIG_CBS     = yes
+CONFIG_CBS_AV1 = yes
+CONFIG_CBS_H264 = yes
+CONFIG_CBS_H265 = yes
+CONFIG_CBS_JPEG = yes
+CONFIG_CBS_MPEG2 = yes
+CONFIG_CBS_VP9 = yes
 CONFIG_CHROMAPRINT = no
 CONFIG_DCT     = yes
 CONFIG_DWT     = yes
@@ -8633,8 +8699,10 @@ CONFIG_GOLOMB  = yes
 CONFIG_H263DSP = yes
 CONFIG_H264CHROMA = yes
 CONFIG_H264DSP = yes
+CONFIG_H264PARSE = yes
 CONFIG_H264PRED= yes
 CONFIG_H264QPEL= yes
+CONFIG_HEVCPARSE = yes
 CONFIG_HPELDSP = yes
 CONFIG_IIRFILTER = yes
 CONFIG_IVIDSP = yes
@@ -8646,10 +8714,11 @@ CONFIG_HUFFYUVENCDSP = yes
 CONFIG_IDCTDSP = yes
 CONFIG_TPELDSP = yes
 CONFIG_HUFFMAN = yes
-CONFIG_IMDCT15 = yes
+CONFIG_MDCT15  = yes
 CONFIG_INTRAX8 = yes
 CONFIG_LLAUDDSP= yes
 CONFIG_LLVIDDSP= yes
+CONFIG_LLVIDENCDSP = yes
 CONFIG_LPC     = yes
 CONFIG_LSP     = yes
 CONFIG_LZF = yes
@@ -8658,6 +8727,7 @@ CONFIG_MDCT    = yes
 CONFIG_ME_CMP  = yes
 CONFIG_MPEG_ER = yes
 CONFIG_MPEGAUDIODSP = yes
+CONFIG_MPEGAUDIOHEADER = yes
 CONFIG_MPEGVIDEO    = yes
 CONFIG_MPEGVIDEOENC = yes
 CONFIG_MSS34DSP = yes
@@ -8672,6 +8742,7 @@ CONFIG_SINEWIN = yes
 CONFIG_SNAPPY = yes
 CONFIG_STARTCODE = yes
 CONFIG_TEXTUREDSP = yes
+CONFIG_VC1DSP = yes
 CONFIG_VIDEODSP = yes
 CONFIG_VP3DSP  = yes
 CONFIG_VP56DSP = yes
@@ -8689,6 +8760,7 @@ CONFIG_BZLIB    = $bzlib
 CONFIG_CRYSTALHD= $crystalhd
 CONFIG_ENCODERS = yes
 CONFIG_GNUTLS   = $_gnutls
+CONFIG_OPENSSL  = $_openssl
 CONFIG_GPL      = yes
 CONFIG_ICONV    = $_iconv
 CONFIG_MLIB     = $_mlib
@@ -8709,6 +8781,7 @@ HAVE_SHM        = $_shm
 HAVE_W32THREADS = $_w32threads
 HAVE_THREADS    = $_threads
 HAVE_YASM       = $have_yasm
+HAVE_X86ASM     = $have_yasm
 INTRINSICS      = none
 
 CONFIG_LIBXVID = $_xvid_lavc
@@ -8903,7 +8976,7 @@ $def_vfp_args
 $(ff_config_enable "$arch_all" "$arch" "#" "ARCH")
 $(ff_config_enable "$subarch_all" "$subarch" "#" "ARCH")
 $(ff_config_enable "$cpuexts_all" "$cpuexts" "#" "HAVE")
-$(ff_config_enable "$cpuexts_all" "$cpuexts" "#" "HAVE" "_EXTERNAL")
+$(ff_config_enable "$cpuexts_all" "$cpuexts_external" "#" "HAVE" "_EXTERNAL")
 $(ff_config_enable "$cpuexts_all" "$cpuexts" "#" "HAVE" "_INLINE")
 
 
@@ -9146,14 +9219,11 @@ $def_windows_h
 /* external libraries */
 $def_bzlib
 $def_crystalhd
-$def_faac_lavc
-$def_libdirac_lavc
 $def_libgsm
 $def_libopencore_amrnb
 $def_libopencore_amrwb
 $def_libopenjpeg
 $def_librtmp
-$def_libschroedinger_lavc
 $def_mp3lame_lavc
 $def_x264_lavc
 $def_xvid_lavc
@@ -9163,9 +9233,7 @@ $def_fast_64bit
 $def_fast_unaligned
 $def_gnu_as
 $def_ibm_asm
-$def_local_aligned_8
-$def_local_aligned_16
-$def_local_aligned_32
+$def_local_aligned
 $def_os2threads
 $def_pic
 $def_pthreads
@@ -9234,12 +9302,13 @@ $def_erf
 #define CONFIG_FFSERVER 0
 #define CONFIG_FTRAPV 0
 $def_gnutls
+$def_openssl
 #define CONFIG_GPL 1
 #define CONFIG_GRAY 0
 #define CONFIG_LIBMODPLUG 0
 #define CONFIG_LIBVORBIS 0
+#define CONFIG_LINUX_PERF 0
 #define CONFIG_MEMORY_POISONING 0
-#define CONFIG_OPENSSL 0
 #define CONFIG_POWERPC_PERF 0
 /* For now prefer speed over avoiding potential invalid reads */
 #define CONFIG_SAFE_BITSTREAM_READER 0
@@ -9267,6 +9336,7 @@ $def_gnutls
 #define HAVE_ISATTY 0
 #define HAVE_LDBRX 0
 #define HAVE_LIBC_MSVCRT 0
+#define HAVE_MACH_ABSOLUTE_TIME 0
 #define HAVE_MACH_MACH_TIME_H 0
 #define HAVE_MAPVIEWOFFILE 0
 #define HAVE_MIPSDSP 0
@@ -9277,9 +9347,11 @@ $def_gnutls
 #define HAVE_RDTSC 0
 #define HAVE_SECTION_DATA_REL_RO 0
 #define HAVE_SIMD_ALIGN_16 1
+$def_simd_align_32
+#define HAVE_SIMD_ALIGN_64 0
 #define HAVE_STRERROR_R 0
 #define HAVE_STRPTIME 0
-#define HAVE_STRUCT_POLLFD 0
+$def_struct_pollfd
 #define HAVE_SYMVER_ASM_LABEL 0
 #define HAVE_SYMVER_GNU_ASM 0
 #define HAVE_SYNC_SYNCHRONIZE 1
@@ -9288,6 +9360,7 @@ $def_gnutls
 
 /* Some FFmpeg codecs depend on these. Enable them unconditionally for now. */
 #define CONFIG_AANDCTTABLES 1
+#define CONFIG_ADTS_HEADER 1
 #define CONFIG_AUDIODSP 1
 #define CONFIG_AUDIO_FRAME_QUEUE 1
 #define CONFIG_BLOCKDSP 1
@@ -9311,6 +9384,7 @@ $def_gnutls
 #define CONFIG_H264DSP 1
 #define CONFIG_H264PRED 1
 #define CONFIG_H264QPEL 1
+#define CONFIG_HEVCPARSE 1
 #define CONFIG_HUFFMAN 1
 #define CONFIG_IDCTDSP 1
 #define CONFIG_IVIDSP 1
@@ -9330,6 +9404,7 @@ $def_gnutls
 #define CONFIG_SNAPPY 1
 #define CONFIG_STARTCODE 1
 #define CONFIG_TEXTUREDSP 1
+#define CONFIG_VC1DSP 1
 #define CONFIG_VIDEODSP 1
 #define CONFIG_VP56DSP 1
 #define CONFIG_VP8DSP 1
@@ -9392,7 +9467,7 @@ echo "%define CONFIG_GPL 1" >> "$TMPS"
 echo "%define HAVE_ALIGNED_STACK 1" >> "$TMPS"
 echo "$(ff_config_enable "$arch_all" "$arch" "%" "ARCH")" >> "$TMPS"
 echo "$(ff_config_enable "$subarch_all" "$subarch" "%" "ARCH")" >> "$TMPS"
-echo "$(ff_config_enable "$cpuexts_all" "$cpuexts" "%" "HAVE" "_EXTERNAL")" >> "$TMPS"
+echo "$(ff_config_enable "$cpuexts_all" "$cpuexts_external" "%" "HAVE" "_EXTERNAL")" >> "$TMPS"
 echo "$(ff_config_enable "$cpuexts_all" "$cpuexts" "%" "HAVE" "_INLINE")" >> "$TMPS"
 echo "$(ff_config_enable "$yasm_features_all" "$yasm_features" "%" "HAVE")" >> "$TMPS"
 echo "$(ff_config_enable "$libavdecoders_all"  "$libavdecoders" "%" "CONFIG")" >> "$TMPS"
@@ -9403,17 +9478,64 @@ fi
 
 
 # Create a config.mak for FFmpeg that includes MPlayer's config.mak.
-cat > ffmpeg/config.mak << EOF
+cat > ffmpeg/ffbuild/config.mak << EOF
 ifndef FFMPEG_CONFIG_MAK
 FFMPEG_CONFIG_MAK = 1
 include ../config.mak
 endif # FFMPEG_CONFIG_MAK
 EOF
 
+# TODO: temporary support for older ffmpeg
+cp ffmpeg/ffbuild/config.mak ffmpeg/config.mak
+
 cat > ffmpeg/config.h << EOF
 #include "../config.h"
 EOF
 touch ffmpeg/.config
+
+# generate the lists of enabled components for ffmpeg
+print_enabled_components(){
+    file=$1
+    struct_name=$2
+    name=$3
+    shift 3
+    list=$(echo $* | tolower)
+    echo "static const $struct_name *$name[] = {" > $TMPH
+    for c in $list; do
+        printf "    &ff_%s,\n" $c >> $TMPH
+    done
+    echo "    NULL };" >> $TMPH
+    cmp -s $TMPH ffmpeg/$file && return
+    cp $TMPH ffmpeg/$file
+}
+
+print_enabled_filters(){
+    file=$1
+    struct_name=$2
+    name=$3
+    shift 3
+    list=$(echo $* | tolower)
+    echo "static const $struct_name *$name[] = {" > $TMPH
+    for c in $list; do
+        printf "    &ff_%s,\n" $(echo $c | rev | cut -d _ -f 2- | rev) >> $TMPH
+    done
+    for c in asrc_abuffer vsrc_buffer asink_abuffer vsink_buffer; do
+        printf "    &ff_%s,\n" $c >> $TMPH
+    done
+    echo "    NULL };" >> $TMPH
+    cmp -s $TMPH ffmpeg/$file && return
+    cp $TMPH ffmpeg/$file
+}
+
+print_enabled_components libavcodec/codec_list.c AVCodec codec_list $libavdecoders $libavencoders
+print_enabled_components libavcodec/parser_list.c AVCodecParser parser_list $libavparsers
+print_enabled_components libavcodec/bsf_list.c AVBitStreamFilter bitstream_filters $libavbsfs
+print_enabled_components libavdevice/indev_list.c AVInputFormat indev_list ""
+print_enabled_components libavdevice/outdev_list.c AVOutputFormat outdev_list ""
+print_enabled_components libavformat/demuxer_list.c AVInputFormat demuxer_list $libavdemuxers
+print_enabled_components libavformat/muxer_list.c AVOutputFormat muxer_list $libavmuxers
+print_enabled_components libavformat/protocol_list.c URLProtocol url_protocols $libavprotocols
+print_enabled_filters libavfilter/filter_list.c AVFilter filter_list $libavfilters
 
 fi
 

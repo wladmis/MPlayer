@@ -224,10 +224,10 @@ static int modplug_read_header(AVFormatContext *s)
         return AVERROR(ENOMEM);
     avpriv_set_pts_info(st, 64, 1, 1000);
     st->duration = ModPlug_GetLength(modplug->f);
-    st->codec->codec_type  = AVMEDIA_TYPE_AUDIO;
-    st->codec->codec_id    = AV_CODEC_ID_PCM_S16LE;
-    st->codec->channels    = settings.mChannels;
-    st->codec->sample_rate = settings.mFrequency;
+    st->codecpar->codec_type  = AVMEDIA_TYPE_AUDIO;
+    st->codecpar->codec_id    = AV_CODEC_ID_PCM_S16LE;
+    st->codecpar->channels    = settings.mChannels;
+    st->codecpar->sample_rate = settings.mFrequency;
 
     // timebase = 1/1000, 2ch 16bits 44.1kHz-> 2*2*44100
     modplug->ts_per_packet = 1000*AUDIO_PKT_SIZE / (4*44100.);
@@ -238,10 +238,10 @@ static int modplug_read_header(AVFormatContext *s)
             return AVERROR(ENOMEM);
         avpriv_set_pts_info(vst, 64, 1, 1000);
         vst->duration = st->duration;
-        vst->codec->codec_type = AVMEDIA_TYPE_VIDEO;
-        vst->codec->codec_id   = AV_CODEC_ID_XBIN;
-        vst->codec->width      = modplug->w << 3;
-        vst->codec->height     = modplug->h << 3;
+        vst->codecpar->codec_type = AVMEDIA_TYPE_VIDEO;
+        vst->codecpar->codec_id   = AV_CODEC_ID_XBIN;
+        vst->codecpar->width      = modplug->w << 3;
+        vst->codecpar->height     = modplug->h << 3;
         modplug->linesize = modplug->w * 3;
         modplug->fsize    = modplug->linesize * modplug->h;
     }
@@ -350,7 +350,7 @@ static int modplug_read_seek(AVFormatContext *s, int stream_idx, int64_t ts, int
 
 static const char modplug_extensions[] = "669,abc,amf,ams,dbm,dmf,dsm,far,it,mdl,med,mid,mod,mt2,mtm,okt,psm,ptm,s3m,stm,ult,umx,xm,itgz,itr,itz,mdgz,mdr,mdz,s3gz,s3r,s3z,xmgz,xmr,xmz";
 
-static int modplug_probe(AVProbeData *p)
+static int modplug_probe(const AVProbeData *p)
 {
     if (av_match_ext(p->filename, modplug_extensions)) {
         if (p->buf_size < 16384)

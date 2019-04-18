@@ -200,7 +200,7 @@ static const vf_info_t* const filter_list[]={
     &vf_info_uspp,
     &vf_info_fspp,
     &vf_info_qp,
-    &vf_info_mcdeint,
+//    &vf_info_mcdeint, //TODO: vf_mcdeint is deactivated because it doesn't build after latest FFmpeg major bumps
 #endif
     &vf_info_yuvcsp,
     &vf_info_kerndeint,
@@ -372,6 +372,9 @@ mp_image_t* vf_get_image(vf_instance_t* vf, unsigned int outfmt, int mp_imgtype,
                 av_freep(&mpi->planes[0]);
                 if (mpi->flags & MP_IMGFLAG_RGB_PALETTE)
                     av_freep(&mpi->planes[1]);
+                mpi->planes[1] = NULL;
+                mpi->planes[2] = NULL;
+                mpi->planes[3] = NULL;
                 mpi->flags&=~MP_IMGFLAG_ALLOCATED;
                 mpi->bpp = 0;
                 mp_msg(MSGT_VFILTER,MSGL_V,"vf.c: have to REALLOCATE buffer memory in vf_%s :(\n",
@@ -713,14 +716,14 @@ int vf_next_query_format(struct vf_instance *vf, unsigned int fmt){
     return flags;
 }
 
-int vf_next_put_image(struct vf_instance *vf,mp_image_t *mpi, double pts){
+int vf_next_put_image(struct vf_instance *vf,mp_image_t *mpi, double pts, double endpts){
     mpi->usage_count--;
     if (mpi->usage_count < 0) {
         mp_msg(MSGT_VFILTER, MSGL_V, "Bad mp_image usage count %i in vf_%s (type %i)\n",
                mpi->usage_count, vf->info->name, mpi->type);
         mpi->usage_count = 0;
     }
-    return vf->next->put_image(vf->next,mpi, pts);
+    return vf->next->put_image(vf->next,mpi, pts, endpts);
 }
 
 void vf_next_draw_slice(struct vf_instance *vf,unsigned char** src, int * stride,int w, int h, int x, int y){

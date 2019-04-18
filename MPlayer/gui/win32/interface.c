@@ -82,7 +82,7 @@
 int guiWinID = 0;
 
 char *skinName = NULL;
-char *codecname = NULL;
+const char *codecname = NULL;
 static gui_t *mygui = NULL;
 static int update_videowindow(void);
 static RECT old_rect;
@@ -101,11 +101,13 @@ mixer_t *mixer = NULL;
  *
  * @return converted file path string
  */
-static char *unix_name (char *win_filename)
+char *unix_name (const char *win_filename)
 {
     static char *unix_filename;
     LPSTR (*CDECL wine_get_unix_file_name_ptr)(LPCWSTR);
     int wchar_conv;
+
+    setdup(&unix_filename, win_filename);
 
     if (*win_filename && (win_filename[1] == ':'))
     {
@@ -121,15 +123,15 @@ static char *unix_name (char *win_filename)
             MultiByteToWideChar(CP_UNIXCP, 0, win_filename, -1, ntpath, wchar_conv);
             unix_name = wine_get_unix_file_name_ptr(ntpath);
             setdup(&unix_filename, unix_name);
-            win_filename = unix_filename;
             HeapFree(GetProcessHeap(), 0, unix_name);
             HeapFree(GetProcessHeap(), 0, ntpath);
         }
     }
 
-    return win_filename;
+    return unix_filename;
 }
 
+#if defined(CONFIG_CDDA) || defined(CONFIG_DVDREAD)
 /**
  * @brief Convert a Windows style device name into an Unix style one.
  *
@@ -174,6 +176,7 @@ static char *unix_device (char *device)
 
     return device;
 }
+#endif
 #endif
 
 /* test for playlist files, no need to specify -playlist on the commandline.
@@ -348,7 +351,7 @@ static void guiSetEvent(int event)
         {
             mp_cmd_t * cmd = calloc(1, sizeof(*cmd));
             cmd->id=MP_CMD_MUTE;
-            cmd->name=strdup("mute");
+            ARRAY_STRCPY(cmd->name, "mute");
             mp_input_queue_cmd(cmd);
             break;
         }
@@ -405,7 +408,7 @@ void uiPause( void )
    {
        mp_cmd_t * cmd = calloc(1, sizeof(*cmd));
        cmd->id=MP_CMD_PAUSE;
-       cmd->name=strdup("pause");
+       ARRAY_STRCPY(cmd->name, "pause");
        mp_input_queue_cmd(cmd);
    } else guiInfo.Playing = GUI_PLAY;
 }
@@ -640,8 +643,11 @@ int gui(int what, void *data)
                 guiInfo.AudioChannels = 0;
                 guiInfo.AudioPassthrough = FALSE;
             }
-            guiSetEvent(evSetVolume);
-            guiSetEvent(evSetBalance);
+            if (guiInfo.Volume >= 0.0f) /* otherwise skin demands usage of current volume */
+            {
+                guiSetEvent(evSetVolume);
+                guiSetEvent(evSetBalance);
+            }
             if(IsWindowVisible(mygui->videowindow) && !guiInfo.VideoWindow)
                 ShowWindow(mygui->videowindow, SW_HIDE);
             break;
@@ -654,7 +660,7 @@ int gui(int what, void *data)
             guiInfo.sh_video = data;
             if (guiInfo.sh_video)
             {
-                codecname = guiInfo.sh_video->codec->name;
+                codecname = codec_idx2str(guiInfo.sh_video->codec->name_idx);
 
                 /* we have video, show the video window */
                 if(!IsWindowVisible(mygui->videowindow) || IsIconic(mygui->videowindow))
@@ -966,7 +972,7 @@ static int update_videowindow(void)
         unsigned int i;
 
         for (i=0; i<mygui->skin->windowcount; i++)
-            if(mygui->skin->windows[i]->type == wiVideo)
+            if(mygui->skin->windows[i]->type == wVideo)
                 desc = mygui->skin->windows[i];
 
         rd.right = rd.left+desc->base->bitmap[0]->width;

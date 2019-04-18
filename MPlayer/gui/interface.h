@@ -140,6 +140,8 @@ typedef struct {
     float Volume;
     float Balance;
 
+    float LastVolume;
+    float ReplayGainVolume;
     int MediumChanged;        // public, read access by MPlayer
     int PlaylistNext;
 
@@ -148,6 +150,8 @@ typedef struct {
 } guiInterface_t;
 
 extern guiInterface_t guiInfo;
+
+void reset_stream_ids(void);
 
 /// @name MPlayer -> GUI
 //@{

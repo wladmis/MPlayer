@@ -1,5 +1,5 @@
-.\" sync with en/mplayer.1 rev. 37436
-.\" MPlayer (C) 2000-2016 MPlayer Team
+.\" sync with en/mplayer.1 rev. 37846
+.\" MPlayer (C) 2000-2019 MPlayer Team
 .\" This man page was/is translated by JRaSH<jrash06 at gmail.com>
 .
 .\" --------------------------------------------------------------------------
@@ -1848,7 +1848,9 @@ MPlayer 并不防止加载产生自不同 AVI 文件的索引，\
 特别是强制使用非交错格式的 AVI 解析器（可使某些损坏的 AVI 文件\
 重新可以播放）。\
 也可能有助于播放一些默认方式下交替而非同时播放音频和\
-视频的文件。
+视频的文件。\
+该选项可能急剧增加内存使用量，所以最好还是修复相关文件的\
+流交错合并格式。
 .
 .TP
 .B \-nobps（仅用于 AVI）
@@ -1912,7 +1914,7 @@ Hauppauge WinTV PVR\-150/250/350/500 和所有基于 IVTV 的卡\
 .IPs arate=<32000\-48000>
 指定编码音频的码率（默认值：48000 Hz，可用值：32000、\
 44100 和 48000 Hz)。
-.IPs alayer=<1\-3>
+.IPs alayer=<1\-5>
 指定 MPEG 音频编码层级（默认值：2）。
 .IPs abitrate=<32\-448>
 指定音频编码比特率（以 kbps 为单位）（默认值：384）。
@@ -2613,7 +2615,8 @@ SSA/ASS 渲染器能在那里放置字幕（与 \-ass\-use\-margins 组合使用
 .
 .TP
 .B \-noautosub
-关闭自动载入字幕文件的行为。
+关闭自动载入字幕文件的行为。\
+注意：VOBsub 字幕不受影响。
 .
 .TP
 .B \-osd\-duration <时间>
@@ -2765,7 +2768,7 @@ DVD/\:VOBsub 的抗锯齿/\:缩放模式。\
 .
 .TP
 .B \-sub\-fuzziness <模式>
-调整搜索字幕时模糊匹配的程度：
+调整搜索字幕时模糊匹配的程度（不适用于 VOBsub）：
 .PD 0
 .RSs
 .IPs 0
@@ -2829,6 +2832,7 @@ DVD/\:VOBsub 的抗锯齿/\:缩放模式。\
 编码页。\
 如果不确定用哪个参数，可随便输入点什么，然后\
 查看 mplayer \-v 输出的可用语言。\
+如果不支持你的语言，可使用 __（两个下划线）。\
 备用编码页指定自动检测失败时使用的编码页。
 .sp 1
 .I 示例：
@@ -2839,6 +2843,8 @@ DVD/\:VOBsub 的抗锯齿/\:缩放模式。\
 使用 latin 2 作为备用。
 .IPs "\-subcp enca:pl:cp1250"
 猜测波兰语的编码方式，cp1250 作为备用方式。
+.IPs "\-subcp enca:__:latin1"
+使用通用语言检测（大部分为 unicode），以 latin1 为备用方式。
 .RE
 .PD 1
 .
@@ -12425,7 +12431,7 @@ rar p test-SVCD.rar | mencoder \-ovc lavc \-lavcopts vcodec=mpeg4:vbitrate=800 \
 MPlayer 最初由 Arpad Gereoffy 制作。\
 参见 AUTHORS 文件以查看其它众多贡献者的部分列表。
 .PP
-MPlayer 为 (C) 2000\-2016 MPlayer 团队所有
+MPlayer 为 (C) 2000\-2019 MPlayer 团队所有
 .PP
 本（英文）手册主要由 Gabucino、Jonas Jermann 和 Diego Biurrun 编写，\
 由 Diego Biurrun 维护。中文版由 JRaSH <jrash06 AT 163.com> 翻译。\

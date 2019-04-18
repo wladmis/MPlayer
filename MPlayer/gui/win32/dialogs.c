@@ -47,40 +47,29 @@ int addurl = FALSE;
 
 void mplayerLoadSubtitle(const char *name)
 {
-    if (!guiInfo.Playing) return;
-
     if (subdata)
     {
         mp_msg(MSGT_GPLAYER, MSGL_INFO, MSGTR_GUI_MSG_RemovingSubtitle);
         sub_free(subdata);
         subdata = NULL;
-        vo_sub = NULL;
-        if (vo_osd_list)
-        {
-            int len;
-            mp_osd_obj_t *osd = vo_osd_list;
-            while (osd)
-            {
-                if (osd->type == OSDTYPE_SUBTITLE) break;
-                osd = osd->next;
-            }
-            if (osd && osd->flags & OSDFLAG_VISIBLE)
-            {
-                len = osd->stride * (osd->bbox.y2 - osd->bbox.y1);
-                memset(osd->bitmap_buffer, 0, len);
-                memset(osd->alpha_buffer, 0, len);
-            }
-        }
     }
 
     if (name)
     {
+#ifdef __WINE__
+        // When the GUI receives the subtitle file name from the open dialog
+        // box it's in Windows style (C:\path\to\file), which needs to be
+        // converted for MPlayer, so that it will find the filename in the
+        // Linux filesystem.
+        name = unix_name(name);
+#endif
         mp_msg(MSGT_GPLAYER, MSGL_INFO, MSGTR_GUI_MSG_LoadingSubtitle, name);
-        subdata = sub_read_file(strdup(name), (guiInfo.sh_video ? guiInfo.sh_video->fps : 0));
-        if (!subdata) mp_msg(MSGT_GPLAYER, MSGL_ERR, MSGTR_CantLoadSub,name);
-        sub_name = (malloc(2 * sizeof(char*))); /* when mplayer will be restarted */
-        sub_name[0] = strdup(name);               /* sub_name[0] will be read */
-        sub_name[1] = NULL;
+        subdata = sub_read_file(name, (guiInfo.sh_video ? guiInfo.sh_video->fps : 25));
+        if (!subdata)
+        {
+            mp_msg(MSGT_GPLAYER, MSGL_ERR, MSGTR_CantLoadSub,name);
+            return;
+        }
     }
     update_set_of_subtitles();
 }
@@ -160,7 +149,7 @@ void display_opensubtitlewindow(gui_t *gui)
     char subtitlefile[MAX_PATH];
 
     /* Safety check */
-    if (guiInfo.Playing == GUI_STOP || !guiInfo.sh_video) return;
+    if (guiInfo.Playing) return;
 
     memset(&subtitleopen, 0, sizeof(OPENFILENAME));
     memset(subtitlefile, 0, sizeof(subtitlefile));

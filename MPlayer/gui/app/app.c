@@ -135,7 +135,7 @@ void appFreeStruct(void)
     guiApp.IndexOfPlaybarItems = -1;
     guiApp.IndexOfMenuItems    = -1;
 
-    fntFreeFont();
+    fntFreeFonts();
 }
 
 /**
@@ -150,7 +150,7 @@ int appFindMessage(const char *name)
     unsigned int i;
 
     for (i = 0; i < FF_ARRAY_ELEMS(evNames); i++)
-        if (!strcmp(evNames[i].name, name))
+        if (strcmp(evNames[i].name, name) == 0)
             return evNames[i].message;
 
     return -1;

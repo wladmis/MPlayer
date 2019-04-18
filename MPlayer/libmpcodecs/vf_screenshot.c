@@ -81,6 +81,8 @@ static int config(struct vf_instance *vf,
         vf->priv->avctx->pix_fmt = AV_PIX_FMT_RGB24;
         vf->priv->avctx->width = d_width;
         vf->priv->avctx->height = d_height;
+        vf->priv->avctx->time_base.num = 1;
+        vf->priv->avctx->time_base.den = 1;
         vf->priv->avctx->compression_level = 0;
         if (avcodec_open2(vf->priv->avctx, avcodec_find_encoder(AV_CODEC_ID_PNG), NULL)) {
             mp_msg(MSGT_VFILTER, MSGL_FATAL, "Could not open libavcodec PNG encoder\n");
@@ -192,7 +194,7 @@ static void get_image(struct vf_instance *vf, mp_image_t *mpi)
     mpi->priv=vf->dmpi;
 }
 
-static int put_image(struct vf_instance *vf, mp_image_t *mpi, double pts)
+static int put_image(struct vf_instance *vf, mp_image_t *mpi, double pts, double endpts)
 {
     mp_image_t *dmpi = (mp_image_t *)mpi->priv;
 
@@ -222,7 +224,7 @@ static int put_image(struct vf_instance *vf, mp_image_t *mpi, double pts)
         vf->priv->store_slices = 0;
     }
 
-    return vf_next_put_image(vf, dmpi, pts);
+    return vf_next_put_image(vf, dmpi, pts, endpts);
 }
 
 static int control (vf_instance_t *vf, int request, void *data)

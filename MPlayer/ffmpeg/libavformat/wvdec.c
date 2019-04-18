@@ -40,6 +40,7 @@ enum WV_FLAGS {
     WV_HBAL   = 0x0400,
     WV_MCINIT = 0x0800,
     WV_MCEND  = 0x1000,
+    WV_DSD    = 0x80000000,
 };
 
 static const int wv_rates[16] = {
@@ -59,7 +60,7 @@ typedef struct WVContext {
     int64_t apetag_start;
 } WVContext;
 
-static int wv_probe(AVProbeData *p)
+static int wv_probe(const AVProbeData *p)
 {
     /* check file header */
     if (p->buf_size <= 32)
@@ -97,8 +98,14 @@ static int wv_read_block_header(AVFormatContext *ctx, AVIOContext *pb)
         return ret;
     }
 
+    if (wc->header.flags & WV_DSD) {
+        avpriv_report_missing_feature(ctx, "WV DSD");
+        return AVERROR_PATCHWELCOME;
+    }
+
     if (wc->header.version < 0x402 || wc->header.version > 0x410) {
-        av_log(ctx, AV_LOG_ERROR, "Unsupported version %03X\n", wc->header.version);
+        avpriv_report_missing_feature(ctx, "WV version 0x%03X",
+                                      wc->header.version);
         return AVERROR_PATCHWELCOME;
     }
 
@@ -119,7 +126,7 @@ static int wv_read_block_header(AVFormatContext *ctx, AVIOContext *pb)
     }
     if ((rate == -1 || !chan) && !wc->block_parsed) {
         int64_t block_end = avio_tell(pb) + wc->header.blocksize;
-        if (!pb->seekable) {
+        if (!(pb->seekable & AVIO_SEEKABLE_NORMAL)) {
             av_log(ctx, AV_LOG_ERROR,
                    "Cannot determine additional parameters\n");
             return AVERROR_INVALIDDATA;
@@ -152,10 +159,17 @@ static int wv_read_block_header(AVFormatContext *ctx, AVIOContext *pb)
                 case 3:
                     chmask = avio_rl32(pb);
                     break;
+                case 4:
+                    avio_skip(pb, 1);
+                    chan  |= (avio_r8(pb) & 0xF) << 8;
+                    chan  += 1;
+                    chmask = avio_rl24(pb);
+                    break;
                 case 5:
                     avio_skip(pb, 1);
                     chan  |= (avio_r8(pb) & 0xF) << 8;
-                    chmask = avio_rl24(pb);
+                    chan  += 1;
+                    chmask = avio_rl32(pb);
                     break;
                 default:
                     av_log(ctx, AV_LOG_ERROR,
@@ -230,18 +244,18 @@ static int wv_read_header(AVFormatContext *s)
     st = avformat_new_stream(s, NULL);
     if (!st)
         return AVERROR(ENOMEM);
-    st->codec->codec_type            = AVMEDIA_TYPE_AUDIO;
-    st->codec->codec_id              = AV_CODEC_ID_WAVPACK;
-    st->codec->channels              = wc->chan;
-    st->codec->channel_layout        = wc->chmask;
-    st->codec->sample_rate           = wc->rate;
-    st->codec->bits_per_coded_sample = wc->bpp;
+    st->codecpar->codec_type            = AVMEDIA_TYPE_AUDIO;
+    st->codecpar->codec_id              = AV_CODEC_ID_WAVPACK;
+    st->codecpar->channels              = wc->chan;
+    st->codecpar->channel_layout        = wc->chmask;
+    st->codecpar->sample_rate           = wc->rate;
+    st->codecpar->bits_per_coded_sample = wc->bpp;
     avpriv_set_pts_info(st, 64, 1, wc->rate);
     st->start_time = 0;
     if (wc->header.total_samples != 0xFFFFFFFFu)
         st->duration = wc->header.total_samples;
 
-    if (s->pb->seekable) {
+    if (s->pb->seekable & AVIO_SEEKABLE_NORMAL) {
         int64_t cur = avio_tell(s->pb);
         wc->apetag_start = ff_ape_parse_tag(s);
         if (!av_dict_get(s->metadata, "", NULL, AV_DICT_IGNORE_SUFFIX))

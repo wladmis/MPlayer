@@ -36,6 +36,8 @@
 #include "libavutil/intreadwrite.h"
 #include "libvo/fastmemcpy.h"
 
+static uint32_t palette[256];
+
 /**
  * @brief Check whether a (PNG) file exists.
  *
@@ -67,12 +69,13 @@ static const char *fExist(const char *fname)
  *
  * @param fname filename (with path)
  * @param img memory location to store the image data
+ * @param pix_fmt pointer to the location to store the pixel format
  *
  * @return 0 (ok), 1 (decoding error), 2 (file open error), 3 (file too big),
  *                 4 (out of memory), 5 (read error), 6 (avcodec alloc error),
  *                 7 (avcodec open error)
  */
-static int pngRead(const char *fname, guiImage *img)
+static int pngRead(const char *fname, guiImage *img, int *pix_fmt)
 {
     FILE *file;
     size_t len, l;
@@ -95,7 +98,7 @@ static int pngRead(const char *fname, guiImage *img)
         return 3;
     }
 
-    data = av_malloc(len + FF_INPUT_BUFFER_PADDING_SIZE);
+    data = av_malloc(len + AV_INPUT_BUFFER_PADDING_SIZE);
 
     if (!data) {
         fclose(file);
@@ -139,14 +142,13 @@ static int pngRead(const char *fname, guiImage *img)
     avcodec_decode_video2(avctx, frame, &decode_ok, &pkt);
 
     memset(img, 0, sizeof(*img));
+    memset(palette, 0, sizeof(palette));
 
-    switch (avctx->pix_fmt) {
-    case AV_PIX_FMT_GRAY8:
+    *pix_fmt = avctx->pix_fmt;
+
+    switch (*pix_fmt) {
+    case AV_PIX_FMT_PAL8:
         img->Bpp = 8;
-        break;
-
-    case AV_PIX_FMT_GRAY16BE:
-        img->Bpp = 16;
         break;
 
     case AV_PIX_FMT_RGB24:
@@ -159,6 +161,7 @@ static int pngRead(const char *fname, guiImage *img)
 
     default:
         img->Bpp = 0;
+        mp_msg(MSGT_GPLAYER, MSGL_DBG2, "[bitmap] unsupported pixel format: %d\n", *pix_fmt);
         break;
     }
 
@@ -174,9 +177,12 @@ static int pngRead(const char *fname, guiImage *img)
 
         img->Image = malloc(img->ImageSize);
 
-        if (img->Image)
+        if (img->Image) {
             memcpy_pic(img->Image, frame->data[0], bpl, img->Height, bpl, frame->linesize[0]);
-        else
+
+            if (frame->data[1])
+                memcpy(palette, frame->data[1], sizeof(palette));
+        } else
             decode_ok = False;
     }
 
@@ -198,12 +204,14 @@ static int pngRead(const char *fname, guiImage *img)
  * @note This is an in-place conversion,
  *       new memory will be allocated for @a img if necessary.
  */
-static int convert_ARGB(guiImage *img)
+static int convert_ARGB(guiImage *img, int pix_fmt)
 {
+    unsigned int orgSize;
     unsigned char *orgImage;
     unsigned int i, c;
 
-    if (img->Bpp == 24) {
+    if (pix_fmt == AV_PIX_FMT_PAL8 || pix_fmt == AV_PIX_FMT_RGB24) {
+        orgSize  = img->ImageSize;
         orgImage = img->Image;
 
         img->Bpp       = 32;
@@ -218,11 +226,16 @@ static int convert_ARGB(guiImage *img)
 
         mp_msg(MSGT_GPLAYER, MSGL_DBG2, "[bitmap] 32 bpp conversion size: %u\n", img->ImageSize);
 
-        for (i = 0, c = 0; i < img->ImageSize; i += 4, c += 3)
-            *(uint32_t *)&img->Image[i] = ALPHA_OPAQUE | AV_RB24(&orgImage[c]);
+        if (pix_fmt == AV_PIX_FMT_PAL8)
+            for (i = 0, c = 0; c < orgSize; i += 4, c++)
+                *(uint32_t *)&img->Image[i] = palette[orgImage[c]];
+
+        if (pix_fmt == AV_PIX_FMT_RGB24)
+            for (i = 0, c = 0; i < img->ImageSize; i += 4, c += 3)
+                *(uint32_t *)&img->Image[i] = ALPHA_OPAQUE | AV_RB24(&orgImage[c]);
 
         free(orgImage);
-    } else if (img->Bpp == 32) {
+    } else if (pix_fmt == AV_PIX_FMT_RGBA) {
         mp_msg(MSGT_GPLAYER, MSGL_DBG2, "[bitmap] 32 bpp ARGB conversion\n");
 
         for (i = 0; i < img->ImageSize; i += 4)
@@ -244,26 +257,24 @@ static int convert_ARGB(guiImage *img)
  */
 int bpRead(const char *fname, guiImage *img)
 {
-    int r;
+    int r, pix_fmt;
 
     fname = fExist(fname);
 
     if (!fname)
         return -2;
 
-    r = pngRead(fname, img);
+    r = pngRead(fname, img, &pix_fmt);
 
     if (r != 0) {
         mp_msg(MSGT_GPLAYER, MSGL_DBG2, "[bitmap] read error #%d: %s\n", r, fname);
         return -5;
     }
 
-    if (img->Bpp < 24) {
-        mp_msg(MSGT_GPLAYER, MSGL_DBG2, "[bitmap] bpp too low: %u\n", img->Bpp);
+    if (!img->Bpp)
         return -1;
-    }
 
-    if (!convert_ARGB(img))
+    if (!convert_ARGB(img, pix_fmt))
         return -8;
 
     return 0;

@@ -99,6 +99,10 @@ static const unsigned int outfmt_list[]={
     IMGFMT_420P10_BE,
     IMGFMT_420P9_LE,
     IMGFMT_420P9_BE,
+    IMGFMT_440P12_LE,
+    IMGFMT_440P12_BE,
+    IMGFMT_440P10_LE,
+    IMGFMT_440P10_BE,
     IMGFMT_420A,
     IMGFMT_422A,
     IMGFMT_444A,
@@ -117,6 +121,8 @@ static const unsigned int outfmt_list[]={
     IMGFMT_BGR24,
     IMGFMT_RGB24,
     IMGFMT_GBR24P,
+    IMGFMT_GBR10PLE,
+    IMGFMT_GBR10PBE,
     IMGFMT_GBR12PLE,
     IMGFMT_GBR12PBE,
     IMGFMT_GBR14PLE,
@@ -453,7 +459,7 @@ static void draw_slice(struct vf_instance *vf,
     scale(vf->priv->ctx, vf->priv->ctx2, src, stride, y, h, dmpi->planes, dmpi->stride, vf->priv->interlaced);
 }
 
-static int put_image(struct vf_instance *vf, mp_image_t *mpi, double pts){
+static int put_image(struct vf_instance *vf, mp_image_t *mpi, double pts, double endpts){
     mp_image_t *dmpi=mpi->priv;
 
 //  printf("vf_scale::put_image(): processing whole frame! dmpi=%p flag=%d\n",
@@ -477,7 +483,7 @@ static int put_image(struct vf_instance *vf, mp_image_t *mpi, double pts){
 
     if(vf->priv->palette) dmpi->planes[1]=vf->priv->palette; // export palette!
 
-    return vf_next_put_image(vf,dmpi, pts);
+    return vf_next_put_image(vf, dmpi, pts, endpts);
 }
 
 static int control(struct vf_instance *vf, int request, void* data){

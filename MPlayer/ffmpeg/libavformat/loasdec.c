@@ -27,7 +27,7 @@
 
 #define LOAS_SYNC_WORD 0x2b7
 
-static int loas_probe(AVProbeData *p)
+static int loas_probe(const AVProbeData *p)
 {
     int max_frames = 0, first_frames = 0;
     int fsize, frames;
@@ -73,8 +73,8 @@ static int loas_read_header(AVFormatContext *s)
     if (!st)
         return AVERROR(ENOMEM);
 
-    st->codec->codec_type = AVMEDIA_TYPE_AUDIO;
-    st->codec->codec_id = s->iformat->raw_codec_id;
+    st->codecpar->codec_type = AVMEDIA_TYPE_AUDIO;
+    st->codecpar->codec_id = s->iformat->raw_codec_id;
     st->need_parsing = AVSTREAM_PARSE_FULL_RAW;
 
     //LCM of all possible AAC sample rates

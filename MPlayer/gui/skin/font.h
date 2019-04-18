@@ -22,10 +22,6 @@
 #include "gui/app/app.h"
 #include "gui/util/bitmap.h"
 
-#define ASCII_CHRS 128   // number of ASCII characters
-#define EXTRA_CHRS 128   // (arbitrary) number of non-ASCII characters
-#define UTF8LENGTH 4     // length of an UTF-8 encoding according to RFC 3629
-
 #define MAX_FONT_NAME 128
 
 typedef struct {
@@ -34,14 +30,17 @@ typedef struct {
 } fntChar;
 
 typedef struct {
-    fntChar Fnt[ASCII_CHRS + EXTRA_CHRS];
-    unsigned char nonASCIIidx[EXTRA_CHRS][UTF8LENGTH];
+    int chrs;
+    fntChar *Chr;
+    int extra_chrs;
+    unsigned char *bit8_chr;
+    int bit8_count;
     guiImage Bitmap;
     char name[MAX_FONT_NAME];
 } bmpFont;
 
 int fntFindID(char *name);
-void fntFreeFont(void);
+void fntFreeFonts(void);
 int fntRead(char *path, char *fname);
 guiImage *fntTextRender(guiItem *item, int px, char *txt);
 int fntTextWidth(int id, char *str);

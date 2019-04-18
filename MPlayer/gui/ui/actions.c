@@ -134,6 +134,8 @@ void uiEvent(int ev, float param)
         guiInfo.Track = iparam;
 
     case evPlayCD:
+        if (guiInfo.StreamType != STREAMTYPE_CDDA)
+            guiInfo.Track = 0;
         guiInfo.StreamType = STREAMTYPE_CDDA;
         goto play;
 #endif
@@ -142,6 +144,8 @@ void uiEvent(int ev, float param)
         guiInfo.Track = iparam;
 
     case evPlayVCD:
+        if (guiInfo.StreamType != STREAMTYPE_VCD)
+            guiInfo.Track = 0;
         guiInfo.StreamType = STREAMTYPE_VCD;
         goto play;
 #endif
@@ -165,12 +169,16 @@ void uiEvent(int ev, float param)
         guiInfo.Track   = iparam;
         guiInfo.Chapter = 1;
         guiInfo.Angle   = 1;
+        reset_stream_ids();
         uiEvent(ivPlayDVD, 0);
         break;
 
     case evPlayDVD:
         guiInfo.Chapter = 1;
         guiInfo.Angle   = 1;
+        reset_stream_ids();
+        if (guiInfo.StreamType != STREAMTYPE_DVD)
+            guiInfo.Track = 0;
 
     case ivPlayDVD:
         guiInfo.StreamType = STREAMTYPE_DVD;
@@ -243,7 +251,6 @@ play:
         break;
 
     case evDropSubtitle:
-        nfree(guiInfo.SubtitleFilename);
         mplayerLoadSubtitle(NULL);
         break;
 
@@ -369,17 +376,17 @@ play:
          * gtkShow( ivHidePopUpMenu,NULL );            with this menu from skin as
          * uiMenuShow( 0,0 );                          they do with normal menus.
          * }
-         * else*/gtkShow(ivShowPopUpMenu, NULL);
+         * else*/gtkShow(ivShowPopUpMenu, (void *)wMain);
         break;
 
     case evIconify:
 
         switch (iparam) {
-        case 0:
+        case wMain:
             wsWindowIconify(&guiApp.mainWindow);
             break;
 
-        case 1:
+        case wVideo:
             wsWindowIconify(&guiApp.videoWindow);
             break;
         }
@@ -577,8 +584,8 @@ void uiPause(void)
         mp_cmd_t *cmd = calloc(1, sizeof(*cmd));
 
         if (cmd) {
-            cmd->id   = MP_CMD_PAUSE;
-            cmd->name = strdup("pause");
+            cmd->id = MP_CMD_PAUSE;
+            ARRAY_STRCPY(cmd->name, "pause");
             mp_input_queue_cmd(cmd);
         }
     } else
@@ -764,7 +771,8 @@ void uiUnsetFile(void)
 /**
  * @brief Unset media information.
  *
- * @param totals whether to additionally unset number of chapters and angles (#True)
+ * @param totals whether to additionally unset number of chapters, angles and
+ *               audio and subtitle filenames (#True)
  *               or just track, chapter and angle (#False)
  */
 void uiUnsetMedia(int totals)
@@ -782,6 +790,9 @@ void uiUnsetMedia(int totals)
 
         if (guiInfo.StreamType != STREAMTYPE_BINCUE)
             guiInfo.Angles = 0;
+
+        nfree(guiInfo.AudioFilename);
+        nfree(guiInfo.SubtitleFilename);
     } else {
         guiInfo.Track   = 0;
         guiInfo.Chapter = 0;
@@ -790,8 +801,6 @@ void uiUnsetMedia(int totals)
 
     nfree(guiInfo.CodecName);
     nfree(guiInfo.Title);
-    nfree(guiInfo.AudioFilename);
-    nfree(guiInfo.SubtitleFilename);
     nfree(guiInfo.ImageFilename);
 }
 
@@ -865,6 +874,7 @@ void uiPrev(void)
 
         if (--guiInfo.Chapter == 0) {
             guiInfo.Chapter = 1;
+            reset_stream_ids();
 
             if (--guiInfo.Track == 0) {
                 guiInfo.Track = 1;
@@ -941,6 +951,7 @@ void uiNext(void)
 
         if (guiInfo.Chapter++ >= guiInfo.Chapters) {
             guiInfo.Chapter = 1;
+            reset_stream_ids();
 
             if (++guiInfo.Track > guiInfo.Tracks) {
                 guiInfo.Track   = guiInfo.Tracks;
@@ -980,4 +991,69 @@ void uiNext(void)
         uiEvent(evPlay, 0);
     else if (!stop && !next && unset)
         uiUnsetMedia(True);
+}
+
+/**
+ * @brief Check whether the end of a cue sheet playlist track has been
+ *        reached and set #guiInfo information for the next track.
+ *
+ * @param set whether to set next track's information or skip setting
+ *            information once
+ *
+ * @note Parameter @a set will be set for next call of the function.
+ *
+ * @return #True (information for next track has been set),
+ *         #False (end not yet reached) or -1 (@a set was #False)
+ */
+int uiCueCheckNext(int *set)
+{
+    plItem *next;
+
+    if (guiInfo.Stop && (guiInfo.ElapsedTime == guiInfo.Stop)) {
+        if (!*set) {
+            *set = True;
+            return -1;
+        }
+
+        next = listMgr(PLAYLIST_ITEM_GET_NEXT, 0);
+
+        if (next) {
+            free(guiInfo.Title);
+            guiInfo.Title = gstrdup(next->title);
+            guiInfo.Track = (uintptr_t)listMgr(PLAYLIST_ITEM_GET_POS, next);
+            guiInfo.Start = next->start;
+            guiInfo.Stop  = next->stop;
+
+            if (guiInfo.ElapsedTime != guiInfo.Start) {
+                guiInfo.PlaylistNext  = False;
+                guiInfo.MediumChanged = GUI_MEDIUM_NEW;
+            }
+
+            *set = False;
+        }
+
+        return True;
+    } else
+        return False;
+}
+
+/**
+ * @brief Set or unset #guiInfo member @ref guiInterface_t.Title "Title"
+ *        depending on whether playback position is within the current
+ *        cue sheet playlist track or not.
+ */
+void uiCueSetTitle(void)
+{
+    if (guiInfo.MediumChanged)
+        return;
+
+    if (guiInfo.Stop) {
+        if (guiInfo.ElapsedTime >= guiInfo.Start && guiInfo.ElapsedTime <= guiInfo.Stop) {
+            plItem *curr = listMgr(PLAYLIST_ITEM_GET_CURR, 0);
+
+            if (curr && !guiInfo.Title)
+                guiInfo.Title = gstrdup(curr->title);
+        } else
+            nfree(guiInfo.Title);
+    }
 }

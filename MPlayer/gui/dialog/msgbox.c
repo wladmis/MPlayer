@@ -22,19 +22,16 @@
 #include "gui/app/gui.h"
 #include "help_mp.h"
 
-#include "pixmaps/error.xpm"
-#include "pixmaps/warning.xpm"
-#include "pixmaps/information.xpm"
-
 #include "dialog.h"
+#include "icons.h"
 #include "msgbox.h"
 #include "tools.h"
 
 GtkWidget * gtkMessageBoxText;
 GtkWidget * MessageBox = NULL;
-GtkWidget * InformationPixmap;
-GtkWidget * WarningPixmap;
-GtkWidget * ErrorPixmap;
+GtkWidget * InformationImage;
+GtkWidget * WarningImage;
+GtkWidget * ErrorImage;
 
 static void on_Ok_released( GtkButton * button,gpointer user_data  )
 {
@@ -51,15 +48,13 @@ static GtkWidget * CreateMessageBox( void )
  GtkWidget * hbuttonbox1;
  GtkWidget * Ok;
  GtkAccelGroup * accel_group;
- GtkStyle * pixmapstyle;
- GdkPixmap * pixmapwid;
- GdkBitmap * mask;
+ GdkPixbuf * pixbuf;
 
  accel_group=gtk_accel_group_new();
 
  MessageBox=gtk_window_new( GTK_WINDOW_TOPLEVEL );
  gtk_widget_set_events( MessageBox,GDK_EXPOSURE_MASK | GDK_KEY_PRESS_MASK | GDK_KEY_RELEASE_MASK | GDK_VISIBILITY_NOTIFY_MASK );
- gtk_window_set_title( GTK_WINDOW( MessageBox ),"MPlayer ..." );
+ gtk_window_set_title( GTK_WINDOW( MessageBox ),"MPlayer " ELLIPSIS );
  gtk_window_set_position( GTK_WINDOW( MessageBox ),GTK_WIN_POS_CENTER );
  gtk_window_set_modal( GTK_WINDOW( MessageBox ),TRUE );
  gtk_window_set_policy( GTK_WINDOW( MessageBox ),FALSE,FALSE,TRUE );
@@ -71,30 +66,30 @@ static GtkWidget * CreateMessageBox( void )
  vbox1=gtkAddVBox( gtkAddDialogFrame( MessageBox ),0 );
  hbox1=gtkAddHBox( vbox1,1 );
 
- pixmapstyle=gtk_widget_get_style( MessageBox );
+ pixbuf = gdk_pixbuf_new_from_inline(-1, information_png, FALSE, NULL);
+ InformationImage = gtk_image_new_from_pixbuf(pixbuf);
+ g_object_unref(pixbuf);
 
- pixmapwid=gdk_pixmap_colormap_create_from_xpm_d( MessageBox->window,gdk_colormap_get_system(),&mask,&pixmapstyle->bg[GTK_STATE_NORMAL],(gchar ** )information_xpm );
- InformationPixmap=gtk_pixmap_new( pixmapwid,mask );
- pixmapwid=gdk_pixmap_colormap_create_from_xpm_d( MessageBox->window,gdk_colormap_get_system(),&mask,&pixmapstyle->bg[GTK_STATE_NORMAL],(gchar ** )warning_xpm );
- WarningPixmap=gtk_pixmap_new( pixmapwid,mask );
- pixmapwid=gdk_pixmap_colormap_create_from_xpm_d( MessageBox->window,gdk_colormap_get_system(),&mask,&pixmapstyle->bg[GTK_STATE_NORMAL],(gchar ** )error_xpm );
- ErrorPixmap=gtk_pixmap_new( pixmapwid,mask );
+ gtk_widget_hide( InformationImage );
+ gtk_box_pack_start( GTK_BOX( hbox1 ),InformationImage,FALSE,FALSE,2 );
 
- gtk_widget_hide( InformationPixmap );
- gtk_box_pack_start( GTK_BOX( hbox1 ),InformationPixmap,FALSE,FALSE,0 );
- gtk_widget_set_usize( InformationPixmap,55,-2 );
+ pixbuf = gdk_pixbuf_new_from_inline(-1, warning_png, FALSE, NULL);
+ WarningImage = gtk_image_new_from_pixbuf(pixbuf);
+ g_object_unref(pixbuf);
 
- gtk_widget_hide( WarningPixmap );
- gtk_box_pack_start( GTK_BOX( hbox1 ),WarningPixmap,FALSE,FALSE,0 );
- gtk_widget_set_usize( WarningPixmap,55,-2 );
+ gtk_widget_hide( WarningImage );
+ gtk_box_pack_start( GTK_BOX( hbox1 ),WarningImage,FALSE,FALSE,2 );
 
- gtk_widget_hide( ErrorPixmap );
- gtk_box_pack_start( GTK_BOX( hbox1 ),ErrorPixmap,FALSE,FALSE,0 );
- gtk_widget_set_usize( ErrorPixmap,55,-2 );
+ pixbuf = gdk_pixbuf_new_from_inline(-1, error_png, FALSE, NULL);
+ ErrorImage = gtk_image_new_from_pixbuf(pixbuf);
+ g_object_unref(pixbuf);
+
+ gtk_widget_hide( ErrorImage );
+ gtk_box_pack_start( GTK_BOX( hbox1 ),ErrorImage,FALSE,FALSE,2 );
 
  gtkMessageBoxText=gtk_label_new( "Text jol. Ha ezt megerted,akkor neked nagyon jo a magyar tudasod,te." );
  gtk_widget_show( gtkMessageBoxText );
- gtk_box_pack_start( GTK_BOX( hbox1 ),gtkMessageBoxText,TRUE,TRUE,0 );
+ gtk_box_pack_start( GTK_BOX( hbox1 ),gtkMessageBoxText,FALSE,FALSE,4 );
 // gtk_label_set_justify( GTK_LABEL( gtkMessageBoxText ),GTK_JUSTIFY_FILL );
  gtk_label_set_justify( GTK_LABEL( gtkMessageBoxText ),GTK_JUSTIFY_CENTER );
  gtk_label_set_line_wrap( GTK_LABEL( gtkMessageBoxText ),FALSE );
@@ -116,7 +111,8 @@ static GtkWidget * CreateMessageBox( void )
 
 void ShowMessageBox( const char * msg )
 {
+ (void) msg;
+
  if ( MessageBox ) gtk_widget_destroy( MessageBox );
  MessageBox=CreateMessageBox();
- if ( strlen( msg ) < 20 ) gtk_widget_set_usize( MessageBox,196,-1 );
 }

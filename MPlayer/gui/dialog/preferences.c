@@ -86,6 +86,7 @@ static GtkWidget * CBAFM;
 static GtkWidget * CBAudioEqualizer;
 //static GtkWidget * CBSurround;
 static GtkWidget * CBExtraStereo;
+static GtkWidget * CBReplayGain;
 static GtkWidget * CBNormalize;
 static GtkWidget * CBSoftwareMixer;
 static GtkWidget * CBDoubleBuffer;
@@ -115,6 +116,7 @@ static GtkWidget * CBStopXScreenSaver;
 static GtkWidget * CBPlayBar;
 static GtkWidget * CBNoIdle;
 static GtkWidget * CBTVDigital;
+static GtkWidget * CBPlaylists;
 
 static GtkWidget * SBCache;
 static GtkAdjustment * SBCacheadj;
@@ -136,6 +138,9 @@ static GtkWidget * HSSubPosition;
 static GtkWidget * HSSubFPS;
 static GtkWidget * HSPPQuality;
 static GtkWidget * HSFPS;
+
+static GtkWidget *RGbox;
+static GtkObject *RGadj;
 
 static GtkAdjustment * HSExtraStereoMuladj, * HSAudioDelayadj, * HSPanscanadj, * HSSubDelayadj;
 static GtkAdjustment * HSSubPositionadj, * HSSubFPSadj, * HSPPQualityadj, * HSFPSadj;
@@ -286,6 +291,8 @@ static void prButton( GtkButton * button, gpointer user_data )
   {
    case bOk:
         /* 1st page */
+        gtkReplayGainOn = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(CBReplayGain));
+        gtkReplayGainAdjustment = GTK_ADJUSTMENT(RGadj)->value;
         gtkEnableAudioEqualizer=gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON( CBAudioEqualizer ) );
         gtkAOExtraStereo=gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON( CBExtraStereo ) );
         gtkAONorm=gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON( CBNormalize ) );
@@ -376,6 +383,7 @@ static void prButton( GtkButton * button, gpointer user_data )
         gtkEnablePlayBar=gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON( CBPlayBar ) );
         gui_tv_digital=gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON( CBTVDigital ) );
         player_idle_mode=!gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON( CBNoIdle ) );
+        allow_playlist_parsing = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(CBPlaylists));
         mplayer( MPLAYER_SET_AUTO_QUALITY,HSPPQualityadj->value,0 );
 
         if ( gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON( CBCache ) ) ) { gtkCacheSize=(int)SBCacheadj->value; gtkCacheOn=True; }
@@ -532,6 +540,9 @@ static void prToggled( GtkToggleButton * togglebutton,gpointer user_data )
          }
         break;
 #endif
+  case 11:
+    gtk_widget_set_sensitive(RGbox, gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(CBReplayGain)));
+    break;
   }
 }
 
@@ -612,6 +623,8 @@ static GtkWidget * CreatePreferences( void )
   GtkWidget * hbox9;
   GtkWidget * hbox91;
   GtkWidget * hbox92;
+  GtkWidget * hbox10;
+  GtkWidget * RGspin;
 
   accel_group=gtk_accel_group_new();
 
@@ -659,6 +672,18 @@ static GtkWidget * CreatePreferences( void )
     gtkAddFrame( NULL,GTK_SHADOW_NONE,
       gtkAddFrame( NULL,GTK_SHADOW_ETCHED_OUT,hbox1,0 ),1 ),0 );
     gtk_widget_set_usize( vbox3,250,-2 );
+
+  hbox10 = gtkAddHBox(vbox3, 1);
+  CBReplayGain = gtkAddCheckButton(MSGTR_GUI_ReplayGain, hbox10);
+  RGbox = gtkAddHBox(hbox10, 1);
+  gtkAddLabel(MSGTR_GUI_ReplayGainAdjustment, RGbox);
+  RGadj = gtk_adjustment_new(gtkReplayGainAdjustment, -30, 10, 1, 5, 0);
+  RGspin = gtk_spin_button_new(GTK_ADJUSTMENT(RGadj), 1, 0);
+  gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(RGspin), TRUE);
+  gtk_box_pack_start(GTK_BOX(RGbox), GTK_WIDGET(RGspin), FALSE, FALSE, 0);
+  gtkAddLabel(MSGTR_GUI_dB, RGbox);
+  gtk_widget_set_sensitive(RGbox, gtkReplayGainOn);
+  gtk_widget_show(RGspin);
 
   CBNormalize=gtkAddCheckButton( MSGTR_GUI_NormalizeSound,vbox3 );
   CBAudioEqualizer=gtkAddCheckButton( MSGTR_GUI_EnableEqualizer,vbox3 );
@@ -1069,6 +1094,7 @@ static GtkWidget * CreatePreferences( void )
   CBStopXScreenSaver=gtkAddCheckButton( MSGTR_GUI_TurnOffXScreenSaver,vbox602 );
   CBPlayBar=gtkAddCheckButton( MSGTR_GUI_EnablePlaybar,vbox602 );
   CBTVDigital=gtkAddCheckButton( MSGTR_GUI_EnableDigitalTV,vbox602 );
+  CBPlaylists = gtkAddCheckButton(MSGTR_GUI_PlaylistSupport, vbox602);
   CBNoIdle=gtkAddCheckButton( MSGTR_GUI_QuitAfterPlaying,vbox602 );
 
   gtkAddHSeparator( vbox602 );
@@ -1182,6 +1208,8 @@ void ShowPreferences( void )
 #if 0
  gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON( CBSurround ),gtkAOSurround );
 #endif
+ gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(CBReplayGain), gtkReplayGainOn);
+ gtk_adjustment_set_value(GTK_ADJUSTMENT(RGadj), gtkReplayGainAdjustment);
  gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON( CBExtraStereo ),gtkAOExtraStereo );
  gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON( CBNormalize ),gtkAONorm );
  gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON( CBSoftwareMixer ),soft_vol );
@@ -1386,6 +1414,7 @@ void ShowPreferences( void )
    gtk_widget_set_sensitive( CBTVDigital,FALSE );
 #endif
  gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON( CBNoIdle ),!player_idle_mode );
+ gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(CBPlaylists), allow_playlist_parsing);
 
  gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON( CBCache ),0 );
  gtk_adjustment_set_value( SBCacheadj,gtkCacheSize );
@@ -1427,6 +1456,7 @@ void ShowPreferences( void )
 #ifdef CONFIG_ASS
  gtk_signal_connect( GTK_OBJECT( CBUseASS ),"toggled",GTK_SIGNAL_FUNC( prToggled ),GINT_TO_POINTER(10));
 #endif
+ gtk_signal_connect(GTK_OBJECT(CBReplayGain), "toggled", GTK_SIGNAL_FUNC(prToggled), GINT_TO_POINTER(11));
 
  gtk_signal_connect( GTK_OBJECT( HSExtraStereoMul ),"motion-notify-event",GTK_SIGNAL_FUNC( prHScaler ),GINT_TO_POINTER(0) );
  gtk_signal_connect( GTK_OBJECT( HSAudioDelay ),"motion-notify-event",GTK_SIGNAL_FUNC( prHScaler ),GINT_TO_POINTER(1) );

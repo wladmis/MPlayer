@@ -16,6 +16,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <limits.h>
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -73,9 +74,11 @@ guiInterface_t guiInfo = {
     .StreamType   = STREAMTYPE_DUMMY,
     .Volume       = 50.0f,
     .Balance      = 50.0f,
+    .LastVolume   = -1.0f,
     .PlaylistNext = True
 };
 
+static int current_volume;
 static int guiInitialized;
 static int orig_fontconfig;
 static struct {
@@ -198,6 +201,17 @@ static void remove_vf(char *vf)
     }
 }
 
+/**
+ * @brief Reset the audio, video and subtitles stream IDs.
+ */
+void reset_stream_ids(void)
+{
+    audio_id  = -1;
+    video_id  = -1;
+    dvdsub_id = -1;
+    vobsub_id = -1;
+}
+
 /* MPlayer -> GUI */
 
 /**
@@ -309,6 +323,12 @@ void guiInit(void)
     btnValue(evSetBalance, &guiInfo.Balance);
     btnValue(evSetMoviePosition, &guiInfo.Position);
 
+    // skin demands usage of current volume
+    if (guiInfo.Volume < 0.0f) {
+        guiInfo.Volume = 0.0f;
+        current_volume = True;
+    }
+
     if (guiInfo.Position)
         uiEvent(evSetMoviePosition, guiInfo.Position);
 
@@ -337,9 +357,6 @@ void guiInit(void)
         guiInfo.Track  = 1;
         filename       = NULL; // don't start playing
     }
-
-    if (subdata)
-        setdup(&guiInfo.SubtitleFilename, subdata->filename);
 
     orig_fontconfig = font_fontconfig;
     set_fontconfig();
@@ -404,11 +421,12 @@ void guiDone(void)
  */
 int gui(int what, void *data)
 {
-    static float last_balance = -1.0f;
+    static float last_balance    = -1.0f;
+    static int last_playlistnext = True;
 #ifdef CONFIG_DVDREAD
     dvd_priv_t *dvd;
 #endif
-    int idata = (intptr_t)data, msg, state;
+    int idata = (intptr_t)data, msg, state, replay_gain;
     stream_t *stream = NULL;
     sh_audio_t *sh_audio;
     mixer_t *mixer;
@@ -446,8 +464,8 @@ int gui(int what, void *data)
         wsMouseAutohide();
         gtkEvents();
 
-        if (guiInfo.Stop && (guiInfo.ElapsedTime >= guiInfo.Stop))
-            guiInfo.MediumChanged = GUI_MEDIUM_NEW;
+        if (uiCueCheckNext(&last_playlistnext) == False)
+            uiCueSetTitle();
 
         break;
 
@@ -497,11 +515,7 @@ int gui(int what, void *data)
         wsEvents();
 
         if (guiInfo.MediumChanged == GUI_MEDIUM_NEW) {
-            audio_id  = -1;
-            video_id  = -1;
-            dvdsub_id = -1;
-            vobsub_id = -1;
-
+            reset_stream_ids();
             stream_cache_size = -1;
             autosync  = 0;
             force_fps = 0;
@@ -576,7 +590,7 @@ int gui(int what, void *data)
                         if (*(playlist + 1))
                             (*playlist)->stop = (*(playlist + 1))->start;
                         else
-                            (*playlist)->stop = 0;
+                            (*playlist)->stop = INT_MAX;
 
                         listMgr(PLAYLIST_ITEM_INSERT, *playlist);
                         playlist++;
@@ -745,7 +759,6 @@ int gui(int what, void *data)
 
         /* subtitle */
 
-// subdata->filename=gstrdup( guiInfo.SubtitleFilename );
         stream_dump_type = 0;
 
         if (gtkSubDumpMPSub)
@@ -869,7 +882,7 @@ int gui(int what, void *data)
         nfree(guiInfo.CodecName);
 
         if (guiInfo.sh_video)
-            guiInfo.CodecName = strdup(guiInfo.sh_video->codec->name);
+            guiInfo.CodecName = strdup(codec_idx2str(guiInfo.sh_video->codec->name_idx));
 
         state = (isSeekableStreamtype ? btnReleased : btnDisabled);
         btnSet(evForward10sec, state);
@@ -910,9 +923,37 @@ int gui(int what, void *data)
         if (guiInfo.AudioChannels < 2 || guiInfo.AudioPassthrough)
             btnSet(evSetBalance, btnDisabled);
 
-        if (last_balance < 0.0f) {
+        if (current_volume) {
+            mixer_getvolume(mpctx_get_mixer(guiInfo.mpcontext), &l, &r);
+            guiInfo.Volume = FFMAX(l, r);
+            current_volume = False;
+        }
+
+        if (gtkReplayGainOn) {
+            gainItem *item;
+            int ReplayGain = False;
+
+            item = listMgr(GAINLIST_ITEM_FIND, guiInfo.Filename);
+
+            if (item) {
+                replay_gain = (item->replay_gain < 0.0f ? item->replay_gain - 0.05f : item->replay_gain + 0.05f) * 10;
+                ReplayGain  = True;
+            }
+
+            if (!ReplayGain)
+                ReplayGain = (demux_control(mpctx_get_demuxer(guiInfo.mpcontext), DEMUXER_CTRL_GET_REPLAY_GAIN, &replay_gain) == DEMUXER_CTRL_OK);
+
+            if (ReplayGain) {
+                guiInfo.LastVolume       = guiInfo.Volume;
+                guiInfo.Volume           = constrain(100.0 + (replay_gain / 10.0 + gtkReplayGainAdjustment) / 0.5);
+                guiInfo.ReplayGainVolume = -1.0f;
+            }
+        }
+
+        if (guiInfo.LastVolume >= 0.0f || last_balance < 0.0f)
             uiEvent(ivSetVolume, guiInfo.Volume);
 
+        if (last_balance < 0.0f) {
             if (guiInfo.AudioChannels == 2 && !guiInfo.AudioPassthrough)
                 uiEvent(ivSetBalance, guiInfo.Balance);
 
@@ -959,6 +1000,9 @@ int gui(int what, void *data)
         mixer_getvolume(mixer, &l, &r);
         guiInfo.Volume = FFMAX(l, r);
 
+        if (guiInfo.LastVolume >= 0.0f && guiInfo.ReplayGainVolume < 0.0f)
+            guiInfo.ReplayGainVolume = guiInfo.Volume;
+
         mixer_getbalance(mixer, &b);
         guiInfo.Balance = (b + 1.0) * 50.0;   // transform -1..1 to 0..100
 
@@ -1000,12 +1044,24 @@ int gui(int what, void *data)
 
         guiInfo.sh_video = NULL;
 
+        nfree(guiInfo.AudioFilename);
+        nfree(guiInfo.SubtitleFilename);
+
+        if (guiInfo.LastVolume >= 0.0f) {
+            if (guiInfo.Volume == guiInfo.ReplayGainVolume)
+                uiEvent(ivSetVolume, guiInfo.LastVolume);
+
+            guiInfo.LastVolume = -1.0f;
+        }
+
         btnSet(evSetVolume, btnReleased);
         btnSet(evSetBalance, btnReleased);
 
         uiEvent(ivRedraw, True);
 
         if (guiInfo.Playing) {
+            last_playlistnext = guiInfo.PlaylistNext;
+
             if (!guiInfo.PlaylistNext) {
                 guiInfo.PlaylistNext = True;
                 break;
@@ -1017,6 +1073,11 @@ int gui(int what, void *data)
             }
 
             next = listMgr(PLAYLIST_ITEM_GET_NEXT, 0);
+
+            if (guiInfo.Stop && (guiInfo.ElapsedTime > guiInfo.Stop)) {
+                while (next && next->stop)
+                    next = listMgr(PLAYLIST_ITEM_GET_NEXT, 0);
+            }
         }
 
         if (next) {
@@ -1260,9 +1321,9 @@ void mplayer(int what, float value, void *data)
     {
         mp_cmd_t *mp_cmd;
 
-        mp_cmd       = calloc(1, sizeof(*mp_cmd));
-        mp_cmd->id   = MP_CMD_PANSCAN;
-        mp_cmd->name = strdup("panscan");
+        mp_cmd     = calloc(1, sizeof(*mp_cmd));
+        mp_cmd->id = MP_CMD_PANSCAN;
+        ARRAY_STRCPY(mp_cmd->name, "panscan");
         mp_cmd->args[0].v.f = value;
         mp_cmd->args[1].v.i = 1;
         mp_input_queue_cmd(mp_cmd);
@@ -1333,48 +1394,22 @@ void mplayer(int what, float value, void *data)
 
 void mplayerLoadSubtitle(const char *name)
 {
-    if (guiInfo.Playing == GUI_STOP)
-        return;
-
     if (subdata) {
         mp_msg(MSGT_GPLAYER, MSGL_INFO, MSGTR_GUI_MSG_RemovingSubtitle);
 
         sub_free(subdata);
         subdata = NULL;
-        vo_sub  = NULL;
-
-        if (vo_osd_list) {
-            int len;
-            mp_osd_obj_t *osd;
-
-            osd = vo_osd_list;
-
-            while (osd) {
-                if (osd->type == OSDTYPE_SUBTITLE)
-                    break;
-
-                osd = osd->next;
-            }
-
-            if (osd && (osd->flags & OSDFLAG_VISIBLE)) {
-                len = osd->stride * (osd->bbox.y2 - osd->bbox.y1);
-                memset(osd->bitmap_buffer, 0, len);
-                memset(osd->alpha_buffer, 0, len);
-            }
-        }
     }
 
     if (name) {
         mp_msg(MSGT_GPLAYER, MSGL_INFO, MSGTR_GUI_MSG_LoadingSubtitle, name);
 
-        subdata = sub_read_file(name, guiInfo.sh_video ? guiInfo.sh_video->fps : 0);
+        subdata = sub_read_file(name, guiInfo.sh_video ? guiInfo.sh_video->fps : 25);
 
-        if (!subdata)
+        if (!subdata) {
             gmp_msg(MSGT_GPLAYER, MSGL_ERR, MSGTR_CantLoadSub, name);
-
-        sub_name    = (malloc(2 * sizeof(char *))); // when mplayer will be restarted
-        sub_name[0] = strdup(name);                 // sub_name[0] will be read
-        sub_name[1] = NULL;
+            return;
+        }
     }
 
     update_set_of_subtitles();
@@ -1398,6 +1433,8 @@ void gmp_msg(int mod, int lev, const char *format, ...)
 
     mp_msg(mod, lev, "%s", msg);
 
-    if (mp_msg_test(mod, lev))
+    if (mp_msg_test(mod, lev)) {
+        wsEvents();
         gtkMessageBox(MSGBOX_FATAL, msg);
+    }
 }

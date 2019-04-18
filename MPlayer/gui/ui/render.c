@@ -47,7 +47,7 @@
 #define DLABEL_DELAY 2500
 
 /**
- * @brief Convert #guiInfo member Filename.
+ * @brief Convert #guiInfo member @ref guiInterface_t.Filename "Filename".
  *
  * @param how 0 (cut file path and extension),
  *            1 (additionally, convert lower case) or
@@ -266,6 +266,11 @@ MMMM_SS:        snprintf(trans, sizeof(trans), "%04d:%02d", t / 60, t % 60);
             case 'F':
                 TranslateFilename(2, trans, sizeof(trans));
                 av_strlcat(translation, trans, sizeof(translation));
+                break;
+
+            case 'g':
+                if (guiInfo.LastVolume >= 0.0f && guiInfo.Volume == guiInfo.ReplayGainVolume)
+                    av_strlcat(translation, "g", sizeof(translation));
                 break;
 
             case 'o':

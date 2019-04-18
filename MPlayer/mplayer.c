@@ -330,7 +330,7 @@ static char *prog_path;
 static int crash_debug;
 #endif
 
-static int allow_playlist_parsing;
+int allow_playlist_parsing;
 
 /* This header requires all the global variable declarations. */
 #include "cfg-mplayer.h"
@@ -467,8 +467,8 @@ char *get_metadata(metadata_t type)
         return mp_asprintf("%d x %d", sh_video->disp_w, sh_video->disp_h);
 
     case META_AUDIO_CODEC:
-        if (sh_audio->codec && sh_audio->codec->name)
-            return strdup(sh_audio->codec->name);
+        if (sh_audio->codec && sh_audio->codec->name_idx)
+            return strdup(codec_idx2str(sh_audio->codec->name_idx));
         break;
 
     case META_AUDIO_BITRATE:
@@ -718,22 +718,7 @@ void exit_player_with_rc(enum exit_reason how, int rc)
     vo_uninit(); // Close the X11 connection (if any is open).
 #endif
 
-#ifdef CONFIG_FREETYPE
-    current_module = "uninit_font";
-    if (sub_font && sub_font != vo_font)
-        free_font_desc(sub_font);
-    sub_font = NULL;
-    if (vo_font)
-        free_font_desc(vo_font);
-    vo_font = NULL;
-    done_freetype();
-#endif
-    free_osd_list();
-
-#ifdef CONFIG_ASS
-    ass_library_done(ass_library);
-    ass_library = NULL;
-#endif
+    common_uninit();
 
     current_module = "exit_player";
 
@@ -769,6 +754,8 @@ void exit_player_with_rc(enum exit_reason how, int rc)
     if (mconfig)
         m_config_free(mconfig);
     mconfig = NULL;
+
+    mp_msg_uninit();
 
     exit(rc);
 }
@@ -1085,11 +1072,12 @@ void add_subtitles(char *filename, float fps, int noerr)
     if (filename == NULL || mpctx->set_of_sub_size >= MAX_SUBTITLE_FILES)
         return;
 
+    enca_sub_cp = NULL;
     subd = sub_read_file(filename, fps);
 #ifdef CONFIG_ASS
     if (ass_enabled)
 #ifdef CONFIG_ICONV
-        asst = ass_read_stream(ass_library, filename, sub_cp);
+        asst = ass_read_stream(ass_library, filename, (enca_sub_cp ? enca_sub_cp : sub_cp));
 #else
         asst = ass_read_stream(ass_library, filename, 0);
 #endif
@@ -1147,6 +1135,7 @@ void update_set_of_subtitles(void)
             set_of_subtitles[i - 1] = set_of_subtitles[i];
         set_of_subtitles[mpctx->set_of_sub_size - 1] = NULL;
         --mpctx->set_of_sub_size;
+        --mpctx->sub_counts[SUB_SOURCE_SUBS];
         if (mpctx->set_of_sub_size > 0)
             subdata = set_of_subtitles[mpctx->set_of_sub_pos = 0];
     } else if (mpctx->set_of_sub_size > 0 && subdata != NULL) { // *subdata was changed
@@ -1154,6 +1143,7 @@ void update_set_of_subtitles(void)
     } else if (mpctx->set_of_sub_size <= 0 && subdata != NULL) { // *subdata was added
         set_of_subtitles[mpctx->set_of_sub_pos = mpctx->set_of_sub_size] = subdata;
         ++mpctx->set_of_sub_size;
+        ++mpctx->sub_counts[SUB_SOURCE_SUBS];
     }
 }
 
@@ -1789,6 +1779,7 @@ static int generate_video_frame(sh_video_t *sh_video, demux_stream_t *d_video)
     int in_size;
     int hit_eof = 0;
     double pts;
+    double endpts;
 
     while (1) {
         int drop_frame = 0;
@@ -1799,7 +1790,7 @@ static int generate_video_frame(sh_video_t *sh_video, demux_stream_t *d_video)
         if (vf_output_queued_frame(sh_video->vfilter))
             break;
         current_module = "video_read_frame";
-        in_size = ds_get_packet_pts(d_video, &start, &pts);
+        in_size = ds_get_packet_pts_endpts(d_video, &start, &pts, &endpts);
         if (in_size < 0) {
             // try to extract last frames in case of decoder lag
             in_size = 0;
@@ -1811,13 +1802,13 @@ static int generate_video_frame(sh_video_t *sh_video, demux_stream_t *d_video)
         if (in_size > max_framesize)
             max_framesize = in_size;
         current_module = "decode video";
-        decoded_frame  = decode_video(sh_video, start, in_size, drop_frame, pts, NULL);
+        decoded_frame  = decode_video(sh_video, start, in_size, drop_frame, pts, endpts, NULL);
         if (decoded_frame) {
             update_subtitles(sh_video, sh_video->pts, mpctx->d_sub, 0);
             update_teletext(sh_video, mpctx->demuxer, 0);
             update_osd_msg();
             current_module = "filter video";
-            if (filter_video(sh_video, decoded_frame, sh_video->pts))
+            if (filter_video(sh_video, decoded_frame, sh_video->pts, sh_video->endpts))
                 break;
         } else if (drop_frame)
             return -1;
@@ -2419,7 +2410,7 @@ int reinit_video_chain(void)
     initialized_flags |= INITIALIZED_VCODEC;
 
     if (sh_video->codec)
-        mp_msg(MSGT_IDENTIFY, MSGL_INFO, "ID_VIDEO_CODEC=%s\n", sh_video->codec->name);
+        mp_msg(MSGT_IDENTIFY, MSGL_INFO, "ID_VIDEO_CODEC=%s\n", codec_idx2str(sh_video->codec->name_idx));
 
     sh_video->last_pts = MP_NOPTS_VALUE;
     sh_video->num_buffered_pts = 0;
@@ -2503,7 +2494,7 @@ static double update_video(int *blit_frame)
             // still frame has been reached, no need to decode
             if ((in_size > 0 || flush) && !decoded_frame)
             decoded_frame = decode_video(sh_video, start, in_size, drop_frame,
-                                         sh_video->pts, &full_frame);
+                                         sh_video->pts, sh_video->endpts, &full_frame);
 
             if (flush && !decoded_frame)
                 return -1;
@@ -2524,13 +2515,15 @@ static double update_video(int *blit_frame)
 
         current_module = "filter_video";
         *blit_frame    = (decoded_frame && filter_video(sh_video, decoded_frame,
-                                                        sh_video->pts));
+                                                        sh_video->pts, sh_video->endpts));
     } else {
         int res = generate_video_frame(sh_video, mpctx->d_video);
         if (!res)
             return -1;
         ((vf_instance_t *)sh_video->vfilter)->control(sh_video->vfilter,
                                                       VFCTRL_GET_PTS, &sh_video->pts);
+        ((vf_instance_t *)sh_video->vfilter)->control(sh_video->vfilter,
+                                                      VFCTRL_GET_ENDPTS, &sh_video->endpts);
         if (sh_video->pts == MP_NOPTS_VALUE) {
             mp_msg(MSGT_CPLAYER, MSGL_ERR, MSGTR_PtsAfterFiltersMissing);
             sh_video->pts = sh_video->last_pts;
@@ -2548,7 +2541,9 @@ static double update_video(int *blit_frame)
             mp_msg(MSGT_CPLAYER, MSGL_V, "pts value < previous\n");
         }
         frame_time = sh_video->pts - sh_video->last_pts;
-        if (!frame_time)
+        // The first frame should be displayed directly,
+        // all others should get a default frame_time
+        if (!frame_time && mpctx->startup_decode_retry == 0)
             frame_time = sh_video->frametime;
         sh_video->last_pts = sh_video->pts;
         advance_timer(frame_time);
@@ -3660,7 +3655,7 @@ goto_enable_cache:
         if (mpctx->sh_audio) {
             reinit_audio_chain();
             if (mpctx->sh_audio && mpctx->sh_audio->codec)
-                mp_msg(MSGT_IDENTIFY, MSGL_INFO, "ID_AUDIO_CODEC=%s\n", mpctx->sh_audio->codec->name);
+                mp_msg(MSGT_IDENTIFY, MSGL_INFO, "ID_AUDIO_CODEC=%s\n", codec_idx2str(mpctx->sh_audio->codec->name_idx));
             if (mpctx->audio_out)
                 mpctx->audio_out->control(AOCONTROL_FILENAME, (void *)(vo_wintitle ? vo_wintitle : mp_basename(filename)));
         }
@@ -3805,7 +3800,7 @@ goto_enable_cache:
                 update_osd_msg();
             } else {
                 int frame_time_remaining = 0;
-                int blit_frame = 1;
+                int blit_frame = mpctx->num_buffered_frames > 0;
                 // skip timing after seek
                 int skip_timing = mpctx->startup_decode_retry > 0;
 
@@ -3832,13 +3827,26 @@ goto_enable_cache:
                         goto goto_next_file;
                     }
                     if (frame_time < 0) {
+                        // try to figure out duration of last frame
+                        if (correct_pts && mpctx->sh_video->endpts != MP_NOPTS_VALUE &&
+                            mpctx->sh_video->pts != MP_NOPTS_VALUE &&
+                            mpctx->sh_video->endpts > mpctx->sh_video->pts) {
+                            frame_time = mpctx->sh_video->endpts - mpctx->sh_video->pts;
+                        } else {
+                            frame_time = mpctx->sh_video->frametime;
+                        }
+                        // mark as last frame. Note: needs to be reset on seeking
+                        mpctx->sh_video->frametime = -1;
+                        mpctx->sh_video->endpts = MP_NOPTS_VALUE;
+                    }
+                    if (frame_time < 0) {
                         // if we have no more video, sleep some arbitrary time
                         frame_time = 1.0 / 20.0;
                         // Ensure vo_pts is updated so that ao_pcm will not hang.
                         advance_timer(frame_time);
                         // only stop playing when audio is at end as well
                         if (!mpctx->sh_audio || (mpctx->d_audio->eof && !ds_fill_buffer(mpctx->d_audio)))
-                            mpctx->eof = 1;
+                            mpctx->eof = mpctx->time_frame <= 0;
                     } else {
                         // might return with !eof && !blit_frame if !correct_pts
                         mpctx->num_buffered_frames += blit_frame;
@@ -4027,6 +4035,9 @@ goto_enable_cache:
                     }
                 }
 
+                // reset last frame marker
+                if (mpctx->sh_video && mpctx->sh_video->frametime < 0)
+                    mpctx->sh_video->frametime = 1.0f / mpctx->sh_video->fps;
                 rel_seek_secs = 0;
                 abs_seek_pos  = 0;
                 loop_seek     = 0;
@@ -4041,9 +4052,10 @@ goto_enable_cache:
                 } else {
                     guiInfo.Position = demuxer_get_percent_pos(mpctx->demuxer);
                 }
+                guiInfo.ElapsedTime = -1;
                 if (mpctx->sh_video)
                     guiInfo.ElapsedTime = mpctx->sh_video->pts;
-                else if (mpctx->sh_audio)
+                if (guiInfo.ElapsedTime < 0 && mpctx->sh_audio)
                     guiInfo.ElapsedTime = playing_audio_pts(mpctx->sh_audio, mpctx->d_audio, mpctx->audio_out);
                 guiInfo.RunningTime = demuxer_get_time_length(mpctx->demuxer);
                 gui(GUI_SET_VOLUME_BALANCE, &mpctx->mixer);

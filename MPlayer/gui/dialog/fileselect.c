@@ -25,11 +25,18 @@
 
 #include "fileselect.h"
 #include "dialog.h"
+#include "icons.h"
 #include "preferences.h"
 #include "tools.h"
 #include "pixmaps/dir.xpm"
 #include "pixmaps/file.xpm"
-#include "pixmaps/up.xpm"
+#include "pixmaps/file_audio.xpm"
+#include "pixmaps/file_audio_track.xpm"
+#include "pixmaps/file_font.xpm"
+#include "pixmaps/file_image.xpm"
+#include "pixmaps/file_playlist.xpm"
+#include "pixmaps/file_subtitle.xpm"
+#include "pixmaps/file_video.xpm"
 #include "gui/interface.h"
 #include "gui/app/app.h"
 #include "gui/app/cfg.h"
@@ -45,6 +52,7 @@
 #include "config.h"
 #include "help_mp.h"
 #include "mpcommon.h"
+#include "mplayer.h"
 #include "libavutil/common.h"
 #include "stream/stream.h"
 
@@ -79,6 +87,7 @@ char * const fsVideoAudioFilterNames[][2] = {
     { MSGTR_GUI_FilterFileWav,            "*.wav"                                                                                                                                                                                                                                                                                                                                                                                                                  },
     { MSGTR_GUI_FilterMediumWindows,      "*.asf,*.wma,*.wmv"                                                                                                                                                                                                                                                                                                                                                                                                      },
     { MSGTR_GUI_FilterFilePlaylist,       "*.asx,*.m3u,*.m3u8,*.m4u,*.mxu,*.nsc,*.pls,*.ram,*.smi,*.smil,*.sml,*.vlc,*.wax,*.wmx,*.wvx"                                                                                                                                                                                                                                                                                                                            },
+    { MSGTR_GUI_FilterAudioVideo,         "*.aac,*.ac3,*.ape,*.au,*.avi,*.divx,*.flac,*.flv,*.m2v,*.m4a,*.m4v,*.mjpg,*.mkv,*.mov,*.mp3,*.mp4,*.mpe,*.mpeg,*.mpg,*.ogg,*.rec,*.rm,*.ts,*.vob,*.wav,*.webm,*.wma,*.wmv"                                                                                                                                                                                                                                              },
     { MSGTR_GUI_FilterAudioAll,           "*.aac,*.ac3,*.aif,*.aifc,*.aiff,*.amr,*.ape,*.au,*.awb,*.cdg,*.f4a,*.f4b,*.flac,*.m4a,*.m4b,*.mka,*.mp+,*.mp2,*.mp3,*.mpc,*.mpga,*.mpp,*.nsa,*.oga,*.ogg,*.pcm,*.qcp,*.ra,*.snd,*.spx,*.tak,*.voc,*.vqf,*.w64,*.wav,*.wma,*.wv,*.wvp"                                                                                                                                                                                   },
     { MSGTR_GUI_FilterVideoAll,           "*.264,*.3g2,*.3ga,*.3gp,*.3gp2,*.3gpp,*.3gpp2,*.apng,*.asf,*.avi,*.bdm,*.bdmv,*.clpi,*.cpi,*.cpk,*.divx,*.dv,*.f4v,*.flc,*.fli,*.flv,*.m1v,*.m2t,*.m2ts,*.m2v,*.m4v,*.mjpg,*.mkv,*.moov,*.mov,*.mp2,*.mp4,*.mpe,*.mpeg,*.mpg,*.mpl,*.mpls,*.mts,*.mxf,*.nsv,*.nuv,*.ogg,*.ogm,*.ogv,*.ogx,*.pva,*.qt,*.qtvr,*.rec,*.rm,*.rmvb,*.roq,*.rv,*.spl,*.str,*.swf,*.trp,*.ts,*.ty,*.vdr,*.viv,*.vivo,*.vob,*.webm,*.wmv,*.y4m" },
     { MSGTR_GUI_FilterFileAll,            "*"                                                                                                                                                                                                                                                                                                                                                                                                                      },
@@ -158,9 +167,7 @@ GtkWidget *fsFilterCombo;
 
 GtkStyle *style;
 GdkPixmap *dpixmap;
-GdkPixmap *fpixmap;
 GdkBitmap *dmask;
-GdkBitmap *fmask;
 
 static void fs_PersistantHistory(char *subject)
 {
@@ -234,8 +241,127 @@ static void clist_append_fname(GtkWidget *list, char *fname,
     g_free(str[1]);
 }
 
+static void fs_get_pixmap(const char *ext, GdkPixmap **pixmap, GdkBitmap **mask)
+{
+    static GdkPixmap *apixmap, *atpixmap, *avpixmap, *fpixmap, *ipixmap, *ppixmap, *spixmap, *vpixmap;
+    static GdkBitmap *amask, *atmask, *avmask, *fmask, *imask, *pmask, *smask, *vmask;
+    size_t len = 0;
+    char *p;
+    int i;
+
+    if (ext)
+        len = strlen(ext);
+
+    switch (fsType) {
+    case FILESELECT_SUBTITLE:
+        if (!spixmap)
+            spixmap = gdk_pixmap_colormap_create_from_xpm_d(FileSelector->window, fsColorMap, &smask, &style->bg[GTK_STATE_NORMAL], (gchar **)file_subtitle_xpm);
+        *pixmap = spixmap;
+        *mask   = smask;
+        break;
+
+    case FILESELECT_AUDIO_TRACK:
+        if (!atpixmap)
+            atpixmap = gdk_pixmap_colormap_create_from_xpm_d(FileSelector->window, fsColorMap, &atmask, &style->bg[GTK_STATE_NORMAL], (gchar **)file_audio_track_xpm);
+        *pixmap = atpixmap;
+        *mask   = atmask;
+        break;
+
+    case FILESELECT_FONT:
+        if (!fpixmap)
+            fpixmap = gdk_pixmap_colormap_create_from_xpm_d(FileSelector->window, fsColorMap, &fmask, &style->bg[GTK_STATE_NORMAL], (gchar **)file_font_xpm);
+        *pixmap = fpixmap;
+        *mask   = fmask;
+        break;
+
+    case FILESELECT_IMAGE:
+        if (!ipixmap)
+            ipixmap = gdk_pixmap_colormap_create_from_xpm_d(FileSelector->window, fsColorMap, &imask, &style->bg[GTK_STATE_NORMAL], (gchar **)file_image_xpm);
+        *pixmap = ipixmap;
+        *mask   = imask;
+        break;
+
+    default:
+
+        *pixmap = NULL;
+
+        for (i = 0; ext && fsVideoAudioFilterNames[i][0]; i++) {
+            if (strcmp(MSGTR_GUI_FilterVideoAll, fsVideoAudioFilterNames[i][0]) == 0) {
+                if ((p = strstr(fsVideoAudioFilterNames[i][1], ext)) && (p[len] == ',' || p[len] == 0)) {
+                    if (!vpixmap)
+                        vpixmap = gdk_pixmap_colormap_create_from_xpm_d(FileSelector->window, fsColorMap, &vmask, &style->bg[GTK_STATE_NORMAL], (gchar **)file_video_xpm);
+                    *pixmap = vpixmap;
+                    *mask   = vmask;
+                    break;
+                }
+            }
+
+            if (strcmp(MSGTR_GUI_FilterAudioAll, fsVideoAudioFilterNames[i][0]) == 0) {
+                if ((p = strstr(fsVideoAudioFilterNames[i][1], ext)) && (p[len] == ',' || p[len] == 0)) {
+                    if (!apixmap)
+                        apixmap = gdk_pixmap_colormap_create_from_xpm_d(FileSelector->window, fsColorMap, &amask, &style->bg[GTK_STATE_NORMAL], (gchar **)file_audio_xpm);
+                    *pixmap = apixmap;
+                    *mask   = amask;
+                    break;
+                }
+            }
+
+            if (strcmp(MSGTR_GUI_FilterFilePlaylist, fsVideoAudioFilterNames[i][0]) == 0) {
+                if ((p = strstr(fsVideoAudioFilterNames[i][1], ext)) && (p[len] == ',' || p[len] == 0)) {
+                    if (!ppixmap)
+                        ppixmap = gdk_pixmap_colormap_create_from_xpm_d(FileSelector->window, fsColorMap, &pmask, &style->bg[GTK_STATE_NORMAL], (gchar **)file_playlist_xpm);
+                    *pixmap = ppixmap;
+                    *mask   = pmask;
+                    break;
+                }
+            }
+
+            if (strcmp(MSGTR_GUI_FilterImageCue, fsVideoAudioFilterNames[i][0]) == 0) {
+                if ((p = strstr(fsVideoAudioFilterNames[i][1], ext)) && (p[len] == ',' || p[len] == 0)) {
+                    if (!ipixmap)
+                        ipixmap = gdk_pixmap_colormap_create_from_xpm_d(FileSelector->window, fsColorMap, &imask, &style->bg[GTK_STATE_NORMAL], (gchar **)file_image_xpm);
+                    *pixmap = ipixmap;
+                    *mask   = imask;
+                    break;
+                }
+            }
+        }
+
+        for (i = 0; !*pixmap && ext && fsSubtitleFilterNames[i][0]; i++) {
+            if ((p = strstr(fsSubtitleFilterNames[i][1], ext)) && (p[len] == ',' || p[len] == 0)) {
+                if (!spixmap)
+                    spixmap = gdk_pixmap_colormap_create_from_xpm_d(FileSelector->window, fsColorMap, &smask, &style->bg[GTK_STATE_NORMAL], (gchar **)file_subtitle_xpm);
+                *pixmap = spixmap;
+                *mask   = smask;
+                break;
+            }
+        }
+
+        for (i = 0; !*pixmap && ext && fsImageFilterNames[i][0]; i++) {
+            if ((p = strstr(fsImageFilterNames[i][1], ext)) && (p[len] == ',' || p[len] == 0)) {
+                if (!ipixmap)
+                    ipixmap = gdk_pixmap_colormap_create_from_xpm_d(FileSelector->window, fsColorMap, &imask, &style->bg[GTK_STATE_NORMAL], (gchar **)file_image_xpm);
+                *pixmap = ipixmap;
+                *mask   = imask;
+                break;
+            }
+        }
+
+        if (!*pixmap) {
+            if (!avpixmap)
+                avpixmap = gdk_pixmap_colormap_create_from_xpm_d(FileSelector->window, fsColorMap, &avmask, &style->bg[GTK_STATE_NORMAL], (gchar **)file_xpm);
+            *pixmap = avpixmap;
+            *mask   = avmask;
+        }
+
+        break;
+    }
+}
+
 static void CheckDir(GtkWidget *list)
 {
+    GdkPixmap *fpixmap;
+    GdkBitmap *fmask;
     struct stat fs;
     unsigned int i, j, fn;
     glob_t gg;
@@ -288,6 +414,7 @@ static void CheckDir(GtkWidget *list)
             if (ext || !fext[0]) {
                 for (j = 0; j < fn; j++) {
                     if (fext[j] == NULL || strcasecmp(fext[j], ext) == 0) {
+                        fs_get_pixmap(ext, &fpixmap, &fmask);
                         clist_append_fname(list, gg.gl_pathv[i], fpixmap, fmask);
                         break;
                     }
@@ -301,6 +428,7 @@ static void CheckDir(GtkWidget *list)
     globfree(&gg);
 
     gtk_clist_set_column_width(GTK_CLIST(list), 0, 17);
+    gtk_clist_set_row_height(GTK_CLIST(list), 17);
     gtk_widget_show(list);
 }
 
@@ -320,7 +448,7 @@ static void fs_fsFilterCombo_changed(GtkEditable *editable,
     case FILESELECT_VIDEO_AUDIO:
 
         for (i = 0; fsVideoAudioFilterNames[i][0]; i++)
-            if (!strcmp(str, fsVideoAudioFilterNames[i][0])) {
+            if (strcmp(str, fsVideoAudioFilterNames[i][0]) == 0) {
                 fsFilter = fsVideoAudioFilterNames[i][1];
                 fsLastVideoAudioFilterSelected = i;
                 break;
@@ -331,7 +459,7 @@ static void fs_fsFilterCombo_changed(GtkEditable *editable,
     case FILESELECT_SUBTITLE:
 
         for (i = 0; fsSubtitleFilterNames[i][0]; i++)
-            if (!strcmp(str, fsSubtitleFilterNames[i][0])) {
+            if (strcmp(str, fsSubtitleFilterNames[i][0]) == 0) {
                 fsFilter = fsSubtitleFilterNames[i][1];
                 fsLastSubtitleFilterSelected = i;
                 break;
@@ -339,10 +467,10 @@ static void fs_fsFilterCombo_changed(GtkEditable *editable,
 
         break;
 
-    case FILESELECT_AUDIO:
+    case FILESELECT_AUDIO_TRACK:
 
         for (i = 0; fsAudioFileNames[i][0]; i++)
-            if (!strcmp(str, fsAudioFileNames[i][0])) {
+            if (strcmp(str, fsAudioFileNames[i][0]) == 0) {
                 fsFilter = fsAudioFileNames[i][1];
                 fsLastAudioFilterSelected = i;
                 break;
@@ -353,7 +481,7 @@ static void fs_fsFilterCombo_changed(GtkEditable *editable,
     case FILESELECT_FONT:
 
         for (i = 0; fsFontFileNames[i][0]; i++)
-            if (!strcmp(str, fsFontFileNames[i][0])) {
+            if (strcmp(str, fsFontFileNames[i][0]) == 0) {
                 fsFilter = fsFontFileNames[i][1];
                 fsLastFontFilterSelected = i;
                 break;
@@ -364,7 +492,7 @@ static void fs_fsFilterCombo_changed(GtkEditable *editable,
     case FILESELECT_IMAGE:
 
         for (i = 0; fsImageFilterNames[i][0]; i++)
-            if (!strcmp(str, fsImageFilterNames[i][0])) {
+            if (strcmp(str, fsImageFilterNames[i][0]) == 0) {
                 fsFilter = fsImageFilterNames[i][1];
                 fsLastImageFilterSelected = i;
                 break;
@@ -503,10 +631,9 @@ static void fs_Ok_released(GtkButton *button, gpointer user_data)
 
     case FILESELECT_SUBTITLE:
         setddup(&guiInfo.SubtitleFilename, fsSelectedDirectory, fsSelectedFile);
-        mplayerLoadSubtitle(guiInfo.SubtitleFilename);
         break;
 
-    case FILESELECT_AUDIO:
+    case FILESELECT_AUDIO_TRACK:
         setddup(&guiInfo.AudioFilename, fsSelectedDirectory, fsSelectedFile);
         break;
 
@@ -550,6 +677,9 @@ static void fs_Ok_released(GtkButton *button, gpointer user_data)
         uiEvent(ev, 0);
     } else
         gui(GUI_SET_STATE, (void *)GUI_STOP);
+
+    if (fsType == FILESELECT_SUBTITLE)
+        mplayerLoadSubtitle(guiInfo.SubtitleFilename);
 }
 
 /**
@@ -612,6 +742,7 @@ static void fs_Destroy(void)
 
 static GtkWidget *CreateFileSelect(void)
 {
+    gint x, y;
     GtkWidget *vbox4;
     GtkWidget *hbox4;
     GtkWidget *vseparator1;
@@ -619,16 +750,16 @@ static GtkWidget *CreateFileSelect(void)
     GtkWidget *fsFNameListWindow;
     GtkWidget *hbuttonbox3;
 
-    GtkWidget *uppixmapwid;
-    GdkPixmap *uppixmap;
-    GdkBitmap *upmask;
-    GtkStyle *upstyle;
+    GtkWidget *upimage;
+    GdkPixbuf *uppixbuf;
 
     FileSelector = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_widget_set_usize(FileSelector, 512, 300);
+    gtk_widget_set_usize(FileSelector, 512, 440);
     gtk_widget_set_events(FileSelector, GDK_EXPOSURE_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK | GDK_KEY_PRESS_MASK | GDK_KEY_RELEASE_MASK | GDK_FOCUS_CHANGE_MASK | GDK_STRUCTURE_MASK | GDK_PROPERTY_CHANGE_MASK | GDK_VISIBILITY_NOTIFY_MASK);
     gtk_window_set_title(GTK_WINDOW(FileSelector), MSGTR_GUI_SelectFile);
     gtk_window_set_position(GTK_WINDOW(FileSelector), GTK_WIN_POS_CENTER);
+    gtk_window_get_position(GTK_WINDOW(FileSelector), &x, &y);
+    gtk_window_move(GTK_WINDOW(FileSelector), x, y * 5 / 6);
     gtk_window_set_wmclass(GTK_WINDOW(FileSelector), "FileSelector", MPlayer);
     fsColorMap = gdk_colormap_get_system();
 
@@ -637,7 +768,6 @@ static GtkWidget *CreateFileSelect(void)
 
     style   = gtk_widget_get_style(FileSelector);
     dpixmap = gdk_pixmap_colormap_create_from_xpm_d(FileSelector->window, fsColorMap, &dmask, &style->bg[GTK_STATE_NORMAL], (gchar **)dir_xpm);
-    fpixmap = gdk_pixmap_colormap_create_from_xpm_d(FileSelector->window, fsColorMap, &fmask, &style->bg[GTK_STATE_NORMAL], (gchar **)file_xpm);
 
     vbox4 = gtkAddVBox(gtkAddDialogFrame(FileSelector), 0);
     hbox4 = gtkAddHBox(vbox4, 1);
@@ -645,27 +775,24 @@ static GtkWidget *CreateFileSelect(void)
     fsCombo4 = gtk_combo_new();
     gtk_widget_show(fsCombo4);
     gtk_box_pack_start(GTK_BOX(hbox4), fsCombo4, TRUE, TRUE, 0);
-    gtk_widget_set_usize(fsCombo4, -2, 20);
 
     fsPathCombo = GTK_COMBO(fsCombo4)->entry;
     gtk_widget_show(fsPathCombo);
-    gtk_widget_set_usize(fsPathCombo, -2, 20);
 
     vseparator1 = gtk_vseparator_new();
     gtk_widget_show(vseparator1);
     gtk_box_pack_start(GTK_BOX(hbox4), vseparator1, FALSE, TRUE, 0);
-    gtk_widget_set_usize(vseparator1, 7, 20);
 
-    upstyle     = gtk_widget_get_style(FileSelector);
-    uppixmap    = gdk_pixmap_colormap_create_from_xpm_d(FileSelector->window, fsColorMap, &upmask, &upstyle->bg[GTK_STATE_NORMAL], (gchar **)up_xpm);
-    uppixmapwid = gtk_pixmap_new(uppixmap, upmask);
-    gtk_widget_show(uppixmapwid);
+    uppixbuf = gdk_pixbuf_new_from_inline(-1, dir_up_png, FALSE, NULL);
+    upimage  = gtk_image_new_from_pixbuf(uppixbuf);
+    g_object_unref(uppixbuf);
+    gtk_widget_show(upimage);
 
     fsUp = gtk_button_new();
-    gtk_container_add(GTK_CONTAINER(fsUp), uppixmapwid);
+    gtk_button_set_image(GTK_BUTTON(fsUp), upimage);
     gtk_widget_show(fsUp);
     gtk_box_pack_start(GTK_BOX(hbox4), fsUp, FALSE, FALSE, 0);
-    gtk_widget_set_usize(fsUp, 65, 15);
+    gtk_widget_set_usize(fsUp, 60, -2);
 
     gtkAddHSeparator(vbox4);
 
@@ -675,7 +802,6 @@ static GtkWidget *CreateFileSelect(void)
     fsFNameListWindow = gtk_scrolled_window_new(NULL, NULL);
     gtk_widget_show(fsFNameListWindow);
     gtk_box_pack_start(GTK_BOX(hbox6), fsFNameListWindow, TRUE, TRUE, 0);
-    gtk_widget_set_usize(fsFNameListWindow, -2, 145);
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(fsFNameListWindow), GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
 
     fsFNameList = gtk_clist_new(2);
@@ -692,12 +818,10 @@ static GtkWidget *CreateFileSelect(void)
     gtk_object_set_data_full(GTK_OBJECT(FileSelector), "List", List, (GtkDestroyNotify)gtk_widget_unref);
     gtk_widget_show(List);
     gtk_box_pack_start(GTK_BOX(vbox4), List, FALSE, FALSE, 0);
-    gtk_widget_set_usize(List, -2, 20);
 
     fsFilterCombo = GTK_COMBO(List)->entry;
     gtk_widget_show(fsFilterCombo);
     gtk_entry_set_editable(GTK_ENTRY(fsFilterCombo), FALSE);
-    gtk_widget_set_usize(fsFilterCombo, -2, 20);
 
     gtkAddHSeparator(vbox4);
 
@@ -747,12 +871,13 @@ void ShowFileSelector(int type)
         fsList_items = NULL;
 
         for (i = 0; fsVideoAudioFilterNames[i][0]; i++)
-            fsList_items = g_list_append(fsList_items, fsVideoAudioFilterNames[i][0]);
+            if ((strcmp(fsVideoAudioFilterNames[i][0], MSGTR_GUI_FilterFilePlaylist) != 0) || allow_playlist_parsing)
+                fsList_items = g_list_append(fsList_items, fsVideoAudioFilterNames[i][0]);
 
         k = fsLastVideoAudioFilterSelected;
         gtk_combo_set_popdown_strings(GTK_COMBO(List), fsList_items);
         g_list_free(fsList_items);
-        gtk_entry_set_text(GTK_ENTRY(fsFilterCombo), fsVideoAudioFilterNames[k >= 0 ? k : i - 2][0]);
+        gtk_entry_set_text(GTK_ENTRY(fsFilterCombo), fsVideoAudioFilterNames[k >= 0 ? k : i - 4][0]);
         //tmp=guiInfo.Filename;
         break;
 
@@ -770,7 +895,7 @@ void ShowFileSelector(int type)
         tmp = guiInfo.SubtitleFilename;
         break;
 
-    case FILESELECT_AUDIO:
+    case FILESELECT_AUDIO_TRACK:
         gtk_window_set_title(GTK_WINDOW(FileSelector), MSGTR_GUI_SelectAudioFile);
         fsList_items = NULL;
 
@@ -813,7 +938,7 @@ void ShowFileSelector(int type)
         break;
     }
 
-    fsMedium = (fsType == FILESELECT_VIDEO_AUDIO || fsType == FILESELECT_SUBTITLE || fsType == FILESELECT_AUDIO || fsType == FILESELECT_IMAGE);
+    fsMedium = (fsType == FILESELECT_VIDEO_AUDIO || fsType == FILESELECT_SUBTITLE || fsType == FILESELECT_AUDIO_TRACK || fsType == FILESELECT_IMAGE);
 
     if (tmp && tmp[0] && !strstr(tmp, "://")) {
         dir = strdup(tmp);

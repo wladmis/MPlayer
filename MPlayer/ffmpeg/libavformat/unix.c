@@ -23,7 +23,6 @@
  * @file
  *
  * Unix socket url_protocol
- *
  */
 
 #include "libavutil/avstring.h"
@@ -73,6 +72,9 @@ static int unix_open(URLContext *h, const char *filename, int flags)
     if ((fd = ff_socket(AF_UNIX, s->type, 0)) < 0)
         return ff_neterrno();
 
+    if (s->timeout < 0 && h->rw_timeout)
+        s->timeout = h->rw_timeout / 1000;
+
     if (s->listen) {
         ret = ff_listen_bind(fd, (struct sockaddr *)&s->addr,
                              sizeof(s->addr), s->timeout, h);
@@ -109,6 +111,8 @@ static int unix_read(URLContext *h, uint8_t *buf, int size)
             return ret;
     }
     ret = recv(s->fd, buf, size, 0);
+    if (!ret && s->type == SOCK_STREAM)
+        return AVERROR_EOF;
     return ret < 0 ? ff_neterrno() : ret;
 }
 
@@ -141,7 +145,7 @@ static int unix_get_file_handle(URLContext *h)
     return s->fd;
 }
 
-URLProtocol ff_unix_protocol = {
+const URLProtocol ff_unix_protocol = {
     .name                = "unix",
     .url_open            = unix_open,
     .url_read            = unix_read,

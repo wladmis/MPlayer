@@ -1,4 +1,4 @@
-.\" MPlayer (C) 2000-2016 MPlayer Team
+.\" MPlayer (C) 2000-2019 MPlayer Team
 .\" Diese Man-Page wurde/wird von Moritz Bunkus, Sebastian Krämer,
 .\" Tobias Diedrich gepflegt.
 .\"
@@ -33,7 +33,7 @@
 .\" Titel
 .\" --------------------------------------------------------------------------
 .
-.TH MPlayer 1 "13.02.2015" "Das MPlayer Projekt"
+.TH MPlayer 1 "09.03.2019" "Das MPlayer Projekt"
 .
 .SH NAME
 mplayer  \- Movie Player
@@ -127,7 +127,7 @@ tivo://Rechnername/[list|llist|fsid]
 .
 .br
 .B gmplayer
-[Optionen]
+[Optionen] [Datei|URL|Playlist]
 [\-skin\ Skin]
 .
 .br
@@ -624,6 +624,8 @@ gui_video_out_pos_x,
 gui_video_out_pos_y,
 load_fullscreen  (ja/nein),
 playbar (aktiviert/deaktiviert),
+replay_gain (aktiviert/deaktiviert),
+replay_gain_adjustment (-30..10),
 show_videowin (ja/nein),
 vf_lavc
 .RB ( "vf lavc" ") (nur mit DXR3),"
@@ -671,6 +673,8 @@ idle
 .RB ( idle ),
 osd_level
 .RB ( osdlevel ),
+playlist_support
+.RB ( allow-dangerous-playlist-parsing ),
 softvol
 .RB ( softvol ),
 stopxscreensaver
@@ -1759,6 +1763,8 @@ einiger schlechter AVI-Dateien ermöglicht).
 Benutze nicht den durchschnittlichen Bytes/\:Sekunde-Wert für die
 A/\:V-Synchronisation.
 Hilft bei einigen AVI-Dateien mit defektem Header.
+Dies kann den Speicherbedarf beträchtlich erhöhen, weshalb es wohl besser
+wäre, das Interleaving der betroffenen Dateien in Ordnung zu bringen.
 .
 .TP
 .B \-noextbased
@@ -1821,7 +1827,7 @@ Gib den Aspekt der Eingabe an:
 .IPs arate=<32000\-48000>
 Gib die Audio-Rate für die Encodierung an (Standard: 48000 Hz, verfügbar:
 32000, 44100 und 48000 Hz).
-.IPs alayer=<1\-3>
+.IPs alayer=<1\-5>
 Gib die Encodierung des MPEG-Audio-Layers an (Standard: 2).
 .IPs abitrate=<32\-448>
 Gib die Bitrate für die Audioencodierung in kbps an (Standard: 384).
@@ -2540,6 +2546,7 @@ VOBsub-Untertitel lädt.
 .TP
 .B \-noautosub
 Deaktiviert das automatische Laden von Untertiteln.
+ANMERKUNG: VOBsub-Untertitel sind nicht betroffen.
 .
 .TP
 .B \-osd\-duration <Zeit> (nur bei MPlayer)
@@ -2695,7 +2702,8 @@ Demuxer-ID akzeptiert.
 .
 .TP
 .B \-sub\-fuzziness <Modus>
-Passe die Unschärfe für die Suche nach Untertiteln an:
+Passe die Unschärfe für die Suche nach Untertiteln an (gilt nicht für
+VOBsub):
 .PD 0
 .RSs
 .IPs 0
@@ -2758,6 +2766,7 @@ Du kannst eine Sprache im 2-Zeichen-Sprachcode angeben, um ENCA automatisch
 eine Codepage erkennen zu lassen.
 Wenn du nicht sicher bist, gib irgendetwas ein und sieh dir die Ausgaben von
 mplayer \-v an, um die verfügbaren Sprachen zu sehen.
+Benutze __ (zwei Unterstriche), falls deine Sprache nicht unterstützt wird.
 Die alternative Codepage gibt die zu benutzende Codepage an, falls die
 automatische Erkennung versagt.
 .sp 1
@@ -2769,6 +2778,8 @@ Nimm an, die Untertitel seien Tschechisch, und rate die Kodierung.
 Wenn die Erkennung versagt, benutze latin2.
 .IPs "\-subcp enca:pl:cp1250"
 Rate die Kodierung für Polnisch, benutze sonst cp1250.
+.IPs "\-subcp enca:__:latin1"
+Allgemeine Erkennung (meistens Unicode) mit latin1 als Alternative.
 .RE
 .PD 1
 .
@@ -11430,61 +11441,6 @@ dem Referenzzeitgeber des Ausgabestreams (SCR) und des
 Decodierungszeitstempels (DTS) für jeden vorhandenen Stream
 (Verzögerung von Demuxing zu Decodierung).
 .
-.TP
-.
-.
-.\" --------------------------------------------------------------------------
-.\" Dateien
-.\" --------------------------------------------------------------------------
-.
-.SH DATEIEN
-.TP
-/usr/\:local/\:etc/\:mplayer/\:mplayer.conf
-systemweite Einstellungen
-.
-.TP
-~/.mplayer/\:config
-Benutzereinstellungen
-.
-.TP
-~/.mplayer/\:input.conf
-Eingabebelegungen (siehe '\-input keylist' für eine vollständige Auflistung
-aller Tastennamen)
-.
-.TP
-~/.mplayer/\:gui.conf
-Konfigurationsdatei für die GUI
-.
-.TP
-~/.mplayer/\:gui.history
-Verzeichnis-Verlaufsdatei für die GUI
-.
-.TP
-~/.mplayer/\:gui.pl
-Playlist für die GUI
-.
-.TP
-~/.mplayer/\:gui.url
-URL-Liste für die GUI
-.
-.TP
-~/.mplayer/\:font/
-Schriftartenverzeichnis (es müssen sich eine Datei font.desc und Dateien mit
-der Erweiterung .RAW in dem Verzeichnis befinden)
-.
-.TP
-~/.mplayer/\:DVDkeys/
-zwischengespeicherte CSS-Schlüssel
-.
-.TP
-Angenommen, dass /Pfad/\:zum/\:film.avi abgespielt wird,
-sucht MPlayer nach Untertiteldateien in folgender Reihenfolge:
-.RS
-/Pfad/\:zum/\:film.sub
-.br
-~/.mplayer/\:sub/\:film.sub
-.RE
-.PD 1
 .
 .
 .\" --------------------------------------------------------------------------
@@ -11730,10 +11686,10 @@ FIXME: Muss noch dokumentiert werden.
 .
 .
 .\" --------------------------------------------------------------------------
-.\" Files
+.\" Dateien
 .\" --------------------------------------------------------------------------
 .
-.SH FILES
+.SH DATEIEN
 .
 .TP
 /usr/\:local/\:etc/\:mplayer/\:mplayer.conf
@@ -11760,8 +11716,25 @@ Eingabebindungen (Siehe '\-input keylist' für eine vollständige Liste)
 GUI-Konfigurationsdatei
 .
 .TP
+~/.mplayer/\:gui.gain
+Für Audio-Dateien, die keine Information zur Lautstärke-Anpassung (Replay
+Gain) enthalten, kann man eine Zeile mit Verstärkung oder Verminderung und
+Dateinamen (durch ein Leerzeichen getrennt) eintragen, z. B.
+.br
+
++1.50 /home/ich/Musik/Lied.mp3
+.
+.TP
+~/.mplayer/\:gui.history
+GUI-Verzeichnisverlauf
+.
+.TP
 ~/.mplayer/\:gui.pl
 GUI-Playliste
+.
+.TP
+~/.mplayer/\:gui.url
+GUI-URL-Liste
 .
 .TP
 ~/.mplayer/\:font/
@@ -11770,21 +11743,9 @@ mit .RAW-Erweiterung existieren)
 .
 .TP
 ~/.mplayer/\:DVDkeys/
-Cacheverzeichnis für CSS-Schlüssel
-.
-.TP
-Angenommen, das /path/\:to/\:movie.avi abgespielt werden soll, sucht
-MPlayer in folgender Reichenfolge nach Untertiteldateien:
-.RS
-/path/\:to/\:movie.sub
-.br
-~/.mplayer/\:sub/\:movie.sub
-.br
-~/.mplayer/\:default.sub
+zwischengespeicherte CSS-Schlüssel
 .RE
 .PD 1
-.
-.
 .
 .
 .\" --------------------------------------------------------------------------
@@ -12001,7 +11962,7 @@ erstellt.
 MPlayer wurde ursprünglich von Arpad Gereöffy geschrieben.
 Siehe Datei AUTHORS für eine Liste einiger der vielen anderen Beitragenden.
 .PP
-MPlayer is (C) 2000\-2016 The MPlayer Team
+MPlayer is (C) 2000\-2019 The MPlayer Team
 .PP
 Diese Manpage wurde zum größten Teil von Gabucino, Diego Biurrun und
 Jonas Jermann geschrieben und von Moritz Bunkus und Sebastian Krämer

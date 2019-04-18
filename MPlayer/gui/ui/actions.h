@@ -25,6 +25,8 @@ extern int uiLoadPlay;
 
 void uiAbsSeek(float sec);
 void uiChangeSkin(char *name);
+int uiCueCheckNext(int *);
+void uiCueSetTitle(void);
 void uiCurr(void);
 void uiEvent(int ev, float param);
 void uiFullScreen(void);

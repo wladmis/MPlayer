@@ -82,7 +82,7 @@ static int config(struct vf_instance *vf,
     return vf_next_config(vf,width,height,d_width,d_height,flags,IMGFMT_MPEGPES);
 }
 
-static int put_image(struct vf_instance *vf, mp_image_t *mpi, double pts){
+static int put_image(struct vf_instance *vf, mp_image_t *mpi, double pts, double endpts){
     mp_image_t* dmpi;
     int out_size;
     AVFrame *pic= vf->priv->pic;
@@ -116,7 +116,7 @@ static int put_image(struct vf_instance *vf, mp_image_t *mpi, double pts){
 
     dmpi->planes[0]=(unsigned char*)&vf->priv->pes;
 
-    return vf_next_put_image(vf,dmpi, pts);
+    return vf_next_put_image(vf, dmpi, pts, endpts);
 }
 
 //===========================================================================//
@@ -157,7 +157,7 @@ static int vf_open(vf_instance_t *vf, char *args){
 
     if(p_quality<32){
 	// fixed qscale
-	lavc_venc_context.flags = CODEC_FLAG_QSCALE;
+	lavc_venc_context.flags = AV_CODEC_FLAG_QSCALE;
 	lavc_venc_context.global_quality =
 	vf->priv->pic->quality = (int)(FF_QP2LAMBDA * ((p_quality<1) ? 1 : p_quality) + 0.5);
     } else {

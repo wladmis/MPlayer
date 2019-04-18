@@ -133,6 +133,13 @@ License:    GNU General Public License
 Name:       Icons
 Version:    2012-01-07
 URL:        http://www.andreasn.se
-Directory:  etc/
+Files:      etc/mplayer*.{ico,png}
 Copyright:  Andreas Nilsson <andreas@andreasn.se>
+License:    GNU General Public License
+
+Name:       Icons
+Version:    2018-03-31
+URL:        https://sixsixfive.deviantart.com
+Files:      gui/dialog/icons.c, gui/dialog/pixmaps/{dir,file*,open}.xpm
+Copyright:  sixsixfive
 License:    GNU General Public License

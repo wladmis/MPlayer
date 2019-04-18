@@ -48,7 +48,7 @@ static int timed_line(const char *ptr)
             (sscanf(ptr, "@%u @%u %c", &fs, &fe, &c) == 3 && fs < fe));
 }
 
-static int jacosub_probe(AVProbeData *p)
+static int jacosub_probe(const AVProbeData *p)
 {
     const char *ptr     = p->buf;
     const char *ptr_end = p->buf + p->buf_size;
@@ -127,7 +127,7 @@ shift_and_ret:
     ts_start  = (ts_start + jacosub->shift) * 100 / jacosub->timeres;
     ts_end    = (ts_end   + jacosub->shift) * 100 / jacosub->timeres;
     *start    = ts_start;
-    *duration = ts_start + ts_end;
+    *duration = ts_end - ts_start;
     return buf + len;
 }
 
@@ -167,8 +167,8 @@ static int jacosub_read_header(AVFormatContext *s)
     if (!st)
         return AVERROR(ENOMEM);
     avpriv_set_pts_info(st, 64, 1, 100);
-    st->codec->codec_type = AVMEDIA_TYPE_SUBTITLE;
-    st->codec->codec_id   = AV_CODEC_ID_JACOSUB;
+    st->codecpar->codec_type = AVMEDIA_TYPE_SUBTITLE;
+    st->codecpar->codec_id   = AV_CODEC_ID_JACOSUB;
 
     jacosub->timeres = 30;
 
@@ -230,7 +230,7 @@ static int jacosub_read_header(AVFormatContext *s)
     }
 
     /* general/essential directives in the extradata */
-    ret = avpriv_bprint_to_extradata(st->codec, &header);
+    ret = ff_bprint_to_codecpar_extradata(st->codecpar, &header);
     if (ret < 0)
         goto fail;
 

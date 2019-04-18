@@ -45,6 +45,9 @@
 #if ARCH_X86
 #   include "x86/cabac.h"
 #endif
+#if ARCH_MIPS
+#   include "mips/cabac.h"
+#endif
 
 static const uint8_t * const ff_h264_norm_shift = ff_h264_cabac_tables + H264_NORM_SHIFT_OFFSET;
 static const uint8_t * const ff_h264_lps_range = ff_h264_cabac_tables + H264_LPS_RANGE_OFFSET;
@@ -172,7 +175,6 @@ static av_always_inline int get_cabac_bypass_sign(CABACContext *c, int val){
 #endif
 
 /**
- *
  * @return the number of bytes read or 0 if no end
  */
 #ifndef get_cabac_terminate

@@ -42,6 +42,7 @@
 #include "libavutil/avstring.h"
 #include "libavutil/mathematics.h"
 #include "libavutil/opt.h"
+#include "libavutil/replaygain.h"
 
 #include "mp_taglists.h"
 
@@ -80,6 +81,7 @@ typedef struct lavf_priv {
     int cur_program;
     int nb_streams_last;
     int use_lavf_netstream;
+    int r_gain;
 }lavf_priv_t;
 
 static int mp_read(void *opaque, uint8_t *buf, int size) {
@@ -88,6 +90,8 @@ static int mp_read(void *opaque, uint8_t *buf, int size) {
     int ret;
 
     ret=stream_read(stream, buf, size);
+    if (!ret && stream->eof)
+      ret = AVERROR_EOF;
 
     mp_msg(MSGT_HEADER,MSGL_DBG2,"%d=mp_read(%p, %p, %d), pos: %"PRId64", eof:%d\n",
            ret, stream, buf, size, stream_tell(stream), stream->eof);
@@ -155,8 +159,10 @@ static int lavf_check_file(demuxer_t *demuxer){
     int read_size = INITIAL_PROBE_SIZE;
     int score;
 
-    if(!demuxer->priv)
+    if(!demuxer->priv) {
         demuxer->priv=calloc(sizeof(lavf_priv_t),1);
+        ((lavf_priv_t *)demuxer->priv)->r_gain = INT32_MIN;
+    }
     priv= demuxer->priv;
 
     init_avformat();
@@ -176,7 +182,7 @@ static int lavf_check_file(demuxer_t *demuxer){
     }
 
     avpd.buf = av_mallocz(FFMAX(BIO_BUFFER_SIZE, PROBE_BUF_SIZE) +
-                          FF_INPUT_BUFFER_PADDING_SIZE);
+                          AV_INPUT_BUFFER_PADDING_SIZE);
     do {
         read_size = stream_read(demuxer->stream, avpd.buf + probe_data_size, read_size);
         if(read_size < 0) {
@@ -229,6 +235,7 @@ static const char * const preferred_list[] = {
     "cdxl",
     "dxa",
     "flv",
+    "flac",
     "gxf",
     "nut",
     "nuv",
@@ -357,6 +364,14 @@ static void handle_stream(demuxer_t *demuxer, AVFormatContext *avfc, int i) {
             }
             if (demuxer->audio->id != i)
                 st->discard= AVDISCARD_ALL;
+            if (priv->audio_streams == 0) {
+                int rg_size;
+                AVReplayGain *rg = (AVReplayGain*)av_stream_get_side_data(st, AV_PKT_DATA_REPLAYGAIN, &rg_size);
+                if (rg && rg_size >= sizeof(*rg)) {
+                    priv->r_gain = rg->track_gain / 10000;
+                }
+            } else
+                priv->r_gain = INT32_MIN;
             stream_id = priv->audio_streams++;
             break;
         }
@@ -367,9 +382,20 @@ static void handle_stream(demuxer_t *demuxer, AVFormatContext *avfc, int i) {
             if(!sh_video) break;
             stream_type = "video";
             priv->vstreams[priv->video_streams] = i;
-            bih=calloc(sizeof(*bih) + codec->extradata_size,1);
+            if (codec->extradata_size >= 9 &&
+                !memcmp(codec->extradata + codec->extradata_size - 9, "BottomUp", 9))
+            {
+                codec->extradata_size -= 9;
+                sh_video->flipped_input ^= 1;
+            }
+            // always reserve space for palette
+            sh_video->bih_size = sizeof(*bih) + codec->extradata_size + 1024;
+            bih=calloc(sh_video->bih_size,1);
 
             if (codec->codec_id == AV_CODEC_ID_RAWVIDEO) {
+                if (codec->bits_per_coded_sample && codec->bits_per_coded_sample > 0 &&
+                    codec->codec_tag == MKTAG('r', 'a', 'w', 32))
+                    codec->codec_tag = 0;
                 switch (codec->pix_fmt) {
                     case AV_PIX_FMT_RGB24:
                         codec->codec_tag= MKTAG(24, 'B', 'G', 'R');
@@ -444,17 +470,13 @@ static void handle_stream(demuxer_t *demuxer, AVFormatContext *avfc, int i) {
             sh_sub_t* sh_sub;
             char type;
             if (codec->codec_id == AV_CODEC_ID_TEXT
-#if LIBAVUTIL_VERSION_MICRO >= 100
                 || codec->codec_id == AV_CODEC_ID_SUBRIP
-#endif /* LIBAVUTIL_VERSION_MICRO >= 100 */
                 )
                 type = 't';
             else if (codec->codec_id == AV_CODEC_ID_MOV_TEXT)
                 type = 'm';
             else if (codec->codec_id == AV_CODEC_ID_SSA
-#if LIBAVUTIL_VERSION_MICRO >= 100
                      || codec->codec_id == AV_CODEC_ID_ASS
-#endif /* LIBAVUTIL_VERSION_MICRO >= 100 */
                 )
                 type = 'a';
             else if (codec->codec_id == AV_CODEC_ID_DVD_SUBTITLE)
@@ -467,10 +489,8 @@ static void handle_stream(demuxer_t *demuxer, AVFormatContext *avfc, int i) {
                 type = 'd';
             else if (codec->codec_id == AV_CODEC_ID_HDMV_PGS_SUBTITLE)
                 type = 'p';
-#if LIBAVUTIL_VERSION_MICRO >= 100
             else if (codec->codec_id == AV_CODEC_ID_EIA_608)
                 type = 'c';
-#endif /* LIBAVUTIL_VERSION_MICRO >= 100 */
             else if(codec->codec_tag == MKTAG('c', '6', '0', '8'))
                 type = 'c';
             else
@@ -525,7 +545,7 @@ static demuxer_t* demux_open_lavf(demuxer_t *demuxer){
     AVDictionaryEntry *t = NULL;
     lavf_priv_t *priv= demuxer->priv;
     int i;
-    char mp_filename[256]="mp:";
+    char mp_filename[2048]="mp:";
 
     stream_seek(demuxer->stream, 0);
 
@@ -581,6 +601,7 @@ static demuxer_t* demux_open_lavf(demuxer_t *demuxer){
         avfc->pb = priv->pb;
     }
 
+    av_dict_set(&opts, "fflags", "+keepside", 0);
     if(avformat_open_input(&avfc, mp_filename, priv->avif, &opts)<0){
         mp_msg(MSGT_HEADER,MSGL_ERR,"LAVF_header: av_open_input_stream() failed\n");
         return NULL;
@@ -677,10 +698,18 @@ static int demux_lavf_fill_buffer(demuxer_t *demux, demux_stream_t *dsds){
         }
     } else if(id==demux->video->id){
         // video
+        sh_video_t *sh;
         ds=demux->video;
         if(!ds->sh){
             ds->sh=demux->v_streams[id];
             mp_msg(MSGT_DEMUX,MSGL_V,"Auto-selected LAVF video ID = %d\n",ds->id);
+        }
+        sh = ds->sh;
+        if (sh && sh->bih) {
+            int size = 0;
+            const uint8_t *pal = av_packet_get_side_data(&pkt, AV_PKT_DATA_PALETTE, &size);
+            if (pal && size)
+                memcpy(((uint8_t *)sh->bih) + sh->bih->biSize, pal, FFMIN(size, 1024));
         }
     } else if(id==demux->sub->id){
         // subtitle
@@ -691,6 +720,7 @@ static int demux_lavf_fill_buffer(demuxer_t *demux, demux_stream_t *dsds){
         return 1;
     }
 
+        av_packet_merge_side_data(&pkt);
         dp=new_demux_packet(pkt.size);
         memcpy(dp->buffer, pkt.data, pkt.size);
         av_free_packet(&pkt);
@@ -887,6 +917,11 @@ redo:
             priv->cur_program = prog->progid = program->id;
             return DEMUXER_CTRL_OK;
         }
+        case DEMUXER_CTRL_GET_REPLAY_GAIN:
+            if (priv->r_gain == INT32_MIN)
+                return DEMUXER_CTRL_DONTKNOW;
+            *((int *)arg) = priv->r_gain;
+            return DEMUXER_CTRL_OK;
 	default:
 	    return DEMUXER_CTRL_NOTIMPL;
     }

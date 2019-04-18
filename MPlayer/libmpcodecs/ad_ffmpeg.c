@@ -106,9 +106,9 @@ static int init(sh_audio_t *sh_audio)
     mp_msg(MSGT_DECAUDIO,MSGL_V,"FFmpeg's libavcodec audio codec\n");
     init_avcodec();
 
-    lavc_codec = avcodec_find_decoder_by_name(sh_audio->codec->dll);
+    lavc_codec = avcodec_find_decoder_by_name(codec_idx2str(sh_audio->codec->dll_idx));
     if(!lavc_codec){
-	mp_msg(MSGT_DECAUDIO,MSGL_ERR,MSGTR_MissingLAVCcodec,sh_audio->codec->dll);
+	mp_msg(MSGT_DECAUDIO,MSGL_ERR,MSGTR_MissingLAVCcodec,codec_idx2str(sh_audio->codec->dll_idx));
 	return 0;
     }
 
@@ -134,7 +134,7 @@ static int init(sh_audio_t *sh_audio)
 
     /* alloc extra data */
     if (sh_audio->wf && sh_audio->wf->cbSize > 0) {
-        lavc_context->extradata = av_mallocz(sh_audio->wf->cbSize + FF_INPUT_BUFFER_PADDING_SIZE);
+        lavc_context->extradata = av_mallocz(sh_audio->wf->cbSize + AV_INPUT_BUFFER_PADDING_SIZE);
         lavc_context->extradata_size = sh_audio->wf->cbSize;
         memcpy(lavc_context->extradata, sh_audio->wf + 1,
                lavc_context->extradata_size);
@@ -332,6 +332,11 @@ static int decode_audio(sh_audio_t *sh_audio,unsigned char *buf,int minlen,int m
 	    int in_size = x;
 	    int consumed = ds_parse(sh_audio->ds, &start, &x, pts, 0);
 	    sh_audio->ds->buffer_pos -= in_size - consumed;
+	    // Note: hopefully below is correct, it was only
+	    // added because FFmpeg broke the API and 0-sized
+	    // packets started to break e.g. AC3 decode.
+	    if (x <= 0)
+	        break; // error or not enough data
 	}
 
 	av_init_packet(&pkt);

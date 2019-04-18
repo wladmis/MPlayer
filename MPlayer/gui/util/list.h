@@ -21,6 +21,8 @@
 
 /// listMgr() commands
 enum {
+    GAINLIST_ITEM_INSERT,
+    GAINLIST_ITEM_FIND,
     PLAYLIST_GET,
     PLAYLIST_ITEM_APPEND,
     PLAYLIST_ITEM_INSERT,
@@ -33,10 +35,18 @@ enum {
     PLAYLIST_ITEM_GET_LAST,
     PLAYLIST_ITEM_DEL_CURR,
     PLAYLIST_DELETE,
+    PLITEM_COPY,
+    PLITEM_FREE,
     URLLIST_GET,
     URLLIST_ITEM_ADD,
     URLLIST_DELETE
 };
+
+typedef struct gainItem {
+    char *filename;
+    float replay_gain;
+    struct gainItem *next;
+} gainItem;
 
 typedef struct plItem {
     char *path;

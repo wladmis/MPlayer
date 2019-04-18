@@ -16,6 +16,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -89,6 +90,9 @@ int gtkSubDumpSrt;
 
 gtkASS_t gtkASS;
 
+int gtkReplayGainOn;
+int gtkReplayGainAdjustment;
+
 int gtkEnablePlayBar = True;
 int gtkLoadFullscreen;
 int gtkShowVideoWindow = True;
@@ -108,6 +112,7 @@ char *skinName;
 char *fsHistory[5];
 
 static const char gui_configuration[] = "gui.conf";
+static const char gui_gainlist[]      = "gui.gain";
 static const char gui_history[]       = "gui.history";
 static const char gui_playlist[]      = "gui.pl";
 static const char gui_urllist[]       = "gui.url";
@@ -169,6 +174,9 @@ static const m_option_t gui_opts[] = {
     audio_equ_row(4, 0), audio_equ_row(4, 1), audio_equ_row(4, 2), audio_equ_row(4, 3), audio_equ_row(4, 4), audio_equ_row(4, 5), audio_equ_row(4, 6), audio_equ_row(4, 7), audio_equ_row(4, 8), audio_equ_row(4, 9),
     audio_equ_row(5, 0), audio_equ_row(5, 1), audio_equ_row(5, 2), audio_equ_row(5, 3), audio_equ_row(5, 4), audio_equ_row(5, 5), audio_equ_row(5, 6), audio_equ_row(5, 7), audio_equ_row(5, 8), audio_equ_row(5, 9),
 #undef audio_equ_row
+
+    { "replay_gain",                 &gtkReplayGainOn,         CONF_TYPE_FLAG,        0,           0,     1,          NULL },
+    { "replay_gain_adjustment",      &gtkReplayGainAdjustment, CONF_TYPE_INT,         CONF_RANGE,  -30,   10,         NULL },
 
     { "playbar",                     &gtkEnablePlayBar,        CONF_TYPE_FLAG,        0,           0,     1,          NULL },
     { "load_fullscreen",             &gtkLoadFullscreen,       CONF_TYPE_FLAG,        0,           0,     1,          NULL },
@@ -242,6 +250,8 @@ static const m_option_t gui_opts[] = {
     { "ass_top_margin",              &ass_top_margin,          CONF_TYPE_INT,         CONF_RANGE,  0,     2000,       NULL },
     { "ass_bottom_margin",           &ass_bottom_margin,       CONF_TYPE_INT,         CONF_RANGE,  0,     2000,       NULL },
 #endif
+
+    { "playlist_support",            &allow_playlist_parsing,  CONF_TYPE_FLAG,        0,           0,     1,          NULL },
 
     { NULL,                          NULL,                     0,                     0,           0,     0,          NULL }
 };
@@ -356,6 +366,39 @@ void cfg_read(void)
         while (fgetstr(line, sizeof(line), file))
             if (*line && (i < FF_ARRAY_ELEMS(fsHistory)))
                 fsHistory[i++] = strdup(line);
+
+        fclose(file);
+    }
+
+    free(fname);
+
+    /* ReplayGain list */
+
+    fname = get_path(gui_gainlist);
+    file  = fopen(fname, "rt");
+
+    if (file) {
+        while (fgetstr(line, sizeof(line), file)) {
+            char *space = strchr(line, ' ');
+
+            if (space) {
+                float gain;
+
+                *space = 0;
+                errno  = 0;
+                gain   = strtof(line, NULL);
+
+                if (errno == 0) {
+                    gainItem *item = calloc(1, sizeof(*item));
+
+                    if (item) {
+                        item->filename    = strdup(space + 1);
+                        item->replay_gain = gain;
+                        listMgr(GAINLIST_ITEM_INSERT, item);
+                    }
+                }
+            }
+        }
 
         fclose(file);
     }

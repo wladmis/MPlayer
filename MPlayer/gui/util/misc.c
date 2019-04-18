@@ -30,6 +30,9 @@
 #include "string.h"
 #include "gui/app/gui.h"
 
+#define CFG_OLD_PLAYLIST
+#include "gui/app/cfg-old.c"
+
 #include "mp_msg.h"
 
 /**
@@ -117,7 +120,7 @@ float msf2sec(const char *msf)
  */
 plItem **cue_playlist(const char *fname)
 {
-    static plItem *item[100];
+    static plItem *item[101];
     FILE *file;
     char line[256], *l, *fmt, *path = NULL, *data = NULL;
     int i = -1, isFILE = False, isTRACK = False;
@@ -128,6 +131,8 @@ plItem **cue_playlist(const char *fname)
         mp_msg(MSGT_GPLAYER, MSGL_DBG2, "[misc] cue file: %s\n", fname);
     else
         return NULL;
+
+    memset(item, 0, sizeof(item));
 
     while (fgetstr(line, sizeof(line), file) && (i < 99)) {
         l = (char *)ltrim(line);
@@ -170,8 +175,8 @@ plItem **cue_playlist(const char *fname)
             if (!item[i])
                 break;
 
-            item[i]->path = strdup(path);
-            item[i]->name = strdup(data);
+            item[i]->path = strdup(cfg_old_filename_from_utf8(path));
+            item[i]->name = strdup(cfg_old_filename_from_utf8(data));
 
             isTRACK = True;
         } else if (strncmp(l, "TITLE ", 6) == 0) {

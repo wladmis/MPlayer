@@ -193,30 +193,30 @@ void gtkMessageBox(int type, const gchar *str)
     switch (type) {
     case MSGBOX_FATAL:
         gtk_window_set_title(GTK_WINDOW(MessageBox), MSGTR_GUI_ErrorFatal);
-        gtk_widget_hide(InformationPixmap);
-        gtk_widget_hide(WarningPixmap);
-        gtk_widget_show(ErrorPixmap);
+        gtk_widget_hide(InformationImage);
+        gtk_widget_hide(WarningImage);
+        gtk_widget_show(ErrorImage);
         break;
 
     case MSGBOX_ERROR:
         gtk_window_set_title(GTK_WINDOW(MessageBox), MSGTR_GUI_Error);
-        gtk_widget_hide(InformationPixmap);
-        gtk_widget_hide(WarningPixmap);
-        gtk_widget_show(ErrorPixmap);
+        gtk_widget_hide(InformationImage);
+        gtk_widget_hide(WarningImage);
+        gtk_widget_show(ErrorImage);
         break;
 
     case MSGBOX_WARNING:
         gtk_window_set_title(GTK_WINDOW(MessageBox), MSGTR_GUI_Warning);
-        gtk_widget_hide(InformationPixmap);
-        gtk_widget_show(WarningPixmap);
-        gtk_widget_hide(ErrorPixmap);
+        gtk_widget_hide(InformationImage);
+        gtk_widget_show(WarningImage);
+        gtk_widget_hide(ErrorImage);
         break;
 
     case MSGBOX_INFORMATION:
         gtk_window_set_title(GTK_WINDOW(MessageBox), MSGTR_GUI_Information);
-        gtk_widget_show(InformationPixmap);
-        gtk_widget_hide(WarningPixmap);
-        gtk_widget_hide(ErrorPixmap);
+        gtk_widget_show(InformationImage);
+        gtk_widget_hide(WarningImage);
+        gtk_widget_hide(ErrorImage);
         break;
     }
 
@@ -277,7 +277,7 @@ void gtkShow(int type, char *param)
             gtkSetLayer(SkinBrowser);
         } else {
             gtk_widget_destroy(SkinBrowser);
-            gtkMessageBox(MSGBOX_ERROR, "Skin dirs not found ... Please install skins.");
+            gtkMessageBox(MSGBOX_ERROR, MSGTR_GUI_MSG_SkinDirNotFound);
         }
 
         break;
@@ -302,7 +302,7 @@ void gtkShow(int type, char *param)
         break;
 
     case evLoadAudioFile:
-        ShowFileSelector(FILESELECT_AUDIO);
+        ShowFileSelector(FILESELECT_AUDIO_TRACK);
         gtkSetLayer(FileSelector);
         break;
 
@@ -317,15 +317,13 @@ void gtkShow(int type, char *param)
         break;
 
     case ivShowPopUpMenu:
-        gtkPopupMenu      = evNone;
-        gtkPopupMenuParam = 0;
 
         if (PopUpMenu) {
             gtk_widget_hide(PopUpMenu);
             gtk_widget_destroy(PopUpMenu);
         }
 
-        PopUpMenu = CreatePopUpMenu();
+        PopUpMenu = CreatePopUpMenu((int)param);
         gtk_menu_popup(GTK_MENU(PopUpMenu), NULL, NULL, NULL, NULL, 0, 0);
         break;
 

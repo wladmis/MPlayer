@@ -33,6 +33,9 @@
 #include "mp_msg.h"
 #include "path.h"
 
+static gainItem *gainList;
+static unsigned int gainCount;
+
 static plItem *plList;
 static plItem *plCurrent;
 
@@ -42,11 +45,12 @@ static urlItem *urlList;
  * @brief Manage playlists and URL lists.
  *
  * @param cmd task to be performed
- * @param data list item for the task
+ * @param data list item (or string in case of GAINLIST_ITEM_FIND) for the task
  *
  * @return pointer to top of list (GET command),
- *         pointer to current list item (ITEM command) or
- *         NULL (DELETE or unknown command)
+ *         pointer to current list item (ITEM command),
+ *         pointer to copied item (PLITEM_COPY) or
+ *         NULL (PLAYLIST_DELETE, PLITEM_FREE or unknown command)
  *
  * @note PLAYLIST_ITEM_GET_POS returns the position number as pointer value
  *       (if @a data is NULL the last position number, i.e. number of items),
@@ -55,10 +59,66 @@ static urlItem *urlList;
 void *listMgr(int cmd, void *data)
 {
     uintptr_t pos;
-    plItem *pdat  = (plItem *)data;
-    urlItem *udat = (urlItem *)data;
+    gainItem *gdat = (gainItem *)data;
+    char *cdat     = (char *)data;
+    plItem *pdat   = (plItem *)data;
+    urlItem *udat  = (urlItem *)data;
+    plItem *item;
 
     switch (cmd) {
+    /* ReplayGain list (sorted) */
+
+    case GAINLIST_ITEM_INSERT:
+
+        if (!gainList || (strcmp(gainList->filename, gdat->filename) >= 0)) {
+            gdat->next = gainList;
+            gainList   = gdat;
+        } else {
+            gainItem *item = gainList;
+
+            while (item->next && (strcmp(item->next->filename, gdat->filename) < 0))
+                item = item->next;
+
+            gdat->next = item->next;
+            item->next = gdat;
+        }
+
+        gainCount++;
+        return gdat;
+
+    case GAINLIST_ITEM_FIND:
+
+        if (!gainList || (strcmp(gainList->filename, cdat) == 0))
+            return gainList;
+        else {
+            gainItem *left = gainList, *right = NULL;
+            unsigned int count = gainCount;
+
+            while (count > 1) {
+                int cmp;
+                unsigned int i, newcount = count / 2;
+
+                right = left;
+
+                for (i = 0; i < newcount && right->next != NULL; i++)
+                    right = right->next;
+
+                cmp = strcmp(right->filename, cdat);
+
+                if (cmp == 0)
+                    return right;
+                else if (cmp < 0)
+                    left = right;
+
+                count -= newcount;
+            }
+
+            if (right && (strcmp(right->filename, cdat) == 0))
+                return right;
+            else
+                return NULL;
+        }
+
     /* playlist */
 
     case PLAYLIST_GET:
@@ -68,7 +128,7 @@ void *listMgr(int cmd, void *data)
     case PLAYLIST_ITEM_APPEND:
 
         if (plList) {
-            plItem *item = plList;
+            item = plList;
 
             while (item->next)
                 item = item->next;
@@ -103,10 +163,13 @@ void *listMgr(int cmd, void *data)
     case PLAYLIST_ITEM_FIND:
 
         if (plList) {
-            plItem *item = plList;
+            item = plList;
 
             do {
-                if (gstrcmp(item->path, pdat->path) == 0 && gstrcmp(item->name, pdat->name) == 0)
+                if (gstrcmp(item->path, pdat->path) == 0 &&
+                    gstrcmp(item->name, pdat->name) == 0 &&
+                    gstrcmp(item->title, pdat->title) == 0 &&
+                    item->start == pdat->start && item->stop == pdat->stop)
                     return item;
 
                 item = item->next;
@@ -129,8 +192,9 @@ void *listMgr(int cmd, void *data)
         pos = 0;
 
         if (plList) {
-            uintptr_t i  = 0;
-            plItem *item = plList;
+            uintptr_t i = 0;
+
+            item = plList;
 
             do {
                 i++;
@@ -170,7 +234,7 @@ void *listMgr(int cmd, void *data)
     case PLAYLIST_ITEM_GET_LAST:
 
         if (plList) {
-            plItem *item = plList;
+            item = plList;
 
             while (item->next)
                 item = item->next;
@@ -206,17 +270,39 @@ void *listMgr(int cmd, void *data)
     case PLAYLIST_DELETE:
 
         while (plList) {
-            plItem *item = plList->next;
+            item = plList->next;
 
-            free(plList->path);
-            free(plList->name);
-            free(plList->title);
-            free(plList);
+            listMgr(PLITEM_FREE, plList);
 
             plList = item;
         }
 
         plCurrent = NULL;
+        return NULL;
+
+    case PLITEM_COPY:
+
+        item = calloc(1, sizeof(*item));
+
+        if (item) {
+            item->path  = gstrdup(pdat->path);
+            item->name  = gstrdup(pdat->name);
+            item->title = gstrdup(pdat->title);
+            item->start = pdat->start;
+            item->stop  = pdat->stop;
+        }
+
+        return item;
+
+    case PLITEM_FREE:
+
+        if (pdat) {
+            free(pdat->path);
+            free(pdat->name);
+            free(pdat->title);
+            free(pdat);
+        }
+
         return NULL;
 
     /* URL list */

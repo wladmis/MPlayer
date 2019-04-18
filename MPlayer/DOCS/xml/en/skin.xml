@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- $Revision: 37501 $ -->
+<!-- $Revision: 38098 $ -->
 <appendix id="skin">
 <title><application>MPlayer</application> skin format</title>
 
@@ -111,7 +111,10 @@ they are clicked.
 <sect2 id="skin-overview-formats">
 <title>Image formats</title>
 
-<para>Images must be truecolor (24 or 32 bpp) PNGs.</para>
+<para>
+Images must be PNGs&#x2014;either truecolor (24 or 32 bpp)
+or 8 bpp with a RGBA color palette.
+</para>
 <para>
 In the main window and in the playbar (see below) you can use images with
 `transparency': Regions filled with the color #FF00FF (magenta) are fully
@@ -442,6 +445,10 @@ blocks.
   <listitem><para>
     <literal>default</literal> - default value for the potentiometer
     (in the range <literal>0</literal> to <literal>100</literal>)
+    </para><para>
+    (If message is <literal>evSetVolume</literal>, it's allowed to use a
+    plain hyphen-minus as value. This will cause the currently set volume to
+    remain unchanged.)
   </para></listitem>
   <listitem><para>
     <literal>X</literal>, <literal>Y</literal> - position for the potentiometer
@@ -642,6 +649,10 @@ blocks.
     <entry>the <keycap>e</keycap> character (if playback is paused)</entry>
   </row>
   <row>
+    <entry>$g</entry>
+    <entry>the <keycap>g</keycap> character (if ReplayGain is active)</entry>
+  </row>
+  <row>
     <entry>$x</entry>
     <entry>video width</entry>
   </row>
@@ -835,6 +846,7 @@ symbols (and thus require a different font).
   <row><entry><keycap>m</keycap></entry><entry>mono sound</entry></row>
   <row><entry><keycap>t</keycap></entry><entry>stereo sound</entry></row>
   <row><entry><keycap>r</keycap></entry><entry>surround sound</entry></row>
+  <row><entry><keycap>g</keycap></entry><entry>replay gain</entry></row>
   <row><entry><keycap>space</keycap></entry><entry>no (known)stream</entry></row>
   <row><entry><keycap>f</keycap></entry><entry>stream is a file</entry></row>
   <row><entry><keycap>a</keycap></entry><entry>stream is a CD</entry></row>
