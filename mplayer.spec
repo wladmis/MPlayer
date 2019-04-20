@@ -308,7 +308,6 @@ Summary(ru_RU.UTF-8): Медиаплейер
 License: GPLv2+
 Group: Video
 URL: http://www.mplayerhq.hu
-Packager: Afanasov Dmitry <ender@altlinux.org>
 %if %name != %Name
 Provides: %Name = %version-%release
 Obsoletes: %Name
