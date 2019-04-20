@@ -330,6 +330,7 @@ Optional features:
   --enable-gui           enable GMPlayer compilation (GTK+ GUI) [disable]
   --enable-termcap       use termcap database for key codes [autodetect]
   --enable-termios       use termios database for key codes [autodetect]
+  --enable-nls           use Native Language Support [disable]
   --disable-iconv        disable iconv for encoding conversion [autodetect]
   --disable-langinfo     do not use langinfo [autodetect]
   --enable-lirc          enable LIRC (remote control) support [autodetect]
@@ -708,6 +709,7 @@ _dxr2=auto
 _dxr3=auto
 _ivtv=auto
 _v4l2=auto
+_nls=no
 _iconv=auto
 _langinfo=auto
 _rtc=auto
@@ -1087,6 +1089,8 @@ for ac_option do
   --disable-ivtv)       _ivtv=no        ;;
   --enable-v4l2)        _v4l2=yes       ;;
   --disable-v4l2)       _v4l2=no        ;;
+  --enable-nls)		    _nls=yes	    ;;
+  --disable-nls)	    _nls=no		    ;;
   --enable-iconv)       _iconv=yes      ;;
   --disable-iconv)      _iconv=no       ;;
   --enable-langinfo)    _langinfo=yes   ;;
@@ -4158,6 +4162,14 @@ if test "$_rpath" = yes ; then
 extra_ldflags=$tmp
 fi
 echores "$_rpath"
+
+echocheck "NLS"
+if test "$_nls" = yes ; then
+  _def_nls='#define ENABLE_NLS 1'
+else
+  _def_nls='#undef ENABLE_NLS'
+fi
+echores "$_nls"
 
 echocheck "iconv"
 if test "$_iconv" != no ; then
@@ -8945,6 +8957,9 @@ $def_dl
 $def_dos_paths
 $def_extern_asm
 $def_extern_prefix
+$_def_nls
+#define PACKAGE "mplayer"
+#define LOCALEDIR "$_prefix/share/locale"
 $def_iconv
 $def_kstat
 $def_macosx_bundle
