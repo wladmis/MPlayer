@@ -1,8 +1,16 @@
+
+
+
+
+
+
+
 // Translated by:  Volodymyr M. Lisivka <lvm@mystery.lviv.net>,
 // Andriy Gritsenko <andrej@lucky.net>
 // sevenfourk <sevenfourk@gmail.com>
+// Led <ledest@gmail.com>
 
-// Was synced with help_mp-en.h: r28450
+// Was synced with help_mp-en.h: 1.1.1
 
 // ========================= MPlayer help ===========================
 
@@ -73,10 +81,14 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_DumpSelectedStreamMissing "dump: FATAL: обраний потік загублений!\n"
 #define MSGTR_CantOpenDumpfile "Не можу відкрити файл дампу!!!\n"
 #define MSGTR_CoreDumped "Створено дамп ядра :)\n"
+#define MSGTR_DumpBytesWrittenPercent "дамп: %"PRIu64" байт(и) записано (~%.1f%%)\r"
+#define MSGTR_DumpBytesWritten "дамп: %"PRIu64" байт(и) записано\r"
+#define MSGTR_DumpBytesWrittenTo "дамп: %"PRIu64" байт(и) записано до '%s'.\n"
 #define MSGTR_FPSnotspecified "Не вказано чи невірна кількість кадрів, застосуйте опцію -fps.\n"
 #define MSGTR_TryForceAudioFmtStr "Намагаюсь форсувати групу аудіо кодеків %s...\n"
 #define MSGTR_CantFindVideoCodec "Не можу знайти кодек для відео формату 0x%X!\n"
 #define MSGTR_TryForceVideoFmtStr "Намагаюсь форсувати групу відео кодеків %s...\n"
+#define MSGTR_CantFindVideoCodec "Не можгу знайти кодек для вибранного -vo та відеоформату 0x%X!\n"
 #define MSGTR_CannotInitVO "ФАТАЛЬНО: Не можу ініціалізувати відео драйвер!\n"
 #define MSGTR_CannotInitAO "не можу відкрити/ініціалізувати аудіо пристрій -> ГРАЮ БЕЗ ЗВУКУ\n"
 #define MSGTR_StartPlaying "Початок програвання...\n"
@@ -156,6 +168,7 @@ static const char help_text[] = MSGTR_Help;
 
 // --- edit decision lists
 #define MSGTR_EdlOutOfMem "Не можу виділити достатньо пам'яті для збереження даних EDL.\n"
+#define MSGTR_EdlOutOfMemFile "Не можу виділити достатньо пам'яті для зберігання даних EDL імені файлу [%s].\n"
 #define MSGTR_EdlRecordsNo "Читання %d EDL дій.\n"
 #define MSGTR_EdlQueueEmpty "Немає дій EDL які треба виконати.\n"
 #define MSGTR_EdlCantOpenForWrite "Не може відкрити EDL файл [%s] для запису.\n"
@@ -179,6 +192,9 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_OSDosd "OSD: %s"
 #define MSGTR_OSDChapter "Розділ: (%d) %s"
 #define MSGTR_OSDAngle "Кут: %d/%d"
+#define MSGTR_OSDDeinterlace "Деінтерлейс: %s"
+#define MSGTR_OSDCapturing "Захоплення: %s"
+#define MSGTR_OSDCapturingFailure "Збій захоплення"
 
 // property values
 #define MSGTR_Enabled "увімкнено"
@@ -200,7 +216,7 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_Brightness "Яскравість"
 #define MSGTR_Contrast "Контраст"
 #define MSGTR_Saturation "Насиченність"
-#define MSGTR_Hue "Колір"
+#define MSGTR_Hue "Відтінок"
 #define MSGTR_Balance "Баланс"
 
 // property state
@@ -260,12 +276,12 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_IncreasingAudioDensity "Збільшую густину аудіо до 4.\n"
 #define MSGTR_ZeroingAudioPreloadAndMaxPtsCorrection "Форсую аудіо підвантаження до 0, максимальну корекцію pts у 0.\n"
 #define MSGTR_LameVersion "Версія LAME %s (%s)\n\n"
-#define MSGTR_InvalidBitrateForLamePreset "Помилка: Вказаний бітрейт не є вірним для даного встановлення.\n"\
+#define MSGTR_InvalidBitrateForLamePreset "Помилка: Вказаний бітрейт непидатний для даного встановлення.\n"\
 "\n"\
 "Використовуючи цей режим ви повинні ввести значення між \"8\" та \"320\".\n"\
 "\n"\
 "Для подальшої інформації спробуйте: \"-lameopts preset=help\"\n"
-#define MSGTR_InvalidLamePresetOptions "Помилка: Ви не ввели дійсний профайл та/чи опції з встановлення.\n"\
+#define MSGTR_InvalidLamePresetOptions "Помилка: Ви не ввели придатний профайл та/чи опції з встановлення.\n"\
 "\n"\
 "Доступні профайли:\n"\
 "\n"\
@@ -437,7 +453,7 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_ParseErrorFIDAliasNotNumber "помилка у синтаксичному розборі (ID ім'я формату не є номером?)"
 #define MSGTR_DuplicateFID "подвоєний ID формату"
 #define MSGTR_TooManyOut "забагато вихідних форматів..."
-#define MSGTR_InvalidCodecName "\nкодек(%s) ім'я невірне!\n"
+#define MSGTR_InvalidCodecName "\nкодек(%s) ім'я непридатне!\n"
 #define MSGTR_CodecLacksFourcc "\nкодек(%s) не має FourCC/фармат!\n"
 #define MSGTR_CodecLacksDriver "\nкодек(%s) не має драйверу!\n"
 #define MSGTR_CodecNeedsDLL "\nкодек(%s) потребує 'dll'!\n"
@@ -462,7 +478,7 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_TheLoopOptionMustBeAnInteger "Опція loop має бути цілим числом: %s\n"
 #define MSGTR_UnknownOptionOnCommandLine "Невідома опція команд. рядку: -%s\n"
 #define MSGTR_ErrorParsingOptionOnCommandLine "Помилка аналізу опції команд. рядку: -%s\n"
-#define MSGTR_InvalidPlayEntry "Невірний елемент програвання %s\n"
+#define MSGTR_InvalidPlayEntry "Непридатній елемент програвання %s\n"
 #define MSGTR_NotAnMEncoderOption "-%s не є опцією MEncoder \n"
 #define MSGTR_NoFileGiven "Файл не вказано\n"
 
@@ -599,7 +615,7 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_MSG_LoadingSubtitle "[GUI] Вантажу субтитри: %s\n"
 #define MSGTR_GUI_MSG_MemoryErrorImage "Вибачте, не достатньо пам'яті для прорисування буферу.\n"
 #define MSGTR_GUI_MSG_MemoryErrorWindow "Вибачте, не достатньо пам'яті для прорисовки буферу."
-#define MSGTR_GUI_MSG_NoFileLoaded "Файл не завантжено."
+#define MSGTR_GUI_MSG_NoFileLoaded "Файл не завантажено."
 #define MSGTR_GUI_MSG_NoMediaOpened "Носій не відкритий."
 #define MSGTR_GUI_MSG_NotAFile0 "Здається, це не файл...\n"
 #define MSGTR_GUI_MSG_NotAFile1 "Здається, це не файл: %s !\n"
@@ -648,7 +664,7 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_Playlist "Список програвання"
 #define MSGTR_GUI_Position "Положення"
 #define MSGTR_GUI_PostProcessing "Postprocessing"
-#define MSGTR_GUI_Preferences "Шалаштування"
+#define MSGTR_GUI_Preferences "Hалаштування"
 #define MSGTR_GUI_Previous "Попередній потік"
 #define MSGTR_GUI_Quit "Вихід"
 #define MSGTR_GUI_RearLeft "Задній Лівий"
@@ -698,6 +714,35 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_VideoTracks "Відео доріжка"
 #define MSGTR_GUI_Warning "Попередження!"
 
+// Win32 GUI
+#define MSGTR_Close "Закрити"
+#define MSGTR_Default "Типові значення"
+#define MSGTR_Down "Вниз"
+#define MSGTR_Load "Завантажити"
+#define MSGTR_Save "Зберегти"
+#define MSGTR_Up "Вгору"
+#define MSGTR_DirectorySelect "Вибрати каталог..."
+#define MSGTR_PlaylistSave "Зберегти список програвання..."
+#define MSGTR_PlaylistSelect "Вибрати список програвання..."
+#define MSGTR_SelectTitleChapter "Вибрати ролик/разділ..."
+#define MSGTR_MENU_DebugConsole "Консоль зневадження"
+#define MSGTR_MENU_OnlineHelp "Онлайн довідка"
+#define MSGTR_MENU_PlayDirectory "Програти каталог..."
+#define MSGTR_MENU_SeekBack "Перейти назад"
+#define MSGTR_MENU_SeekForw "Перейти вперед"
+#define MSGTR_MENU_ShowHide "Показати/Сховати"
+#define MSGTR_MENU_SubtitlesOnOff "Видимість субтитрів вкл./выкл."
+#define MSGTR_PLAYLIST_AddFile "Додати файл..."
+#define MSGTR_PLAYLIST_AddURL "Додати URL..."
+#define MSGTR_PREFERENCES_Priority "Приорітет:"
+#define MSGTR_PREFERENCES_PriorityHigh "високий"
+#define MSGTR_PREFERENCES_PriorityLow "низький"
+#define MSGTR_PREFERENCES_PriorityNormal "звичайний"
+#define MSGTR_PREFERENCES_PriorityNormalAbove "вище звичайного"
+#define MSGTR_PREFERENCES_PriorityNormalBelow "нижче звичайного"
+#define MSGTR_PREFERENCES_ShowInVideoWin "Показати у вікні відео (тільки DirectX)"
+
+
 // ======================= video output drivers ========================
 
 #define MSGTR_VOincompCodec "Обраний пристрій виводу відео несумісний з цим кодеком.\n"\
@@ -725,6 +770,7 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_LIBVO_FONT_LOAD_FT_CannotPrepareOSDFont "Не можу підготувати шрифт OSD.\n"
 #define MSGTR_LIBVO_FONT_LOAD_FT_CannotGenerateTables "Не можу генерувати таблиці.\n"
 #define MSGTR_LIBVO_FONT_LOAD_FT_DoneFreeTypeFailed "Помилка FT_Done_FreeType.\n"
+#define MSGTR_LIBVO_FONT_LOAD_FT_FontconfigNoMatch "Збій fontconfig при виборі шрифта. Спробуйте без fontconfig...\n"
 
 // sub.c
 #define MSGTR_VO_SUB_Seekbar "Навігація"
@@ -822,7 +868,7 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_LIBVO_MGA_CouldNotGetLumaValuesFromTheKernelModule "[MGA] Не можу отримати значення luma з модуля ядра!\n"
 #define MSGTR_LIBVO_MGA_CouldNotSetLumaValuesFromTheKernelModule "[MGA] Не можу встановити значення luma з модуля ядра!\n"
 #define MSGTR_LIBVO_MGA_ScreenWidthHeightUnknown "[MGA] Невідома ширина/висота екрану!\n"
-#define MSGTR_LIBVO_MGA_InvalidOutputFormat "[MGA] невірний вихідний формат %0X\n"
+#define MSGTR_LIBVO_MGA_InvalidOutputFormat "[MGA] непридатний вихідний формат %0X\n"
 #define MSGTR_LIBVO_MGA_IncompatibleDriverVersion "[MGA] Версія вашого mga_vid драйверу несумісна із цією версією MPlayer!\n"
 #define MSGTR_LIBVO_MGA_CouldntOpen "[MGA] Не можу відкрити: %s\n"
 #define MSGTR_LIBVO_MGA_ResolutionTooHigh "[MGA] Розширення джерела, у крайньому випадку в одному вимірі, більше ніж 1023x1023.\n[MGA] Перемасштабуйте програмно або викорстайте -lavdopts lowres=1.\n"
@@ -947,6 +993,271 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_LIBVO_VESA_CantFindModeFor "[VO_VESA] Не можу знайти режим для: %ux%u@%u.\n"
 #define MSGTR_LIBVO_VESA_InitializationComplete "[VO_VESA] Ініціялізація VESA завершена.\n"
 
+// libvo/vesa_lvo.c
+#define MSGTR_LIBVO_VESA_ThisBranchIsNoLongerSupported "[VESA_LVO] Ця гілка більше не підтримується.\n[VESA_LVO] Используйте -vo vesa:vidix взамен.\n"
+#define MSGTR_LIBVO_VESA_CouldntOpen "[VESA_LVO] Не можу відкрити: '%s'\n"
+#define MSGTR_LIBVO_VESA_InvalidOutputFormat "[VESA_LVI] Непридатний вихідний формат: %s(%0X)\n"
+#define MSGTR_LIBVO_VESA_IncompatibleDriverVersion "[VESA_LVO] Версія вашого драйвера fb_vid несумісна з цією версією MPlayer!\n"
+
+// libvo/vo_x11.c
+#define MSGTR_LIBVO_X11_DrawFrameCalled "[VO_X11] Викликано draw_frame()!!!!!!\n"
+
+// libvo/vo_xv.c
+#define MSGTR_LIBVO_XV_DrawFrameCalled "[VO_XV] Викликано draw_frame()!!!!!!\n"
+#define MSGTR_LIBVO_XV_SharedMemoryNotSupported "[VO_XV] Разділяєма пам'ять не підтримується\nПовернення до звичайного Xv.\n"
+#define MSGTR_LIBVO_XV_XvNotSupportedByX11 "[VO_XV] На жаль, Xv не підтримується цією версією/драйвером X11\n[VO_XV] ******** Попробуйте -vo x11  или  -vo sdl  *********\n"
+#define MSGTR_LIBVO_XV_XvQueryAdaptorsFailed  "[VO_XV] Помилка XvQueryAdaptors.\n"
+#define MSGTR_LIBVO_XV_InvalidPortParameter "[VO_XV] Непридатний параметр port, перевизначення параметром port 0.\n"
+#define MSGTR_LIBVO_XV_CouldNotGrabPort "[VO_XV] Немождиво захопити порт %i.\n"
+#define MSGTR_LIBVO_XV_CouldNotFindFreePort "[VO_XV] Неможливо знайти вільній Xvideo-порт - можливо інший додаток вже\n"\
+"[VO_XV] його використовує. Закрийте всі відео-додатки і спробуйте знову. Якщо це\n"\
+"[VO_XV] не допомогає, дивіться 'mplayer -vo help' для інших (не-xv) драйверів відео-виводу.\n"
+#define MSGTR_LIBVO_XV_NoXvideoSupport "[VO_XV] Схоже, що ваша відео-карта не має підтримки Xvideo.\n"\
+"[VO_XV] Запустіть 'xvinfo', щоб перевірити підтримку Xv і читайте \n"\
+"[VO_XV] DOCS/HTML/uk/video.html#xv!\n"\
+"[VO_XV] Дивіться 'mplayer -vo help' для інших (не-xv) драйверів відео-виводу.\n"\
+"[VO_XV] Спробуйте -vo x11.\n"
+#define MSGTR_VO_XV_ImagedimTooHigh "Розміри зображення джерела надто великі: %ux%u (максимум %ux%u)\n"
+
+// vo_yuv4mpeg.c
+#define MSGTR_VO_YUV4MPEG_InterlacedHeightDivisibleBy4 "Для режима з чергуванням рядків необхідно, щоб висота зображеня ділилася на 4."
+#define MSGTR_VO_YUV4MPEG_InterlacedLineBufAllocFail "Неможливо виділити пам'ять для лінійного буфера в режимі з чергуванням рядків."
+#define MSGTR_VO_YUV4MPEG_WidthDivisibleBy2 "Ширина зображення повинна ділитися на 2."
+#define MSGTR_VO_YUV4MPEG_OutFileOpenError "Не можу виділити пам'ять або файловий дескриптор для запису \"%s\"!"
+#define MSGTR_VO_YUV4MPEG_OutFileWriteError "Помилка запису зображення в вивід!"
+#define MSGTR_VO_YUV4MPEG_UnknownSubDev "Невідомий субпристрій: %s"
+#define MSGTR_VO_YUV4MPEG_InterlacedTFFMode "Використовую режим виводу з чергуванням рядків, верхнє поле - перше."
+#define MSGTR_VO_YUV4MPEG_InterlacedBFFMode "Використовую режим виводу з чергуванням рядків, нижнє поле - перше."
+#define MSGTR_VO_YUV4MPEG_ProgressiveMode "Використовую (типово) прогресивний режим кадрів."
+
+// vosub_vidix.c
+#define MSGTR_LIBVO_SUB_VIDIX_CantStartPlayback "[VO_SUB_VIDIX] Не можу почати відтворення: %s\n"
+#define MSGTR_LIBVO_SUB_VIDIX_CantStopPlayback "[VO_SUB_VIDIX] Не можу зупинити відтворення: %s\n"
+#define MSGTR_LIBVO_SUB_VIDIX_InterleavedUvForYuv410pNotSupported "[VO_SUB_VIDIX] UV з чергуванням рядкыв для YUV410P не пыдтримуэться.\n"
+#define MSGTR_LIBVO_SUB_VIDIX_DummyVidixdrawsliceWasCalled "[VO_SUB_VIDIX] Був викликаний фіктивний vidix_draw_slice().\n"
+#define MSGTR_LIBVO_SUB_VIDIX_DummyVidixdrawframeWasCalled "[VO_SUB_VIDIX] Був викликаний фіктивний vidix_draw_frame().\n"
+#define MSGTR_LIBVO_SUB_VIDIX_UnsupportedFourccForThisVidixDriver "[VO_SUB_VIDIX] Непідтримуваний FourCC для цього драйвера VIDIX: %x (%s).\n"
+#define MSGTR_LIBVO_SUB_VIDIX_VideoServerHasUnsupportedResolution "[VO_SUB_VIDIX] Відео-сервер не підтримує дозвіл (%dx%d), підтримується: %dx%d-%dx%d.\n"
+#define MSGTR_LIBVO_SUB_VIDIX_VideoServerHasUnsupportedColorDepth "[VO_SUB_VIDIX] Відео-сервер не підтримує глибину колору vidix (%d).\n"
+#define MSGTR_LIBVO_SUB_VIDIX_DriverCantUpscaleImage "[VO_SUB_VIDIX] Драйвер VIDIX не може збільшити масштаб зображення (%d%d -> %d%d).\n"
+#define MSGTR_LIBVO_SUB_VIDIX_DriverCantDownscaleImage "[VO_SUB_VIDIX] Драйвер VIDIX не може зменшити масштаб зображення (%d%d -> %d%d).\n"
+#define MSGTR_LIBVO_SUB_VIDIX_CantConfigurePlayback "[VO_SUB_VIDIX] Не можу налаштувати відтворення: %s.\n"
+#define MSGTR_LIBVO_SUB_VIDIX_YouHaveWrongVersionOfVidixLibrary "[VO_SUB_VIDIX] Маєте невірну версію бібліотеки VIDIX.\n"
+#define MSGTR_LIBVO_SUB_VIDIX_CouldntFindWorkingVidixDriver "[VO_SUB_VIDIX] Неможливо знайти рабочий драйвер VIDIX.\n"
+#define MSGTR_LIBVO_SUB_VIDIX_CouldntGetCapability "[VO_SUB_VIDIX] Неможливо отримати здатність: %s.\n"
+
+// x11_common.c
+#define MSGTR_EwmhFullscreenStateFailed "\nX11: Неможливо відіслати подію EWMH fullscreen!\n"
+#define MSGTR_CouldNotFindXScreenSaver "xscreensaver_disable: Неможливо знайти вікно XScreenSaver'а.\n"
+#define MSGTR_SelectedVideoMode "XF86VM: Вибрано відеорежим %dx%d для розміру зображення %dx%d.\n"
+
+#define MSGTR_InsertingAfVolume "[Мікшер] Немає апаратного мікшування, вставляю фільтр гучності.\n"
+#define MSGTR_NoVolume "[Мікшер] Немає доступного керування гучності.\n"
+#define MSGTR_NoBalance "[Мікшер] Немає доступного керування балансом.\n"
+
+// old vo drivers that have been replaced
+#define MSGTR_VO_PGM_HasBeenReplaced "Драйвер відеовиводу pgm було змінено на -vo pnm:pgmyuv.\n"
+#define MSGTR_VO_MD5_HasBeenReplaced "Драйвер відеовиводу md5 було змінено на -vo md5sum.\n"
+
+
+// ======================= audio output drivers ========================
+
+// audio_out.c
+#define MSGTR_AO_ALSA9_1x_Removed "audio_out: модулі alsa9 та alsa1x були видалені, використовуйте -ao alsa.\n"
+#define MSGTR_AO_NoSuchDriver "відсутній аудіо-драйвер '%.*s'\n"
+#define MSGTR_AO_FailedInit "Збій ініціалізації аудіо-драйвера '%s'\n"
+
+// ao_oss.c
+#define MSGTR_AO_OSS_CantOpenMixer "[AO OSS] audio_setup: Не можу відкрити пристрій мікшера %s: %s\n"
+#define MSGTR_AO_OSS_ChanNotFound "[AO OSS] audio_setup: Мікшер аудіо-карти не має  каналу '%s', використовується типовий канал.\n"
+#define MSGTR_AO_OSS_CantOpenDev "[AO OSS] audio_setup: Не можу відкрити аудіо-пристрій %s: %s\n"
+#define MSGTR_AO_OSS_CantMakeFd "[AO OSS] audio_setup: Не можу заблокувати файловий дескриптор: %s\n"
+#define MSGTR_AO_OSS_CantSet "[AO OSS] Не можу встановити аудіо-пристрій %s до %s виводу, пробую %s...\n"
+#define MSGTR_AO_OSS_CantSetChans "[AO OSS] audio_setup: Збій при встановлені аудіо-пристрою в %d-канальный режим.\n"
+#define MSGTR_AO_OSS_CantUseGetospace "[AO OSS] audio_setup: драйвер не підтримує SNDCTL_DSP_GETOSPACE :-(\n"
+#define MSGTR_AO_OSS_CantUseSelect "[AO OSS]\n   ***  Ваш аудіо-драйвер НЕ підтримує select()  ***\n Перекомпілюйте MPlayer з #undef HAVE_AUDIO_SELECT в config.h !\n\n"
+#define MSGTR_AO_OSS_CantReopen "[AO OSS] Фатальна помилка:\n*** НЕ МОЖУ ПУКУВІДКРИТИ / СКИНУТИ АУДІО-ПРИСТРІЙ *** %s\n"
+#define MSGTR_AO_OSS_UnknownUnsupportedFormat "[AO OSS] Невідомий/Непідтримуваний формат OSS: %x.\n"
+
+// ao_arts.c
+#define MSGTR_AO_ARTS_CantInit "[AO ARTS] %s\n"
+#define MSGTR_AO_ARTS_ServerConnect "[AO ARTS] Під'єднано до звукового сервера.\n"
+#define MSGTR_AO_ARTS_CantOpenStream "[AO ARTS] Неможливо відкрити потік.\n"
+#define MSGTR_AO_ARTS_StreamOpen "[AO ARTS] Потік відкрито.\n"
+#define MSGTR_AO_ARTS_BufferSize "[AO ARTS] розмір буфера: %d\n"
+
+// ao_dxr2.c
+#define MSGTR_AO_DXR2_SetVolFailed "[AO DXR2] Не вдалося встановити гучніть в %d.\n"
+#define MSGTR_AO_DXR2_UnsupSamplerate "[AO DXR2] dxr2: %d Гц не підтримується, спробуйте змінити частоту дискретизації.\n"
+
+// ao_esd.c
+#define MSGTR_AO_ESD_CantOpenSound "[AO ESD] Збій esd_open_sound: %s\n"
+#define MSGTR_AO_ESD_LatencyInfo "[AO ESD] затримка: [сервер: %0.2fs, мережа: %0.2fs] (підлаштування %0.2fs)\n"
+#define MSGTR_AO_ESD_CantOpenPBStream "[AO ESD] не вдалося віткрити потік програвання ESD: %s\n"
+
+// ao_mpegpes.c
+#define MSGTR_AO_MPEGPES_CantSetMixer "[AO MPEGPES] Не вдалося встановити мікшер DVB-аудио: %s\n"
+#define MSGTR_AO_MPEGPES_UnsupSamplerate "[AO MPEGPES] %d Гц не підтримується, спробуйте змінити частоту дискретизації.\n"
+
+// ao_pcm.c
+#define MSGTR_AO_PCM_FileInfo "[AO PCM] Файл: %s (%s)\nPCM: Частота дискретизації: %i Гц Канали: %s Формат %s\n"
+#define MSGTR_AO_PCM_HintInfo "[AO PCM] Інформація: найшвидший дамп досягається з -benchmark -vc null -vo null -ao pcm:fast\n[AO PCM]: Інформація: Для запису WAVE-файлів використовуйте -ao pcm:waveheader (типово).\n"
+#define MSGTR_AO_PCM_CantOpenOutputFile "[AO PCM] Збій відкриття %s для запису!\n"
+
+// ao_sdl.c
+#define MSGTR_AO_SDL_INFO "[AO SDL] Частота дискретизації: %i Гц Канали: %s Формат %s\n"
+#define MSGTR_AO_SDL_DriverInfo "[AO SDL] використовується аудіо-драйвер %s.\n"
+#define MSGTR_AO_SDL_UnsupportedAudioFmt "[AO SDL] Непідтримуваний аудіо-формат: 0x%x.\n"
+#define MSGTR_AO_SDL_CantInit "[AO SDL] Збій ініціалізіції SDL Audio: %s\n"
+#define MSGTR_AO_SDL_CantOpenAudio "[AO SDL] Неможливо відкрити аудіо: %s\n"
+
+// ao_sgi.c
+#define MSGTR_AO_SGI_INFO "[AO SGI] керування.\n"
+#define MSGTR_AO_SGI_InitInfo "[AO SGI] init: Частота дискретизації: %i Гц Канали: %s Формат %s\n"
+#define MSGTR_AO_SGI_InvalidDevice "[AO SGI] play: непридатний пристрій.\n"
+#define MSGTR_AO_SGI_CantSetParms_Samplerate "[AO SGI] init: збій setparams: %s\nНеможливо встановити бажану частоту дискретизації.\n"
+#define MSGTR_AO_SGI_CantSetAlRate "[AO SGI] init: AL_RATE не доступний на заданому ресурсі.\n"
+#define MSGTR_AO_SGI_CantGetParms "[AO SGI] init: збій getparams: %s\n"
+#define MSGTR_AO_SGI_SampleRateInfo "[AO SGI] init: частота дискретизації зараз %f (бажана частота %f)\n"
+#define MSGTR_AO_SGI_InitConfigError "[AO SGI] init: %s\n"
+#define MSGTR_AO_SGI_InitOpenAudioFailed "[AO SGI] init: Неможливо відкрити аудио-канал: %s\n"
+#define MSGTR_AO_SGI_Uninit "[AO SGI] uninit: ...\n"
+#define MSGTR_AO_SGI_Reset "[AO SGI] reset: ...\n"
+#define MSGTR_AO_SGI_PauseInfo "[AO SGI] audio_pause: ...\n"
+#define MSGTR_AO_SGI_ResumeInfo "[AO SGI] audio_resume: ...\n"
+
+// ao_sun.c
+#define MSGTR_AO_SUN_RtscSetinfoFailed "[AO SUN] rtsc: Збій SETINFO.\n"
+#define MSGTR_AO_SUN_RtscWriteFailed "[AO SUN] rtsc: збій запису."
+#define MSGTR_AO_SUN_CantOpenAudioDev "[AO SUN] Не можу відкрити аудіо-пристрій %s, %s -> nosound.\n"
+#define MSGTR_AO_SUN_UnsupSampleRate "[AO SUN] audio_setup: ваша карта не підтримує канал %d, %s, частоту дискретизации %d Гц.\n"
+#define MSGTR_AO_SUN_CantUseSelect "[AO SUN]\n   ***  Ваш аудіо-драйвер НЕ підтримує select()  ***\nПерекомпілюйте MPlayer з #undef HAVE_AUDIO_SELECT в config.h !\n\n"
+#define MSGTR_AO_SUN_CantReopenReset "[AO SUN] Фатальная ошибка:\n*** НЕ МОЖУ ПЕРЕВІДКРИТИ / СКИНУТИ АУДІО-ПРИСТРІЙ (%s) ***\n"
+
+// ao_alsa.c
+#define MSGTR_AO_ALSA_InvalidMixerIndexDefaultingToZero "[AO_ALSA] Непридатний індекс мікшера. Повертаю до 0.\n"
+#define MSGTR_AO_ALSA_MixerOpenError "[AO_ALSA] Помилка відкриття мікшера: %s\n"
+#define MSGTR_AO_ALSA_MixerAttachError "[AO_ALSA] Помилка приєднання %s до мікшера: %s\n"
+#define MSGTR_AO_ALSA_MixerRegisterError "[AO_ALSA] Помилка реєстрації мікшера: %s\n"
+#define MSGTR_AO_ALSA_MixerLoadError "[AO_ALSA] Помилка завантаження мікшера: %s\n"
+#define MSGTR_AO_ALSA_UnableToFindSimpleControl "[AO_ALSA] Неможливо знайти простий елемент керування '%s',%i.\n"
+#define MSGTR_AO_ALSA_ErrorSettingLeftChannel "[AO_ALSA] Помилка установки лівого каналу, %s\n"
+#define MSGTR_AO_ALSA_ErrorSettingRightChannel "[AO_ALSA] Полмилка установки правого каналу, %s\n"
+#define MSGTR_AO_ALSA_CommandlineHelp "\n[AO_ALSA] підказка командного рядка -ao alsa:\n"\
+"[AO_ALSA] Приклад: mplayer -ao alsa:device=hw=0.3\n"\
+"[AO_ALSA]   Встанавлює четвертий пристрій першої карти.\n\n"\
+"[AO_ALSA] Опції:\n"\
+"[AO_ALSA]   noblock\n"\
+"[AO_ALSA]     Відкриває пристрій в неблокуючому режимі.\n"\
+"[AO_ALSA]   device=<им'я-пристрою>\n"\
+"[AO_ALSA]     Встанавлює пристрій (замініть , на . і : на =)\n"
+#define MSGTR_AO_ALSA_ChannelsNotSupported "[AO_ALSA] %d каналів не подтримується.\n"
+#define MSGTR_AO_ALSA_OpenInNonblockModeFailed "[AO_ALSA] Збій відткриття в неблокуючому режимі, спроба відкрити в блокуючому режимі.\n"
+#define MSGTR_AO_ALSA_PlaybackOpenError "[AO_ALSA] Помилка відкриття відтворення: %s\n"
+#define MSGTR_AO_ALSA_ErrorSetBlockMode "[AL_ALSA] Помилка установки блокуючого режиму: %s.\n"
+#define MSGTR_AO_ALSA_UnableToGetInitialParameters "[AO_ALSA] Неможливо отримати початкові параметры: %s\n"
+#define MSGTR_AO_ALSA_UnableToSetAccessType "[AO_ALSA] Неможливо встановити тип доступу: %s\n"
+#define MSGTR_AO_ALSA_FormatNotSupportedByHardware "[AO_ALSA] Формат %s не підтримується обладнанням, пробуєм типові значення.\n"
+#define MSGTR_AO_ALSA_UnableToSetFormat "[AO_ALSA] Неможливо втановити формат: %s\n"
+#define MSGTR_AO_ALSA_UnableToSetChannels "[AO_ALSA] Неможливо встановити канали: %s\n"
+#define MSGTR_AO_ALSA_UnableToDisableResampling "[AO_ALSA] Неможливо відключити ресемплінг: %s\n"
+#define MSGTR_AO_ALSA_UnableToSetSamplerate2 "[AO_ALSA] Неможливо встановити частоту дискретизації-2: %s\n"
+#define MSGTR_AO_ALSA_UnableToSetBufferTimeNear "[AO_ALSA] Неможливо встановити приблизний час буфера: %s\n"
+#define MSGTR_AO_ALSA_UnableToGetPeriodSize "[AO ALSA] Неможливо отримати розмір періода: %s\n"
+#define MSGTR_AO_ALSA_UnableToSetPeriods "[AO_ALSA] Неможливо встановити періоди: %s\n"
+#define MSGTR_AO_ALSA_UnableToSetHwParameters "[AO_ALSA] Неможливо встановити hw-параметри: %s\n"
+#define MSGTR_AO_ALSA_UnableToGetBufferSize "[AO_ALSA] Неможливо отримати buffersize: %s\n"
+#define MSGTR_AO_ALSA_UnableToGetSwParameters "[AO_ALSA] Неможливо отримати sw-параметри: %s\n"
+#define MSGTR_AO_ALSA_UnableToSetSwParameters "[AO_ALSA] Неможливо встановити sw-параметри: %s\n"
+#define MSGTR_AO_ALSA_UnableToGetBoundary "[AO_ALSA] Неможливо отримати межу: %s\n"
+#define MSGTR_AO_ALSA_UnableToSetStartThreshold "[AO_ALSA] Неможливо встановити поріг запуску: %s\n"
+#define MSGTR_AO_ALSA_UnableToSetStopThreshold "[AO_ALSA] Неможливо встановити поріг зупинки: %s\n"
+#define MSGTR_AO_ALSA_UnableToSetSilenceSize "[AO_ALSA] Неможливо встановити розмір тиші: %s\n"
+#define MSGTR_AO_ALSA_PcmCloseError "[AO_ALSA] помилка закриття pcm: %s\n"
+#define MSGTR_AO_ALSA_NoHandlerDefined "[AO_ALSA] Не визначений обробник!\n"
+#define MSGTR_AO_ALSA_PcmPrepareError "[AO_ALSA] помилка підготовки pcm: %s\n"
+#define MSGTR_AO_ALSA_PcmPauseError "[AO_ALSA] помилка паузи pcm: %s\n"
+#define MSGTR_AO_ALSA_PcmDropError "[AO_ALSA] помилка скидання pcm: %s\n"
+#define MSGTR_AO_ALSA_PcmResumeError "[AO_ALSA] помилка відновлення pcm: %s\n"
+#define MSGTR_AO_ALSA_DeviceConfigurationError "[AO_ALSA] Помилка настройки пристрою."
+#define MSGTR_AO_ALSA_PcmInSuspendModeTryingResume "[AO_ALSA] Pcm в режимі очікування, спроба відновлення.\n"
+#define MSGTR_AO_ALSA_WriteError "[AO_ALSA] Помилка запису: %s\n"
+#define MSGTR_AO_ALSA_TryingToResetSoundcard "[AO_ALSA] Спроба скинути звукову карту.\n"
+#define MSGTR_AO_ALSA_CannotGetPcmStatus "[AO_ALSA] Неможливо отримати стан pcm: %s\n"
+
+// ao_plugin.c
+#define MSGTR_AO_PLUGIN_InvalidPlugin "[AO ПЛАГИН] непридатний плагін: %s\n"
+
+
+// ======================= audio filters ================================
+
+// af_scaletempo.c
+#define MSGTR_AF_ValueOutOfRange MSGTR_VO_ValueOutOfRange
+
+// af_ladspa.c
+#define MSGTR_AF_LADSPA_AvailableLabels "доступні мітки в"
+#define MSGTR_AF_LADSPA_WarnNoInputs "ПОПЕРЕДЖЕННЯ! Цей LADSPA-плагін не має аудіо-входів.\n  Вхідний аудіо-сигнал буде втрачено."
+#define MSGTR_AF_LADSPA_ErrMultiChannel "Мультиканальні (>2) плагіны наразі не підтримуються.\n  Використовуйте тільки моно- та стерео-плагіни."
+#define MSGTR_AF_LADSPA_ErrNoOutputs "Цей LADSPA-плагін не має аудіо-виходів."
+#define MSGTR_AF_LADSPA_ErrInOutDiff "Число аудиовходов и аудиовыходов у LADSPA плагина отличается."
+#define MSGTR_AF_LADSPA_ErrFailedToLoad "сбой загрузки"
+#define MSGTR_AF_LADSPA_ErrNoDescriptor "Неможливо знайти функцію ladspa_descriptor() у вказаному файлі бібліотеки."
+#define MSGTR_AF_LADSPA_ErrLabelNotFound "Неможливо знайти мітку в бібліотеці плагіна."
+#define MSGTR_AF_LADSPA_ErrNoSuboptions "Не вказаны субопції."
+#define MSGTR_AF_LADSPA_ErrNoLibFile "Не вказаний файл бібліотеки."
+#define MSGTR_AF_LADSPA_ErrNoLabel "Не вказана мітка фільтра."
+#define MSGTR_AF_LADSPA_ErrNotEnoughControls "Недостатньо налаштувань вказано в командному рядку."
+#define MSGTR_AF_LADSPA_ErrControlBelow "%s: Вхідний параметр #%d менше нижньої межі %0.4f.\n"
+#define MSGTR_AF_LADSPA_ErrControlAbove "%s: Вхідний параметр #%d більше верхньої межі %0.4f.\n"
+
+
+// ========================== INPUT =========================================
+
+// joystick.c
+#define MSGTR_INPUT_JOYSTICK_CantOpen "Не можу відкрити пристрій джойстика %s: %s\n"
+#define MSGTR_INPUT_JOYSTICK_ErrReading "Помилка під час читання пристрою джойстика: %s\n"
+#define MSGTR_INPUT_JOYSTICK_LoosingBytes "Joystick: Ми втратили %d байт(и/ів) даних\n"
+#define MSGTR_INPUT_JOYSTICK_WarnLostSync "Joystick: попередження про init-випадок, ми втратили синхронізацію з драйвером.\n"
+#define MSGTR_INPUT_JOYSTICK_WarnUnknownEvent "Joystick: попередження про невідомий тип випадку %d\n"
+
+// appleir.c
+#define MSGTR_INPUT_APPLE_IR_CantOpen "Не можу вікрити пристрій Apple IR: %s\n"
+
+// input.c
+#define MSGTR_INPUT_INPUT_ErrCantRegister2ManyCmdFds "Надто багато дескрипторів командних файлів, неможливо зареєструвати файловий дескриптор %d.\n"
+#define MSGTR_INPUT_INPUT_ErrCantRegister2ManyKeyFds "Надто багато дескрипторів файлів клавіш, неможливо зареєструвати файловий дескриптор %d.\n"
+#define MSGTR_INPUT_INPUT_ErrArgMustBeInt "Команда %s: аргумент %d не є цілим числом.\n"
+#define MSGTR_INPUT_INPUT_ErrArgMustBeFloat "Команда %s: аргумент %d не є дійсним числом.\n"
+#define MSGTR_INPUT_INPUT_ErrUnterminatedArg "Команда %s: аргумент %d незавершений.\n"
+#define MSGTR_INPUT_INPUT_ErrUnknownArg "Невідомий аргумент %d\n"
+#define MSGTR_INPUT_INPUT_Err2FewArgs "Команда %s потребує не менш як %d аргументів, досі ми знашли лише %d.\n"
+#define MSGTR_INPUT_INPUT_ErrReadingCmdFd "Помилка під час читання дескриптора командного файлу %d: %s\n"
+#define MSGTR_INPUT_INPUT_ErrCmdBufferFullDroppingContent "Командний буфер файлового дескриптора %d заповнений: пропускаю вміст.\n"
+#define MSGTR_INPUT_INPUT_ErrInvalidCommandForKey "Непридатна команда для прив'язки до клавіші %s"
+#define MSGTR_INPUT_INPUT_ErrSelect "Помилка вибору: %s\n"
+#define MSGTR_INPUT_INPUT_ErrOnKeyInFd "Помилка у файловому дескрипторі клавіш вводу %d\n"
+#define MSGTR_INPUT_INPUT_ErrDeadKeyOnFd "Мертва клавіша вводу в файловому дескрипторі %d\n"
+#define MSGTR_INPUT_INPUT_Err2ManyKeyDowns "Надто багато подій одночасного натиснення клавіш\n"
+#define MSGTR_INPUT_INPUT_ErrOnCmdFd "Помилка в дескрипторі командного файлу %d\n"
+#define MSGTR_INPUT_INPUT_ErrReadingInputConfig "Помилка під час читання конфігураційного файла вводу %s: %s\n"
+#define MSGTR_INPUT_INPUT_ErrUnknownKey "Невідома клавіша '%s'\n"
+#define MSGTR_INPUT_INPUT_ErrUnfinishedBinding "Незакінчена прив'язка %s\n"
+#define MSGTR_INPUT_INPUT_ErrBuffer2SmallForKeyName "Буфер замалий для назви цієї клавіші: %s\n"
+#define MSGTR_INPUT_INPUT_ErrNoCmdForKey "Не знайдено команди для клавіші %s"
+#define MSGTR_INPUT_INPUT_ErrBuffer2SmallForCmd "Буфер замалий для команди %s\n"
+#define MSGTR_INPUT_INPUT_ErrWhyHere "Що ми тут робимо?\n"
+#define MSGTR_INPUT_INPUT_ErrCantInitJoystick "Неможливо иниціювати джойстик ввода\n"
+#define MSGTR_INPUT_INPUT_ErrCantOpenFile "Неможливо відкрити %s: %s\n"
+#define MSGTR_INPUT_INPUT_ErrCantInitAppleRemote "Неможливо иніціювати Apple Remote.\n"
+
+// lirc.c
+#define MSGTR_LIRCopenfailed "Збій відкриття підтримки LIRC. Ви не зможете скористатися вашим дистанційним керуванням.\n"
+#define MSGTR_LIRCcfgerr "Збій читання файла конфігурації LIRC '%s'!\n"
+
+// format.c
+#define MSGTR_AF_FORMAT_UnknownFormat "неизвестный формат "
+
+
 // open.c, stream.c:
 #define MSGTR_CdDevNotfound "Компактовід \"%s\" не знайдений!\n"
 #define MSGTR_ErrTrackSelect "Помилка вибору треку на VCD!"
@@ -994,10 +1305,90 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_ErrorOpeningOGGDemuxer "Неможливо відкрити ogg demuxer.\n"
 #define MSGTR_CannotOpenAudioStream "Неможливо відкрити аудіо потік: %s\n"
 #define MSGTR_CannotOpenSubtitlesStream "Неможливо відкрити потік субтитрів: %s\n"
-#define MSGTR_OpeningAudioDemuxerFailed "Не вдалося відкрити аудіо demuxer: %s\n"
-#define MSGTR_OpeningSubtitlesDemuxerFailed "Не вдалося відкрити demuxer субтитрів: %s\n"
-#define MSGTR_TVInputNotSeekable "TV input is not seekable! (Seeking will probably be for changing channels ;)\n"
-#define MSGTR_ClipInfo "Інформація кліпу:\n"
+#define MSGTR_OpeningAudioDemuxerFailed "Збій відкриття демультиплексора аудіо: %s\n"
+#define MSGTR_OpeningSubtitlesDemuxerFailed "Збій відриття демультиплексора субтитрів: %s\n"
+#define MSGTR_TVInputNotSeekable "По ТВ-входу неможливо переміщуватися! (Можливо, переміщення буде для зміни каналів ;)\n"
+#define MSGTR_DemuxerInfoChanged "Інформація демультиплексора %s змінена на %s\n"
+#define MSGTR_ClipInfo "Інформація про кліп:\n"
+
+#define MSGTR_LeaveTelecineMode "\ndemux_mpg: виявлено NTSC-вміст з 30000/1001 кадр/сек, переключаю частоту кадрів.\n"
+#define MSGTR_EnterTelecineMode "\ndemux_mpg: виявлено NTSC-вміст з 24000/1001 кадр/сек з порядковим розгортанням, переключаю частоту кадрів.\n"
+
+#define MSGTR_CacheFill "\rЗаповнення кэшу: %5.2f%% (%"PRId64" байт(и,ів))   "
+#define MSGTR_NoBindFound "Не знайдена прив'язка до клавіші '%s'.\n"
+#define MSGTR_FailedToOpen "Збій відкриття %s.\n"
+
+#define MSGTR_VideoID "[%s] Знайдено відеопотік, -vid %d\n"
+#define MSGTR_AudioID "[%s] Знайдено аудіопотік, -aid %d\n"
+#define MSGTR_SubtitleID "[%s] Знайдено потік субтитрів, -sid %d\n"
+
+// asfheader.c
+#define MSGTR_MPDEMUX_ASFHDR_HeaderSizeOver1MB "ФАТАЛЬНА ПОМИЛКА: розмір заголовка більший за 1 MB (%d)!\nБудь-ласка, зв'яжіться з авторами MPlayer'а і завантажте/відішліть цей файл.\n"
+#define MSGTR_MPDEMUX_ASFHDR_HeaderMallocFailed "Не можу виділити %d байт(и,ів) для заголовка.\n"
+#define MSGTR_MPDEMUX_ASFHDR_EOFWhileReadingHeader "EOF при читанні заголовка ASF, зламаний/неповний файл?\n"
+#define MSGTR_MPDEMUX_ASFHDR_DVRWantsLibavformat "DVR, мабуть, буде працювати лише з libavformat, спробуйте -demuxer 35, якщо маєте проблеми\n"
+#define MSGTR_MPDEMUX_ASFHDR_NoDataChunkAfterHeader "Нема ланки даных, слідуючих за заголовком!\n"
+#define MSGTR_MPDEMUX_ASFHDR_AudioVideoHeaderNotFound "ASF: не знайдено аудіо- або відеозаголовка - зламаний файл?\n"
+#define MSGTR_MPDEMUX_ASFHDR_InvalidLengthInASFHeader "Непридатна довжина в заголовці ASF!\n"
+#define MSGTR_MPDEMUX_ASFHDR_DRMLicenseURL "URL ліцензії DRM: %s\n"
+#define MSGTR_MPDEMUX_ASFHDR_DRMProtected "Файл обтяжений DRM-шифруванням, він не буде відтворюватися в MPlayer!\n"
+
+// aviheader.c
+#define MSGTR_MPDEMUX_AVIHDR_EmptyList "** порожній список?!\n"
+#define MSGTR_MPDEMUX_AVIHDR_WarnNotExtendedAVIHdr "** Попередження: це не разширений заголовок AVI..\n"
+#define MSGTR_MPDEMUX_AVIHDR_BuildingODMLidx "AVI: ODML: Побудова індекса ODML (%d ланок суперіндекса).\n"
+#define MSGTR_MPDEMUX_AVIHDR_BrokenODMLfile "AVI: ODML: Виявлено зламаний (неповний?) файл. Буде використано традиційний індекс.\n"
+#define MSGTR_MPDEMUX_AVIHDR_CantReadIdxFile "Неможливо прочитати файл індекса %s: %s\n"
+#define MSGTR_MPDEMUX_AVIHDR_NotValidMPidxFile "%s не є придатним файлом індекса MPlayer.\n"
+#define MSGTR_MPDEMUX_AVIHDR_FailedMallocForIdxFile "Не можу виділити пам'ять для даних індекса з %s.\n"
+#define MSGTR_MPDEMUX_AVIHDR_PrematureEOF "передчасний кінець індексного файлу %s\n"
+#define MSGTR_MPDEMUX_AVIHDR_IdxFileLoaded "Завантажено індексний файл: %s\n"
+#define MSGTR_MPDEMUX_AVIHDR_GeneratingIdx "Генерується Індекс: %3lu %s     \r"
+#define MSGTR_MPDEMUX_AVIHDR_IdxGeneratedForHowManyChunks "AVI: Згенеровано індексну таблицю для %d ланок!\n"
+#define MSGTR_MPDEMUX_AVIHDR_Failed2WriteIdxFile "Не можу записати файл індекса %s: %s\n"
+#define MSGTR_MPDEMUX_AVIHDR_IdxFileSaved "Збережено індексный файл: %s\n"
+
+// demux_audio.c
+#define MSGTR_MPDEMUX_AUDIO_BadID3v2TagSize "Аудіо-демультиплексор: поганий размір ID3v2-тага: більший, ніж потік (%u).\n"
+#define MSGTR_MPDEMUX_AUDIO_DamagedAppendedID3v2Tag "Аудіо-демультиплексор: виявлено пошкоджений приєднаний ID3v2-таг.\n"
+#define MSGTR_MPDEMUX_AUDIO_UnknownFormat "Аудіо-демультиплексор: невідомий формат %d.\n"
+
+// demux_demuxers.c
+#define MSGTR_MPDEMUX_DEMUXERS_FillBufferError "помилка fill_buffer: поганий демультиплексор: не vd, ad чи sd.\n"
+
+// demux_mkv.c
+#define MSGTR_MPDEMUX_MKV_ZlibInitializationFailed "[mkv] збій инициалізації zlib.\n"
+#define MSGTR_MPDEMUX_MKV_ZlibDecompressionFailed "[mkv] збій zlib-розпакування.\n"
+#define MSGTR_MPDEMUX_MKV_LzoInitializationFailed "[mkv] збій инициалізації lzo.\n"
+#define MSGTR_MPDEMUX_MKV_LzoDecompressionFailed "[mkv] збій lzo-розпакування.\n"
+#define MSGTR_MPDEMUX_MKV_TrackEncrypted "[mkv] Доріжка номер %u зашифрована і расшифровка ще не реалізована.\n[mkv] Пропуск доріжки.\n"
+#define MSGTR_MPDEMUX_MKV_UnknownContentEncoding "[mkv] Невідомий тип шифрування вмісту для доріжки %u. Пропуск доріжки.\n"
+#define MSGTR_MPDEMUX_MKV_UnknownCompression "[mkv] Доріжка %u стиснута невідомим/непідтримуваним алгоритмом (%u).\n[mkv] Пропуск доріжки.\n"
+#define MSGTR_MPDEMUX_MKV_ZlibCompressionUnsupported "[mkv] Доріжка %u стиснута zlib, але mplayer скомпільовано без підтримки стиснення zlib.\n[mkv] Пропуск доріжки.\n"
+#define MSGTR_MPDEMUX_MKV_TrackIDName "[mkv] ID доріжки %u: %s (%s) \"%s\", %s\n"
+#define MSGTR_MPDEMUX_MKV_TrackID "[mkv] ID доріжки %u: %s (%s), %s\n"
+#define MSGTR_MPDEMUX_MKV_UnknownCodecID "[mkv] Невідомий/непідтримуваний CodecID (%s) фбо відсутні/погані дані CodecPrivate (доріжка %u).\n"
+#define MSGTR_MPDEMUX_MKV_FlacTrackDoesNotContainValidHeaders "[mkv] Доріжка FLAC не містить придатних заголовків.\n"
+#define MSGTR_MPDEMUX_MKV_UnknownAudioCodec "[mkv] Невідомий/непідтримуваний ID аудіо-кодека '%s' для доріжки %u або відсутні/зіпсовані приватні дані кодека.\n"
+#define MSGTR_MPDEMUX_MKV_SubtitleTypeNotSupported "[mkv] Тип субтитрів '%s' не подтримується.\n"
+#define MSGTR_MPDEMUX_MKV_WillPlayVideoTrack "[mkv] Буде відтворюватися доріжка %u.\n"
+#define MSGTR_MPDEMUX_MKV_NoVideoTrackFound "[mkv] Не знайдена/потребується відео-доріжка.\n"
+#define MSGTR_MPDEMUX_MKV_NoAudioTrackFound "[mkv] Не знайдена/потребується аудіо-доріжка.\n"
+#define MSGTR_MPDEMUX_MKV_WillDisplaySubtitleTrack "[mkv] Буде відображуватися доріжка субтитрів %u.\n"
+#define MSGTR_MPDEMUX_MKV_NoBlockDurationForSubtitleTrackFound "[mkv] Попередження: Не знайдено BlockDuration для доріжки субтитрів.\n"
+#define MSGTR_MPDEMUX_MKV_TooManySublines "[mkv] Попередження: слишком много строк для рендеринга, пропущены.\n"
+#define MSGTR_MPDEMUX_MKV_TooManySublinesSkippingAfterFirst "\n[mkv] Попередження: надто багато субрядків для рендерингу, пропускаю всі крім першої %i.\n"
+
+// demux_nuv.c
+#define MSGTR_MPDEMUX_NUV_NoVideoBlocksInFile "У файлі нема відео-блоків.\n"
+
+// demux_xmms.c
+#define MSGTR_MPDEMUX_XMMS_FoundPlugin "Знайдено плагін: %s (%s).\n"
+#define MSGTR_MPDEMUX_XMMS_ClosingPlugin "Закриваю плагін: %s.\n"
+#define MSGTR_MPDEMUX_XMMS_WaitForStart "Очікування початку відтворення '%s' плагіном XMMS...\n"
+
+
+// ========================== LIBMPCODECS ===================================
 
 // dec_video.c & dec_audio.c:
 #define MSGTR_CantOpenCodec "Не зміг відкрити кодек\n"
@@ -1043,3 +1434,24 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_CouldNotFindColorspace "Не можу підібрати підходящу схему кольорів - повтор з -vf scale...\n"
 #define MSGTR_MovieAspectIsSet "Відношення сторін %.2f:1 - масштабую аби скоректувати.\n"
 #define MSGTR_MovieAspectUndefined "Відношення сторін не вказано - масштабування не використовується.\n"
+
+// open.c, stream.c:
+#define MSGTR_CdDevNotfound "CD-ROM \"%s\" не знайдений!\n"
+#define MSGTR_ErrTrackSelect "Помилка вибору треку на VCD!"
+#define MSGTR_ReadSTDIN "Читання з stdin...\n"
+#define MSGTR_UnableOpenURL "Не можу відкрити URL: %s\n"
+#define MSGTR_ConnToServer "З'єднання з сервером: %s\n"
+#define MSGTR_FileNotFound "Файл не знайдений: '%s'\n"
+
+#define MSGTR_SMBFileNotFound "Помилка відкриття з мережі: '%s'\n"
+#define MSGTR_SMBNotCompiled "MPlayer не має вкомпільованої підтримки SMB\n"
+
+#define MSGTR_CantOpenDVD "Не зміг відкрити DVD: %s (%s)\n"
+#define MSGTR_DVDnumTitles "Є %d доріжок з титрами на цьому DVD.\n"
+#define MSGTR_DVDinvalidTitle "Непридатний номер доріжки титрів на DVD: %d\n"
+#define MSGTR_DVDnumChapters "Є %d розділів на цій доріжці з DVD титрами.\n"
+#define MSGTR_DVDinvalidChapter "Непридатний номер DVD розділу: %d\n"
+#define MSGTR_DVDnumAngles "Є %d кутів на цій доріжці з DVD титрами.\n"
+#define MSGTR_DVDinvalidAngle "Непридатний номер DVD кута: %d\n"
+#define MSGTR_DVDnoIFO "Не можу відкрити IFO файл для DVD титрів %d.\n"
+#define MSGTR_DVDnoVOBs "Не можу відкрити титри VOBS (VTS_%02d_1.VOB).\n"
