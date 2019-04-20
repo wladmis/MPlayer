@@ -1,0 +1,6 @@
+object 535c57044abcb3c5f5b73744e477fbbe125fac55
+type commit
+tag v1.4
+tagger Vladimir D. Seleznev <vseleznv@altlinux.org> 1555625741 +0300
+
+MPlayer 1.4

@@ -1,5 +1,4 @@
-tar: v@version@:. name=MPlayer-@version@
+tar: v@version@:MPlayer name=MPlayer-@version@
 tar: standard-1.9:. name=standard-1.9 base=standard
-diff: v@version@:. v@version@-alt:.
-diff: v@version@:. v@version@-nls:. name=@name@-@version@-nls.patch
+diff: v@version@:MPlayer MPlayer name=@name@-@version@-@release@.patch
 copy: *.in *.desktop
