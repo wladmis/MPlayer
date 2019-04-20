@@ -984,7 +984,7 @@ MP_MSG_OBJS = mp_msg.o mp_fifo.o osdep/$(GETCH) osdep/$(TIMER) -ltinfo -lm
 libvo/aspecttest$(EXESUF): libvo/aspect.o libvo/geometry.o $(MP_MSG_OBJS)
 libvo/aspecttest$(EXESUF): LIBS = $(MP_MSG_LIBS)
 
-LOADER_TEST_OBJS = $(SRCS_WIN32_EMULATION:.c=.o) $(SRCS_QTX_EMULATION:.S=.o) ffmpeg/libavutil/libavutil.a osdep/mmap_anon.o cpudetect.o path.o $(MP_MSG_OBJS)
+LOADER_TEST_OBJS = $(SRCS_WIN32_EMULATION:.c=.o) $(SRCS_QTX_EMULATION:.S=.o) osdep/mmap_anon.o cpudetect.o path.o $(MP_MSG_OBJS)
 
 loader/qtx/list$(EXESUF) loader/qtx/qtxload$(EXESUF): CFLAGS += -g
 loader/qtx/list$(EXESUF) loader/qtx/qtxload$(EXESUF): $(LOADER_TEST_OBJS)
@@ -1018,9 +1018,9 @@ toolsclean:
 
 TOOLS/bmovl-test$(EXESUF): LIBS = -lSDL -lSDL_image
 TOOLS/vfw2menc$(EXESUF):   LIBS = -lwinmm -lole32
-TOOLS/subrip$(EXESUF):     LIBS = $(MP_MSG_LIBS) -lm
+TOOLS/subrip$(EXESUF):     LIBS = $(MP_MSG_LIBS) -lm -lswscale
 TOOLS/subrip$(EXESUF): path.o sub/vobsub.o sub/spudec.o sub/unrar_exec.o \
-    ffmpeg/libswscale/libswscale.a ffmpeg/libavutil/libavutil.a $(MP_MSG_OBJS)
+    $(MP_MSG_OBJS)
 
 mplayer-nomain.o: mplayer.c
 	$(CC) $(CFLAGS) -DDISABLE_MAIN -c -o $@ $<
