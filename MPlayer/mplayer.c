@@ -3634,7 +3634,7 @@ goto_enable_cache:
 
     if (playing_msg) {
         char *msg = property_expand_string(mpctx, playing_msg);
-        mp_msg(MSGT_CPLAYER, MSGL_INFO, msg);
+        mp_msg(MSGT_CPLAYER, MSGL_INFO, "%s", msg);
         free(msg);
     }
 

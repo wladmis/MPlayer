@@ -1,0 +1,29 @@
+From 217e029de4dd4be11482f167bb0437a2b878c2ec Mon Sep 17 00:00:00 2001
+From: Afanasov Dmitry <ender@altlinux.org>
+Date: Fri, 5 Nov 2010 21:48:56 +0300
+Subject: [PATCH 03/21] fix aalib /dev/vcsa detection
+
+I do not know, why aa_getfirst(&aa_displayrecommended) on x11 retuns x11
+driver, but on plain console it returns NULL. what is more, mplayer
+upstream knows it and opens /dev/vcsa%2.2 directly. simpl changing
+format to plain %i fixes this bug.
+---
+ MPlayer/libvo/vo_aa.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/MPlayer/libvo/vo_aa.c b/MPlayer/libvo/vo_aa.c
+index bd1b9665eb..991a92d27a 100644
+--- a/MPlayer/libvo/vo_aa.c
++++ b/MPlayer/libvo/vo_aa.c
+@@ -694,7 +694,7 @@ static int preinit(const char *arg)
+ 	if (fstat (2, &sbuf) != -1) {
+ 	// vt number stored in device minor
+ 	vt = sbuf.st_rdev & 0xff;
+-	sprintf (fname, "/dev/vcsa%2.2i", vt);
++	sprintf (fname, "/dev/vcsa%i", vt);
+ 	fp = fopen (fname, "w+");
+ 	}
+ 	if (fp==NULL){
+-- 
+2.24.0
+

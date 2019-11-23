@@ -1,0 +1,23 @@
+From 2e747ea496eb65ac6a00d89b0c1b6a4ce57556ea Mon Sep 17 00:00:00 2001
+From: Led <led@altlinux.ru>
+Date: Mon, 3 Jun 2013 18:39:45 +0300
+Subject: [PATCH 5/5] fix po/mp_help2msg.awk
+
+---
+ MPlayer/po/mp_help2msg.awk | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/MPlayer/po/mp_help2msg.awk b/MPlayer/po/mp_help2msg.awk
+index b833980fd6..e13944fe25 100644
+--- a/MPlayer/po/mp_help2msg.awk
++++ b/MPlayer/po/mp_help2msg.awk
+@@ -105,5 +105,5 @@ msg[i] = msg[i] ProtectQuote()
+ 
+ END {
+ for (i in msg)
+-	print i " " msg[i] | "sort --key=2 | uniq --skip-fields=1 | sort"
++	print i " " msg[i] | "sort -k 2 -u"
+ }
+-- 
+2.24.0
+

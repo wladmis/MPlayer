@@ -1,0 +1,92 @@
+From 9428f90309e696087ea9d42c1f2fe11a49c40825 Mon Sep 17 00:00:00 2001
+From: Led <led@altlinux.org>
+Date: Thu, 30 May 2013 10:30:51 +0300
+Subject: [PATCH 3/5] fix usage mp_msg()
+
+---
+ MPlayer/m_option.c |  4 ++--
+ MPlayer/mp_msg.c   | 15 +++++----------
+ MPlayer/mplayer.c  |  2 +-
+ 3 files changed, 8 insertions(+), 13 deletions(-)
+
+diff --git a/MPlayer/m_option.c b/MPlayer/m_option.c
+index 7cc1a744f5..865707ca19 100644
+--- a/MPlayer/m_option.c
++++ b/MPlayer/m_option.c
+@@ -901,11 +901,11 @@ const m_option_type_t m_option_type_func = {
+ 
+ static int parse_print(const m_option_t* opt,const char *name, const char *param, void* dst, int src) {
+   if(opt->type == CONF_TYPE_PRINT_INDIRECT)
+-    mp_msg(MSGT_CFGPARSER, MSGL_INFO, "%s", *(char **) opt->p);
++    mp_msg(MSGT_CFGPARSER, MSGL_INFO, *(char **) opt->p);
+   else if(opt->type == CONF_TYPE_PRINT_FUNC)
+     return ((m_opt_func_full_t) opt->p)(opt,name,param);
+   else
+-    mp_msg(MSGT_CFGPARSER, MSGL_INFO, "%s", (char *) opt->p);
++    mp_msg(MSGT_CFGPARSER, MSGL_INFO, (const char *) opt->p);
+ 
+   if(opt->priv == NULL)
+     return M_OPT_EXIT;
+diff --git a/MPlayer/mp_msg.c b/MPlayer/mp_msg.c
+index 6bfac51860..03d4fcf5b2 100644
+--- a/MPlayer/mp_msg.c
++++ b/MPlayer/mp_msg.c
+@@ -84,11 +84,6 @@ const char* filename_recode(const char* filename)
+     }
+     *precoded = '\0';
+     return recoded_filename;
+-#ifdef ENABLE_NLS
+-    setlocale(LC_ALL, "");
+-    bindtextdomain(PACKAGE, LOCALEDIR);
+-    textdomain(PACKAGE);
+-#endif
+ #endif
+ }
+ 
+@@ -210,8 +205,8 @@ static void print_msg_module(FILE* stream, int mod)
+         fprintf(stream, "\033[%d;3%dm", c2 >> 3, c2 & 7);
+     fprintf(stream, "%9s", module_text[mod]);
+     if (mp_msg_color)
+-        fprintf(stream, "\033[0;37m");
+-    fprintf(stream, ": ");
++        fputs("\033[0;37m", stream);
++    fputs(": ", stream);
+ }
+ 
+ void mp_msg(int mod, int lev, const char *format, ... ){
+@@ -267,7 +262,7 @@ void mp_msg_va(int mod, int lev, const char *format, va_list va){
+ 
+     // as a status line normally is intended to be overwitten by next status line
+     // output a '\n' to get a normal message on a separate line
+-    if (statusline && lev != MSGL_STATUS) fprintf(stream, "\n");
++    if (statusline && lev != MSGL_STATUS) fputc('\n', stream);
+     statusline = lev == MSGL_STATUS;
+ 
+     if (header)
+@@ -276,8 +271,8 @@ void mp_msg_va(int mod, int lev, const char *format, va_list va){
+     len = strlen(tmp);
+     header = len && (tmp[len-1] == '\n' || tmp[len-1] == '\r');
+ 
+-    fprintf(stream, "%s", tmp);
++    fputs(tmp, stream);
+     if (mp_msg_color)
+-        fprintf(stream, "\033[0m");
++        fputs("\033[0m", stream);
+     fflush(stream);
+ }
+diff --git a/MPlayer/mplayer.c b/MPlayer/mplayer.c
+index c0223ab6c2..ef4b496d6d 100644
+--- a/MPlayer/mplayer.c
++++ b/MPlayer/mplayer.c
+@@ -3634,7 +3634,7 @@ goto_enable_cache:
+ 
+     if (playing_msg) {
+         char *msg = property_expand_string(mpctx, playing_msg);
+-        mp_msg(MSGT_CPLAYER, MSGL_INFO, "%s", msg);
++        mp_msg(MSGT_CPLAYER, MSGL_INFO, msg);
+         free(msg);
+     }
+ 
+-- 
+2.24.0
+

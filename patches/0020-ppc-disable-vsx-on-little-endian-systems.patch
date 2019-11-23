@@ -1,0 +1,39 @@
+From d7cc34962b995734e099392ad916fbf4e993e7e9 Mon Sep 17 00:00:00 2001
+From: Gleb Fotengauer-Malinovskiy <glebfm@altlinux.org>
+Date: Thu, 11 Apr 2019 22:31:57 +0300
+Subject: [PATCH 20/21] ppc: disable vsx on little-endian systems
+
+altivec and vsx support is broken in this ffmpeg on little-endian
+systems.
+---
+ MPlayer/configure | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/MPlayer/configure b/MPlayer/configure
+index d1dce55c56..85291cb743 100755
+--- a/MPlayer/configure
++++ b/MPlayer/configure
+@@ -2597,16 +2597,16 @@ case "$host_arch" in
+         fi
+         # gcc 4.5 and up supports POWER7
+         if test "$_cc_major" -ge "4" && test "$_cc_minor" -ge "5" || test "$_cc_major" -ge "5"; then
+-            case "$proc" in
+-                POWER7*) _march='-mcpu=power7' _mcpu='-mtune=power7'
++            case "$proc$_big_endian" in
++                POWER7*yes) _march='-mcpu=power7' _mcpu='-mtune=power7'
+                       def_vsx='#define HAVE_VSX 1' ;;
+                 *) ;;
+             esac
+         fi
+         # gcc 4.9 and up supports POWER8
+         if test "$_cc_major" -ge "4" && test "$_cc_minor" -ge "9" || test "$_cc_major" -ge "5"; then
+-            case "$proc" in
+-                POWER8*) _march='-mcpu=power8' _mcpu='-mtune=power8'
++            case "$proc$_big_endian" in
++                POWER8*yes) _march='-mcpu=power8' _mcpu='-mtune=power8'
+                       def_vsx='#define HAVE_VSX 1' ;;
+                 *) ;;
+             esac
+-- 
+2.24.0
+

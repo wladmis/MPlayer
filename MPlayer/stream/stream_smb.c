@@ -18,7 +18,6 @@
 
 #include "config.h"
 
-#include <time.h>
 #include <libsmbclient.h>
 #include <unistd.h>
 

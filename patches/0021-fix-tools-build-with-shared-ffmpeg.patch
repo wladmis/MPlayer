@@ -1,0 +1,37 @@
+From 7382804fdabbf8d45c85126107f24bd76d08aef3 Mon Sep 17 00:00:00 2001
+From: "Vladimir D. Seleznev" <vseleznv@altlinux.org>
+Date: Sat, 20 Apr 2019 22:40:45 +0300
+Subject: [PATCH 21/21] fix tools build with shared ffmpeg
+
+---
+ MPlayer/Makefile | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/MPlayer/Makefile b/MPlayer/Makefile
+index 5935ca1be2..2f416fbd1d 100644
+--- a/MPlayer/Makefile
++++ b/MPlayer/Makefile
+@@ -984,7 +984,7 @@ MP_MSG_OBJS = mp_msg.o mp_fifo.o osdep/$(GETCH) osdep/$(TIMER) -ltinfo -lm
+ libvo/aspecttest$(EXESUF): libvo/aspect.o libvo/geometry.o $(MP_MSG_OBJS)
+ libvo/aspecttest$(EXESUF): LIBS = $(MP_MSG_LIBS)
+ 
+-LOADER_TEST_OBJS = $(SRCS_WIN32_EMULATION:.c=.o) $(SRCS_QTX_EMULATION:.S=.o) ffmpeg/libavutil/libavutil.a osdep/mmap_anon.o cpudetect.o path.o $(MP_MSG_OBJS)
++LOADER_TEST_OBJS = $(SRCS_WIN32_EMULATION:.c=.o) $(SRCS_QTX_EMULATION:.S=.o) osdep/mmap_anon.o cpudetect.o path.o $(MP_MSG_OBJS)
+ 
+ loader/qtx/list$(EXESUF) loader/qtx/qtxload$(EXESUF): CFLAGS += -g
+ loader/qtx/list$(EXESUF) loader/qtx/qtxload$(EXESUF): $(LOADER_TEST_OBJS)
+@@ -1018,9 +1018,9 @@ toolsclean:
+ 
+ TOOLS/bmovl-test$(EXESUF): LIBS = -lSDL -lSDL_image
+ TOOLS/vfw2menc$(EXESUF):   LIBS = -lwinmm -lole32
+-TOOLS/subrip$(EXESUF):     LIBS = $(MP_MSG_LIBS) -lm
++TOOLS/subrip$(EXESUF):     LIBS = $(MP_MSG_LIBS) -lm -lswscale
+ TOOLS/subrip$(EXESUF): path.o sub/vobsub.o sub/spudec.o sub/unrar_exec.o \
+-    ffmpeg/libswscale/libswscale.a ffmpeg/libavutil/libavutil.a $(MP_MSG_OBJS)
++    $(MP_MSG_OBJS)
+ 
+ mplayer-nomain.o: mplayer.c
+ 	$(CC) $(CFLAGS) -DDISABLE_MAIN -c -o $@ $<
+-- 
+2.24.0
+

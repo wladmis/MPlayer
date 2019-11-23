@@ -131,15 +131,12 @@ int dvd_aid_from_lang(stream_t *stream, const unsigned char* lang) {
   int code,i;
   if(lang) {
     while(strlen(lang)>=2) {
-      int c=isdigit(lang[2]) && lang[2]!='0'?lang[2]-0x30:1;
       code=lang[1]|(lang[0]<<8);
       for(i=0;i<d->nr_of_channels;i++) {
         if(d->audio_streams[i].language==code) {
-          if (c == 1){
-            mp_msg(MSGT_OPEN,MSGL_INFO,MSGTR_DVDaudioChannel, d->audio_streams[i].id, lang[0],lang[1]);
-            return d->audio_streams[i].id;
-          } else
-            --c;
+          mp_msg(MSGT_OPEN,MSGL_INFO,MSGTR_DVDaudioChannel,
+          d->audio_streams[i].id, lang[0],lang[1]);
+          return d->audio_streams[i].id;
         }
         //printf("%X != %X  (%c%c)\n",code,d->audio_streams[i].language,lang[0],lang[1]);
       }

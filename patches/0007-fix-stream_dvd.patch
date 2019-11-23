@@ -1,0 +1,35 @@
+From f92c225d3ee224865e20bac3cfc7c8e9087a0336 Mon Sep 17 00:00:00 2001
+From: Led <led@altlinux.org>
+Date: Sat, 25 May 2013 05:53:57 +0300
+Subject: [PATCH 07/21] fix stream_dvd
+
+---
+ MPlayer/stream/stream_dvd.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/MPlayer/stream/stream_dvd.c b/MPlayer/stream/stream_dvd.c
+index 742e6088aa..e250351a07 100644
+--- a/MPlayer/stream/stream_dvd.c
++++ b/MPlayer/stream/stream_dvd.c
+@@ -131,12 +131,15 @@ int dvd_aid_from_lang(stream_t *stream, const unsigned char* lang) {
+   int code,i;
+   if(lang) {
+     while(strlen(lang)>=2) {
++      int c=isdigit(lang[2]) && lang[2]!='0'?lang[2]-0x30:1;
+       code=lang[1]|(lang[0]<<8);
+       for(i=0;i<d->nr_of_channels;i++) {
+         if(d->audio_streams[i].language==code) {
+-          mp_msg(MSGT_OPEN,MSGL_INFO,MSGTR_DVDaudioChannel,
+-          d->audio_streams[i].id, lang[0],lang[1]);
+-          return d->audio_streams[i].id;
++          if (c == 1){
++            mp_msg(MSGT_OPEN,MSGL_INFO,MSGTR_DVDaudioChannel, d->audio_streams[i].id, lang[0],lang[1]);
++            return d->audio_streams[i].id;
++          } else
++            --c;
+         }
+         //printf("%X != %X  (%c%c)\n",code,d->audio_streams[i].language,lang[0],lang[1]);
+       }
+-- 
+2.24.0
+

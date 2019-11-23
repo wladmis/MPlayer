@@ -42,12 +42,6 @@ cat <<EOF > "$TARGET"
 
 #include <inttypes.h>
 #include "config.h"
-#ifdef ENABLE_NLS
-#include <libintl.h>
-#define _(x) gettext(x)
-#else
-#define _(x) (x)
-#endif
 
 EOF
 

@@ -1,0 +1,25 @@
+From 5c9357a60efa07e90858bb8bd44e1b19c971e264 Mon Sep 17 00:00:00 2001
+From: Led <led@altlinux.ru>
+Date: Thu, 23 May 2013 20:18:35 +0300
+Subject: [PATCH 02/21] fix Makefile
+
+---
+ MPlayer/Makefile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/MPlayer/Makefile b/MPlayer/Makefile
+index efa871d01b..6bd660c4d6 100644
+--- a/MPlayer/Makefile
++++ b/MPlayer/Makefile
+@@ -979,7 +979,7 @@ endif
+ 
+ ###### tests / tools #######
+ 
+-MP_MSG_OBJS = mp_msg.o mp_fifo.o osdep/$(GETCH) osdep/$(TIMER)
++MP_MSG_OBJS = mp_msg.o mp_fifo.o osdep/$(GETCH) osdep/$(TIMER) -ltinfo -lm
+ 
+ libvo/aspecttest$(EXESUF): libvo/aspect.o libvo/geometry.o $(MP_MSG_OBJS)
+ libvo/aspecttest$(EXESUF): LIBS = $(MP_MSG_LIBS)
+-- 
+2.24.0
+

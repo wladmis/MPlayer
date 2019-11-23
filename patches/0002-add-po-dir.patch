@@ -1,0 +1,217 @@
+From 30a9f572cc174423ac8049a31c861a605e5405c0 Mon Sep 17 00:00:00 2001
+From: Led <led@altlinux.ru>
+Date: Wed, 29 May 2013 21:06:59 +0300
+Subject: [PATCH 2/5] add 'po' dir
+
+---
+ MPlayer/po/Makefile        |  15 +++++
+ MPlayer/po/mp_help2msg.awk | 109 +++++++++++++++++++++++++++++++++++++
+ MPlayer/po/mp_msg2po.awk   |  58 ++++++++++++++++++++
+ 3 files changed, 182 insertions(+)
+ create mode 100644 MPlayer/po/Makefile
+ create mode 100644 MPlayer/po/mp_help2msg.awk
+ create mode 100644 MPlayer/po/mp_msg2po.awk
+
+diff --git a/MPlayer/po/Makefile b/MPlayer/po/Makefile
+new file mode 100644
+index 0000000000..8d84f09a0b
+--- /dev/null
++++ b/MPlayer/po/Makefile
+@@ -0,0 +1,15 @@
++HELP_FILES = $(wildcard ../help/help_mp-*.h)
++LANGS = $(filter-out en,$(basename $(subst help_mp-,,$(notdir $(HELP_FILES)))))
++PO_FILES = $(addsuffix .po,$(LANGS))
++MO_FILES = $(addsuffix .gmo,$(LANGS))
++
++all: $(MO_FILES)
++
++%.gmo: %.po
++	msgfmt -o $@ $<
++
++en.msg: ../help/help_mp-en.h
++	gawk -f ./mp_help2msg.awk $< > $@
++
++$(PO_FILES): en.msg $(HELP_FILES)
++	gawk -f ./mp_help2msg.awk ../help/help_mp-$(basename $@).h | awk -f ./mp_msg2po.awk en.msg > $@
+diff --git a/MPlayer/po/mp_help2msg.awk b/MPlayer/po/mp_help2msg.awk
+new file mode 100644
+index 0000000000..b833980fd6
+--- /dev/null
++++ b/MPlayer/po/mp_help2msg.awk
+@@ -0,0 +1,109 @@
++#!/bin/gawk -f
++
++
++function Trim() {
++sub(/\/\*.*\*\//, "")
++sub(/[[:blank:]]+\/\/.*$/, "")
++sub(/^[[:blank:]]+/, "")
++sub(/[[:blank:]]+$/, "")
++sub(/^#[[:blank:]]+/, "#")
++}
++
++
++function ClearStr() {
++sub(/[[:blank:]]*\\$/, "")
++sub(/"[[:blank:]]*$/, "")
++sub(/^[[:blank:]]*"/, "")
++sub(/^\\\\n/, "\\n")
++sub(/\\\\n$/, "\\n")
++}
++
++
++function ProtectQuote() {
++return gensub(/([^\\])"/, "\\1\\\\\"", "g")
++}
++
++
++BEGIN {
++defs["HELP_MP_DEFINE_STATIC"] = 1
++while (getline <"../config.h") {
++	Trim()
++	if ($0~/^#define[[:blank:]]+/)
++		defs[$2] = 1
++}
++ifdef_level = 0
++IsHelp = 0
++IsDefine = 0
++}
++
++
++{
++Trim()
++}
++
++
++/^#endif/ {
++ifdef_level = rshift(ifdef_level, 1)
++next
++}
++
++
++/^#ifdef/ {
++ifdef_level = lshift(ifdef_level, 1)
++if (defs[$2] != 1)
++	ifdef_level++
++next
++}
++
++
++ifdef_level != 0 {
++next
++}
++
++
++IsHelp != 0 {
++ClearStr()
++if ($0~/;$/) {
++	IsHelp = 0
++	sub(/[[:blank:]]*;$/, "")
++	sub(/"[[:blank:]]*$/, "")
++}
++msg["Help_text"] = msg["Help_text"] $0
++}
++
++
++IsDefine!=0 {
++if ($0!~/\\$/)
++	IsDefine = 0
++ClearStr()
++msg[i] = msg[i] ProtectQuote()
++}
++
++
++/static[[:blank:]]+const[[:blank:]]+char[[:blank:]]+help_text/ {
++sub(/^.*=[[:blank:]]*/, "")
++ClearStr()
++msg["Help_text"] = $0
++if ($0~/;$/)
++	sub(/[[:blank:]]*;$/, "")
++else
++	IsHelp = 1
++}
++
++
++/^#define[[:blank:]]+MSGTR_/ {
++if ($0~/\\$/)
++	IsDefine = 1
++i = $2
++sub(/^#define[[:blank:]]+MSGTR_[^[:blank:]]+[[:blank:]]+/, "")
++if ($0~/\\$/)
++	IsDefine = 1
++ClearStr()
++msg[i] = msg[i] ProtectQuote()
++}
++
++
++END {
++for (i in msg)
++	print i " " msg[i] | "sort --key=2 | uniq --skip-fields=1 | sort"
++}
+diff --git a/MPlayer/po/mp_msg2po.awk b/MPlayer/po/mp_msg2po.awk
+new file mode 100644
+index 0000000000..19ed004330
+--- /dev/null
++++ b/MPlayer/po/mp_msg2po.awk
+@@ -0,0 +1,58 @@
++#!/bin/awk -f
++
++function TrimId() {
++i = $1
++sub(/[^[:blank:]]+[[:blank:]]+/, "")
++}
++
++
++BEGIN {
++if (ARGC == 1) {
++	print "Usage: " ARGV[0] " <msgid-file> [<msgstr-file>]"
++	exit
++} else {
++	idfile = ARGV[1]
++	while (getline <idfile) {
++		TrimId()
++		msgid[i] = $0
++	}
++	delete ARGV[1]
++}
++}
++
++
++{
++TrimId()
++if (length(msgid[i]) != 0) {
++	a = substr($0, 1, 2)
++	b = substr(msgid[i], 1, 2)
++	if (a == "\\n" && b != "\\n")
++		sub(/^(\\n)+/, "")
++	else if (b == "\\n" && a != "\\n")
++		$0 = "\\n" $0
++	a = substr($0, length() - 1)
++	b = substr(msgid[i], length(msgid[i]) - 1)
++	if (a == "\\n" && b != "\\n")
++		sub(/(\\n)+$/, "")
++	else if (b == "\\n" && a != "\\n")
++		$0 = $0 "\\n"
++	msgstr[i] = $0
++}
++}
++
++
++END {
++print "msgid \"\""
++print "msgstr \"\""
++print "\"Project-Id-Version: kshutdown\\n\""
++print "\"MIME-Version: 1.0\\n\""
++print "\"Content-Type: text/plain; charset=UTF-8\\n\""
++print "\"Content-Transfer-Encoding: 8bit\\n\""
++for (i in msgid) {
++	if (msgid[i]!~/^$|^MSGTR_/) {
++		print "# " i "\n" "msgid " "\"" msgid[i] "\"\n" "msgstr " "\"" msgstr[i] "\"\n"
++		if (msgstr[i]~/^$/)
++			print "mp_msg2po: " i " don't translated" > "/dev/stderr"
++	}
++}
++}
+-- 
+2.24.0
+

@@ -1,0 +1,45 @@
+From 2727cfcec2fc280dc41c32dad506ac1e6105e087 Mon Sep 17 00:00:00 2001
+From: Led <led@altlinux.org>
+Date: Sat, 25 May 2013 05:47:09 +0300
+Subject: [PATCH 06/21] fixed subreader
+
+---
+ MPlayer/sub/subreader.c | 18 ++++++------------
+ 1 file changed, 6 insertions(+), 12 deletions(-)
+
+diff --git a/MPlayer/sub/subreader.c b/MPlayer/sub/subreader.c
+index d57856b0fc..60688e1971 100644
+--- a/MPlayer/sub/subreader.c
++++ b/MPlayer/sub/subreader.c
+@@ -1883,22 +1883,16 @@ char * strreplace( char * in,char * what,char * whereof )
+ static void strcpy_trim(char *d, const char *s)
+ {
+     // skip leading whitespace
+-    while (*s && isspace(*s)) {
+-	s++;
+-    }
+-    for (;;) {
++    for (; *s && isascii(*s) && !isalnum(*s); s++);
++    for (;; d++) {
+ 	// copy word
+-	while (*s && !isspace(*s)) {
+-	    *d = tolower(*s);
+-	    s++; d++;
+-	}
++	for (; *s && (!isascii(*s) || isalnum(*s)); s++, d++)
++	    *d = *s;
+ 	if (*s == 0) break;
+ 	// trim excess whitespace
+-	while (*s && isspace(*s)) {
+-	    s++;
+-	}
++	for (; *s && isascii(*s) && !isalnum(*s); s++);
+ 	if (*s == 0) break;
+-	*d++ = ' ';
++	*d = ' ';
+     }
+     *d = 0;
+ }
+-- 
+2.24.0
+

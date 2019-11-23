@@ -1,0 +1,36 @@
+From 83ab568a4ce133621972b1c89685a79f2759f4bf Mon Sep 17 00:00:00 2001
+From: Led <led@altlinux.ru>
+Date: Mon, 3 Jun 2013 17:08:15 +0300
+Subject: [PATCH 4/5]  po/mp_msg2po.awk: fix po generation
+
+---
+ MPlayer/po/mp_msg2po.awk | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
+
+diff --git a/MPlayer/po/mp_msg2po.awk b/MPlayer/po/mp_msg2po.awk
+index 19ed004330..8bbddb252f 100644
+--- a/MPlayer/po/mp_msg2po.awk
++++ b/MPlayer/po/mp_msg2po.awk
+@@ -42,12 +42,13 @@ if (length(msgid[i]) != 0) {
+ 
+ 
+ END {
+-print "msgid \"\""
+-print "msgstr \"\""
+-print "\"Project-Id-Version: kshutdown\\n\""
+-print "\"MIME-Version: 1.0\\n\""
+-print "\"Content-Type: text/plain; charset=UTF-8\\n\""
+-print "\"Content-Transfer-Encoding: 8bit\\n\""
++#print "msgid \"\""
++#print "msgstr \"\""
++#print "\"Project-Id-Version: mplayer\\n\""
++#print "\"MIME-Version: 1.0\\n\""
++#print "\"Content-Type: text/plain; charset=UTF-8\\n\""
++#print "\"Content-Transfer-Encoding: 8bit\\n\""
++#print "\n"
+ for (i in msgid) {
+ 	if (msgid[i]!~/^$|^MSGTR_/) {
+ 		print "# " i "\n" "msgid " "\"" msgid[i] "\"\n" "msgstr " "\"" msgstr[i] "\"\n"
+-- 
+2.24.0
+

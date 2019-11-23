@@ -1,0 +1,287 @@
+From 69279ca7b48ad47c615818d4c2305b3a54c940cf Mon Sep 17 00:00:00 2001
+From: Led <led@altlinux.ru>
+Date: Mon, 3 Jun 2013 17:10:42 +0300
+Subject: [PATCH 13/21] fix ru translation
+
+---
+ MPlayer/help/help_mp-ru.h | 151 ++++++++++++++++++++++++++------------
+ 1 file changed, 105 insertions(+), 46 deletions(-)
+
+diff --git a/MPlayer/help/help_mp-ru.h b/MPlayer/help/help_mp-ru.h
+index 888c368723..f899607f3a 100644
+--- a/MPlayer/help/help_mp-ru.h
++++ b/MPlayer/help/help_mp-ru.h
+@@ -1,8 +1,9 @@
+ // Translated by: Nick Kurshev <nickols_k@mail.ru>,
+ // Dmitry Baryshkov <mitya@school.ioffe.ru>
++// Led <ledest@gmail.com>
+ // Reworked by: Andrew Savchenko aka Bircoph <Bircoph[at]list[dot]ru>
+ 
+-// Synced with help_mp-en.h: r28860
++// Synced with help_mp-en.h: 1.1.1
+ 
+ 
+ // ========================= MPlayer help ===========================
+@@ -1244,26 +1245,27 @@ static const char help_text[] = MSGTR_Help;
+ #define MSGTR_INPUT_APPLE_IR_CantOpen "Не могу открыть устройство Apple IR: %s\n"
+ 
+ // input.c
+-#define MSGTR_INPUT_INPUT_ErrCantRegister2ManyCmdFds "Слишком много описателей файлов команд,\nне могу зарегистрировать файловый описатель %d.\n"
++#define MSGTR_INPUT_INPUT_ErrCantRegister2ManyCmdFds "Слишком много описателей командных файлов, не могу зарегистрировать файловый описатель %d.\n"
+ #define MSGTR_INPUT_INPUT_ErrCantRegister2ManyKeyFds "Слишком много описателей файлов клавиш,\nне могу зарегистрировать файловый описатель %d.\n"
+ #define MSGTR_INPUT_INPUT_ErrArgMustBeInt "Команда %s: аргумент %d не целое число.\n"
+ #define MSGTR_INPUT_INPUT_ErrArgMustBeFloat "Команда %s: аргумент %d не вещественный.\n"
+-#define MSGTR_INPUT_INPUT_ErrUnterminatedArg "Команда %s: аргумент %d не определён.\n"
++#define MSGTR_INPUT_INPUT_ErrUnterminatedArg "Команда %s: аргумент %d незавершён.\n"
+ #define MSGTR_INPUT_INPUT_ErrUnknownArg "Неизвестный аргумент %d\n"
+ #define MSGTR_INPUT_INPUT_Err2FewArgs "Команда %s требует не менее %d аргументов, мы нашли пока только %d.\n"
+ #define MSGTR_INPUT_INPUT_ErrReadingCmdFd "Ошибка чтения описателя %d файла команд: %s\n"
+ #define MSGTR_INPUT_INPUT_ErrCmdBufferFullDroppingContent "Командный буфер файлового описателя %d полон: пропускаю содержимое.\n"
+ #define MSGTR_INPUT_INPUT_ErrInvalidCommandForKey "Неверная команда для привязки к клавише %s"
+-#define MSGTR_INPUT_INPUT_ErrSelect "Ошибка вызова select: %s\n"
+-#define MSGTR_INPUT_INPUT_ErrOnKeyInFd "Ошибка в файловом описателе %d клавиш ввода\n"
+-#define MSGTR_INPUT_INPUT_ErrDeadKeyOnFd "Фатальная ошибка клавиши ввода в файловом описателе %d\n"
++#define MSGTR_INPUT_INPUT_ErrSelect "Ошибка выбора: %s\n"
++#define MSGTR_INPUT_INPUT_ErrOnKeyInFd "Ошибка в файловом описателе клавиш ввода %d\n"
++#define MSGTR_INPUT_INPUT_ErrDeadKeyOnFd "Мёртвая клавиша ввода в файловом описателе %d\n"
+ #define MSGTR_INPUT_INPUT_Err2ManyKeyDowns "Слишком много событий одновременного нажатия клавиш\n"
+-#define MSGTR_INPUT_INPUT_ErrOnCmdFd "Ошибка в описателе %d файла команд\n"
+-#define MSGTR_INPUT_INPUT_ErrReadingInputConfig "Ошибка чтения конфигурационного файла ввода %s: %s\n"
++#define MSGTR_INPUT_INPUT_ErrOnCmdFd "Ошибка в описателе файла команд %d\n"
++#define MSGTR_INPUT_INPUT_ErrReadingInputConfig "Ошибка во время чтения конфигурационного файла ввода %s: %s\n"
+ #define MSGTR_INPUT_INPUT_ErrUnknownKey "Неизвестная клавиша '%s'\n"
+ #define MSGTR_INPUT_INPUT_ErrBuffer2SmallForKeyName "Буфер слишком мал для названия этой клавиши: %s\n"
+ #define MSGTR_INPUT_INPUT_ErrNoCmdForKey "Не найдено команды для клавиши %s"
+ #define MSGTR_INPUT_INPUT_ErrBuffer2SmallForCmd "Буфер слишком мал для команды %s\n"
++#define MSGTR_INPUT_INPUT_ErrWhyHere "Что мы здесь делаем?\n"
+ #define MSGTR_INPUT_INPUT_ErrCantInitJoystick "Не могу инициализировать джойстик ввода\n"
+ #define MSGTR_INPUT_INPUT_ErrCantOpenFile "Не могу выполнить open %s: %s\n"
+ #define MSGTR_INPUT_INPUT_ErrCantInitAppleRemote "Не могу инициализировать Пульт ДУ Apple Remote.\n"
+@@ -1277,28 +1279,30 @@ static const char help_text[] = MSGTR_Help;
+ 
+ // muxer.c, muxer_*.c
+ #define MSGTR_TooManyStreams "Слишком много потоков!"
+-#define MSGTR_RawMuxerOnlyOneStream "Мультиплексор rawaudio поддерживает только один аудиопоток!\n"
++#define MSGTR_RawMuxerOnlyOneStream "Мультиплексор rawaudio поддерживает только один поток!\n"
+ #define MSGTR_IgnoringVideoStream "Игнорирую видеопоток!\n"
+ #define MSGTR_UnknownStreamType "Предупреждение, неизвестный тип потока: %d\n"
+-#define MSGTR_WarningLenIsntDivisible "Предупреждение: длина не кратна размеру образца!\n"
+-#define MSGTR_MuxbufMallocErr "Мультиплексор фреймбуфера не может выделить память (malloc)!\n"
+-#define MSGTR_MuxbufReallocErr "Мультиплексор фреймбуфера не может перераспределить память (realloc)!\n"
++#define MSGTR_WarningLenIsntDivisible "Предупреждение, длина не кратна размеру фрагмента!\n"
++#define MSGTR_MuxbufMallocErr "Мультиплексор фреймбуфера не может выделить память!\n"
++#define MSGTR_MuxbufReallocErr "Мультиплексор фреймбуфера не может перераспределить память!\n"
+ #define MSGTR_WritingHeader "Запись заголовка...\n"
+ #define MSGTR_WritingTrailer "Запись индекса...\n"
+ 
+ // demuxer.c, demux_*.c
+-#define MSGTR_AudioStreamRedefined "ПРЕДУПРЕЖДЕНИЕ: Заголовок аудио потока %d переопределён!\n"
+-#define MSGTR_VideoStreamRedefined "ПРЕДУПРЕЖДЕНИЕ: Заголовок видео потока %d переопределён!\n"
+-#define MSGTR_TooManyAudioInBuffer "\nСлишком много (%d в %d байтах) аудиопакетов в буфере!\n"
+-#define MSGTR_TooManyVideoInBuffer "\nСлишком много (%d в %d байтах) видеопакетов в буфере!\n"
++#define MSGTR_AudioStreamRedefined "ПРЕДУПРЕЖДЕНИЕ: Заголовок аудиопотока %d переопределён!\n"
++#define MSGTR_VideoStreamRedefined "ПРЕДУПРЕЖДЕНИЕ: Заголовок видеопотока %d переопределён!\n"
++#define MSGTR_TooManyAudioInBuffer "\nСлишком много аудиопакетов в буфере: (%d в %d байтах).\n"
++#define MSGTR_TooManyVideoInBuffer "\nСлишком много видеопакетов в буфере: (%d в %d байтах).\n"
+ #define MSGTR_MaybeNI "Возможно Вы проигрываете 'неслоёный' поток/файл или неудачный кодек?\n" \
+-                      "Для AVI файлов попробуйте форсировать 'неслоёный' режим опцией -ni.\n"
++                      "Для AVI-файлов попробуйте форсировать 'неслоёный' режим опцией -ni.\n"
+ #define MSGTR_WorkAroundBlockAlignHeaderBug "AVI: Обход ошибки CBR-MP3 nBlockAlign заголовка!\n"
+-#define MSGTR_SwitchToNi "\nОбнаружен плохо 'слоёный' AVI файл - переключаюсь в -ni режим...\n"
+-#define MSGTR_InvalidAudioStreamNosound "AVI: неверный ID аудио потока: %d - игнорирование (без звука)\n"
+-#define MSGTR_InvalidAudioStreamUsingDefault "AVI: неверный ID видео потока: %d - игнорирование (используется значение по-умолчанию)\n"
++#define MSGTR_SwitchToNi "\nОбнаружен плохо 'слоёный' AVI-файл - переключаюсь в -ni режим...\n"
++#define MSGTR_InvalidAudioStreamNosound "AVI: неверный ID аудиопотока: %d - игнорирование (nosound)\n"
++#define MSGTR_InvalidAudioStreamUsingDefault "AVI: неверный ID видеопотока: %d - игнорирование (используется значение по-умолчанию)\n"
+ #define MSGTR_ON2AviFormat "ON2 AVI формат"
+ #define MSGTR_Detected_XXX_FileFormat "Обнаружен %s формат файла!\n"
++#define MSGTR_DetectedAudiofile "Обнаружен аудиофайл.\n"
++#define MSGTR_InvalidMPEGES "Недопустимый поток MPEG-ES??? свяжитесь с автором, это может быть ошибкой :(\n"
+ #define MSGTR_FormatNotRecognized "======= Извините, формат этого файла не распознан/не поддерживается ==========\n"\
+                                   "===== Если это AVI, ASF или MPEG поток, пожалуйста свяжитесь с автором! ======\n"
+ #define MSGTR_SettingProcessPriority "Устанавливаю приоритет процесса: %s\n"
+@@ -1308,13 +1312,13 @@ static const char help_text[] = MSGTR_Help;
+ #define MSGTR_MissingAudioStream "Аудиопоток не найден -> без звука\n"
+ #define MSGTR_MissingVideoStreamBug "Видеопоток потерян!? свяжитесь с автором, это может быть ошибкой :(\n"
+ 
+-#define MSGTR_DoesntContainSelectedStream "demux: в файле нет выбранного аудио или видеопотока\n"
++#define MSGTR_DoesntContainSelectedStream "demux: в файле нет выбранного аудио- или видеопотока\n"
+ 
+ #define MSGTR_NI_Forced "Форсирован"
+ #define MSGTR_NI_Detected "Обнаружен"
+ #define MSGTR_NI_Message "%s 'НЕСЛОЁНЫЙ' формат AVI файла!\n"
+ 
+-#define MSGTR_UsingNINI "Использование 'НЕСЛОЁНОГО' испорченного формата AVI файла!\n"
++#define MSGTR_UsingNINI "Использование 'НЕСЛОЁНОГО' испорченного формата AVI-файла!\n"
+ #define MSGTR_CouldntDetFNo "Не смог определить число кадров (для абсолютного перемещения).\n"
+ #define MSGTR_CantSeekRawAVI "Не могу переместиться в сыром потоке AVI!\n(требуется индекс, попробуйте с ключом -idx!)\n"
+ #define MSGTR_CantSeekFile "Не могу перемещаться в этом файле!\n"
+@@ -1322,6 +1326,7 @@ static const char help_text[] = MSGTR_Help;
+ #define MSGTR_MOVcomprhdr "MOV: Для поддержки сжатых заголовков необходим zlib!\n"
+ #define MSGTR_MOVvariableFourCC "MOV: Предупреждение! Обнаружен переменный FOURCC!?\n"
+ #define MSGTR_MOVtooManyTrk "MOV: Предупреждение! слишком много треков!"
++#define MSGTR_DetectedTV "Обнаружен ТВ! ;-)\n"
+ #define MSGTR_ErrorOpeningOGGDemuxer "Не могу открыть демультиплексор ogg.\n"
+ #define MSGTR_CannotOpenAudioStream "Не могу открыть аудиопоток: %s\n"
+ #define MSGTR_CannotOpenSubtitlesStream "Не могу открыть поток субтитров: %s\n"
+@@ -1331,40 +1336,40 @@ static const char help_text[] = MSGTR_Help;
+ #define MSGTR_DemuxerInfoChanged "Информация демультиплексора %s изменена в %s\n"
+ #define MSGTR_ClipInfo "Информация о клипе:\n"
+ 
+-#define MSGTR_LeaveTelecineMode "\ndemux_mpg: обнаружено 30000/1001 кадров/сек NTSC содержимое, переключаю частоту кадров.\n"
+-#define MSGTR_EnterTelecineMode "\ndemux_mpg: обнаружено 24000/1001 кадра/сек NTSC содержимое с построчной развёрткой,\nпереключаю частоту кадров.\n"
++#define MSGTR_LeaveTelecineMode "\ndemux_mpg: обнаружено NTSC-содержимое с 30000/1001 кадров/сек, переключаю частоту кадров.\n"
++#define MSGTR_EnterTelecineMode "\ndemux_mpg: обнаружено NTSC-содержимое с 24000/1001 кадра/сек с построчной развёрткой, переключаю частоту кадров.\n"
+ 
+-#define MSGTR_CacheFill "\rЗаполнение кэша: %5.2f%% (%"PRId64" байт(а))   "
++#define MSGTR_CacheFill "\rЗаполнение кэша: %5.2f%% (%"PRId64" байт(а,ов))   "
+ #define MSGTR_NoBindFound "Не найдена привязка к клавише '%s'.\n"
+-#define MSGTR_FailedToOpen "Не могу открыть %s.\n"
++#define MSGTR_FailedToOpen "Сбой открытия %s.\n"
+ 
+-#define MSGTR_VideoID "[%s] Найден видео поток, -vid %d\n"
+-#define MSGTR_AudioID "[%s] Найден аудио поток, -aid %d\n"
++#define MSGTR_VideoID "[%s] Найден видеопоток, -vid %d\n"
++#define MSGTR_AudioID "[%s] Найден аудиопоток, -aid %d\n"
+ #define MSGTR_SubtitleID "[%s] Найден поток субтитров, -sid %d\n"
+ 
+ // asfheader.c
+-#define MSGTR_MPDEMUX_ASFHDR_HeaderSizeOver1MB "ФАТАЛЬНАЯ ОШИБКА: размер заголовка более 1 MB (%d)!\nПожалуйста, обратитесь к разработчикам MPlayer и загрузите/отошлите этот файл.\n"
+-#define MSGTR_MPDEMUX_ASFHDR_HeaderMallocFailed "Не могу выделить %d байт(а/ов) для заголовка.\n"
++#define MSGTR_MPDEMUX_ASFHDR_HeaderSizeOver1MB "ФАТАЛЬНАЯ ОШИБКА: размер заголовка более 1 MB (%d)!\nПожалуйста, свяжитесь с авторами MPlayer'а и загрузите/отошлите этот файл.\n"
++#define MSGTR_MPDEMUX_ASFHDR_HeaderMallocFailed "Не могу выделить %d байт(а,ов) для заголовка.\n"
+ #define MSGTR_MPDEMUX_ASFHDR_EOFWhileReadingHeader "EOF при чтении заголовка ASF, испорченный/неполный файл?\n"
+-#define MSGTR_MPDEMUX_ASFHDR_DVRWantsLibavformat "DVR, вероятно, будет работать только с libavformat,\nпопробуйте -demuxer 35, если у Вас есть проблемы\n"
++#define MSGTR_MPDEMUX_ASFHDR_DVRWantsLibavformat "DVR, вероятно, будет работать только с libavformat, попробуйте -demuxer 35, если у вас проблемы\n"
+ #define MSGTR_MPDEMUX_ASFHDR_NoDataChunkAfterHeader "Нет звена данных, следующих за заголовком!\n"
+-#define MSGTR_MPDEMUX_ASFHDR_AudioVideoHeaderNotFound "ASF: не найден аудио или видео заголовок - испорченный файл?\n"
++#define MSGTR_MPDEMUX_ASFHDR_AudioVideoHeaderNotFound "ASF: не найден аудио- или видеозаголовок - испорченный файл?\n"
+ #define MSGTR_MPDEMUX_ASFHDR_InvalidLengthInASFHeader "Неверная длина в заголовке ASF!\n"
+-#define MSGTR_MPDEMUX_ASFHDR_DRMLicenseURL "URL DRM лицензии: %s\n"
+-#define MSGTR_MPDEMUX_ASFHDR_DRMProtected "Файл был обременен DRM шифрованием, он не будет воспроизводиться в MPlayer!\n"
++#define MSGTR_MPDEMUX_ASFHDR_DRMLicenseURL "URL лицензии DRM: %s\n"
++#define MSGTR_MPDEMUX_ASFHDR_DRMProtected "Файл обременен DRM шифрованием, он не будет воспроизводиться в MPlayer!\n"
+ 
+ // aviheader.c
+ #define MSGTR_MPDEMUX_AVIHDR_EmptyList "** пустой список?!\n"
+-#define MSGTR_MPDEMUX_AVIHDR_WarnNotExtendedAVIHdr "** Предупреждение: Это не расширенный заголовок AVI..\n"
++#define MSGTR_MPDEMUX_AVIHDR_WarnNotExtendedAVIHdr "** Предупреждение: это не расширенный заголовок AVI..\n"
+ #define MSGTR_MPDEMUX_AVIHDR_BuildingODMLidx "AVI: ODML: Построение индекса ODML (%d звеньев супериндекса).\n"
+-#define MSGTR_MPDEMUX_AVIHDR_BrokenODMLfile "AVI: ODML: Обнаружен плохой (неполный?) файл. Использую традиционный индекс.\n"
+-#define MSGTR_MPDEMUX_AVIHDR_CantReadIdxFile "Не могу прочитать файл индекса %s: %s\n"
++#define MSGTR_MPDEMUX_AVIHDR_BrokenODMLfile "AVI: ODML: Обнаружен плохой (неполный?) файл. Будет использован традиционный индекс.\n"
++#define MSGTR_MPDEMUX_AVIHDR_CantReadIdxFile "Невозможно прочитать файл индекса %s: %s\n"
+ #define MSGTR_MPDEMUX_AVIHDR_NotValidMPidxFile "%s не является корректным файлом индекса MPlayer.\n"
+ #define MSGTR_MPDEMUX_AVIHDR_FailedMallocForIdxFile "Не могу выделить память для данных индекса из %s.\n"
+ #define MSGTR_MPDEMUX_AVIHDR_PrematureEOF "преждевременный конец индексного файла %s\n"
+-#define MSGTR_MPDEMUX_AVIHDR_IdxFileLoaded "Загружаю индексный файл: %s\n"
+-#define MSGTR_MPDEMUX_AVIHDR_GeneratingIdx "Создаю Индекс: %3lu %s     \r"
+-#define MSGTR_MPDEMUX_AVIHDR_IdxGeneratedForHowManyChunks "AVI: Создана индексная таблица для %d звеньев!\n"
++#define MSGTR_MPDEMUX_AVIHDR_IdxFileLoaded "Загружен индексный файл: %s\n"
++#define MSGTR_MPDEMUX_AVIHDR_GeneratingIdx "Генерируется Индекс: %3lu %s     \r"
++#define MSGTR_MPDEMUX_AVIHDR_IdxGeneratedForHowManyChunks "AVI: Сгенеривана индексная таблица для %d звеньев!\n"
+ #define MSGTR_MPDEMUX_AVIHDR_Failed2WriteIdxFile "Не могу записать файл индекса %s: %s\n"
+ #define MSGTR_MPDEMUX_AVIHDR_IdxFileSaved "Сохранён индексный файл: %s\n"
+ 
+@@ -1416,31 +1421,35 @@ static const char help_text[] = MSGTR_Help;
+ #define MSGTR_MPDEMUX_NW_CacheSizeSetTo "Установлен размер кэша %d КБайт(а/ов)\n"
+ 
+ // demux_audio.c
+-#define MSGTR_MPDEMUX_AUDIO_BadID3v2TagSize "Аудио-демультиплексор: плохой размер ID3v2-тага: больше,чем поток (%u).\n"
++#define MSGTR_MPDEMUX_AUDIO_BadID3v2TagSize "Аудио-демультиплексор: плохой размер ID3v2-тага: больше, чем поток (%u).\n"
+ #define MSGTR_MPDEMUX_AUDIO_DamagedAppendedID3v2Tag "Аудио-демультиплексор: обнаружен повреждённый присоединённый ID3v2-таг.\n"
+ #define MSGTR_MPDEMUX_AUDIO_UnknownFormat "Аудио-демультиплексор: неизвестный формат %d.\n"
+ 
+ // demux_demuxers.c
+-#define MSGTR_MPDEMUX_DEMUXERS_FillBufferError "ошибка заполнения_буфера: плохой демультиплексор: не vd, ad или sd.\n"
++#define MSGTR_MPDEMUX_DEMUXERS_FillBufferError "ошибка fill_buffer: плохой демультиплексор: не vd, ad или sd.\n"
+ 
+ // demux_mkv.c
+ #define MSGTR_MPDEMUX_MKV_ZlibInitializationFailed "[mkv] ошибка инициализации zlib.\n"
+ #define MSGTR_MPDEMUX_MKV_ZlibDecompressionFailed "[mkv] ошибка zlib распаковки.\n"
++#define MSGTR_MPDEMUX_MKV_LzoInitializationFailed "[mkv] сбой инициализации lzo.\n"
+ #define MSGTR_MPDEMUX_MKV_LzoDecompressionFailed "[mkv] ошибка lzo распаковки.\n"
+ #define MSGTR_MPDEMUX_MKV_TrackEncrypted "[mkv] Дорожка номер %u зашифрована, а расшифровка еще не \n[mkv] реализована. Пропуск дорожки.\n"
+ #define MSGTR_MPDEMUX_MKV_UnknownContentEncoding "[mkv] Неизвестный тип шифрования содержимого для дорожки %u. Пропуск дорожки.\n"
+-#define MSGTR_MPDEMUX_MKV_UnknownCompression "[mkv] Дорожка %u сжата неизвестным/неподдерживаемым \n[mkv] алгоритмом (%u). Пропуск дорожки.\n"
+-#define MSGTR_MPDEMUX_MKV_ZlibCompressionUnsupported "[mkv] Дорожка %u сжата zlib, но mplayer скомпилирован \n[mkv] без поддержки сжатия zlib. Пропуск дорожки.\n"
++#define MSGTR_MPDEMUX_MKV_UnknownCompression "[mkv] Дорожка %u сжата неизвестным/неподдерживаемым алгоритмом (%u).\n[mkv] Пропуск дорожки.\n"
++#define MSGTR_MPDEMUX_MKV_ZlibCompressionUnsupported "[mkv] Дорожка %u сжата zlib, но mplayer скомпилирован без поддержки сжатия zlib.\n[mkv] Пропуск дорожки.\n"
+ #define MSGTR_MPDEMUX_MKV_TrackIDName "[mkv] ID дорожки %u: %s (%s) \"%s\", %s\n"
+ #define MSGTR_MPDEMUX_MKV_TrackID "[mkv] ID дорожки %u: %s (%s), %s\n"
+-#define MSGTR_MPDEMUX_MKV_UnknownCodecID "[mkv] Неизвестный/неподдерживаемый CodecID (%s) или отсутствующие/плохие\n[mkv] данные CodecPrivate (дорожка %u).\n"
++#define MSGTR_MPDEMUX_MKV_UnknownCodecID "[mkv] Неизвестный/неподдерживаемый CodecID (%s) или отсутствующие/плохие данные CodecPrivate (дорожка %u).\n"
+ #define MSGTR_MPDEMUX_MKV_FlacTrackDoesNotContainValidHeaders "[mkv] Дорожка FLAC не содержит правильных заголовков.\n"
+-#define MSGTR_MPDEMUX_MKV_UnknownAudioCodec "[mkv] Неизвестный/неподдерживаемый ID аудио кодека '%s' для дорожки %u или отсутствующие/неверные\n[mkv] частные данные кодека.\n"
++#define MSGTR_MPDEMUX_MKV_UnknownAudioCodec "[mkv] Неизвестный/неподдерживаемый ID аудио-кодека '%s' для дорожки %u или отсутствующие/испорченные частные данные кодека.\n"
+ #define MSGTR_MPDEMUX_MKV_SubtitleTypeNotSupported "[mkv] Тип субтитров '%s' не поддерживается.\n"
+ #define MSGTR_MPDEMUX_MKV_WillPlayVideoTrack "[mkv] Будет воспроизводиться дорожка %u.\n"
+ #define MSGTR_MPDEMUX_MKV_NoVideoTrackFound "[mkv] Не найдена/не требуется видео дорожка.\n"
+ #define MSGTR_MPDEMUX_MKV_NoAudioTrackFound "[mkv] Не найдена/не требуется аудио дорожка.\n"
++#define MSGTR_MPDEMUX_MKV_WillDisplaySubtitleTrack "[mkv] Будет отображаться дорожка субтитров %u.\n"
+ #define MSGTR_MPDEMUX_MKV_NoBlockDurationForSubtitleTrackFound "[mkv] Предупреждение: Не найдена длительность блока трека субтитров.\n"
++#define MSGTR_MPDEMUX_MKV_TooManySublines "[mkv] Предупреждение: слишком много строк для рендеринга, пропущены.\n"
++#define MSGTR_MPDEMUX_MKV_TooManySublinesSkippingAfterFirst "\n[mkv] Предупреждение: слишком много подстрок для рендеринга, пропускаю все кроме первой %i.\n"
+ 
+ // demux_nuv.c
+ 
+@@ -1717,6 +1726,56 @@ static const char help_text[] = MSGTR_Help;
+ 
+ // cache2.c
+ 
++// network.c
++#define MSGTR_MPDEMUX_NW_UnknownAF "Неизвестное семейство адресов %d\n"
++#define MSGTR_MPDEMUX_NW_ResolvingHostForAF "Разрешаю %s для %s...\n"
++#define MSGTR_MPDEMUX_NW_CantResolv "Не могу разрешить имя для %s: %s\n"
++#define MSGTR_MPDEMUX_NW_ConnectingToServer "Соединяюсь с сервером %s[%s]: %d...\n"
++#define MSGTR_MPDEMUX_NW_CantConnect2Server "Не могу соединится с сервером: %s\n"
++#define MSGTR_MPDEMUX_NW_SelectFailed "Select не удался.\n"
++#define MSGTR_MPDEMUX_NW_ConnTimeout "таймаут соединения\n"
++#define MSGTR_MPDEMUX_NW_GetSockOptFailed "getsockopt не удался: %s\n"
++#define MSGTR_MPDEMUX_NW_ConnectError "ошибка соединения: %s\n"
++#define MSGTR_MPDEMUX_NW_InvalidProxySettingTryingWithout "Неверные настройки прокси... пробую без прокси.\n"
++#define MSGTR_MPDEMUX_NW_CantResolvTryingWithoutProxy "Не могу разрешить удалённое имя для AF_INET. Пробую без прокси.\n"
++#define MSGTR_MPDEMUX_NW_ErrSendingHTTPRequest "Ошибка отправки HTTP запроса: Послан не весь запрос.\n"
++#define MSGTR_MPDEMUX_NW_ReadFailed "Чтение не удалось.\n"
++#define MSGTR_MPDEMUX_NW_Read0CouldBeEOF "http_read_response прочитано 0 (т.е. EOF).\n"
++#define MSGTR_MPDEMUX_NW_AuthFailed "Ошибка аутентификации. Используйте опции -user и -passwd чтобы предоставить ваши\n"\
++"логин/пароль для списка URL, или сформируйте URL следующим образом:\n"\
++"http://логин:пароль@имя_хоста/файл\n"
++#define MSGTR_MPDEMUX_NW_AuthRequiredFor "Для %s требуется аутентификация\n"
++#define MSGTR_MPDEMUX_NW_AuthRequired "Требуется аутентификация.\n"
++#define MSGTR_MPDEMUX_NW_NoPasswdProvidedTryingBlank "Пароль не указан, пробую пустой пароль.\n"
++#define MSGTR_MPDEMUX_NW_ErrServerReturned "Сервер вернул %d: %s\n"
++#define MSGTR_MPDEMUX_NW_CacheSizeSetTo "Установлен размер кэша %d КБайт(а/ов)\n"
++
++// open.c, stream.c
++#define MSGTR_CdDevNotfound "CD-ROM '%s' не найден!\n"
++#define MSGTR_ErrTrackSelect "Ошибка выбора дорожки VCD!"
++#define MSGTR_ReadSTDIN "Чтение из stdin (со стандартного входа)...\n"
++#define MSGTR_UnableOpenURL "Не могу открыть URL: %s\n"
++#define MSGTR_ConnToServer "Соединение с сервером: %s\n"
++#define MSGTR_FileNotFound "Файл не найден: '%s'\n"
++
++#define MSGTR_SMBInitError "Не могу инициализировать библиотеку libsmbclient: %d\n"
++#define MSGTR_SMBFileNotFound "Не могу открыть по сети: '%s'\n"
++#define MSGTR_SMBNotCompiled "MPlayer не был скомпилирован с поддержкой чтения SMB.\n"
++
++#define MSGTR_CantOpenBluray "Не могу открыть устройство Blu-ray: %s\n"
++#define MSGTR_CantOpenDVD "Не могу открыть устройство DVD: %s (%s)\n"
++
++#define MSGTR_URLParsingFailed "Сбой анализа URL %s\n"
++#define MSGTR_FailedSetStreamOption "Сбой установки опции %s=%s\n"
++#define MSGTR_StreamNeedType "Требуется тип потока!\n"
++#define MSGTR_StreamProtocolNULL "Тип потока %s имеет протокол == NULL, это ошибка\n"
++#define MSGTR_StreamCantHandleURL "Не найден поток для поддержки url %s\n"
++#define MSGTR_StreamNULLFilename "open_output_stream(), имя файла - NULL, сообщите об этой ошибке\n"
++#define MSGTR_StreamErrorWritingCapture "Ошибка записи файла захвата: %s\n"
++#define MSGTR_StreamSeekFailed "Сбой перемещения\n"
++#define MSGTR_StreamNotSeekable "В потоке нельзя перемещаться!\n"
++#define MSGTR_StreamCannotSeekBackward "Невозможно перемещаться в линейном потоке!\n"
++
+ // stream_cdda.c
+ #define MSGTR_MPDEMUX_CDDA_CantOpenCDDADevice "Не могу открыть устройство CDDA.\n"
+ #define MSGTR_MPDEMUX_CDDA_CantOpenDisc "Не могу открыть диск.\n"
+-- 
+2.24.0
+

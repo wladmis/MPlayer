@@ -326,8 +326,32 @@ Source0: %Name-%pkgver.tar
 Source2: %lname.desktop
 Source4: standard-1.9.tar
 Source5: %lname.conf.in
-# git://git.altlinux.org/gears/m/mplayer.git
-Patch0: %name-%version-%release.patch
+Patch1: 0001-fix-configure-script.patch
+Patch2: 0002-fix-Makefile.patch
+Patch3: 0003-fix-aalib-dev-vcsa-detection.patch
+Patch4: 0004-help_mp-uk.h-fixed-typo.patch
+Patch5: 0005-fix-vbe.h-path.patch
+Patch6: 0006-fixed-subreader.patch
+Patch7: 0007-fix-stream_dvd.patch
+Patch8: 0008-fix-desktop-file.patch
+Patch9: 0009-help-update-ru-translation.patch
+Patch10: 0010-update-ru-translation.patch
+Patch11: 0011-update-uk-translation.patch
+Patch12: 0012-fix-messages.patch
+Patch13: 0013-fix-ru-translation.patch
+Patch14: 0014-update-uk-translation.patch
+Patch15: 0015-fix-add-missing-ld-flag.patch
+Patch16: 0016-fix-aarch64-compile.patch
+Patch17: 0017-compilation-fix-with-glibc-2.27.patch
+Patch18: 0018-stream-stream_smb.c-include-time.h.patch
+Patch19: 0019-ffmpeg-libavformat-libsmbclient.c-include-time.h.patch
+Patch20: 0020-ppc-disable-vsx-on-little-endian-systems.patch
+Patch21: 0021-fix-tools-build-with-shared-ffmpeg.patch
+Patch22: 0001-add-NLS-support.patch
+Patch23: 0002-add-po-dir.patch
+Patch24: 0003-fix-usage-mp_msg.patch
+Patch25: 0004-po-mp_msg2po.awk-fix-po-generation.patch
+Patch26: 0005-fix-po-mp_help2msg.awk.patch
 
 %if_enabled gui
 Provides: %name-gui = %version-%release
@@ -617,7 +641,7 @@ Ukrainian language support for %Name.
 
 %prep
 %setup -q -n %Name-%pkgver
-%patch0 -p1
+%autopatch -p2
 
 %{?svnrev:subst 's/UNKNOWN/%svnrev/' version.sh}
 

@@ -1,0 +1,31 @@
+From 75d9f92f8e86ce4c56566903498f3fff3652fbc5 Mon Sep 17 00:00:00 2001
+From: Led <led@altlinux.org>
+Date: Sat, 25 May 2013 05:58:34 +0300
+Subject: [PATCH 08/21] fix desktop file
+
+---
+ MPlayer/etc/mplayer.desktop | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/MPlayer/etc/mplayer.desktop b/MPlayer/etc/mplayer.desktop
+index 5b8c40a878..47d03f9510 100644
+--- a/MPlayer/etc/mplayer.desktop
++++ b/MPlayer/etc/mplayer.desktop
+@@ -22,11 +22,13 @@ Comment[es]=Reproduce vídeos y música
+ Comment[fr]=Lit les films et musiques
+ Comment[it]=Riproduce filmati e musica
+ Comment[ja]=動画や音声のファイルを再生します
++Comment[ru]=Проигрыватель мультимедиа
++Comment[uk]=Програвач мультимедіа
+ Keywords=Player;Capture;Audio;Music;Song;Video;Movie;Film;Clip;DVD;VCD;CD;Disc;DVB;TV;
+ Keywords[de]=Player;Wiedergabe;Capture;Mitschnitt;Audio;Musik;Lied;Video;Film;Clip;DVD;VCD;CD;Disc;Disk;DVB;TV;
+ Icon=mplayer
+ TryExec=gmplayer
+-Exec=gmplayer %F
++Exec=gmplayer %U
+ Terminal=false
+ Categories=GTK;AudioVideo;Audio;Video;Player;TV;
+ MimeType=application/x-cd-image;application/x-cue;application/x-mpegurl;application/mxf;application/x-netshow-channel;application/ogg;application/ram;application/vnd.adobe.flash.movie;application/vnd.apple.mpegurl;application/vnd.rn-realmedia;application/x-shockwave-flash;application/smil;audio/aac;audio/ac3;audio/x-adpcm;audio/x-aiff;audio/AMR;audio/AMR-WB;audio/x-ape;audio/basic;audio/flac;audio/x-flac;audio/x-flac+ogg;audio/x-m4b;audio/x-matroska;audio/mp2;audio/mp4;audio/mpeg;audio/x-mpegurl;audio/x-ms-asx;audio/x-ms-wma;audio/x-musepack;audio/ogg;audio/vnd.rn-realaudio;audio/x-scpls;audio/x-voc;audio/x-vorbis+ogg;audio/x-wav;audio/x-wavpack;video/3gpp;video/3gpp2;video/dv;video/x-flic;video/x-flv;video/x-matroska;video/mp2t;video/mp4;video/mpeg;video/vnd.mpegurl;video/x-ms-asf;video/x-ms-wmv;video/x-msvideo;video/x-nsv;video/ogg;video/x-ogm+ogg;video/quicktime;video/vnd.rn-realvideo;video/x-theora+ogg;video/webm;x-content/audio-cdda;x-content/audio-dvd;x-content/video-dvd;x-content/video-svcd;x-content/video-vcd;
+-- 
+2.24.0
+

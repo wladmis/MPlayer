@@ -25,13 +25,6 @@
 #include "config.h"
 #include "osdep/getch2.h"
 
-#ifdef ENABLE_NLS
-#include <libintl.h>
-#define _(x) gettext(x)
-#else
-#define _(x) (x)
-#endif
-
 #ifdef CONFIG_ICONV
 #include <iconv.h>
 #include <errno.h>
@@ -40,7 +33,7 @@
 #include "mp_msg.h"
 
 /* maximum message length of mp_msg */
-#define MSGSIZE_MAX 4096
+#define MSGSIZE_MAX 3072
 
 int mp_msg_levels[MSGT_MAX]; // verbose level of this module. initialized to -2
 int mp_msg_level_all = MSGL_STATUS;
@@ -113,13 +106,6 @@ void mp_msg_uninit(void)
     if (inv_msgiconv != (iconv_t)(-1)) iconv_close(inv_msgiconv);
     free(term_charset_ptr_to_free);
     term_charset_ptr_to_free = NULL;
-#ifdef ENABLE_NLS
-    setlocale(LC_ALL, "");
-    // fix radix char in sprintf's
-    setlocale(LC_NUMERIC, "C");
-    bindtextdomain(PACKAGE, LOCALEDIR);
-    textdomain(PACKAGE);
-#endif
 #endif
 }
 
@@ -205,8 +191,8 @@ static void print_msg_module(FILE* stream, int mod)
         fprintf(stream, "\033[%d;3%dm", c2 >> 3, c2 & 7);
     fprintf(stream, "%9s", module_text[mod]);
     if (mp_msg_color)
-        fputs("\033[0;37m", stream);
-    fputs(": ", stream);
+        fprintf(stream, "\033[0;37m");
+    fprintf(stream, ": ");
 }
 
 void mp_msg(int mod, int lev, const char *format, ... ){
@@ -225,7 +211,7 @@ void mp_msg_va(int mod, int lev, const char *format, va_list va){
     size_t len;
 
     if (!mp_msg_test(mod, lev)) return; // do not display
-    vsnprintf(tmp, MSGSIZE_MAX, _(format), va);
+    vsnprintf(tmp, MSGSIZE_MAX, format, va);
     tmp[MSGSIZE_MAX-2] = '\n';
     tmp[MSGSIZE_MAX-1] = 0;
 
@@ -262,7 +248,7 @@ void mp_msg_va(int mod, int lev, const char *format, va_list va){
 
     // as a status line normally is intended to be overwitten by next status line
     // output a '\n' to get a normal message on a separate line
-    if (statusline && lev != MSGL_STATUS) fputc('\n', stream);
+    if (statusline && lev != MSGL_STATUS) fprintf(stream, "\n");
     statusline = lev == MSGL_STATUS;
 
     if (header)
@@ -271,8 +257,8 @@ void mp_msg_va(int mod, int lev, const char *format, va_list va){
     len = strlen(tmp);
     header = len && (tmp[len-1] == '\n' || tmp[len-1] == '\r');
 
-    fputs(tmp, stream);
+    fprintf(stream, "%s", tmp);
     if (mp_msg_color)
-        fputs("\033[0m", stream);
+        fprintf(stream, "\033[0m");
     fflush(stream);
 }
