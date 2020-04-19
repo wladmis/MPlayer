@@ -376,7 +376,7 @@ static void prButton( GtkButton * button, gpointer user_data )
 
         /* 6th page */
         gtkVfPP=gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON( CBPostprocess ) );
-        gtkLoadFullscreen=gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON( CBLoadFullscreen ) );
+        fullscreen=gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON( CBLoadFullscreen ) );
         gui_save_pos=gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON( CBSaveWinPos ) );
         gtkShowVideoWindow=!gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON( CBShowVideoWindow ) );
         stop_xscreensaver=gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON( CBStopXScreenSaver ) );
@@ -658,7 +658,7 @@ static GtkWidget * CreatePreferences( void )
   CLADrivers=gtk_clist_new( 2 );
   gtk_widget_show( CLADrivers );
   gtk_container_add( GTK_CONTAINER( scrolledwindow3 ),CLADrivers );
-  gtk_clist_set_column_width( GTK_CLIST( CLADrivers ),0,50 );
+  gtk_clist_set_column_width( GTK_CLIST( CLADrivers ),0,65 );
   gtk_clist_column_titles_show( GTK_CLIST( CLADrivers ) );
   gtk_clist_set_shadow_type( GTK_CLIST( CLADrivers ),GTK_SHADOW_NONE );
   gtk_widget_set_usize( CLADrivers,250,-2 );
@@ -725,7 +725,7 @@ static GtkWidget * CreatePreferences( void )
   CLVDrivers=gtk_clist_new( 2 );
   gtk_widget_show( CLVDrivers );
   gtk_container_add( GTK_CONTAINER( scrolledwindow2 ),CLVDrivers );
-  gtk_clist_set_column_width( GTK_CLIST( CLVDrivers ),0,50 );
+  gtk_clist_set_column_width( GTK_CLIST( CLVDrivers ),0,65 );
   gtk_clist_column_titles_show( GTK_CLIST( CLVDrivers ) );
   gtk_clist_set_shadow_type( GTK_CLIST( CLVDrivers ),GTK_SHADOW_NONE );
   gtk_widget_set_usize( CLVDrivers,250,-2 );
@@ -1222,6 +1222,8 @@ void ShowPreferences( void )
   while ( audio_out_drivers[i] )
    {
     const ao_info_t *info = audio_out_drivers[i++]->info;
+    if ( !strcmp( info->short_name,"mpegpes" ) ) continue;
+    if ( !strcmp( info->short_name,"pcm" ) ) continue;
     if ( !strcmp( info->short_name,"plugin" ) ) continue;
     if ( audio_driver_list )
      {
@@ -1397,7 +1399,7 @@ void ShowPreferences( void )
 
 /* 6th page */
  gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON( CBPostprocess ),gtkVfPP );
- gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON( CBLoadFullscreen ),gtkLoadFullscreen );
+ gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON( CBLoadFullscreen ),fullscreen );
  gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON( CBSaveWinPos ),gui_save_pos );
  gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON( CBShowVideoWindow ),!gtkShowVideoWindow );
  gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON( CBStopXScreenSaver ),stop_xscreensaver );

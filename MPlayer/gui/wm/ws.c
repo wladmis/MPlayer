@@ -20,10 +20,12 @@
  */
 
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ipc.h>
 #include <X11/Xatom.h>
+#include <X11/Xlibint.h>
 
 #include "ws.h"
 #include "wsxdnd.h"
@@ -64,6 +66,8 @@ int wsOrgX;                          // Screen origin x.
 int wsOrgY;                          // Screen origin y.
 
 Display *wsDisplay;
+XVisualInfo *gui_vinfo;
+
 static int wsScreen;
 static Window wsRootWin;
 
@@ -309,12 +313,40 @@ void wsDone(void)
 static int wsErrorHandler(Display *display, XErrorEvent *event)
 {
     char type[128];
+    _XExtension *ext = NULL;
 
     XGetErrorText(display, event->error_code, type, sizeof(type));
 
     mp_msg(MSGT_GPLAYER, MSGL_ERR, "[ws] " MSGTR_GUI_MSG_X11Error);
     mp_msg(MSGT_GPLAYER, MSGL_ERR, "[ws]  Error code: %d - %s\n", event->error_code, type);
-    mp_msg(MSGT_GPLAYER, MSGL_DBG2, "[ws]  Request code: %d (minor code: %d)\n", event->request_code, event->minor_code);
+
+    if (event->request_code < 128) {
+        snprintf(type, sizeof(type), "%d", event->request_code);
+        XGetErrorDatabaseText(display, "XRequest", type, "?", type, sizeof(type));
+    } else {
+        ext = display->ext_procs;
+
+        while (ext && (ext->codes.major_opcode != event->request_code))
+            ext = ext->next;
+
+        if (ext)
+            snprintf(type, sizeof(type), "%s", ext->name);
+        else
+            strcpy(type, "?");
+    }
+
+    mp_msg(MSGT_GPLAYER, MSGL_DBG2, "[ws]  Request code: %d (%s)\n", event->request_code, type);
+
+    if (event->request_code >= 128) {
+        if (ext) {
+            snprintf(type, sizeof(type), "%s.%d", ext->name, event->minor_code);
+            XGetErrorDatabaseText(display, "XRequest", type, "?", type, sizeof(type));
+        } else
+            strcpy(type, "?");
+
+        mp_msg(MSGT_GPLAYER, MSGL_DBG2, "[ws]  Minor code: %d (%s)\n", event->minor_code, type);
+    }
+
     mp_msg(MSGT_GPLAYER, MSGL_DBG2, "[ws]  MPlayer module: %s\n", current_module ? current_module : "(none)");
 
     return 0;
@@ -341,6 +373,25 @@ static int wsWindowListSearch(Window win)
             return i;
 
     return -1;
+}
+
+static void wsClearWindowParts(Display *display, wsWindow *win)
+{
+    int W_leftover, H_leftover;
+
+    if (win->Width <= win->xImage->width && win->Height <= win->xImage->height)
+        return;
+
+    W_leftover = (win->Width - win->xImage->width) / 2;
+    H_leftover = (win->Height - win->xImage->height) / 2;
+
+    XFillRectangle(display, win->WindowID, win->wGC, 0, 0, win->Width, H_leftover);
+    XFillRectangle(display, win->WindowID, win->wGC, 0, win->Height - H_leftover - 1, win->Width, H_leftover + 1);
+
+    if (win->Width > win->xImage->width) {
+        XFillRectangle(display, win->WindowID, win->wGC, 0, H_leftover, W_leftover, win->xImage->height);
+        XFillRectangle(display, win->WindowID, win->wGC, win->Width - W_leftover - 1, H_leftover, W_leftover + 1, win->xImage->height);
+    }
 }
 
 void wsEvent(XEvent *event)
@@ -443,8 +494,10 @@ expose:
 
         wsWindowList[l]->State = wsWindowExpose;
 
-        if ((wsWindowList[l]->DrawHandler) && (!event->xexpose.count))
+        if ((wsWindowList[l]->DrawHandler) && (!event->xexpose.count)) {
+            wsClearWindowParts(wsDisplay, wsWindowList[l]);
             wsWindowList[l]->DrawHandler();
+        }
 
         break;
 
@@ -806,6 +859,8 @@ void wsWindowCreate(wsWindow *win, int x, int y, int w, int h, int p, int c, cha
     }
 
     XMatchVisualInfo(wsDisplay, wsScreen, depth, TrueColor, &win->VisualInfo);
+
+    gui_vinfo = &win->VisualInfo;
 
     mp_msg(MSGT_GPLAYER, MSGL_DBG2, "[ws] visual: ID %#lx\n", win->VisualInfo.visualid);
 

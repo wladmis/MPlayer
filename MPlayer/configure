@@ -270,9 +270,16 @@ alpha() {
   esac
 }
 
+aarch64() {
+  case "$host_arch" in
+    aarch64*) return 0;;
+    *) return 1;;
+  esac
+}
+
 arm() {
   case "$host_arch" in
-    arm*) return 0;;
+    arm*|aarch64*) return 0;;
     *) return 1;;
   esac
 }
@@ -405,6 +412,8 @@ Codecs:
   --disable-x264            disable x264 [autodetect]
   --disable-x264-lavc       disable x264 in libavcodec [autodetect]
   --disable-libvpx-lavc     disable libvpx in libavcodec [autodetect]
+  --disable-libdav1d-lavc   disable libdav1d in libavcodec [autodetect]
+  --disable-libaom-lavc     disable libaom in libavcodec [autodetect]
   --disable-libnut          disable libnut [autodetect]
   --disable-ffmpeg_a        disable static FFmpeg [autodetect]
   --disable-ffmpeg_so       disable shared FFmpeg [autodetect]
@@ -478,7 +487,6 @@ Video output:
   --enable-directx         enable DirectX video output [autodetect]
   --enable-dxr2            enable DXR2 video output [autodetect]
   --enable-dxr3            enable DXR3/H+ video output [autodetect]
-  --enable-ivtv            enable IVTV TV-Out video output [autodetect]
   --enable-v4l2            enable V4L2 Decoder audio/video output [autodetect]
   --enable-dvb             enable DVB video output [autodetect]
   --enable-mga             enable mga_vid video output [autodetect]
@@ -706,7 +714,6 @@ _fbdev=auto
 _dvb=auto
 _dxr2=auto
 _dxr3=auto
-_ivtv=auto
 _v4l2=auto
 _iconv=auto
 _langinfo=auto
@@ -801,6 +808,8 @@ _xvid_lavc=auto
 _x264=auto
 _x264_lavc=auto
 _libvpx_lavc=auto
+_libdav1d_lavc=auto
+_libaom_lavc=auto
 _libnut=auto
 _lirc=auto
 _lircc=auto
@@ -1083,8 +1092,6 @@ for ac_option do
   --disable-dxr2)       _dxr2=no        ;;
   --enable-dxr3)        _dxr3=yes       ;;
   --disable-dxr3)       _dxr3=no        ;;
-  --enable-ivtv)        _ivtv=yes       ;;
-  --disable-ivtv)       _ivtv=no        ;;
   --enable-v4l2)        _v4l2=yes       ;;
   --disable-v4l2)       _v4l2=no        ;;
   --enable-iconv)       _iconv=yes      ;;
@@ -1255,6 +1262,10 @@ for ac_option do
   --disable-x264-lavc)  _x264_lavc=no   ;;
   --enable-libvpx-lavc)   _libvpx_lavc=yes  ;;
   --disable-libvpx-lavc)  _libvpx_lavc=no   ;;
+  --enable-libdav1d-lavc)   _libdav1d_lavc=yes  ;;
+  --disable-libdav1d-lavc)  _libdav1d_lavc=no   ;;
+  --enable-libaom-lavc)   _libaom_lavc=yes  ;;
+  --disable-libaom-lavc)  _libaom_lavc=no   ;;
   --enable-libnut)      _libnut=yes     ;;
   --disable-libnut)     _libnut=no      ;;
   --enable-libopencore_amrnb)   _libopencore_amrnb=yes  ;;
@@ -1505,7 +1516,7 @@ if test -e ffmpeg/.svn ; then
 fi
 
 FFBRANCH=master
-test -e FFBRANCH && FFBRANCH=$(cat FFMPEG_BRANCH)
+test -e FFBRANCH && FFBRANCH=$(cat FFBRANCH)
 
 if test -e ffmpeg/mp_auto_pull ; then
     echo "Updating FFmpeg, (re)move ffmpeg/mp_auto_pull to disable"
@@ -1615,8 +1626,8 @@ libavmuxers=$(echo $libavmuxers_all)
 libavprotocols=$(echo $libavprotocols_all)
 libavfilters=$(echo $libavfilters_all)
 
-libavdecoders=$(filter_out_component decoder 'LIB[A-Z0-9_]* H264_QSV MJPEG_QSV MPEG2_MMAL MPEG4_MMAL MPEG2_QSV HEVC_QSV VC1_MMAL VC1_QSV H264_MMAL H264_MEDIACODEC HEVC_MEDIACODEC MPEG2_MEDIACODEC H264_CUVID HEVC_CUVID VC1_CUVID VP8_CUVID VP9_CUVID H263_CUVID MJPEG_CUVID MPEG1_CUVID MPEG2_CUVID MPEG4_CUVID VP8_MEDIACODEC VP9_MEDIACODEC MPEG4_MEDIACODEC VP8_QSV [A-Z0-9_]*_AT [A-Z0-9]*_RKMPP [A-Z0-9]*_V4L2M2M')
-libavencoders=$(filter_out_component encoder 'LIB[A-Z0-9_]* H264_QSV MJPEG_QSV MPEG2_QSV HEVC_QSV VC1_MMAL VC1_QSV NVENC[A-Z0-9_]* H264_NVENC[A-Z0-9_]* HEVC_NVENC[A-Z0-9_]* HAP [A-Z0-9]*_VIDEOTOOLBOX H264_VAAPI HEVC_VAAPI MJPEG_VAAPI MPEG2_VAAPI VP8_VAAPI VP9_VAAPI H264_OMX MPEG4_OMX [A-Z0-9_]*_AT [A-Z0-9]*_V4L2M2M [A-Z0-9]*_AMF')
+libavdecoders=$(filter_out_component decoder 'LIB[A-Z0-9_]* [A-Z0-9]*_QSV [A-Z0-9]*_MMAL [A-Z0-9]*_MEDIACODEC [A-Z0-9]*_CUVID [A-Z0-9_]*_AT [A-Z0-9]*_RKMPP [A-Z0-9]*_V4L2M2M')
+libavencoders=$(filter_out_component encoder 'LIB[A-Z0-9_]* [A-Z0-9]*_QSV [A-Z0-9]*_MMAL NVENC[A-Z0-9_]* H264_NVENC[A-Z0-9_]* HEVC_NVENC[A-Z0-9_]* HAP [A-Z0-9]*_VIDEOTOOLBOX [A-Z0-9]*_VAAPI [A-Z0-9]*_OMX [A-Z0-9_]*_AT [A-Z0-9]*_V4L2M2M [A-Z0-9]*_AMF')
 libavbsfs=$(filter_out_component bsf 'TRACE_HEADERS [A-Z0-9_]*_METADATA H264_REDUNDANT_PPS FILTER_UNITS')
 libavdemuxers=$(filter_out_component demuxer 'AVISYNTH DASH LIB[A-Z0-9_]* REDIR VAPOURSYNTH')
 libavmuxers=$(filter_out_component muxer 'CHROMAPRINT LIB[A-Z0-9_]* RTP RTSP SAP')
@@ -1861,6 +1872,7 @@ fi
 
 if wine ; then
   extra_cflags="-fno-pic -UWIN32 -U_WIN32 -U__WIN32 -U__WIN32__ -DWINE_NOWINSOCK $extra_cflags"
+  libs_mplayer="$libs_mplayer -lshell32"
 fi
 
 if darwin && test "$cc_vendor" != "clang" ; then
@@ -1894,6 +1906,9 @@ if ppc ; then
 fi
 if sparc ; then
   cc_check && host_arch=sparc64 || host_arch=sparc
+fi
+if arm ; then
+  cc_check && host_arch=aarch64 || host_arch=arm
 fi
 fi
 
@@ -3223,6 +3238,7 @@ if arm ; then
   if test $_armvfp = "auto" ; then
     _armvfp=no
     inline_asm_check '"fadds s0, s0, s0"' && _armvfp=yes
+    inline_asm_check '"fmadd d0,    d0,    d1,    d2"' && _armvfp=yes
   fi
   echores "$_armvfp"
 
@@ -3254,8 +3270,14 @@ if arm ; then
   if test $neon = "auto" ; then
     neon=no
     inline_asm_check '"vadd.i16 q0, q0, q0"' && neon=yes
+    inline_asm_check '"ext   v0.8B, v0.8B, v1.8B, #1"' && neon=yes
   fi
   echores "$neon"
+
+  echocheck "ARM NEON intrinsics"
+  neon_intrinsics=no
+  statement_check "arm_neon.h" "int16x8_t test = vdupq_n_s16(0)" && neon_intrinsics=yes
+  echores "$neon_intrinsics"
 
   echocheck "ARM THUMB"
   if test $armthumb = "auto" ; then
@@ -3265,7 +3287,7 @@ if arm ; then
     extra_cflags="$extra_cflags -mthumb"
     def_armthumb='#define CONFIG_THUMB 1'
   else
-    extra_cflags="$extra_cflags -marm"
+    aarch64 || extra_cflags="$extra_cflags -marm"
     def_armthumb='#define CONFIG_THUMB 0'
   fi
   echores "$armthumb"
@@ -3278,7 +3300,8 @@ if arm ; then
   echores "$_iwmmxt"
 fi
 
-cpuexts_all='ALTIVEC XOP AVX AVX2 AVX512 FMA3 FMA4 MMX MMX2 MMXEXT AMD3DNOW AMD3DNOWEXT SSE SSE2 SSE3 SSSE3 SSE4 SSE42 FAST_CMOV I686 FAST_CLZ ARMV5TE ARMV6 ARMV6T2 VFP VFPV3 SETEND NEON IWMMXT MMI VIS MVI'
+intrinsics="none"
+cpuexts_all='ALTIVEC XOP AVX AVX2 AVX512 FMA3 FMA4 MMX MMX2 MMXEXT AMD3DNOW AMD3DNOWEXT SSE SSE2 SSE3 SSSE3 SSE4 SSE42 FAST_CMOV I686 FAST_CLZ ARMV5TE ARMV6 ARMV6T2 ARMV8 VFP VFPV3 SETEND NEON INTRINSICS_NEON IWMMXT MMI VIS MVI'
 test "$_altivec"   = yes && cpuexts="ALTIVEC $cpuexts"
 test "$_mmx"       = yes && cpuexts="MMX $cpuexts"
 test "$_mmxext"    = yes && cpuexts="MMX2 $cpuexts"
@@ -3303,10 +3326,12 @@ test "$_fast_clz"  = yes && cpuexts="FAST_CLZ $cpuexts"
 test "$_armv5te"   = yes && cpuexts="ARMV5TE $cpuexts"
 test "$_armv6"     = yes && cpuexts="ARMV6 $cpuexts"
 test "$_armv6t2"   = yes && cpuexts="ARMV6T2 $cpuexts"
+aarch64 && cpuexts="ARMV8 $cpuexts"
 test "$_armvfp"    = yes && cpuexts="VFP $cpuexts"
 test "$vfpv3"      = yes && cpuexts="VFPV3 $cpuexts"
 test "$setend"     = yes && cpuexts="SETEND $cpuexts"
 test "$neon"       = yes && cpuexts="NEON $cpuexts"
+test "$neon_intrinsics" = yes && cpuexts="INTRINSICS_NEON $cpuexts" && intrinsics="neon"
 test "$_iwmmxt"    = yes && cpuexts="IWMMXT $cpuexts"
 test "$_vis"       = yes && cpuexts="VIS $cpuexts"
 test "$_mvi"       = yes && cpuexts="MVI $cpuexts"
@@ -3863,6 +3888,26 @@ header_check sys/poll.h && poll_h=yes &&
   def_poll_h='#define HAVE_POLL_H 1'
 echores "$poll_h"
 
+echocheck "emmintrin.h (SSE intrinsics)"
+emmintrin_h=no
+def_emmintrin_h='#define HAVE_EMMINTRIN_H 0'
+  cat > $TMPC << EOF
+#include <emmintrin.h>
+
+__attribute__((target("sse2")))
+static int sse2test(int i) {
+    __m128i mmi = _mm_set1_epi16(i);
+    mmi = _mm_add_epi16(mmi, mmi);
+    return _mm_extract_epi16(mmi, 2);
+}
+
+int main(int argc, char **argv) {
+    return sse2test(argc);
+}
+EOF
+cc_check && emmintrin_h=yes &&
+  def_emmintrin_h='#define HAVE_EMMINTRIN_H 1'
+echores "$emmintrin_h"
 
 echocheck "inttypes.h (required)"
 _inttypes=no
@@ -3896,6 +3941,14 @@ if test "$_fast_inttypes" = no ; then
 fi
 echores "$_fast_inttypes"
 
+
+echocheck "stdatomic.h"
+stdatomic_h=no
+header_check stdatomic.h && stdatomic_h=yes
+echores "$stdatomic_h"
+if test "$stdatomic_h" = no ; then
+  CFLAGS="-Icompat/atomics/gcc $CFLAGS"
+fi
 
 echocheck "malloc.h"
 _malloc=no
@@ -5835,35 +5888,6 @@ fi
 echores "$_dxr3"
 
 
-echocheck "IVTV TV-Out (pre linux-2.6.24)"
-if test "$_ivtv" = auto ; then
-  cat > $TMPC << EOF
-#include <sys/time.h>
-#include <linux/videodev2.h>
-#include <linux/ivtv.h>
-#include <sys/ioctl.h>
-int main(void) {
-struct ivtv_cfg_stop_decode sd;
-struct ivtv_cfg_start_decode sd1;
-ioctl(0, IVTV_IOC_START_DECODE, &sd1);
-ioctl(0, IVTV_IOC_STOP_DECODE, &sd);
-return 0; }
-EOF
-  _ivtv=no
-  cc_check && _ivtv=yes
-fi
-if test "$_ivtv" = yes ; then
-  def_ivtv='#define CONFIG_IVTV 1'
-  vomodules="ivtv $vomodules"
-  aomodules="ivtv $aomodules"
-else
-  def_ivtv='#undef CONFIG_IVTV'
-  novomodules="ivtv $novomodules"
-  noaomodules="ivtv $noaomodules"
-fi
-echores "$_ivtv"
-
-
 echocheck "V4L2 MPEG Decoder"
 if test "$_v4l2" = auto ; then
   cat > $TMPC << EOF
@@ -6577,7 +6601,7 @@ if test "$_zlib" = yes ; then
   mplayer_encoders="$mplayer_encoders PNG_ENCODER"
 else
   def_zlib='#define CONFIG_ZLIB 0'
-  libavdecoders=$(filter_out_component decoder 'APNG FLASHSV FLASHSV2 PNG ZMBV ZLIB DXA EXR G2M MSCC RSCC SCREENPRESSO SRGC TDSC TSCC ZEROCODEC')
+  libavdecoders=$(filter_out_component decoder 'APNG FLASHSV FLASHSV2 PNG ZMBV ZLIB DXA EXR G2M LSCR MSCC MWSC RASC RSCC SCREENPRESSO SRGC TDSC TSCC ZEROCODEC WCMV')
   libavencoders=$(filter_out_component encoder 'APNG FLASHSV FLASHSV2 PNG ZMBV ZLIB')
 fi
 echores "$_zlib"
@@ -7477,6 +7501,65 @@ else
   nocodecmodules="libvpx $nocodecmodules"
 fi
 echores "$_libvpx_lavc"
+
+
+echocheck "libdav1d"
+if test "$_libdav1d_lavc" = auto; then
+  _libdav1d_lavc=no
+  if test "$ffmpeg_a" != yes; then
+    res_comment="dynamic linking to libdav1d is irrelevant when using dynamic FFmpeg"
+  else
+    cat > $TMPC << EOF
+#include <dav1d/dav1d.h>
+int main(void) {
+    const char *version_lib = dav1d_version();
+    return version_lib[0];
+}
+EOF
+    for ld_tmp in "-ldav1d" "-ldav1d $ld_pthread" ; do
+      cc_check $ld_tmp && _libdav1d_lavc=yes && extra_ldflags="$extra_ldflags $ld_tmp" && break
+    done
+  fi
+fi
+if test "$_libdav1d_lavc" = yes ; then
+  def_libdav1d_lavc='#define CONFIG_LIBDAV1D 1'
+  libavdecoders="$libavdecoders LIBDAV1D_DECODER"
+  codecmodules="libdav1d $codecmodules"
+else
+  def_libdav1d_lavc='#define CONFIG_LIBDAV1D 0'
+  nocodecmodules="libdav1d $nocodecmodules"
+fi
+echores "$_libdav1d_lavc"
+
+
+echocheck "libaom"
+if test "$_libaom_lavc" = auto; then
+  _libaom_lavc=no
+  if test "$ffmpeg_a" != yes; then
+    res_comment="dynamic linking to libaom is irrelevant when using dynamic FFmpeg"
+  else
+    cat > $TMPC << EOF
+#include <aom/aom_decoder.h>
+int main(void) {
+    const char *version_lib = aom_codec_version_str();
+    return version_lib[0];
+}
+EOF
+    for ld_tmp in "-laom" "-laom $ld_pthread" ; do
+      cc_check $ld_tmp && _libaom_lavc=yes && extra_ldflags="$extra_ldflags $ld_tmp" && break
+    done
+  fi
+fi
+if test "$_libaom_lavc" = yes ; then
+  def_libaom_lavc='#define CONFIG_LIBAOM 1'
+  libavdecoders="$libavdecoders LIBAOM_AV1_DECODER"
+  codecmodules="libaom $codecmodules"
+else
+  def_libaom_lavc='#define CONFIG_LIBAOM 0'
+  nocodecmodules="libaom $nocodecmodules"
+fi
+echores "$_libaom_lavc"
+
 
 echocheck "libnut"
 if test "$_libnut" = auto ; then
@@ -8498,7 +8581,6 @@ GUI_WIN32 = $_gui_win32
 HAVE_POSIX_SELECT = $_posix_select
 HAVE_SYS_MMAN_H = $_mman
 HAVE_WINDOWS_H = $windows_h
-IVTV = $_ivtv
 JACK = $_jack
 JOYSTICK = $_joystick
 JPEG = $_jpeg
@@ -8782,7 +8864,7 @@ HAVE_W32THREADS = $_w32threads
 HAVE_THREADS    = $_threads
 HAVE_YASM       = $have_yasm
 HAVE_X86ASM     = $have_yasm
-INTRINSICS      = none
+INTRINSICS      = $intrinsics
 
 CONFIG_LIBXVID = $_xvid_lavc
 $(mak_enable "$libavdecoders_all"  "$libavdecoders"  CONFIG)
@@ -9139,7 +9221,6 @@ $def_gl_egl_x11
 $def_gl_sdl
 $def_gl_osx
 $def_matrixview
-$def_ivtv
 $def_jpeg
 $def_kva
 $def_md5sum
@@ -9215,10 +9296,18 @@ $def_direct_h
 $def_io_h
 $def_poll_h
 $def_windows_h
+$def_emmintrin_h
+#if ARCH_X86_32
+#define ATTR_TARGET_SSE2 __attribute__((target("sse2")))
+#else
+#define ATTR_TARGET_SSE2
+#endif
 
 /* external libraries */
 $def_bzlib
 $def_crystalhd
+$def_libaom_lavc
+$def_libdav1d_lavc
 $def_libgsm
 $def_libopencore_amrnb
 $def_libopencore_amrwb
@@ -9332,7 +9421,6 @@ $def_openssl
 #define HAVE_INLINE_ASM 1
 #define HAVE_INLINE_ASM_NONLOCAL_LABELS 1
 #define HAVE_INLINE_ASM_DIRECT_SYMBOL_REFS 1
-#define HAVE_INTRINSICS_NEON 0
 #define HAVE_ISATTY 0
 #define HAVE_LDBRX 0
 #define HAVE_LIBC_MSVCRT 0
