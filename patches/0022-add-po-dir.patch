@@ -1,7 +1,7 @@
-From 30a9f572cc174423ac8049a31c861a605e5405c0 Mon Sep 17 00:00:00 2001
+From 555acc7e269dfe79c3dea67d787f7cde0f88fec2 Mon Sep 17 00:00:00 2001
 From: Led <led@altlinux.ru>
 Date: Wed, 29 May 2013 21:06:59 +0300
-Subject: [PATCH 2/5] add 'po' dir
+Subject: [PATCH 22/28] add 'po' dir
 
 ---
  MPlayer/po/Makefile        |  15 +++++
@@ -213,5 +213,5 @@ index 0000000000..19ed004330
 +}
 +}
 -- 
-2.24.0
+2.25.3
 

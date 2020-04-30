@@ -1,7 +1,7 @@
-From f92c225d3ee224865e20bac3cfc7c8e9087a0336 Mon Sep 17 00:00:00 2001
+From f3864dc0fe7119f7f07bbd5961f7ef0672af8e48 Mon Sep 17 00:00:00 2001
 From: Led <led@altlinux.org>
 Date: Sat, 25 May 2013 05:53:57 +0300
-Subject: [PATCH 07/21] fix stream_dvd
+Subject: [PATCH 07/28] fix stream_dvd
 
 ---
  MPlayer/stream/stream_dvd.c | 9 ++++++---
@@ -31,5 +31,5 @@ index 742e6088aa..e250351a07 100644
          //printf("%X != %X  (%c%c)\n",code,d->audio_streams[i].language,lang[0],lang[1]);
        }
 -- 
-2.24.0
+2.25.3
 

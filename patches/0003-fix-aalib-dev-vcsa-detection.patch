@@ -1,7 +1,7 @@
-From 217e029de4dd4be11482f167bb0437a2b878c2ec Mon Sep 17 00:00:00 2001
+From fb458d5be3603fc5e27f8a8258f04c14afdf2ab9 Mon Sep 17 00:00:00 2001
 From: Afanasov Dmitry <ender@altlinux.org>
 Date: Fri, 5 Nov 2010 21:48:56 +0300
-Subject: [PATCH 03/21] fix aalib /dev/vcsa detection
+Subject: [PATCH 03/28] fix aalib /dev/vcsa detection
 
 I do not know, why aa_getfirst(&aa_displayrecommended) on x11 retuns x11
 driver, but on plain console it returns NULL. what is more, mplayer
@@ -25,5 +25,5 @@ index bd1b9665eb..991a92d27a 100644
  	}
  	if (fp==NULL){
 -- 
-2.24.0
+2.25.3
 

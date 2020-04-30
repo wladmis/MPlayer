@@ -1,4 +1,4 @@
-tar: MPlayer name=MPlayer-@version@
+tar: MPlayer name=MPlayer-svn-r38184
 tar: Blue name=Blue-1.13 base=Blue
 copy: patches/*.patch
 copy: *.in *.desktop

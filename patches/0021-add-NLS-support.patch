@@ -1,7 +1,7 @@
-From 73ecb46484cb763bad1f83ff00ba0ef6176dd1bd Mon Sep 17 00:00:00 2001
+From f422902b7b197cfe3e46bff1e39247a287b28111 Mon Sep 17 00:00:00 2001
 From: Led <led@altlinux.ru>
 Date: Thu, 23 May 2013 18:09:09 +0300
-Subject: [PATCH 1/5] add NLS support
+Subject: [PATCH 21/28] add NLS support
 
 ---
  MPlayer/configure           | 15 +++++++++++++++
@@ -12,10 +12,10 @@ Subject: [PATCH 1/5] add NLS support
  5 files changed, 45 insertions(+), 5 deletions(-)
 
 diff --git a/MPlayer/configure b/MPlayer/configure
-index d1aa8cdf22..deac5b1f70 100755
+index d602dbd8a1..8ed00c03f2 100755
 --- a/MPlayer/configure
 +++ b/MPlayer/configure
-@@ -330,6 +330,7 @@ Optional features:
+@@ -337,6 +337,7 @@ Optional features:
    --enable-gui           enable GMPlayer compilation (GTK+ GUI) [disable]
    --enable-termcap       use termcap database for key codes [autodetect]
    --enable-termios       use termios database for key codes [autodetect]
@@ -23,16 +23,16 @@ index d1aa8cdf22..deac5b1f70 100755
    --disable-iconv        disable iconv for encoding conversion [autodetect]
    --disable-langinfo     do not use langinfo [autodetect]
    --enable-lirc          enable LIRC (remote control) support [autodetect]
-@@ -708,6 +709,7 @@ _dxr2=auto
+@@ -715,6 +716,7 @@ _dvb=auto
+ _dxr2=auto
  _dxr3=auto
- _ivtv=auto
  _v4l2=auto
 +_nls=no
  _iconv=auto
  _langinfo=auto
  _rtc=auto
-@@ -1087,6 +1089,8 @@ for ac_option do
-   --disable-ivtv)       _ivtv=no        ;;
+@@ -1094,6 +1096,8 @@ for ac_option do
+   --disable-dxr3)       _dxr3=no        ;;
    --enable-v4l2)        _v4l2=yes       ;;
    --disable-v4l2)       _v4l2=no        ;;
 +  --enable-nls)		    _nls=yes	    ;;
@@ -40,7 +40,7 @@ index d1aa8cdf22..deac5b1f70 100755
    --enable-iconv)       _iconv=yes      ;;
    --disable-iconv)      _iconv=no       ;;
    --enable-langinfo)    _langinfo=yes   ;;
-@@ -4156,6 +4160,14 @@ extra_ldflags=$tmp
+@@ -4211,6 +4215,14 @@ extra_ldflags=$tmp
  fi
  echores "$_rpath"
  
@@ -53,9 +53,9 @@ index d1aa8cdf22..deac5b1f70 100755
 +echores "$_nls"
 +
  echocheck "iconv"
- if test "$_iconv" = auto ; then
+ if test "$_iconv" != no ; then
    cat > $TMPC << EOF
-@@ -8939,6 +8951,9 @@ $def_dl
+@@ -9026,6 +9038,9 @@ $def_dl
  $def_dos_paths
  $def_extern_asm
  $def_extern_prefix
@@ -66,10 +66,10 @@ index d1aa8cdf22..deac5b1f70 100755
  $def_kstat
  $def_macosx_bundle
 diff --git a/MPlayer/gui/interface.c b/MPlayer/gui/interface.c
-index 4928c40206..2c346ad864 100644
+index 93ec71b919..c00db152a3 100644
 --- a/MPlayer/gui/interface.c
 +++ b/MPlayer/gui/interface.c
-@@ -894,7 +894,7 @@ int gui(int what, void *data)
+@@ -896,7 +896,7 @@ int gui(int what, void *data)
          btnSet(evSetMoviePosition, state);
  
          if (video_driver_list && !gstrcmp(video_driver_list[0], "dxr3") && (((demuxer_t *)mpctx_get_demuxer(guiInfo.mpcontext))->file_format != DEMUXER_TYPE_MPEG_PS) && !gtkVfLAVC) {
@@ -78,7 +78,7 @@ index 4928c40206..2c346ad864 100644
              return False;
          }
  
-@@ -1428,7 +1428,7 @@ void gmp_msg(int mod, int lev, const char *format, ...)
+@@ -1424,7 +1424,7 @@ void gmp_msg(int mod, int lev, const char *format, ...)
      va_list va;
  
      va_start(va, format);
@@ -180,5 +180,5 @@ index c235503123..6bfac51860 100644
      tmp[MSGSIZE_MAX-1] = 0;
  
 -- 
-2.24.0
+2.25.3
 

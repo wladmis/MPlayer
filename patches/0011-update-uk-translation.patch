@@ -1,7 +1,7 @@
-From 2b54ecad2bbeefdcd5d7b3b24d80858a74667ef8 Mon Sep 17 00:00:00 2001
+From a60085a401e8eb7c61bcdb2c7ca40ba087206964 Mon Sep 17 00:00:00 2001
 From: Led <led@altlinux.ru>
 Date: Thu, 30 May 2013 19:56:45 +0300
-Subject: [PATCH 11/21] update uk translation
+Subject: [PATCH 11/28] update uk translation
 
 ---
  MPlayer/help/help_mp-uk.h | 312 +++++++++++++++++++++++++++++++++++++-
@@ -381,5 +381,5 @@ index 6570c840e8..d11b264696 100644
  #define MSGTR_CdDevNotfound "Компактовід \"%s\" не знайдений!\n"
  #define MSGTR_ErrTrackSelect "Помилка вибору треку на VCD!"
 -- 
-2.24.0
+2.25.3
 

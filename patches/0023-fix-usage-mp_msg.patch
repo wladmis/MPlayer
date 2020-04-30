@@ -1,7 +1,7 @@
-From 9428f90309e696087ea9d42c1f2fe11a49c40825 Mon Sep 17 00:00:00 2001
+From 8305a7e87c589ca96faa2a1555ec8509f2a4060d Mon Sep 17 00:00:00 2001
 From: Led <led@altlinux.org>
 Date: Thu, 30 May 2013 10:30:51 +0300
-Subject: [PATCH 3/5] fix usage mp_msg()
+Subject: [PATCH 23/28] fix usage mp_msg()
 
 ---
  MPlayer/m_option.c |  4 ++--
@@ -88,5 +88,5 @@ index c0223ab6c2..ef4b496d6d 100644
      }
  
 -- 
-2.24.0
+2.25.3
 

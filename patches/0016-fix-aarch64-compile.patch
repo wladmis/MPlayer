@@ -1,17 +1,17 @@
-From 7c967850e9239a459098a48c9655d480b56c927e Mon Sep 17 00:00:00 2001
+From 2815d6dde5edef24f1f1ca4735e9dc2ded4215a8 Mon Sep 17 00:00:00 2001
 From: Anton Farygin <rider@altlinux.com>
 Date: Wed, 20 Jun 2018 15:05:11 +0300
-Subject: [PATCH 16/21] fix aarch64 compile
+Subject: [PATCH 16/28] fix aarch64 compile
 
 ---
- MPlayer/configure | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ MPlayer/configure | 2 ++
+ 1 file changed, 2 insertions(+)
 
 diff --git a/MPlayer/configure b/MPlayer/configure
-index 12dcfff563..d1dce55c56 100755
+index ac0c12c193..37b6fc60e3 100755
 --- a/MPlayer/configure
 +++ b/MPlayer/configure
-@@ -1440,6 +1440,8 @@ for ac_option do
+@@ -1451,6 +1451,8 @@ for ac_option do
    --disable-armv6) _armv6=no ;;
    --enable-armv6t2) _armv6t2=yes ;;
    --disable-armv6t2) _armv6t2=no ;;
@@ -20,23 +20,6 @@ index 12dcfff563..d1dce55c56 100755
    --enable-armvfp) _armvfp=yes ;;
    --disable-armvfp) _armvfp=no ;;
    --enable-vfpv3) vfpv3=yes ;;
-@@ -3278,7 +3280,7 @@ if arm ; then
-   echores "$_iwmmxt"
- fi
- 
--cpuexts_all='ALTIVEC XOP AVX AVX2 AVX512 FMA3 FMA4 MMX MMX2 MMXEXT AMD3DNOW AMD3DNOWEXT SSE SSE2 SSE3 SSSE3 SSE4 SSE42 FAST_CMOV I686 FAST_CLZ ARMV5TE ARMV6 ARMV6T2 VFP VFPV3 SETEND NEON IWMMXT MMI VIS MVI'
-+cpuexts_all='ALTIVEC XOP AVX AVX2 AVX512 FMA3 FMA4 MMX MMX2 MMXEXT AMD3DNOW AMD3DNOWEXT SSE SSE2 SSE3 SSSE3 SSE4 SSE42 FAST_CMOV I686 FAST_CLZ ARMV5TE ARMV6 ARMV6T2 ARMV8 VFP VFPV3 SETEND NEON IWMMXT MMI VIS MVI'
- test "$_altivec"   = yes && cpuexts="ALTIVEC $cpuexts"
- test "$_mmx"       = yes && cpuexts="MMX $cpuexts"
- test "$_mmxext"    = yes && cpuexts="MMX2 $cpuexts"
-@@ -3303,6 +3305,7 @@ test "$_fast_clz"  = yes && cpuexts="FAST_CLZ $cpuexts"
- test "$_armv5te"   = yes && cpuexts="ARMV5TE $cpuexts"
- test "$_armv6"     = yes && cpuexts="ARMV6 $cpuexts"
- test "$_armv6t2"   = yes && cpuexts="ARMV6T2 $cpuexts"
-+test "$_armv8"     = yes && cpuexts="ARMV8 $cpuexts"
- test "$_armvfp"    = yes && cpuexts="VFP $cpuexts"
- test "$vfpv3"      = yes && cpuexts="VFPV3 $cpuexts"
- test "$setend"     = yes && cpuexts="SETEND $cpuexts"
 -- 
-2.24.0
+2.25.3
 

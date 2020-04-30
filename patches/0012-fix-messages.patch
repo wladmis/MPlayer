@@ -1,7 +1,7 @@
-From edbf654b073a82d5aae94b1d62def700d8461733 Mon Sep 17 00:00:00 2001
+From cea961263acaa170e79d040e207fbb55d313bafa Mon Sep 17 00:00:00 2001
 From: Led <led@altlinux.ru>
 Date: Mon, 3 Jun 2013 17:10:22 +0300
-Subject: [PATCH 12/21] fix messages
+Subject: [PATCH 12/28] fix messages
 
 ---
  MPlayer/help/help_mp-en.h | 10 +++++-----
@@ -33,5 +33,5 @@ index 0929249d91..b3fb8d03a7 100644
  #define MSGTR_MPDEMUX_MKV_WillPlayVideoTrack "[mkv] Will play video track %u.\n"
  #define MSGTR_MPDEMUX_MKV_NoVideoTrackFound "[mkv] No video track found/wanted.\n"
 -- 
-2.24.0
+2.25.3
 

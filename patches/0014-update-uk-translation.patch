@@ -1,7 +1,7 @@
-From f1fca5f2525e8b6f0a8fb882e2e83b24d9dddded Mon Sep 17 00:00:00 2001
+From 679c1dd8d830007d360ea09d880096f48be83c4f Mon Sep 17 00:00:00 2001
 From: Led <led@altlinux.ru>
 Date: Mon, 3 Jun 2013 17:33:51 +0300
-Subject: [PATCH 14/21] update uk translation
+Subject: [PATCH 14/28] update uk translation
 
 ---
  MPlayer/help/help_mp-uk.h | 192 +++++++++++++++++++++++++++++---------
@@ -325,5 +325,5 @@ index d11b264696..82baa0835f 100644
 +#define MSGTR_DVDnoIFO "Не можу відкрити IFO файл для DVD титрів %d.\n"
 +#define MSGTR_DVDnoVOBs "Не можу відкрити титри VOBS (VTS_%02d_1.VOB).\n"
 -- 
-2.24.0
+2.25.3
 

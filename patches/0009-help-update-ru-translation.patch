@@ -1,7 +1,7 @@
-From b812f54948b852d4aa7c568700a07e10e1f4724d Mon Sep 17 00:00:00 2001
+From 85e300991134d92528083c1924677c5a84228ffc Mon Sep 17 00:00:00 2001
 From: Led <led@altlinux.org>
 Date: Wed, 29 May 2013 05:06:28 +0300
-Subject: [PATCH 09/21] help: update ru translation
+Subject: [PATCH 09/28] help: update ru translation
 
 ---
  MPlayer/help/help_mp-ru.h | 63 +++++++++++++++++++++++++++++++++++++--
@@ -149,5 +149,5 @@ index 6259d223fe..bcd480a898 100644
 +// subtitles
 +#define MSGTR_SUBTITLES_SubRip_UnknownFontColor "SubRip: неизвестный цвет шрифта в субтитрах: %s\n"
 -- 
-2.24.0
+2.25.3
 

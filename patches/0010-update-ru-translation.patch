@@ -1,7 +1,7 @@
-From 271eab7a6b557cc00c49e8e9191fd19f2d243366 Mon Sep 17 00:00:00 2001
+From 85b1bf33028092f5d5145fe86d3b6991aae3c7dc Mon Sep 17 00:00:00 2001
 From: Led <led@altlinux.ru>
 Date: Thu, 30 May 2013 19:56:28 +0300
-Subject: [PATCH 10/21] update ru translation
+Subject: [PATCH 10/28] update ru translation
 
 ---
  MPlayer/help/help_mp-ru.h | 195 ++++++++++++++++++++++----------------
@@ -365,5 +365,5 @@ index bcd480a898..888c368723 100644
  
  // ========================== LIBMPDEMUX ===================================
 -- 
-2.24.0
+2.25.3
 

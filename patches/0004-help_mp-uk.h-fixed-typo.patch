@@ -1,7 +1,7 @@
-From 1dca7f16887f4b0bd46c92cb18cab9d2eea9f4ac Mon Sep 17 00:00:00 2001
+From 628668326058f3c16d380a6e9ea18e72501706ff Mon Sep 17 00:00:00 2001
 From: Led <led@altlinux.org>
 Date: Fri, 24 May 2013 06:15:55 +0300
-Subject: [PATCH 04/21] help_mp-uk.h: fixed typo
+Subject: [PATCH 04/28] help_mp-uk.h: fixed typo
 
 ---
  MPlayer/help/help_mp-uk.h | 4 ++--
@@ -30,5 +30,5 @@ index 4399bf7d5d..6570c840e8 100644
  #define MSGTR_GUI_Quit "Вихід"
  #define MSGTR_GUI_RearLeft "Задній Лівий"
 -- 
-2.24.0
+2.25.3
 
