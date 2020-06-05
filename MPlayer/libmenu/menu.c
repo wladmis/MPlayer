@@ -745,11 +745,16 @@ void menu_draw_box(mp_image_t* mpi,unsigned char grey,unsigned char alpha, int x
   if(g < 1) g = 1;
 
   {
-    int stride = (w+7)&(~7); // round to 8
-    char pic[stride*h],pic_alpha[stride*h];
-    memset(pic,g,stride*h);
-    memset(pic_alpha,alpha,stride*h);
-    draw_alpha(w,h,pic,pic_alpha,stride,
+    int stride = (w+15)&(~15); // round to 16
+#if HAVE_LOCAL_ALIGNED
+    DECLARE_ALIGNED(16, char, pic)[stride];
+    DECLARE_ALIGNED(16, char, pic_alpha)[stride];
+#else
+    char pic[stride],pic_alpha[stride];
+#endif
+    memset(pic,g,stride);
+    memset(pic_alpha,alpha,stride);
+    draw_alpha(w,h,pic,pic_alpha,0,
                mpi->planes[0] + y * mpi->stride[0] + x * (mpi->bpp>>3),
                mpi->stride[0]);
   }
