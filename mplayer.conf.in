@@ -19,6 +19,9 @@
 # Specify default video driver (see -vo help for a list).
 @VO@
 
+# Enforce a fixed video system for multiple files
+fixed-vo = 1
+
 # FBdev driver:
 #
 # mode to use (read from fb.modes)
