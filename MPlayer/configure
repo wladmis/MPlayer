@@ -1920,7 +1920,7 @@ fi
 echo "Detected operating system: $system_name"
 echo "Detected host architecture: $host_arch"
 
-if test "$_runtime_cpudetection" = yes && ! x86 && ! ppc; then
+if test "$_runtime_cpudetection" = yes && ! x86 && ! ppc && ! arm; then
   die "Runtime CPU detection only works for x86, x86-64 and PPC!"
 fi
 
@@ -2291,8 +2291,8 @@ case "$host_arch" in
     fi
   else # if test "$_runtime_cpudetection" = no
     _mcpu="$cpuopt=generic"
-    # at least i486 required, for bswap instruction
-    _march="-march=i486"
+    # at least i586 required, for __atomic_fetch_add builtin
+    _march="-march=i586"
     cflag_check $_mcpu || _mcpu="$cpuopt=i686"
     cflag_check $_mcpu || _mcpu=""
     cflag_check $_march $_mcpu || _march=""
@@ -2478,6 +2478,9 @@ case "$host_arch" in
   aarch64)
     arch='aarch64'
     iproc='aarch64'
+    if test "$_runtime_cpudetection" = no ; then
+      cflag_check -march=native -mcpu=native -mfpu=auto && _march="-march=native -mcpu=native -mfpu=auto"
+    fi
     ;;
 
   arm*)
@@ -2487,6 +2490,9 @@ case "$host_arch" in
     def_av_fast_unaligned='#define AV_HAVE_FAST_UNALIGNED 1'
     def_local_aligned='#define HAVE_LOCAL_ALIGNED 1'
     test $_fast_clz = "auto" && _fast_clz=yes
+    if test "$_runtime_cpudetection" = no ; then
+      cflag_check -march=native -mcpu=native -mfpu=auto && _march="-march=native -mcpu=native -mfpu=auto"
+    fi
     ;;
 
   avr32)
@@ -3954,7 +3960,9 @@ echores "$_fast_inttypes"
 
 echocheck "stdatomic.h"
 stdatomic_h=no
-header_check stdatomic.h && stdatomic_h=yes
+# need to use statement_check because some implementations (Rasbian) create a dependency
+# on libatomic, in which case we rather want to use the fallback
+statement_check stdatomic.h "atomic_int_least64_t a; atomic_fetch_add_explicit(&a, 5, memory_order_relaxed)" && stdatomic_h=yes
 echores "$stdatomic_h"
 if test "$stdatomic_h" = no ; then
   CFLAGS="-Icompat/atomics/gcc $CFLAGS"
@@ -9416,8 +9424,11 @@ $def_openssl
 #define CONFIG_VAAPI 0
 
 #define HAVE_ALIGNED_STACK 1
+#define HAVE_AS_ARCH_DIRECTIVE 1
 #define HAVE_AS_DN_DIRECTIVE 1
+#define HAVE_AS_FPU_DIRECTIVE 1
 #define HAVE_AS_FUNC 1
+#define HAVE_AS_OBJECT_ARCH 1
 #define HAVE_ASM_MOD_Q 1
 #define HAVE_ATOMICS_GCC 1
 #define HAVE_COPYSIGN 1
@@ -9706,6 +9717,14 @@ make sure you have passed the necessary compiler/linker flags to configure.
 If you suspect a bug, please read DOCS/HTML/$language_doc/bugreports.html.
 
 EOF
+
+if test "$_runtime_cpudetection" = yes && arm; then
+  cat << EOF
+WARNING: --enable-runtime-cpudetection is not fully supported on Arm,
+it only compiles for your compilers default target instead of the host
+CPU (-march=native).
+EOF
+fi
 
 if test "$warn_cflags" = yes; then
   cat <<EOF

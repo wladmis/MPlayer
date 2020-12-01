@@ -1,4 +1,4 @@
-.\" $Revision: 38172 $
+.\" $Revision: 38202 $
 .\" MPlayer (C) 2000-2020 MPlayer Team
 .\" This man page was/is done by Gabucino, Diego Biurrun, Jonas Jermann
 .
@@ -1810,6 +1810,10 @@ MEncoder skips writing the index with this option.
 .B \-ipv4\-only\-proxy (network only)
 Skip the proxy for IPv6 addresses.
 It will still be used for IPv4 connections.
+.
+.TP
+.B \-lavfstreamopts <options>
+Specify extra options for libavformat based streams.
 .
 .TP
 .B \-loadidx <index file>
@@ -5399,6 +5403,11 @@ natural bicubic spline
 Some \-sws options are tunable.
 The description of the scale video filter has further information.
 .RE
+.
+.TP
+.B \-swsopts <software scaler options>
+Specify advanced software scaler options provided by libswscale.
+Set to "help" to get a list of supported options.
 .
 .TP
 .B \-vc <[\-|+]codec1,[\-|+]codec2,...[,]>
