@@ -124,6 +124,12 @@ cache-seek-min = 50
 # DVD: Play English audio tracks if available.
 #alang = en
 
+# Maximum  number  of  threads used for decoding.
+#lavdopts=threads=2
+
+# Specify  a  priority  list  of  video codec families to be used, according to
+# their names in  codecs.conf.
+#vfm=ffmpeg,
 
 # You can also include other configuration files.
 #include = /path/to/the/file/you/want/to/include
