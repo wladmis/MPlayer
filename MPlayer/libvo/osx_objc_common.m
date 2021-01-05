@@ -20,6 +20,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#define GL_SILENCE_DEPRECATION
+
 #import "osx_objc_common.h"
 #include <Carbon/Carbon.h>
 #include <CoreServices/CoreServices.h>
@@ -139,8 +141,11 @@ void vo_osx_swap_buffers(void)
 {
 	NSScreen *screen_handle = [self fullscreen_screen];
 	NSRect screen_frame = [screen_handle frame];
-	vo_screenwidth = screen_frame.size.width;
-	vo_screenheight = screen_frame.size.height;
+	NSSize size = screen_frame.size;
+	if ([self respondsToSelector:@selector(convertSizeToBacking:)])
+		size = [self convertSizeToBacking:size];
+	vo_screenwidth = size.width;
+	vo_screenheight = size.height;
 	xinerama_x = screen_frame.origin.x;
 	xinerama_y = screen_frame.origin.y;
 	aspect_save_screenres(vo_screenwidth, vo_screenheight);
@@ -241,9 +246,13 @@ void vo_osx_swap_buffers(void)
 
 - (void)reshape
 {
+	[super reshape];
 	NSRect frame = [self frame];
-	vo_dwidth  = frame.size.width;
-	vo_dheight = frame.size.height;
+	NSSize size = frame.size;
+	if ([self respondsToSelector:@selector(convertSizeToBacking:)])
+		size = [self convertSizeToBacking:size];
+	vo_dwidth  = size.width;
+	vo_dheight = size.height;
 	event_flags |= VO_EVENT_RESIZE;
 }
 
@@ -269,55 +278,39 @@ void vo_osx_swap_buffers(void)
 
 //Create Movie Menu
 	menu = [[NSMenu alloc] initWithTitle:@"Movie"];
-	menuItem = [[NSMenuItem alloc] initWithTitle:@"Half Size" action:@selector(menuAction:) keyEquivalent:@"0"]; [menu addItem:menuItem];
-	kHalfScreenCmd = menuItem;
-	menuItem = [[NSMenuItem alloc] initWithTitle:@"Normal Size" action:@selector(menuAction:) keyEquivalent:@"1"]; [menu addItem:menuItem];
-	kNormalScreenCmd = menuItem;
-	menuItem = [[NSMenuItem alloc] initWithTitle:@"Double Size" action:@selector(menuAction:) keyEquivalent:@"2"]; [menu addItem:menuItem];
-	kDoubleScreenCmd = menuItem;
-	menuItem = [[NSMenuItem alloc] initWithTitle:@"Full Size" action:@selector(menuAction:) keyEquivalent:@"f"]; [menu addItem:menuItem];
-	kFullScreenCmd = menuItem;
-	menuItem = [NSMenuItem separatorItem]; [menu addItem:menuItem];
+	kHalfScreenCmd = [menu addItemWithTitle:@"Half Size" action:@selector(menuAction:) keyEquivalent:@"0"];
+	kNormalScreenCmd = [menu addItemWithTitle:@"Normal Size" action:@selector(menuAction:) keyEquivalent:@"1"];
+	kDoubleScreenCmd = [menu addItemWithTitle:@"Double Size" action:@selector(menuAction:) keyEquivalent:@"2"];
+	kFullScreenCmd = [menu addItemWithTitle:@"Full Size" action:@selector(menuAction:) keyEquivalent:@"f"];
+	[menu addItem: [NSMenuItem separatorItem]];
 
 	aspectMenu = [[NSMenu alloc] initWithTitle:@"Aspect Ratio"];
-	menuItem = [[NSMenuItem alloc] initWithTitle:@"Keep" action:@selector(menuAction:) keyEquivalent:@""]; [aspectMenu addItem:menuItem];
-	if(vo_keepaspect) [menuItem setState:NSOnState];
-	kKeepAspectCmd = menuItem;
-	menuItem = [[NSMenuItem alloc] initWithTitle:@"Pan-Scan" action:@selector(menuAction:) keyEquivalent:@""]; [aspectMenu addItem:menuItem];
-	if(vo_panscan) [menuItem setState:NSOnState];
-	kPanScanCmd = menuItem;
-	menuItem = [NSMenuItem separatorItem]; [aspectMenu addItem:menuItem];
-	menuItem = [[NSMenuItem alloc] initWithTitle:@"Original" action:@selector(menuAction:) keyEquivalent:@""]; [aspectMenu addItem:menuItem];
-	kAspectOrgCmd = menuItem;
-	menuItem = [[NSMenuItem alloc] initWithTitle:@"4:3" action:@selector(menuAction:) keyEquivalent:@""]; [aspectMenu addItem:menuItem];
-	kAspectFullCmd = menuItem;
-	menuItem = [[NSMenuItem alloc] initWithTitle:@"16:9" action:@selector(menuAction:) keyEquivalent:@""];	[aspectMenu addItem:menuItem];
-	kAspectWideCmd = menuItem;
-	menuItem = [[NSMenuItem alloc] initWithTitle:@"Aspect Ratio" action:nil keyEquivalent:@""];
+	kKeepAspectCmd = [aspectMenu addItemWithTitle:@"Keep" action:@selector(menuAction:) keyEquivalent:@""];
+	if(vo_keepaspect) [kKeepAspectCmd setState:NSOnState];
+	kPanScanCmd = [aspectMenu addItemWithTitle:@"Pan-Scan" action:@selector(menuAction:) keyEquivalent:@""];
+	if(vo_panscan) [kPanScanCmd setState:NSOnState];
+	[aspectMenu addItem:[NSMenuItem separatorItem]];
+	kAspectOrgCmd = [aspectMenu addItemWithTitle:@"Original" action:@selector(menuAction:) keyEquivalent:@""];
+	kAspectFullCmd = [aspectMenu addItemWithTitle:@"4:3" action:@selector(menuAction:) keyEquivalent:@""];
+	kAspectWideCmd = [aspectMenu addItemWithTitle:@"16:9" action:@selector(menuAction:) keyEquivalent:@""];
+	menuItem = [menu addItemWithTitle:@"Aspect Ratio" action:nil keyEquivalent:@""];
 	[menuItem setSubmenu:aspectMenu];
-	[menu addItem:menuItem];
-	[aspectMenu release];
 
 	//Add to menubar
-	menuItem = [[NSMenuItem alloc] initWithTitle:@"Movie" action:nil keyEquivalent:@""];
+	menuItem = [mainMenu addItemWithTitle:@"Movie" action:nil keyEquivalent:@""];
 	[menuItem setSubmenu:menu];
-	[mainMenu addItem:menuItem];
 
 //Create Window Menu
 	menu = [[NSMenu alloc] initWithTitle:@"Window"];
 
-	menuItem = [[NSMenuItem alloc] initWithTitle:@"Minimize" action:@selector(performMiniaturize:) keyEquivalent:@"m"]; [menu addItem:menuItem];
-	menuItem = [[NSMenuItem alloc] initWithTitle:@"Zoom" action:@selector(performZoom:) keyEquivalent:@""]; [menu addItem:menuItem];
+	[menu addItemWithTitle:@"Minimize" action:@selector(performMiniaturize:) keyEquivalent:@"m"];
+	[menu addItemWithTitle:@"Zoom" action:@selector(performZoom:) keyEquivalent:@""];
 
 	//Add to menubar
-	menuItem = [[NSMenuItem alloc] initWithTitle:@"Window" action:nil keyEquivalent:@""];
+	menuItem = [mainMenu addItemWithTitle:@"Window" action:nil keyEquivalent:@""];
 	[menuItem setSubmenu:menu];
-	[mainMenu addItem:menuItem];
 	[NSApp setWindowsMenu:menu];
 	[NSApp setMainMenu:mainMenu];
-
-	[menu release];
-	[menuItem release];
 }
 
 - (void)set_winSizeMult:(float)mult
@@ -400,7 +393,7 @@ void vo_osx_swap_buffers(void)
 	//go fullscreen
 	if(vo_fs)
 	{
-		if ([window respondsToSelector:@selector(enterFullScreenMode)]) {
+		if ([window respondsToSelector:@selector(enterFullScreenMode:)]) {
 		[window enterFullScreenMode:[self fullscreen_screen]];
 		}
 		if(!vo_rootwin)
@@ -413,16 +406,19 @@ void vo_osx_swap_buffers(void)
 		old_frame = [window frame];	//save main window size & position
 		[self update_screen_info];
 
-		[window setFrame:NSMakeRect(xinerama_x, xinerama_y, vo_screenwidth, vo_screenheight) display:YES animate:animate]; //zoom-in window with nice useless sfx
+		NSSize size = { vo_screenwidth, vo_screenheight };
+		if ([self respondsToSelector:@selector(convertSizeFromBacking:)])
+			size = [self convertSizeFromBacking:size];
+		[window setFrame:NSMakeRect(xinerama_x, xinerama_y, size.width, size.height) display:YES animate:animate]; //zoom-in window with nice useless sfx
 		old_view_frame = [self bounds];
 
-		[self setFrame:NSMakeRect(0, 0, vo_screenwidth, vo_screenheight)];
+		[self setFrame:NSMakeRect(0, 0, size.width, size.height)];
 		[self setNeedsDisplay:YES];
 		[window setHasShadow:NO];
 	}
 	else
 	{
-		if ([window respondsToSelector:@selector(exitFullScreenMode)]) {
+		if ([window respondsToSelector:@selector(exitFullScreenMode:)]) {
 		[window exitFullScreenMode:[self fullscreen_screen]];
 		}
 		SetSystemUIMode( kUIModeNormal, 0);
