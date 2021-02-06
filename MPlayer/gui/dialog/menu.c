@@ -19,7 +19,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <strings.h>
 
 #include "config.h"
 #include "help_mp.h"
@@ -306,8 +305,8 @@ static const Languages_t Languages[] =
   { lng( 'q','u' ), "que", "Runa Simi"                       },
   { lng( 'r','m' ), "roh", "Rätoromanisch"                  },
   { lng( 'r','n' ), "run", "íkiRǔndi"                      },
-  { lng( 'r','o' ), "ron", "Română)"                       },
-  { lng( 'r','o' ), "rum", "Română)"                       },
+  { lng( 'r','o' ), "ron", "Română"                        },
+  { lng( 'r','o' ), "rum", "Română"                        },
   { lng( 'r','u' ), "rus", "Русский"                  },
   { lng( 'r','w' ), "kin", "Ikinyarwanda"                    },
   { lng( 's','c' ), "srd", "Sardu"                           },
@@ -319,7 +318,7 @@ static const Languages_t Languages[] =
   { lng( 's','l' ), "slv", "Slovenščina"                   },
   { lng( 's','m' ), "smo", "Gagana Sāmoa"                   },
   { lng( 's','n' ), "sna", "chiShona"                        },
-  { lng( 's','o' ), "som", "Af-ka Soomaali-ga"               },
+  { lng( 's','o' ), "som", "Afka Soomaaliga"                 },
   { lng( 's','q' ), "sqi", "Shqip"                           },
   { lng( 's','q' ), "alb", "Shqip"                           },
   { lng( 's','r' ), "srp", "Српски"                    },
@@ -396,7 +395,7 @@ static const char * GetLanguage( void *language, int type )
     else if ( p[3] != 0) return language;
   }
  for ( i=0;i<sizeof( Languages ) / sizeof( Languages_t );i++ )
-  if ( type == GET_LANG_INT ? Languages[i].id == l : strncasecmp(Languages[i].id2, p, sizeof(Languages[i].id2)) == 0 ) return Languages[i].name;
+  if ( type == GET_LANG_INT ? Languages[i].id == l : av_strncasecmp(Languages[i].id2, p, sizeof(Languages[i].id2)) == 0 ) return Languages[i].name;
  return MSGTR_GUI_Unknown;
 }
 #undef lng

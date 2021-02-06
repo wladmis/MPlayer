@@ -28,6 +28,7 @@
  */
 
 #include "config.h"
+#include "libavutil/avstring.h"
 #include "mp_msg.h"
 
 #include <errno.h>
@@ -36,7 +37,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-#include <strings.h>
 #include <math.h>
 #include "sub.h"
 #include "libvo/video_out.h"
@@ -354,7 +354,7 @@ int spudec_apply_palette_crop(void *this, uint32_t palette,
 
 static void spudec_process_data(spudec_handle_t *this, packet_t *packet)
 {
-  unsigned int i, x, y;
+  unsigned int limit0, limit1, x, y;
   uint8_t *dst;
 
   if (!spudec_alloc_image(this, packet->stride, packet->height))
@@ -368,12 +368,17 @@ static void spudec_process_data(spudec_handle_t *this, packet_t *packet)
   memcpy(this->palette, packet->palette, sizeof(this->palette));
   memcpy(this->alpha,   packet->alpha,   sizeof(this->alpha));
 
-  i = packet->current_nibble[1];
+  limit0 = packet->current_nibble[1];
+  limit1 = 2*packet->control_start;
+  if (packet->current_nibble[0] > packet->current_nibble[1]) {
+    limit0 = limit1;
+    limit1 = packet->current_nibble[0];
+  }
   x = 0;
   y = 0;
   dst = this->pal_image;
-  while (packet->current_nibble[0] < i
-	 && packet->current_nibble[1] / 2 < packet->control_start
+  while (packet->current_nibble[0] < limit0
+	 && packet->current_nibble[1] < limit1
 	 && y < this->pal_height) {
     unsigned int len, color;
     unsigned int rle = 0;
@@ -1287,7 +1292,7 @@ static void spudec_parse_extradata(spudec_handle_t *this,
         pal[i] = vobsub_palette_to_yuv(pal[i]);
       this->auto_palette = 0;
     }
-    if (!strncasecmp(ptr, "forced subs: on", 15))
+    if (!av_strncasecmp(ptr, "forced subs: on", 15))
       this->forced_subs_only = 1;
     if (!strncmp(ptr, "custom colors: ON, tridx: ", 26) &&
         sscanf(ptr + 26, "%x, colors: %x, %x, %x, %x",
