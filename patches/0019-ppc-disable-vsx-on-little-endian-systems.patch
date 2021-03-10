@@ -1,7 +1,7 @@
-From 7be279b740e78a29be8ad8d19eed43ba33b66b80 Mon Sep 17 00:00:00 2001
+From 1990b4cde83b20f5fdd81670715c23e52c479e14 Mon Sep 17 00:00:00 2001
 From: Gleb Fotengauer-Malinovskiy <glebfm@altlinux.org>
 Date: Thu, 11 Apr 2019 22:31:57 +0300
-Subject: [PATCH 19/28] ppc: disable vsx on little-endian systems
+Subject: [PATCH] ppc: disable vsx on little-endian systems
 
 altivec and vsx support is broken in this ffmpeg on little-endian
 systems.
@@ -10,10 +10,10 @@ systems.
  1 file changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/MPlayer/configure b/MPlayer/configure
-index 37b6fc60e3..d602dbd8a1 100755
+index 6326fe702b..d660a3e019 100755
 --- a/MPlayer/configure
 +++ b/MPlayer/configure
-@@ -2612,16 +2612,16 @@ case "$host_arch" in
+@@ -2701,16 +2701,16 @@ case "$host_arch" in
          fi
          # gcc 4.5 and up supports POWER7
          if test "$_cc_major" -ge "4" && test "$_cc_minor" -ge "5" || test "$_cc_major" -ge "5"; then
@@ -35,5 +35,5 @@ index 37b6fc60e3..d602dbd8a1 100755
                  *) ;;
              esac
 -- 
-2.25.3
+2.29.2
 

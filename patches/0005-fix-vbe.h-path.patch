@@ -1,7 +1,7 @@
-From ca154c1b6c3e8329910368d08a9cc2c951686579 Mon Sep 17 00:00:00 2001
+From b7249e399f4c82aca02cafd4c06f506f7fbfd690 Mon Sep 17 00:00:00 2001
 From: Led <led@altlinux.org>
 Date: Sat, 25 May 2013 05:40:30 +0300
-Subject: [PATCH 05/28] fix vbe.h path
+Subject: [PATCH] fix vbe.h path
 
 ---
  MPlayer/configure       | 2 +-
@@ -10,10 +10,10 @@ Subject: [PATCH 05/28] fix vbe.h path
  3 files changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/MPlayer/configure b/MPlayer/configure
-index a230474005..ac0c12c193 100755
+index dba7750a6a..dfa122a1f7 100755
 --- a/MPlayer/configure
 +++ b/MPlayer/configure
-@@ -5538,7 +5538,7 @@ esac
+@@ -5714,7 +5714,7 @@ esac
  echocheck "VESA support"
  if test "$_vesa" != no ; then
    _vesa=no
@@ -49,5 +49,5 @@ index 89ceaf338b..c1d4f20376 100644
  #include "video_out.h"
  #include "video_out_internal.h"
 -- 
-2.25.3
+2.29.2
 

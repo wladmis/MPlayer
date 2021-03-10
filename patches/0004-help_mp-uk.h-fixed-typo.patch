@@ -1,26 +1,26 @@
-From 628668326058f3c16d380a6e9ea18e72501706ff Mon Sep 17 00:00:00 2001
+From e2032836d199279c07cffe9d91a66f63833f8ec4 Mon Sep 17 00:00:00 2001
 From: Led <led@altlinux.org>
 Date: Fri, 24 May 2013 06:15:55 +0300
-Subject: [PATCH 04/28] help_mp-uk.h: fixed typo
+Subject: [PATCH] help_mp-uk.h: fixed typo
 
 ---
  MPlayer/help/help_mp-uk.h | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/MPlayer/help/help_mp-uk.h b/MPlayer/help/help_mp-uk.h
-index 4399bf7d5d..6570c840e8 100644
+index f2d7f25fc2..33c17864ac 100644
 --- a/MPlayer/help/help_mp-uk.h
 +++ b/MPlayer/help/help_mp-uk.h
-@@ -599,7 +599,7 @@ static const char help_text[] = MSGTR_Help;
+@@ -603,7 +603,7 @@ static const char help_text[] = MSGTR_Help;
  #define MSGTR_GUI_MSG_LoadingSubtitle "[GUI] Вантажу субтитри: %s\n"
  #define MSGTR_GUI_MSG_MemoryErrorImage "Вибачте, не достатньо пам'яті для прорисування буферу.\n"
- #define MSGTR_GUI_MSG_MemoryErrorWindow "Вибачте, не достатньо пам'яті для прорисовки буферу."
+ #define MSGTR_GUI_MSG_MemoryErrorWindow "Вибачте, не достатньо пам'яті для прорисовки буферу.\n"
 -#define MSGTR_GUI_MSG_NoFileLoaded "Файл не завантжено."
 +#define MSGTR_GUI_MSG_NoFileLoaded "Файл не завантажено."
  #define MSGTR_GUI_MSG_NoMediaOpened "Носій не відкритий."
  #define MSGTR_GUI_MSG_NotAFile0 "Здається, це не файл...\n"
  #define MSGTR_GUI_MSG_NotAFile1 "Здається, це не файл: %s !\n"
-@@ -648,7 +648,7 @@ static const char help_text[] = MSGTR_Help;
+@@ -652,7 +652,7 @@ static const char help_text[] = MSGTR_Help;
  #define MSGTR_GUI_Playlist "Список програвання"
  #define MSGTR_GUI_Position "Положення"
  #define MSGTR_GUI_PostProcessing "Postprocessing"
@@ -30,5 +30,5 @@ index 4399bf7d5d..6570c840e8 100644
  #define MSGTR_GUI_Quit "Вихід"
  #define MSGTR_GUI_RearLeft "Задній Лівий"
 -- 
-2.25.3
+2.29.2
 

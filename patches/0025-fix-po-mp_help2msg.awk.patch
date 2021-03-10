@@ -1,7 +1,7 @@
-From 4df7bf5ab02da3908b1c831497c44cb0cebdcbd4 Mon Sep 17 00:00:00 2001
+From 8a2d34f45a19678b2ba5e6abfe1525b510821acc Mon Sep 17 00:00:00 2001
 From: Led <led@altlinux.ru>
 Date: Mon, 3 Jun 2013 18:39:45 +0300
-Subject: [PATCH 25/28] fix po/mp_help2msg.awk
+Subject: [PATCH] fix po/mp_help2msg.awk
 
 ---
  MPlayer/po/mp_help2msg.awk | 2 +-
@@ -19,5 +19,5 @@ index b833980fd6..e13944fe25 100644
 +	print i " " msg[i] | "sort -k 2 -u"
  }
 -- 
-2.25.3
+2.29.2
 

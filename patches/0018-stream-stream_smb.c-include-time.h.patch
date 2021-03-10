@@ -1,7 +1,7 @@
-From 7bf519587894c2bd75f6f9df9634400af3c0c963 Mon Sep 17 00:00:00 2001
+From efe5411d7d0e6be67df620e7ad65df3a8b93cbd9 Mon Sep 17 00:00:00 2001
 From: "Vladimir D. Seleznev" <vseleznv@altlinux.org>
 Date: Wed, 28 Nov 2018 22:17:58 +0300
-Subject: [PATCH 18/28] stream/stream_smb.c: include time.h
+Subject: [PATCH] stream/stream_smb.c: include time.h
 
 ---
  MPlayer/stream/stream_smb.c | 1 +
@@ -20,5 +20,5 @@ index 53fd821199..333436a249 100644
  #include <unistd.h>
  
 -- 
-2.25.3
+2.29.2
 

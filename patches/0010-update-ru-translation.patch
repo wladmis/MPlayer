@@ -1,14 +1,14 @@
-From 85b1bf33028092f5d5145fe86d3b6991aae3c7dc Mon Sep 17 00:00:00 2001
+From 6d5c04abcbe8f387586a870ececf6380a39e9836 Mon Sep 17 00:00:00 2001
 From: Led <led@altlinux.ru>
 Date: Thu, 30 May 2013 19:56:28 +0300
-Subject: [PATCH 10/28] update ru translation
+Subject: [PATCH] update ru translation
 
 ---
  MPlayer/help/help_mp-ru.h | 195 ++++++++++++++++++++++----------------
  1 file changed, 114 insertions(+), 81 deletions(-)
 
 diff --git a/MPlayer/help/help_mp-ru.h b/MPlayer/help/help_mp-ru.h
-index bcd480a898..888c368723 100644
+index 3dd2630cf4..d5d71f1264 100644
 --- a/MPlayer/help/help_mp-ru.h
 +++ b/MPlayer/help/help_mp-ru.h
 @@ -75,8 +75,8 @@ static const char help_text[] = MSGTR_Help;
@@ -82,7 +82,7 @@ index bcd480a898..888c368723 100644
  #define MSGTR_Balance "Баланс"
  
  // property state
-@@ -723,7 +753,7 @@ static const char help_text[] = MSGTR_Help;
+@@ -728,7 +758,7 @@ static const char help_text[] = MSGTR_Help;
  #define MSGTR_PlaylistSelect "Выбрать список воспроизведения..."
  #define MSGTR_SelectTitleChapter "Выбрать ролик/раздел..."
  #define MSGTR_MENU_DebugConsole "Консоль отладки"
@@ -91,7 +91,7 @@ index bcd480a898..888c368723 100644
  #define MSGTR_MENU_PlayDirectory "Воспроизвести каталог..."
  #define MSGTR_MENU_SeekBack "Перейти назад"
  #define MSGTR_MENU_SeekForw "Перейти вперёд"
-@@ -801,6 +831,7 @@ static const char help_text[] = MSGTR_Help;
+@@ -806,6 +836,7 @@ static const char help_text[] = MSGTR_Help;
  "           1 : тусклый\n           2 : жирный\n           3 : жирный шрифт\n" \
  "           4 : инверсный\n           5 : специальный\n\n\n"
  
@@ -99,7 +99,7 @@ index bcd480a898..888c368723 100644
  // libvo/vo_dxr3.c
  #define MSGTR_LIBVO_DXR3_UnableToLoadNewSPUPalette "[VO_DXR3] Не могу загрузить новую палитру SPU!\n"
  #define MSGTR_LIBVO_DXR3_UnableToSetPlaymode "[VO_DXR3] Не могу задать режим воспроизведения!\n"
-@@ -998,17 +1029,17 @@ static const char help_text[] = MSGTR_Help;
+@@ -1003,17 +1034,17 @@ static const char help_text[] = MSGTR_Help;
  
  // libvo/vo_xv.c
  #define MSGTR_LIBVO_XV_SharedMemoryNotSupported "[VO_XV] Разделяемая память не поддерживается\nВозврат к обычному Xv.\n"
@@ -124,7 +124,7 @@ index bcd480a898..888c368723 100644
  "[VO_XV] Попробуйте -vo x11.\n"
  #define MSGTR_VO_XV_ImagedimTooHigh "Размеры изображения источника слишком велики: %ux%u (максимум %ux%u)\n"
  
-@@ -1020,7 +1051,7 @@ static const char help_text[] = MSGTR_Help;
+@@ -1025,7 +1056,7 @@ static const char help_text[] = MSGTR_Help;
  #define MSGTR_VO_YUV4MPEG_UnknownSubDev "Неизвестное подустройство: %s"
  #define MSGTR_VO_YUV4MPEG_InterlacedTFFMode "Использую режим вывода с чересстрочной развёрткой, верхнее поле первое."
  #define MSGTR_VO_YUV4MPEG_InterlacedBFFMode "Использую режим вывода с чересстрочной развёрткой, нижнее поле первое."
@@ -133,7 +133,7 @@ index bcd480a898..888c368723 100644
  
  // vosub_vidix.c
  #define MSGTR_LIBVO_SUB_VIDIX_CantStartPlayback "[VO_SUB_VIDIX] Не могу начать воспроизведение: %s\n"
-@@ -1028,10 +1059,10 @@ static const char help_text[] = MSGTR_Help;
+@@ -1033,10 +1064,10 @@ static const char help_text[] = MSGTR_Help;
  #define MSGTR_LIBVO_SUB_VIDIX_InterleavedUvForYuv410pNotSupported "[VO_SUB_VIDIX] Слоёный UV для YUV410P не поддерживается.\n"
  #define MSGTR_LIBVO_SUB_VIDIX_DummyVidixdrawsliceWasCalled "[VO_SUB_VIDIX] Был вызван фиктивный vidix_draw_slice().\n"
  #define MSGTR_LIBVO_SUB_VIDIX_UnsupportedFourccForThisVidixDriver "[VO_SUB_VIDIX] Неподдерживаемый FourCC для этого драйвера VIDIX: %x (%s).\n"
@@ -148,7 +148,7 @@ index bcd480a898..888c368723 100644
  #define MSGTR_LIBVO_SUB_VIDIX_CantConfigurePlayback "[VO_SUB_VIDIX] Не могу настроить воспроизведение: %s.\n"
  #define MSGTR_LIBVO_SUB_VIDIX_CouldntFindWorkingVidixDriver "[VO_SUB_VIDIX] Не могу найти работающий драйвер VIDIX.\n"
  #define MSGTR_LIBVO_SUB_VIDIX_CouldntGetCapability "[VO_SUB_VIDIX] Не могу получить возможность: %s.\n"
-@@ -1045,27 +1076,27 @@ static const char help_text[] = MSGTR_Help;
+@@ -1050,27 +1081,27 @@ static const char help_text[] = MSGTR_Help;
  #define MSGTR_NoBalance "[Микшер] Управление балансом недоступно.\n"
  
  // old vo drivers that have been replaced
@@ -188,7 +188,7 @@ index bcd480a898..888c368723 100644
  #define MSGTR_AO_OSS_UnknownUnsupportedFormat "[AO OSS] Неизвестный/Неподдерживаемый формат OSS: %x.\n"
  
  // ao_arts.c
-@@ -1076,53 +1107,55 @@ static const char help_text[] = MSGTR_Help;
+@@ -1081,53 +1112,55 @@ static const char help_text[] = MSGTR_Help;
  #define MSGTR_AO_ARTS_BufferSize "[AO ARTS] размер буфера: %d\n"
  
  // ao_dxr2.c
@@ -269,7 +269,7 @@ index bcd480a898..888c368723 100644
  #define MSGTR_AO_ALSA_MixerOpenError "[AO_ALSA] Ошибка открытия микшера: %s\n"
  #define MSGTR_AO_ALSA_MixerAttachError "[AO_ALSA] Ошибка присоединения %s к микшеру: %s\n"
  #define MSGTR_AO_ALSA_MixerRegisterError "[AO_ALSA] Ошибка регистрации микшера: %s\n"
-@@ -1138,38 +1171,38 @@ static const char help_text[] = MSGTR_Help;
+@@ -1143,38 +1176,38 @@ static const char help_text[] = MSGTR_Help;
  "[AO_ALSA]     Открывает устройство в неблокирующем режиме.\n"\
  "[AO_ALSA]   device=<имя-устройства>\n"\
  "[AO_ALSA]     Устанавливает устройство (замените , на . и : на =)\n"
@@ -323,7 +323,7 @@ index bcd480a898..888c368723 100644
  
  // ao_plugin.c
  
-@@ -1185,8 +1218,8 @@ static const char help_text[] = MSGTR_Help;
+@@ -1190,8 +1223,8 @@ static const char help_text[] = MSGTR_Help;
  #define MSGTR_AF_LADSPA_ErrNoOutputs "У этого LADSPA плагина отсутствуют выходы аудио."
  #define MSGTR_AF_LADSPA_ErrInOutDiff "Число аудиовходов и аудиовыходов у LADSPA плагина отличается."
  #define MSGTR_AF_LADSPA_ErrFailedToLoad "не могу загрузить"
@@ -334,7 +334,7 @@ index bcd480a898..888c368723 100644
  #define MSGTR_AF_LADSPA_ErrNoSuboptions "Не указаны субопции."
  #define MSGTR_AF_LADSPA_ErrNoLibFile "Не указан файл библиотеки."
  #define MSGTR_AF_LADSPA_ErrNoLabel "Не указана метка фильтра."
-@@ -1202,13 +1235,13 @@ static const char help_text[] = MSGTR_Help;
+@@ -1207,13 +1240,13 @@ static const char help_text[] = MSGTR_Help;
  
  // joystick.c
  #define MSGTR_INPUT_JOYSTICK_CantOpen "Не могу отрыть устройство джойстика %s: %s\n"
@@ -353,7 +353,7 @@ index bcd480a898..888c368723 100644
  
  // input.c
  #define MSGTR_INPUT_INPUT_ErrCantRegister2ManyCmdFds "Слишком много описателей файлов команд,\nне могу зарегистрировать файловый описатель %d.\n"
-@@ -1236,8 +1269,8 @@ static const char help_text[] = MSGTR_Help;
+@@ -1241,8 +1274,8 @@ static const char help_text[] = MSGTR_Help;
  #define MSGTR_INPUT_INPUT_ErrCantInitAppleRemote "Не могу инициализировать Пульт ДУ Apple Remote.\n"
  
  // lirc.c
@@ -365,5 +365,5 @@ index bcd480a898..888c368723 100644
  
  // ========================== LIBMPDEMUX ===================================
 -- 
-2.25.3
+2.29.2
 

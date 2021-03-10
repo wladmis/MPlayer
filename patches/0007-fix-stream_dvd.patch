@@ -1,14 +1,14 @@
-From f3864dc0fe7119f7f07bbd5961f7ef0672af8e48 Mon Sep 17 00:00:00 2001
+From dfee3bc89fd83fef72d3cce18d2a5d62c36cebcc Mon Sep 17 00:00:00 2001
 From: Led <led@altlinux.org>
 Date: Sat, 25 May 2013 05:53:57 +0300
-Subject: [PATCH 07/28] fix stream_dvd
+Subject: [PATCH] fix stream_dvd
 
 ---
  MPlayer/stream/stream_dvd.c | 9 ++++++---
  1 file changed, 6 insertions(+), 3 deletions(-)
 
 diff --git a/MPlayer/stream/stream_dvd.c b/MPlayer/stream/stream_dvd.c
-index 742e6088aa..e250351a07 100644
+index f80c46e6a2..2e241958ab 100644
 --- a/MPlayer/stream/stream_dvd.c
 +++ b/MPlayer/stream/stream_dvd.c
 @@ -131,12 +131,15 @@ int dvd_aid_from_lang(stream_t *stream, const unsigned char* lang) {
@@ -31,5 +31,5 @@ index 742e6088aa..e250351a07 100644
          //printf("%X != %X  (%c%c)\n",code,d->audio_streams[i].language,lang[0],lang[1]);
        }
 -- 
-2.25.3
+2.29.2
 

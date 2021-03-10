@@ -1,21 +1,21 @@
-From f422902b7b197cfe3e46bff1e39247a287b28111 Mon Sep 17 00:00:00 2001
+From 0c29dcb76c984bffd854e06ddb1c08ffce28434d Mon Sep 17 00:00:00 2001
 From: Led <led@altlinux.ru>
 Date: Thu, 23 May 2013 18:09:09 +0300
-Subject: [PATCH 21/28] add NLS support
+Subject: [PATCH] add NLS support
 
 ---
  MPlayer/configure           | 15 +++++++++++++++
- MPlayer/gui/interface.c     |  4 ++--
+ MPlayer/gui/interface.c     |  2 +-
  MPlayer/gui/skin/skin.c     |  2 +-
  MPlayer/help/help_create.sh |  6 ++++++
  MPlayer/mp_msg.c            | 23 +++++++++++++++++++++--
- 5 files changed, 45 insertions(+), 5 deletions(-)
+ 5 files changed, 44 insertions(+), 4 deletions(-)
 
 diff --git a/MPlayer/configure b/MPlayer/configure
-index d602dbd8a1..8ed00c03f2 100755
+index d660a3e019..12233aaa87 100755
 --- a/MPlayer/configure
 +++ b/MPlayer/configure
-@@ -337,6 +337,7 @@ Optional features:
+@@ -342,6 +342,7 @@ Optional features:
    --enable-gui           enable GMPlayer compilation (GTK+ GUI) [disable]
    --enable-termcap       use termcap database for key codes [autodetect]
    --enable-termios       use termios database for key codes [autodetect]
@@ -23,7 +23,7 @@ index d602dbd8a1..8ed00c03f2 100755
    --disable-iconv        disable iconv for encoding conversion [autodetect]
    --disable-langinfo     do not use langinfo [autodetect]
    --enable-lirc          enable LIRC (remote control) support [autodetect]
-@@ -715,6 +716,7 @@ _dvb=auto
+@@ -725,6 +726,7 @@ _dvb=auto
  _dxr2=auto
  _dxr3=auto
  _v4l2=auto
@@ -31,7 +31,7 @@ index d602dbd8a1..8ed00c03f2 100755
  _iconv=auto
  _langinfo=auto
  _rtc=auto
-@@ -1094,6 +1096,8 @@ for ac_option do
+@@ -1108,6 +1110,8 @@ for ac_option do
    --disable-dxr3)       _dxr3=no        ;;
    --enable-v4l2)        _v4l2=yes       ;;
    --disable-v4l2)       _v4l2=no        ;;
@@ -40,7 +40,7 @@ index d602dbd8a1..8ed00c03f2 100755
    --enable-iconv)       _iconv=yes      ;;
    --disable-iconv)      _iconv=no       ;;
    --enable-langinfo)    _langinfo=yes   ;;
-@@ -4211,6 +4215,14 @@ extra_ldflags=$tmp
+@@ -4386,6 +4390,14 @@ extra_ldflags=$tmp
  fi
  echores "$_rpath"
  
@@ -55,7 +55,7 @@ index d602dbd8a1..8ed00c03f2 100755
  echocheck "iconv"
  if test "$_iconv" != no ; then
    cat > $TMPC << EOF
-@@ -9026,6 +9038,9 @@ $def_dl
+@@ -9218,6 +9230,9 @@ $def_dl
  $def_dos_paths
  $def_extern_asm
  $def_extern_prefix
@@ -66,19 +66,10 @@ index d602dbd8a1..8ed00c03f2 100755
  $def_kstat
  $def_macosx_bundle
 diff --git a/MPlayer/gui/interface.c b/MPlayer/gui/interface.c
-index 93ec71b919..c00db152a3 100644
+index 09d179c142..66b47810ef 100644
 --- a/MPlayer/gui/interface.c
 +++ b/MPlayer/gui/interface.c
-@@ -896,7 +896,7 @@ int gui(int what, void *data)
-         btnSet(evSetMoviePosition, state);
- 
-         if (video_driver_list && !gstrcmp(video_driver_list[0], "dxr3") && (((demuxer_t *)mpctx_get_demuxer(guiInfo.mpcontext))->file_format != DEMUXER_TYPE_MPEG_PS) && !gtkVfLAVC) {
--            gtkMessageBox(MSGBOX_FATAL, MSGTR_GUI_MSG_DXR3NeedsLavc);
-+            gtkMessageBox(MSGBOX_FATAL, _(MSGTR_GUI_MSG_DXR3NeedsLavc));
-             return False;
-         }
- 
-@@ -1424,7 +1424,7 @@ void gmp_msg(int mod, int lev, const char *format, ...)
+@@ -1443,7 +1443,7 @@ void gmp_msg(int mod, int lev, const char *format, ...)
      va_list va;
  
      va_start(va, format);
@@ -88,10 +79,10 @@ index 93ec71b919..c00db152a3 100644
  
      mp_msg(mod, lev, "%s", msg);
 diff --git a/MPlayer/gui/skin/skin.c b/MPlayer/gui/skin/skin.c
-index 13ea81569f..27ab500548 100644
+index 621e13f01d..59cb0ff009 100644
 --- a/MPlayer/gui/skin/skin.c
 +++ b/MPlayer/gui/skin/skin.c
-@@ -97,7 +97,7 @@ static void skin_error(const char *format, ...)
+@@ -98,7 +98,7 @@ static void skin_error(const char *format, ...)
      va_list ap;
  
      va_start(ap, format);
@@ -99,7 +90,7 @@ index 13ea81569f..27ab500548 100644
 +    vsnprintf(p, sizeof(p), _(format), ap);
      va_end(ap);
  
-     gmp_msg(MSGT_GPLAYER, MSGL_ERR, MSGTR_GUI_MSG_SkinErrorMessage, linenumber, p);
+     gmp_msg(MSGT_GPLAYER, MSGL_ERR, _(MSGTR_GUI_MSG_SkinErrorMessage), linenumber, p);
 diff --git a/MPlayer/help/help_create.sh b/MPlayer/help/help_create.sh
 index d56349a476..ce3bd62560 100755
 --- a/MPlayer/help/help_create.sh
@@ -118,11 +109,11 @@ index d56349a476..ce3bd62560 100755
  EOF
  
 diff --git a/MPlayer/mp_msg.c b/MPlayer/mp_msg.c
-index c235503123..6bfac51860 100644
+index 67bcc067d3..b7cc68a1ed 100644
 --- a/MPlayer/mp_msg.c
 +++ b/MPlayer/mp_msg.c
 @@ -25,6 +25,13 @@
- #include "config.h"
+ #include "libavutil/avstring.h"
  #include "osdep/getch2.h"
  
 +#ifdef ENABLE_NLS
@@ -180,5 +171,5 @@ index c235503123..6bfac51860 100644
      tmp[MSGSIZE_MAX-1] = 0;
  
 -- 
-2.25.3
+2.29.2
 

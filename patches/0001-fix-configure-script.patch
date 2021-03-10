@@ -1,17 +1,17 @@
-From 41e0438ade7793cbb75c0fd6c7c0ee41ea0e4071 Mon Sep 17 00:00:00 2001
+From d7d0af3866ca3257700a00167cddf40d3e78f206 Mon Sep 17 00:00:00 2001
 From: Led <led@altlinux.ru>
 Date: Thu, 23 May 2013 20:18:26 +0300
-Subject: [PATCH 01/28] fix configure script
+Subject: [PATCH] fix configure script
 
 ---
  MPlayer/configure | 285 +++++++++++++++++++++++-----------------------
  1 file changed, 144 insertions(+), 141 deletions(-)
 
 diff --git a/MPlayer/configure b/MPlayer/configure
-index d2a70cfcfd..a230474005 100755
+index 4f23e097da..dba7750a6a 100755
 --- a/MPlayer/configure
 +++ b/MPlayer/configure
-@@ -1920,7 +1920,7 @@ if test "$_runtime_cpudetection" = yes && ! x86 && ! ppc; then
+@@ -1997,7 +1997,7 @@ if test "$_runtime_cpudetection" = yes && ! x86 && ! ppc && ! arm; then
  fi
  
  echocheck "cross compilation"
@@ -20,7 +20,7 @@ index d2a70cfcfd..a230474005 100755
    _cross_compile=yes
    cflag_check "" && "$TMPEXE" 2> /dev/null && _cross_compile=no
  fi
-@@ -2780,7 +2780,7 @@ test "$_avx" != no && def_simd_align_32='#define HAVE_SIMD_ALIGN_32 1'
+@@ -2869,7 +2869,7 @@ test "$_avx" != no && def_simd_align_32='#define HAVE_SIMD_ALIGN_32 1'
  
  # endian testing
  echocheck "byte order"
@@ -29,7 +29,7 @@ index d2a70cfcfd..a230474005 100755
    cat > $TMPC <<EOF
  short ascii_name[] = {
    'M' << 8 | 'P', 'l' << 8 | 'a', 'y' << 8 | 'e', 'r' << 8 | 'B',
-@@ -2925,7 +2925,7 @@ fi
+@@ -3019,7 +3019,7 @@ fi
  
  # try to create a relocatable binary by default
  echocheck "relocatable binary"
@@ -38,7 +38,7 @@ index d2a70cfcfd..a230474005 100755
    if test -n "$ld_static" ; then
      relocatable=no
      res_comment="PIE + static assumed to be broken"
-@@ -3038,7 +3038,7 @@ fi
+@@ -3132,7 +3132,7 @@ fi
  if x86 ; then
  
  echocheck ".align is a power of two"
@@ -47,7 +47,7 @@ index d2a70cfcfd..a230474005 100755
  _asmalign_pot=no
  inline_asm_check '".align 3"' && _asmalign_pot=yes
  fi
-@@ -3370,7 +3370,7 @@ fi
+@@ -3473,7 +3473,7 @@ fi
  
  
  echocheck "langinfo"
@@ -56,7 +56,7 @@ index d2a70cfcfd..a230474005 100755
    _langinfo=no
    statement_check langinfo.h 'nl_langinfo(CODESET)' && _langinfo=yes
  fi
-@@ -3589,7 +3589,7 @@ else
+@@ -3751,7 +3751,7 @@ else
  fi
  
  echocheck "struct pollfd"
@@ -65,7 +65,7 @@ index d2a70cfcfd..a230474005 100755
    _struct_pollfd=no
    cat > $TMPC << EOF
  #if HAVE_WINSOCK2_H
-@@ -3610,7 +3610,7 @@ else
+@@ -3772,7 +3772,7 @@ else
  fi
  
  echocheck "netdb.h, struct addrinfo"
@@ -74,7 +74,7 @@ index d2a70cfcfd..a230474005 100755
    _struct_addrinfo=no
    cat > $TMPC << EOF
  #if HAVE_WINSOCK2_H
-@@ -3635,7 +3635,7 @@ fi
+@@ -3797,7 +3797,7 @@ fi
  
  
  echocheck "netdb.h, getaddrinfo()"
@@ -83,7 +83,7 @@ index d2a70cfcfd..a230474005 100755
    _getaddrinfo=no
    cat > $TMPC << EOF
  #if HAVE_WINSOCK2_H
-@@ -3659,7 +3659,7 @@ fi
+@@ -3821,7 +3821,7 @@ fi
  
  
  echocheck "sockaddr_storage"
@@ -92,7 +92,7 @@ index d2a70cfcfd..a230474005 100755
    _struct_sockaddr_storage=no
    cat > $TMPC << EOF
  #if HAVE_WINSOCK2_H
-@@ -3816,7 +3816,7 @@ echores "$networking"
+@@ -3978,7 +3978,7 @@ echores "$networking"
  
  
  echocheck "inet6"
@@ -101,7 +101,7 @@ index d2a70cfcfd..a230474005 100755
    cat > $TMPC << EOF
  #include <sys/types.h>
  #if !defined(_WIN32)
-@@ -3841,7 +3841,7 @@ echores "$_inet6"
+@@ -4003,7 +4003,7 @@ echores "$_inet6"
  
  
  echocheck "gethostbyname2"
@@ -110,7 +110,7 @@ index d2a70cfcfd..a230474005 100755
  cat > $TMPC << EOF
  #define _BSD_SOURCE
  #include <sys/types.h>
-@@ -3862,7 +3862,7 @@ fi
+@@ -4024,7 +4024,7 @@ fi
  echores "$_gethostbyname2"
  
  echocheck "SCTP"
@@ -119,7 +119,7 @@ index d2a70cfcfd..a230474005 100755
    _sctp=no
    if header_check netinet/sctp.h; then
      _sctp=yes
-@@ -4087,7 +4087,7 @@ if linux ; then
+@@ -4268,7 +4268,7 @@ if linux ; then
  elif freebsd || netbsd || openbsd || bsdos ; then
    THREAD_CFLAGS=-D_THREAD_SAFE
  fi
@@ -128,7 +128,7 @@ index d2a70cfcfd..a230474005 100755
  cat > $TMPC << EOF
  #include <pthread.h>
  static void *func(void *arg) { return arg; }
-@@ -4210,7 +4210,7 @@ fi
+@@ -4385,7 +4385,7 @@ fi
  echores "$_rpath"
  
  echocheck "iconv"
@@ -137,7 +137,7 @@ index d2a70cfcfd..a230474005 100755
    cat > $TMPC << EOF
  #include <stdio.h>
  #include <unistd.h>
-@@ -4277,7 +4277,7 @@ echores "$_soundcard_h"
+@@ -4452,7 +4452,7 @@ echores "$_soundcard_h"
  
  
  echocheck "termcap"
@@ -146,7 +146,7 @@ index d2a70cfcfd..a230474005 100755
    _termcap=no
    for ld_tmp in "-lncurses" "-ltinfo" "-ltermcap"; do
      statement_check term.h 'tgetent(0, 0)' $ld_tmp &&
-@@ -4298,7 +4298,7 @@ echocheck "termios"
+@@ -4473,7 +4473,7 @@ echocheck "termios"
  def_termios='#undef HAVE_TERMIOS'
  def_termios_h='#undef HAVE_TERMIOS_H'
  def_termios_sys_h='#undef HAVE_SYS_TERMIOS_H'
@@ -155,7 +155,7 @@ index d2a70cfcfd..a230474005 100755
    _termios=no
    for _termios_header in "termios.h" "sys/termios.h"; do
    header_check $_termios_header && _termios=yes &&
-@@ -4318,7 +4318,7 @@ echores "$_termios"
+@@ -4493,7 +4493,7 @@ echores "$_termios"
  
  
  echocheck "shm"
@@ -164,7 +164,7 @@ index d2a70cfcfd..a230474005 100755
    _shm=no
    statement_check sys/shm.h 'shmget(0, 0, 0); shmat(0, 0, 0); shmctl(0, 0, 0)' && _shm=yes
  fi
-@@ -4456,7 +4456,7 @@ fi
+@@ -4631,7 +4631,7 @@ fi
  echores "$_macosx_bundle"
  
  echocheck "Apple Remote"
@@ -173,7 +173,7 @@ index d2a70cfcfd..a230474005 100755
    _apple_remote=no
    cat > $TMPC <<EOF
  #include <stdio.h>
-@@ -4497,7 +4497,7 @@ fi #if darwin
+@@ -4672,7 +4672,7 @@ fi #if darwin
  if linux; then
  
  echocheck "Apple IR"
@@ -182,7 +182,7 @@ index d2a70cfcfd..a230474005 100755
    _apple_ir=no
    statement_check linux/input.h 'struct input_event ev; struct input_id id' && _apple_ir=yes
  fi
-@@ -4523,7 +4523,7 @@ fi
+@@ -4698,7 +4698,7 @@ fi
  
  
  echocheck "GnuTLS"
@@ -191,7 +191,7 @@ index d2a70cfcfd..a230474005 100755
    _gnutls=no
    if $_pkg_config --exists gnutls ; then
  	  statement_check gnutls/gnutls.h 'gnutls_global_init()' $($_pkg_config --libs --cflags gnutls) &&
-@@ -4592,7 +4592,7 @@ echores "$_smb"
+@@ -4767,7 +4767,7 @@ echores "$_smb"
  
  
  echocheck "/dev/mga_vid"
@@ -200,7 +200,7 @@ index d2a70cfcfd..a230474005 100755
    _mga=no
    test -c /dev/mga_vid && _mga=yes
  fi
-@@ -4647,7 +4647,7 @@ fi
+@@ -4822,7 +4822,7 @@ fi
  echores "$_tdfxvid"
  
  echocheck "xvr100"
@@ -209,7 +209,7 @@ index d2a70cfcfd..a230474005 100755
  cat > $TMPC << EOF
  #include <unistd.h>
  #include <sys/fbio.h>
-@@ -4717,7 +4717,7 @@ echores "$_bl"
+@@ -4892,7 +4892,7 @@ echores "$_bl"
  
  
  echocheck "DirectFB"
@@ -218,7 +218,7 @@ index d2a70cfcfd..a230474005 100755
    _directfb=no
    cat > $TMPC << EOF
  #include <directfb.h>
-@@ -4768,7 +4768,7 @@ echores "$_x11_headers"
+@@ -4943,7 +4943,7 @@ echores "$_x11_headers"
  
  
  echocheck "X11"
@@ -227,7 +227,7 @@ index d2a70cfcfd..a230474005 100755
    for I in "" -L/usr/X11R7/lib -L/usr/local/lib -L/usr/X11R6/lib -L/usr/lib/X11R6 \
             -L/usr/X11/lib -L/usr/lib32 -L/usr/openwin/lib -L/usr/local/lib64 -L/usr/X11R6/lib64 \
             -L/usr/lib ; do
-@@ -4793,7 +4793,7 @@ fi
+@@ -4968,7 +4968,7 @@ fi
  echores "$_x11"
  
  echocheck "Xss screensaver extensions"
@@ -236,7 +236,7 @@ index d2a70cfcfd..a230474005 100755
    _xss=no
    statement_check "X11/extensions/scrnsaver.h" 'XScreenSaverSuspend(NULL, True)' -lXss && _xss=yes
  fi
-@@ -4836,7 +4836,7 @@ fi
+@@ -5011,7 +5011,7 @@ fi
  
  
  echocheck "Xv"
@@ -245,7 +245,7 @@ index d2a70cfcfd..a230474005 100755
    _xv=no
    statement_check_broken X11/Xlib.h X11/extensions/Xvlib.h 'XvGetPortAttribute(0, 0, 0, 0)' -lXv && _xv=yes
  fi
-@@ -4884,7 +4884,7 @@ echores "$_xvmc"
+@@ -5059,7 +5059,7 @@ echores "$_xvmc"
  
  
  echocheck "Video Decode Acceleration (VDA)"
@@ -254,7 +254,7 @@ index d2a70cfcfd..a230474005 100755
    _vda=no
    header_check VideoDecodeAcceleration/VDADecoder.h && _vda=yes
  fi
-@@ -4900,7 +4900,7 @@ echores "$_vda"
+@@ -5075,7 +5075,7 @@ echores "$_vda"
  
  
  echocheck "VDPAU"
@@ -263,7 +263,7 @@ index d2a70cfcfd..a230474005 100755
    _vdpau=no
    if test "$_dl" = yes ; then
      return_statement_check vdpau/vdpau_x11.h 'vdp_device_create_x11(0, 0, 0, 0)' VDP_VIDEO_MIXER_FEATURE_HIGH_QUALITY_SCALING_L1 -lvdpau && _vdpau=yes
-@@ -4924,7 +4924,7 @@ echores "$_vdpau"
+@@ -5099,7 +5099,7 @@ echores "$_vdpau"
  
  
  echocheck "Xinerama"
@@ -272,7 +272,7 @@ index d2a70cfcfd..a230474005 100755
    _xinerama=no
    statement_check X11/extensions/Xinerama.h 'XineramaIsActive(0)' -lXinerama && _xinerama=yes
  fi
-@@ -4944,7 +4944,7 @@ echores "$_xinerama"
+@@ -5119,7 +5119,7 @@ echores "$_xinerama"
  # This check may be useful for future MPlayer versions (to change resolution)
  # If you run into problems, remove '-lXxf86vm'.
  echocheck "Xxf86vm"
@@ -281,7 +281,7 @@ index d2a70cfcfd..a230474005 100755
    _vm=no
    statement_check_broken X11/Xlib.h X11/extensions/xf86vmode.h 'XF86VidModeQueryExtension(0, 0, 0)' -lXxf86vm && _vm=yes
  fi
-@@ -4961,7 +4961,7 @@ echores "$_vm"
+@@ -5136,7 +5136,7 @@ echores "$_vm"
  # has nothing to do with xf86vm and XFree 3.x has xf86vm but does NOT
  # have these new keycodes.
  echocheck "XF86keysym"
@@ -290,7 +290,7 @@ index d2a70cfcfd..a230474005 100755
    _xf86keysym=no
    return_check X11/XF86keysym.h XF86XK_AudioPause && _xf86keysym=yes
  fi
-@@ -4973,11 +4973,11 @@ fi
+@@ -5148,11 +5148,11 @@ fi
  echores "$_xf86keysym"
  
  echocheck "DGA"
@@ -304,7 +304,7 @@ index d2a70cfcfd..a230474005 100755
    _dga1=no
    statement_check_broken X11/Xlib.h X11/extensions/xf86dga.h 'XF86DGASetViewPort(0, 0, 0, 0)' -lXxf86dga -lXxf86vm && _dga1=yes
  fi
-@@ -5006,7 +5006,7 @@ echores "$_dga"
+@@ -5181,7 +5181,7 @@ echores "$_dga"
  
  
  echocheck "xmga"
@@ -313,7 +313,7 @@ index d2a70cfcfd..a230474005 100755
    _xmga=no
    test "$_x11" = yes && test "$_mga" = yes && _xmga=yes
  fi
-@@ -5061,7 +5061,7 @@ def_vidix_drv_sis='#undef CONFIG_VIDIX_DRV_SIS'
+@@ -5236,7 +5236,7 @@ def_vidix_drv_sis='#undef CONFIG_VIDIX_DRV_SIS'
  _vidix_drv_sis=no
  def_vidix_drv_unichrome='#undef CONFIG_VIDIX_DRV_UNICHROME'
  _vidix_drv_unichrome=no
@@ -322,7 +322,7 @@ index d2a70cfcfd..a230474005 100755
    _vidix=no
    x86 && (linux || freebsd || netbsd || openbsd || dragonfly || sunos || win32) && _vidix=yes
    win32 && ! header_check ddk/ntddk.h && _vidix=no
-@@ -5123,7 +5123,7 @@ fi
+@@ -5298,7 +5298,7 @@ fi
  
  
  echocheck "GGI"
@@ -331,7 +331,7 @@ index d2a70cfcfd..a230474005 100755
    _ggi=no
    statement_check ggi/ggi.h 'ggiInit()' -lggi && _ggi=yes
  fi
-@@ -5138,7 +5138,7 @@ fi
+@@ -5313,7 +5313,7 @@ fi
  echores "$_ggi"
  
  echocheck "GGI extension: libggiwmh"
@@ -340,7 +340,7 @@ index d2a70cfcfd..a230474005 100755
    _ggiwmh=no
    statement_check ggi/wmh.h 'ggiWmhInit()' -lggi -lggiwmh && _ggiwmh=yes
  fi
-@@ -5155,7 +5155,7 @@ echores "$_ggiwmh"
+@@ -5330,7 +5330,7 @@ echores "$_ggiwmh"
  
  
  echocheck "AA"
@@ -349,7 +349,7 @@ index d2a70cfcfd..a230474005 100755
    cat > $TMPC << EOF
  #include <aalib.h>
  int main(void) {
-@@ -5176,6 +5176,8 @@ if test "$_aa" = yes ; then
+@@ -5351,6 +5351,8 @@ if test "$_aa" = yes ; then
    def_aa='#define CONFIG_AA 1'
    if cygwin ; then
      libs_mplayer="$libs_mplayer $(aalib-config --libs | cut -d " " -f 2,5,6)"
@@ -358,7 +358,7 @@ index d2a70cfcfd..a230474005 100755
    fi
    vomodules="aa $vomodules"
  else
-@@ -5186,7 +5188,7 @@ echores "$_aa"
+@@ -5361,7 +5363,7 @@ echores "$_aa"
  
  
  echocheck "CACA"
@@ -367,7 +367,7 @@ index d2a70cfcfd..a230474005 100755
    _caca=no
    if ( caca-config --version ) >> "$TMPLOG" 2>&1 ; then
    cat > $TMPC << EOF
-@@ -5212,7 +5214,7 @@ echores "$_caca"
+@@ -5387,7 +5389,7 @@ echores "$_caca"
  
  
  echocheck "SVGAlib"
@@ -376,7 +376,7 @@ index d2a70cfcfd..a230474005 100755
    _svga=no
    header_check vga.h -lvga && _svga=yes
  fi
-@@ -5228,7 +5230,7 @@ echores "$_svga"
+@@ -5403,7 +5405,7 @@ echores "$_svga"
  
  
  echocheck "FBDev"
@@ -385,7 +385,7 @@ index d2a70cfcfd..a230474005 100755
    _fbdev=no
    linux && _fbdev=yes
  fi
-@@ -5244,7 +5246,7 @@ echores "$_fbdev"
+@@ -5419,7 +5421,7 @@ echores "$_fbdev"
  
  
  echocheck "DVB"
@@ -394,7 +394,7 @@ index d2a70cfcfd..a230474005 100755
    _dvb=no
  cat >$TMPC << EOF
  #include <poll.h>
-@@ -5284,7 +5286,7 @@ fi
+@@ -5459,7 +5461,7 @@ fi
  if darwin; then
  
  echocheck "QuickTime"
@@ -403,7 +403,7 @@ index d2a70cfcfd..a230474005 100755
    quicktime=no
    statement_check QuickTime/QuickTime.h 'ImageDescription *desc; EnterMovies(); ExitMovies()' -framework QuickTime && quicktime=yes
  fi
-@@ -5298,7 +5300,7 @@ fi
+@@ -5474,7 +5476,7 @@ fi
  echores $quicktime
  
  echocheck "Quartz"
@@ -412,7 +412,7 @@ index d2a70cfcfd..a230474005 100755
    _quartz=no
    statement_check Carbon/Carbon.h 'CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0, false)' -framework Carbon && _quartz=yes
  fi
-@@ -5313,7 +5315,7 @@ fi
+@@ -5489,7 +5491,7 @@ fi
  echores $_quartz
  
  echocheck "CoreVideo"
@@ -421,7 +421,7 @@ index d2a70cfcfd..a230474005 100755
    cat > $TMPC <<EOF
  #include <Carbon/Carbon.h>
  #include <CoreServices/CoreServices.h>
-@@ -5338,7 +5340,7 @@ fi #if darwin
+@@ -5514,7 +5516,7 @@ fi #if darwin
  
  
  echocheck "PNG support"
@@ -430,7 +430,7 @@ index d2a70cfcfd..a230474005 100755
    _png=no
    if irix ; then
      # Don't check for -lpng on IRIX since it has its own libpng
-@@ -5367,7 +5369,7 @@ else
+@@ -5543,7 +5545,7 @@ else
  fi
  
  echocheck "MNG support"
@@ -439,7 +439,7 @@ index d2a70cfcfd..a230474005 100755
    _mng=no
    cat > $TMPC << EOF
  #define MNG_NO_INCLUDE_JNG
-@@ -5389,7 +5391,7 @@ else
+@@ -5565,7 +5567,7 @@ else
  fi
  
  echocheck "JPEG support"
@@ -448,7 +448,7 @@ index d2a70cfcfd..a230474005 100755
    _jpeg=no
    header_check_broken stdio.h jpeglib.h -ljpeg && _jpeg=yes
  fi
-@@ -5406,7 +5408,7 @@ fi
+@@ -5582,7 +5584,7 @@ fi
  
  
  echocheck "OpenJPEG (JPEG 2000) support"
@@ -457,7 +457,7 @@ index d2a70cfcfd..a230474005 100755
    libopenjpeg=no
    if test "$ffmpeg_a" = no ; then
      res_comment="dynamic linking to libopenjpeg is irrelevant when using dynamic FFmpeg"
-@@ -5463,7 +5465,7 @@ if test "$_gif" = yes ; then
+@@ -5639,7 +5641,7 @@ if test "$_gif" = yes ; then
  fi
  
  gif_new=no
@@ -466,7 +466,7 @@ index d2a70cfcfd..a230474005 100755
    _gif=no
    for ld_gif in "-lungif" "-lgif" ; do
      statement_check gif_lib.h 'QuantizeBuffer(0, 0, 0, 0, 0, 0, 0, 0)' $ld_gif && _gif=yes && break
-@@ -5534,7 +5536,7 @@ esac
+@@ -5710,7 +5712,7 @@ esac
  
  
  echocheck "VESA support"
@@ -475,7 +475,7 @@ index d2a70cfcfd..a230474005 100755
    _vesa=no
    statement_check vbe.h 'vbeInit()' -lvbe -llrmi && _vesa=yes
  fi
-@@ -5766,7 +5768,7 @@ echores "$_gl"
+@@ -5942,7 +5944,7 @@ echores "$_gl"
  
  
  echocheck "MatrixView"
@@ -484,7 +484,7 @@ index d2a70cfcfd..a230474005 100755
    matrixview="$_gl"
  fi
  if test "$matrixview" = yes ; then
-@@ -5781,7 +5783,7 @@ echores "$matrixview"
+@@ -5957,7 +5959,7 @@ echores "$matrixview"
  
  if os2 ; then
  echocheck "KVA (SNAP/WarpOverlay!/VMAN/DIVE)"
@@ -493,7 +493,7 @@ index d2a70cfcfd..a230474005 100755
    _kva=no;
    header_check_broken os2.h kva.h -lkva && _kva=yes
  fi
-@@ -5800,7 +5802,7 @@ fi #if os2
+@@ -5976,7 +5978,7 @@ fi #if os2
  if win32; then
  
  echocheck "Windows waveout"
@@ -502,7 +502,7 @@ index d2a70cfcfd..a230474005 100755
    _win32waveout=no
    header_check_broken windows.h mmsystem.h -lwinmm && _win32waveout=yes
  fi
-@@ -5815,7 +5817,7 @@ fi
+@@ -5991,7 +5993,7 @@ fi
  echores "$_win32waveout"
  
  echocheck "Direct3D"
@@ -511,7 +511,7 @@ index d2a70cfcfd..a230474005 100755
    _direct3d=no
    header_check d3d9.h && _direct3d=yes
  fi
-@@ -5829,7 +5831,7 @@ fi
+@@ -6005,7 +6007,7 @@ fi
  echores "$_direct3d"
  
  echocheck "Directx"
@@ -520,7 +520,7 @@ index d2a70cfcfd..a230474005 100755
    cat > $TMPC << EOF
  #include <windows.h>
  #include <ddraw.h>
-@@ -5855,7 +5857,7 @@ fi #if win32; then
+@@ -6031,7 +6033,7 @@ fi #if win32; then
  
  
  echocheck "DXR2"
@@ -529,7 +529,7 @@ index d2a70cfcfd..a230474005 100755
    _dxr2=no
    for inc_tmp in "" -I/usr/local/include/dxr2 -I/usr/include/dxr2; do
      header_check dxr2ioctl.h $inc_tmp && _dxr2=yes &&
-@@ -5874,7 +5876,7 @@ fi
+@@ -6050,7 +6052,7 @@ fi
  echores "$_dxr2"
  
  echocheck "DXR3/H+"
@@ -538,7 +538,7 @@ index d2a70cfcfd..a230474005 100755
    _dxr3=no
    header_check linux/em8300.h && _dxr3=yes
  fi
-@@ -5889,7 +5891,7 @@ echores "$_dxr3"
+@@ -6065,7 +6067,7 @@ echores "$_dxr3"
  
  
  echocheck "V4L2 MPEG Decoder"
@@ -547,7 +547,7 @@ index d2a70cfcfd..a230474005 100755
    cat > $TMPC << EOF
  #include <sys/time.h>
  #include <linux/videodev2.h>
-@@ -5925,7 +5927,7 @@ echores "$_v4l2"
+@@ -6101,7 +6103,7 @@ echores "$_v4l2"
  
  
  echocheck "OSS Audio"
@@ -556,7 +556,7 @@ index d2a70cfcfd..a230474005 100755
    _ossaudio=no
    return_check $_soundcard_header SNDCTL_DSP_SETFRAGMENT && _ossaudio=yes
  fi
-@@ -5954,7 +5956,7 @@ echores "$_ossaudio"
+@@ -6130,7 +6132,7 @@ echores "$_ossaudio"
  
  
  echocheck "aRts"
@@ -565,7 +565,7 @@ index d2a70cfcfd..a230474005 100755
    _arts=no
    if ( artsc-config --version ) >> "$TMPLOG" 2>&1 ; then
      statement_check artsc.h 'arts_init()' $(artsc-config --libs) $(artsc-config --cflags) &&
-@@ -5974,7 +5976,7 @@ echores "$_arts"
+@@ -6150,7 +6152,7 @@ echores "$_arts"
  
  
  echocheck "EsounD"
@@ -574,7 +574,7 @@ index d2a70cfcfd..a230474005 100755
    _esd=no
    if ( esd-config --version ) >> "$TMPLOG" 2>&1 ; then
      statement_check esd.h 'esd_open_sound("test")' $(esd-config --libs) $(esd-config --cflags) && _esd=yes
-@@ -6000,7 +6002,7 @@ fi
+@@ -6176,7 +6178,7 @@ fi
  
  
  echocheck "NAS"
@@ -583,7 +583,7 @@ index d2a70cfcfd..a230474005 100755
    _nas=no
    header_check audio/audiolib.h -laudio -lXt && _nas=yes
  fi
-@@ -6016,7 +6018,7 @@ echores "$_nas"
+@@ -6192,7 +6194,7 @@ echores "$_nas"
  
  
  echocheck "pulse"
@@ -592,7 +592,7 @@ index d2a70cfcfd..a230474005 100755
    _pulse=no
    if $_pkg_config --exists 'libpulse >= 0.9' ; then
      header_check pulse/pulseaudio.h $($_pkg_config --libs --cflags libpulse) &&
-@@ -6037,7 +6039,7 @@ fi
+@@ -6213,7 +6215,7 @@ fi
  
  
  echocheck "JACK"
@@ -601,7 +601,7 @@ index d2a70cfcfd..a230474005 100755
    _jack=yes
    if statement_check jack/jack.h 'jack_client_open("test", JackUseExactName, NULL)' -ljack ; then
      libs_mplayer="$libs_mplayer -ljack"
-@@ -6058,7 +6060,7 @@ fi
+@@ -6234,7 +6236,7 @@ fi
  echores "$_jack"
  
  echocheck "OpenAL"
@@ -610,7 +610,7 @@ index d2a70cfcfd..a230474005 100755
    _openal=no
  cat > $TMPC << EOF
  #ifdef OPENAL_AL_H
-@@ -6087,7 +6089,7 @@ echores "$_openal"
+@@ -6263,7 +6265,7 @@ echores "$_openal"
  
  
  echocheck "ALSA audio"
@@ -619,7 +619,7 @@ index d2a70cfcfd..a230474005 100755
    _alsa=no
    header_check alsa/asoundlib.h -lasound $ld_dl $ld_pthread && _alsa=yes
  fi
-@@ -6103,7 +6105,7 @@ echores "$_alsa"
+@@ -6279,7 +6281,7 @@ echores "$_alsa"
  
  
  echocheck "Sun audio"
@@ -628,7 +628,7 @@ index d2a70cfcfd..a230474005 100755
    cat > $TMPC << EOF
  #include <sys/types.h>
  #include <sys/audioio.h>
-@@ -6125,7 +6127,7 @@ echores "$_sunaudio"
+@@ -6301,7 +6303,7 @@ echores "$_sunaudio"
  def_mlib='#define CONFIG_MLIB 0'
  if sunos; then
  echocheck "Sun mediaLib"
@@ -637,7 +637,7 @@ index d2a70cfcfd..a230474005 100755
    _mlib=no
    cc_check mlib.h "mlib_VideoColorYUV2ABGR420(0, 0, 0, 0, 0, 0, 0, 0, 0)" -lmlib &&
      _mlib=yes && def_mlib='#define CONFIG_MLIB 1'
-@@ -6136,7 +6138,7 @@ fi #if sunos
+@@ -6312,7 +6314,7 @@ fi #if sunos
  
  if darwin; then
  echocheck "CoreAudio"
@@ -646,7 +646,7 @@ index d2a70cfcfd..a230474005 100755
    cat > $TMPC <<EOF
  #include <CoreAudio/CoreAudio.h>
  #include <AudioToolbox/AudioToolbox.h>
-@@ -6160,7 +6162,7 @@ fi #if darwin
+@@ -6336,7 +6338,7 @@ fi #if darwin
  
  if irix; then
  echocheck "SGI audio"
@@ -655,7 +655,7 @@ index d2a70cfcfd..a230474005 100755
    _sgiaudio=no
    header_check dmedia/audio.h && _sgiaudio=yes
  fi
-@@ -6177,7 +6179,7 @@ fi #if irix
+@@ -6353,7 +6355,7 @@ fi #if irix
  
  
  echocheck "sndio audio"
@@ -664,7 +664,7 @@ index d2a70cfcfd..a230474005 100755
    _sndio=no
    statement_check sndio.h 'sio_open(SIO_DEVANY, SIO_PLAY, 0)' -lsndio && _sndio=yes
  fi
-@@ -6194,7 +6196,7 @@ echores "$_sndio"
+@@ -6370,7 +6372,7 @@ echores "$_sndio"
  
  if os2 ; then
  echocheck "KAI (UNIAUD/DART)"
@@ -673,7 +673,7 @@ index d2a70cfcfd..a230474005 100755
    _kai=no;
    header_check_broken os2.h kai.h -lkai && _kai=yes
  fi
-@@ -6209,7 +6211,7 @@ fi
+@@ -6385,7 +6387,7 @@ fi
  echores "$_kai"
  
  echocheck "DART"
@@ -682,7 +682,7 @@ index d2a70cfcfd..a230474005 100755
    _dart=no;
    header_check_broken os2.h dart.h -ldart && _dart=yes
  fi
-@@ -6256,7 +6258,7 @@ fi
+@@ -6432,7 +6434,7 @@ fi
  
  
  echocheck "VCD support"
@@ -691,7 +691,7 @@ index d2a70cfcfd..a230474005 100755
    _vcd=no
    if linux || freebsd || netbsd || openbsd || dragonfly || bsdos || darwin || sunos || os2; then
      _vcd=yes
-@@ -6277,7 +6279,7 @@ echores "$_vcd"
+@@ -6453,7 +6455,7 @@ echores "$_vcd"
  
  
  echocheck "Blu-ray support"
@@ -700,7 +700,7 @@ index d2a70cfcfd..a230474005 100755
    _bluray=no
    statement_check libbluray/bluray.h 'bd_get_title_info(0, 0, 0)' -lbluray && _bluray=yes
  fi
-@@ -6292,7 +6294,7 @@ fi
+@@ -6468,7 +6470,7 @@ fi
  echores "$_bluray"
  
  echocheck "dvdread"
@@ -709,7 +709,7 @@ index d2a70cfcfd..a230474005 100755
    _dvdread=no
      _dvdreadcflags=$($_dvdreadconfig --cflags 2> /dev/null)
      _dvdreadlibs=$($_dvdreadconfig --libs 2> /dev/null)
-@@ -6317,7 +6319,7 @@ echores "$_dvdread"
+@@ -6493,7 +6495,7 @@ echores "$_dvdread"
  
  echocheck "libcdio"
  header_check cdio/cdda.h && _inc_paranoia=cdio || _inc_paranoia=cdio/paranoia
@@ -718,7 +718,7 @@ index d2a70cfcfd..a230474005 100755
          cat > $TMPC << EOF
  #include <stdio.h>
  #include <cdio/version.h>
-@@ -6364,7 +6366,7 @@ fi
+@@ -6540,7 +6542,7 @@ fi
  echores "$_libcdio"
  
  echocheck "cdparanoia"
@@ -727,7 +727,7 @@ index d2a70cfcfd..a230474005 100755
      _cdparanoia=no
      for inc_tmp in "" "-I/usr/include/cdda" "-I/usr/local/include/cdda" ; do
        statement_check_broken cdda_interface.h cdda_paranoia.h 'paranoia_cachemodel_size(NULL, 0)' $inc_tmp -lcdda_interface -lcdda_paranoia &&
-@@ -6416,7 +6418,7 @@ if test "$_iconv" = no ; then
+@@ -6592,7 +6594,7 @@ if test "$_iconv" = no ; then
      res_comment="iconv support needed"
  fi
  
@@ -736,7 +736,7 @@ index d2a70cfcfd..a230474005 100755
      test -n "$ld_static" && _freetypeconfig="$_freetypeconfig --static"
      if ( $_freetypeconfig --version ) >/dev/null 2>&1 ; then
          cat > $TMPC << EOF
-@@ -6452,7 +6454,7 @@ if test "$_freetype" = no ; then
+@@ -6628,7 +6630,7 @@ if test "$_freetype" = no ; then
      res_comment="FreeType support needed"
  fi
  echocheck "fontconfig"
@@ -745,7 +745,7 @@ index d2a70cfcfd..a230474005 100755
          cat > $TMPC << EOF
  #include <stdio.h>
  #include <stdlib.h>
-@@ -6490,7 +6492,7 @@ echores "$_fontconfig"
+@@ -6666,7 +6668,7 @@ echores "$_fontconfig"
  
  
  echocheck "fribidi with charsets"
@@ -754,7 +754,7 @@ index d2a70cfcfd..a230474005 100755
      cat > $TMPC << EOF
  #include <stdlib.h>
  #include <fribidi/fribidi.h>
-@@ -6528,7 +6530,7 @@ if test "$_freetype" = no ; then
+@@ -6704,7 +6706,7 @@ if test "$_freetype" = no ; then
      res_comment="FreeType and FriBiDi support needed"
  fi
  
@@ -763,16 +763,16 @@ index d2a70cfcfd..a230474005 100755
      cat > $TMPC << EOF
  #include <ft2build.h>
  #include FT_FREETYPE_H
-@@ -6577,7 +6579,7 @@ echores "$_ass"
+@@ -6753,7 +6755,7 @@ echores "$_ass"
  
  
  echocheck "ENCA"
 -if test "$_enca" = auto ; then
 +if test "$_enca" != no ; then
      _enca=no
-     statement_check enca.h 'enca_get_languages(NULL)' -lenca && _enca=yes
- fi
-@@ -6619,7 +6621,7 @@ echores "$bzlib"
+     if statement_check enca.h 'enca_get_languages(NULL)' -lenca; then
+       _enca=yes
+@@ -6803,7 +6805,7 @@ echores "$bzlib"
  
  
  echocheck "RTC"
@@ -781,7 +781,7 @@ index d2a70cfcfd..a230474005 100755
    cat > $TMPC << EOF
  #include <sys/ioctl.h>
  #ifdef __linux__
-@@ -6643,7 +6645,7 @@ echores "$_rtc"
+@@ -6827,7 +6829,7 @@ echores "$_rtc"
  
  
  echocheck "liblzo2 support"
@@ -790,7 +790,7 @@ index d2a70cfcfd..a230474005 100755
    _liblzo=no
    statement_check lzo/lzo1x.h 'lzo_init()' -llzo2 && _liblzo=yes
  fi
-@@ -6659,7 +6661,7 @@ echores "$_liblzo"
+@@ -6843,7 +6845,7 @@ echores "$_liblzo"
  
  
  echocheck "mad support"
@@ -799,7 +799,7 @@ index d2a70cfcfd..a230474005 100755
    _mad=no
    statement_check mad.h 'mad_synth_init(0)' -lmad && _mad=yes
  fi
-@@ -6674,7 +6676,7 @@ fi
+@@ -6858,7 +6860,7 @@ fi
  echores "$_mad"
  
  echocheck "Twolame"
@@ -808,7 +808,7 @@ index d2a70cfcfd..a230474005 100755
    _twolame=no
    statement_check twolame.h 'twolame_init()' -ltwolame && _twolame=yes
  fi
-@@ -6689,7 +6691,7 @@ fi
+@@ -6873,7 +6875,7 @@ fi
  echores "$_twolame"
  
  echocheck "Toolame"
@@ -817,7 +817,7 @@ index d2a70cfcfd..a230474005 100755
    _toolame=no
  if test "$_twolame" = yes ; then
    res_comment="disabled by twolame"
-@@ -6711,11 +6713,11 @@ fi
+@@ -6895,11 +6897,11 @@ fi
  echores "$_toolame"
  
  echocheck "OggVorbis support"
@@ -831,7 +831,7 @@ index d2a70cfcfd..a230474005 100755
    _libvorbis=no
    for vorbislibs in '-lvorbisenc -lvorbis -logg' '-lvorbis -logg' ; do
      statement_check vorbis/vorbisenc.h 'vorbis_encode_ctl(0, 0, 0); ogg_stream_clear(0)' $vorbislibs && _libvorbis=yes && break
-@@ -6734,6 +6736,7 @@ elif test "$_libvorbis" = yes ; then
+@@ -6918,6 +6920,7 @@ elif test "$_libvorbis" = yes ; then
    codecmodules="libvorbis $codecmodules"
    res_comment="libvorbis"
    extra_ldflags="$extra_ldflags $vorbislibs"
@@ -839,7 +839,7 @@ index d2a70cfcfd..a230474005 100755
    libavencoders="$libavencoders LIBVORBIS_ENCODER"
  else
    _vorbis=no
-@@ -6742,7 +6745,7 @@ fi
+@@ -6926,7 +6929,7 @@ fi
  echores "$_vorbis"
  
  echocheck "libspeex (version >= 1.1 required)"
@@ -848,7 +848,7 @@ index d2a70cfcfd..a230474005 100755
    _speex=no
    cat > $TMPC << EOF
  #include <stddef.h>
-@@ -6762,7 +6765,7 @@ fi
+@@ -6946,7 +6949,7 @@ fi
  echores "$_speex"
  
  echocheck "libgsm"
@@ -857,7 +857,7 @@ index d2a70cfcfd..a230474005 100755
    _libgsm=no
    statement_check gsm/gsm.h 'gsm_create()' -lgsm && _libgsm=yes
  fi
-@@ -6779,7 +6782,7 @@ fi
+@@ -6963,7 +6966,7 @@ fi
  echores "$_libgsm"
  
  echocheck "OggTheora support"
@@ -866,7 +866,7 @@ index d2a70cfcfd..a230474005 100755
    _theora=no
    ld_theora="-ltheoradec -logg"
    statement_check theora/theoradec.h 'th_info_init(NULL)' $ld_theora &&
-@@ -6808,7 +6811,7 @@ echores "$_theora"
+@@ -6992,7 +6995,7 @@ echores "$_theora"
  # That is, 1.2.0 onwards. Recommened is 1.14 onwards, though.
  echocheck "mpg123 support"
  def_mpg123='#undef CONFIG_MPG123'
@@ -875,7 +875,7 @@ index d2a70cfcfd..a230474005 100755
    _mpg123=no
    statement_check mpg123.h 'mpg123_param(NULL, MPG123_RESYNC_LIMIT, -1, 0.)' -lmpg123 &&
        _mpg123=yes && extra_ldflags="$extra_ldflags -lmpg123"
-@@ -6823,7 +6826,7 @@ echores "$_mpg123"
+@@ -7007,7 +7010,7 @@ echores "$_mpg123"
  
  echocheck "liba52 support"
  def_liba52='#undef CONFIG_LIBA52'
@@ -884,7 +884,7 @@ index d2a70cfcfd..a230474005 100755
    _liba52=no
    statement_check_broken inttypes.h a52dec/a52.h 'a52_state_t *testHand; testHand=a52_init(0)' -la52 &&
      _liba52=yes && extra_ldflags="$extra_ldflags -la52"
-@@ -6838,7 +6841,7 @@ echores "$_liba52"
+@@ -7022,7 +7025,7 @@ echores "$_liba52"
  
  
  echocheck "libmpeg2 support"
@@ -893,7 +893,7 @@ index d2a70cfcfd..a230474005 100755
    if alpha && test cc_vendor=gnu; then
      case $cc_version in
        2*|3.0*|3.1*) # cannot compile MVI instructions
-@@ -6851,7 +6854,7 @@ if test "$_libmpeg2_internal" = auto ; then
+@@ -7035,7 +7038,7 @@ if test "$_libmpeg2_internal" = auto ; then
      res_comment="internal"
    fi
  fi
@@ -902,7 +902,7 @@ index d2a70cfcfd..a230474005 100755
    _libmpeg2=no
    header_check_broken stdint.h mpeg2dec/mpeg2.h -lmpeg2 &&
      _libmpeg2=yes && extra_ldflags="$extra_ldflags -lmpeg2"
-@@ -6874,7 +6877,7 @@ echores "$_libmpeg2"
+@@ -7058,7 +7061,7 @@ echores "$_libmpeg2"
  
  
  echocheck "libdca support"
@@ -911,7 +911,7 @@ index d2a70cfcfd..a230474005 100755
    _libdca=no
    for ld_dca in -ldca -ldts ; do
      statement_check_broken stdint.h dca.h 'dca_init(0)' $ld_dca &&
-@@ -6891,7 +6894,7 @@ fi
+@@ -7075,7 +7078,7 @@ fi
  echores "$_libdca"
  
  echocheck "libmpcdec (musepack, version >= 1.2.1 required)"
@@ -920,7 +920,7 @@ index d2a70cfcfd..a230474005 100755
    _musepack=no
    cat > $TMPC << EOF
  #include <stddef.h>
-@@ -6918,7 +6921,7 @@ echores "$_musepack"
+@@ -7102,7 +7105,7 @@ echores "$_musepack"
  
  
  echocheck "FAAC support"
@@ -929,7 +929,7 @@ index d2a70cfcfd..a230474005 100755
    cat > $TMPC <<EOF
  #include <inttypes.h>
  #include <faac.h>
-@@ -6940,7 +6943,7 @@ echores "$_faac"
+@@ -7124,7 +7127,7 @@ echores "$_faac"
  
  
  echocheck "FAAD2 support"
@@ -938,7 +938,7 @@ index d2a70cfcfd..a230474005 100755
    _faad=no
    cat > $TMPC << EOF
  #include <faad.h>
-@@ -6965,7 +6968,7 @@ echores "$_faad"
+@@ -7149,7 +7152,7 @@ echores "$_faad"
  
  
  echocheck "libilbc support"
@@ -947,7 +947,7 @@ index d2a70cfcfd..a230474005 100755
    _libilbc=no
    statement_check ilbc.h 'WebRtcIlbcfix_InitDecode(0, 0, 0);' -lilbc && _libilbc=yes
  fi
-@@ -6982,7 +6985,7 @@ fi
+@@ -7166,7 +7169,7 @@ fi
  
  
  echocheck "libopus decoding support"
@@ -956,7 +956,7 @@ index d2a70cfcfd..a230474005 100755
    _libopus=no
    if $_pkg_config --exists 'opus' ; then
      statement_check opus_multistream.h 'opus_multistream_decoder_create(0,0,0,0,0,0)' $($_pkg_config --libs --cflags opus) &&
-@@ -7003,7 +7006,7 @@ echores "$_libopus"
+@@ -7187,7 +7190,7 @@ echores "$_libopus"
  
  
  echocheck "LADSPA plugin support"
@@ -965,7 +965,7 @@ index d2a70cfcfd..a230474005 100755
    _ladspa=no
    statement_check ladspa.h 'LADSPA_Descriptor ld = {0}' && _ladspa=yes
  fi
-@@ -7016,7 +7019,7 @@ echores "$_ladspa"
+@@ -7200,7 +7203,7 @@ echores "$_ladspa"
  
  
  echocheck "libbs2b audio filter support"
@@ -974,7 +974,7 @@ index d2a70cfcfd..a230474005 100755
    cat > $TMPC <<EOF
  #include <bs2b.h>
  #if BS2B_VERSION_MAJOR < 3
-@@ -7069,7 +7072,7 @@ fi
+@@ -7253,7 +7256,7 @@ fi
  
  
  echocheck "Win32 codecs"
@@ -983,7 +983,7 @@ index d2a70cfcfd..a230474005 100755
    _win32dll=no
    if x86_32 && ! qnx; then
      _win32dll=yes
-@@ -7095,7 +7098,7 @@ echores "$_win32dll"
+@@ -7279,7 +7282,7 @@ echores "$_win32dll"
  
  
  echocheck "XAnim codecs"
@@ -992,7 +992,7 @@ index d2a70cfcfd..a230474005 100755
    _xanim=no
    res_comment="dynamic loader support needed"
    if test "$_dl" = yes ; then
-@@ -7113,7 +7116,7 @@ echores "$_xanim"
+@@ -7297,7 +7300,7 @@ echores "$_xanim"
  
  
  echocheck "RealPlayer codecs"
@@ -1001,7 +1001,7 @@ index d2a70cfcfd..a230474005 100755
    _real=no
    res_comment="dynamic loader support needed"
    if test "$_dl" = yes || test "$_win32dll" = yes &&
-@@ -7134,7 +7137,7 @@ echores "$_real"
+@@ -7318,7 +7321,7 @@ echores "$_real"
  echocheck "QuickTime codecs"
  _qtx_emulation=no
  def_qtx_win32='#undef CONFIG_QTX_CODECS_WIN32'
@@ -1010,7 +1010,7 @@ index d2a70cfcfd..a230474005 100755
    test "$_win32dll" = yes || test "$quicktime" = yes && _qtx=yes
  fi
  if test "$_qtx" = yes ; then
-@@ -7149,7 +7152,7 @@ fi
+@@ -7333,7 +7336,7 @@ fi
  echores "$_qtx"
  
  echocheck "Nemesi Streaming Media libraries"
@@ -1019,7 +1019,7 @@ index d2a70cfcfd..a230474005 100755
      _nemesi=no
      if $_pkg_config libnemesi --atleast-version=0.6.3 ; then
          extra_cflags="$extra_cflags $($_pkg_config --cflags libnemesi)"
-@@ -7170,7 +7173,7 @@ fi
+@@ -7354,7 +7357,7 @@ fi
  echores "$_nemesi"
  
  echocheck "LIVE555 Streaming Media libraries"
@@ -1028,7 +1028,7 @@ index d2a70cfcfd..a230474005 100755
    cat > $TMPCPP << EOF
  #define RTSPCLIENT_SYNCHRONOUS_INTERFACE 1
  #include <liveMedia.hh>
-@@ -7225,7 +7228,7 @@ fi
+@@ -7409,7 +7412,7 @@ fi
  echores "$_live"
  
  echocheck "RTMPDump Streaming Media library"
@@ -1037,7 +1037,7 @@ index d2a70cfcfd..a230474005 100755
    statement_check librtmp/rtmp.h 'RTMP_Socket(NULL)' -lrtmp &&
      _librtmp=yes && extra_ldflags="$extra_ldflags -lrtmp"
    if test "$_librtmp" != yes && $_pkg_config --exists librtmp ; then
-@@ -7251,11 +7254,11 @@ echores "$_librtmp"
+@@ -7435,11 +7438,11 @@ echores "$_librtmp"
  
  
  echocheck "FFmpeg"
@@ -1051,7 +1051,7 @@ index d2a70cfcfd..a230474005 100755
    ffmpeg_so=no
    if $_pkg_config --exists libavutil ; then
      inc_ffmpeg=$($_pkg_config --cflags libswscale libswresample libavformat libavcodec libavutil)
-@@ -7303,7 +7306,7 @@ echores "$ffmpeg"
+@@ -7487,7 +7490,7 @@ echores "$ffmpeg"
  
  
  echocheck "libpostproc"
@@ -1060,7 +1060,7 @@ index d2a70cfcfd..a230474005 100755
    postproc=no
    if test "$ffmpeg_a" = yes && test -d ffmpeg/libpostproc ; then
      postproc=yes
-@@ -7327,7 +7330,7 @@ echores "$postproc"
+@@ -7511,7 +7514,7 @@ echores "$postproc"
  
  
  echocheck "libopencore_amr narrowband"
@@ -1069,7 +1069,7 @@ index d2a70cfcfd..a230474005 100755
    _libopencore_amrnb=no
    statement_check opencore-amrnb/interf_dec.h 'Decoder_Interface_init()' -lopencore-amrnb && _libopencore_amrnb=yes
    if test "$ffmpeg_a" != yes ; then
-@@ -7350,7 +7353,7 @@ echores "$_libopencore_amrnb"
+@@ -7534,7 +7537,7 @@ echores "$_libopencore_amrnb"
  
  
  echocheck "libopencore_amr wideband"
@@ -1078,7 +1078,7 @@ index d2a70cfcfd..a230474005 100755
    _libopencore_amrwb=no
    statement_check opencore-amrwb/dec_if.h 'D_IF_init()' -lopencore-amrwb && _libopencore_amrwb=yes
    if test "$ffmpeg_a" != yes ; then
-@@ -7372,7 +7375,7 @@ echores "$_libopencore_amrwb"
+@@ -7556,7 +7559,7 @@ echores "$_libopencore_amrwb"
  
  
  echocheck "libdv-0.9.5+"
@@ -1087,7 +1087,7 @@ index d2a70cfcfd..a230474005 100755
    _libdv=no
    statement_check libdv/dv.h 'dv_encoder_new(1, 1, 1)' -ldv $ld_pthread && _libdv=yes
  fi
-@@ -7387,7 +7390,7 @@ fi
+@@ -7571,7 +7574,7 @@ fi
  echores "$_libdv"
  
  echocheck "CrystalHD"
@@ -1096,7 +1096,7 @@ index d2a70cfcfd..a230474005 100755
     crystalhd=no
     statement_check_broken libcrystalhd/bc_dts_types.h libcrystalhd/libcrystalhd_if.h 'DtsCrystalHDVersion(0, 0)' -lcrystalhd && crystalhd=yes
  fi
-@@ -7404,7 +7407,7 @@ fi
+@@ -7588,7 +7591,7 @@ fi
  echores "$crystalhd"
  
  echocheck "Xvid"
@@ -1105,7 +1105,7 @@ index d2a70cfcfd..a230474005 100755
    _xvid=no
    for ld_tmp in "-lxvidcore" "-lxvidcore $ld_pthread" ; do
      statement_check xvid.h 'xvid_plugin_ssim_t xs; xvid_global(0, 0, 0, 0)' $ld_tmp &&
-@@ -7422,7 +7425,7 @@ fi
+@@ -7606,7 +7609,7 @@ fi
  echores "$_xvid"
  
  echocheck "Xvid two pass plugin"
@@ -1114,7 +1114,7 @@ index d2a70cfcfd..a230474005 100755
    statement_check xvid.h 'xvid_plugin_2pass2_t s; s.vbv_size = 0' && _xvid_lavc=yes
  fi
  if test "$_xvid_lavc" = yes ; then
-@@ -7436,7 +7439,7 @@ echores "$_xvid_lavc"
+@@ -7620,7 +7623,7 @@ echores "$_xvid_lavc"
  
  
  echocheck "x264"
@@ -1123,7 +1123,7 @@ index d2a70cfcfd..a230474005 100755
    cat > $TMPC << EOF
  #include <inttypes.h>
  #include <x264.h>
-@@ -7471,7 +7474,7 @@ echores "$_x264"
+@@ -7655,7 +7658,7 @@ echores "$_x264"
  
  
  echocheck "libvpx"
@@ -1132,7 +1132,7 @@ index d2a70cfcfd..a230474005 100755
    _libvpx_lavc=no
    if test "$ffmpeg_a" != yes; then
      res_comment="dynamic linking to libvpx is irrelevant when using dynamic FFmpeg"
-@@ -7562,7 +7565,7 @@ echores "$_libaom_lavc"
+@@ -7746,7 +7749,7 @@ echores "$_libaom_lavc"
  
  
  echocheck "libnut"
@@ -1141,7 +1141,7 @@ index d2a70cfcfd..a230474005 100755
    _libnut=no
     statement_check libnut.h 'nut_context_tt * nut; nut_error(0)' -lnut && _libnut=yes
  fi
-@@ -7577,7 +7580,7 @@ echores "$_libnut"
+@@ -7761,7 +7764,7 @@ echores "$_libnut"
  
  #check must be done after FFmpeg one
  echocheck "zr"
@@ -1150,7 +1150,7 @@ index d2a70cfcfd..a230474005 100755
    #36067's seem to identify themselves as 36057PQC's, so the line
    #below should work for 36067's and 36057's.
    if grep -q -s -e "Multimedia video controller: Zoran Corporation ZR36057" /proc/pci ; then
-@@ -7603,7 +7606,7 @@ def_mp3lame='#undef CONFIG_MP3LAME'
+@@ -7787,7 +7790,7 @@ def_mp3lame='#undef CONFIG_MP3LAME'
  def_mp3lame_lavc="#define CONFIG_LIBMP3LAME 0"
  def_mp3lame_preset='#undef CONFIG_MP3LAME_PRESET'
  def_mp3lame_preset_medium='#undef CONFIG_MP3LAME_PRESET_MEDIUM'
@@ -1159,7 +1159,7 @@ index d2a70cfcfd..a230474005 100755
    _mp3lame=no
    statement_check lame/lame.h 'lame_set_VBR_quality(NULL, 0)' -lmp3lame &&
      _mp3lame=yes && _mp3lame_lavc=yes
-@@ -7635,7 +7638,7 @@ echores "$_mencoder"
+@@ -7819,7 +7822,7 @@ echores "$_mencoder"
  
  
  echocheck "UnRAR executable"
@@ -1168,16 +1168,16 @@ index d2a70cfcfd..a230474005 100755
      _unrar_exec="yes"
      mingw32 && _unrar_exec="no"
  fi
-@@ -7733,7 +7736,7 @@ fi #if freebsd || netbsd || openbsd || dragonfly || bsdos
+@@ -7917,7 +7920,7 @@ fi #if freebsd || netbsd || openbsd || dragonfly || bsdos
  
  
  echocheck "DirectShow TV interface"
--if test "$_tv_dshow" = auto && test "$_tv" = yes && win32 ; then
-+if test "$_tv_dshow" != no && test "$_tv" = yes && win32 ; then
+-if test "$_tv_dshow" = auto && test "$_tv" = yes && win32 && ! msvc ; then
++if test "$_tv_dshow" != no && test "$_tv" = yes && win32 && ! msvc ; then
      _tv_dshow=no
      statement_check ole2.h 'void* p; CoCreateInstance((GUID*)&GUID_NULL, NULL, CLSCTX_INPROC_SERVER, &GUID_NULL, &p)' -lole32 -luuid && _tv_dshow=yes
  fi
-@@ -7750,7 +7753,7 @@ echores "$_tv_dshow"
+@@ -7934,7 +7937,7 @@ echores "$_tv_dshow"
  
  
  echocheck "Video 4 Linux TV interface"
@@ -1186,7 +1186,7 @@ index d2a70cfcfd..a230474005 100755
      _tv_v4l1=no
      header_check_broken sys/time.h linux/videodev.h && _tv_v4l1=yes
  fi
-@@ -7769,7 +7772,7 @@ echores "$_tv_v4l1"
+@@ -7953,7 +7956,7 @@ echores "$_tv_v4l1"
  
  
  echocheck "Video 4 Linux 2 TV interface"
@@ -1195,7 +1195,7 @@ index d2a70cfcfd..a230474005 100755
      _tv_v4l2=no
      if linux ; then
          header_check_broken sys/time.h linux/videodev2.h && _tv_v4l2=yes
-@@ -7816,7 +7819,7 @@ echores "$_radio_capture"
+@@ -8000,7 +8003,7 @@ echores "$_radio_capture"
  
  
  echocheck "Video 4 Linux 2 Radio interface"
@@ -1204,7 +1204,7 @@ index d2a70cfcfd..a230474005 100755
      _radio_v4l2=no
      header_check linux/videodev2.h && _radio_v4l2=yes
  fi
-@@ -7830,7 +7833,7 @@ echores "$_radio_v4l2"
+@@ -8014,7 +8017,7 @@ echores "$_radio_v4l2"
  
  
  echocheck "Video 4 Linux Radio interface"
@@ -1213,7 +1213,7 @@ index d2a70cfcfd..a230474005 100755
      _radio_v4l=no
      header_check linux/videodev.h && _radio_v4l=yes
  fi
-@@ -7871,7 +7874,7 @@ if test "$_radio_v4l" = no && test "$_radio_v4l2" = no &&
+@@ -8055,7 +8058,7 @@ if test "$_radio_v4l" = no && test "$_radio_v4l2" = no &&
  fi
  
  echocheck "Video 4 Linux 2 MPEG PVR interface"
@@ -1222,7 +1222,7 @@ index d2a70cfcfd..a230474005 100755
   _pvr=no
    cat > $TMPC <<EOF
  #include <sys/time.h>
-@@ -7895,7 +7898,7 @@ echores "$_pvr"
+@@ -8079,7 +8082,7 @@ echores "$_pvr"
  
  
  echocheck "ftp"
@@ -1231,7 +1231,7 @@ index d2a70cfcfd..a230474005 100755
      _ftp=yes
  fi
  if test "$_ftp" = yes ; then
-@@ -7908,7 +7911,7 @@ fi
+@@ -8092,7 +8095,7 @@ fi
  echores "$_ftp"
  
  echocheck "vstream client"
@@ -1240,7 +1240,7 @@ index d2a70cfcfd..a230474005 100755
    _vstream=no
    cat > $TMPC <<EOF
  #include <vstream-client.h>
-@@ -7990,7 +7993,7 @@ if test "$_gui" = yes ; then
+@@ -8174,7 +8177,7 @@ if test "$_gui" = yes ; then
      test "$_x11" != yes && die "The GUI requires X11."
  
      echocheck "XShape extension"
@@ -1249,7 +1249,7 @@ index d2a70cfcfd..a230474005 100755
        _xshape=no
        cat > $TMPC << EOF
  #include <X11/Xlib.h>
-@@ -8168,7 +8171,7 @@ fi
+@@ -8352,7 +8355,7 @@ fi
  echores "$_joystick"
  
  echocheck "lirc"
@@ -1258,7 +1258,7 @@ index d2a70cfcfd..a230474005 100755
    _lirc=no
    header_check lirc/lirc_client.h -llirc_client && _lirc=yes
  fi
-@@ -8181,7 +8184,7 @@ fi
+@@ -8365,7 +8368,7 @@ fi
  echores "$_lirc"
  
  echocheck "lircc"
@@ -1267,7 +1267,7 @@ index d2a70cfcfd..a230474005 100755
    _lircc=no
    header_check lirc/lircc.h -llircc && _lircc=yes
  fi
-@@ -8197,7 +8200,7 @@ if arm; then
+@@ -8381,7 +8384,7 @@ if arm; then
  # Detect Maemo development platform libraries availability (http://www.maemo.org),
  # they are used when run on Nokia 770|8x0
  echocheck "maemo (Nokia 770|8x0)"
@@ -1276,7 +1276,7 @@ index d2a70cfcfd..a230474005 100755
    _maemo=no
    statement_check libosso.h 'osso_initialize('', '', 0, NULL)' $($_pkg_config --cflags --libs libosso 2>/dev/null) && _maemo=yes
  fi
-@@ -8240,7 +8243,7 @@ CFLAGS="$CFLAGS -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D_LARGEFILE64_SOURCE
+@@ -8424,7 +8427,7 @@ CFLAGS="$CFLAGS -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D_LARGEFILE64_SOURCE
  CXXFLAGS=" $CFLAGS -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS"
  
  echocheck "DVD support (libdvdnav)"
@@ -1286,5 +1286,5 @@ index d2a70cfcfd..a230474005 100755
    _dvdnavdir=$($_dvdnavconfig --cflags)
    _dvdnavlibs=$($_dvdnavconfig --libs)
 -- 
-2.25.3
+2.29.2
 

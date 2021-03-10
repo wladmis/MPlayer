@@ -1,17 +1,17 @@
-From 41b6ffe80262341c372eac3f7bf362788c86effc Mon Sep 17 00:00:00 2001
+From b5ffb585a0454717143b631e4e184a8d3c8be020 Mon Sep 17 00:00:00 2001
 From: "Vladimir D. Seleznev" <vseleznv@altlinux.org>
 Date: Sat, 20 Apr 2019 22:40:45 +0300
-Subject: [PATCH 20/28] fix tools build with shared ffmpeg
+Subject: [PATCH] fix tools build with shared ffmpeg
 
 ---
  MPlayer/Makefile | 6 +++---
  1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/MPlayer/Makefile b/MPlayer/Makefile
-index 92f3061de3..2816504e22 100644
+index 624e5091e6..f21ffbfbac 100644
 --- a/MPlayer/Makefile
 +++ b/MPlayer/Makefile
-@@ -983,7 +983,7 @@ MP_MSG_OBJS = mp_msg.o mp_fifo.o osdep/$(GETCH) osdep/$(TIMER) -ltinfo -lm
+@@ -1003,7 +1003,7 @@ MP_MSG_OBJS = mp_msg.o mp_fifo.o osdep/$(GETCH) osdep/$(TIMER) -ltinfo -lm
  libvo/aspecttest$(EXESUF): libvo/aspect.o libvo/geometry.o $(MP_MSG_OBJS)
  libvo/aspecttest$(EXESUF): LIBS = $(MP_MSG_LIBS)
  
@@ -20,7 +20,7 @@ index 92f3061de3..2816504e22 100644
  
  loader/qtx/list$(EXESUF) loader/qtx/qtxload$(EXESUF): CFLAGS += -g
  loader/qtx/list$(EXESUF) loader/qtx/qtxload$(EXESUF): $(LOADER_TEST_OBJS)
-@@ -1017,9 +1017,9 @@ toolsclean:
+@@ -1037,9 +1037,9 @@ toolsclean:
  
  TOOLS/bmovl-test$(EXESUF): LIBS = -lSDL -lSDL_image
  TOOLS/vfw2menc$(EXESUF):   LIBS = -lwinmm -lole32
@@ -31,7 +31,7 @@ index 92f3061de3..2816504e22 100644
 +    $(MP_MSG_OBJS)
  
  mplayer-nomain.o: mplayer.c
- 	$(CC) $(CFLAGS) -DDISABLE_MAIN -c -o $@ $<
+ 	$(CC) $(CFLAGS) -DDISABLE_MAIN -c $(CC_O) $<
 -- 
-2.25.3
+2.29.2
 

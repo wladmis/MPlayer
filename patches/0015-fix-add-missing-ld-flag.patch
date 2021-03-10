@@ -1,17 +1,17 @@
-From a0d1b5e876059105a9f9bbf928bb1b89cf5a77a5 Mon Sep 17 00:00:00 2001
+From ea22fd05b09e9ab348f5656dc16dd0854d4e4c91 Mon Sep 17 00:00:00 2001
 From: "Vladimir D. Seleznev" <vseleznv@altlinux.org>
 Date: Sat, 1 Apr 2017 18:22:49 +0300
-Subject: [PATCH 15/28] fix: add missing ld flag
+Subject: [PATCH] fix: add missing ld flag
 
 ---
  MPlayer/Makefile | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/MPlayer/Makefile b/MPlayer/Makefile
-index 1f125f5ff5..92f3061de3 100644
+index 24ffd22a21..624e5091e6 100644
 --- a/MPlayer/Makefile
 +++ b/MPlayer/Makefile
-@@ -1015,7 +1015,7 @@ toolsclean:
+@@ -1035,7 +1035,7 @@ toolsclean:
  	-rm -f $(call ADD_ALL_EXESUFS,$(TOOLS) $(TOOLS-no))
  	-rm -f TOOLS/realcodecs/*.so.6.0
  
@@ -21,5 +21,5 @@ index 1f125f5ff5..92f3061de3 100644
  TOOLS/subrip$(EXESUF):     LIBS = $(MP_MSG_LIBS) -lm
  TOOLS/subrip$(EXESUF): path.o sub/vobsub.o sub/spudec.o sub/unrar_exec.o \
 -- 
-2.25.3
+2.29.2
 

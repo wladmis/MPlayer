@@ -1,7 +1,7 @@
-From 17e12ab483adaec3ad2554468dc044b8fc9e751e Mon Sep 17 00:00:00 2001
+From 84b886ef89cbfa27e4dbaac15354b9dc6b3b2137 Mon Sep 17 00:00:00 2001
 From: Led <led@altlinux.ru>
 Date: Mon, 3 Jun 2013 17:08:15 +0300
-Subject: [PATCH 24/28] po/mp_msg2po.awk: fix po generation
+Subject: [PATCH] po/mp_msg2po.awk: fix po generation
 
 ---
  MPlayer/po/mp_msg2po.awk | 13 +++++++------
@@ -32,5 +32,5 @@ index 19ed004330..8bbddb252f 100644
  	if (msgid[i]!~/^$|^MSGTR_/) {
  		print "# " i "\n" "msgid " "\"" msgid[i] "\"\n" "msgstr " "\"" msgstr[i] "\"\n"
 -- 
-2.25.3
+2.29.2
 

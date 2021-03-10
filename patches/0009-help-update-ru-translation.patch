@@ -1,14 +1,14 @@
-From 85e300991134d92528083c1924677c5a84228ffc Mon Sep 17 00:00:00 2001
+From 199c86561f4ba167e22b0a1b8f2a52336e71ee04 Mon Sep 17 00:00:00 2001
 From: Led <led@altlinux.org>
 Date: Wed, 29 May 2013 05:06:28 +0300
-Subject: [PATCH 09/28] help: update ru translation
+Subject: [PATCH] help: update ru translation
 
 ---
  MPlayer/help/help_mp-ru.h | 63 +++++++++++++++++++++++++++++++++++++--
  1 file changed, 61 insertions(+), 2 deletions(-)
 
 diff --git a/MPlayer/help/help_mp-ru.h b/MPlayer/help/help_mp-ru.h
-index 6259d223fe..bcd480a898 100644
+index ce384e122c..3dd2630cf4 100644
 --- a/MPlayer/help/help_mp-ru.h
 +++ b/MPlayer/help/help_mp-ru.h
 @@ -74,6 +74,9 @@ static const char help_text[] = MSGTR_Help;
@@ -39,8 +39,8 @@ index 6259d223fe..bcd480a898 100644
  
  // property values
  #define MSGTR_Enabled "включено"
-@@ -704,6 +711,34 @@ static const char help_text[] = MSGTR_Help;
- #define MSGTR_GUI_VideoTracks "Видео дорожка"
+@@ -709,6 +716,34 @@ static const char help_text[] = MSGTR_Help;
+ #define MSGTR_GUI_Volume MSGTR_Volume
  #define MSGTR_GUI_Warning "Предупреждение!"
  
 +// Win32 GUI
@@ -74,7 +74,7 @@ index 6259d223fe..bcd480a898 100644
  // ======================= video output drivers ========================
  
  #define MSGTR_VOincompCodec "Извините, выбранное устройство видеовывода не совместимо с этим кодеком.\n"\
-@@ -731,6 +766,7 @@ static const char help_text[] = MSGTR_Help;
+@@ -736,6 +771,7 @@ static const char help_text[] = MSGTR_Help;
  #define MSGTR_LIBVO_FONT_LOAD_FT_CannotPrepareOSDFont "Невозможно подготовить шрифт OSD.\n"
  #define MSGTR_LIBVO_FONT_LOAD_FT_CannotGenerateTables "Невозможно сгенерировать таблицы.\n"
  #define MSGTR_LIBVO_FONT_LOAD_FT_DoneFreeTypeFailed "Сбой FT_Done_FreeType.\n"
@@ -82,7 +82,7 @@ index 6259d223fe..bcd480a898 100644
  
  // sub.c
  #define MSGTR_VO_SUB_Seekbar "Навигация"
-@@ -1308,7 +1344,19 @@ static const char help_text[] = MSGTR_Help;
+@@ -1313,7 +1349,19 @@ static const char help_text[] = MSGTR_Help;
  #define MSGTR_SMBInitError "Не могу инициализировать библиотеку libsmbclient: %d\n"
  #define MSGTR_SMBFileNotFound "Не могу открыть по сети: '%s'\n"
  
@@ -103,7 +103,7 @@ index 6259d223fe..bcd480a898 100644
  
  // network.c
  #define MSGTR_MPDEMUX_NW_UnknownAF "Неизвестное семейство адресов %d\n"
-@@ -1335,7 +1383,9 @@ static const char help_text[] = MSGTR_Help;
+@@ -1340,7 +1388,9 @@ static const char help_text[] = MSGTR_Help;
  #define MSGTR_MPDEMUX_NW_CacheSizeSetTo "Установлен размер кэша %d КБайт(а/ов)\n"
  
  // demux_audio.c
@@ -114,7 +114,7 @@ index 6259d223fe..bcd480a898 100644
  
  // demux_demuxers.c
  #define MSGTR_MPDEMUX_DEMUXERS_FillBufferError "ошибка заполнения_буфера: плохой демультиплексор: не vd, ad или sd.\n"
-@@ -1483,6 +1533,7 @@ static const char help_text[] = MSGTR_Help;
+@@ -1488,6 +1538,7 @@ static const char help_text[] = MSGTR_Help;
  #define MSGTR_MPCODECS_TryingPixfmt "[VD_FFMPEG] Пробую pixfmt=%d.\n"
  #define MSGTR_MPCODECS_McGetBufferShouldWorkOnlyWithXVMC "[VD_FFMPEG] Буфер mc_get_buffer должен использоваться только с XVMC ускорением!!"
  #define MSGTR_MPCODECS_OnlyBuffersAllocatedByVoXvmcAllowed "[VD_FFMPEG] Разрешены только буферы, выделенные vo_xvmc.\n"
@@ -122,7 +122,7 @@ index 6259d223fe..bcd480a898 100644
  
  // libmpcodecs/ve_lavc.c
  #define MSGTR_MPCODECS_HighQualityEncodingSelected "[VE_LAVC] Выбрано высококачественное кодирование (не в реальном времени)!\n"
-@@ -1559,6 +1610,7 @@ static const char help_text[] = MSGTR_Help;
+@@ -1564,6 +1615,7 @@ static const char help_text[] = MSGTR_Help;
  #define MSGTR_MPDEMUX_AIALSA_PeriodEqualsBufferSize "Не могу использовать период, равный размеру буфера (%u == %lu)\n"
  #define MSGTR_MPDEMUX_AIALSA_CannotInstallSWParams "Не могу установить программные параметры:\n"
  #define MSGTR_MPDEMUX_AIALSA_ErrorOpeningAudio "Ошибка открытия аудио: %s\n"
@@ -130,7 +130,7 @@ index 6259d223fe..bcd480a898 100644
  #define MSGTR_MPDEMUX_AIALSA_AlsaXRUN "ALSA xrun!!! (как минимум длительностью %.3f мс)\n"
  #define MSGTR_MPDEMUX_AIALSA_AlsaXRUNPrepareError "ALSA xrun: ошибка подготовки: %s"
  #define MSGTR_MPDEMUX_AIALSA_AlsaReadWriteError "Ошибка чтения/записи ALSA"
-@@ -1697,6 +1749,10 @@ static const char help_text[] = MSGTR_Help;
+@@ -1702,6 +1754,10 @@ static const char help_text[] = MSGTR_Help;
  #define MSGTR_DVDsubtitleLanguage "субтитры ( sid ): %d язык: %s\n"
  #define MSGTR_DVDnumSubtitles "число субтитров на диске: %d\n"
  
@@ -141,7 +141,7 @@ index 6259d223fe..bcd480a898 100644
  // stream/stream_radio.c
  #define MSGTR_RADIO_ChannelNamesDetected "[radio] Обнаружены имена радиостанций.\n"
  #define MSGTR_RADIO_WrongFreqForChannel "[radio] Неверная частота для станции %s\n"
-@@ -1812,3 +1868,6 @@ static const char help_text[] = MSGTR_Help;
+@@ -1817,3 +1873,6 @@ static const char help_text[] = MSGTR_Help;
  
  // url.c
  #define MSGTR_MPDEMUX_URL_StringAlreadyEscaped "Похоже, что строка уже пропущена в url_escape %c%c%c\n"
@@ -149,5 +149,5 @@ index 6259d223fe..bcd480a898 100644
 +// subtitles
 +#define MSGTR_SUBTITLES_SubRip_UnknownFontColor "SubRip: неизвестный цвет шрифта в субтитрах: %s\n"
 -- 
-2.25.3
+2.29.2
 

@@ -1,7 +1,7 @@
-From 8305a7e87c589ca96faa2a1555ec8509f2a4060d Mon Sep 17 00:00:00 2001
+From 30e3dd07f4a5a9f741e5848cbbec1aac4f739040 Mon Sep 17 00:00:00 2001
 From: Led <led@altlinux.org>
 Date: Thu, 30 May 2013 10:30:51 +0300
-Subject: [PATCH 23/28] fix usage mp_msg()
+Subject: [PATCH] fix usage mp_msg()
 
 ---
  MPlayer/m_option.c |  4 ++--
@@ -10,10 +10,10 @@ Subject: [PATCH 23/28] fix usage mp_msg()
  3 files changed, 8 insertions(+), 13 deletions(-)
 
 diff --git a/MPlayer/m_option.c b/MPlayer/m_option.c
-index 7cc1a744f5..865707ca19 100644
+index fecefabc31..f623bc2196 100644
 --- a/MPlayer/m_option.c
 +++ b/MPlayer/m_option.c
-@@ -901,11 +901,11 @@ const m_option_type_t m_option_type_func = {
+@@ -902,11 +902,11 @@ const m_option_type_t m_option_type_func = {
  
  static int parse_print(const m_option_t* opt,const char *name, const char *param, void* dst, int src) {
    if(opt->type == CONF_TYPE_PRINT_INDIRECT)
@@ -28,7 +28,7 @@ index 7cc1a744f5..865707ca19 100644
    if(opt->priv == NULL)
      return M_OPT_EXIT;
 diff --git a/MPlayer/mp_msg.c b/MPlayer/mp_msg.c
-index 6bfac51860..03d4fcf5b2 100644
+index b7cc68a1ed..4094ee084d 100644
 --- a/MPlayer/mp_msg.c
 +++ b/MPlayer/mp_msg.c
 @@ -84,11 +84,6 @@ const char* filename_recode(const char* filename)
@@ -75,10 +75,10 @@ index 6bfac51860..03d4fcf5b2 100644
      fflush(stream);
  }
 diff --git a/MPlayer/mplayer.c b/MPlayer/mplayer.c
-index c0223ab6c2..ef4b496d6d 100644
+index ee0063e637..b4cc482c18 100644
 --- a/MPlayer/mplayer.c
 +++ b/MPlayer/mplayer.c
-@@ -3634,7 +3634,7 @@ goto_enable_cache:
+@@ -3630,7 +3630,7 @@ goto_enable_cache:
  
      if (playing_msg) {
          char *msg = property_expand_string(mpctx, playing_msg);
@@ -88,5 +88,5 @@ index c0223ab6c2..ef4b496d6d 100644
      }
  
 -- 
-2.25.3
+2.29.2
 
