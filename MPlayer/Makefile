@@ -24,7 +24,8 @@ include config.mak
 ###### variable declarations #######
 
 # local fallbacks for missing operating system features
-OS_FEATURE-$(GETTIMEOFDAY)           += osdep/gettimeofday.c
+# the fallback for gettimeofday should actually no longet be needed
+#OS_FEATURE-$(GETTIMEOFDAY)           += osdep/gettimeofday.c
 OS_FEATURE-$(GLOB_WIN)               += osdep/glob-win.c
 OS_FEATURE-$(MMAP)                   += osdep/mmap-os2.c
 OS_FEATURE-$(SETENV)                 += osdep/setenv.c
@@ -666,7 +667,7 @@ $(foreach suffix,.c .cpp .m .S,$(eval DEP_FILES := $(DEP_FILES:$(suffix)=.d)))
 ALL_PRG-$(MPLAYER)  += mplayer$(EXESUF)
 ALL_PRG-$(MENCODER) += mencoder$(EXESUF)
 
-INSTALL_TARGETS-$(GUI)      += install-gui
+INSTALL_TARGETS-$(GUI)      += install-gui install-gui-man
 INSTALL_TARGETS-$(MENCODER) += install-mencoder install-mencoder-man
 INSTALL_TARGETS-$(MPLAYER)  += install-mplayer  install-mplayer-man
 
@@ -710,13 +711,15 @@ ADDSUFFIXES     = $(foreach suf,$(1),$(addsuffix $(suf),$(2)))
 ADD_ALL_DIRS    = $(call ADDSUFFIXES,$(1),$(ALL_DIRS))
 ADD_ALL_EXESUFS = $(1) $(call ADDSUFFIXES,$(EXESUFS_ALL),$(1))
 
+ALL_MSGS = $(foreach lang,$(filter-out $(firstword $(MSG_LANGS)),$(MSG_LANGS)),help/po/$(lang).mo)
+
 GUI_ICONSIZES = 16x16 22x22 24x24 32x32 48x48 256x256
 
 
 
 ###### generic rules #######
 
-all: $(ALL_PRG-yes)
+all: $(ALL_PRG-yes) $(ALL_MSGS)
 
 %.o: %.S
 	$(CC) $(CC_DEPFLAGS) $(CFLAGS) $(AS_C) $(AS_O) $<
@@ -731,7 +734,7 @@ all: $(ALL_PRG-yes)
 	$(CC) $(CC_DEPFLAGS) $(CFLAGS) $(CC_C) $(CC_O) $<
 
 %-rc.o: %.rc
-	$(WINDRES) -I. $< -o $@
+	$(WINDRES) -I. $(WINDRES_O) $<
 
 ffmpeglibs: $(FFMPEGLIBS)
 
@@ -743,7 +746,7 @@ mencoder$(EXESUF): EXTRALIBS += $(EXTRALIBS_MENCODER)
 mplayer$(EXESUF): $(MPLAYER_DEPS)
 mplayer$(EXESUF): EXTRALIBS += $(EXTRALIBS_MPLAYER)
 mencoder$(EXESUF) mplayer$(EXESUF):
-	$(CC) -o $@ $^ $(EXTRALIBS)
+	$(CC) $(CC_LINK_O) $^ $(EXTRALIBS)
 
 codec-cfg-test$(EXESUF): HOSTCFLAGS := $(HOSTCFLAGS) -DTESTING
 codec-cfg$(EXESUF) codecs2html$(EXESUF):  HOSTCFLAGS := $(HOSTCFLAGS) -DCODECS2HTML
@@ -765,21 +768,30 @@ config.mak: configure
 	@echo "####### Please run ./configure again - it's changed! #######"
 	@echo "############################################################"
 
-checkhelp: help/help_mp*.h
-	help/help_check.sh $(CC) $^
+helpcheck: $(addsuffix elpcheck,$(wildcard help/help_mp-*.h))
+
+%.helpcheck: %.h
+	help/help_check.sh $(CC) $<
 
 help_mp.h: help/help_mp-en.h $(HELP_FILE)
 	help/help_create.sh $(HELP_FILE) $(CHARSET)
+
+help/po/%.po: help/help_mp-%.h help/help_mp-en.h
+	mkdir -p $(@D)
+	help/help_create_po.pl $< $@
+
+%.mo: %.po
+	msgfmt $< -o $@
 
 # rebuild version.h each time the working copy is updated
 version.h: version.sh $(wildcard .svn/entries .git/logs/HEAD)
 	./$< `$(CC) -dumpversion`
 
 %$(EXESUF): %.c
-	$(CC) $(CC_DEPFLAGS) $(CFLAGS) -o $@ $^ $(LIBS)
+	$(CC) $(CC_DEPFLAGS) $(CFLAGS) $(CC_LINK_O) $^ $(LIBS)
 
 %.ho: %.h
-	$(CC) $(CFLAGS) -Wno-unused -c -o $@ -x c $<
+	$(CC) $(CFLAGS) -Wno-unused -c $(CC_O) -x c $<
 
 checkheaders: $(ALLHEADERS:.h=.ho)
 
@@ -826,7 +838,7 @@ mpcommon.o osdep/mplayer-rc.o gui/dialog/about.o gui/win32/gui.o: version.h
 
 osdep/mplayer-rc.o: osdep/mplayer.exe.manifest
 
-gui/%: CFLAGS += -Wno-strict-prototypes
+gui/%: CFLAGS += -DLOCALEDIR=\"$(prefix)/share/locale\" -Wno-strict-prototypes
 
 loader/%: CFLAGS += -fno-omit-frame-pointer $(CFLAGS_NO_OMIT_LEAF_FRAME_POINTER)
 #loader/%: CFLAGS += -Ddbg_printf=__vprintf -DTRACE=__vprintf -DDETAILED_OUT
@@ -856,13 +868,14 @@ install-dirs:
 install-%: %$(EXESUF) install-dirs
 	$(INSTALL) -m 755 $(INSTALLSTRIP) $< $(BINDIR)
 
-install-gui: install-mplayer install-gui-icons
+install-gui: install-mplayer install-gui-icons install-gui-msg
 	-ln -sf mplayer$(EXESUF) $(BINDIR)/gmplayer$(EXESUF)
 	$(INSTALL) -d $(DATADIR)/skins $(prefix)/share/applications
 	$(INSTALL) -m 644 etc/mplayer.desktop $(prefix)/share/applications/
 
 install-gui-icons:    $(foreach size,$(GUI_ICONSIZES),install-gui-icon-$(size))
 install-gui-man:      $(foreach lang,$(MAN_LANGS),install-gui-man-$(lang))
+install-gui-msg:      $(foreach lang,$(filter-out $(firstword $(MSG_LANGS)),$(MSG_LANGS)),install-gui-msg-$(lang))
 install-mencoder-man: $(foreach lang,$(MAN_LANGS),install-mencoder-man-$(lang))
 install-mplayer-man:  $(foreach lang,$(MAN_LANGS),install-mplayer-man-$(lang))
 
@@ -887,6 +900,12 @@ install-gui-man-$(lang): install-mplayer-man-$(lang)
 	cd $(MANDIR)/$(lang)/man1/ && ln -sf mplayer.1 gmplayer.1
 endef
 
+define GUI_MSG_RULE
+install-gui-msg-$(lang): help/po/$(lang).mo
+	$(INSTALL) -d $(prefix)/share/locale/$(lang)/LC_MESSAGES
+	$(INSTALL) -m 644 help/po/$(lang).mo $(prefix)/share/locale/$(lang)/LC_MESSAGES/mplayer.mo
+endef
+
 define MENCODER_MAN_RULE
 install-mencoder-man-$(lang): install-mplayer-man-$(lang)
 	cd $(MANDIR)/$(lang)/man1 && ln -sf mplayer.1 mencoder.1
@@ -900,17 +919,18 @@ endef
 
 $(foreach size,$(GUI_ICONSIZES),$(eval $(GUI_ICON_RULE)))
 $(foreach lang,$(filter-out en,$(MAN_LANG_ALL)),$(eval $(GUI_MAN_RULE)))
+$(foreach lang,$(MSG_LANGS),$(eval $(GUI_MSG_RULE)))
 $(foreach lang,$(filter-out en,$(MAN_LANG_ALL)),$(eval $(MENCODER_MAN_RULE)))
 $(foreach lang,$(filter-out en,$(MAN_LANG_ALL)),$(eval $(MPLAYER_MAN_RULE)))
 
 uninstall:
 	rm -f $(BINDIR)/mplayer$(EXESUF) $(BINDIR)/gmplayer$(EXESUF)
 	rm -f $(BINDIR)/mencoder$(EXESUF)
-	rm -f $(MANDIR)/man1/mencoder.1 $(MANDIR)/man1/mplayer.1
 	rm -f $(foreach size,$(GUI_ICONSIZES),$(prefix)/share/icons/hicolor/$(size)/apps/mplayer.png)
 	rm -f $(prefix)/share/applications/mplayer.desktop
-	rm -f $(MANDIR)/man1/mplayer.1 $(MANDIR)/man1/mencoder.1
-	rm -f $(foreach lang,$(MAN_LANGS),$(foreach man,mplayer.1 mencoder.1,$(MANDIR)/$(lang)/man1/$(man)))
+	rm -f $(MANDIR)/man1/mplayer.1 $(MANDIR)/man1/mencoder.1 $(MANDIR)/man1/gmplayer.1
+	rm -f $(foreach lang,$(MAN_LANGS),$(foreach man,mplayer.1 mencoder.1 gmplayer.1,$(MANDIR)/$(lang)/man1/$(man)))
+	rm -f $(foreach lang,$(MSG_LANGS),$(prefix)/share/locale/$(lang)/LC_MESSAGES/mplayer.mo)
 
 clean: testsclean toolsclean driversclean dhahelperclean
 	-$(MAKE) -C ffmpeg $@
@@ -920,7 +940,7 @@ clean: testsclean toolsclean driversclean dhahelperclean
 	-rm -f $(VIDIX_PCI_FILES)
 	-rm -f $(call ADD_ALL_EXESUFS,codec-cfg cpuinfo)
 	-rm -f codecs.conf.h help_mp.h version.h
-	-rm -rf DOCS/tech/doxygen DOCS/HTML
+	-rm -rf DOCS/tech/doxygen DOCS/HTML help/po
 
 distclean: clean
 	-$(MAKE) -C ffmpeg $@
@@ -1022,12 +1042,12 @@ TOOLS/subrip$(EXESUF): path.o sub/vobsub.o sub/spudec.o sub/unrar_exec.o \
     ffmpeg/libswscale/libswscale.a ffmpeg/libavutil/libavutil.a $(MP_MSG_OBJS)
 
 mplayer-nomain.o: mplayer.c
-	$(CC) $(CFLAGS) -DDISABLE_MAIN -c -o $@ $<
+	$(CC) $(CFLAGS) -DDISABLE_MAIN -c $(CC_O) $<
 
 TOOLS/netstream$(EXESUF): TOOLS/netstream.c
 TOOLS/vivodump$(EXESUF): TOOLS/vivodump.c
 TOOLS/netstream$(EXESUF) TOOLS/vivodump$(EXESUF): $(subst mplayer.o,mplayer-nomain.o,$(OBJS_MPLAYER)) $(filter-out %mencoder.o,$(OBJS_MENCODER)) $(OBJS_COMMON) $(COMMON_LIBS)
-	$(CC) $(CC_DEPFLAGS) $(CFLAGS) -o $@ $^ $(EXTRALIBS_MPLAYER) $(EXTRALIBS_MENCODER) $(EXTRALIBS)
+	$(CC) $(CC_DEPFLAGS) $(CFLAGS) $(CC_LINK_O) $^ $(EXTRALIBS_MPLAYER) $(EXTRALIBS_MENCODER) $(EXTRALIBS)
 
 REAL_SRCS    = $(wildcard TOOLS/realcodecs/*.c)
 REAL_TARGETS = $(REAL_SRCS:.c=.so.6.0)
@@ -1108,8 +1128,10 @@ dhahelperclean:
 -include $(DEP_FILES) $(DRIVER_DEP_FILES) $(TESTS_DEP_FILES) $(TOOLS_DEP_FILES) $(DHAHELPER_DEP_FILES)
 
 .PHONY: all doxygen *install* *tools drivers dhahelper*
-.PHONY: checkheaders *clean tests check_checksums fatetest checkhelp
+.PHONY: checkheaders *clean tests check_checksums fatetest helpcheck
 .PHONY: doc html-chunked* html-single* xmllint*
+
+.SECONDARY: $(patsubst %.mo,%.po,$(ALL_MSGS))
 
 # Disable suffix rules.  Most of the builtin rules are suffix rules,
 # so this saves some time on slow systems.

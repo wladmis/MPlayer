@@ -11,6 +11,11 @@ MPlayer
     * Command line option -fs is now recognized in addition to the
       GUI option load_fullscreen
     * Use correct visual in OpenGL video output driver for X11
+    * Provide a built-in skin so that the GUI can be used even
+      without an installed skin
+    * Native Language Support, i.e. the GUI language can be changed
+      as specified in LC_MESSAGES or LANG
+    * Minor bug fixes
 
     Other:
     * Building on Arm now compiles for the ISA and extensions of the
@@ -18,6 +23,9 @@ MPlayer
       e.g. Raspbian not using NEON by default.
       Can use --enable-runtime-cpudetection to restore the previous
       behaviour, though full runtime CPU detection is not supported.
+    * New configure option --enable-nls for Native Language Support at
+      runtime (for the moment only for the GUI and enabled by default
+      for it)
 
   1.4: "SubCounter" April 18, 2019
 

@@ -16,38 +16,18 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef MPLAYER_GUI_DIALOG_H
-#define MPLAYER_GUI_DIALOG_H
+#ifndef MPLAYER_MPPACKED_H
+#define MPLAYER_MPPACKED_H
 
-#include <gtk/gtk.h>
-#include <X11/Xlib.h>
+#ifdef _MSC_VER
+// actually also works for newer gcc
+#define MP_PACKED(type, name_and_def) \
+_Pragma("pack(push, 1)") \
+type name_and_def \
+_Pragma("pack(pop)")
+#else
+#define MP_PACKED(type, name_and_def) \
+type __attribute__((packed)) name_and_def
+#endif
 
-/// MessageBox types
-enum {
-    MSGBOX_INFORMATION,
-    MSGBOX_WARNING,
-    MSGBOX_ERROR,
-    MSGBOX_FATAL,
-    MSGBOX_WAIT         // must be a power of 2!
-};
-
-typedef struct {
-    Pixmap small;
-    Pixmap small_mask;
-    Pixmap normal;
-    Pixmap normal_mask;
-    int collection_size;
-    long *collection;
-} guiIcon_t;
-
-extern guiIcon_t guiIcon;
-
-void gtkAddIcon(GtkWidget *window);
-void gtkEvents(void);
-void gtkInit(char *display_name);
-void gtkMessageBox(int type, const gchar *str);
-void gtkRaise(GtkWidget *window);
-void gtkSetLayer(GtkWidget *window);
-void gtkShow(int type, char *param);
-
-#endif /* MPLAYER_GUI_DIALOG_H */
+#endif /* MPLAYER_MPPACKED_H */
